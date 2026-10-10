@@ -26,7 +26,7 @@ test('catalog to builder to validated diff; recording matches require acceptance
   await page.getByRole('dialog').getByRole('textbox').fill('Playwright');
   await page.getByRole('button', { name: 'Add existing step', exact: true }).click();
   await page.getByRole('button', { name: 'Features', exact: true }).click();
-  await page.getByRole('tab', { name: 'Builder' }).click();
+  await page.getByRole('radio', { name: 'Builder' }).click();
   await expect(page.getByRole('textbox', { name: 'Step 1 text' })).toHaveValue(
     'the user searches for "Playwright"',
   );
@@ -59,7 +59,7 @@ test('unmatched action produces a reviewable scaffold and outline examples remai
   await expect(page.getByText('Generated/RecordedWorkflowSteps.cs', { exact: true })).toBeVisible();
   await expect(page.getByText(/No verified accessible target/)).toBeVisible();
   await page.getByRole('button', { name: 'Close dialog' }).click();
-  await page.getByRole('tab', { name: 'Builder' }).click();
+  await page.getByRole('radio', { name: 'Builder' }).click();
   await page.getByRole('checkbox', { name: 'Scenario Outline with examples' }).check();
   await expect(page.getByRole('textbox', { name: 'EXAMPLES TABLE' })).toBeVisible();
 });

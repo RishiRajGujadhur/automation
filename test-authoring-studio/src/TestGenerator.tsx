@@ -14,12 +14,16 @@ import * as Tabs from '@radix-ui/react-tabs';
 import { ArrowLeft, ArrowRight, Check as CheckIcon, CircleAlert as AlertIcon } from 'lucide-react';
 import type { DictionaryEntry, Index } from './types';
 import StepLint from './StepLint';
+import { scenarioExtensions } from './editor/gherkin';
+import { labelled } from './editor/a11y';
+const scenarioExt = scenarioExtensions('Scenario text');
 import { DictionaryEntryForm } from './forms';
 import { generatorSchema, validateSync } from './validators';
 import { Select, Button } from './radix';
 import { IconButton, Meter, Separator, useConfirm, haptic } from './radix2';
 import { markDone } from './progress';
 import { xmlExtensions } from './editor/xml';
+import Card from './Card';
 const snippetXml = xmlExtensions(false);
 
 type Plan = { entry: DictionaryEntry | null; source?: string; code?: string | null };
@@ -104,8 +108,8 @@ export default function TestGenerator({ revision, seed, onSource, onExport, onIn
     const t = setTimeout(() => api('/source?file=' + encodeURIComponent(file), undefined, c.signal).then(() => setFileExists(true)).catch(() => { if (!c.signal.aborted) setFileExists(false); }), 300);
     return () => { clearTimeout(t); c.abort(); };
   }, [file, revision]);
-  const caretLine = (el: HTMLTextAreaElement) => {
-    const before = el.value.slice(0, el.selectionStart).split('\n');
+  const caretLine = (value: string, caret: number) => {
+    const before = value.slice(0, caret).split('\n');
     const nonEmptyBefore = before.slice(0, -1).filter((l) => l.trim()).length;
     setActiveLine(before.at(-1)!.trim() ? nonEmptyBefore : Math.max(0, nonEmptyBefore - 1));
   };
@@ -247,7 +251,17 @@ export default function TestGenerator({ revision, seed, onSource, onExport, onIn
                   <Button variant="ghost" size="tiny" aria-label="Copy scenario as Gherkin" onClick={async () => onNotice?.((await copyText(`Scenario: ${scenarioName}\n${steps.map((x) => `  ${x.keyword} ${x.text}`).join('\n')}`)) ? 'Scenario copied.' : 'Clipboard unavailable.')}><Copy size={12} />Copy</Button>
                 </span>
               </span>
-              <textarea aria-label="Scenario text" rows={Math.max(3, steps.length + 1)} value={scenarioText} onChange={(e) => { set('scenarioText', e.target.value); caretLine(e.target); }} onKeyUp={(e) => caretLine(e.currentTarget)} onClick={(e) => caretLine(e.currentTarget)} spellCheck={false} onBlur={() => touch('scenarioText')} />
+              <div className="scenario-editor" onBlur={() => touch('scenarioText')}>
+                <CodeMirror
+                  value={scenarioText}
+                  theme={oneDark}
+                  minHeight={`${Math.max(3, steps.length + 1) * 22 + 12}px`}
+                  extensions={scenarioExt}
+                  basicSetup={{ lineNumbers: false, foldGutter: false, autocompletion: false, highlightActiveLine: false }}
+                  onChange={(v, vu) => { set('scenarioText', v); caretLine(v, vu.state.selection.main.head); }}
+                  onUpdate={(u) => { if (u.selectionSet && !u.docChanged) caretLine(u.state.doc.toString(), u.state.selection.main.head); }}
+                />
+              </div>
               {err('scenarioText')}
               <StepLint steps={steps} activeLine={activeLine} onReplace={replaceStep} onSource={onSource} revision={revision} />
             </div>
@@ -286,7 +300,7 @@ export default function TestGenerator({ revision, seed, onSource, onExport, onIn
                 <p className="micro-label">LIVE DICTIONARY MATCH</p>
                 <RowMenu items={[{ label: 'Open dictionary source', icon: FileCode2, onSelect: () => onSource(plan.entry!.file, plan.entry!.line) }, { label: 'Copy field XML', icon: Copy, onSelect: () => copyText(plan.source ? fieldSnippet(plan.source, plan.entry!) : '') }]}>
                   <div className="code-with-copy" data-menu-row>
-                    <CodeMirror value={plan.source ? fieldSnippet(plan.source, plan.entry) : ''} theme={oneDark} extensions={snippetXml} editable={false} />
+                    <CodeMirror value={plan.source ? fieldSnippet(plan.source, plan.entry) : ''} theme={oneDark} extensions={[...snippetXml, labelled('Matched dictionary field XML', true)]} editable={false} />
                   </div>
                 </RowMenu>
                 <button className="text-button" onClick={() => onSource(plan.entry!.file, plan.entry!.line)}>Open {plan.entry.file}:{plan.entry.line}</button>
@@ -316,7 +330,7 @@ export default function TestGenerator({ revision, seed, onSource, onExport, onIn
           <details className="code-details">
             <summary>Generated locator code</summary>
             <div className="code-with-copy">
-              <CodeMirror value={code} theme={oneDark} extensions={[StreamLanguage.define(csharp)]} editable={false} />
+              <CodeMirror value={code} theme={oneDark} extensions={[StreamLanguage.define(csharp), labelled('Generated locator code', true)]} editable={false} />
               <CopyButton text={code} label="Copy locator code" />
             </div>
           </details>
@@ -400,10 +414,9 @@ export default function TestGenerator({ revision, seed, onSource, onExport, onIn
         )}
       </div>
       {sidebar && (
-        <aside className="panel generator-sidebar" aria-label="Project model">
-          <div className="panel-heading"><div><h2>Project model</h2></div><span className="subtle">{highlight.length} in use</span></div>
+        <Card as="aside" id="gen-project-model" className="generator-sidebar" label="Project model" title="Project model" badge={<span className="subtle">{highlight.length} in use</span>}>
           <div className="wizard-body"><ProjectModelTree model={model} highlight={highlight} onSource={onSource} compact /></div>
-        </aside>
+        </Card>
       )}
     </div>
   );

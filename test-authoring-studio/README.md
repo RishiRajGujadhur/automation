@@ -104,6 +104,38 @@ The tab bar shows only the four primary pages. To reach Step Catalog, Background
 
 The studio menu is a Radix context menu (`@radix-ui/react-context-menu`). It also offers Command palette, Start a recording, New feature, Rescan, Workspace settings and Keyboard shortcuts. Menus on cards and rows take priority over it. Text inputs and code editors keep the browser's own right-click menu (copy, paste, spellcheck).
 
+### Studio settings (Preferences dialog)
+
+| Setting | Effect |
+| --- | --- |
+| **Web UI port / API port** | Saved to `.local/settings.json` and used by the API server, the Vite dev server (and its `/api` proxy), the allowed-host/origin checks, and `playwright.config.ts`. Validation requires 1024–65535 and two different ports. Takes effect after restarting `npm run dev`. `STUDIO_WEB_PORT` / `STUDIO_API_PORT` override the file. |
+| **Record Playwright traces** | Recordings run with `context.tracing` (screenshots, DOM snapshots and sources are each optional). Stopping saves `.local/traces/recording-<time>.zip`; download it from the recorder toolbar or the settings list, then open it with `npx playwright show-trace <zip>`. Test runs get `STUDIO_PLAYWRIGHT_TRACING=1`, so your hooks can opt in. |
+| **Show dashboard statistics** | Shows or hides the counts row at the top of the Dashboard. |
+| **Cached UI state** | **Reset card states** reopens all cards. **Clear cache** removes every `tas:*` item this app stores in the browser (drafts, preferences, layout, history) and reloads. Repository files are never touched. Both ask for confirmation first. |
+
+Cards (Dashboard panels, Project Explorer model, the generator's project model) are **collapsible**. Each card's state is remembered under `tas:card:<id>`.
+
+### Layout
+
+- **Compact header:** the header (48 px) holds a smaller logo and a breadcrumb: workspace › section › **page title (the page's single `<h1>`)** with an unsaved-changes dot. The nav bar (44 px) carries the Editor / Builder / Recorder switch on the right. The tall page heading is gone; its description is announced to screen readers through `aria-describedby` on `<main>`.
+- **Scenario text:** in the Test Generator this is a CodeMirror editor with Gherkin highlighting, binding warnings, step hover and the same step autocomplete as the feature editor.
+- **Full screen editor:** the feature editor has a full-screen button (also in its right-click menu and Ctrl/Cmd+Shift+F). It fills the window and asks the browser for fullscreen; Esc exits.
+
+### Web standards and accessibility
+
+The app is checked against the W3C standards it relies on (HTML, CSS, WAI-ARIA) and **WCAG 2.2 level AA**.
+- **Automated audit:** `tests/e2e/a11y.spec.ts` runs [axe-core](https://github.com/dequelabs/axe-core) with the `wcag2a`, `wcag2aa`, `wcag21a`, `wcag21aa` and `wcag22aa` rule sets on all 11 pages, plus the Preferences and Workspace dialogs and the studio menu. The suite fails on any violation.
+- **Document structure (also tested):** `lang="en"`, a descriptive `<title>` per page, one `banner`, `main` and `contentinfo` landmark, exactly one `<h1>`, and a **Skip to main content** link as the first focus stop.
+- **Fixes this audit drove:**
+  - muted text raised to at least 4.5:1 contrast, and 9 px text raised to 11 px;
+  - every CodeMirror editor has an accessible name and is keyboard-focusable (read-only ones are marked `aria-readonly`);
+  - the view switch is a radio group, since it has no tab panels;
+  - the dictionary list no longer misuses `listbox`;
+  - Radix menus are non-modal, so they don't `aria-hide` focusable content;
+  - visible focus outlines on every interactive role.
+- **Still in place from earlier:** labelled inputs with linked hints and errors (`aria-describedby`, `aria-invalid`), reduced-motion and contrast preferences, 44 px touch targets on coarse pointers, and the Radix primitives' keyboard and screen-reader behaviour.
+- **Limits:** automated checks catch most, not all, WCAG issues. Screen-reader passes (NVDA/VoiceOver) and a keyboard-only walkthrough remain worthwhile before a release.
+
 ### Test Generator wizard
 
 The four steps form a **wizard**: one step at a time, built on Radix Tabs. I chose this over a driver.js-style tour because it gates progress and keeps step state. The existing Joyride tour remains for walkthroughs.

@@ -2,7 +2,7 @@ import { Parser, AstBuilder, GherkinClassicTokenMatcher } from '@cucumber/gherki
 import { IdGenerator } from '@cucumber/messages';
 import { linter, type Diagnostic } from '@codemirror/lint';
 import { autocompletion, snippetCompletion, type CompletionContext, type CompletionResult, type Completion } from '@codemirror/autocomplete';
-import { hoverTooltip, keymap, type EditorView } from '@codemirror/view';
+import { hoverTooltip, keymap, EditorView } from '@codemirror/view';
 import { EditorState, type Extension } from '@codemirror/state';
 import { StreamLanguage } from '@codemirror/language';
 import { gherkin } from '@codemirror/legacy-modes/mode/gherkin';
@@ -95,7 +95,7 @@ export function bindingSnippet(b: Binding) {
 const keywordOptions: Completion[] = ['Feature: ', 'Background:', 'Scenario: ', 'Scenario Outline: ', 'Examples:', 'Rule: ', 'Given ', 'When ', 'Then ', 'And ', 'But '].map((k) => ({ label: k.trim(), apply: k, type: 'keyword', boost: k.startsWith('Given') || k.startsWith('When') || k.startsWith('Then') ? 2 : 0 }));
 
 /** 3–4. Autocomplete: keywords at line start; existing steps after a keyword (server-ranked, snippet placeholders). */
-async function gherkinCompletions(ctx: CompletionContext): Promise<CompletionResult | null> {
+export async function gherkinCompletions(ctx: CompletionContext): Promise<CompletionResult | null> {
   const line = ctx.state.doc.lineAt(ctx.pos);
   const before = line.text.slice(0, ctx.pos - line.from);
   const m = /^(\s*)(Given|When|Then|And|But|\*)\s+(.*)$/.exec(before);
@@ -228,5 +228,18 @@ export function gherkinExtensions(opts: { onSave?: () => void; onValidate?: () =
       { key: 'Mod-Enter', preventDefault: true, run: () => { opts.onValidate?.(); return true; } },
       { key: 'Shift-Alt-f', preventDefault: true, run: (v: EditorView) => { const next = formatGherkin(v.state.doc.toString()); v.dispatch({ changes: { from: 0, to: v.state.doc.length, insert: next } }); return true; } },
     ]),
+  ];
+}
+
+/** Steps-only editor (no Feature/Scenario header): highlighting, binding warnings, autocomplete. */
+export function scenarioExtensions(label: string): Extension[] {
+  return [
+    StreamLanguage.define(gherkin),
+    EditorState.languageData.of(() => [{ commentTokens: { line: '#' } }]),
+    bindingLinter,
+    autocompletion({ override: [gherkinCompletions], activateOnTyping: true, maxRenderedOptions: 10 }),
+    stepHover,
+    EditorView.contentAttributes.of({ 'aria-label': label, 'aria-multiline': 'true', tabindex: '0' }),
+    EditorView.lineWrapping,
   ];
 }

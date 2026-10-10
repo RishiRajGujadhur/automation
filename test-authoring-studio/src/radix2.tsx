@@ -153,8 +153,8 @@ export function Segmented<T extends string>({ value, onValueChange, options, lab
 }
 
 /* ------------------------------------------------------------------ Preferences */
-export type Prefs = { density: 'comfortable' | 'compact'; textSize: 'small' | 'medium' | 'large'; motion: 'system' | 'reduce'; contrast: 'normal' | 'high'; accent: 'violet' | 'teal' | 'blue' | 'amber'; haptics: boolean; sidebar: boolean; focus: boolean };
-export const defaultPrefs: Prefs = { density: 'comfortable', textSize: 'medium', motion: 'system', contrast: 'normal', accent: 'violet', haptics: true, sidebar: true, focus: false };
+export type Prefs = { density: 'comfortable' | 'compact'; textSize: 'small' | 'medium' | 'large'; motion: 'system' | 'reduce'; contrast: 'normal' | 'high'; accent: 'violet' | 'teal' | 'blue' | 'amber'; haptics: boolean; sidebar: boolean; focus: boolean; showStats: boolean };
+export const defaultPrefs: Prefs = { density: 'comfortable', textSize: 'medium', motion: 'system', contrast: 'normal', accent: 'violet', haptics: true, sidebar: true, focus: false, showStats: true };
 const PrefsContext = createContext<{ prefs: Prefs; setPrefs: (p: Partial<Prefs>) => void }>({ prefs: defaultPrefs, setPrefs: () => {} });
 export const usePrefs = () => useContext(PrefsContext);
 /** Applies preferences as data attributes on <html> so plain CSS can respond. */

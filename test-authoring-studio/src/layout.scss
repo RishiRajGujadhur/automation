@@ -1,0 +1,362 @@
+// Compact chrome: preserve vertical space for work. Loaded last so it wins over styles.scss.
+$border: #252c3e;
+$muted: #8791a7;
+
+.skip-link {
+  position: absolute;
+  left: 12px;
+  top: -60px;
+  z-index: 200;
+  padding: 10px 14px;
+  border-radius: 8px;
+  background: var(--accent-strong);
+  color: #fff;
+  font-weight: 600;
+  text-decoration: none;
+  &:focus {
+    top: 10px;
+  }
+}
+
+// Header: 48px instead of 69px
+.app-header {
+  height: 48px;
+  padding: 0 18px;
+  gap: 14px;
+}
+.brand {
+  font-size: 14px;
+  gap: 8px;
+  flex: none;
+}
+.brand-mark {
+  width: 24px;
+  height: 24px;
+  border-radius: 7px;
+  svg {
+    width: 15px;
+    height: 15px;
+  }
+}
+.brand > .badge {
+  font-size: 7.5px;
+  padding: 1px 5px;
+}
+.guide-button {
+  padding: 6px 11px !important;
+  font-size: 11px !important;
+}
+
+// Breadcrumb carries the page title (h1) so the tall page heading is gone.
+.workspace-breadcrumb {
+  min-width: 0;
+  flex: 1;
+  ol {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    min-width: 0;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+  li {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    min-width: 0;
+    color: $muted;
+    font-size: 12px;
+    white-space: nowrap;
+  }
+  li[aria-current='page'] {
+    min-width: 0;
+    overflow: hidden;
+  }
+  h1 {
+    margin: 0;
+    font-size: 14px !important;
+    font-weight: 600;
+    color: #eef0f6;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    letter-spacing: 0;
+  }
+  .crumb {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 8px;
+    border-radius: 6px;
+    border: 0;
+    background: none;
+    color: #c5cbe0;
+    font-size: 12px;
+    &:hover {
+      background: #ffffff0d;
+    }
+  }
+  .dirty-dot {
+    width: 7px;
+    height: 7px;
+    margin-left: 8px;
+  }
+}
+
+// Nav: 44px, view tabs live on the right
+.main-nav {
+  height: 44px;
+  padding: 0 18px;
+  gap: 16px;
+}
+.nav-tab {
+  font-size: 12px;
+}
+.recorder-tab {
+  padding: 6px 12px !important;
+}
+.nav-trailing {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  .segmented {
+    padding: 2px;
+  }
+  .segmented-item {
+    padding: 5px 10px;
+    font-size: 11px;
+  }
+}
+.main-content {
+  padding-top: 16px;
+}
+.app-body {
+  min-height: calc(100dvh - 92px - 28px);
+}
+
+// Collapsible cards
+.card-heading {
+  height: auto;
+  min-height: 44px;
+  h2 {
+    margin: 0;
+    font-size: 12px;
+    flex: 1;
+    min-width: 0;
+  }
+}
+.card-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 10px 0;
+  border: 0;
+  background: none;
+  color: #eef0f6;
+  font: inherit;
+  font-weight: 600;
+  text-align: left;
+  cursor: pointer;
+  &:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+    border-radius: 4px;
+  }
+}
+.card-chevron {
+  flex: none;
+  color: $muted;
+  transition: transform 0.15s;
+}
+.card.closed .card-chevron {
+  transform: rotate(-90deg);
+}
+.card.closed .card-heading {
+  border-bottom: 0;
+}
+.card-meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: none;
+}
+.card-content[data-state='open'] {
+  animation: fade-in 0.15s ease-out;
+}
+.checklist.card {
+  padding: 0;
+  .card-content > * {
+    padding: 0 18px;
+  }
+  .checklist-head {
+    padding-top: 12px;
+  }
+  ul {
+    padding-bottom: 14px;
+  }
+}
+
+// Scenario editor (CodeMirror in the wizard)
+.scenario-editor {
+  border: 1px solid $border;
+  border-radius: 8px;
+  overflow: hidden;
+  .cm-editor {
+    font-size: 13px;
+  }
+  .cm-content {
+    padding: 8px 4px;
+  }
+  &:focus-within {
+    border-color: color-mix(in srgb, var(--accent) 70%, transparent);
+  }
+}
+
+// Full-screen feature editor
+.gherkin-editor {
+  position: relative;
+}
+.editor-toolbar {
+  position: absolute;
+  top: 6px;
+  right: 10px;
+  z-index: 5;
+  display: flex;
+  gap: 4px;
+  .icon-button {
+    background: #1a2130cc;
+  }
+}
+.gherkin-editor.is-fullscreen {
+  position: fixed;
+  inset: 0;
+  z-index: 70;
+  background: #0b0e16;
+  display: flex;
+  flex-direction: column;
+  padding-top: 0;
+}
+
+// Settings
+.nested-switches {
+  margin-left: 18px;
+  padding-left: 14px;
+  border-left: 1px solid $border;
+}
+.trace-list ul {
+  list-style: none;
+  margin: 6px 0 0;
+  padding: 0;
+  li {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .text-button {
+    margin: 0;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+  }
+}
+@media (max-width: 900px) {
+  .workspace-breadcrumb .crumb-section {
+    display: none;
+  }
+}
+@media (max-width: 640px) {
+  .brand > span:not(.badge),
+  .brand > .badge {
+    display: none;
+  }
+}
+
+// ---- WCAG 1.4.3 contrast (AA, 4.5:1 for normal text) ----
+// Muted text colours were 2.7–4.4:1 on the darkest panels. #9aa4bb is ≥ 5.9:1 on #0b0e16 and ≥ 5.1:1 on #1b2232.
+:root {
+  --text-muted: #9aa4bb;
+  --text-subtle: #a9b2c6;
+}
+.subtle,
+.meta,
+.field-hint,
+.micro-label,
+.collapsible-summary,
+.stepper-text small,
+.lint-footer,
+.lint-footer span,
+.scanned-at,
+.repo-path,
+.repo-path span,
+.index-status span,
+.new-feature,
+.status-bar,
+.footer-right,
+.action-number,
+.eyebrow,
+.search-summary,
+.explorer-summary,
+.step-lint .meta,
+.step-lint .link,
+.catalog-card-top > span:not(.badge),
+.context-label,
+.badge.muted,
+.tooltip kbd,
+.field-hint code,
+kbd {
+  color: var(--text-muted) !important;
+}
+.step-lint li {
+  color: var(--text-subtle);
+}
+// Minimum readable sizes (9px text was below comfortable reading size)
+.status-bar,
+.footer-right,
+.repo-path,
+.index-status span,
+.scanned-at,
+.micro-label {
+  font-size: 11px !important;
+}
+.status-bar {
+  height: 30px;
+}
+.action-number {
+  font-size: 11px;
+}
+// Visible focus for every interactive element (WCAG 2.4.7 / 2.4.11)
+a:focus-visible,
+button:focus-visible,
+[role='tab']:focus-visible,
+[role='radio']:focus-visible,
+[role='switch']:focus-visible,
+[role='checkbox']:focus-visible,
+[tabindex]:focus-visible,
+.cm-content:focus-visible {
+  outline: 2px solid var(--accent) !important;
+  outline-offset: 2px;
+}
+.main-content:focus {
+  outline: none;
+}
+// The breadcrumb now carries the page h1, so it stays visible on small screens (workspace crumb collapses instead).
+@media (max-width: 900px) {
+  .workspace-breadcrumb {
+    display: flex !important;
+  }
+  .workspace-breadcrumb .crumb,
+  .workspace-breadcrumb .header-divider {
+    display: none;
+  }
+  .workspace-breadcrumb li:first-child + li > svg,
+  .workspace-breadcrumb li[aria-current='page'] > svg:first-child {
+    display: none;
+  }
+}
+.workspace-breadcrumb {
+  justify-content: flex-start;
+  margin-left: 0;
+  margin-right: auto;
+}

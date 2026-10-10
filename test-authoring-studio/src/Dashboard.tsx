@@ -5,8 +5,9 @@ import { Button } from './radix';
 import * as Popover from '@radix-ui/react-popover';
 import { useEffect, useState } from 'react';
 import { CircleCheck, CircleDashed, Info } from 'lucide-react';
-import { Meter } from './radix2';
+import { Meter, usePrefs } from './radix2';
 import { milestones, doneMilestones } from './progress';
+import Card from './Card';
 
 export function ContextBar({ index, config, recordStatus, revision }: { index?: Index; config?: { repositoryRoot: string; targetProject: string }; recordStatus: string; revision?: string }) {
   const { model } = useProjectModel(revision);
@@ -38,6 +39,7 @@ export function ContextBar({ index, config, recordStatus, revision }: { index?: 
 export default function Dashboard({ index, revision, onNavigate, recent = [], onSource }: { index?: Index; revision?: string; onNavigate: (tab: string) => void; recent?: string[]; onSource?: (file: string, line: number) => void }) {
   const { model } = useProjectModel(revision);
   const s = index?.stats;
+  const { prefs } = usePrefs();
   const [done, setDone] = useState(doneMilestones);
   useEffect(() => {
     const h = () => setDone(doneMilestones());
@@ -57,7 +59,7 @@ export default function Dashboard({ index, revision, onNavigate, recent = [], on
   ];
   return (
     <div className="dashboard">
-      <div className="stat-grid">
+      {prefs.showStats && <div className="stat-grid">
         {tiles.map((t) => (
           <button key={t.label} className="panel stat-tile" onClick={() => onNavigate(t.tab)}>
             <t.icon size={18} />
@@ -65,7 +67,7 @@ export default function Dashboard({ index, revision, onNavigate, recent = [], on
             <span>{t.label}</span>
           </button>
         ))}
-      </div>
+      </div>}
       {draft?.scenarioName && (
         <button className="panel continue-card" onClick={() => onNavigate('Test Generator')}>
           <span className="micro-label">CONTINUE WHERE YOU LEFT OFF</span>
@@ -75,7 +77,7 @@ export default function Dashboard({ index, revision, onNavigate, recent = [], on
         </button>
       )}
       {done.size < milestones.length && (
-        <section className="panel checklist" aria-label="Getting started">
+        <Card id="dash-getting-started" className="checklist" label="Getting started" title="Getting started" badge={<span className="subtle">{done.size} of {milestones.length} done</span>}>
           <div className="checklist-head">
             <div>
               <span className="micro-label">GETTING STARTED</span>
@@ -91,19 +93,17 @@ export default function Dashboard({ index, revision, onNavigate, recent = [], on
               </li>
             ))}
           </ul>
-        </section>
+        </Card>
       )}
       <div className="dashboard-grid">
-        <section className="panel">
-          <div className="panel-heading"><div><h2>Start authoring</h2></div></div>
+        <Card id="dash-start-authoring" title="Start authoring">
           <div className="wizard-body quick-actions">
             <Button variant="primary" onClick={() => onNavigate('Test Generator')}><Wand2 size={15} />Generate a test from inputs</Button>
             <Button onClick={() => onNavigate('Recorder')}><Circle size={15} />Record a Playwright workflow</Button>
             <Button onClick={() => onNavigate('Dictionary Inspector')}><Braces size={15} />Inspect selector dictionaries</Button>
           </div>
-        </section>
-        <section className="panel">
-          <div className="panel-heading"><div><h2>Recently opened</h2></div></div>
+        </Card>
+        <Card id="dash-recently-opened" title="Recently opened">
           <div className="wizard-body">
             {recent.length ? (
               <ul className="recent-list">{recent.map((f) => <li key={f}><button className="text-button" onClick={() => onSource?.(f, 1)}><FileCode2 size={13} />{f}</button></li>)}</ul>
@@ -111,24 +111,21 @@ export default function Dashboard({ index, revision, onNavigate, recent = [], on
               <p className="subtle">Files you open appear here.</p>
             )}
           </div>
-        </section>
-        <section className="panel">
-          <div className="panel-heading"><div><h2>Project classification</h2></div><span className="badge">Rules §11</span></div>
+        </Card>
+        <Card id="dash-project-classification" title="Project classification" badge={<><span className="badge">Rules §11</span></>}>
           <div className="wizard-body"><Indicators model={model} /></div>
-        </section>
-        <section className="panel">
-          <div className="panel-heading"><div><h2>Layers</h2></div><span className="badge">Rules §1–2</span></div>
+        </Card>
+        <Card id="dash-layers" title="Layers" badge={<><span className="badge">Rules §1–2</span></>}>
           <div className="wizard-body">
             <ul className="layer-list">{model && Object.entries(model.layers).sort((a, b) => b[1] - a[1]).map(([l, n]) => <li key={l}><span>{l}</span><strong>{n}</strong></li>)}</ul>
           </div>
-        </section>
-        <section className="panel">
-          <div className="panel-heading"><div><h2>Index diagnostics</h2></div><span className={`badge ${index?.diagnostics.length ? 'amber' : 'green'}`}>{index?.diagnostics.length ?? 0}</span></div>
+        </Card>
+        <Card id="dash-index-diagnostics" title="Index diagnostics" badge={<><span className={`badge ${index?.diagnostics.length ? 'amber' : 'green'}`}>{index?.diagnostics.length ?? 0}</span></>}>
           <div className="wizard-body">
             {index?.diagnostics.slice(0, 6).map((d) => <p className="subtle" key={d}>{d}</p>)}
             {!index?.diagnostics.length && <p className="subtle">No parse or regex diagnostics.</p>}
           </div>
-        </section>
+        </Card>
       </div>
     </div>
   );

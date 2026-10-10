@@ -57,3 +57,20 @@ it('verifies dictionary selectors against a real page', async () => {
     server.close();
   }
 }, 30000);
+it('saves a Playwright trace when tracing is enabled', async () => {
+  const server = createServer((_req, res) => { res.setHeader('Content-Type', 'text/html'); res.end('<!doctype html><button>Go</button>'); });
+  await new Promise<void>((resolve) => server.listen(0, '127.0.0.1', resolve));
+  const port = (server.address() as { port: number }).port;
+  const recorder = new Recorder();
+  try {
+    await recorder.start(`http://127.0.0.1:${port}`, true, { enabled: true, screenshots: false, snapshots: true, sources: false });
+    await recorder.context!.pages()[0].getByRole('button').click();
+    const trace = await recorder.stop();
+    expect(trace).toMatch(/recording-.*\.zip$/);
+    const { statSync, rmSync } = await import('node:fs');
+    expect(statSync(trace!).size).toBeGreaterThan(1000);
+    rmSync(trace!);
+  } finally {
+    server.close();
+  }
+}, 30000);

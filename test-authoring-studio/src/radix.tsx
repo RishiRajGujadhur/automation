@@ -9,7 +9,7 @@ import type { LucideIcon } from 'lucide-react';
 
 /* ------------------------------------------------------------------ Button */
 export type ButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & {
-  variant?: 'default' | 'primary' | 'soft' | 'ghost' | 'success';
+  variant?: 'default' | 'primary' | 'soft' | 'ghost' | 'success' | 'danger';
   size?: 'default' | 'small' | 'tiny';
   /** Render the child element (e.g. a link) with button styling via Radix Slot. */
   asChild?: boolean;
@@ -111,7 +111,7 @@ export function MenuEntries({ entries, P }: { entries: MenuEntry[]; P: typeof Dr
 }
 export function Dropdown({ entries, label, trigger, align = 'start', className = '' }: { entries: MenuEntry[]; label: string; trigger?: ReactNode; align?: 'start' | 'end'; className?: string }) {
   return (
-    <DropdownMenu.Root>
+    <DropdownMenu.Root modal={false}>
       <DropdownMenu.Trigger asChild>
         {trigger ?? (
           <button className={`icon-button ${className}`} aria-label={label} title={label}>

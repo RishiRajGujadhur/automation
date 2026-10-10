@@ -20,23 +20,25 @@ import { validate } from './validation.js';
 import { projectModel } from './projectModel.js';
 import { command, dotnet } from './core.js';
 import type { Index } from '../src/types.js';
+import { readSettings, writeSettings, settingsSchema, tracesDir } from './settings.js';
 import { WorkspaceSearch } from './stepSearch.js';
 import { mergeDictionary, proposeField, findEntry, parseDictionary, selectorRank, fieldName, type FieldProposal } from './dictionaries.js';
+const studio = readSettings();
+const allowedHosts = [studio.apiPort, studio.webPort].flatMap((p) => [`127.0.0.1:${p}`, `localhost:${p}`]);
+const allowedOrigins = allowedHosts.map((h) => `http://${h}`);
 const app = express();
 app.use(express.json({ limit: '2mb' }));
 app.use((req, res, next) => {
   const origin = req.headers.origin;
   if (
     origin &&
-    !['http://127.0.0.1:5173', 'http://localhost:5173', 'http://127.0.0.1:4310'].includes(origin)
+    !allowedOrigins.includes(origin)
   ) {
     res.status(403).json({ error: 'Origin not allowed' });
     return;
   }
   if (
-    !['127.0.0.1:4310', 'localhost:4310', '127.0.0.1:5173', 'localhost:5173'].includes(
-      req.headers.host ?? '',
-    )
+    !allowedHosts.includes(req.headers.host ?? '')
   ) {
     res.status(403).json({ error: 'Host not allowed' });
     return;
@@ -137,7 +139,7 @@ app.get('/api/recording', (_req, res) =>
   res.json({ status: recorder.status, actions: recorder.actions }),
 );
 app.post('/api/recording/start', async (req, res) => {
-  await recorder.start(z.string().url().parse(req.body.url));
+  await recorder.start(z.string().url().parse(req.body.url), false, readSettings().tracing);
   res.json({ status: recorder.status });
 });
 app.post('/api/recording/pause', (req, res) => {
@@ -145,8 +147,8 @@ app.post('/api/recording/pause', (req, res) => {
   res.json({ status: recorder.status });
 });
 app.post('/api/recording/stop', async (_req, res) => {
-  await recorder.stop();
-  res.json({ status: recorder.status });
+  const trace = await recorder.stop();
+  res.json({ status: recorder.status, trace: trace ? path.basename(trace) : null });
 });
 app.post('/api/recording/clear', (_req, res) => {
   recorder.actions = [];
@@ -237,7 +239,7 @@ app.post('/api/execution', async (req, res) => {
   execution = { status: 'running', output: '' };
   command(
     dotnet,
-    ['test', target, '--filter', filter, '--logger', 'console;verbosity=normal'],
+    ['test', target, '--filter', filter, '--logger', 'console;verbosity=normal', ...(readSettings().tracing.enabled ? ['--environment', 'STUDIO_PLAYWRIGHT_TRACING=1'] : [])],
     '',
     config.repositoryRoot,
   )
@@ -302,6 +304,22 @@ app.get('/api/demo/result', (_req, res) =>
       '<h1>Dayforce local result</h1><p>Deterministic recording fixture. No external service required.</p>',
     ),
 );
+// Studio settings (ports, tracing). Port changes apply after restarting `npm run dev`.
+app.get('/api/settings', (_req, res) => res.json({ ...readSettings(), running: { webPort: studio.webPort, apiPort: studio.apiPort } }));
+app.post('/api/settings', (req, res) => {
+  const next = settingsSchema.parse(req.body);
+  writeSettings(next);
+  res.json({ ...next, restartRequired: next.webPort !== studio.webPort || next.apiPort !== studio.apiPort });
+});
+app.get('/api/traces', async (_req, res) => {
+  const files = await fs.readdir(tracesDir).catch(() => [] as string[]);
+  const items = await Promise.all(files.filter((f) => /^[\w.-]+\.zip$/.test(f)).map(async (name) => ({ name, size: (await fs.stat(path.join(tracesDir, name))).size, modified: (await fs.stat(path.join(tracesDir, name))).mtime })));
+  res.json(items.sort((a, b) => +b.modified - +a.modified).slice(0, 20));
+});
+app.get('/api/traces/:name', (req, res) => {
+  const name = z.string().regex(/^[\w.-]+\.zip$/, 'Invalid trace name').parse(req.params.name);
+  res.download(path.join(tracesDir, name), name);
+});
 app.use(express.static(path.join(projectRoot, 'dist')));
 app.use(
   (error: Error, _req: express.Request, res: express.Response, _next: express.NextFunction) => {
@@ -309,4 +327,4 @@ app.use(
     res.status(400).json({ error: error.message });
   },
 );
-app.listen(4310, '127.0.0.1', () => console.log('Local API: http://127.0.0.1:4310'));
+app.listen(studio.apiPort, '127.0.0.1', () => console.log(`Local API: http://127.0.0.1:${studio.apiPort} (web UI on ${studio.webPort})`));

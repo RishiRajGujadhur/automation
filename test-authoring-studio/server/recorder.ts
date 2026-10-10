@@ -2,12 +2,17 @@ import { chromium, type Browser, type BrowserContext } from 'playwright';
 import { randomUUID } from 'node:crypto';
 import type { Action } from '../src/types.js';
 import { redact } from './core.js';
+import path from 'node:path';
+import fs from 'node:fs/promises';
+import { tracesDir } from './settings.js';
+type Tracing = { enabled: boolean; screenshots: boolean; snapshots: boolean; sources: boolean };
 export class Recorder {
   browser?: Browser;
   context?: BrowserContext;
   actions: Action[] = [];
   status = 'idle';
-  async start(url: string, headless = false) {
+  private tracing = false;
+  async start(url: string, headless = false, tracing?: Tracing) {
     if (this.browser) await this.stop();
     const parsed = new URL(url);
     if (!['http:', 'https:'].includes(parsed.protocol))
@@ -15,6 +20,8 @@ export class Recorder {
     this.actions = [];
     this.browser = await chromium.launch({ headless });
     this.context = await this.browser.newContext();
+    this.tracing = !!tracing?.enabled;
+    if (tracing?.enabled) await this.context.tracing.start({ screenshots: tracing.screenshots, snapshots: tracing.snapshots, sources: tracing.sources, title: 'TestAuthoring Studio recording' });
     this.status = 'recording';
     await this.context.exposeBinding('__studioRecord', (_, data: Omit<Action, 'id'>) => {
       if (this.status === 'recording') {
@@ -151,10 +158,19 @@ export class Recorder {
       await scratch?.close();
     }
   }
-  async stop() {
+  /** Stops recording; when tracing was on, saves a Playwright trace (.zip) and returns its path. */
+  async stop(): Promise<string | undefined> {
     this.status = 'stopped';
+    let trace: string | undefined;
+    if (this.tracing && this.context) {
+      await fs.mkdir(tracesDir, { recursive: true });
+      trace = path.join(tracesDir, `recording-${new Date().toISOString().replace(/[:.]/g, '-')}.zip`);
+      await this.context.tracing.stop({ path: trace }).catch(() => (trace = undefined));
+      this.tracing = false;
+    }
     await this.browser?.close();
     this.browser = undefined;
     this.context = undefined;
+    return trace;
   }
 }

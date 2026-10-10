@@ -13,6 +13,7 @@ import { Select, Checkbox, Button } from './radix';
 import * as Tabs from '@radix-ui/react-tabs';
 import { useLocalState as useTabState } from './ui';
 import { xmlExtensions } from './editor/xml';
+import { labelled } from './editor/a11y';
 const dictXml = xmlExtensions(true);
 
 export default function DictionaryInspector({ revision = '', compact = false, onSource, onGenerate }: { revision?: string; compact?: boolean; onSource?: (file: string, line: number) => void; onGenerate?: (entry: DictionaryEntry) => void }) {
@@ -71,7 +72,7 @@ export default function DictionaryInspector({ revision = '', compact = false, on
       </div>
       {error && <p role="alert" className="inline-error">{error}</p>}
       <div className="dictionary-grid">
-        <div className="dictionary-fields" role="listbox" aria-label="Dictionary fields" onKeyDown={arrowNav}>
+        <div className="dictionary-fields" role="group" aria-label="Dictionary fields" onKeyDown={arrowNav}>
           {visible.map((e) => (
             <RowMenu
               key={e.id}
@@ -85,7 +86,7 @@ export default function DictionaryInspector({ revision = '', compact = false, on
                 { label: `Show all fields in ${e.section}`, icon: Search, onSelect: () => { setQuery(e.section); setOffset(0); } },
               ]}
             >
-              <button data-nav-item role="option" aria-selected={selected?.id === e.id} className={`dictionary-field ${selected?.id === e.id ? 'selected' : ''}`} onClick={() => setSelected(e)} onFocus={() => setSelected(e)}>
+              <button data-nav-item aria-pressed={selected?.id === e.id} className={`dictionary-field ${selected?.id === e.id ? 'selected' : ''}`} onClick={() => setSelected(e)} onFocus={() => setSelected(e)}>
                 <strong><Highlight text={`${e.section} / ${e.field}`} query={query} /></strong>
                 <span>{e.page || 'Unnamed page'} · {e.fieldType} · {e.selectors.length} selector{e.selectors.length === 1 ? '' : 's'}{e.selectors.some((x) => x.warnings.length) ? ' · ⚠' : ''}</span>
               </button>
@@ -123,13 +124,13 @@ export default function DictionaryInspector({ revision = '', compact = false, on
                 {action === 'fill' && <input aria-label="Test data value" placeholder="Test data value" value={value} onChange={(e) => setValue(e.target.value)} />}
               </div>
               <div className="code-with-copy">
-                <CodeMirror value={code} theme={oneDark} extensions={[StreamLanguage.define(csharp)]} editable={false} />
+                <CodeMirror value={code} theme={oneDark} extensions={[StreamLanguage.define(csharp), labelled('Locator code', true)]} editable={false} />
                 <CopyButton text={code} label="Copy locator code" />
               </div>
                 </Tabs.Content>
                 {!compact && (
                   <Tabs.Content value="source" className="tabs-content">
-                    <CodeMirror value={source} theme={oneDark} height="320px" extensions={dictXml} editable={false} />
+                    <CodeMirror value={source} theme={oneDark} height="320px" extensions={[...dictXml, labelled(`Dictionary source ${selected.file}`, true)]} editable={false} />
                   </Tabs.Content>
                 )}
               </Tabs.Root>

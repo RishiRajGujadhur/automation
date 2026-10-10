@@ -7,6 +7,7 @@ import { FileCode2, Save, TriangleAlert, Check } from 'lucide-react';
 import { api, type FilePreview } from './api';
 import type { Index } from './types';
 import { Button } from './radix';
+import { labelled } from './editor/a11y';
 
 /** Shows one previewed file diff; approval is the only write and consumes the one-time preview token. */
 export default function DiffApproval({ preview, onApplied, height = '260px' }: { preview: FilePreview; onApplied?: (index: Index) => void; height?: string }) {
@@ -31,7 +32,7 @@ export default function DiffApproval({ preview, onApplied, height = '260px' }: {
           {n}
         </div>
       ))}
-      <CodeMirror value={preview.diff} theme={oneDark} extensions={[StreamLanguage.define(diffMode)]} height={height} editable={false} />
+      <CodeMirror value={preview.diff} theme={oneDark} extensions={[StreamLanguage.define(diffMode), labelled(`Diff for ${preview.file}`, true)]} height={height} editable={false} />
       {error && <p role="alert" className="inline-error">{error}</p>}
       <Button
         variant="primary"

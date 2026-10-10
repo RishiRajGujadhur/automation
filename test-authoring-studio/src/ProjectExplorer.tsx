@@ -3,6 +3,7 @@ import { Folder, FileCode2, ArrowUp, Copy, FolderOpen } from 'lucide-react';
 import { RowMenu, copyText, useLocalState } from './ui';
 import ProjectModelTree, { Indicators, useProjectModel } from './ProjectModelTree';
 import { Button } from './radix';
+import Card from './Card';
 
 export default function ProjectExplorer({ revision, onSource }: { revision?: string; onSource: (file: string, line: number) => void }) {
   const [folder, setFolder] = useLocalState('explorer:folder', '.');
@@ -24,13 +25,12 @@ export default function ProjectExplorer({ revision, onSource }: { revision?: str
   }, [folder, offset, revision]);
   return (
     <div className="explorer-layout">
-      <section className="panel">
-        <div className="panel-heading"><div><h2>Project model</h2></div><span className="badge">Layers §1–3</span></div>
+      <Card id="explorer-project-model" title="Project model" badge={<><span className="badge">Layers §1–3</span></>}>
         <div className="wizard-body">
           <Indicators model={model} />
           <ProjectModelTree model={model} onSource={onSource} />
         </div>
-      </section>
+      </Card>
       <section className="panel project-browser">
         <div className="panel-heading">
           <nav className="breadcrumbs" aria-label="Folder path">

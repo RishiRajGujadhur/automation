@@ -10,7 +10,7 @@ const RowMenuItems = createContext<{ items: MenuItem[]; label: string } | null>(
 export function RowMenu({ items, children, label = 'Actions' }: { items: MenuItem[]; children: ReactNode; label?: string }) {
   return (
     <RowMenuItems.Provider value={{ items, label }}>
-      <ContextMenu.Root>
+      <ContextMenu.Root modal={false}>
         <ContextMenu.Trigger asChild>{children}</ContextMenu.Trigger>
         <ContextMenu.Portal>
           <ContextMenu.Content className="context-menu" aria-label={label}>

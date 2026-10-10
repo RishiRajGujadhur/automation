@@ -27,7 +27,7 @@ export function studioEntries({ pages, primary, active, commands, onNavigate }: 
  */
 export default function AppMenu({ children, ...props }: Props & { children: ReactNode }) {
   return (
-    <ContextMenu.Root>
+    <ContextMenu.Root modal={false}>
       <ContextMenu.Trigger asChild>{children}</ContextMenu.Trigger>
       <ContextMenu.Portal>
         <ContextMenu.Content className="context-menu app-menu" aria-label="Studio menu">

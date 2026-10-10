@@ -36,7 +36,7 @@ test('step lint, suggestions, file state, palette commands, undo and accept-all'
   await page.keyboard.type('the user searches');
   await expect(page.getByRole('list', { name: 'Step suggestions' })).toBeVisible();
   await page.locator('.suggestion').first().click();
-  await expect(textarea).toHaveValue(/When the user searches for "<searchText>"/);
+  await expect(textarea).toContainText('When the user searches for "<searchText>"');
   await expect(page.getByText('New file. It will be created on save.')).toBeVisible();
   await page.getByLabel('Target feature file').fill('my login flow');
   await page.getByLabel('Scenario name').click();

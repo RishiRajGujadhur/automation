@@ -17,13 +17,15 @@ import { WorkspaceForm, RecordForm, NewFeatureForm, ParametersForm, RunForm } fr
 import { Select, Checkbox, Button } from './radix';
 import * as Dialog from '@radix-ui/react-dialog';
 import * as Toast from '@radix-ui/react-toast';
-import * as Tabs from '@radix-ui/react-tabs';
+import * as ToggleGroup from '@radix-ui/react-toggle-group';
 import * as NavigationMenu from '@radix-ui/react-navigation-menu';
 import { IconButton, IndeterminateProgress, Separator, Switch, Segmented, usePrefs, useConfirm, haptic, withTransition, Meter } from './radix2';
 import { markDone } from './progress';
+import StudioSettings from './StudioSettings';
 import SidebarResizer, { SIDEBAR_DEFAULT } from './SidebarResizer';
 import GherkinEditor from './editor/GherkinEditor';
 import { xmlExtensions } from './editor/xml';
+import { labelled } from './editor/a11y';
 import AppMenu, { AppMenuButton } from './AppMenu';
 import '@fontsource-variable/dm-sans';
 import '@fontsource/ibm-plex-mono/400.css';
@@ -93,6 +95,7 @@ import './styles.scss';
 import './explorer.scss';
 import './generator.scss';
 import './modern.scss';
+import './layout.scss';
 
 const demo: Action[] = [
   { id: 'd1', action: 'goto', url: 'https://www.google.com/' },
@@ -160,7 +163,9 @@ export default function App() {
   const [matches, setMatches] = useState<Match[]>([]);
   const [accepted, setAccepted] = useState<Record<string, string>>({});
   const [recordStatus, setRecordStatus] = useState('demo');
-  const [url, setUrl] = useState('http://127.0.0.1:4310/api/demo');
+  // Same origin as the UI (proxied to the API), so it follows the configured ports.
+  const [url, setUrl] = useState(`${location.origin}/api/demo`);
+  const [lastTrace, setLastTrace] = useState<string | null>(null);
   const [preview, setPreview] = useState<any>();
   const [draftName, setDraftName] = useState('Search for Dayforce');
   const [newFile, setNewFile] = useState('Features/NewFeature.feature');
@@ -229,6 +234,12 @@ export default function App() {
   const now = useNow(30000);
   const saveRef = useRef<() => void>(() => {});
   const dirty = !!source && source !== (feature?.source ?? '');
+  const pageDescription =
+    tab === 'Features'
+      ? view === 'recorder'
+        ? 'Turn browser interactions into reusable, repository-aware tests.'
+        : 'Assemble tests from the capabilities your project already contains.'
+      : (headings[tab] ?? 'Discover existing automation, with evidence from your repository.');
   const pageTitle = tab === 'Features' ? (view === 'recorder' ? 'Playwright recorder' : view === 'builder' ? 'Scenario builder' : (feature?.name ?? 'Feature editor')) : tab;
   useEffect(() => {
     document.title = `${dirty ? '● ' : ''}${pageTitle} · TestAuthoring Studio`;
@@ -488,6 +499,7 @@ export default function App() {
   return (
     <AppMenu {...menuProps}>
     <div className="studio-shell">
+      <a className="skip-link" href="#main" onClick={(e) => { e.preventDefault(); document.getElementById('main')?.focus(); }}>Skip to main content</a>
       {/* Text inputs and editors keep the browser's native menu (copy/paste/spellcheck). */}
       <div
         style={{ display: 'contents' }}
@@ -538,12 +550,26 @@ export default function App() {
           </span>
           <Badge tone="purple">LOCAL</Badge>
         </div>
-        <div className="workspace-breadcrumb">
-          <span className="header-divider" />
-          <Folder size={15} />
-          <span>{index?.workspace ?? 'Loading workspace'}</span>
-          <ChevronDown size={13} />
-        </div>
+        <nav className="workspace-breadcrumb page-heading" aria-label="Breadcrumb">
+          <span className="header-divider" aria-hidden="true" />
+          <ol>
+            <li>
+              <button className="crumb" onClick={() => setModal('settings')} title="Workspace settings">
+                <Folder size={14} aria-hidden="true" />
+                {index?.workspace ?? 'Loading workspace'}
+                <ChevronDown size={12} aria-hidden="true" />
+              </button>
+            </li>
+            {tab !== pageTitle && <li className="crumb-section"><ChevronRight size={12} aria-hidden="true" />{tab}</li>}
+            <li aria-current="page">
+              <ChevronRight size={12} aria-hidden="true" />
+              <h1 title={pageDescription}>
+                {pageTitle}
+                {tab === 'Features' && view === 'editor' && dirty && <span className="dirty-dot" role="img" aria-label="Unsaved changes" title="Unsaved changes (Ctrl/Cmd+S to preview)" />}
+              </h1>
+            </li>
+          </ol>
+        </nav>
         <Button
           id="guide-me" className="guide-button"
           disabled={!index || busy}
@@ -624,9 +650,23 @@ export default function App() {
           <span className="record-dot" />
           Playwright Recorder<Badge>β</Badge>
         </button>
-        <div className="local-state">
-          <span />
-          Local workspace
+        <div className="nav-trailing">
+          {tab === 'Features' ? (
+            <ToggleGroup.Root type="single" className="segmented" aria-label="Feature view" value={view} onValueChange={(v) => { if (v) withTransition(() => setView(v)); }}>
+              {[
+                { id: 'editor', icon: Code2, label: 'Editor' },
+                { id: 'builder', icon: Blocks, label: 'Builder' },
+                { id: 'recorder', icon: Circle, label: 'Recorder' },
+              ].map((v) => (
+                <ToggleGroup.Item key={v.id} value={v.id} className="segmented-item" aria-label={v.label}>
+                  <v.icon size={14} aria-hidden="true" />
+                  {v.label}
+                </ToggleGroup.Item>
+              ))}
+            </ToggleGroup.Root>
+          ) : (
+            <span className="local-state"><span aria-hidden="true" />Local workspace</span>
+          )}
         </div>
       </nav>
       <div className="app-body">
@@ -689,49 +729,8 @@ export default function App() {
         {prefs.sidebar && !prefs.focus && (
           <SidebarResizer width={sidebarWidth} onWidth={setSidebarWidth} onCollapse={() => { setPrefs({ sidebar: false }); setSidebarWidth(SIDEBAR_DEFAULT); setNotice('Explorer hidden. Press Ctrl/Cmd+B to show it again.'); }} label="Resize feature explorer" />
         )}
-        <main className="main-content">
-          <div className="page-heading">
-            <div className="page-title">
-              <span className="eyebrow">
-                WORKSPACE <ChevronRight size={12} /> {tab.toUpperCase()}
-              </span>
-              <h1>
-                {tab === 'Features'
-                  ? view === 'recorder'
-                    ? 'Playwright recorder'
-                    : view === 'builder'
-                      ? 'Scenario builder'
-                      : (feature?.name ?? 'Feature editor')
-                  : tab}
-                {tab === 'Features' && view === 'editor' && dirty && <span className="dirty-dot" title="Unsaved changes (Ctrl/Cmd+S to preview)" aria-label="Unsaved changes" />}
-              </h1>
-              <p>
-                {tab === 'Features'
-                  ? view === 'recorder'
-                    ? 'Turn browser interactions into reusable, repository-aware tests.'
-                    : 'Assemble tests from the capabilities your project already contains.'
-                  : (headings[tab] ?? 'Discover existing automation, with evidence from your repository.')}
-              </p>
-            </div>
-            <div className="heading-actions">
-              {tab === 'Features' && (
-                <Tabs.Root value={view} onValueChange={(v) => withTransition(() => setView(v))} activationMode="manual">
-                  <Tabs.List className="segmented" aria-label="Feature views">
-                    {[
-                      { id: 'editor', icon: Code2, label: 'Editor' },
-                      { id: 'builder', icon: Blocks, label: 'Builder' },
-                      { id: 'recorder', icon: Circle, label: 'Recorder' },
-                    ].map((v) => (
-                      <Tabs.Trigger key={v.id} value={v.id} className="segmented-item">
-                        <v.icon size={14} />
-                        {v.label}
-                      </Tabs.Trigger>
-                    ))}
-                  </Tabs.List>
-                </Tabs.Root>
-              )}
-            </div>
-          </div>
+        <main className="main-content" id="main" tabIndex={-1} aria-describedby="page-description">
+          <p id="page-description" className="sr-only">{pageDescription}</p>
           {['Dashboard', 'Test Generator'].includes(tab) && (
             <ContextBar index={index} config={config} recordStatus={recordStatus} revision={revision} />
           )}
@@ -763,6 +762,11 @@ export default function App() {
                   </strong>
                   <span className="toolbar-separator" />
                   <span className="subtle">{actions.length} actions captured</span>
+                  {lastTrace && (
+                    <a className="button tiny ghost" href={`/api/traces/${encodeURIComponent(lastTrace)}`} download>
+                      Download trace
+                    </a>
+                  )}
                 </div>
                 <div className="toolbar-buttons">
                   {['recording', 'paused'].includes(recordStatus) ? (
@@ -785,8 +789,10 @@ export default function App() {
                         size="small"
                         onClick={() =>
                           work(async () => {
-                            await api('/recording/stop', {});
+                            const r = await api<{ trace: string | null }>('/recording/stop', {});
                             setRecordStatus('stopped');
+                            setLastTrace(r.trace);
+                            if (r.trace) setNotice(`Trace saved: ${r.trace}`);
                           })
                         }
                       >
@@ -1329,7 +1335,7 @@ export default function App() {
                   value={draftSource()}
                   theme={oneDark}
                   height="340px"
-                  extensions={[StreamLanguage.define(gherkin)]}
+                  extensions={[StreamLanguage.define(gherkin), labelled('Generated Gherkin preview', true)]}
                   editable={false}
                 />
                 <div className="editor-bottom">
@@ -1579,7 +1585,7 @@ export default function App() {
                     <CodeMirror
                       value={preview.diff}
                       theme={oneDark}
-                      extensions={[StreamLanguage.define(diffMode)]}
+                      extensions={[StreamLanguage.define(diffMode), labelled(`Diff for ${preview.file}`, true)]}
                       height="360px"
                       editable={false}
                     />
@@ -1613,11 +1619,12 @@ export default function App() {
                   <CodeMirror
                     value={sourcePeek}
                     theme={oneDark}
-                    extensions={
-                      sourceTitle.includes('.xml:')
+                    extensions={[
+                      ...(sourceTitle.includes('.xml:')
                         ? xmlExtensions(true)
-                        : [StreamLanguage.define(sourceTitle.includes('.feature:') ? gherkin : csharp)]
-                    }
+                        : [StreamLanguage.define(sourceTitle.includes('.feature:') ? gherkin : csharp)]),
+                      labelled(`Source of ${sourceTitle}`, true),
+                    ]}
                     height="460px"
                     editable={false}
                   />
@@ -1691,29 +1698,7 @@ export default function App() {
                     </Button>
                   </>
                 )}
-                {modal === 'preferences' && (
-                  <div className="prefs">
-                    <section>
-                      <h3>Display</h3>
-                      <div className="pref-row"><span>Density</span><Segmented label="Density" value={prefs.density} onValueChange={(v) => setPrefs({ density: v })} options={[{ value: 'comfortable', label: 'Comfortable' }, { value: 'compact', label: 'Compact' }]} /></div>
-                      <div className="pref-row"><span>Text size</span><Segmented label="Text size" value={prefs.textSize} onValueChange={(v) => setPrefs({ textSize: v })} options={[{ value: 'small', label: 'A−' }, { value: 'medium', label: 'A' }, { value: 'large', label: 'A+' }]} /></div>
-                      <div className="pref-row"><span>Accent</span><Segmented label="Accent colour" value={prefs.accent} onValueChange={(v) => setPrefs({ accent: v })} options={(['violet', 'teal', 'blue', 'amber'] as const).map((a) => ({ value: a, label: <span className={`swatch ${a}`} aria-label={a} /> }))} /></div>
-                    </section>
-                    <Separator />
-                    <section>
-                      <h3>Accessibility</h3>
-                      <Switch id="pref-motion" label="Reduce motion" description="Turns off animations and page transitions." checked={prefs.motion === 'reduce'} onCheckedChange={(v) => setPrefs({ motion: v ? 'reduce' : 'system' })} />
-                      <Switch id="pref-contrast" label="High contrast" description="Stronger borders and brighter secondary text." checked={prefs.contrast === 'high'} onCheckedChange={(v) => setPrefs({ contrast: v ? 'high' : 'normal' })} />
-                      <Switch id="pref-haptics" label="Haptic feedback" description="Short vibrations on touch devices when you accept or remove items." checked={prefs.haptics} onCheckedChange={(v) => setPrefs({ haptics: v })} />
-                    </section>
-                    <Separator />
-                    <section>
-                      <h3>Layout</h3>
-                      <Switch id="pref-sidebar" label="Show feature explorer" description="Ctrl/Cmd+B" checked={prefs.sidebar} onCheckedChange={(v) => setPrefs({ sidebar: v })} />
-                      <Switch id="pref-focus" label="Focus mode" description="Hides navigation chrome. Ctrl/Cmd+." checked={prefs.focus} onCheckedChange={(v) => setPrefs({ focus: v })} />
-                    </section>
-                  </div>
-                )}
+                {modal === 'preferences' && <StudioSettings onNotice={setNotice} />}
                 {modal === 'shortcuts' && (
                   <dl className="shortcut-list">
                     {shortcuts.map(([k, d]) => (
