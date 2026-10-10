@@ -225,14 +225,14 @@ export async function gherkinCompletions(ctx: CompletionContext): Promise<Comple
     try {
       const { trie } = await corpusSteps();
       const seen = new Set(items.map((b) => bindingSnippet(b).replace(/\$\{([^}]+)\}/g, '$1').toLowerCase()));
-      written = trie.complete(`${resolved} ${typed}`, 6).map((x) => x.text.slice(resolved.length + 1)).filter((t) => t !== typed && !seen.has(t.toLowerCase())).map((t, i) => ({ label: t, detail: 'used in features', type: 'text', boost: 10 - i }));
+      written = trie.complete(`${resolved} ${typed}`, 6).map((x) => x.text.slice(resolved.length + 1)).filter((t) => t !== typed && !seen.has(t.toLowerCase())).map((t, i) => ({ label: t, detail: 'used in features', type: 'text', boost: -10 - i }));
     } catch { /* corpus unavailable */ }
   }
   if (ctx.aborted) return null;
   return {
     from: line.from + m[1].length + m[2].length + (before.length - m[1].length - m[2].length - typed.length),
     filter: false,
-    options: [...written, ...items.map((b, i) => {
+    options: [...items.map((b, i) => {
       const tpl = bindingSnippet(b);
       return snippetCompletion(tpl, {
         label: tpl.replace(/\$\{([^}]+)\}/g, '$1'),
@@ -251,7 +251,7 @@ export async function gherkinCompletions(ctx: CompletionContext): Promise<Comple
         type: 'function',
         boost: 50 - i,
       });
-    })],
+    }), ...written],
   };
 }
 

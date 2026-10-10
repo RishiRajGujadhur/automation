@@ -173,6 +173,26 @@ The app is checked against the W3C standards it relies on (HTML, CSS, WAI-ARIA) 
 - **Still in place from earlier:** labelled inputs with linked hints and errors (`aria-describedby`, `aria-invalid`), reduced-motion and contrast preferences, 44 px touch targets on coarse pointers, and the Radix primitives' keyboard and screen-reader behaviour.
 - **Limits:** automated checks catch most, not all, WCAG issues. Screen-reader passes (NVDA/VoiceOver) and a keyboard-only walkthrough remain worthwhile before a release.
 
+### Test Design (deterministic algorithms)
+
+**Test Design** is an Advanced page (⋯ menu, Ctrl/Cmd+K, Alt+5, `#/test-design`). It runs 94 non-AI algorithms from `src/algorithms/` over the whole feature corpus (`GET /api/design/corpus`). Each tool is a tab, and the last tab you used is remembered.
+
+| Tool | What it does | Algorithms |
+| --- | --- | --- |
+| **Examples generator** | Parameters (or CSV import) → a Scenario Outline Examples table, with a t-way coverage meter. Constraints (`a = x & b = y`, `if a = x then b != y`), seed rows, weights (`value*3`), `18..65` boundary values, `[0..17|18..64]` classes. Includes a decision table with minimized rules. | IPOG, AETG, covertable, orthogonal arrays, each-choice, base-choice, seeded random, Cartesian, BVA, equivalence partitioning, Quine–McCluskey |
+| **Step library** | Searchable reusable steps with usage counts, "parameterize repeated steps" proposals, similar-step clusters with a threshold slider, **rename everywhere** (Cucumber expression → new wording, diff preview per file, approve to write), expression converters. | BM25, fuzzy, trie, inverted index, BK-tree, frecency, Aho–Corasick, 11 similarity measures, union-find / HAC / DBSCAN, MinHash-LSH, SimHash |
+| **Suite optimizer** | The fewest scenarios that still cover every tag and/or distinct step; run order with APFD. | Greedy / weighted set cover, HGS, exact branch and bound, simulated annealing, genetic, total/additional greedy, adaptive random |
+| **Flow generator** | `From -> To : action [cost]` state machine → Gherkin scenarios, plus dead-state warnings, a route finder and feature dependency order. | Transition, state, 1-switch and prime-path coverage, Chinese postman + Hierholzer, simple paths, random walks, BFS, Dijkstra, Tarjan, Kahn |
+| **Duplicates & smells** | Missing Then, long scenarios, conjunction steps, imperative UI detail, keyword order, Outline/Examples mismatches, duplicate names, duplicate scenarios, readability. | Rule checks, scenario fingerprints, Flesch reading ease |
+| **Results & flakiness** | Drop JUnit XML or Cucumber JSON reports; history is stored per browser. | Flip rate, entropy, flakiness score, Wilson interval, EWMA, Beta posterior |
+| **Plans & filters** | Cucumber tag expressions, folder filter, saved filters, test plans/cycles with per-scenario status, tag co-occurrence heat map. | Shunting-yard parser, co-occurrence matrix |
+| **Living docs** | HTML (printable, dark-mode aware) or Markdown spec with the latest imported status. | Status roll-up |
+| **Similarity lab** | Compare two steps with every enabled measure, phonetic code and stemmer. | — |
+
+The **feature editor** uses the same library: steps already written in feature files appear in autocomplete after the bindings, a step that is almost identical to an existing one gets a **Use existing step** quick fix (quoted values are kept), and scenario smells show as info diagnostics.
+
+**Settings → Algorithms** lists every algorithm with a switch and an ⓘ tooltip explaining it. There are also per-category switches, Enable all / Disable all / Reset, and an "N of 94 on" count. Settings search matches what an algorithm does (try "phonetic"). A tool whose algorithm is off says so and offers **Turn on**. The full checklist and research notes are in [PLAN.md](PLAN.md).
+
 ### Test Generator wizard
 
 The four steps form a **wizard**: one step at a time, built on Radix Tabs. I chose this over a driver.js-style tour because it gates progress and keeps step state. The existing Joyride tour remains for walkthroughs.

@@ -254,7 +254,7 @@ export default function StudioSettings({ onNotice, onWorkspace, shortcuts, onClo
                 <div className="settings-row-text">
                   <h3>
                     <Highlight text={r.title} query={q} />
-                    {r.tip && <Tip content={<span className="tooltip-wide">{r.tip}</span>} side="top"><button type="button" className="info-tip" aria-label={`About ${r.title}: ${r.tip}`}><Info size={13} aria-hidden="true" /></button></Tip>}
+                    {r.tip && <Tip content={<span className="tooltip-wide">{r.tip}</span>} side="top"><button type="button" className="info-tip" aria-label={`About ${r.title}`}><Info size={13} aria-hidden="true" /></button></Tip>}
                   </h3>
                   {r.description && <p><Highlight text={r.description} query={q} /></p>}
                 </div>
