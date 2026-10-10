@@ -5,7 +5,7 @@ import { useStepSearch } from './useStepSearch';
 import type { Binding } from './types';
 
 export type PaletteCommand = { label: string; run: () => void; shortcut?: string };
-const pages = ['Dashboard', 'Test Generator', 'Project Explorer', 'Dictionary Inspector', 'Config', 'Step Catalog', 'Backgrounds', 'Selectors', 'Scenario Builder', 'Playwright Recorder', 'Feature Editor'];
+const pages = ['Dashboard', 'Test Generator', 'Project Explorer', 'Dictionary Inspector', 'Test Design', 'Config', 'Step Catalog', 'Backgrounds', 'Selectors', 'Scenario Builder', 'Playwright Recorder', 'Feature Editor'];
 
 export default function SearchPalette({ open, onOpenChange, onNavigate, onAdd, revision, commands = [], recentPages = [] }: { open: boolean; onOpenChange: (open: boolean) => void; onNavigate: (name: string) => void; onAdd: (binding: Binding) => void; revision?: string; commands?: PaletteCommand[]; recentPages?: string[] }) {
   const [query, setQuery] = useState('');

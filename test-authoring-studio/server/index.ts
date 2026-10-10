@@ -102,6 +102,8 @@ app.get('/api/dictionary/tree',async(_req,res)=>{
  res.json([...tree.values()].map(t=>({...t,fields:[...t.fields].sort()})));
 });
 app.get('/api/features/folders',async(_req,res)=>{const i=await ensure();res.json([...new Set(i.features.map(f=>f.file.split('/').slice(0,-1).join('/')).filter(Boolean))].sort());});
+// Test Design tools run client-side over the whole feature corpus; bindings are trimmed to what they need.
+app.get('/api/design/corpus',async(_req,res)=>{const i=await ensure();res.json({revision:i.revision,features:i.features.map(f=>({file:f.file,name:f.name,tags:f.tags,line:f.line,source:f.source,scenarios:f.scenarios,backgrounds:f.backgrounds})),bindings:i.stepDefinitions.map(b=>({id:b.id,keyword:b.keyword,pattern:b.pattern,expression:b.expression,usages:b.usages,file:b.file,line:b.line,parameters:b.parameters}))});});
 app.get('/api/health',(_req,res)=>res.json({ok:true,scannedAt:index?.scannedAt??null}));
 app.get('/api/project/model',async(_req,res)=>{res.json(await projectModel(config,await ensure()));});
 app.get('/api/project/files',async(req,res)=>{const folder=z.string().default('.').parse(req.query.folder);const dir=await confined(config.repositoryRoot,folder);const entries=await fs.readdir(dir,{withFileTypes:true});const {offset,limit}=paging.parse(req.query);const filtered=entries.filter(e=>!e.isSymbolicLink()&&!e.name.startsWith('.')&&!config.ignoredDirectories.includes(e.name)).sort((a,b)=>Number(b.isDirectory())-Number(a.isDirectory())||a.name.localeCompare(b.name));res.json({folder,items:filtered.slice(offset,offset+limit).map(e=>({name:e.name,file:path.relative(config.repositoryRoot,path.join(dir,e.name)).replaceAll('\\','/'),directory:e.isDirectory()})),total:filtered.length,hasNext:offset+limit<filtered.length});});

@@ -6,6 +6,7 @@ import Dashboard, { ContextBar } from './Dashboard';
 import TestGenerator, { type GeneratorSeed } from './TestGenerator';
 import DictionaryInspector from './DictionaryInspector';
 import ProjectExplorer from './ProjectExplorer';
+import TestDesign, { designTools } from './TestDesign';
 import StepCatalogue from './StepCatalogue';
 import SearchPalette from './SearchPalette';
 import RecordingDictionary from './RecordingDictionary';
@@ -87,6 +88,7 @@ import {
   Link2,
   Maximize2,
   PanelLeft,
+  FlaskConical,
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import type { Index, Feature, Binding, Action, Match } from './types';
@@ -97,6 +99,7 @@ import './generator.scss';
 import './modern.scss';
 import './layout.scss';
 import './theme.scss';
+import './design.scss';
 
 const demo: Action[] = [
   { id: 'd1', action: 'goto', url: 'https://www.google.com/' },
@@ -112,6 +115,7 @@ const tabs = [
   { name: 'Dictionary Inspector', icon: Braces, shortcut: 'Alt+4' },
 ] as const;
 const moreTabs = [
+  { name: 'Test Design', icon: FlaskConical },
   { name: 'Step Catalog', icon: BookOpen },
   { name: 'Backgrounds', icon: Blocks },
   { name: 'Selectors', icon: ScanLine },
@@ -121,6 +125,7 @@ const moreTabs = [
 const shortcuts: [string, string][] = [
   ['Ctrl/Cmd + K', 'Command palette: go to any page or add a step'],
   ['Alt + 1…4', 'Main pages in navigation order (Basic: Dashboard, Test Generator, Recorder)'],
+  ['Alt + 5', 'Test Design (Advanced mode)'],
   ['Ctrl/Cmd + Shift + A', 'Switch between Basic and Advanced mode'],
   ['/', 'Search feature files'],
   ['?', 'Show this shortcut list'],
@@ -139,6 +144,7 @@ const headings: Record<string, string> = {
   'Test Generator': 'Inputs, dictionary match, locator flow and the validation gate in one place.',
   'Dictionary Inspector': 'XML selector dictionaries in document order, with optional browser verification.',
   'Project Explorer': 'Repository files by architectural layer.',
+  'Test Design': 'Deterministic test-design algorithms: combinatorial Examples, flows, suite optimization, smells, flakiness and living docs.',
   Config: 'Workspace configuration for scanning and authoring.',
 };
 function Icon({ icon: Icon, className = '' }: { icon: LucideIcon; className?: string }) {
@@ -188,6 +194,7 @@ export default function App() {
   const [mobileExplorer, setMobileExplorer] = useState(false);
   const [activeFolder, setActiveFolder] = useState<string>();
   const [paletteOpen, setPaletteOpen] = useState(false);
+  const [designKey, setDesignKey] = useState(0);
   const [generatorSeed, setGeneratorSeed] = useState<GeneratorSeed>();
   const [edges, setEdges] = useState<Index['callEdges']>([]);
   const revision = index?.revision;
@@ -358,6 +365,7 @@ export default function App() {
           if (n === 3) { setTab('Features'); setView('recorder'); }
         } else setTab(tabs[n - 1].name);
       }
+      if (e.altKey && e.key === '5' && modeRef.current === 'advanced') { e.preventDefault(); setTab('Test Design'); }
       if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key.toLowerCase() === 'a') {
         e.preventDefault();
         setPrefs({ mode: modeRef.current === 'advanced' ? 'basic' : 'advanced' });
@@ -550,6 +558,7 @@ export default function App() {
           { label: 'Preferences', run: () => setModal('preferences') },
           { label: 'Toggle focus mode', run: () => setPrefs({ focus: !prefs.focus }), shortcut: 'Ctrl .' },
           { label: 'Copy link to this page', run: () => copyText(location.href).then((ok) => setNotice(ok ? 'Link copied.' : 'Clipboard unavailable.')) },
+          ...designTools.map((d) => ({ label: `Test Design: ${d.label}`, run: () => { try { localStorage.setItem('tas:design:tool', JSON.stringify(d.id)); } catch { /* storage blocked */ } setDesignKey((k) => k + 1); setTab('Test Design'); } })),
         ]}
       />
       {busy && <IndeterminateProgress label="Working" />}
@@ -1453,6 +1462,15 @@ export default function App() {
             />
           )}
           {tab === 'Project Explorer' && <ProjectExplorer revision={revision} onSource={openSource} />}
+          {tab === 'Test Design' && (
+            <TestDesign
+              key={designKey}
+              revision={revision}
+              onNotice={setNotice}
+              onSource={openSource}
+              onOpenDraft={(text, file) => { setFeature(undefined); setNewFile(file); setSource(text); setTab('Features'); setView('editor'); setNotice(`Opened in the editor as ${file}. Preview changes to save.`); }}
+            />
+          )}
           {tab === 'Config' && config && (
             <section className="panel config-summary">
               <div className="panel-heading"><div><h2>Workspace</h2></div><Button size="small" onClick={() => setModal('settings')}><Settings2 size={14} />Edit workspace settings</Button></div>
