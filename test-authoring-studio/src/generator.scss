@@ -1081,3 +1081,67 @@ mark {
     color: $purple;
   }
 }
+
+// ---- Forms & validation ----
+.form-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  > .button.primary,
+  > .button.primary-soft {
+    align-self: flex-start;
+  }
+}
+.field-error {
+  display: block;
+  margin-top: 5px;
+  color: $red;
+  font-size: 11.5px;
+  letter-spacing: 0;
+  font-weight: 500;
+}
+.field-hint {
+  display: block;
+  margin-top: 5px;
+  color: #66718a;
+  font-size: 11px;
+  letter-spacing: 0;
+}
+.field-label.has-error input,
+.field-label.has-error textarea,
+.field-label.has-error select,
+input[aria-invalid='true'],
+textarea[aria-invalid='true'] {
+  border-color: #ff8a8a99 !important;
+  background: #2a151a !important;
+}
+.selector-row-wrap {
+  display: flex;
+  flex-direction: column;
+}
+.row-buttons {
+  display: flex;
+  gap: 2px;
+}
+.form-summary {
+  border: 1px solid #ff8a8a55;
+  background: #2a151a;
+  border-radius: 8px;
+  padding: 10px 14px;
+  color: #ffd2d2;
+  font-size: 12px;
+  ul {
+    margin: 6px 0 0;
+    padding-left: 18px;
+  }
+}
+.context-label {
+  padding: 6px 10px 2px;
+  font-size: 9px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: #66718a;
+}
+.app-menu-button {
+  padding: 0 4px;
+}

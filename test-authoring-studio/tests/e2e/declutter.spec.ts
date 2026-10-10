@@ -6,9 +6,9 @@ test('right-click menus, More navigation, shortcuts, persisted drafts and collap
   await page.goto('/');
   await expect(page.getByText('Repository indexed')).toBeVisible();
 
-  // Secondary pages are in the More menu, not the tab bar.
+  // Secondary pages are in the right-click studio menu, not the tab bar.
   await expect(page.getByRole('button', { name: 'Step Catalog', exact: true })).toHaveCount(0);
-  await page.getByRole('button', { name: 'More' }).click();
+  await page.getByRole('button', { name: 'Open studio menu' }).click();
   await page.getByRole('menuitem', { name: 'Step Catalog' }).click();
   await expect(page.getByRole('button', { name: /Step Catalog/ })).toBeVisible();
 

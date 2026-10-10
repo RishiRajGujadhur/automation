@@ -98,7 +98,29 @@ Folder names are configurable through scan globs.
 | **Project Explorer** | Files grouped by layer (Feature, Step, UI, Selector data, Support, Config, Data, Build, Output), plus a folder browser. |
 | **Config** | The current workspace configuration, with a link to the settings dialog. |
 
-The tab bar shows only the four primary pages. Step Catalog, Backgrounds, Selectors, Project Explorer and Config are under **More**, and in the command palette.
+The tab bar shows only the four primary pages. To reach Step Catalog, Backgrounds, Selectors, Project Explorer or Config, use either:
+- the **studio menu**: right-click any empty space, or click **⋯** in the tab bar; or
+- the command palette (Ctrl/Cmd+K).
+
+The studio menu is a Radix context menu (`@radix-ui/react-context-menu`). It also offers Command palette, Start a recording, New feature, Rescan, Workspace settings and Keyboard shortcuts. Menus on cards and rows take priority over it. Text inputs and code editors keep the browser's own right-click menu (copy, paste, spellcheck).
+
+### Form validation
+
+Every form uses **Formik** with **Yup** schemas from `src/validators.ts`. Each rule is also unit-tested.
+- **When errors show:** after you leave a field, or after a submit attempt. Submit stays disabled while the form is invalid. Server errors appear inline in the form.
+
+| Form | What it rejects |
+| --- | --- |
+| Workspace settings | Relative repository roots, a target that isn't `.`/folder/`.csproj`, empty or absolute glob lists |
+| Record | URLs without `http://`/`https://` or that don't parse |
+| New feature | Absolute paths, `..`, backslashes, illegal file characters, non-`.feature` files, non-PascalCase names, paths that already exist |
+| Step parameters | Empty values, non-numeric values for numeric types, non-`true`/`false` for booleans, embedded quotes, table rows not wrapped in `|` |
+| Run tests | Non-`.csproj` projects, empty or malformed `dotnet test` filters (so the whole suite never runs by accident) |
+| Dictionary entry | Non-`.xml` files, empty selector values, duplicate rows, CSS/XPath listed before a stable selector |
+| Recording → dictionary | Page names with spaces or symbols, non-`.xml` dictionaries, non-`.cs` page objects |
+| Test Generator | Lines not starting with a Gherkin keyword, a first step of And/But, folders in the file name, missing section/field, fill actions with no test data. Problems are listed in a summary before saving. |
+
+The server repeats the critical checks (selector type and value, `.csproj`, `..`), so nothing slips through if the UI is bypassed.
 
 ### Usability
 

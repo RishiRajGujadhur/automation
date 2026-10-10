@@ -18,7 +18,7 @@ test('catalog to builder to validated diff; recording matches require acceptance
   await expect(page.getByRole('dialog')).toBeVisible();
   await expect(page.getByRole('button', { name: 'Approve and write file' })).toBeEnabled();
   await page.getByRole('button', { name: 'Close dialog' }).click();
-  await page.getByRole('button', { name: 'More' }).click();
+  await page.getByRole('button', { name: 'Open studio menu' }).click();
   await page.getByRole('menuitem', { name: 'Step Catalog' }).click();
   await page.getByRole('combobox', { name: 'Search Step Catalog' }).fill('the user searches');
   await expect(page.locator('.catalog-card h3').first()).toHaveText('the user searches for "(.*)"');

@@ -33,6 +33,7 @@
     "express": "^5.3.0",
     "fast-xml-parser": "^5.11.2",
     "flexsearch": "^0.8.212",
+    "formik": "^2.4.9",
     "lucide-react": "^1.55.0",
     "motion": "^14.1.0",
     "react": "^19.3.0",
@@ -43,6 +44,7 @@
     "tailwindcss": "^4.3.3",
     "typescript": "^7.0.2",
     "vite": "^8.3.4",
+    "yup": "^1.7.1",
     "zod": "^4.6.5"
   },
   "devDependencies": {

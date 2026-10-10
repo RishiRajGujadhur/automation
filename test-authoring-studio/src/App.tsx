@@ -13,7 +13,8 @@ import { SelectorCatalogue, BackgroundCatalogue } from './Catalogues';
 import { api } from './api';
 import { useLocalState, RowMenu, copyText } from './ui';
 import { timeAgo, useNow } from './time';
-import MoreMenu from './MoreMenu';
+import { WorkspaceForm, RecordForm, NewFeatureForm, ParametersForm, RunForm } from './forms';
+import AppMenu, { AppMenuButton } from './AppMenu';
 import '@fontsource-variable/dm-sans';
 import '@fontsource/ibm-plex-mono/400.css';
 import CodeMirror from '@uiw/react-codemirror';
@@ -68,6 +69,8 @@ import {
   LayoutDashboard,
   Wand2,
   FolderTree,
+  Keyboard,
+  Command as CommandIcon,
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import type { Index, Feature, Binding, Action, Match } from './types';
@@ -105,7 +108,8 @@ const shortcuts: [string, string][] = [
   ['Ctrl/Cmd + Enter', 'Test Generator: run validation'],
   ['Esc', 'Clear a search box, close a dialog or menu'],
   ['↑ / ↓', 'Move through dictionary fields'],
-  ['Right-click', 'Secondary actions on cards, rows, files and folders'],
+  ['Right-click empty space', 'Studio menu: Step Catalog, Backgrounds, Selectors, Project Explorer, Config and common actions'],
+  ['Right-click a card or row', 'Actions for that item'],
 ];
 const headings: Record<string, string> = {
   Dashboard: 'Repository health, classification and entry points.',
@@ -360,21 +364,24 @@ export default function App() {
     setParams(Object.fromEntries(b.parameters.map((p) => [p.name, ''])));
     setModal('parameters');
   };
-  const addStep = () => {
+  const addStep = (input: Record<string, string> = params) => {
     if (!binding) return;
+    const params_ = input;
     let n = 0;
-    const values = binding.parameters.filter((p) => p.type !== 'Table').map((p) => params[p.name]);
+    const values = binding.parameters.filter((p) => p.type !== 'Table').map((p) => params_[p.name]);
     let text = binding.pattern
       .replace(/^\^|\$$/g, '')
-      .replace(/\(\.\*\)|\(\.\+\)|\(\[\^"\]\*\)/g, () => values[n++] ?? '');
+      // Cucumber optional text "item(s)" → "items" (only for expression-style patterns, before values go in).
+      .replace(binding.expression === 'Cucumber' ? /\(([^()|]+)\)/g : /$^/, '$1')
+      .replace(/\(\.\*\)|\(\.\+\)|\(\[\^"\]\*\)|\(\\d\+\)|\{[A-Za-z]*\}/g, (m) => (m === '{string}' ? `"${values[n++] ?? ''}"` : (values[n++] ?? '')));
     if (n < values.length) {
       setError('This pattern needs manual editing in the feature editor.');
     }
     const tableParam = binding.parameters.find((p) => p.type === 'Table');
-    if (tableParam && params[tableParam.name])
+    if (tableParam && params_[tableParam.name])
       text +=
         '\n' +
-        params[tableParam.name]
+        params_[tableParam.name]
           .split('\n')
           .map((line) => '      ' + line)
           .join('\n');
@@ -428,7 +435,28 @@ export default function App() {
           : `click("${a.target?.description ?? a.target?.name ?? 'element'}")`;
   const matched = matches.filter((m) => m.candidates.length).length;
   return (
+    <AppMenu
+      pages={moreTabs.map((t) => ({ ...t }))}
+      primary={tabs.map((t) => ({ name: t.name, icon: t.icon, hint: t.shortcut }))}
+      active={tab}
+      onNavigate={navigate}
+      commands={[
+        { label: 'Command palette', icon: CommandIcon, run: () => setPaletteOpen(true), shortcut: 'Ctrl K' },
+        { label: 'Start a recording', icon: Circle, run: () => { setTab('Features'); setView('recorder'); setModal('record'); } },
+        { label: 'New feature', icon: Plus, run: () => beginFeature() },
+        { label: 'Rescan repository', icon: RefreshCw, disabled: busy, run: () => work(async () => { setIndex(await api('/scan', {})); setNotice('Repository index refreshed.'); }) },
+        { label: 'Workspace settings', icon: Settings2, run: () => setModal('settings') },
+        { label: 'Keyboard shortcuts', icon: Keyboard, run: () => setModal('shortcuts'), shortcut: '?' },
+      ]}
+    >
     <div className="studio-shell">
+      {/* Text inputs and editors keep the browser's native menu (copy/paste/spellcheck). */}
+      <div
+        style={{ display: 'contents' }}
+        onContextMenu={(e) => {
+          if ((e.target as HTMLElement).closest('input, textarea, select, .cm-editor, [contenteditable="true"], pre, code')) e.stopPropagation();
+        }}
+      >
       <SearchPalette
         open={paletteOpen}
         onOpenChange={setPaletteOpen}
@@ -525,7 +553,13 @@ export default function App() {
               )}
             </button>
           ))}
-          <MoreMenu items={moreTabs} active={tab} onSelect={(name) => { setTab(name); setCatalogQuery(''); }} />
+          {moreTabs.filter((t) => t.name === tab).map((t) => (
+            <button key={t.name} className="nav-tab active" aria-current="page">
+              <Icon icon={t.icon} />
+              {t.name}
+            </button>
+          ))}
+          <AppMenuButton />
         </div>
         <button
           className={`recorder-tab ${view === 'recorder' && tab === 'Features' ? 'selected' : ''}`}
@@ -1428,179 +1462,57 @@ export default function App() {
               </div>
               <div className="modal-body">
                 {modal === 'settings' && config && (
-                  <>
-                    <p className="subtle">
-                      Point the scanner at a C# SpecFlow + Playwright repository. Indexing is
-                      read-only.
-                    </p>
-                    <label className="field-label">
-                      REPOSITORY ROOT
-                      <input
-                        value={config.repositoryRoot}
-                        onChange={(e) => setConfig({ ...config, repositoryRoot: e.target.value })}
-                      />
-                    </label>
-                    <label className="field-label">
-                      TARGET PROJECT / DIRECTORY
-                      <input
-                        value={config.targetProject}
-                        onChange={(e) => setConfig({ ...config, targetProject: e.target.value })}
-                      />
-                    </label>
-                    <label className="field-label">
-                      REFERENCE SCOPE
-                      <select
-                        value={config.referenceScope}
-                        onChange={(e) => setConfig({ ...config, referenceScope: e.target.value })}
-                      >
-                        <option>DirectReferences</option>
-                        <option>TargetOnly</option>
-                      </select>
-                    </label>
-                    {[
-                      'featurePatterns',
-                      'sourcePatterns',
-                      'selectorPatterns',
-                      'ignoredDirectories',
-                    ].map((k) => (
-                      <label className="field-label" key={k}>
-                        {k.replace(/([A-Z])/g, ' $1').toUpperCase()}
-                        <input
-                          value={config[k].join(', ')}
-                          onChange={(e) =>
-                            setConfig({
-                              ...config,
-                              [k]: e.target.value
-                                .split(',')
-                                .map((s: string) => s.trim())
-                                .filter(Boolean),
-                            })
-                          }
-                        />
-                      </label>
-                    ))}
-                    <button
-                      className="button primary"
-                      disabled={busy}
-                      onClick={() =>
-                        work(async () => {
-                          const r = await api('/workspace', config);
-                          setIndex(r.index);
-                          setConfig(r.config);
-                          setActiveFolder(undefined);
-                          setQuery('');
-                          setFeature(r.index.features[0]);
-                          setSource(r.index.features[0]?.source ?? '');
-                          setMatches([]);
-                          setAccepted({});
-                          setModal(undefined);
-                          setNotice('Workspace indexed.');
-                        })
-                      }
-                    >
-                      <RefreshCw size={16} />
-                      Scan workspace
-                    </button>
-                  </>
+                  <WorkspaceForm
+                    initial={config}
+                    onSubmit={async (values) => {
+                      const r = await api('/workspace', values);
+                      setIndex(r.index);
+                      setConfig(r.config);
+                      setActiveFolder(undefined);
+                      setQuery('');
+                      if (r.index.features[0]) await loadFeature(r.index.features[0].file);
+                      else { setFeature(undefined); setSource(''); }
+                      setMatches([]);
+                      setAccepted({});
+                      setModal(undefined);
+                      setNotice('Workspace indexed.');
+                    }}
+                  />
                 )}
                 {modal === 'record' && (
-                  <>
-                    <p className="subtle">
-                      A local Chromium window will open. Navigate, click, type, and press keys to
-                      capture actions.
-                    </p>
-                    <label className="field-label">
-                      START URL
-                      <input value={url} list="recent-urls" onChange={(e) => setUrl(e.target.value)} />
-                      <datalist id="recent-urls">{recentUrls.map((u) => <option key={u} value={u} />)}</datalist>
-                    </label>
-                    <div className="info-box">
-                      <ShieldCheck size={18} />
-                      <span>
-                        Passwords and fields marked as sensitive are redacted. Review recordings
-                        before sharing.
-                      </span>
-                    </div>
-                    <button
-                      className="button primary"
-                      disabled={busy}
-                      onClick={() =>
-                        work(async () => {
-                          await api('/recording/start', { url });
-                          setRecentUrls((r) => [url, ...r.filter((x) => x !== url)].slice(0, 8));
-                          setRecordStatus('recording');
-                          setActions([]);
-                          setMatches([]);
-                          setAccepted({});
-                          setModal(undefined);
-                        })
-                      }
-                    >
-                      <Play size={16} />
-                      Launch browser
-                    </button>
-                  </>
+                  <RecordForm
+                    initialUrl={url}
+                    recentUrls={recentUrls}
+                    onSubmit={async (u) => {
+                      await api('/recording/start', { url: u });
+                      setUrl(u);
+                      setRecentUrls((r) => [u, ...r.filter((x) => x !== u)].slice(0, 8));
+                      setRecordStatus('recording');
+                      setActions([]);
+                      setMatches([]);
+                      setAccepted({});
+                      setModal(undefined);
+                    }}
+                  />
                 )}
                 {modal === 'new' && (
-                  <>
-                    <label className="field-label">
-                      FEATURE FILE
-                      <input value={newFile} onChange={(e) => setNewFile(e.target.value)} />
-                    </label>
-                    <p className="subtle">
-                      The file will only be written after you review and approve its diff.
-                    </p>
-                    <button
-                      className="button primary"
-                      onClick={() => {
-                        setFeature(undefined);
-                        setSource(
-                          'Feature: New feature\n\n  Scenario: New scenario\n    Given the browser is started\n',
-                        );
-                        setTab('Features');
-                        setView('editor');
-                        setModal(undefined);
-                      }}
-                    >
-                      Create draft
-                      <ArrowRight size={15} />
-                    </button>
-                  </>
+                  <NewFeatureForm
+                    initialFile={newFile}
+                    existing={index?.features.map((f) => f.file) ?? []}
+                    folders={[...new Set(index?.features.map((f) => f.file.split('/').slice(0, -1).join('/')).filter(Boolean) ?? [])]}
+                    onSubmit={({ file, name }) => {
+                      setNewFile(file);
+                      setFeature(undefined);
+                      setSource(`Feature: ${name}\n\n  Scenario: New scenario\n    Given the browser is started\n`);
+                      setTab('Features');
+                      setView('editor');
+                      setModal(undefined);
+                      setNotice(`Draft created for ${file}. Preview changes to save.`);
+                    }}
+                  />
                 )}
                 {modal === 'parameters' && binding && (
-                  <>
-                    <code className="binding-code">
-                      {binding.keyword} {binding.pattern}
-                    </code>
-                    {binding.parameters.map((p) => (
-                      <label className="field-label" key={p.name}>
-                        {p.name} · {p.type}
-                        <>
-                          {p.type === 'Table' ? (
-                            <textarea
-                              rows={5}
-                              value={params[p.name] ?? ''}
-                              placeholder="| column |\n| value |"
-                              onChange={(e) => setParams({ ...params, [p.name]: e.target.value })}
-                            />
-                          ) : (
-                            <input
-                              value={params[p.name] ?? ''}
-                              placeholder={`Enter ${p.name}`}
-                              onChange={(e) => setParams({ ...params, [p.name]: e.target.value })}
-                            />
-                          )}
-                        </>
-                      </label>
-                    ))}
-                    {!binding.parameters.length && (
-                      <p className="subtle">This step does not require parameters.</p>
-                    )}
-                    <button className="button primary" onClick={addStep}>
-                      <Plus size={16} />
-                      Add existing step
-                    </button>
-                  </>
+                  <ParametersForm binding={binding} onSubmit={(values) => addStep(values)} />
                 )}
                 {modal === 'preview' && preview && (
                   <>
@@ -1794,47 +1706,17 @@ export default function App() {
                 )}
                 {modal === 'run' && (
                   <>
-                    <p className="subtle">
-                      This explicitly runs repository test code through dotnet test. Save the
-                      feature first. Indexing itself never executes repository code.
-                    </p>
-                    <label className="field-label">
-                      TEST PROJECT
-                      <input
-                        value={runProject}
-                        onChange={(e) => setRunProject(e.target.value)}
-                        placeholder="src/Tests/Tests.csproj"
-                      />
-                    </label>
-                    <label className="field-label">
-                      TEST FILTER
-                      <input
-                        value={runFilter}
-                        onChange={(e) => setRunFilter(e.target.value)}
-                        placeholder="FullyQualifiedName~SearchForDayforce"
-                      />
-                    </label>
-                    <button
-                      className="button primary"
-                      disabled={execution.status === 'running' || !runProject || !runFilter}
-                      onClick={() =>
-                        work(async () =>
-                          setExecution(
-                            await api('/execution', {
-                              project: runProject,
-                              filter: runFilter,
-                              approved: true,
-                            }),
-                          ),
-                        )
-                      }
-                    >
-                      <Play size={15} />
-                      Run selected tests
-                    </button>
-                    <Badge tone={execution.status === 'passed' ? 'green' : 'amber'}>
-                      {execution.status}
-                    </Badge>
+                    <RunForm
+                      initial={{ project: runProject, filter: runFilter }}
+                      running={execution.status === 'running'}
+                      projects={config?.targetProject?.endsWith('.csproj') ? [config.targetProject] : []}
+                      onSubmit={async (v) => {
+                        setRunProject(v.project);
+                        setRunFilter(v.filter);
+                        setExecution(await api('/execution', { project: v.project, filter: v.filter, approved: true }));
+                      }}
+                    />
+                    <Badge tone={execution.status === 'passed' ? 'green' : 'amber'}>{execution.status}</Badge>
                     {execution.output && <pre className="run-output">{execution.output}</pre>}
                   </>
                 )}
@@ -1843,6 +1725,8 @@ export default function App() {
           </motion.div>
         )}
       </AnimatePresence>
+      </div>
     </div>
+    </AppMenu>
   );
 }

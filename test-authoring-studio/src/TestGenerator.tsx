@@ -12,12 +12,13 @@ import ProjectModelTree, { useProjectModel } from './ProjectModelTree';
 import { Collapsible, CopyButton, RowMenu, copyText, useLocalState } from './ui';
 import type { DictionaryEntry, Index } from './types';
 import StepLint from './StepLint';
+import { DictionaryEntryForm } from './forms';
+import { generatorSchema, validateSync } from './validators';
 
 type Plan = { entry: DictionaryEntry | null; source?: string; code?: string | null };
 export type GeneratorSeed = Partial<{ page: string; section: string; field: string; fieldType: string; file: string }>;
 const statusIcon = { pass: CircleCheck, fail: CircleX, warn: CircleAlert, skip: CircleMinus };
 const statusLabel = { pass: 'Passed', fail: 'Failed', warn: 'Review', skip: 'Skipped' };
-const selectorTypes = ['testid', 'ariarole.textbox', 'ariarole.button', 'ariarole.link', 'ariarole.combobox', 'ariarole.checkbox', 'text', 'css', 'xpath'];
 const defaults = {
   area: 'Features/Checkout',
   featureFile: 'ShoppingCart.feature',
@@ -72,7 +73,6 @@ export default function TestGenerator({ revision, seed, onSource, onExport, onIn
   const [fieldHits, setFieldHits] = useState<DictionaryEntry[]>([]);
   const [dictFiles, setDictFiles] = useState<string[]>([]);
   const [dictFile, setDictFile] = useState(seed?.file ?? '');
-  const [newSelectors, setNewSelectors] = useState([{ type: 'testid', value: '' }, { type: 'ariarole.textbox', value: '' }]);
   const [sidebar, setSidebar] = useLocalState('generator:sidebar', true);
   const { model } = useProjectModel(revision);
   const [activeLine, setActiveLine] = useState(0);
@@ -85,6 +85,12 @@ export default function TestGenerator({ revision, seed, onSource, onExport, onIn
   }, [revision]);
   const file = `${area.replace(/\/+$/, '')}/${featureFile}`.replace(/^\//, '');
   const steps = useMemo(() => parseSteps(scenarioText), [scenarioText]);
+  const issues = useMemo(() => validateSync(generatorSchema, { area, featureFile, scenarioName, scenarioText, page, section, field, value, action }), [area, featureFile, scenarioName, scenarioText, page, section, field, value, action]);
+  const [touchedFields, setTouchedFields] = useState<Record<string, boolean>>({});
+  const touch = (k: string) => setTouchedFields((t) => (t[k] ? t : { ...t, [k]: true }));
+  const err = (k: string) => (touchedFields[k] || touchedFields.__all) && issues[k] ? <span className="field-error" role="alert">{issues[k]}</span> : null;
+  const invalid = Object.keys(issues).length > 0;
+  const guard = (fn: () => void) => () => { if (invalid) { setTouchedFields({ __all: true }); onNotice?.(`Fix ${Object.keys(issues).length} input problem${Object.keys(issues).length === 1 ? '' : 's'} first.`); return; } fn(); };
   useEffect(() => {
     const c = new AbortController();
     const t = setTimeout(() => api('/source?file=' + encodeURIComponent(file), undefined, c.signal).then(() => setFileExists(true)).catch(() => { if (!c.signal.aborted) setFileExists(false); }), 300);
@@ -169,18 +175,18 @@ export default function TestGenerator({ revision, seed, onSource, onExport, onIn
       <div className="generator-main">
         {error && <p role="alert" className="inline-error">{error}</p>}
         <Collapsible id="gen-1" icon={<span className="step-number">1</span>} title="Scenario & feature context" summary={`${file} · ${steps.length} step${steps.length === 1 ? '' : 's'}`}>
-          <div className="form-grid">
-            <label className="field-label">FEATURE AREA / MODULE<input aria-label="Feature area" list="feature-folders" value={area} onChange={(e) => set('area', e.target.value)} /></label>
+          <div className="form-grid" onBlur={(e) => { const l = (e.target as HTMLElement).getAttribute('aria-label'); const map: Record<string, string> = { 'Feature area': 'area', 'Scenario name': 'scenarioName' }; if (l && map[l]) touch(map[l]); }}>
+            <label className="field-label">FEATURE AREA / MODULE<input aria-label="Feature area" list="feature-folders" value={area} onChange={(e) => set('area', e.target.value)} />{err('area')}</label>
             <datalist id="feature-folders">{folders.map((f) => <option key={f} value={f} />)}</datalist>
             <label className="field-label">TARGET FEATURE FILE
-              <input aria-label="Target feature file" value={featureFile} onChange={(e) => set('featureFile', e.target.value)} onBlur={normalizeFileName} />
+              <input aria-label="Target feature file" value={featureFile} onChange={(e) => set('featureFile', e.target.value)} onBlur={() => { normalizeFileName(); touch('featureFile'); }} />{err('featureFile')}
               {fileExists !== undefined && (
                 <span className={`file-state ${fileExists ? 'existing' : 'new'}`}>
                   {fileExists ? <><FilePen size={12} />Existing file. The scenario will be appended.</> : <><FilePlus2 size={12} />New file. It will be created on save.</>}
                 </span>
               )}
             </label>
-            <label className="field-label span-2">SCENARIO NAME<input aria-label="Scenario name" value={scenarioName} onChange={(e) => set('scenarioName', e.target.value)} /></label>
+            <label className="field-label span-2">SCENARIO NAME<input aria-label="Scenario name" value={scenarioName} onChange={(e) => set('scenarioName', e.target.value)} />{err('scenarioName')}</label>
             <div className="field-label span-2">
               <span className="label-row">SCENARIO TEXT
                 <span className="keyword-buttons" role="group" aria-label="Insert keyword">
@@ -188,7 +194,8 @@ export default function TestGenerator({ revision, seed, onSource, onExport, onIn
                   <button className="button tiny ghost" aria-label="Copy scenario as Gherkin" onClick={async () => onNotice?.((await copyText(`Scenario: ${scenarioName}\n${steps.map((x) => `  ${x.keyword} ${x.text}`).join('\n')}`)) ? 'Scenario copied.' : 'Clipboard unavailable.')}><Copy size={12} />Copy</button>
                 </span>
               </span>
-              <textarea aria-label="Scenario text" rows={Math.max(3, steps.length + 1)} value={scenarioText} onChange={(e) => { set('scenarioText', e.target.value); caretLine(e.target); }} onKeyUp={(e) => caretLine(e.currentTarget)} onClick={(e) => caretLine(e.currentTarget)} spellCheck={false} />
+              <textarea aria-label="Scenario text" rows={Math.max(3, steps.length + 1)} value={scenarioText} onChange={(e) => { set('scenarioText', e.target.value); caretLine(e.target); }} onKeyUp={(e) => caretLine(e.currentTarget)} onClick={(e) => caretLine(e.currentTarget)} spellCheck={false} onBlur={() => touch('scenarioText')} />
+              {err('scenarioText')}
               <StepLint steps={steps} activeLine={activeLine} onReplace={replaceStep} onSource={onSource} revision={revision} />
             </div>
           </div>
@@ -207,16 +214,16 @@ export default function TestGenerator({ revision, seed, onSource, onExport, onIn
               ))}
             </div>
           )}
-          <div className="form-grid four">
-            <label className="field-label">PAGE NAME<input aria-label="Page name" list="dict-pages" value={page} onChange={(e) => set('page', e.target.value)} /></label>
+          <div className="form-grid four" onBlur={(e) => { const l = (e.target as HTMLElement).getAttribute('aria-label'); const map: Record<string, string> = { 'Page name': 'page', 'Section name': 'section', 'Field name': 'field', 'Test data': 'value' }; if (l && map[l]) touch(map[l]); }}>
+            <label className="field-label">PAGE NAME<input aria-label="Page name" list="dict-pages" value={page} onChange={(e) => set('page', e.target.value)} />{err('page')}</label>
             <datalist id="dict-pages">{[...new Set(tree.map((t) => t.page).filter(Boolean))].map((x) => <option key={x} value={x} />)}</datalist>
-            <label className="field-label">SECTION NAME<input aria-label="Section name" list="dict-sections" value={section} onChange={(e) => set('section', e.target.value)} /></label>
-            <label className="field-label">FIELD NAME<input aria-label="Field name" list="dict-fields" value={field} onChange={(e) => set('field', e.target.value)} /></label>
+            <label className="field-label">SECTION NAME<input aria-label="Section name" list="dict-sections" value={section} onChange={(e) => set('section', e.target.value)} />{err('section')}</label>
+            <label className="field-label">FIELD NAME<input aria-label="Field name" list="dict-fields" value={field} onChange={(e) => set('field', e.target.value)} />{err('field')}</label>
             <datalist id="dict-sections">{[...new Set(sectionsForPage.map((t) => t.section))].map((x) => <option key={x} value={x} />)}</datalist>
             <datalist id="dict-fields">{fieldsForSection.map((x) => <option key={x} value={x} />)}</datalist>
             <label className="field-label">FIELD TYPE<select aria-label="Field type" value={fieldType} onChange={(e) => set('fieldType', e.target.value)}>{['TextBox', 'Button', 'Link', 'ComboBox', 'CheckBox', 'RadioButton', 'Label'].map((t) => <option key={t}>{t}</option>)}</select></label>
             <label className="field-label">ACTION<select aria-label="Action" value={action} onChange={(e) => set('action', e.target.value as typeof action)}><option value="fill">Fill</option><option value="click">Click</option><option value="visible">Verify visible</option></select></label>
-            {action === 'fill' && <label className="field-label span-3">TEST DATA VALUE<input aria-label="Test data" value={value} onChange={(e) => set('value', e.target.value)} /></label>}
+            {action === 'fill' && <label className="field-label span-3">TEST DATA VALUE<input aria-label="Test data" value={value} onChange={(e) => set('value', e.target.value)} />{err('value')}</label>}
           </div>
         </Collapsible>
         <Collapsible id="gen-3" icon={<span className="step-number">3</span>} title="Selector resolution & dictionary match" summary={plan?.entry ? `${plan.entry.selectors.length} selectors · ${plan.entry.file}` : 'No dictionary entry'} badge={matchBadge}>
@@ -239,27 +246,15 @@ export default function TestGenerator({ revision, seed, onSource, onExport, onIn
           ) : plan?.entry === null ? (
             <div className="propose-entry">
               <p><strong>No dictionary entry</strong> for <code>{section}/{field}</code>. Add one rather than hardcoding a selector; list selectors in priority order.</p>
-              <label className="field-label">DICTIONARY FILE
-                <input aria-label="Dictionary file" list="dictionary-files" value={dictFile} onChange={(e) => setDictFile(e.target.value)} />
-                <datalist id="dictionary-files">{dictFiles.map((f) => <option key={f} value={f} />)}</datalist>
-              </label>
-              {newSelectors.map((s, i) => (
-                <div className="selector-row" key={i}>
-                  <select aria-label={`Selector ${i + 1} type`} value={s.type} onChange={(e) => setNewSelectors(newSelectors.map((x, j) => (j === i ? { ...x, type: e.target.value } : x)))}>{selectorTypes.map((t) => <option key={t}>{t}</option>)}</select>
-                  <input aria-label={`Selector ${i + 1} value`} placeholder="Selector value" value={s.value} onChange={(e) => setNewSelectors(newSelectors.map((x, j) => (j === i ? { ...x, value: e.target.value } : x)))} />
-                  <button className="icon-button" aria-label="Remove selector" onClick={() => setNewSelectors(newSelectors.filter((_, j) => j !== i))}><Trash2 size={14} /></button>
-                </div>
-              ))}
-              <div className="row-actions">
-                <button className="button tiny ghost" onClick={() => setNewSelectors([...newSelectors, { type: 'text', value: '' }])}><Plus size={13} />Add selector</button>
-                <button
-                  className="button small"
-                  disabled={!!busy || !newSelectors.some((s) => s.value.trim())}
-                  onClick={() => run('dict', async () => setDictPreview(await api<FilePreview>('/dictionary/preview', { file: dictFile, proposals: [{ page, section, field, fieldType, selectors: newSelectors.filter((s) => s.value.trim()) }] })))}
-                >
-                  Preview dictionary change
-                </button>
-              </div>
+              <DictionaryEntryForm
+                initial={{ dictionaryFile: dictFile, selectors: [{ type: 'testid', value: '' }, { type: fieldType === 'Button' ? 'ariarole.button' : fieldType === 'Link' ? 'ariarole.link' : 'ariarole.textbox', value: field.replace(/([a-z])([A-Z])/g, '$1 $2') }] }}
+                files={dictFiles}
+                busy={busy === 'dict'}
+                onSubmit={async (v) => {
+                  setDictFile(v.dictionaryFile);
+                  setDictPreview(await api<FilePreview>('/dictionary/preview', { file: v.dictionaryFile.trim(), proposals: [{ page, section, field, fieldType, selectors: v.selectors.map((x) => ({ type: x.type, value: x.value.trim() })) }] }));
+                }}
+              />
               {dictPreview && <DiffApproval key={dictPreview.id} preview={dictPreview} onApplied={(i) => { onIndex(i); setDictPreview(undefined); }} />}
             </div>
           ) : (
@@ -311,12 +306,18 @@ export default function TestGenerator({ revision, seed, onSource, onExport, onIn
             <p className="subtle">Run a dry-run validation to evaluate the quality gate. Nothing is written.</p>
           )}
         </Collapsible>
+        {invalid && (touchedFields.__all || Object.keys(touchedFields).length > 0) && (
+          <div className="form-summary" role="alert">
+            <strong>{Object.keys(issues).length} thing{Object.keys(issues).length === 1 ? '' : 's'} to fix before saving:</strong>
+            <ul>{Object.entries(issues).map(([k, m]) => <li key={k}>{m}</li>)}</ul>
+          </div>
+        )}
         <div className="generator-actions" role="toolbar" aria-label="Generator actions">
-          <button className="button primary" disabled={!!busy || !steps.length} onClick={() => run('save', async () => setPreview(await api<FilePreview>('/generation/preview', { file, source: await composeFeature() })))} title="Preview the feature-file diff, then approve to write (Ctrl+S)">
+          <button className="button primary" disabled={!!busy || !steps.length} onClick={guard(() => run('save', async () => setPreview(await api<FilePreview>('/generation/preview', { file, source: await composeFeature() }))))} title="Preview the feature-file diff, then approve to write (Ctrl+S)">
             <Save size={15} />{busy === 'save' ? 'Preparing diff…' : 'Regenerate code & save'}
           </button>
           <button className="button ghost" disabled={!!busy} onClick={validateNow} title="Ctrl+Enter"><ShieldCheck size={15} />{busy === 'validate' ? 'Validating…' : 'Run dry-run validation'}</button>
-          <button className="button ghost" disabled={!!busy || !steps.length} onClick={() => run('export', async () => onExport(await composeFeature(), file))}><FileOutput size={15} />Export to feature file</button>
+          <button className="button ghost" disabled={!!busy || !steps.length} onClick={guard(() => run('export', async () => onExport(await composeFeature(), file)))}><FileOutput size={15} />Export to feature file</button>
           <span className="toolbar-spacer" />
           <button className="icon-button" aria-label="Reset generator form" title="Reset form" onClick={() => { if (confirm('Reset all generator inputs to defaults?')) { setDraft(defaults); onNotice?.('Generator reset.'); } }}><RotateCcw size={15} /></button>
           <button className="icon-button" aria-label={sidebar ? 'Hide project model' : 'Show project model'} title={sidebar ? 'Hide project model' : 'Show project model'} onClick={() => setSidebar(!sidebar)}>{sidebar ? <PanelRightClose size={15} /> : <PanelRightOpen size={15} />}</button>

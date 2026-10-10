@@ -1,7 +1,10 @@
 import { useState } from 'react';
+import { Formik, Form } from 'formik';
 import { Braces } from 'lucide-react';
 import { api, type FilePreview } from './api';
 import DiffApproval from './DiffApproval';
+import { TextField } from './forms';
+import { recordingDictionarySchema } from './validators';
 import type { Action, Index } from './types';
 
 type Result = {
@@ -11,47 +14,53 @@ type Result = {
   skipped: string[];
   reused: number;
 };
+type Values = { page: string; section: string; file: string; pageObjectFile: string };
 
 /** Recording → dictionary entries → dictionary-backed page object, each written only after its own approval. */
 export default function RecordingDictionary({ actions, onIndex }: { actions: Action[]; onIndex: (i: Index) => void }) {
-  const [page, setPage] = useState('RecordedPage');
-  const [section, setSection] = useState('Main');
-  const [file, setFile] = useState('Dictionaries/RecordedPage.xml');
-  const [pageObjectFile, setPageObjectFile] = useState('Pages/RecordedPage.cs');
   const [result, setResult] = useState<Result>();
-  const [error, setError] = useState('');
-  const [busy, setBusy] = useState(false);
   const usable = actions.filter((a) => a.action !== 'goto');
   return (
     <div className="recording-dictionary">
       <p className="subtle">
         {usable.length} unmatched interaction{usable.length === 1 ? '' : 's'}. Fields are proposed from recorded test ids, roles and accessible names (priority: test id → role → text). CSS and XPath are never invented. Existing fields are reused.
       </p>
-      <div className="form-grid">
-        <label className="field-label">PAGE NAME<input aria-label="Dictionary page name" value={page} onChange={(e) => setPage(e.target.value)} /></label>
-        <label className="field-label">SECTION<input aria-label="Dictionary section" value={section} onChange={(e) => setSection(e.target.value)} /></label>
-        <label className="field-label">DICTIONARY FILE<input aria-label="Dictionary file path" value={file} onChange={(e) => setFile(e.target.value)} /></label>
-        <label className="field-label">PAGE OBJECT FILE (NEW)<input aria-label="Page object file path" value={pageObjectFile} onChange={(e) => setPageObjectFile(e.target.value)} /></label>
-      </div>
-      <button
-        className="button primary-soft"
-        disabled={busy || !usable.length}
-        onClick={async () => {
-          setBusy(true);
-          setError('');
+      <Formik<Values>
+        initialValues={{ page: 'RecordedPage', section: 'Main', file: 'Dictionaries/RecordedPage.xml', pageObjectFile: 'Pages/RecordedPage.cs' }}
+        validationSchema={recordingDictionarySchema}
+        validateOnMount
+        onSubmit={async (v, h) => {
           try {
-            setResult(await api<Result>('/recording/dictionary-proposal', { actions: usable, page, section, file, pageObjectFile: pageObjectFile || undefined }));
+            setResult(await api<Result>('/recording/dictionary-proposal', { actions: usable, page: v.page.trim(), section: v.section.trim(), file: v.file.trim(), pageObjectFile: v.pageObjectFile.trim() }));
+            h.setStatus(undefined);
           } catch (e) {
-            setError((e as Error).message);
+            h.setStatus((e as Error).message);
           } finally {
-            setBusy(false);
+            h.setSubmitting(false);
           }
         }}
       >
-        <Braces size={15} />
-        Propose dictionary entries
-      </button>
-      {error && <p role="alert" className="inline-error">{error}</p>}
+        {({ isSubmitting, isValid, status, values, setFieldValue, touched }) => (
+          <Form className="form-stack" noValidate>
+            <div className="form-grid">
+              <TextField name="page" label="PAGE NAME" hint="PascalCase, e.g. CheckoutPage" />
+              <TextField name="section" label="SECTION" />
+              <TextField name="file" label="DICTIONARY FILE" />
+              <TextField name="pageObjectFile" label="PAGE OBJECT FILE (NEW)" />
+            </div>
+            {!touched.file && values.file !== `Dictionaries/${values.page}.xml` && /^[A-Za-z]\w*$/.test(values.page) && (
+              <button type="button" className="button tiny ghost" onClick={() => { setFieldValue('file', `Dictionaries/${values.page}.xml`); setFieldValue('pageObjectFile', `Pages/${values.page}.cs`); }}>
+                Name files after {values.page}
+              </button>
+            )}
+            {status && <p className="field-error" role="alert">{status}</p>}
+            <button type="submit" className="button primary-soft" disabled={isSubmitting || !isValid || !usable.length}>
+              <Braces size={15} />
+              {isSubmitting ? 'Proposing…' : 'Propose dictionary entries'}
+            </button>
+          </Form>
+        )}
+      </Formik>
       {result && (
         <>
           {result.reused > 0 && <div className="info-box">{result.reused} interaction(s) reuse existing dictionary fields.</div>}

@@ -66,7 +66,7 @@ app.get('/api/step',async(req,res)=>{const i=await ensure();const binding=search
 app.get('/api/feature',async(req,res)=>{const f=(await ensure()).features.find(f=>f.file===req.query.file);if(!f){res.status(404).json({error:'Feature not found'});return;}res.json(f);});
 app.get('/api/dictionaries',async(req,res)=>{await ensure();const {q,offset,limit}=paging.parse(req.query);res.json(await search!.query('dictionaries',q,offset,limit));});
 app.get('/api/dictionary/files',async(_req,res)=>{const i=await ensure();res.json([...new Set((i.dictionaryEntries??[]).map(e=>e.file))].sort());});
-const selectorSchema=z.object({type:z.string().max(40),value:z.string().max(2000)});
+const selectorSchema=z.object({type:z.string().trim().regex(/^(testid|text|css|xpath|ariarole\.[a-z]+)$/i,'Unsupported selector type.'),value:z.string().trim().min(1,'Selector value is empty.').max(2000)});
 app.post('/api/dictionary/verify',async(req,res)=>{const {selectors,url}=z.object({selectors:z.array(selectorSchema).min(1).max(20),url:z.string().url().optional()}).parse(req.body);res.json(await recorder.verify(selectors,url));});
 const proposalSchema=z.object({page:z.string().max(200),section:z.string().min(1).max(200),field:z.string().min(1).max(200),fieldType:z.string().max(60).default('TextBox'),selectors:z.array(selectorSchema).min(1).max(20)});
 async function previewDictionary(file:string,proposals:FieldProposal[]){
@@ -227,7 +227,7 @@ app.get('/api/execution', (_req, res) => res.json(execution));
 app.post('/api/execution', async (req, res) => {
   const { project, filter } = z
     .object({
-      project: z.string().endsWith('.csproj'),
+      project: z.string().trim().endsWith('.csproj', 'Choose a .csproj file.').refine((v) => !v.split(/[\\/]/).includes('..'), 'Path cannot contain ..'),
       filter: z.string().min(1).max(500),
       approved: z.literal(true),
     })
