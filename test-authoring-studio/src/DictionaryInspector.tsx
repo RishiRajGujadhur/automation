@@ -4,7 +4,8 @@ import { StreamLanguage } from '@codemirror/language';
 import { xml } from '@codemirror/legacy-modes/mode/xml';
 import { csharp } from '@codemirror/legacy-modes/mode/clike';
 import { oneDark } from '@codemirror/theme-one-dark';
-import { Search, Wand2 } from 'lucide-react';
+import { Search, Wand2, Copy, FileCode2 } from 'lucide-react';
+import { RowMenu, Highlight, CopyButton, Collapsible, arrowNav, copyText, clearOnEscape } from './ui';
 import { api, type Paged } from './api';
 import SelectorResolution from './SelectorResolution';
 import type { DictionaryEntry } from './types';
@@ -47,34 +48,46 @@ export default function DictionaryInspector({ revision = '', compact = false, on
       <div className="catalog-toolbar">
         <label className="search-box">
           <Search size={16} />
-          <input aria-label="Search dictionary" placeholder="Page, section, field, selector or file…" value={query} onChange={(e) => { setQuery(e.target.value); setOffset(0); }} />
+          <input aria-label="Search dictionary" placeholder="Page, section, field, selector or file…" value={query} onChange={(e) => { setQuery(e.target.value); setOffset(0); }} onKeyDown={clearOnEscape(query, setQuery)} />
         </label>
         <span className="badge">{data.total.toLocaleString()} fields</span>
       </div>
       {error && <p role="alert" className="inline-error">{error}</p>}
       <div className="dictionary-grid">
-        <div className="dictionary-fields">
+        <div className="dictionary-fields" role="listbox" aria-label="Dictionary fields" onKeyDown={arrowNav}>
           {data.items.map((e) => (
-            <button key={e.id} className={`dictionary-field ${selected?.id === e.id ? 'selected' : ''}`} onClick={() => setSelected(e)}>
-              <strong>{e.page || 'Unnamed page'} / {e.section} / {e.field}</strong>
-              <span>{e.fieldType} · {e.selectors.length} selectors</span>
-              <small>{e.file}:{e.line}</small>
-            </button>
+            <RowMenu
+              key={e.id}
+              items={[
+                ...(onGenerate ? [{ label: 'Use in Test Generator', icon: Wand2, onSelect: () => onGenerate(e) }] : []),
+                ...(onSource ? [{ label: 'Open dictionary source', icon: FileCode2, onSelect: () => onSource(e.file, e.line) }] : []),
+                'separator' as const,
+                { label: 'Copy Section/Field path', icon: Copy, onSelect: () => copyText(`${e.section}/${e.field}`) },
+                { label: 'Copy first locator', icon: Copy, disabled: !e.selectors.some((x) => x.code), onSelect: () => copyText(e.selectors.find((x) => x.code)?.code ?? '') },
+                { label: 'Copy field XML', icon: Copy, onSelect: () => copyText(`<Field XRefCode="${e.field}" Type="${e.fieldType}">\n${e.selectors.map((x) => `  <Selector Type="${x.type}">${x.value}</Selector>`).join('\n')}\n</Field>`) },
+                { label: `Show all fields in ${e.section}`, icon: Search, onSelect: () => { setQuery(e.section); setOffset(0); } },
+              ]}
+            >
+              <button data-nav-item role="option" aria-selected={selected?.id === e.id} className={`dictionary-field ${selected?.id === e.id ? 'selected' : ''}`} onClick={() => setSelected(e)} onFocus={() => setSelected(e)}>
+                <strong><Highlight text={`${e.section} / ${e.field}`} query={query} /></strong>
+                <span>{e.page || 'Unnamed page'} · {e.fieldType} · {e.selectors.length} selector{e.selectors.length === 1 ? '' : 's'}{e.selectors.some((x) => x.warnings.length) ? ' · ⚠' : ''}</span>
+              </button>
+            </RowMenu>
           ))}
           {!data.items.length && <p className="subtle">No Page → Section → Field XML entries match. Configure dictionary XML patterns in Config.</p>}
           <div className="pagination">
-            <button className="button tiny" disabled={!offset} onClick={() => setOffset(Math.max(0, offset - 12))}>Previous</button>
+            <button className="button tiny ghost" disabled={!offset} onClick={() => setOffset(Math.max(0, offset - 12))}>Previous</button>
             <span>{data.items.length ? `${offset + 1}–${offset + data.items.length}` : ''}</span>
-            <button className="button tiny" disabled={!data.hasNext} onClick={() => setOffset(offset + 12)}>Next</button>
+            <button className="button tiny ghost" disabled={!data.hasNext} onClick={() => setOffset(offset + 12)}>Next</button>
           </div>
         </div>
         <div>
           {selected ? (
             <>
               <div className="inspector-heading">
-                <h3>Selector resolution</h3>
-                {onSource && <button className="text-button" onClick={() => onSource(selected.file, selected.line)}>{selected.file}:{selected.line}</button>}
-                {onGenerate && <button className="button tiny" onClick={() => onGenerate(selected)}><Wand2 size={13} />Use in Test Generator</button>}
+                <h3>{selected.section} / {selected.field}</h3>
+                <span className="meta">{selected.page} · {selected.file}:{selected.line}</span>
+                {onGenerate && <button className="button tiny primary" onClick={() => onGenerate(selected)}><Wand2 size={13} />Use in Test Generator</button>}
               </div>
               <SelectorResolution entry={selected} />
               <div className="locator-inputs">
@@ -85,12 +98,14 @@ export default function DictionaryInspector({ revision = '', compact = false, on
                 </select>
                 {action === 'fill' && <input aria-label="Test data value" placeholder="Test data value" value={value} onChange={(e) => setValue(e.target.value)} />}
               </div>
-              <CodeMirror value={code} theme={oneDark} extensions={[StreamLanguage.define(csharp)]} editable={false} />
+              <div className="code-with-copy">
+                <CodeMirror value={code} theme={oneDark} extensions={[StreamLanguage.define(csharp)]} editable={false} />
+                <CopyButton text={code} label="Copy locator code" />
+              </div>
               {!compact && (
-                <>
-                  <h3>Dictionary source</h3>
+                <Collapsible id="dictionary-source" title="Dictionary source" summary={selected.file} defaultOpen={false}>
                   <CodeMirror value={source} theme={oneDark} height="260px" extensions={[StreamLanguage.define(xml)]} editable={false} />
-                </>
+                </Collapsible>
               )}
             </>
           ) : (

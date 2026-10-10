@@ -11,6 +11,8 @@ import SearchPalette from './SearchPalette';
 import RecordingDictionary from './RecordingDictionary';
 import { SelectorCatalogue, BackgroundCatalogue } from './Catalogues';
 import { api } from './api';
+import { useLocalState, RowMenu, copyText } from './ui';
+import MoreMenu from './MoreMenu';
 import '@fontsource-variable/dm-sans';
 import '@fontsource/ibm-plex-mono/400.css';
 import CodeMirror from '@uiw/react-codemirror';
@@ -79,17 +81,31 @@ const demo: Action[] = [
   { id: 'd3', action: 'press', target: { name: 'Search' }, key: 'Enter' },
   { id: 'd4', action: 'click', target: { role: 'link', description: 'first search result' } },
 ];
+// Primary destinations stay visible; reference pages live in the "More" menu and the Ctrl/Cmd+K palette.
 const tabs = [
-  { name: 'Dashboard', icon: LayoutDashboard },
-  { name: 'Test Generator', icon: Wand2 },
-  { name: 'Features', icon: FileCode2 },
+  { name: 'Dashboard', icon: LayoutDashboard, shortcut: 'Alt+1' },
+  { name: 'Test Generator', icon: Wand2, shortcut: 'Alt+2' },
+  { name: 'Features', icon: FileCode2, shortcut: 'Alt+3' },
+  { name: 'Dictionary Inspector', icon: Braces, shortcut: 'Alt+4' },
+] as const;
+const moreTabs = [
   { name: 'Step Catalog', icon: BookOpen },
   { name: 'Backgrounds', icon: Blocks },
   { name: 'Selectors', icon: ScanLine },
-  { name: 'Dictionary Inspector', icon: Braces },
   { name: 'Project Explorer', icon: FolderTree },
   { name: 'Config', icon: Settings2 },
 ] as const;
+const shortcuts: [string, string][] = [
+  ['Ctrl/Cmd + K', 'Command palette: go to any page or add a step'],
+  ['Alt + 1…4', 'Dashboard, Test Generator, Features, Dictionary Inspector'],
+  ['/', 'Search feature files'],
+  ['?', 'Show this shortcut list'],
+  ['Ctrl/Cmd + S', 'Test Generator: preview save'],
+  ['Ctrl/Cmd + Enter', 'Test Generator: run validation'],
+  ['Esc', 'Clear a search box, close a dialog or menu'],
+  ['↑ / ↓', 'Move through dictionary fields'],
+  ['Right-click', 'Secondary actions on cards, rows, files and folders'],
+];
 const headings: Record<string, string> = {
   Dashboard: 'Repository health, classification and entry points.',
   'Test Generator': 'Inputs, dictionary match, locator flow and the validation gate in one place.',
@@ -106,8 +122,8 @@ function Badge({ children, tone = 'muted' }: { children: React.ReactNode; tone?:
 export default function App() {
   const [index, setIndex] = useState<Index>();
   const [config, setConfig] = useState<any>();
-  const [tab, setTab] = useState('Features');
-  const [view, setView] = useState('recorder');
+  const [tab, setTab] = useLocalState('tab', 'Features');
+  const [view, setView] = useLocalState('view', 'recorder');
   const [feature, setFeature] = useState<Feature>();
   const [source, setSource] = useState('');
   const [query, setQuery] = useState('');
@@ -143,6 +159,7 @@ export default function App() {
   const [generatorSeed, setGeneratorSeed] = useState<GeneratorSeed>();
   const [edges, setEdges] = useState<Index['callEdges']>([]);
   const revision = index?.revision;
+  const [recent, setRecent] = useLocalState<string[]>('recent', []);
   const previousView = useRef({ tab, view, mobileExplorer });
   const navigateTour = useCallback((destination: TourDestination) => {
     if (destination.tab) setTab(destination.tab);
@@ -241,6 +258,20 @@ export default function App() {
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
       if (e.key === 'Escape') setModal(undefined);
+      const typing = /^(INPUT|TEXTAREA|SELECT)$/.test((e.target as HTMLElement)?.tagName) || (e.target as HTMLElement)?.isContentEditable;
+      if (e.altKey && /^[1-4]$/.test(e.key)) {
+        e.preventDefault();
+        setTab(tabs[Number(e.key) - 1].name);
+      }
+      if (!typing && !e.ctrlKey && !e.metaKey && e.key === '/') {
+        e.preventDefault();
+        setMobileExplorer(true);
+        requestAnimationFrame(() => document.querySelector<HTMLInputElement>('input[aria-label="Search features"]')?.focus());
+      }
+      if (!typing && e.key === '?') {
+        e.preventDefault();
+        setModal('shortcuts');
+      }
       if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
         e.preventDefault();
         setPaletteOpen(true);
@@ -254,6 +285,7 @@ export default function App() {
   const acceptedCount = Object.keys(accepted).length;
   const openSource = (file: string, line: number) =>
     work(async () => {
+      setRecent((r) => [file, ...r.filter((f) => f !== file)].slice(0, 8));
       const r = await api(`/source?file=${encodeURIComponent(file)}`);
       setSourcePeek(r.source);
       setSourceTitle(`${file}:${line}`);
@@ -410,6 +442,7 @@ export default function App() {
             <button
               key={t.name}
               className={`nav-tab ${tab === t.name ? 'active' : ''}`}
+              title={`${t.name} (${t.shortcut})`}
               onClick={() => {
                 setTab(t.name);
                 setCatalogQuery('');
@@ -417,11 +450,12 @@ export default function App() {
             >
               <Icon icon={t.icon} />
               {t.name}
-              {t.name === 'Step Catalog' && (
-                <span className="nav-count">{index?.stats?.steps ?? 0}</span>
+              {t.name === 'Dictionary Inspector' && !!index?.stats?.dictionaries && (
+                <span className="nav-count">{index.stats.dictionaries}</span>
               )}
             </button>
           ))}
+          <MoreMenu items={moreTabs} active={tab} onSelect={(name) => { setTab(name); setCatalogQuery(''); }} />
         </div>
         <button
           className={`recorder-tab ${view === 'recorder' && tab === 'Features' ? 'selected' : ''}`}
@@ -456,6 +490,7 @@ export default function App() {
             onQuery={setQuery}
             onFolder={setActiveFolder}
             onNew={beginFeature}
+            onSource={openSource}
             onSelect={(f) => {
               select(f);
               setTab('Features');
@@ -641,12 +676,27 @@ export default function App() {
                         press: CornerDownLeft,
                         click: MousePointer2,
                       }[a.action];
+                      const playwright =
+                        a.action === 'goto'
+                          ? `await page.GotoAsync(${JSON.stringify(a.url)});`
+                          : `await page.${a.target?.testId ? `GetByTestId(${JSON.stringify(a.target.testId)})` : a.target?.role && a.target?.name ? `GetByRole(AriaRole.${a.target.role[0].toUpperCase() + a.target.role.slice(1)}, new() { Name = ${JSON.stringify(a.target.name)} })` : `GetByText(${JSON.stringify(a.target?.name ?? a.target?.description ?? '')})`}.${a.action === 'fill' ? `FillAsync(${JSON.stringify(a.value ?? '')})` : a.action === 'press' ? `PressAsync(${JSON.stringify(a.key)})` : 'ClickAsync()'};`;
                       return (
+                        <RowMenu key={a.id} items={[
+                          ...(hasMatch && !acceptedAction ? [{ label: 'Accept top match', icon: Check, onSelect: () => { const c = matches.find((m) => m.action.id === a.id)!.candidates[0]; setAccepted({ ...accepted, [a.id]: `${c.binding.keyword} ${c.text}` }); } }] : []),
+                          ...(acceptedAction ? [{ label: 'Undo acceptance', icon: X, onSelect: () => { const { [a.id]: _, ...rest } = accepted; setAccepted(rest); } }] : []),
+                          ...(!hasMatch && a.action !== 'goto' ? [
+                            { label: 'Propose a step', icon: Plus, onSelect: () => { setSelected(a.id); setModal('proposal'); } },
+                            { label: 'Propose dictionary entries', icon: Braces, onSelect: () => setModal('dictionary') },
+                          ] : []),
+                          { label: 'Search steps for this target', icon: Search, onSelect: () => { setCatalogQuery(a.target?.name ?? a.target?.description ?? ''); setTab('Step Catalog'); } },
+                          'separator' as const,
+                          { label: 'Copy as Playwright C#', icon: Copy, onSelect: () => copyText(playwright).then((ok) => setNotice(ok ? 'Playwright code copied.' : 'Clipboard unavailable.')) },
+                          { label: 'Remove action', icon: Trash2, danger: true, onSelect: () => { setActions(actions.filter((x) => x.id !== a.id)); const { [a.id]: _, ...rest } = accepted; setAccepted(rest); } },
+                        ]}>
                         <motion.button
                           initial={{ opacity: 0, y: 8 }}
                           animate={{ opacity: 1, y: 0 }}
                           transition={{ delay: i * 0.04 }}
-                          key={a.id}
                           className={`action-card ${selected === a.id ? 'selected' : ''}`}
                           onClick={() => setSelected(a.id)}
                         >
@@ -685,6 +735,7 @@ export default function App() {
                           </span>
                           <ChevronRight size={14} className="action-chevron" />
                         </motion.button>
+                        </RowMenu>
                       );
                     })}
                     {!actions.length && (
@@ -1122,12 +1173,13 @@ export default function App() {
               </section>
             </div>
           )}
-          {tab === 'Dashboard' && <Dashboard index={index} revision={revision} onNavigate={navigate} />}
+          {tab === 'Dashboard' && <Dashboard index={index} revision={revision} onNavigate={navigate} recent={recent} onSource={openSource} />}
           {tab === 'Test Generator' && (
             <TestGenerator
               revision={revision}
               seed={generatorSeed}
               onSource={openSource}
+              onNotice={setNotice}
               onIndex={(i) => {
                 setIndex(i);
                 setNotice('Approved changes saved to the repository.');
@@ -1149,6 +1201,7 @@ export default function App() {
               revision={revision}
               onAdd={addBinding}
               onSource={openSource}
+              onNotice={setNotice}
               onInspect={(b) => {
                 setBinding(b);
                 setEdges([]);
@@ -1264,6 +1317,7 @@ export default function App() {
                       run: 'Run repository tests',
                       details: 'Binding evidence',
                       dictionary: 'Recorded fields → dictionary & page object',
+                      shortcuts: 'Keyboard shortcuts',
                     }[modal]
                   }
                 </h2>
@@ -1578,6 +1632,16 @@ export default function App() {
                       Preview C# scaffold
                     </button>
                   </>
+                )}
+                {modal === 'shortcuts' && (
+                  <dl className="shortcut-list">
+                    {shortcuts.map(([k, d]) => (
+                      <React.Fragment key={k}>
+                        <dt><kbd>{k}</kbd></dt>
+                        <dd>{d}</dd>
+                      </React.Fragment>
+                    ))}
+                  </dl>
                 )}
                 {modal === 'dictionary' && (
                   <RecordingDictionary

@@ -16,7 +16,7 @@ export function ContextBar({ index, config, recordStatus, revision }: { index?: 
   );
 }
 
-export default function Dashboard({ index, revision, onNavigate }: { index?: Index; revision?: string; onNavigate: (tab: string) => void }) {
+export default function Dashboard({ index, revision, onNavigate, recent = [], onSource }: { index?: Index; revision?: string; onNavigate: (tab: string) => void; recent?: string[]; onSource?: (file: string, line: number) => void }) {
   const { model } = useProjectModel(revision);
   const s = index?.stats;
   const tiles = [
@@ -45,6 +45,16 @@ export default function Dashboard({ index, revision, onNavigate }: { index?: Ind
             <button className="button primary" onClick={() => onNavigate('Test Generator')}><Wand2 size={15} />Generate a test from inputs</button>
             <button className="button" onClick={() => onNavigate('Recorder')}><Circle size={15} />Record a Playwright workflow</button>
             <button className="button" onClick={() => onNavigate('Dictionary Inspector')}><Braces size={15} />Inspect selector dictionaries</button>
+          </div>
+        </section>
+        <section className="panel">
+          <div className="panel-heading"><div><h2>Recently opened</h2></div></div>
+          <div className="wizard-body">
+            {recent.length ? (
+              <ul className="recent-list">{recent.map((f) => <li key={f}><button className="text-button" onClick={() => onSource?.(f, 1)}><FileCode2 size={13} />{f}</button></li>)}</ul>
+            ) : (
+              <p className="subtle">Files you open appear here.</p>
+            )}
           </div>
         </section>
         <section className="panel">

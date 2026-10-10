@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Search, FileCode2, Copy, Plus, Check, ChevronLeft, ChevronRight } from 'lucide-react';
 import { api, type Paged } from './api';
 import type { Selector } from './types';
+import { RowMenu, MenuHint, Highlight, copyText, clearOnEscape } from './ui';
 
 type Background = { name: string; file: string; line: number; steps: { keyword: string; text: string }[] };
 
@@ -26,9 +27,9 @@ function usePaged<T>(route: string, query: string, offset: number, limit: number
 function Pager({ offset, limit, data, setOffset }: { offset: number; limit: number; data: Paged<unknown>; setOffset: (n: number) => void }) {
   return (
     <div className="pagination">
-      <button className="button small" disabled={!offset} onClick={() => setOffset(Math.max(0, offset - limit))}><ChevronLeft size={14} />Previous</button>
+      <button className="button small ghost" disabled={!offset} onClick={() => setOffset(Math.max(0, offset - limit))}><ChevronLeft size={14} />Previous</button>
       <span>{data.items.length ? `${offset + 1}–${offset + data.items.length} of ${data.total.toLocaleString()}` : 'No results'}</span>
-      <button className="button small" disabled={!data.hasNext} onClick={() => setOffset(offset + limit)}>Next<ChevronRight size={14} /></button>
+      <button className="button small ghost" disabled={!data.hasNext} onClick={() => setOffset(offset + limit)}>Next<ChevronRight size={14} /></button>
     </div>
   );
 }
@@ -41,7 +42,7 @@ export function SelectorCatalogue({ revision, onSource, onNotice }: { revision?:
   return (
     <section aria-label="Selector catalogue">
       <div className="catalog-toolbar">
-        <label className="search-box"><Search size={16} /><input aria-label="Search Selectors" placeholder="Search selectors…" value={query} onChange={(e) => { setQuery(e.target.value); setOffset(0); }} /></label>
+        <label className="search-box"><Search size={16} /><input aria-label="Search Selectors" placeholder="Search selectors…" value={query} onChange={(e) => { setQuery(e.target.value); setOffset(0); }} onKeyDown={clearOnEscape(query, setQuery)} /></label>
         <select aria-label="Selector type" value={type} onChange={(e) => { setType(e.target.value); setOffset(0); }}>
           <option value="">All locator types</option>
           {['GetByTestId', 'GetByRole', 'GetByLabel', 'GetByText', 'Locator'].map((t) => <option key={t}>{t}</option>)}
@@ -49,21 +50,36 @@ export function SelectorCatalogue({ revision, onSource, onNotice }: { revision?:
       </div>
       {error && <p role="alert" className="inline-error">{error}</p>}
       <div className="catalog-grid" aria-busy={loading}>
-        {data.items.map((s) => (
-          <article className="panel catalog-card" key={s.id ?? `${s.file}:${s.line}`}>
-            <div className="catalog-card-top">
-              <span className="badge teal">{s.type}</span>
-              <span className={`badge ${s.resolution === 'Static' ? 'green' : 'amber'}`}>{s.resolution}</span>
-            </div>
-            <h3>{s.owner}.{s.member}</h3>
-            <code className="selector-code">{s.value}</code>
-            <button className="source-link" onClick={() => onSource(s.file, s.line)}><FileCode2 size={13} />{s.file}:{s.line}</button>
-            <div className="catalog-card-footer">
-              <span>Existing repository selector</span>
-              <button className="icon-button" aria-label="Copy selector" onClick={() => navigator.clipboard.writeText(s.value).then(() => onNotice('Selector copied.')).catch(() => onNotice('Clipboard unavailable.'))}><Copy size={15} /></button>
-            </div>
-          </article>
-        ))}
+        {data.items.map((s) => {
+          const copy = async (t: string, what: string) => onNotice((await copyText(t)) ? `${what} copied.` : 'Clipboard unavailable.');
+          return (
+            <RowMenu
+              key={s.id ?? `${s.file}:${s.line}`}
+              items={[
+                { label: 'Copy selector', icon: Copy, onSelect: () => copy(s.value, 'Selector') },
+                { label: 'Copy owner.member', icon: Copy, onSelect: () => copy(`${s.owner}.${s.member}`, 'Member') },
+                { label: 'Open source', icon: FileCode2, onSelect: () => onSource(s.file, s.line) },
+                'separator',
+                { label: `Show only ${s.type}`, icon: Search, onSelect: () => { setType(s.type); setOffset(0); } },
+                { label: `Search ${s.owner}`, icon: Search, onSelect: () => { setQuery(s.owner); setOffset(0); } },
+              ]}
+            >
+              <article className="panel catalog-card" data-menu-row>
+                <div className="catalog-card-top">
+                  <span className="badge teal">{s.type}</span>
+                  {s.resolution !== 'Static' && <span className="badge amber" title="Selector value is computed at runtime">Dynamic</span>}
+                  <MenuHint />
+                </div>
+                <h3><Highlight text={`${s.owner}.${s.member}`} query={query} /></h3>
+                <code className="selector-code">{s.value}</code>
+                <div className="catalog-card-footer">
+                  <span className="meta">{s.file.split('/').pop()}:{s.line}</span>
+                  <button className="icon-button" aria-label="Copy selector" onClick={() => copy(s.value, 'Selector')}><Copy size={15} /></button>
+                </div>
+              </article>
+            </RowMenu>
+          );
+        })}
         {!loading && !data.items.length && <div className="empty-state">No matching selectors.</div>}
       </div>
       <Pager offset={offset} limit={24} data={data} setOffset={setOffset} />
@@ -78,18 +94,30 @@ export function BackgroundCatalogue({ revision, onSource, onReuse }: { revision?
   return (
     <section aria-label="Background catalogue">
       <div className="catalog-toolbar">
-        <label className="search-box"><Search size={16} /><input aria-label="Search Backgrounds" placeholder="Search backgrounds…" value={query} onChange={(e) => { setQuery(e.target.value); setOffset(0); }} /></label>
+        <label className="search-box"><Search size={16} /><input aria-label="Search Backgrounds" placeholder="Search backgrounds…" value={query} onChange={(e) => { setQuery(e.target.value); setOffset(0); }} onKeyDown={clearOnEscape(query, setQuery)} /></label>
       </div>
       {error && <p role="alert" className="inline-error">{error}</p>}
       <div className="catalog-grid" aria-busy={loading}>
         {data.items.map((b) => (
-          <article className="panel catalog-card" key={`${b.file}:${b.line}`}>
-            <div className="catalog-card-top"><span className="badge purple">BACKGROUND</span><span>{b.steps.length} steps</span></div>
-            <h3>{b.name || b.file}</h3>
-            {b.steps.map((s, i) => <p className="background-step" key={i}><Check size={13} /><code>{s.keyword} {s.text}</code></p>)}
-            <button className="source-link" onClick={() => onSource(b.file, b.line)}>{b.file}:{b.line}</button>
-            <button className="button tiny" onClick={() => onReuse(b)}><Plus size={14} />Reuse background</button>
-          </article>
+          <RowMenu
+            key={`${b.file}:${b.line}`}
+            items={[
+              { label: 'Reuse background', icon: Plus, onSelect: () => onReuse(b) },
+              { label: 'Open source', icon: FileCode2, onSelect: () => onSource(b.file, b.line) },
+              { label: 'Copy steps', icon: Copy, onSelect: () => copyText(b.steps.map((s) => `${s.keyword} ${s.text}`).join('\n')) },
+            ]}
+          >
+            <article className="panel catalog-card" data-menu-row>
+              <div className="catalog-card-top"><span className="badge purple">BACKGROUND</span><span>{b.steps.length} steps</span><MenuHint /></div>
+              <h3><Highlight text={b.name || b.file.split('/').pop() || b.file} query={query} /></h3>
+              {b.steps.slice(0, 3).map((s, i) => <p className="background-step" key={i}><Check size={13} /><code>{s.keyword} {s.text}</code></p>)}
+              {b.steps.length > 3 && <p className="subtle">+{b.steps.length - 3} more steps</p>}
+              <div className="catalog-card-footer">
+                <span className="meta">{b.file}</span>
+                <button className="button tiny" onClick={() => onReuse(b)}><Plus size={14} />Reuse</button>
+              </div>
+            </article>
+          </RowMenu>
         ))}
         {!loading && !data.items.length && <div className="empty-state">No matching backgrounds.</div>}
       </div>

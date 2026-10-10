@@ -8,8 +8,6 @@ $red: #ff8a8a;
 // Navigation: nine tabs scroll rather than wrap.
 .nav-tabs {
   min-width: 0;
-  overflow-x: auto;
-  scrollbar-width: none;
   gap: 18px !important;
 }
 .nav-tab {
@@ -624,4 +622,237 @@ $red: #ff8a8a;
   .verify-row {
     flex-direction: column;
   }
+}
+
+// ---- Progressive disclosure & hierarchy ----
+.button.ghost {
+  background: transparent;
+  border-color: transparent;
+  box-shadow: none;
+  color: #b4bdd1;
+  &:hover:not(:disabled) {
+    background: #ffffff0a;
+    border-color: $border;
+  }
+  &.active {
+    color: $purple;
+    border-color: #aa94ff55;
+  }
+}
+.toolbar-spacer {
+  flex: 1;
+}
+.meta {
+  color: #6f7a92;
+  font-size: 11px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+mark {
+  background: #aa94ff33;
+  color: inherit;
+  border-radius: 2px;
+  padding: 0 1px;
+}
+.segmented.small button {
+  padding: 6px 10px;
+  font-size: 11px;
+}
+.menu-hint {
+  margin-left: auto;
+  opacity: 0;
+  width: 26px;
+  height: 26px;
+  transition: opacity 0.15s;
+}
+[data-menu-row]:hover .menu-hint,
+[data-menu-row]:focus-within .menu-hint,
+.menu-hint:focus-visible {
+  opacity: 1;
+}
+@media (hover: none) {
+  .menu-hint {
+    opacity: 1;
+  }
+}
+.catalog-card:focus-visible {
+  outline: 2px solid $purple;
+  outline-offset: 2px;
+}
+.context-menu {
+  min-width: 210px;
+  box-shadow: 0 16px 40px #0008;
+  animation: menu-in 0.12s ease-out;
+}
+@keyframes menu-in {
+  from {
+    opacity: 0;
+    transform: translateY(-3px);
+  }
+}
+.context-item {
+  width: 100%;
+  background: none;
+  border: 0;
+  font-size: 12px;
+  color: #d7dcea;
+  text-align: left;
+  span {
+    flex: 1;
+  }
+  kbd {
+    color: $muted;
+    font-size: 10px;
+  }
+  &:focus-visible,
+  &:hover {
+    background: #aa94ff1f;
+    outline: none;
+  }
+  &.active {
+    color: $purple;
+  }
+  &.danger {
+    color: $red;
+  }
+  &[data-disabled] {
+    opacity: 0.4;
+    pointer-events: none;
+  }
+}
+.context-separator {
+  height: 1px;
+  background: $border;
+  margin: 4px 2px;
+}
+.more-menu {
+  position: relative;
+  height: 100%;
+  display: flex;
+}
+.more-menu-list {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  z-index: 50;
+  display: flex;
+  flex-direction: column;
+}
+.collapsible-heading {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  min-height: 50px;
+  padding: 0 16px;
+  background: #19203055;
+  border: 0;
+  text-align: left;
+  color: #929cbb;
+  h2 {
+    font-size: 13px;
+    font-weight: 600;
+    color: #eef0f6;
+    margin: 0;
+    white-space: nowrap;
+  }
+}
+.collapsible.open .collapsible-heading {
+  border-bottom: 1px solid #293145;
+}
+.collapsible-summary {
+  color: #6f7a92;
+  font-size: 12px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  min-width: 0;
+}
+.collapsible-badge {
+  margin-left: auto;
+}
+.generator-main {
+  gap: 18px !important;
+}
+.generator-layout.no-sidebar {
+  grid-template-columns: minmax(0, 1fr);
+}
+.wizard-body {
+  padding: 18px 20px !important;
+  gap: 14px !important;
+}
+.code-with-copy {
+  position: relative;
+  .copy-button {
+    position: absolute;
+    top: 6px;
+    right: 6px;
+    background: #1a2130cc;
+  }
+}
+.code-details {
+  summary {
+    cursor: pointer;
+    color: $muted;
+    font-size: 12px;
+    padding: 4px 0;
+  }
+  &[open] summary {
+    margin-bottom: 8px;
+  }
+}
+.breadcrumbs {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 2px;
+  font-size: 12px;
+  min-width: 0;
+  button {
+    background: none;
+    border: 0;
+    padding: 2px 4px;
+    color: #c5cbe0;
+    border-radius: 4px;
+    &:hover {
+      background: #ffffff0d;
+    }
+  }
+  span {
+    color: $muted;
+  }
+}
+.shortcut-list {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 10px 18px;
+  margin: 0;
+  dt kbd {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    padding: 3px 7px;
+    border: 1px solid $border;
+    border-radius: 5px;
+    background: #0f1420;
+    white-space: nowrap;
+  }
+  dd {
+    margin: 0;
+    color: #c5cbe0;
+  }
+}
+.recent-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  .text-button {
+    margin: 0;
+    display: inline-flex;
+    gap: 6px;
+    align-items: center;
+  }
+}
+.dictionary-field:focus-visible {
+  outline: 2px solid $purple;
 }

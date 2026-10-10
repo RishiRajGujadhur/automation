@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
-import { Globe, ScanSearch } from 'lucide-react';
+import { Globe, ScanSearch, Copy } from 'lucide-react';
+import { RowMenu, copyText, useLocalState } from './ui';
 import { api, type Verification } from './api';
 import type { DictionaryEntry } from './types';
 
@@ -25,7 +26,8 @@ const verdict: Record<string, [string, string]> = {
  * appear after an explicit verification run, so the two are never confused.
  */
 export default function SelectorResolution({ entry, defaultUrl = '' }: { entry: DictionaryEntry; defaultUrl?: string }) {
-  const [url, setUrl] = useState(defaultUrl);
+  const [savedUrl, setUrl] = useLocalState('verify:url', defaultUrl);
+  const url = savedUrl;
   const [result, setResult] = useState<Verification>();
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
@@ -38,7 +40,12 @@ export default function SelectorResolution({ entry, defaultUrl = '' }: { entry: 
         {entry.selectors.map((s, i) => {
           const v = result?.results[i];
           return (
-            <li key={i} className={result ? (i === firstVerified ? 'resolved' : '') : s === firstSupported ? 'resolved' : ''}>
+            <RowMenu key={i} items={[
+              { label: 'Copy selector value', icon: Copy, onSelect: () => copyText(s.value) },
+              { label: 'Copy Playwright locator', icon: Copy, disabled: !s.code, onSelect: () => copyText(s.code ?? '') },
+              { label: 'Copy as XML', icon: Copy, onSelect: () => copyText(`<Selector Type="${s.type}">${s.value}</Selector>`) },
+            ]}>
+            <li data-menu-row className={result ? (i === firstVerified ? 'resolved' : '') : s === firstSupported ? 'resolved' : ''}>
               <span className="order-index">{i + 1}</span>
               <span className={`badge ${s.supported ? 'teal' : 'amber'}`}>{s.type}</span>
               <code>{s.value}</code>
@@ -51,6 +58,7 @@ export default function SelectorResolution({ entry, defaultUrl = '' }: { entry: 
                 {v?.error && <span className="subtle">{v.error}</span>}
               </small>
             </li>
+            </RowMenu>
           );
         })}
       </ol>

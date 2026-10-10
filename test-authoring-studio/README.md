@@ -98,7 +98,50 @@ Folder names are configurable through scan globs.
 | **Project Explorer** | Files grouped by layer (Feature, Step, UI, Selector data, Support, Config, Data, Build, Output), plus a folder browser. |
 | **Config** | The current workspace configuration, with a link to the settings dialog. |
 
-**Ctrl/Cmd+K** opens the command palette, which navigates between pages or adds a repository step.
+The tab bar shows only the four primary pages. Step Catalog, Backgrounds, Selectors, Project Explorer and Config are under **More**, and in the command palette.
+
+### Usability
+
+**Right-click menus:** secondary actions live in right-click menus. Hovering a card also shows a **⋯** button that opens the same menu.
+
+| Where | Menu actions |
+| --- | --- |
+| Step cards | Add, inspect evidence, open source, copy pattern, copy as Gherkin, copy location, filter by keyword |
+| Selector cards | Copy selector, copy owner.member, open source, filter by type, search the owner |
+| Background cards | Reuse, open source, copy steps |
+| Dictionary fields | Use in Test Generator, open source, copy Section/Field path, copy first locator, copy field XML, show the section |
+| Selector resolution rows | Copy value, copy Playwright locator, copy as XML |
+| Recorded actions | Accept top match, undo acceptance, propose a step or dictionary entries, search steps, copy as Playwright C#, remove |
+| Validation rows | Open the related file, copy details, re-run |
+| Feature explorer files | Open, view source, copy path, new feature beside |
+| Feature explorer folders | New feature here, collapse or expand, collapse all, expand all, copy path |
+| Project files | Open or view, copy path |
+
+**Keyboard:**
+- Ctrl/Cmd+K opens the command palette.
+- Alt+1…4 jumps to the primary pages.
+- `/` searches feature files, and `?` lists all shortcuts.
+- Ctrl/Cmd+S previews a save in the Test Generator, and Ctrl/Cmd+Enter validates.
+- Arrow keys move through dictionary fields.
+- Esc clears a search box before it closes anything.
+
+**Less on screen at once:**
+- The Test Generator steps are collapsible cards that show a one-line summary when closed.
+- Generated locator code and dictionary source start collapsed, and code blocks have a copy button.
+- Each view has one filled primary button. Secondary actions use ghost buttons or icons.
+- Catalogue cards show the source location as muted metadata. Backgrounds show their first three steps.
+
+**Remembered in this browser:** the last page and editor view, the Test Generator draft, the step-type filter, collapsed panels, the project sidebar setting, the selector verification URL, the Project Explorer folder, and recently opened files (listed on the Dashboard).
+
+**Small conveniences:**
+- Search terms are highlighted in results.
+- An "Unused" filter shows bindings no feature uses yet.
+- Project Explorer has clickable breadcrumbs.
+- The project-model sidebar can be hidden.
+- Validation results clear when you change inputs, so stale results are never shown.
+- Enter on a step card adds it.
+- Enter in the dictionary field finder picks the first match.
+- The Test Generator has a reset button.
 
 ### Test Generator
 

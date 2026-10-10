@@ -8,7 +8,12 @@ import {
   Plus,
   Search,
   X,
+  Copy,
+  ChevronsDownUp,
+  ChevronsUpDown,
+  Eye,
 } from 'lucide-react';
+import { RowMenu, copyText } from './ui';
 import {
   buildFeatureTree,
   normalizeFeaturePath,
@@ -26,6 +31,7 @@ type Props = {
   onSelect: (feature: Feature) => void;
   onFolder: (folder: string) => void;
   onNew: (folder?: string) => void;
+  onSource?: (file: string, line: number) => void;
 };
 export default function FeatureExplorer({
   features,
@@ -36,6 +42,7 @@ export default function FeatureExplorer({
   onSelect,
   onFolder,
   onNew,
+  onSource,
 }: Props) {
   const [collapsed, setCollapsed] = useState<Set<string>>(new Set());
   const tree = useMemo(() => buildFeatureTree(features, query), [features, query]);
@@ -48,13 +55,26 @@ export default function FeatureExplorer({
       return next;
     });
   }, [selectedFile]);
+  const collapseAll = () => {
+    const all = new Set<string>();
+    const walk = (nodes: FeatureNode[]) => nodes.forEach((n) => { if (n.kind === 'folder') { all.add(n.path); walk(n.children); } });
+    walk(tree);
+    setCollapsed(all);
+  };
   const count = tree.reduce((total, node) => total + (node.kind === 'folder' ? node.count : 1), 0);
   const render = (nodes: FeatureNode[], depth = 0) => (
     <ul className="folder-children">
       {nodes.map((node) => {
         if (node.kind === 'file')
           return (
-            <li key={node.path}>
+            <RowMenu key={node.path} items={[
+              { label: 'Open in editor', icon: FileCode2, onSelect: () => onSelect(node.feature) },
+              ...(onSource ? [{ label: 'View source', icon: Eye, onSelect: () => onSource(node.feature.file, 1) }] : []),
+              { label: 'Copy path', icon: Copy, onSelect: () => copyText(node.feature.file) },
+              'separator' as const,
+              { label: 'New feature beside this', icon: Plus, onSelect: () => onNew(node.path.split('/').slice(0, -1).join('/')) },
+            ]}>
+            <li>
               <button
                 className={`explorer-file ${normalizeFeaturePath(selectedFile ?? '') === node.path ? 'selected' : ''}`}
                 style={{ paddingLeft: 12 + depth * 14 }}
@@ -68,10 +88,19 @@ export default function FeatureExplorer({
                 <span>{node.name}</span>
               </button>
             </li>
+            </RowMenu>
           );
         const expanded = searching || !collapsed.has(node.path);
         return (
-          <li key={node.path}>
+          <RowMenu key={node.path} items={[
+            { label: 'New feature here', icon: Plus, onSelect: () => onNew(node.path) },
+            { label: expanded ? 'Collapse' : 'Expand', icon: expanded ? ChevronsDownUp : ChevronsUpDown, onSelect: () => setCollapsed((prev) => { const next = new Set(prev); if (expanded) next.add(node.path); else next.delete(node.path); return next; }) },
+            { label: 'Collapse all folders', icon: ChevronsDownUp, onSelect: collapseAll },
+            { label: 'Expand all folders', icon: ChevronsUpDown, onSelect: () => setCollapsed(new Set()) },
+            'separator' as const,
+            { label: 'Copy folder path', icon: Copy, onSelect: () => copyText(node.path) },
+          ]}>
+          <li>
             <div
               className={`explorer-folder-row ${activeFolder === node.path ? 'active-folder' : ''}`}
             >
@@ -108,6 +137,7 @@ export default function FeatureExplorer({
             </div>
             {expanded && render(node.children, depth + 1)}
           </li>
+          </RowMenu>
         );
       })}
     </ul>
@@ -116,6 +146,9 @@ export default function FeatureExplorer({
     <section className="feature-explorer" data-tour="explorer" aria-label="Feature explorer">
       <div className="sidebar-heading">
         <span>EXPLORER</span>
+        <button className="icon-button" aria-label="Collapse all folders" title="Collapse all folders" onClick={collapseAll}>
+          <ChevronsDownUp size={15} />
+        </button>
         <button
           className="icon-button"
           aria-label="New feature"
@@ -132,6 +165,7 @@ export default function FeatureExplorer({
           placeholder="Search files, folders, features…"
           value={query}
           onChange={(e) => onQuery(e.target.value)}
+          onKeyDown={(e) => { if (e.key === 'Escape' && query) { e.stopPropagation(); onQuery(''); } }}
         />
         {query ? (
           <button
@@ -142,7 +176,7 @@ export default function FeatureExplorer({
             <X size={13} />
           </button>
         ) : (
-          <kbd>Ctrl K</kbd>
+          <kbd title="Press / to search features">/</kbd>
         )}
       </label>
       <div className="explorer-summary" role="status">
