@@ -99,6 +99,7 @@ export class Recorder {
     this.browser.on('disconnected', () => {
       this.status = 'stopped';
       this.browser = undefined;
+      this.context = undefined;
     });
     const page = await this.context.newPage();
     try {
@@ -108,9 +109,52 @@ export class Recorder {
       throw error;
     }
   }
+  /**
+   * Resolve dictionary selectors against a real page. Uses the live recording page when one is open
+   * (no navigation), otherwise loads `url` in a throwaway headless browser. Read-only: counts matches only.
+   */
+  async verify(selectors: { type: string; value: string }[], url?: string) {
+    const live = this.context?.pages().at(-1);
+    let scratch: Browser | undefined;
+    try {
+      let page = live;
+      if (!page) {
+        if (!url) throw new Error('Start a recording or supply a page URL to verify selectors.');
+        const parsed = new URL(url);
+        if (!['http:', 'https:'].includes(parsed.protocol)) throw new Error('Use an http or https URL.');
+        scratch = await chromium.launch({ headless: true });
+        page = await scratch.newPage();
+        await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 20000 });
+      }
+      const p = page;
+      const results = [];
+      for (const s of selectors) {
+        const t = s.type.toLowerCase();
+        const locator =
+          t === 'testid' ? p.getByTestId(s.value)
+          : t === 'text' ? p.getByText(s.value, { exact: true })
+          : t === 'css' ? p.locator(s.value)
+          : t === 'xpath' ? p.locator('xpath=' + s.value)
+          : t.startsWith('ariarole.') ? p.getByRole(t.slice(9) as any, { name: s.value, exact: true })
+          : undefined;
+        if (!locator) { results.push({ ...s, status: 'unsupported' as const, count: 0 }); continue; }
+        try {
+          const count = await locator.count();
+          const visible = count === 1 ? await locator.isVisible() : false;
+          results.push({ ...s, count, visible, status: count === 0 ? 'none' as const : count === 1 ? 'verified' as const : 'multiple' as const });
+        } catch (e) {
+          results.push({ ...s, count: 0, status: 'error' as const, error: (e as Error).message.split('\n')[0] });
+        }
+      }
+      return { url: redact({ id: 'v', action: 'goto', url: p.url() }).url, source: live ? 'live recording page' : 'headless page load', results };
+    } finally {
+      await scratch?.close();
+    }
+  }
   async stop() {
     this.status = 'stopped';
     await this.browser?.close();
     this.browser = undefined;
+    this.context = undefined;
   }
 }

@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Page name="CheckoutPage">
+  <Section XRefCode="shippingdetails">
+    <Field XRefCode="emailinput" Type="TextBox">
+      <Selector Type="testid">email-input-field</Selector>
+      <Selector Type="ariarole.textbox">Email Address</Selector>
+      <Selector Type="css">#email-input-id</Selector>
+    </Field>
+    <Field XRefCode="placeorder" Type="Button">
+      <Selector Type="ariarole.button">Place order</Selector>
+      <Selector Type="css">form > div:nth-child(3) > button</Selector>
+    </Field>
+  </Section>
+</Page>

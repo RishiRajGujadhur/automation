@@ -33,3 +33,27 @@ it('records real browser events, redacts passwords, pauses and stops', async () 
     await new Promise<void>((resolve) => server.close(() => resolve()));
   }
 }, 20000);
+it('verifies dictionary selectors against a real page', async () => {
+  const server = createServer((_req, res) => {
+    res.setHeader('Content-Type', 'text/html');
+    res.end('<!doctype html><input data-testid="email" aria-label="Email"><button>Go</button><button>Go</button>');
+  });
+  await new Promise<void>((resolve) => server.listen(0, '127.0.0.1', resolve));
+  const port = (server.address() as { port: number }).port;
+  try {
+    const result = await new Recorder().verify(
+      [
+        { type: 'testid', value: 'email' },
+        { type: 'ariarole.textbox', value: 'Email' },
+        { type: 'text', value: 'Go' },
+        { type: 'css', value: '#missing' },
+        { type: 'weird', value: 'x' },
+      ],
+      `http://127.0.0.1:${port}/?token=secret`,
+    );
+    expect(result.results.map((r) => r.status)).toEqual(['verified', 'verified', 'multiple', 'none', 'unsupported']);
+    expect(result.url).not.toContain('secret');
+  } finally {
+    server.close();
+  }
+}, 30000);

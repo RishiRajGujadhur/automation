@@ -8,6 +8,8 @@ export type Binding = Source & {
   parameters: { name: string; type: string }[];
   usages: number;
   examples: string[];
+  expression?: 'Regex' | 'Cucumber';
+  scopes?: { tag: string; feature: string; scenario: string }[];
 };
 export type Step = Source & {
   keyword: string;
@@ -20,7 +22,7 @@ export type Feature = Source & {
   name: string;
   source: string;
   tags: string[];
-  scenarios: { name: string; keyword: string; steps: Step[]; examples: unknown[]; line: number }[];
+  scenarios: { name: string; keyword: string; steps: Step[]; examples: unknown[]; line: number; tags?: string[] }[];
   backgrounds: { name: string; steps: Step[]; line: number }[];
 };
 export type Selector = Source & {
@@ -45,7 +47,7 @@ export type Index = {
   diagnostics: string[];
 };
 export type DictionaryEntry = Source & {id:string;page:string;section:string;field:string;fieldType:string;selectors:{type:string;value:string;line:number;code:string|null;supported:boolean;warnings:string[]}[]};
-export type StepPage={items:Binding[];offset:number;limit:number;hasNext:boolean;total:number|null;indexedTotal:number};
+export type StepPage={items:Binding[];offset:number;limit:number;hasNext:boolean;total:number;indexedTotal:number};
 export type Action = {
   id: string;
   action: 'goto' | 'fill' | 'press' | 'click';

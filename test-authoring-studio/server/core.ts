@@ -74,9 +74,34 @@ export function command(
     p.stdin.end(input);
   });
 }
+const escapeRegex = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+export const isCucumberExpression = (p: string) =>
+  !p.startsWith('^') && !p.endsWith('$') && /\{[A-Za-z]*\}/.test(p);
+/** Mirrors scanner ToRegex: Cucumber expressions become regex, classic patterns pass through. */
+export function expressionToRegex(p: string) {
+  if (!isCucumberExpression(p)) return p;
+  return p
+    .split(/(\{[A-Za-z]*\}|\([^()]*\))/)
+    .map((x) =>
+      x === '{int}'
+        ? '(-?\\d+)'
+        : ['{float}', '{double}', '{decimal}'].includes(x)
+          ? '(-?\\d*\\.?\\d+)'
+          : x === '{word}'
+            ? '([^\\s]+)'
+            : x === '{string}'
+              ? `(?:"([^"]*)"|'([^']*)')`
+              : /^\{[A-Za-z]*\}$/.test(x)
+                ? '(.*)'
+                : x.startsWith('(') && x.endsWith(')')
+                  ? `(?:${escapeRegex(x.slice(1, -1))})?`
+                  : escapeRegex(x),
+    )
+    .join('');
+}
 export function bindingMatches(binding: Binding, text: string) {
   try {
-    return new RegExp(`^(?:${binding.pattern})$`).test(text);
+    return new RegExp(`^(?:${expressionToRegex(binding.pattern)})$`).test(text);
   } catch {
     return false;
   }
@@ -130,6 +155,7 @@ export function parseFeature(source: string, file: string, bindings: Binding[]):
           keyword: c.scenario.keyword,
           line: c.scenario.location.line,
           steps: steps(c.scenario.steps),
+          tags: c.scenario.tags.map((t: any) => t.name),
           examples: c.scenario.examples,
         });
       if (c.rule) walk(c.rule.children);
@@ -148,14 +174,15 @@ export function parseFeature(source: string, file: string, bindings: Binding[]):
 }
 export async function matchFeatureBindings(features: Feature[], bindings: Binding[]) {
   const occurrences: Step[] = [];
-  const steps: { keyword: string; text: string }[] = [];
+  const steps: { keyword: string; text: string; tags: string[]; feature: string; scenario: string }[] = [];
   for (const feature of features)
     for (const section of [...feature.backgrounds, ...feature.scenarios]) {
       let keyword = 'Given';
+      const tags = [...feature.tags, ...(((section as { tags?: string[] }).tags) ?? [])];
       for (const step of section.steps) {
         if (['Given', 'When', 'Then'].includes(step.keyword)) keyword = step.keyword;
         occurrences.push(step);
-        steps.push({ keyword, text: step.text });
+        steps.push({ keyword, text: step.text, tags, feature: feature.name, scenario: section.name });
       }
     }
   const { results, diagnostics } = JSON.parse(
