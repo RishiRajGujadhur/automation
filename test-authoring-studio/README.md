@@ -86,56 +86,93 @@ Folder names are configurable through scan globs.
   - the dictionary file is included in build output;
   - the test follows the repository's naming and folder conventions.
 
+## Pages
+
+| Page | What it does |
+| --- | --- |
+| **Dashboard** | Index counts, project classification indicators (§11), files per layer, scan diagnostics, quick entry points. |
+| **Test Generator** | The guided flow below. A context bar shows the active project, target framework, browser and dictionary sync status. |
+| **Features** | Feature editor, scenario builder and Playwright recorder. |
+| **Step Catalog / Backgrounds / Selectors** | Worker-backed, paged searches over bindings, backgrounds and C# locator calls. |
+| **Dictionary Inspector** | XML fields in document order, static vs browser-verified selector badges, locator code, and a hand-off to the Test Generator. |
+| **Project Explorer** | Files grouped by layer (Feature, Step, UI, Selector data, Support, Config, Data, Build, Output), plus a folder browser. |
+| **Config** | The current workspace configuration, with a link to the settings dialog. |
+
+**Ctrl/Cmd+K** opens the command palette, which navigates between pages or adds a repository step.
+
+### Test Generator
+
+1. **Scenario & feature context.** Feature area, target `.feature` file, scenario name, and Gherkin steps.
+2. **Page object & locator mapping.** Page, section, field, field type, action, and test data. "Find an existing dictionary field" fills these from the index.
+3. **Selector resolution.** Shows the matched `<Field>` XML, every selector in document order with its rule priority, and the generated Playwright call for the first supported selector. **Verify in browser** counts matches on the live recording page, or on a URL you enter. If the field doesn't exist yet, you enter selectors in priority order, choose an existing or new dictionary file, and preview the XML diff.
+4. **Validation & quality gate.** The §12 checks, each shown as passed, review, failed or skipped:
+   - **Step pattern match:** every step resolves to exactly one binding (regex or Cucumber expression).
+   - **Dictionary existence:** the page, section and field are found after normalization.
+   - **Field has selectors:** at least one selector uses a supported type.
+   - **Selector stability:** the first selector's priority, plus brittle, XPath and generated-id warnings.
+   - **Lifecycle compliance:** `[BeforeScenario]`/`[AfterScenario]` browser hooks exist, and no step definition launches a browser.
+   - **Output directory check:** the nearest `.csproj` copies or embeds the dictionary (MSBuild globs are evaluated).
+   - **Naming & folder conventions:** `Features/<Area>/<PascalCase>.feature`.
+5. **Actions:**
+   - **Regenerate code & save** appends the scenario to the feature file. It shows a diff and writes only after approval.
+   - **Run dry-run validation** writes nothing.
+   - **Export to feature file** opens the result in the editor.
+
+A sidebar shows the project model and highlights the files the current test touches.
+
 ## Workflow
 
 1. **Configure.** Open Config and select the repository root and a project directory or `.csproj`. Set the source, feature, and XML globs, the ignored directories, and whether to scan direct references. The last working config is saved to `.local/workspace.json`.
-2. **Scan.** Search steps, backgrounds, and selectors. Inspect binding parameters, usages, source locations, and resolved or unresolved call evidence.
-3. **Build a scenario.** Add steps from the catalogue, the autocomplete, or the command palette (Ctrl/Cmd+K). Fill in parameters and reorder steps. Optionally switch to a Scenario Outline with Examples. Reuse backgrounds. The Gherkin editor supports the full syntax.
+2. **Scan.** Search steps, backgrounds, selectors and dictionary fields. Inspect binding parameters, usages, source locations, and call evidence.
+3. **Build a scenario.** Use the Test Generator, or add steps from the catalogue or the command palette. Fill in parameters, reorder steps, and optionally switch to a Scenario Outline.
 4. **Record.** Launch Chromium from the recorder. You can pause, resume, and stop. The studio captures navigation, clicks, input, and the Enter, Tab, and Escape keys.
-5. **Match.** The studio ranks each recorded action against existing bindings. Review the alternatives and accept candidates explicitly.
-6. **Fill gaps.** Search the repository first. If nothing fits, the studio proposes Gherkin wording or previews a C# binding or page-object scaffold. Existing selectors and methods are highlighted.
-7. **Write.** Apply the accepted actions to the editor, validate the Gherkin, and preview the real file diff. **Approve and write file** is the only write operation. A file changed outside the app invalidates stale previews. The app never commits.
-8. **Run (optional).** Select **Run tests** and give a `.csproj` and a `dotnet test --filter` expression. This is the only path that executes repository code. Scanning never does.
+5. **Match.** The studio ranks each recorded action against existing bindings. Accept candidates explicitly.
+6. **Fill gaps.**
+   - For unmatched actions, **Propose dictionary entries** creates Section/Field/Selector entries from the recorded test id, role and accessible name. It never invents CSS or XPath. It also creates a new page object whose methods resolve through the dictionary. Each file is written only after its own diff approval.
+   - Existing fields are reused. New selectors are appended without reordering existing ones.
+   - **Propose a step** creates Gherkin wording or a C# binding scaffold.
+7. **Write.** Every write goes through a previewed diff and **Approve and write**. A file changed outside the app invalidates stale previews. The app never commits.
+8. **Run (optional).** Select **Run tests** and give a `.csproj` and a `dotnet test --filter` expression. This is the only path that executes repository code.
 
-The **Feature explorer** mirrors repository paths at any depth. Folder search keeps matching ancestors visible. **+** creates a draft in that folder, and approving the draft creates any new subfolders. **Guide me** starts a Joyride tour that never records or writes anything.
+The **Feature explorer** mirrors repository paths at any depth. **Guide me** starts a tour that never records or writes anything.
 
 ## Search architecture
 
-The client used to download every binding and filter them in the browser. Search now runs on the server:
+The client never downloads full collections. One worker thread per scan hosts FlexSearch indexes for every collection:
 
 ```text
-Catalogue ─┐
-Autocomplete ├─> GET /api/steps?q&offset&limit&keyword ─> StepSearch ─> worker thread (FlexSearch)
-Palette ───┘                                                  (byId map)    indexes: all / Given / When / Then
+Step catalogue / autocomplete / palette ─> GET /api/steps         ─┐
+Selector catalogue                      ─> GET /api/selectors     ─┤
+Background catalogue                    ─> GET /api/backgrounds   ─┼─> WorkspaceSearch ─> worker (FlexSearch)
+Dictionary inspector / generator        ─> GET /api/dictionaries  ─┘    collections × facets (keyword / locator type)
 ```
 
-- **Worker indexes:** `server/stepSearch.ts` builds a FlexSearch index in a worker (`server/search-worker.mjs`) on every scan. The worker keeps one index per keyword.
-- **Indexed text:** each document combines the pattern, class, method, file, parameter names, and examples.
-- **Normalization:** camelCase is split, accents are stripped, and a small fixed alias table maps verb forms (for example, `clicked` → `click` and `login` → `signin`). This is deterministic expansion, not AI inference.
-- **Capped responses:** `limit` is at most 50 and `q` at most 200 characters. Responses return `items`, `hasNext`, `total` (null for text queries), and `indexedTotal`.
-- **Slim workspace payload:** `/api/workspace` returns stats only, with no bindings, selectors, methods, call edges, or dictionary entries. Detail endpoints (`/api/step`, `/api/feature`, `/api/dictionaries`, `/api/project/files`) page separately.
-- **One client hook:** the catalogue, autocomplete, and command palette all use `useStepSearch`, which debounces input and aborts stale requests.
-- **Workspace changes:** rescanning or switching workspaces terminates the old worker and rejects its pending searches.
+- **Normalization:** camelCase is split, accents are stripped, and a small fixed alias table maps verb forms (for example, `clicked` → `click`). This is deterministic, not AI.
+- **Capped responses:** `limit` is at most 50 and `q` at most 200 characters. Responses include `items`, `hasNext`, an exact `total` (capped at 100,000 matches) and `indexedTotal`.
+- **Stats-only workspace payload:** `/api/workspace` returns counts only. Features load on demand through `/api/feature`, and binding call evidence through `/api/step`.
+- **Workspace changes:** a rescan replaces the worker and rejects its pending searches.
 
-## Dictionary inspector
+## Dictionary authoring
 
-- Lists Page / Section / Field entries with their file and line (each field's line, not the top of the file). Results are paged 12 at a time.
-- Shows selectors **in XML document order**. It labels the first supported selector and the fallbacks, and marks unsupported types.
-- Generates the C# locator code for Fill, Click, or Verify-visible, and shows the dictionary source.
-- Every candidate is labeled a **static preview**. Browser verification is not implemented yet (see Todo).
+- **Parsing:** `Page → Section → Field → Selector` is parsed with SAX, so each field and selector carries its own line number.
+- **Matching:** section and field lookups normalize spaces, `/`, `(` and `)`, and ignore case.
+- **Writing:** merges are text-based, so comments, formatting and selector order survive. A new selector is appended, a new field goes at the end of its section, and a new section goes at the end of the page. A missing file is created with a `<Page>` root.
+- **Static preview vs browser verification:** a static preview shows XML order and rule priority only. A browser verification reports per-selector results (verified, multiple matches, no match, error) and which selector the page would resolve to. Results are labeled with the page URL they came from, with the query string and fragment removed.
 
 ## Layout
 
 | Path | Contents |
 | --- | --- |
 | `server/core.ts` | Workspace resolution, Gherkin parsing, index assembly, classification, action matching |
-| `server/stepSearch.ts`, `server/search-worker.mjs` | Worker-backed step search |
-| `server/dictionaries.ts` | SAX parser for dictionary XML, locator code generation, selector warnings |
-| `server/recorder.ts` | Playwright capture and redaction |
-| `server/proposals.ts` | Reviewable C# scaffolds |
+| `server/stepSearch.ts`, `server/search-worker.mjs` | Worker-backed search for steps, selectors, dictionaries, backgrounds |
+| `server/dictionaries.ts` | Dictionary XML parsing, ranking, warnings, text merge, field proposals |
+| `server/validation.ts` | Quality gate checks, including MSBuild output inclusion |
+| `server/projectModel.ts` | Layer classification, packages, frameworks, indicators |
+| `server/recorder.ts` | Playwright capture, redaction, selector verification |
+| `server/proposals.ts` | C# binding scaffolds and dictionary-backed page objects |
 | `scanner/` | Roslyn static scanner. It never runs MSBuild or project code |
-| `src/` | React client (`App.tsx`, `StepCatalogue`, `SearchPalette`, `DictionaryInspector`, `FeatureExplorer`, `ProjectExplorer`, `StudioTour`) |
-| `fixtures/` | Small sample repository. It is not executable |
+| `src/` | React client: `App.tsx` shell, `Dashboard`, `TestGenerator`, `DictionaryInspector`, `SelectorResolution`, `ProjectExplorer`, `Catalogues`, `StepCatalogue`, `SearchPalette`, `RecordingDictionary`, `DiffApproval` |
+| `fixtures/` | Small sample repository (features, steps, hooks, a checkout dictionary, a `.csproj`). It is not executable |
 
 ## CLI
 
@@ -162,9 +199,10 @@ npm audit
 The tests cover:
 
 - **Parsing:** Gherkin outlines, tables, and doc strings; inherited keywords; ambiguous bindings; multiple attributes; parameters; static call evidence.
-- **Matching:** ranking.
+- **Matching:** ranking, Cucumber expressions.
 - **Recording:** redaction, real Chromium capture, pause and stop.
 - **Safety:** path confinement, preview approval, external file changes, one-time apply tokens.
+- **Dictionaries and validation:** XML merge order, field proposals, MSBuild globs, the quality gate on fixtures, project model, worker search totals, and browser selector verification.
 - **UI:** catalogue-to-builder authoring and mobile overflow.
 
 E2E tests run serially because they share one API workspace.
@@ -173,39 +211,34 @@ E2E tests run serially because they share one API workspace.
 
 ### Done
 
-- Roslyn scanning of steps, page objects, locator calls, and call evidence
-- Gherkin parsing and a full-syntax editor
-- Scenario builder with outlines and backgrounds
-- Feature explorer with nested folders
-- Playwright recorder with redaction
-- Deterministic matching of recorded actions to bindings
-- Gherkin and C# scaffold proposals
-- Diff preview, approved writes, and stale-preview protection
-- Optional `dotnet test` execution
-- Worker-backed step search with capped, paged API responses, shared by the catalogue, autocomplete, and palette
-- Page / Section / Field / Selector dictionary parsing with document order preserved and per-field line numbers
-- Dictionary inspector with static locator previews
-- Guided tour, CLI, and unit and E2E tests
+- **Scanning:** Roslyn scanning of steps, page objects, locator calls and call evidence. Supports Cucumber expressions and `[Scope]` (tag, feature, scenario).
+- **Gherkin:** parsing and a full-syntax editor.
+- **Authoring UI:** scenario builder with outlines and backgrounds, and a feature explorer with nested folders.
+- **Pages:** Dashboard, Test Generator, Project Explorer, Dictionary Inspector and Config.
+- **Recording:** Playwright recorder with redaction, and deterministic matching of recorded actions to bindings.
+- **Recording to dictionary to page object:** proposals for unmatched actions.
+- **Dictionaries:** new dictionary files and entries, merged without reordering. Browser-verified selector matches, kept separate from static previews.
+- **Validation gate:** step match, dictionary, selector stability, lifecycle, build output and conventions.
+- **Search:** worker-backed search for every collection, with exact totals and capped, paged responses.
+- **Writes:** diff preview, approved writes and stale-preview protection.
+- **Running:** optional `dotnet test` execution.
+- **Tooling:** guided tour, CLI, unit tests and E2E tests.
 
 ### Todo
 
-- [ ] **Browser-verified selector matches.** Resolve a dictionary field's selectors against a live page in the recorder, then show "verified match", "no match", or "multiple matches" next to each static candidate.
-- [ ] **New selector dictionaries.** Propose new XML dictionary files and Section/Field/Selector entries from recorded actions. Preferred types: testid, then role, then text, then css. Follow the existing preview, approve, and write flow, and append to an existing dictionary without reordering it.
-- [ ] **Recording → dictionary → page object.** For unmatched actions, generate the dictionary entry and a page-object call that uses it, instead of an inline locator scaffold.
-- [ ] **Validation rule checks.** Confirm that the page, section, and field exist for generated steps. Check that dictionary files are copied to build output (`.csproj` `CopyToOutputDirectory`).
-- [ ] **Searchable selectors and backgrounds.** Move selector and background search onto the worker index. Dictionary search is still a linear filter on the server.
-- [ ] **Exact totals.** Report total counts for text search queries, not just paging.
-- [ ] **Binding coverage.** Support scoped bindings (`[Scope]`) and Cucumber expressions, which currently need manual review.
 - [ ] **More recorder actions.** Uploads, downloads, drag-and-drop, assertions, frame identity, and shadow-DOM chains.
 - [ ] **Multi-action steps.** Compress several actions into one binding, and infer assertions.
+- [ ] **Environment and browser selection.** The context bar shows Chromium only. Target environments are not modeled.
+- [ ] **Generator step bindings.** The Test Generator doesn't scaffold missing bindings for scenario steps yet. Use the recorder's **Propose a step** instead.
 - [ ] **Optional integrations.** AI ranking, an MCP server, and IDE extensions.
 
 ## Boundaries
 
 - **The sample repository is not executable.** Running tests needs your real project with its SDK, package restore, browsers, and configuration.
 - **Static analysis only.** Roslyn parses source without MSBuild. It does not guess about external assemblies, reflection, dynamic selectors, or unresolved calls. Direct references are scanned but not built.
-- **Regex limits.** Binding regexes run on the .NET engine with a 100 ms timeout.
+- **Regex limits.** Binding regexes run on the .NET engine with a 100 ms timeout. Cucumber expressions support `{int}`, `{float}`, `{word}`, `{string}`, `{}`, custom types (treated as `.*`), and optional text `(s)`. Alternation (`a/b`) is not supported.
 - **Heuristic scores.** Ranking scores are evidence, not probabilities.
-- **Scaffolds are not verified code.** New C# scaffolds throw until you choose a verified locator. Existing C# files are never replaced.
+- **Scaffolds are not verified code.** New C# scaffolds throw until you choose a verified locator. The generated `DictionaryFieldResolver` is a starting point; replace it with your repository's resolver if one exists (the notes list candidates). Existing C# files are never replaced.
+- **Browser verification is a snapshot.** It reflects the page state at that moment, after the page loads, with no login or navigation beyond the URL.
 - **Redaction.** Passwords and recognizable secret fields are redacted. URL credentials, query strings, and fragments are stripped. Secrets typed into ordinary unlabeled fields cannot be detected.
 - **Local only.** The service binds to loopback only and rejects unexpected origins and hosts. All reads and writes are confined to the selected repository, including symlink checks. Do not expose it publicly.
