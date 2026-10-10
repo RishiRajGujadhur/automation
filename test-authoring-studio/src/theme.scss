@@ -423,6 +423,47 @@
   .switch-row {
     padding: 0;
   }
+  &.sub {
+    padding: 10px 0 10px 16px;
+    h3 {
+      font-size: 14px;
+    }
+    p {
+      font-size: 12.5px;
+    }
+  }
+  h3 {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+}
+.info-tip {
+  display: inline-grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--text-muted);
+  cursor: help;
+  &:hover,
+  &:focus-visible {
+    color: var(--accent-text);
+    background: var(--accent-soft);
+  }
+}
+.tooltip-wide {
+  display: block;
+  max-width: 320px;
+  white-space: normal;
+  line-height: 1.45;
+}
+.button-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
 }
 .settings-row-control {
   justify-self: end;

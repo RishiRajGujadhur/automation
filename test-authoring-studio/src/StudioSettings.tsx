@@ -4,10 +4,11 @@ import * as Yup from 'yup';
 import CodeMirror from '@uiw/react-codemirror';
 import { StreamLanguage } from '@codemirror/language';
 import { gherkin } from '@codemirror/legacy-modes/mode/gherkin';
-import { Download, Trash2, RotateCcw, Search, Settings2, Palette, Code2, Accessibility, PanelLeft, Network, Activity, FolderCog, HardDrive, Keyboard, X, type LucideIcon } from 'lucide-react';
+import { Download, Trash2, RotateCcw, Search, Settings2, Palette, Code2, Accessibility, PanelLeft, Network, Activity, FolderCog, HardDrive, Keyboard, X, Cpu, Info, type LucideIcon } from 'lucide-react';
 import { api } from './api';
 import { TextField } from './forms';
-import { Switch as SwitchPrimitive, Segmented, usePrefs, useConfirm } from './radix2';
+import { Switch as SwitchPrimitive, Segmented, usePrefs, useConfirm, useAlgorithms, Tip } from './radix2';
+import { algorithms, categories } from './algorithms/registry';
 import { Button, Select } from './radix';
 import { Highlight } from './ui';
 import { appThemes, editorThemes, resolveEditorTheme, type AppThemeId, type EditorThemeId } from './themes';
@@ -17,7 +18,7 @@ import { defaultPrefs } from './radix2';
 
 type Settings = { webPort: number; apiPort: number; tracing: { enabled: boolean; screenshots: boolean; snapshots: boolean; sources: boolean } };
 type Trace = { name: string; size: number; modified: string };
-type Row = { id: string; section: string; title: string; description?: string; keywords?: string; control?: ReactNode; block?: ReactNode };
+type Row = { id: string; section: string; title: string; description?: string; keywords?: string; control?: ReactNode; block?: ReactNode; tip?: string; sub?: boolean };
 
 const port = Yup.number().typeError('Enter a number.').integer('Whole numbers only.').min(1024, 'Use 1024–65535 (lower ports need admin rights).').max(65535, 'Use 1024–65535.').required('Required.');
 const portSchema = Yup.object({ webPort: port, apiPort: port.test('distinct', 'Must differ from the web port.', function (v) { return v !== this.parent.webPort; }) });
@@ -33,6 +34,7 @@ const sections: { id: string; label: string; icon: LucideIcon }[] = [
   { id: 'Ports', label: 'Ports', icon: Network },
   { id: 'Playwright tracing', label: 'Playwright tracing', icon: Activity },
   { id: 'Workspace', label: 'Workspace', icon: FolderCog },
+  { id: 'Algorithms', label: 'Algorithms', icon: Cpu },
   { id: 'Storage', label: 'Storage', icon: HardDrive },
   { id: 'Shortcuts', label: 'Keyboard shortcuts', icon: Keyboard },
 ];
@@ -48,6 +50,7 @@ Feature: Checkout
 /** Claude-Code-style settings: searchable sidebar of categories, rows of title/description + control. */
 export default function StudioSettings({ onNotice, onWorkspace, shortcuts, onClose }: { onNotice: (m: string) => void; onWorkspace: () => void; shortcuts: [string, string][]; onClose: () => void }) {
   const { prefs, setPrefs } = usePrefs();
+  const algo = useAlgorithms();
   const confirm = useConfirm();
   const [section, setSection] = useState('General');
   const [query, setQuery] = useState('');
@@ -183,13 +186,31 @@ export default function StudioSettings({ onNotice, onWorkspace, shortcuts, onClo
     },
     // Workspace
     { id: 'workspace', section: 'Workspace', title: 'Repository and scan patterns', description: 'Repository root, target project, feature/source/dictionary globs and ignored folders.', keywords: 'repository root csproj glob scan', control: <Button size="small" onClick={onWorkspace}>Open workspace settings</Button> },
-    // Storage
-    { id: 'cards', section: 'Storage', title: 'Reset card states', description: 'Every collapsible card returns to its default open or closed state.', keywords: 'collapse cards reset', control: <Button variant="ghost" size="small" onClick={async () => { if (await confirm({ title: 'Reset collapsed cards?', description: 'Every card returns to its default open or closed state.', confirm: 'Reset cards' })) { cachedKeys().filter((k) => k.startsWith('tas:open:') || k.startsWith('tas:card:')).forEach((k) => localStorage.removeItem(k)); location.reload(); } }}><RotateCcw size={13} aria-hidden="true" />Reset card states</Button> },
+    // Algorithms
+    {
+      id: 'algo-all', section: 'Algorithms', title: `${algorithms.filter((x) => algo.on(x.id)).length} of ${algorithms.length} algorithms on`, description: 'Deterministic (non-AI) algorithms used by Test Design, the feature editor and search. Turn any of them off; tools that need a disabled algorithm say so and offer to turn it back on. Hover ⓘ for what each one does.', keywords: 'algorithm enable disable all reset',
+      control: (
+        <div className="button-row">
+          <Button size="small" onClick={() => algo.set(Object.fromEntries(algorithms.map((x) => [x.id, true])))}>Enable all</Button>
+          <Button size="small" variant="ghost" onClick={() => algo.set(Object.fromEntries(algorithms.map((x) => [x.id, false])))}>Disable all</Button>
+          <Button size="small" variant="ghost" onClick={() => { algo.reset(); onNotice('Algorithms reset to defaults.'); }}><RotateCcw size={13} aria-hidden="true" />Reset</Button>
+        </div>
+      ),
+    },
+    ...categories.flatMap((c): Row[] => {
+      const list = algorithms.filter((x) => x.category === c);
+      const onCount = list.filter((x) => algo.on(x.id)).length;
+      return [
+        { id: `algo-cat-${c}`, section: 'Algorithms', title: c, description: `${onCount} of ${list.length} on · used in ${list[0].usedIn}.`, keywords: list.map((x) => x.name).join(' '), control: sw(`algo-cat-${c.replace(/\W/g, '')}`, onCount === list.length, (v) => algo.set(Object.fromEntries(list.map((x) => [x.id, v]))), `All ${c} algorithms`) },
+        ...list.map((x): Row => ({ id: `algo-${x.id}`, sub: true, section: 'Algorithms', title: x.name, tip: x.tooltip, description: x.tooltip.split('. ')[0].replace(/\.$/, '') + '.', keywords: `${x.id} ${x.tooltip} ${c}`, control: sw(`algo-${x.id}`, algo.on(x.id), (v) => algo.set({ [x.id]: v }), x.name) })),
+      ];
+    }),
+    // Storage    { id: 'cards', section: 'Storage', title: 'Reset card states', description: 'Every collapsible card returns to its default open or closed state.', keywords: 'collapse cards reset', control: <Button variant="ghost" size="small" onClick={async () => { if (await confirm({ title: 'Reset collapsed cards?', description: 'Every card returns to its default open or closed state.', confirm: 'Reset cards' })) { cachedKeys().filter((k) => k.startsWith('tas:open:') || k.startsWith('tas:card:')).forEach((k) => localStorage.removeItem(k)); location.reload(); } }}><RotateCcw size={13} aria-hidden="true" />Reset card states</Button> },
     { id: 'cache', section: 'Storage', title: 'Clear cached UI state', description: `${cacheCount} item${cacheCount === 1 ? '' : 's'} stored in this browser: drafts, preferences, layout and history. Repository files are not affected.`, keywords: 'cache localstorage clear reset delete', control: <Button variant="danger" size="small" disabled={!cacheCount} onClick={async () => { if (await confirm({ title: 'Clear all cached UI state?', description: 'Removes drafts, preferences, layout and history stored in this browser, then reloads. Repository files are not touched.', confirm: 'Clear cache', danger: true })) { cachedKeys().forEach((k) => localStorage.removeItem(k)); location.reload(); } }}><Trash2 size={13} aria-hidden="true" />Clear cache</Button> },
     // Shortcuts
     { id: 'shortcuts', section: 'Shortcuts', title: 'All shortcuts', keywords: shortcuts.map((s) => s.join(' ')).join(' '), block: <dl className="shortcut-list">{shortcuts.map(([k, d]) => <div key={k} className="shortcut-row"><dt><kbd>{k}</kbd></dt><dd>{d}</dd></div>)}</dl> },
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  ], [prefs, settings, traces, error, cacheCount, editor]);
+  ], [prefs, settings, traces, error, cacheCount, editor, algo]);
 
   const q = query.trim().toLowerCase();
   const matches = q ? rows.filter((r) => `${r.section} ${r.title} ${r.description ?? ''} ${r.keywords ?? ''}`.toLowerCase().includes(q)) : rows.filter((r) => r.section === section);
@@ -229,9 +250,12 @@ export default function StudioSettings({ onNotice, onWorkspace, shortcuts, onClo
           <section key={s.id} className="settings-section" aria-labelledby={`settings-${s.id.replace(/\W/g, '')}`}>
             <h2 id={`settings-${s.id.replace(/\W/g, '')}`}>{s.label}</h2>
             {items.map((r) => (
-              <div key={r.id} className={`settings-row ${r.block && !r.control ? 'stacked' : ''}`}>
+              <div key={r.id} className={`settings-row ${r.block && !r.control ? 'stacked' : ''} ${r.sub ? 'sub' : ''}`}>
                 <div className="settings-row-text">
-                  <h3><Highlight text={r.title} query={q} /></h3>
+                  <h3>
+                    <Highlight text={r.title} query={q} />
+                    {r.tip && <Tip content={<span className="tooltip-wide">{r.tip}</span>} side="top"><button type="button" className="info-tip" aria-label={`About ${r.title}: ${r.tip}`}><Info size={13} aria-hidden="true" /></button></Tip>}
+                  </h3>
                   {r.description && <p><Highlight text={r.description} query={q} /></p>}
                 </div>
                 {r.control && <div className="settings-row-control">{r.control}</div>}
