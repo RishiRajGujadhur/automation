@@ -3,6 +3,7 @@ import { Globe, ScanSearch, Copy } from 'lucide-react';
 import { RowMenu, copyText, useLocalState } from './ui';
 import { api, type Verification } from './api';
 import type { DictionaryEntry } from './types';
+import { Button } from './radix';
 
 const rankLabel = (type: string, value: string) => {
   const t = type.toLowerCase();
@@ -67,8 +68,8 @@ export default function SelectorResolution({ entry, defaultUrl = '' }: { entry: 
           <Globe size={15} />
           <input aria-label="Verification page URL" placeholder="Page URL (uses the live recording page when open)" value={url} onChange={(e) => setUrl(e.target.value)} />
         </label>
-        <button
-          className="button small"
+        <Button
+          size="small"
           disabled={busy}
           onClick={async () => {
             setBusy(true);
@@ -84,7 +85,7 @@ export default function SelectorResolution({ entry, defaultUrl = '' }: { entry: 
         >
           <ScanSearch size={14} />
           {busy ? 'Verifying…' : 'Verify in browser'}
-        </button>
+        </Button>
       </div>
       {result ? (
         <p className="subtle">Verified against {result.url} ({result.source}). Counts reflect that page's current state only.</p>

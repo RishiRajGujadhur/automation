@@ -1145,3 +1145,126 @@ textarea[aria-invalid='true'] {
 .app-menu-button {
   padding: 0 4px;
 }
+
+// ---- Radix primitives ----
+.select-trigger {
+  display: inline-flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  min-width: 120px;
+  width: 100%;
+  padding: 10px 12px;
+  background: #0f1420;
+  border: 1px solid $border;
+  border-radius: 7px;
+  color: #e4e8f1;
+  font-size: 12px;
+  letter-spacing: 0;
+  text-align: left;
+  &:focus-visible,
+  &[data-state='open'] {
+    border-color: #aa94ff99;
+    outline: none;
+  }
+  &[aria-invalid='true'] {
+    border-color: #ff8a8a99;
+    background: #2a151a;
+  }
+  .select-icon {
+    color: $muted;
+    display: flex;
+  }
+}
+.catalog-toolbar .select-trigger,
+.locator-inputs .select-trigger,
+.builder-step .select-trigger {
+  width: auto;
+}
+.select-content {
+  z-index: 80;
+  min-width: var(--radix-select-trigger-width);
+  max-height: var(--radix-select-content-available-height);
+  background: #141a27;
+  border: 1px solid #333c55;
+  border-radius: 8px;
+  box-shadow: 0 16px 40px #0008;
+  overflow: hidden;
+  animation: menu-in 0.12s ease-out;
+}
+.select-viewport {
+  padding: 4px;
+}
+.select-item {
+  position: relative;
+  display: flex;
+  align-items: center;
+  padding: 7px 28px 7px 10px;
+  border-radius: 6px;
+  font-size: 12px;
+  color: #d7dcea;
+  cursor: pointer;
+  outline: none;
+  user-select: none;
+  &[data-highlighted] {
+    background: #aa94ff1f;
+  }
+  &[data-state='checked'] {
+    color: $purple;
+  }
+}
+.select-indicator {
+  position: absolute;
+  right: 8px;
+  display: flex;
+}
+.select-scroll {
+  display: flex;
+  justify-content: center;
+  padding: 3px;
+  color: $muted;
+}
+.checkbox-row {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  color: #c5cbe0;
+  letter-spacing: 0;
+  white-space: nowrap;
+  label {
+    cursor: pointer;
+  }
+}
+.checkbox {
+  all: unset;
+  box-sizing: border-box;
+  width: 17px;
+  height: 17px;
+  flex: none;
+  border-radius: 4px;
+  border: 1px solid #3a4460;
+  background: #0f1420;
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  &:focus-visible {
+    outline: 2px solid $purple;
+    outline-offset: 2px;
+  }
+  &[data-state='checked'] {
+    background: $purple;
+    border-color: $purple;
+    color: #160f2b;
+  }
+}
+.checkbox-indicator {
+  display: flex;
+}
+.menu-hint {
+  display: inline-flex;
+  .icon-button {
+    width: 26px;
+    height: 26px;
+  }
+}

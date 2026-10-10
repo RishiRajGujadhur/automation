@@ -9,6 +9,7 @@ import { RowMenu, Highlight, CopyButton, Collapsible, arrowNav, copyText, clearO
 import { api, type Paged } from './api';
 import SelectorResolution from './SelectorResolution';
 import type { DictionaryEntry } from './types';
+import { Select, Checkbox, Button } from './radix';
 
 export default function DictionaryInspector({ revision = '', compact = false, onSource, onGenerate }: { revision?: string; compact?: boolean; onSource?: (file: string, line: number) => void; onGenerate?: (entry: DictionaryEntry) => void }) {
   const [query, setQuery] = useState('');
@@ -59,7 +60,7 @@ export default function DictionaryInspector({ revision = '', compact = false, on
           <Search size={16} />
           <input aria-label="Search dictionary" placeholder="Page, section, field, selector or file…" value={query} onChange={(e) => { setQuery(e.target.value); setOffset(0); }} onKeyDown={clearOnEscape(query, setQuery)} />
         </label>
-        <button className={`button small ghost ${warningsOnly ? 'active' : ''}`} aria-pressed={warningsOnly} onClick={() => setWarningsOnly(!warningsOnly)} title="Show only fields with brittle, XPath or unsupported selectors">Needs attention</button>
+        <Checkbox id="dict-warnings-only" checked={warningsOnly} onCheckedChange={setWarningsOnly} label="Needs attention" title="Show only fields with brittle, XPath or unsupported selectors" />
         <span className="badge">{data.total.toLocaleString()} fields</span>
       </div>
       {error && <p role="alert" className="inline-error">{error}</p>}
@@ -87,9 +88,9 @@ export default function DictionaryInspector({ revision = '', compact = false, on
           {!visible.length && <p className="subtle">{warningsOnly && data.items.length ? 'No fields with warnings on this page.' : ''}</p>}
           {!data.items.length && <p className="subtle">No Page → Section → Field XML entries match. Configure dictionary XML patterns in Config.</p>}
           <div className="pagination">
-            <button className="button tiny ghost" disabled={!offset} onClick={() => setOffset(Math.max(0, offset - 12))}>Previous</button>
+            <Button variant="ghost" size="tiny" disabled={!offset} onClick={() => setOffset(Math.max(0, offset - 12))}>Previous</Button>
             <span>{data.items.length ? `${offset + 1}–${offset + data.items.length}` : ''}</span>
-            <button className="button tiny ghost" disabled={!data.hasNext} onClick={() => setOffset(offset + 12)}>Next</button>
+            <Button variant="ghost" size="tiny" disabled={!data.hasNext} onClick={() => setOffset(offset + 12)}>Next</Button>
           </div>
         </div>
         <div>
@@ -98,15 +99,11 @@ export default function DictionaryInspector({ revision = '', compact = false, on
               <div className="inspector-heading">
                 <h3>{selected.section} / {selected.field}</h3>
                 <span className="meta">{selected.page} · {selected.file}:{selected.line}</span>
-                {onGenerate && <button className="button tiny primary" onClick={() => onGenerate(selected)}><Wand2 size={13} />Use in Test Generator</button>}
+                {onGenerate && <Button variant="primary" size="tiny" onClick={() => onGenerate(selected)}><Wand2 size={13} />Use in Test Generator</Button>}
               </div>
               <SelectorResolution entry={selected} />
               <div className="locator-inputs">
-                <select aria-label="Locator action" value={action} onChange={(e) => setAction(e.target.value)}>
-                  <option value="fill">Fill</option>
-                  <option value="click">Click</option>
-                  <option value="visible">Verify visible</option>
-                </select>
+                <Select ariaLabel="Locator action" value={action} onValueChange={setAction} options={[{ value: 'fill', label: 'Fill' }, { value: 'click', label: 'Click' }, { value: 'visible', label: 'Verify visible' }]} />
                 {action === 'fill' && <input aria-label="Test data value" placeholder="Test data value" value={value} onChange={(e) => setValue(e.target.value)} />}
               </div>
               <div className="code-with-copy">

@@ -1,6 +1,7 @@
 import { BookOpen, Blocks, FileCode2, ScanLine, Braces, Wand2, Circle, Layers3, ArrowRight } from 'lucide-react';
 import { Indicators, useProjectModel } from './ProjectModelTree';
 import type { Index } from './types';
+import { Button } from './radix';
 
 export function ContextBar({ index, config, recordStatus, revision }: { index?: Index; config?: { repositoryRoot: string; targetProject: string }; recordStatus: string; revision?: string }) {
   const { model } = useProjectModel(revision);
@@ -52,9 +53,9 @@ export default function Dashboard({ index, revision, onNavigate, recent = [], on
         <section className="panel">
           <div className="panel-heading"><div><h2>Start authoring</h2></div></div>
           <div className="wizard-body quick-actions">
-            <button className="button primary" onClick={() => onNavigate('Test Generator')}><Wand2 size={15} />Generate a test from inputs</button>
-            <button className="button" onClick={() => onNavigate('Recorder')}><Circle size={15} />Record a Playwright workflow</button>
-            <button className="button" onClick={() => onNavigate('Dictionary Inspector')}><Braces size={15} />Inspect selector dictionaries</button>
+            <Button variant="primary" onClick={() => onNavigate('Test Generator')}><Wand2 size={15} />Generate a test from inputs</Button>
+            <Button onClick={() => onNavigate('Recorder')}><Circle size={15} />Record a Playwright workflow</Button>
+            <Button onClick={() => onNavigate('Dictionary Inspector')}><Braces size={15} />Inspect selector dictionaries</Button>
           </div>
         </section>
         <section className="panel">

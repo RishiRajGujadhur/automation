@@ -1,51 +1,35 @@
 import * as ContextMenu from '@radix-ui/react-context-menu';
-import { useEffect, useState, type ReactNode } from 'react';
-import { Copy, Check, ChevronDown, ChevronRight, MoreHorizontal } from 'lucide-react';
-import type { LucideIcon } from 'lucide-react';
+import { createContext, useContext, useEffect, useState, type ReactNode } from 'react';
+import { Copy, Check, ChevronDown, ChevronRight } from 'lucide-react';
+import { Dropdown, MenuEntries, type MenuEntry } from './radix';
 
-export type MenuItem = { label: string; icon?: LucideIcon; onSelect: () => void; shortcut?: string; disabled?: boolean; danger?: boolean } | 'separator';
+export type MenuItem = MenuEntry;
+const RowMenuItems = createContext<{ items: MenuItem[]; label: string } | null>(null);
 
-/** Right-click menu: secondary actions live here instead of as always-visible buttons. */
+/** Right-click menu (Radix ContextMenu): secondary actions live here instead of as always-visible buttons. */
 export function RowMenu({ items, children, label = 'Actions' }: { items: MenuItem[]; children: ReactNode; label?: string }) {
   return (
-    <ContextMenu.Root>
-      <ContextMenu.Trigger asChild>{children}</ContextMenu.Trigger>
-      <ContextMenu.Portal>
-        <ContextMenu.Content className="context-menu" aria-label={label}>
-          {items.map((item, i) =>
-            item === 'separator' ? (
-              <ContextMenu.Separator key={i} className="context-separator" />
-            ) : (
-              <ContextMenu.Item key={item.label} className={`context-item ${item.danger ? 'danger' : ''}`} disabled={item.disabled} onSelect={item.onSelect}>
-                {item.icon && <item.icon size={14} />}
-                <span>{item.label}</span>
-                {item.shortcut && <kbd>{item.shortcut}</kbd>}
-              </ContextMenu.Item>
-            ),
-          )}
-        </ContextMenu.Content>
-      </ContextMenu.Portal>
-    </ContextMenu.Root>
+    <RowMenuItems.Provider value={{ items, label }}>
+      <ContextMenu.Root>
+        <ContextMenu.Trigger asChild>{children}</ContextMenu.Trigger>
+        <ContextMenu.Portal>
+          <ContextMenu.Content className="context-menu" aria-label={label}>
+            <MenuEntries entries={items} P={ContextMenu} />
+          </ContextMenu.Content>
+        </ContextMenu.Portal>
+      </ContextMenu.Root>
+    </RowMenuItems.Provider>
   );
 }
 
-/** Visible affordance for the same menu (touch/keyboard users can't right-click easily). */
-export function MenuHint({ onOpen }: { onOpen?: (e: React.MouseEvent) => void }) {
+/** Visible ⋯ button opening the same items as a Radix DropdownMenu (for touch and keyboard users). */
+export function MenuHint() {
+  const ctx = useContext(RowMenuItems);
+  if (!ctx) return null;
   return (
-    <button
-      className="icon-button menu-hint"
-      aria-label="More actions"
-      title="More actions (right-click)"
-      onClick={(e) => {
-        e.stopPropagation();
-        const el = e.currentTarget.closest('[data-menu-row]') as HTMLElement | null;
-        const r = e.currentTarget.getBoundingClientRect();
-        el?.dispatchEvent(new MouseEvent('contextmenu', { bubbles: true, clientX: r.left, clientY: r.bottom }));
-        onOpen?.(e);
-      }}
-    >
-      <MoreHorizontal size={15} />
-    </button>
+    <span className="menu-hint" onClick={(e) => e.stopPropagation()} onKeyDown={(e) => e.stopPropagation()}>
+      <Dropdown entries={ctx.items} label="More actions" align="end" />
+    </span>
   );
 }
 

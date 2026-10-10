@@ -3,6 +3,7 @@ import { Play, RefreshCw, ArrowRight, Plus, Trash2, FolderSearch } from 'lucide-
 import type { ReactNode } from 'react';
 import { workspaceSchema, recordSchema, featureFileSchema, runSchema, parametersSchema, dictionaryEntrySchema, selectorTypes } from './validators';
 import type { Binding } from './types';
+import { FormikSelect, Button } from './radix';
 
 /** Label + input + inline error. Errors appear once the field is touched (or after a submit attempt). */
 export function TextField({ name, label, hint, as, list, placeholder, rows, autoFocus }: { name: string; label: string; hint?: ReactNode; as?: 'textarea' | 'select'; list?: string; placeholder?: string; rows?: number; autoFocus?: boolean }) {
@@ -40,9 +41,9 @@ function ListField({ name, label, hint }: { name: string; label: string; hint?: 
 }
 function Submit({ children, disabled, isSubmitting, isValid, dirty }: { children: ReactNode; disabled?: boolean; isSubmitting: boolean; isValid: boolean; dirty?: boolean }) {
   return (
-    <button type="submit" className="button primary" disabled={disabled || isSubmitting || !isValid || dirty === false}>
+    <Button type="submit" variant="primary" disabled={disabled || isSubmitting || !isValid || dirty === false}>
       {children}
-    </button>
+    </Button>
   );
 }
 const run = <T,>(fn: (v: T) => Promise<void> | void) => async (values: T, h: FormikHelpers<T>) => {
@@ -65,18 +66,19 @@ export function WorkspaceForm({ initial, onSubmit }: { initial: WorkspaceValues;
           <p className="subtle">Point the scanner at a C# SpecFlow + Playwright repository. Indexing is read-only.</p>
           <TextField name="repositoryRoot" label="REPOSITORY ROOT" hint="Absolute path to the repository you want to author tests in." />
           <TextField name="targetProject" label="TARGET PROJECT / DIRECTORY" hint={'"." for the root, a folder, or a path to a .csproj.'} />
-          <label className="field-label">REFERENCE SCOPE
-            <Field as="select" name="referenceScope"><option>DirectReferences</option><option>TargetOnly</option></Field>
-          </label>
+          <div className="field-label">
+            <label htmlFor="f-referenceScope">REFERENCE SCOPE</label>
+            <FormikSelect id="f-referenceScope" name="referenceScope" ariaLabel="Reference scope" options={[{ value: 'DirectReferences', label: 'Target + direct project references' }, { value: 'TargetOnly', label: 'Target project only' }]} />
+          </div>
           <details className="code-details">
             <summary>Advanced scan patterns</summary>
             <ListField name="featurePatterns" label="FEATURE PATTERNS" hint="Comma separated, e.g. **/*.feature" />
             <ListField name="sourcePatterns" label="SOURCE PATTERNS" hint="Comma separated, e.g. **/*.cs" />
             <ListField name="selectorPatterns" label="DICTIONARY XML PATTERNS" hint="e.g. **/Dictionaries/**/*.xml" />
             <ListField name="ignoredDirectories" label="IGNORED DIRECTORIES" hint="Folder names, e.g. bin, obj" />
-            <button type="button" className="button tiny ghost" onClick={() => setFieldValue('selectorPatterns', ['**/Dictionaries/**/*.xml'])} disabled={values.selectorPatterns.join() === '**/Dictionaries/**/*.xml'}>
+            <Button type="button" variant="ghost" size="tiny" onClick={() => setFieldValue('selectorPatterns', ['**/Dictionaries/**/*.xml'])} disabled={values.selectorPatterns.join() === '**/Dictionaries/**/*.xml'}>
               <FolderSearch size={12} />Only scan Dictionaries/ for XML
-            </button>
+            </Button>
           </details>
           <Status status={status} />
           <Submit isSubmitting={isSubmitting} isValid={isValid}><RefreshCw size={16} />{isSubmitting ? 'Scanning…' : 'Scan workspace'}</Submit>
@@ -113,7 +115,7 @@ export function NewFeatureForm({ initialFile, existing, folders, onSubmit }: { i
           <datalist id="new-feature-folders">{folders.map((f) => <option key={f} value={`${f}/`} />)}</datalist>
           <TextField name="name" label="FEATURE NAME" />
           {!touched.name && guessName(values.file) && guessName(values.file) !== values.name && (
-            <button type="button" className="button tiny ghost" onClick={() => setFieldValue('name', guessName(values.file))}>Use “{guessName(values.file)}”</button>
+            <Button type="button" variant="ghost" size="tiny" onClick={() => setFieldValue('name', guessName(values.file))}>Use “{guessName(values.file)}”</Button>
           )}
           <p className="subtle">The file will only be written after you review and approve its diff.</p>
           <Status status={status} />
@@ -176,7 +178,7 @@ export function DictionaryEntryForm({ initial, files, onSubmit, busy }: { initia
                   return (
                     <div key={i} className="selector-row-wrap">
                       <div className="selector-row">
-                        <Field as="select" name={`selectors.${i}.type`} aria-label={`Selector ${i + 1} type`}>{selectorTypes.map((t) => <option key={t}>{t}</option>)}</Field>
+                        <FormikSelect name={`selectors.${i}.type`} ariaLabel={`Selector ${i + 1} type`} options={selectorTypes} />
                         <Field name={`selectors.${i}.value`} aria-label={`Selector ${i + 1} value`} placeholder="Selector value" aria-invalid={!!show} />
                         <span className="row-buttons">
                           <button type="button" className="icon-button" aria-label={`Move selector ${i + 1} up`} disabled={i === 0} onClick={() => move(i, i - 1)}>↑</button>
@@ -188,7 +190,7 @@ export function DictionaryEntryForm({ initial, files, onSubmit, busy }: { initia
                   );
                 })}
                 {typeof errors.selectors === 'string' && <span className="field-error" role="alert">{errors.selectors}</span>}
-                <button type="button" className="button tiny ghost" onClick={() => push({ type: 'text', value: '' })} disabled={values.selectors.length >= 10}><Plus size={13} />Add selector</button>
+                <Button type="button" variant="ghost" size="tiny" onClick={() => push({ type: 'text', value: '' })} disabled={values.selectors.length >= 10}><Plus size={13} />Add selector</Button>
               </>
             )}
           </FieldArray>

@@ -104,6 +104,22 @@ The tab bar shows only the four primary pages. To reach Step Catalog, Background
 
 The studio menu is a Radix context menu (`@radix-ui/react-context-menu`). It also offers Command palette, Start a recording, New feature, Rescan, Workspace settings and Keyboard shortcuts. Menus on cards and rows take priority over it. Text inputs and code editors keep the browser's own right-click menu (copy, paste, spellcheck).
 
+### UI primitives (Radix)
+
+All interactive controls are built on Radix UI primitives, wrapped in `src/radix.tsx`:
+
+| Control | Radix package | Wrapper |
+| --- | --- | --- |
+| Right-click menus | `@radix-ui/react-context-menu` | `RowMenu`, `AppMenu` |
+| ⋯ menus (tab bar, card hover) | `@radix-ui/react-dropdown-menu` | `Dropdown` |
+| Dropdown selects | `@radix-ui/react-select` | `Select`, `FormikSelect` |
+| Checkboxes | `@radix-ui/react-checkbox` | `Checkbox` |
+| Buttons | `@radix-ui/react-slot` | `Button` (variants `primary`, `soft`, `ghost`, `success`; sizes `small`, `tiny`) |
+
+- **Buttons:** `asChild` lends a button's styling to another element.
+- **Menus:** context menus and dropdown menus are built from the same entry list (`MenuEntries`), so right-click and ⋯ always show identical actions.
+- **Selects:** Radix Select can't use an empty value, so the "all" options map to an internal placeholder value.
+
 ### Form validation
 
 Every form uses **Formik** with **Yup** schemas from `src/validators.ts`. Each rule is also unit-tested.

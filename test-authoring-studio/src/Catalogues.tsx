@@ -3,6 +3,7 @@ import { Search, FileCode2, Copy, Plus, Check, ChevronLeft, ChevronRight } from 
 import { api, type Paged } from './api';
 import type { Selector } from './types';
 import { RowMenu, MenuHint, Highlight, copyText, clearOnEscape } from './ui';
+import { Select, Button } from './radix';
 
 type Background = { name: string; file: string; line: number; steps: { keyword: string; text: string }[] };
 
@@ -27,9 +28,9 @@ function usePaged<T>(route: string, query: string, offset: number, limit: number
 function Pager({ offset, limit, data, setOffset }: { offset: number; limit: number; data: Paged<unknown>; setOffset: (n: number) => void }) {
   return (
     <div className="pagination">
-      <button className="button small ghost" disabled={!offset} onClick={() => setOffset(Math.max(0, offset - limit))}><ChevronLeft size={14} />Previous</button>
+      <Button variant="ghost" size="small" disabled={!offset} onClick={() => setOffset(Math.max(0, offset - limit))}><ChevronLeft size={14} />Previous</Button>
       <span>{data.items.length ? `${offset + 1}–${offset + data.items.length} of ${data.total.toLocaleString()}` : 'No results'}</span>
-      <button className="button small ghost" disabled={!data.hasNext} onClick={() => setOffset(offset + limit)}>Next<ChevronRight size={14} /></button>
+      <Button variant="ghost" size="small" disabled={!data.hasNext} onClick={() => setOffset(offset + limit)}>Next<ChevronRight size={14} /></Button>
     </div>
   );
 }
@@ -43,10 +44,7 @@ export function SelectorCatalogue({ revision, onSource, onNotice }: { revision?:
     <section aria-label="Selector catalogue">
       <div className="catalog-toolbar">
         <label className="search-box"><Search size={16} /><input aria-label="Search Selectors" placeholder="Search selectors…" value={query} onChange={(e) => { setQuery(e.target.value); setOffset(0); }} onKeyDown={clearOnEscape(query, setQuery)} /></label>
-        <select aria-label="Selector type" value={type} onChange={(e) => { setType(e.target.value); setOffset(0); }}>
-          <option value="">All locator types</option>
-          {['GetByTestId', 'GetByRole', 'GetByLabel', 'GetByText', 'Locator'].map((t) => <option key={t}>{t}</option>)}
-        </select>
+        <Select ariaLabel="Selector type" value={type} onValueChange={(v) => { setType(v); setOffset(0); }} options={[{ value: '', label: 'All locator types' }, 'GetByTestId', 'GetByRole', 'GetByLabel', 'GetByText', 'Locator']} />
       </div>
       {error && <p role="alert" className="inline-error">{error}</p>}
       <div className="catalog-grid" aria-busy={loading}>
@@ -114,7 +112,7 @@ export function BackgroundCatalogue({ revision, onSource, onReuse }: { revision?
               {b.steps.length > 3 && <p className="subtle">+{b.steps.length - 3} more steps</p>}
               <div className="catalog-card-footer">
                 <span className="meta">{b.file}</span>
-                <button className="button tiny" onClick={() => onReuse(b)}><Plus size={14} />Reuse</button>
+                <Button size="tiny" onClick={() => onReuse(b)}><Plus size={14} />Reuse</Button>
               </div>
             </article>
           </RowMenu>

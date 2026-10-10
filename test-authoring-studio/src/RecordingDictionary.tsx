@@ -6,6 +6,7 @@ import DiffApproval from './DiffApproval';
 import { TextField } from './forms';
 import { recordingDictionarySchema } from './validators';
 import type { Action, Index } from './types';
+import { Button } from './radix';
 
 type Result = {
   proposals: { section: string; field: string; fieldType: string; selectors: { type: string; value: string }[] }[];
@@ -49,15 +50,15 @@ export default function RecordingDictionary({ actions, onIndex }: { actions: Act
               <TextField name="pageObjectFile" label="PAGE OBJECT FILE (NEW)" />
             </div>
             {!touched.file && values.file !== `Dictionaries/${values.page}.xml` && /^[A-Za-z]\w*$/.test(values.page) && (
-              <button type="button" className="button tiny ghost" onClick={() => { setFieldValue('file', `Dictionaries/${values.page}.xml`); setFieldValue('pageObjectFile', `Pages/${values.page}.cs`); }}>
+              <Button type="button" variant="ghost" size="tiny" onClick={() => { setFieldValue('file', `Dictionaries/${values.page}.xml`); setFieldValue('pageObjectFile', `Pages/${values.page}.cs`); }}>
                 Name files after {values.page}
-              </button>
+              </Button>
             )}
             {status && <p className="field-error" role="alert">{status}</p>}
-            <button type="submit" className="button primary-soft" disabled={isSubmitting || !isValid || !usable.length}>
+            <Button type="submit" variant="soft" disabled={isSubmitting || !isValid || !usable.length}>
               <Braces size={15} />
               {isSubmitting ? 'Proposing…' : 'Propose dictionary entries'}
-            </button>
+            </Button>
           </Form>
         )}
       </Formik>

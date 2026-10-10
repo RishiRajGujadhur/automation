@@ -14,6 +14,7 @@ import { api } from './api';
 import { useLocalState, RowMenu, copyText } from './ui';
 import { timeAgo, useNow } from './time';
 import { WorkspaceForm, RecordForm, NewFeatureForm, ParametersForm, RunForm } from './forms';
+import { Select, Checkbox, Button } from './radix';
 import AppMenu, { AppMenuButton } from './AppMenu';
 import '@fontsource-variable/dm-sans';
 import '@fontsource/ibm-plex-mono/400.css';
@@ -434,21 +435,22 @@ export default function App() {
           ? `press("${a.key}")`
           : `click("${a.target?.description ?? a.target?.name ?? 'element'}")`;
   const matched = matches.filter((m) => m.candidates.length).length;
-  return (
-    <AppMenu
-      pages={moreTabs.map((t) => ({ ...t }))}
-      primary={tabs.map((t) => ({ name: t.name, icon: t.icon, hint: t.shortcut }))}
-      active={tab}
-      onNavigate={navigate}
-      commands={[
+  const menuProps = {
+    pages: moreTabs.map((t) => ({ ...t })),
+    primary: tabs.map((t) => ({ name: t.name, icon: t.icon, hint: t.shortcut })),
+    active: tab,
+    onNavigate: navigate,
+    commands: [
         { label: 'Command palette', icon: CommandIcon, run: () => setPaletteOpen(true), shortcut: 'Ctrl K' },
         { label: 'Start a recording', icon: Circle, run: () => { setTab('Features'); setView('recorder'); setModal('record'); } },
         { label: 'New feature', icon: Plus, run: () => beginFeature() },
         { label: 'Rescan repository', icon: RefreshCw, disabled: busy, run: () => work(async () => { setIndex(await api('/scan', {})); setNotice('Repository index refreshed.'); }) },
         { label: 'Workspace settings', icon: Settings2, run: () => setModal('settings') },
         { label: 'Keyboard shortcuts', icon: Keyboard, run: () => setModal('shortcuts'), shortcut: '?' },
-      ]}
-    >
+      ],
+  };
+  return (
+    <AppMenu {...menuProps}>
     <div className="studio-shell">
       {/* Text inputs and editors keep the browser's native menu (copy/paste/spellcheck). */}
       <div
@@ -478,7 +480,7 @@ export default function App() {
       {!online && (
         <div className="offline-banner" role="alert">
           <TriangleAlert size={15} /> Local API is not responding. Is <code>npm run dev</code> still running?
-          <button className="button tiny" onClick={() => fetch('/api/health').then((r) => setOnline(r.ok)).catch(() => setOnline(false))}>Retry</button>
+          <Button size="tiny" onClick={() => fetch('/api/health').then((r) => setOnline(r.ok)).catch(() => setOnline(false))}>Retry</Button>
         </div>
       )}
       {showTop && (
@@ -503,9 +505,8 @@ export default function App() {
           <span>{index?.workspace ?? 'Loading workspace'}</span>
           <ChevronDown size={13} />
         </div>
-        <button
-          id="guide-me"
-          className="button guide-button"
+        <Button
+          id="guide-me" className="guide-button"
           disabled={!index || busy}
           onClick={() => {
             previousView.current = { tab, view, mobileExplorer };
@@ -515,7 +516,7 @@ export default function App() {
         >
           <Compass size={16} className="animated-icon" />
           Guide me
-        </button>
+        </Button>
         <button
           className="icon-button explorer-toggle"
           aria-label="Toggle feature explorer"
@@ -559,7 +560,7 @@ export default function App() {
               {t.name}
             </button>
           ))}
-          <AppMenuButton />
+          <AppMenuButton {...menuProps} />
         </div>
         <button
           className={`recorder-tab ${view === 'recorder' && tab === 'Features' ? 'selected' : ''}`}
@@ -713,8 +714,8 @@ export default function App() {
                 <div className="toolbar-buttons">
                   {['recording', 'paused'].includes(recordStatus) ? (
                     <>
-                      <button
-                        className="button small"
+                      <Button
+                        size="small"
                         onClick={() =>
                           work(async () => {
                             const r = await api('/recording/pause', {
@@ -726,9 +727,9 @@ export default function App() {
                       >
                         <Icon icon={recordStatus === 'paused' ? Play : Pause} />
                         {recordStatus === 'paused' ? 'Resume' : 'Pause'}
-                      </button>
-                      <button
-                        className="button small"
+                      </Button>
+                      <Button
+                        size="small"
                         onClick={() =>
                           work(async () => {
                             await api('/recording/stop', {});
@@ -738,13 +739,13 @@ export default function App() {
                       >
                         <Square size={13} />
                         Stop
-                      </button>
+                      </Button>
                     </>
                   ) : (
-                    <button className="button small" onClick={() => setModal('record')}>
+                    <Button size="small" onClick={() => setModal('record')}>
                       <Play size={14} />
                       Start recording
-                    </button>
+                    </Button>
                   )}
                   <button
                     className="icon-button clear-button"
@@ -864,9 +865,9 @@ export default function App() {
                         <MousePointer2 size={32} />
                         <h3>Capture your first workflow</h3>
                         <p>Launch a browser and interact with your application.</p>
-                        <button className="button" onClick={() => setModal('record')}>
+                        <Button onClick={() => setModal('record')}>
                           Start recording
-                        </button>
+                        </Button>
                       </div>
                     )}
                   </div>
@@ -959,8 +960,9 @@ export default function App() {
                                       <ShieldCheck size={13} />
                                       {c.reasons.length} evidence signals
                                     </span>
-                                    <button
-                                      className={`button tiny ${accepted[selected] === `${c.binding.keyword} ${c.text}` ? 'success' : 'primary-soft'}`}
+                                    <Button
+                                      size="tiny"
+                                      variant={accepted[selected] === `${c.binding.keyword} ${c.text}` ? 'success' : 'soft'}
                                       onClick={() =>
                                         setAccepted({
                                           ...accepted,
@@ -972,7 +974,7 @@ export default function App() {
                                       {accepted[selected] === `${c.binding.keyword} ${c.text}`
                                         ? 'Accepted'
                                         : 'Accept match'}
-                                    </button>
+                                    </Button>
                                   </div>
                                 </div>
                               ))}
@@ -987,8 +989,8 @@ export default function App() {
                                 No strong existing binding was found. Review the step catalog and
                                 selectors before adding a proposal.
                               </p>
-                              <button
-                                className="button"
+                              <Button
+                               
                                 onClick={() => {
                                   setTab('Step Catalog');
                                   setCatalogQuery(selectedAction.target?.name ?? '');
@@ -996,7 +998,7 @@ export default function App() {
                               >
                                 Search existing steps
                                 <ArrowRight size={14} />
-                              </button>
+                              </Button>
                               <button className="text-button" onClick={() => setModal('proposal')}>
                                 <Plus size={14} />
                                 Propose a step
@@ -1057,16 +1059,16 @@ export default function App() {
                   {acceptedCount} accepted
                 </span>
                 <div>
-                  <button className="button" disabled={busy || !actions.length} onClick={match}>
+                  <Button disabled={busy || !actions.length} onClick={match}>
                     <RefreshCw size={15} />
                     Match all actions
-                  </button>
-                  <button className="button ghost" disabled={!matches.some((m) => m.candidates.length && !accepted[m.action.id])} onClick={acceptAllTop} title="Accept the highest-ranked match for every action without one">
+                  </Button>
+                  <Button variant="ghost" disabled={!matches.some((m) => m.candidates.length && !accepted[m.action.id])} onClick={acceptAllTop} title="Accept the highest-ranked match for every action without one">
                     <CheckCheck size={15} />
                     Accept all top matches
-                  </button>
-                  <button
-                    className="button"
+                  </Button>
+                  <Button
+                   
                     onClick={() => {
                       setView('builder');
                       setDraftSteps(
@@ -1079,16 +1081,16 @@ export default function App() {
                   >
                     <Plus size={16} />
                     Create scenario
-                  </button>
-                  <button
-                    className="button primary"
+                  </Button>
+                  <Button
+                    variant="primary"
                     disabled={!acceptedCount}
                     onClick={applyRecording}
                   >
                     <CheckCheck size={16} />
                     Apply to editor
                     <ArrowRight size={15} />
-                  </button>
+                  </Button>
                 </div>
               </div>
             </>
@@ -1101,8 +1103,8 @@ export default function App() {
                   <h2>{feature?.file ?? newFile}</h2>
                   <Badge tone="purple">GHERKIN</Badge>
                 </div>
-                <button
-                  className="button tiny"
+                <Button
+                  size="tiny"
                   onClick={() =>
                     work(async () => {
                       setValidation(await api('/scenario/validate', { source }));
@@ -1112,7 +1114,7 @@ export default function App() {
                 >
                   <Check size={14} />
                   Validate
-                </button>
+                </Button>
               </div>
               <CodeMirror
                 value={source}
@@ -1136,8 +1138,8 @@ export default function App() {
                 </div>
               )}
               <div className="editor-bottom">
-                <button
-                  className="button"
+                <Button
+                 
                   onClick={() => {
                     setRunProject(
                       config.targetProject.endsWith('.csproj') ? config.targetProject : '',
@@ -1151,14 +1153,14 @@ export default function App() {
                 >
                   <Play size={14} />
                   Run tests
-                </button>
+                </Button>
                 <span className="subtle">
                   {source === feature?.source ? 'Saved source' : 'Unsaved changes'} · UTF-8
                 </span>
-                <button className="button primary" onClick={() => previewChange()}>
+                <Button variant="primary" onClick={() => previewChange()}>
                   <Save size={16} />
                   Preview changes
-                </button>
+                </Button>
               </div>
             </section>
           )}
@@ -1180,21 +1182,12 @@ export default function App() {
                   {draftSteps.map((s, i) => (
                     <div className="builder-step" key={i}>
                       <span className="step-index">{i + 1}</span>
-                      <select
-                        aria-label={`Step ${i + 1} keyword`}
+                      <Select
+                        ariaLabel={`Step ${i + 1} keyword`}
                         value={s.keyword}
-                        onChange={(e) =>
-                          setDraftSteps(
-                            draftSteps.map((s, j) =>
-                              j === i ? { ...s, keyword: e.target.value } : s,
-                            ),
-                          )
-                        }
-                      >
-                        {['Given', 'When', 'Then', 'And', 'But'].map((k) => (
-                          <option key={k}>{k}</option>
-                        ))}
-                      </select>
+                        options={['Given', 'When', 'Then', 'And', 'But']}
+                        onValueChange={(v) => setDraftSteps(draftSteps.map((x, j) => (j === i ? { ...x, keyword: v } : x)))}
+                      />
                       <input
                         aria-label={`Step ${i + 1} text`}
                         value={s.text}
@@ -1233,14 +1226,7 @@ export default function App() {
                       <p>Add an existing step to begin your scenario.</p>
                     </div>
                   )}
-                  <label className="outline-toggle">
-                    <input
-                      type="checkbox"
-                      checked={outline}
-                      onChange={(e) => setOutline(e.target.checked)}
-                    />
-                    Scenario Outline with examples
-                  </label>
+                  <Checkbox id="outline-toggle" className="outline-toggle" checked={outline} onCheckedChange={setOutline} label="Scenario Outline with examples" />
                   {outline && (
                     <label className="field-label">
                       EXAMPLES TABLE
@@ -1252,8 +1238,8 @@ export default function App() {
                       />
                     </label>
                   )}
-                  <button
-                    className="button dashed"
+                  <Button
+                    className="dashed"
                     onClick={() => {
                       setTab('Step Catalog');
                       setCatalogQuery('');
@@ -1261,7 +1247,7 @@ export default function App() {
                   >
                     <Plus size={16} />
                     Add existing step
-                  </button>
+                  </Button>
                   <button className="text-button" onClick={() => setTab('Backgrounds')}>
                     Browse reusable backgrounds
                     <ArrowRight size={13} />
@@ -1283,8 +1269,8 @@ export default function App() {
                   editable={false}
                 />
                 <div className="editor-bottom">
-                  <button
-                    className="button primary"
+                  <Button
+                    variant="primary"
                     disabled={!draftSteps.length}
                     onClick={() => {
                       setSource(draftSource());
@@ -1293,7 +1279,7 @@ export default function App() {
                   >
                     Open in editor
                     <ArrowRight size={15} />
-                  </button>
+                  </Button>
                 </div>
               </section>
             </div>
@@ -1365,7 +1351,7 @@ export default function App() {
           {tab === 'Project Explorer' && <ProjectExplorer revision={revision} onSource={openSource} />}
           {tab === 'Config' && config && (
             <section className="panel config-summary">
-              <div className="panel-heading"><div><h2>Workspace</h2></div><button className="button small" onClick={() => setModal('settings')}><Settings2 size={14} />Edit workspace settings</button></div>
+              <div className="panel-heading"><div><h2>Workspace</h2></div><Button size="small" onClick={() => setModal('settings')}><Settings2 size={14} />Edit workspace settings</Button></div>
               <dl>
                 <dt>Repository root</dt><dd>{config.repositoryRoot}</dd>
                 <dt>Target project</dt><dd>{config.targetProject}</dd>
@@ -1408,9 +1394,9 @@ export default function App() {
             <Check size={17} />
             {notice}
             {undo && (
-              <button className="button tiny" onClick={() => { undo.run(); setUndo(undefined); setNotice('Restored.'); }}>
+              <Button size="tiny" onClick={() => { undo.run(); setUndo(undefined); setNotice('Restored.'); }}>
                 Undo
-              </button>
+              </Button>
             )}
           </motion.div>
         )}
@@ -1536,8 +1522,8 @@ export default function App() {
                     <p className="subtle">
                       Approval writes this exact preview to your repository. No commit is created.
                     </p>
-                    <button
-                      className="button primary"
+                    <Button
+                      variant="primary"
                       disabled={busy || !preview.changed}
                       onClick={() =>
                         work(async () => {
@@ -1555,7 +1541,7 @@ export default function App() {
                     >
                       <Save size={16} />
                       Approve and write file
-                    </button>
+                    </Button>
                   </>
                 )}
                 {modal === 'source' && (
@@ -1606,8 +1592,8 @@ export default function App() {
                         defaultValue={`the user ${selectedAction?.action === 'click' ? 'opens' : 'interacts with'} ${selectedAction?.target?.description ?? selectedAction?.target?.name ?? 'the element'}`}
                       />
                     </label>
-                    <button
-                      className="button primary"
+                    <Button
+                      variant="primary"
                       onClick={() => {
                         const value = (document.getElementById('proposal-text') as HTMLInputElement)
                           .value;
@@ -1620,9 +1606,9 @@ export default function App() {
                     >
                       Accept wording proposal
                       <ArrowRight size={15} />
-                    </button>
-                    <button
-                      className="button"
+                    </Button>
+                    <Button
+                     
                       style={{ marginLeft: 8 }}
                       onClick={() =>
                         work(async () => {
@@ -1641,7 +1627,7 @@ export default function App() {
                     >
                       <Code2 size={15} />
                       Preview C# scaffold
-                    </button>
+                    </Button>
                   </>
                 )}
                 {modal === 'shortcuts' && (
@@ -1698,10 +1684,10 @@ export default function App() {
                     {!edges.length && (
                       <p className="subtle">No method calls discovered.</p>
                     )}
-                    <button className="button primary" onClick={() => addBinding(binding)}>
+                    <Button variant="primary" onClick={() => addBinding(binding)}>
                       <Plus size={15} />
                       Add existing step
-                    </button>
+                    </Button>
                   </>
                 )}
                 {modal === 'run' && (

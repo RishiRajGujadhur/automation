@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Folder, FileCode2, ArrowUp, Copy, FolderOpen } from 'lucide-react';
 import { RowMenu, copyText, useLocalState } from './ui';
 import ProjectModelTree, { Indicators, useProjectModel } from './ProjectModelTree';
+import { Button } from './radix';
 
 export default function ProjectExplorer({ revision, onSource }: { revision?: string; onSource: (file: string, line: number) => void }) {
   const [folder, setFolder] = useLocalState('explorer:folder', '.');
@@ -38,7 +39,7 @@ export default function ProjectExplorer({ revision, onSource }: { revision?: str
               <span key={i}>/<button onClick={() => { setFolder(all.slice(0, i + 1).join('/')); setOffset(0); }}>{part}</button></span>
             ))}
           </nav>
-          <button className="button tiny ghost" disabled={folder === '.'} onClick={() => { setFolder(folder.split('/').slice(0, -1).join('/') || '.'); setOffset(0); }}><ArrowUp size={14} />Parent folder</button>
+          <Button variant="ghost" size="tiny" disabled={folder === '.'} onClick={() => { setFolder(folder.split('/').slice(0, -1).join('/') || '.'); setOffset(0); }}><ArrowUp size={14} />Parent folder</Button>
         </div>
         {error && <p role="alert" className="inline-error">{error}</p>}
         <div className="project-files">
@@ -56,9 +57,9 @@ export default function ProjectExplorer({ revision, onSource }: { revision?: str
           ))}
         </div>
         <div className="pagination">
-          <button className="button small ghost" disabled={!offset} onClick={() => setOffset(offset - 40)}>Previous</button>
+          <Button variant="ghost" size="small" disabled={!offset} onClick={() => setOffset(offset - 40)}>Previous</Button>
           <span>{data.total} entries</span>
-          <button className="button small ghost" disabled={!data.hasNext} onClick={() => setOffset(offset + 40)}>Next</button>
+          <Button variant="ghost" size="small" disabled={!data.hasNext} onClick={() => setOffset(offset + 40)}>Next</Button>
         </div>
       </section>
     </div>

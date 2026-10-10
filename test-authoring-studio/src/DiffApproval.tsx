@@ -6,6 +6,7 @@ import { oneDark } from '@codemirror/theme-one-dark';
 import { FileCode2, Save, TriangleAlert, Check } from 'lucide-react';
 import { api, type FilePreview } from './api';
 import type { Index } from './types';
+import { Button } from './radix';
 
 /** Shows one previewed file diff; approval is the only write and consumes the one-time preview token. */
 export default function DiffApproval({ preview, onApplied, height = '260px' }: { preview: FilePreview; onApplied?: (index: Index) => void; height?: string }) {
@@ -32,8 +33,8 @@ export default function DiffApproval({ preview, onApplied, height = '260px' }: {
       ))}
       <CodeMirror value={preview.diff} theme={oneDark} extensions={[StreamLanguage.define(diffMode)]} height={height} editable={false} />
       {error && <p role="alert" className="inline-error">{error}</p>}
-      <button
-        className="button primary"
+      <Button
+        variant="primary"
         disabled={state !== 'idle' || !preview.changed}
         onClick={async () => {
           setState('busy');
@@ -50,7 +51,7 @@ export default function DiffApproval({ preview, onApplied, height = '260px' }: {
       >
         <Save size={15} />
         {state === 'done' ? 'Written' : `Approve and write ${preview.file.split('/').pop()}`}
-      </button>
+      </Button>
     </div>
   );
 }

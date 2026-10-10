@@ -4,6 +4,7 @@ import { Search, Plus, ChevronLeft, ChevronRight, FileCode2, GitBranch, Copy, Fi
 import type { Binding } from './types';
 import { useStepSearch } from './useStepSearch';
 import { RowMenu, MenuHint, Highlight, copyText, useLocalState } from './ui';
+import { Checkbox, Button } from './radix';
 
 const tone = (k: string) => (k === 'Given' ? 'purple' : k === 'When' ? 'teal' : 'green');
 /** Pattern with regex groups shown as readable placeholders. */
@@ -61,16 +62,13 @@ export default function StepCatalogue({ query, onQuery, onAdd, onInspect, onSour
           ))}
         </div>
         {(query || keyword || unused) && (
-          <button className="button small ghost" onClick={() => { update(''); setKeyword(''); setUnused(false); }} title="Clear search and filters">
+          <Button variant="ghost" size="small" onClick={() => { update(''); setKeyword(''); setUnused(false); }} title="Clear search and filters">
             <X size={13} />
             Clear
-          </button>
+          </Button>
         )}
         {!compact && (
-          <button className={`button small ghost ${unused ? 'active' : ''}`} aria-pressed={unused} onClick={() => setUnused(!unused)} title="Show only bindings no feature uses yet">
-            <Filter size={13} />
-            Unused
-          </button>
+          <Checkbox id="catalog-unused" checked={unused} onCheckedChange={setUnused} label="Unused only" title="Show only bindings no feature uses yet" />
         )}
       </div>
       <div className="search-summary" aria-live="polite">
@@ -105,7 +103,7 @@ export default function StepCatalogue({ query, onQuery, onAdd, onInspect, onSour
               )}
               <div className="catalog-card-footer">
                 <span className="meta" title={`${b.file}:${b.line}`}>{b.className}</span>
-                <button className="button tiny" onClick={() => onAdd(b)}><Plus size={13} />Add to scenario</button>
+                <Button size="tiny" onClick={() => onAdd(b)}><Plus size={13} />Add to scenario</Button>
               </div>
             </article>
           </RowMenu>
@@ -114,15 +112,15 @@ export default function StepCatalogue({ query, onQuery, onAdd, onInspect, onSour
           <div className="empty-state">
             <p>{unused && data.items.length ? 'Every result on this page is already used. Turn off Unused to see them.' : 'No matching steps. Try an action, a page name, or a shorter prefix.'}</p>
             <div className="chip-row">
-              {['open', 'click', 'enter', 'search', 'should'].map((q) => <button key={q} className="button tiny ghost" onClick={() => { update(q); setKeyword(''); }}>{q}</button>)}
+              {['open', 'click', 'enter', 'search', 'should'].map((q) => <Button key={q} variant="ghost" size="tiny" onClick={() => { update(q); setKeyword(''); }}>{q}</Button>)}
             </div>
           </div>
         )}
       </div>
       <div className="pagination">
-        <button className="button small ghost" disabled={loading || offset === 0} onClick={() => setOffset(Math.max(0, offset - limit))}><ChevronLeft size={14} />Previous</button>
+        <Button variant="ghost" size="small" disabled={loading || offset === 0} onClick={() => setOffset(Math.max(0, offset - limit))}><ChevronLeft size={14} />Previous</Button>
         <span>Page {Math.floor(offset / limit) + 1}</span>
-        <button className="button small ghost" disabled={loading || !data.hasNext} onClick={() => setOffset(offset + limit)}>Next<ChevronRight size={14} /></button>
+        <Button variant="ghost" size="small" disabled={loading || !data.hasNext} onClick={() => setOffset(offset + limit)}>Next<ChevronRight size={14} /></Button>
       </div>
     </section>
   );
