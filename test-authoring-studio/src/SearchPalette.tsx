@@ -1,0 +1,10 @@
+import { useState } from 'react';
+import { Command } from 'cmdk';
+import { Search } from 'lucide-react';
+import { useStepSearch } from './useStepSearch';
+import type { Binding } from './types';
+export default function SearchPalette({open,onOpenChange,onNavigate,onAdd,revision}:{open:boolean;onOpenChange:(open:boolean)=>void;onNavigate:(name:string)=>void;onAdd:(binding:Binding)=>void;revision?:string}){
+ const [query,setQuery]=useState('');const {data,loading,error}=useStepSearch(query,0,8,'',revision);
+ const pages=['Dashboard','Test Generator','Project Explorer','Dictionary Inspector','Config','Step Catalog','Scenario Builder','Playwright Recorder','Feature Editor'];
+ return <Command.Dialog open={open} onOpenChange={onOpenChange} label="Search commands and steps" shouldFilter={false} className="command-palette"><div className="palette-heading"><Search size={20}/><Command.Input autoFocus aria-label="Search commands and steps" placeholder="Where do you want to go? Search a step…" value={query} onValueChange={setQuery}/><kbd>Esc</kbd></div><p className="palette-description">Navigate the studio or choose a repository step to add.</p><Command.List><Command.Group heading="Go to">{pages.filter(p=>p.toLowerCase().includes(query.toLowerCase())).map(p=><Command.Item key={p} value={'page:'+p} onSelect={()=>{onOpenChange(false);onNavigate(p);}}>{p}<span>Open</span></Command.Item>)}</Command.Group><Command.Group heading="Repository steps">{loading?<Command.Loading>Searching…</Command.Loading>:error?<p role="alert">{error}</p>:data.items.map(b=><Command.Item key={b.id} value={'step:'+b.id} onSelect={()=>{onOpenChange(false);onAdd(b);}}><div><strong>{b.keyword} {b.pattern}</strong><small>{b.file}:{b.line}</small></div><span>Add</span></Command.Item>)}</Command.Group>{!loading&&!data.items.length&&!pages.some(p=>p.toLowerCase().includes(query.toLowerCase()))&&<Command.Empty>No commands or steps found.</Command.Empty>}</Command.List><footer>↑ ↓ Navigate · Enter Select · Esc Close</footer></Command.Dialog>;
+}

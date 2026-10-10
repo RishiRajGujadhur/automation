@@ -1,0 +1,4 @@
+import * as ContextMenu from '@radix-ui/react-context-menu';
+import { Search, ChevronRight } from 'lucide-react';
+import type { ReactNode } from 'react';
+export default function BrowseStepMenu({children,onBrowse}:{children:ReactNode;onBrowse:()=>void}){return <ContextMenu.Root><ContextMenu.Trigger asChild>{children}</ContextMenu.Trigger><ContextMenu.Portal><ContextMenu.Content className="context-menu"><ContextMenu.Sub><ContextMenu.SubTrigger className="context-item">Browse step<ChevronRight size={14}/></ContextMenu.SubTrigger><ContextMenu.Portal><ContextMenu.SubContent className="context-menu"><ContextMenu.Item className="context-item" onSelect={onBrowse}><Search size={14}/>Search and add step</ContextMenu.Item></ContextMenu.SubContent></ContextMenu.Portal></ContextMenu.Sub></ContextMenu.Content></ContextMenu.Portal></ContextMenu.Root>;}

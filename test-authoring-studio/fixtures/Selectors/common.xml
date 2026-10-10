@@ -1,0 +1,1 @@
+<selectors><selector name="Save" value="[data-testid='save']"/><selector name="Cancel" value="#cancel"/></selectors>
