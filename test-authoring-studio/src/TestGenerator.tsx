@@ -15,6 +15,9 @@ import StepLint from './StepLint';
 import { DictionaryEntryForm } from './forms';
 import { generatorSchema, validateSync } from './validators';
 import { Select, Button } from './radix';
+import { IconButton, Meter, Separator, setAllSections, useConfirm, haptic } from './radix2';
+import { markDone } from './progress';
+import { ChevronsDownUp, ChevronsUpDown } from 'lucide-react';
 
 type Plan = { entry: DictionaryEntry | null; source?: string; code?: string | null };
 export type GeneratorSeed = Partial<{ page: string; section: string; field: string; fieldType: string; file: string }>;
@@ -76,6 +79,7 @@ export default function TestGenerator({ revision, seed, onSource, onExport, onIn
   const [dictFile, setDictFile] = useState(seed?.file ?? '');
   const [sidebar, setSidebar] = useLocalState('generator:sidebar', true);
   const { model } = useProjectModel(revision);
+  const confirm = useConfirm();
   const [activeLine, setActiveLine] = useState(0);
   const [folders, setFolders] = useState<string[]>([]);
   const [tree, setTree] = useState<{ page: string; section: string; fields: string[] }[]>([]);
@@ -155,6 +159,8 @@ export default function TestGenerator({ revision, seed, onSource, onExport, onIn
     run('validate', async () => {
       const r = await api<{ checks: Check[] }>('/validate', { steps: steps.map((s) => ({ keyword: s.resolved, text: s.text })), page, section, field, featureFile: file, dictionaryFile: plan?.entry?.file });
       setChecks(r.checks);
+      markDone('validate');
+      if (r.checks.every((c) => c.status !== 'fail')) haptic();
     });
   const composeFeature = async () => {
     const existing = await api<{ source: string }>('/source?file=' + encodeURIComponent(file)).then((r) => r.source).catch(() => '');
@@ -174,6 +180,12 @@ export default function TestGenerator({ revision, seed, onSource, onExport, onIn
   return (
     <div className={`generator-layout ${sidebar ? '' : 'no-sidebar'}`}>
       <div className="generator-main">
+        <div className="section-toolbar">
+          <span className="subtle">{steps.length} step{steps.length === 1 ? '' : 's'} · {plan?.entry ? 'selector matched' : plan?.entry === null ? 'selector missing' : 'no selector yet'}{checks ? ` · ${passed}/${checks.length} checks passed` : ''}</span>
+          <span className="toolbar-spacer" />
+          <IconButton label="Expand all steps" onClick={() => setAllSections('gen-', true)}><ChevronsUpDown size={15} /></IconButton>
+          <IconButton label="Collapse all steps" onClick={() => setAllSections('gen-', false)}><ChevronsDownUp size={15} /></IconButton>
+        </div>
         {error && <p role="alert" className="inline-error">{error}</p>}
         <Collapsible id="gen-1" icon={<span className="step-number">1</span>} title="Scenario & feature context" summary={`${file} · ${steps.length} step${steps.length === 1 ? '' : 's'}`}>
           <div className="form-grid" onBlur={(e) => { const l = (e.target as HTMLElement).getAttribute('aria-label'); const map: Record<string, string> = { 'Feature area': 'area', 'Scenario name': 'scenarioName' }; if (l && map[l]) touch(map[l]); }}>
@@ -276,6 +288,12 @@ export default function TestGenerator({ revision, seed, onSource, onExport, onIn
           summary={checks ? `${passed}/${checks.length} passed` : 'Not run yet'}
           badge={checks ? <span className={`badge ${failed ? 'red' : passed === checks.length ? 'green' : 'amber'}`}>{failed ? `${failed} failed` : `${passed}/${checks.length} passed`}</span> : null}
         >
+          {checks && (
+            <div className="gate-score">
+              <Meter value={passed} max={checks.length} label="Quality gate" />
+              <span>{Math.round((passed / Math.max(1, checks.length)) * 100)}% of checks passed</span>
+            </div>
+          )}
           {checks ? (
             <table className="checks-table">
               <thead><tr><th>Validation check</th><th>Status</th><th>Details</th></tr></thead>
@@ -320,8 +338,9 @@ export default function TestGenerator({ revision, seed, onSource, onExport, onIn
           <Button variant="ghost" disabled={!!busy} onClick={validateNow} title="Ctrl+Enter"><ShieldCheck size={15} />{busy === 'validate' ? 'Validating…' : 'Run dry-run validation'}</Button>
           <Button variant="ghost" disabled={!!busy || !steps.length} onClick={guard(() => run('export', async () => onExport(await composeFeature(), file)))}><FileOutput size={15} />Export to feature file</Button>
           <span className="toolbar-spacer" />
-          <button className="icon-button" aria-label="Reset generator form" title="Reset form" onClick={() => { if (confirm('Reset all generator inputs to defaults?')) { setDraft(defaults); onNotice?.('Generator reset.'); } }}><RotateCcw size={15} /></button>
-          <button className="icon-button" aria-label={sidebar ? 'Hide project model' : 'Show project model'} title={sidebar ? 'Hide project model' : 'Show project model'} onClick={() => setSidebar(!sidebar)}>{sidebar ? <PanelRightClose size={15} /> : <PanelRightOpen size={15} />}</button>
+          <Separator vertical />
+          <IconButton label="Reset generator form" side="top" onClick={async () => { if (await confirm({ title: 'Reset the Test Generator?', description: 'All inputs return to their defaults. Files in your repository are not affected.', confirm: 'Reset form', danger: true })) { setDraft(defaults); onNotice?.('Generator reset.'); } }}><RotateCcw size={15} /></IconButton>
+          <IconButton label={sidebar ? 'Hide project model' : 'Show project model'} side="top" onClick={() => setSidebar(!sidebar)}>{sidebar ? <PanelRightClose size={15} /> : <PanelRightOpen size={15} />}</IconButton>
         </div>
         <GeneratorShortcuts onSave={() => document.querySelector<HTMLButtonElement>('.generator-actions .button.primary')?.click()} onValidate={validateNow} />
         {preview && (

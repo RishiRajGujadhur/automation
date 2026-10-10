@@ -10,11 +10,15 @@ import { api, type Paged } from './api';
 import SelectorResolution from './SelectorResolution';
 import type { DictionaryEntry } from './types';
 import { Select, Checkbox, Button } from './radix';
+import * as Tabs from '@radix-ui/react-tabs';
+import { useLocalState as useTabState } from './ui';
 
 export default function DictionaryInspector({ revision = '', compact = false, onSource, onGenerate }: { revision?: string; compact?: boolean; onSource?: (file: string, line: number) => void; onGenerate?: (entry: DictionaryEntry) => void }) {
   const [query, setQuery] = useState('');
   const [offset, setOffset] = useState(0);
   const [data, setData] = useState<Paged<DictionaryEntry>>({ items: [], total: 0, hasNext: false });
+  const [loaded, setLoaded] = useState(false);
+  const [detailTab, setDetailTab] = useTabState('dictionary:tab', 'resolution');
   const [selected, setSelectedState] = useState<DictionaryEntry>();
   const [selectedId, setSelectedId] = useLocalState('dictionary:selected', '');
   const [warningsOnly, setWarningsOnly] = useLocalState('dictionary:warnings', false);
@@ -34,7 +38,7 @@ export default function DictionaryInspector({ revision = '', compact = false, on
     const timer = setTimeout(
       () =>
         api<Paged<DictionaryEntry>>('/dictionaries?' + new URLSearchParams({ q: query, offset: String(offset), limit: '12' }), undefined, controller.signal)
-          .then((body) => { setData(body); setError(''); })
+          .then((body) => { setData(body); setError(''); setLoaded(true); })
           .catch((e) => { if (!controller.signal.aborted) setError(e.message); }),
       180,
     );
@@ -86,7 +90,8 @@ export default function DictionaryInspector({ revision = '', compact = false, on
             </RowMenu>
           ))}
           {!visible.length && <p className="subtle">{warningsOnly && data.items.length ? 'No fields with warnings on this page.' : ''}</p>}
-          {!data.items.length && <p className="subtle">No Page → Section → Field XML entries match. Configure dictionary XML patterns in Config.</p>}
+          {!loaded && Array.from({ length: 6 }, (_, i) => <span key={i} className="skeleton skeleton-row" aria-hidden="true" />)}
+          {loaded && !data.items.length && <p className="subtle">No Page → Section → Field XML entries match. Configure dictionary XML patterns in Config.</p>}
           <div className="pagination">
             <Button variant="ghost" size="tiny" disabled={!offset} onClick={() => setOffset(Math.max(0, offset - 12))}>Previous</Button>
             <span>{data.items.length ? `${offset + 1}–${offset + data.items.length}` : ''}</span>
@@ -101,7 +106,16 @@ export default function DictionaryInspector({ revision = '', compact = false, on
                 <span className="meta">{selected.page} · {selected.file}:{selected.line}</span>
                 {onGenerate && <Button variant="primary" size="tiny" onClick={() => onGenerate(selected)}><Wand2 size={13} />Use in Test Generator</Button>}
               </div>
+              <Tabs.Root value={detailTab} onValueChange={setDetailTab} className="detail-tabs">
+                <Tabs.List className="tabs-list" aria-label="Field details">
+                  <Tabs.Trigger value="resolution" className="tabs-trigger">Resolution</Tabs.Trigger>
+                  <Tabs.Trigger value="code" className="tabs-trigger">Locator code</Tabs.Trigger>
+                  {!compact && <Tabs.Trigger value="source" className="tabs-trigger">Source</Tabs.Trigger>}
+                </Tabs.List>
+                <Tabs.Content value="resolution" className="tabs-content">
               <SelectorResolution entry={selected} />
+                </Tabs.Content>
+                <Tabs.Content value="code" className="tabs-content">
               <div className="locator-inputs">
                 <Select ariaLabel="Locator action" value={action} onValueChange={setAction} options={[{ value: 'fill', label: 'Fill' }, { value: 'click', label: 'Click' }, { value: 'visible', label: 'Verify visible' }]} />
                 {action === 'fill' && <input aria-label="Test data value" placeholder="Test data value" value={value} onChange={(e) => setValue(e.target.value)} />}
@@ -110,11 +124,13 @@ export default function DictionaryInspector({ revision = '', compact = false, on
                 <CodeMirror value={code} theme={oneDark} extensions={[StreamLanguage.define(csharp)]} editable={false} />
                 <CopyButton text={code} label="Copy locator code" />
               </div>
-              {!compact && (
-                <Collapsible id="dictionary-source" title="Dictionary source" summary={selected.file} defaultOpen={false}>
-                  <CodeMirror value={source} theme={oneDark} height="260px" extensions={[StreamLanguage.define(xml)]} editable={false} />
-                </Collapsible>
-              )}
+                </Tabs.Content>
+                {!compact && (
+                  <Tabs.Content value="source" className="tabs-content">
+                    <CodeMirror value={source} theme={oneDark} height="320px" extensions={[StreamLanguage.define(xml)]} editable={false} />
+                  </Tabs.Content>
+                )}
+              </Tabs.Root>
             </>
           ) : (
             <div className="empty-state">Select a dictionary field to inspect its selector order and locator code.</div>

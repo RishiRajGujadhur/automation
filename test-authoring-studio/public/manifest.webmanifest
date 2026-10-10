@@ -1,0 +1,10 @@
+{
+  "name": "TestAuthoring Studio",
+  "short_name": "TA Studio",
+  "description": "Turn Playwright recordings into SpecFlow features using your repository's steps and selector dictionaries.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0b0e16",
+  "theme_color": "#0b0e16",
+  "icons": [{ "src": "/icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }]
+}

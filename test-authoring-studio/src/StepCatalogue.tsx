@@ -5,6 +5,7 @@ import type { Binding } from './types';
 import { useStepSearch } from './useStepSearch';
 import { RowMenu, MenuHint, Highlight, copyText, useLocalState } from './ui';
 import { Checkbox, Button } from './radix';
+import { Segmented } from './radix2';
 
 const tone = (k: string) => (k === 'Given' ? 'purple' : k === 'When' ? 'teal' : 'green');
 /** Pattern with regex groups shown as readable placeholders. */
@@ -54,13 +55,7 @@ export default function StepCatalogue({ query, onQuery, onAdd, onInspect, onSour
             ))}
           </Command.List>
         </Command>
-        <div className="segmented small" role="group" aria-label="Binding type">
-          {['', 'Given', 'When', 'Then'].map((k) => (
-            <button key={k || 'all'} className={keyword === k ? 'active' : ''} aria-pressed={keyword === k} onClick={() => { setKeyword(k); setOffset(0); }}>
-              {k || 'All'}
-            </button>
-          ))}
-        </div>
+        <Segmented size="small" label="Binding type" value={keyword} onValueChange={(k) => { setKeyword(k); setOffset(0); }} options={[{ value: '', label: 'All' }, { value: 'Given', label: 'Given' }, { value: 'When', label: 'When' }, { value: 'Then', label: 'Then' }]} />
         {(query || keyword || unused) && (
           <Button variant="ghost" size="small" onClick={() => { update(''); setKeyword(''); setUnused(false); }} title="Clear search and filters">
             <X size={13} />
@@ -76,6 +71,7 @@ export default function StepCatalogue({ query, onQuery, onAdd, onInspect, onSour
         <span className="subtle">Right-click a step for more actions</span>
       </div>
       <div className={compact ? 'step-picker-results' : 'catalog-grid'} aria-busy={loading}>
+        {loading && Array.from({ length: compact ? 3 : 6 }, (_, i) => <div key={i} className="panel catalog-card skeleton-card" aria-hidden="true"><span className="skeleton" style={{ width: '30%' }} /><span className="skeleton" style={{ width: '85%' }} /><span className="skeleton" style={{ width: '60%' }} /></div>)}
         {!loading && !error && items.map((b) => (
           <RowMenu
             key={b.id}

@@ -15,7 +15,7 @@ test('Guide me visits each workflow, supports Back and restart, and restores the
   await page.goto('/');
   await expect(page.getByRole('button', { name: 'Guide me' })).toBeEnabled();
   await expect(page.getByText('JD', { exact: true })).toHaveCount(0);
-  await page.getByRole('button', { name: 'Builder', exact: true }).click();
+  await page.getByRole('tab', { name: 'Builder' }).click();
   await page.getByLabel('SCENARIO NAME').fill('Keep my draft');
   await page.getByRole('button', { name: 'Guide me' }).click();
   await expect(
@@ -90,7 +90,7 @@ test('nested feature search preserves ancestry and new drafts use the selected f
     ).toBeVisible();
     await expect(page.getByRole('button', { name: 'Create.feature', exact: true })).toHaveCount(1);
     await page.getByRole('button', { name: 'Create.feature', exact: true }).click();
-    await page.getByRole('button', { name: 'Editor', exact: true }).click();
+    await page.getByRole('tab', { name: 'Editor' }).click();
     await expect(
       page.getByRole('heading', { name: 'Features/Payroll/Salary/Create.feature', exact: true }),
     ).toBeVisible();

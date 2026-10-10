@@ -15,6 +15,12 @@ import { useLocalState, RowMenu, copyText } from './ui';
 import { timeAgo, useNow } from './time';
 import { WorkspaceForm, RecordForm, NewFeatureForm, ParametersForm, RunForm } from './forms';
 import { Select, Checkbox, Button } from './radix';
+import * as Dialog from '@radix-ui/react-dialog';
+import * as Toast from '@radix-ui/react-toast';
+import * as Tabs from '@radix-ui/react-tabs';
+import * as NavigationMenu from '@radix-ui/react-navigation-menu';
+import { IconButton, IndeterminateProgress, Separator, Switch, Segmented, usePrefs, useConfirm, haptic, withTransition, Meter } from './radix2';
+import { markDone } from './progress';
 import AppMenu, { AppMenuButton } from './AppMenu';
 import '@fontsource-variable/dm-sans';
 import '@fontsource/ibm-plex-mono/400.css';
@@ -72,6 +78,10 @@ import {
   FolderTree,
   Keyboard,
   Command as CommandIcon,
+  SlidersHorizontal,
+  Link2,
+  Maximize2,
+  PanelLeft,
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import type { Index, Feature, Binding, Action, Match } from './types';
@@ -79,6 +89,7 @@ import './tailwind.css';
 import './styles.scss';
 import './explorer.scss';
 import './generator.scss';
+import './modern.scss';
 
 const demo: Action[] = [
   { id: 'd1', action: 'goto', url: 'https://www.google.com/' },
@@ -105,6 +116,9 @@ const shortcuts: [string, string][] = [
   ['Alt + 1…4', 'Dashboard, Test Generator, Features, Dictionary Inspector'],
   ['/', 'Search feature files'],
   ['?', 'Show this shortcut list'],
+  ['Ctrl/Cmd + .', 'Focus mode (hide navigation chrome)'],
+  ['Ctrl/Cmd + B', 'Show or hide the feature explorer'],
+  ['Swipe a notification', 'Dismiss it (touch)'],
   ['Ctrl/Cmd + S', 'Test Generator: preview save'],
   ['Ctrl/Cmd + Enter', 'Test Generator: run validation'],
   ['Esc', 'Clear a search box, close a dialog or menu'],
@@ -169,6 +183,36 @@ export default function App() {
   const [recentPages, setRecentPages] = useLocalState<string[]>('recentPages', []);
   const [recentUrls, setRecentUrls] = useLocalState<string[]>('recentUrls', []);
   const [online, setOnline] = useState(true);
+  const { prefs, setPrefs } = usePrefs();
+  const confirm = useConfirm();
+  const [toastKey, setToastKey] = useState(0);
+  useEffect(() => { if (notice) setToastKey((k) => k + 1); }, [notice]);
+  useEffect(() => { if (index) markDone('scan'); }, [index]);
+  useEffect(() => { if (tab === 'Test Generator') markDone('generator'); if (tab === 'Dictionary Inspector') markDone('dictionary'); }, [tab]);
+  // Deep links: #/<tab>[/<view>] is shareable and drives back/forward.
+  const slug = (t: string) => t.toLowerCase().replace(/\s+/g, '-');
+  useEffect(() => {
+    const fromHash = () => {
+      const [, t, v] = location.hash.split('/');
+      const all = [...tabs, ...moreTabs].map((x) => x.name);
+      const match = all.find((x) => slug(x) === t);
+      if (match) { setTab(match); if (v && ['editor', 'builder', 'recorder'].includes(v)) setView(v); }
+    };
+    fromHash();
+    window.addEventListener('popstate', fromHash);
+    return () => window.removeEventListener('popstate', fromHash);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+  useEffect(() => {
+    const next = `#/${slug(tab)}${tab === 'Features' ? '/' + view : ''}`;
+    if (location.hash !== next) history.pushState(null, '', next);
+  }, [tab, view]);
+  // Glass header once content scrolls under it.
+  useEffect(() => {
+    const h = () => { const y = Math.max(window.scrollY, document.querySelector('.main-content')?.scrollTop ?? 0); document.documentElement.dataset.scrolled = String(y > 8); };
+    document.addEventListener('scroll', h, true);
+    return () => document.removeEventListener('scroll', h, true);
+  }, []);
   const [undo, setUndo] = useState<{ run: () => void }>();
   const [showTop, setShowTop] = useState(false);
   const now = useNow(30000);
@@ -191,7 +235,7 @@ export default function App() {
   }, [dirty]);
   // Local API heartbeat: surfaces a stopped dev server instead of opaque fetch errors.
   useEffect(() => {
-    const ping = () => fetch('/api/health').then((r) => setOnline(r.ok)).catch(() => setOnline(false));
+    const ping = () => document.visibilityState === 'hidden' ? undefined : fetch('/api/health').then((r) => setOnline(r.ok)).catch(() => setOnline(false));
     const t = setInterval(ping, 15000);
     window.addEventListener('focus', ping);
     return () => { clearInterval(t); window.removeEventListener('focus', ping); };
@@ -218,36 +262,6 @@ export default function App() {
     setNewFile(`${folder ? `${folder}/` : ''}NewFeature.feature`);
     setModal('new');
   };
-  useEffect(() => {
-    if (!modal) return;
-    const previous = document.activeElement as HTMLElement | null;
-    const frame = requestAnimationFrame(() => {
-      document.querySelector<HTMLElement>('[role="dialog"] button, [role="dialog"] input')?.focus();
-    });
-    const trap = (event: KeyboardEvent) => {
-      if (event.key !== 'Tab') return;
-      const items = Array.from(
-        document.querySelectorAll<HTMLElement>(
-          '[role="dialog"] button:not(:disabled), [role="dialog"] input, [role="dialog"] textarea, [role="dialog"] select, [role="dialog"] [tabindex="0"]',
-        ),
-      );
-      const first = items[0],
-        last = items.at(-1);
-      if (event.shiftKey && document.activeElement === first) {
-        event.preventDefault();
-        last?.focus();
-      } else if (!event.shiftKey && document.activeElement === last) {
-        event.preventDefault();
-        first?.focus();
-      }
-    };
-    document.addEventListener('keydown', trap);
-    return () => {
-      cancelAnimationFrame(frame);
-      document.removeEventListener('keydown', trap);
-      if (previous?.isConnected) previous.focus();
-    };
-  }, [modal]);
   const work = async (fn: () => Promise<void>) => {
     setBusy(true);
     setError('');
@@ -268,11 +282,6 @@ export default function App() {
       setMatches(await api('/recording/match', { actions: demo }));
     });
   }, []);
-  useEffect(() => {
-    if (!notice) return;
-    const timer = setTimeout(() => { setNotice(''); setUndo(undefined); }, 6000);
-    return () => clearTimeout(timer);
-  }, [notice]);
   useEffect(() => {
     if (!['recording', 'paused'].includes(recordStatus)) return;
     const timer = setInterval(() => {
@@ -298,7 +307,6 @@ export default function App() {
   }, [execution.status]);
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') setModal(undefined);
       if ((e.ctrlKey || e.metaKey) && e.key === 's' && document.querySelector('.editor-panel')) {
         e.preventDefault();
         saveRef.current();
@@ -312,6 +320,14 @@ export default function App() {
         e.preventDefault();
         setMobileExplorer(true);
         requestAnimationFrame(() => document.querySelector<HTMLInputElement>('input[aria-label="Search features"]')?.focus());
+      }
+      if ((e.ctrlKey || e.metaKey) && e.key === '.') {
+        e.preventDefault();
+        setPrefs({ focus: !document.documentElement.dataset.focus || document.documentElement.dataset.focus === 'false' });
+      }
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'b' && !typing) {
+        e.preventDefault();
+        setPrefs({ sidebar: document.documentElement.dataset.sidebar === 'false' });
       }
       if (!typing && e.key === '?') {
         e.preventDefault();
@@ -340,8 +356,12 @@ export default function App() {
     const full = await api<Feature>(`/feature?file=${encodeURIComponent(file)}`);
     choose(full);
   };
-  const select = (f: Feature) => work(() => loadFeature(f.file));
-  const navigate = (name: string) => {
+  const select = async (f: Feature) => {
+    if (dirty && f.file !== feature?.file && !(await confirm({ title: 'Discard unsaved changes?', description: `Your edits to ${feature?.file ?? newFile} have not been saved. Opening ${f.file} will discard them.`, confirm: 'Discard and open', danger: true }))) return;
+    work(() => loadFeature(f.file));
+  };
+  const navigate = (name: string) => withTransition(() => navigateNow(name));
+  const navigateNow = (name: string) => {
     const views: Record<string, string> = { 'Playwright Recorder': 'recorder', Recorder: 'recorder', 'Scenario Builder': 'builder', 'Feature Editor': 'editor' };
     if (views[name]) {
       setTab('Features');
@@ -413,6 +433,7 @@ export default function App() {
     let n = 0;
     for (const m of matches) if (m.candidates[0] && !next[m.action.id]) { next[m.action.id] = `${m.candidates[0].binding.keyword} ${m.candidates[0].text}`; n++; }
     setAccepted(next);
+    if (n) haptic();
     setNotice(n ? `Accepted the top match for ${n} action${n === 1 ? '' : 's'}. Review before applying.` : 'No unaccepted matches.');
   };
   const applyRecording = () => {
@@ -447,6 +468,10 @@ export default function App() {
         { label: 'Rescan repository', icon: RefreshCw, disabled: busy, run: () => work(async () => { setIndex(await api('/scan', {})); setNotice('Repository index refreshed.'); }) },
         { label: 'Workspace settings', icon: Settings2, run: () => setModal('settings') },
         { label: 'Keyboard shortcuts', icon: Keyboard, run: () => setModal('shortcuts'), shortcut: '?' },
+        { label: 'Preferences', icon: SlidersHorizontal, run: () => setModal('preferences') },
+        { label: 'Copy link to this page', icon: Link2, run: () => copyText(location.href).then((ok) => setNotice(ok ? 'Link copied.' : 'Clipboard unavailable.')) },
+        { label: prefs.focus ? 'Exit focus mode' : 'Focus mode', icon: Maximize2, run: () => setPrefs({ focus: !prefs.focus }), shortcut: 'Ctrl .' },
+        { label: prefs.sidebar ? 'Hide explorer' : 'Show explorer', icon: PanelLeft, run: () => setPrefs({ sidebar: !prefs.sidebar }), shortcut: 'Ctrl B' },
       ],
   };
   return (
@@ -474,9 +499,12 @@ export default function App() {
           { label: 'Show keyboard shortcuts', run: () => setModal('shortcuts'), shortcut: '?' },
           { label: 'Show index diagnostics', run: () => setModal('diagnostics') },
           { label: 'Start the guided tour', run: () => setGuideOpen(true) },
+          { label: 'Preferences', run: () => setModal('preferences') },
+          { label: 'Toggle focus mode', run: () => setPrefs({ focus: !prefs.focus }), shortcut: 'Ctrl .' },
+          { label: 'Copy link to this page', run: () => copyText(location.href).then((ok) => setNotice(ok ? 'Link copied.' : 'Clipboard unavailable.')) },
         ]}
       />
-      {busy && <div className="progress-bar" role="progressbar" aria-label="Working" />}
+      {busy && <IndeterminateProgress label="Working" />}
       {!online && (
         <div className="offline-banner" role="alert">
           <TriangleAlert size={15} /> Local API is not responding. Is <code>npm run dev</code> still running?
@@ -517,35 +545,43 @@ export default function App() {
           <Compass size={16} className="animated-icon" />
           Guide me
         </Button>
-        <button
-          className="icon-button explorer-toggle"
-          aria-label="Toggle feature explorer"
+        <IconButton
+          className="explorer-toggle"
+          label="Toggle feature explorer"
           aria-expanded={mobileExplorer}
           aria-controls="feature-sidebar"
           onClick={() => setMobileExplorer((open) => !open)}
         >
           <Folder size={19} />
-        </button>
-        <button
-          className="icon-button"
+        </IconButton>
+        <IconButton
+          label="Preferences"
+          onClick={() => setModal('preferences')}
+        >
+          <SlidersHorizontal size={18} />
+        </IconButton>
+        <IconButton
           data-tour="workspace"
-          aria-label="Workspace settings"
+          label="Workspace settings"
           onClick={() => setModal('settings')}
         >
           <Settings2 size={19} />
-        </button>
+        </IconButton>
       </header>
       <nav className="main-nav">
-        <div className="nav-tabs">
+        <NavigationMenu.Root className="nav-root" aria-label="Main">
+        <NavigationMenu.List className="nav-tabs">
           {tabs.map((t) => (
+            <NavigationMenu.Item key={t.name}>
+            <NavigationMenu.Link asChild active={tab === t.name}>
             <button
               key={t.name}
               className={`nav-tab ${tab === t.name ? 'active' : ''}`}
               title={`${t.name} (${t.shortcut})`}
-              onClick={() => {
+              onClick={() => withTransition(() => {
                 setTab(t.name);
                 setCatalogQuery('');
-              }}
+              })}
             >
               <Icon icon={t.icon} />
               {t.name}
@@ -553,15 +589,20 @@ export default function App() {
                 <span className="nav-count">{index.stats.dictionaries}</span>
               )}
             </button>
+            </NavigationMenu.Link>
+            </NavigationMenu.Item>
           ))}
           {moreTabs.filter((t) => t.name === tab).map((t) => (
-            <button key={t.name} className="nav-tab active" aria-current="page">
-              <Icon icon={t.icon} />
-              {t.name}
-            </button>
+            <NavigationMenu.Item key={t.name}>
+              <button className="nav-tab active" aria-current="page">
+                <Icon icon={t.icon} />
+                {t.name}
+              </button>
+            </NavigationMenu.Item>
           ))}
-          <AppMenuButton {...menuProps} />
-        </div>
+          <NavigationMenu.Item><AppMenuButton {...menuProps} /></NavigationMenu.Item>
+        </NavigationMenu.List>
+        </NavigationMenu.Root>
         <button
           className={`recorder-tab ${view === 'recorder' && tab === 'Features' ? 'selected' : ''}`}
           onClick={() => {
@@ -615,9 +656,9 @@ export default function App() {
                 </span>
                 {index?.scannedAt && <span className="scanned-at" title={new Date(index.scannedAt).toLocaleString()}>Scanned {timeAgo(index.scannedAt, now)}</span>}
               </div>
-              <button
-                className={`icon-button ${busy ? 'spin' : ''}`}
-                aria-label="Rescan repository"
+              <IconButton
+                className={busy ? 'spin' : ''}
+                label="Rescan repository"
                 onClick={() =>
                   work(async () => {
                     setIndex(await api('/scan', {}));
@@ -626,7 +667,7 @@ export default function App() {
                 }
               >
                 <RefreshCw size={15} />
-              </button>
+              </IconButton>
             </div>
             <div className="repo-path">
               <Folder size={13} />
@@ -660,22 +701,20 @@ export default function App() {
             </div>
             <div className="heading-actions">
               {tab === 'Features' && (
-                <div className="segmented">
-                  {[
-                    { id: 'editor', icon: Code2, label: 'Editor' },
-                    { id: 'builder', icon: Blocks, label: 'Builder' },
-                    { id: 'recorder', icon: Circle, label: 'Recorder' },
-                  ].map((v) => (
-                    <button
-                      className={view === v.id ? 'active' : ''}
-                      key={v.id}
-                      onClick={() => setView(v.id)}
-                    >
-                      <v.icon size={14} />
-                      {v.label}
-                    </button>
-                  ))}
-                </div>
+                <Tabs.Root value={view} onValueChange={(v) => withTransition(() => setView(v))} activationMode="manual">
+                  <Tabs.List className="segmented" aria-label="Feature views">
+                    {[
+                      { id: 'editor', icon: Code2, label: 'Editor' },
+                      { id: 'builder', icon: Blocks, label: 'Builder' },
+                      { id: 'recorder', icon: Circle, label: 'Recorder' },
+                    ].map((v) => (
+                      <Tabs.Trigger key={v.id} value={v.id} className="segmented-item">
+                        <v.icon size={14} />
+                        {v.label}
+                      </Tabs.Trigger>
+                    ))}
+                  </Tabs.List>
+                </Tabs.Root>
               )}
             </div>
           </div>
@@ -747,10 +786,11 @@ export default function App() {
                       Start recording
                     </Button>
                   )}
-                  <button
-                    className="icon-button clear-button"
-                    aria-label="Clear recording"
-                    onClick={() =>
+                  <IconButton
+                    className="clear-button"
+                    label="Clear recording"
+                    onClick={async () =>
+                      actions.length && (await confirm({ title: 'Clear this recording?', description: `All ${actions.length} captured actions and their accepted matches will be removed.`, confirm: 'Clear recording', danger: true })) &&
                       work(async () => {
                         await api('/recording/clear', {});
                         setActions([]);
@@ -763,7 +803,7 @@ export default function App() {
                     }
                   >
                     <Trash2 size={16} />
-                  </button>
+                  </IconButton>
                 </div>
               </div>
               <div className="recorder-grid">
@@ -813,7 +853,7 @@ export default function App() {
                           { label: 'Search steps for this target', icon: Search, onSelect: () => { setCatalogQuery(a.target?.name ?? a.target?.description ?? ''); setTab('Step Catalog'); } },
                           'separator' as const,
                           { label: 'Copy as Playwright C#', icon: Copy, onSelect: () => copyText(playwright).then((ok) => setNotice(ok ? 'Playwright code copied.' : 'Clipboard unavailable.')) },
-                          { label: 'Remove action', icon: Trash2, danger: true, onSelect: () => { const before = actions, beforeAccepted = accepted; setActions(actions.filter((x) => x.id !== a.id)); const { [a.id]: _, ...rest } = accepted; setAccepted(rest); setNotice('Action removed.'); setUndo({ run: () => { setActions(before); setAccepted(beforeAccepted); } }); } },
+                          { label: 'Remove action', icon: Trash2, danger: true, onSelect: () => { const before = actions, beforeAccepted = accepted; setActions(actions.filter((x) => x.id !== a.id)); const { [a.id]: _, ...rest } = accepted; setAccepted(rest); setNotice('Action removed.'); haptic([8, 40, 8]); setUndo({ run: () => { setActions(before); setAccepted(beforeAccepted); } }); } },
                         ]}>
                         <motion.button
                           initial={{ opacity: 0, y: 8 }}
@@ -1365,6 +1405,15 @@ export default function App() {
           )}
         </main>
       </div>
+      <nav className="bottom-nav" aria-label="Main (mobile)">
+        {tabs.map((t) => (
+          <button key={t.name} className={tab === t.name ? 'active' : ''} aria-current={tab === t.name ? 'page' : undefined} onClick={() => navigate(t.name)}>
+            <t.icon size={20} />
+            <span>{t.name.replace('Dictionary Inspector', 'Dictionary').replace('Test Generator', 'Generator')}</span>
+          </button>
+        ))}
+        <AppMenuButton {...menuProps} />
+      </nav>
       <footer className="status-bar">
         <span>
           <span className="status-dot" />
@@ -1372,6 +1421,7 @@ export default function App() {
           <span className="muted-separator">│</span>
           <GitBranch size={12} />
           Repository source is authoritative
+          {execution.status === 'running' && (<><Separator vertical /><span className="status-run">Running tests</span><Meter value={60} label="Test run" tone="purple" /></>)}
         </span>
         <button onClick={() => setModal('diagnostics')}>
           <TriangleAlert size={12} />
@@ -1382,45 +1432,37 @@ export default function App() {
           Local only<span className="muted-separator">│</span>SpecFlow + Playwright
         </span>
       </footer>
-      <AnimatePresence>
-        {notice && (
-          <motion.div
-            role="status"
-            className="toast"
-            initial={{ opacity: 0, y: 15 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: 15 }}
-          >
-            <Check size={17} />
-            {notice}
-            {undo && (
+      <Toast.Provider swipeDirection={typeof window !== 'undefined' && matchMedia('(max-width: 640px)').matches ? 'down' : 'right'} duration={6000}>
+        <Toast.Root
+          key={toastKey}
+          className="toast"
+          open={!!notice}
+          onOpenChange={(open) => { if (!open) { setNotice(''); setUndo(undefined); } }}
+        >
+          <Check size={17} />
+          <Toast.Description>{notice}</Toast.Description>
+          {undo && (
+            <Toast.Action asChild altText="Undo the last change">
               <Button size="tiny" onClick={() => { undo.run(); setUndo(undefined); setNotice('Restored.'); }}>
                 Undo
               </Button>
-            )}
-          </motion.div>
-        )}
-      </AnimatePresence>
-      <AnimatePresence>
-        {modal && (
-          <motion.div
-            className="modal-backdrop"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            onClick={() => setModal(undefined)}
-          >
-            <motion.section
-              role="dialog"
-              aria-modal="true"
-              aria-label={modal}
+            </Toast.Action>
+          )}
+          <Toast.Close className="toast-close" aria-label="Dismiss notification"><X size={14} /></Toast.Close>
+        </Toast.Root>
+        <Toast.Viewport className="toast-viewport" />
+      </Toast.Provider>
+      <Dialog.Root open={!!modal} onOpenChange={(open) => { if (!open) setModal(undefined); }}>
+        <Dialog.Portal>
+          <Dialog.Overlay className="dialog-overlay" />
+          {modal && (
+            <Dialog.Content
               className={`modal ${['preview', 'source', 'settings', 'dictionary'].includes(modal) ? 'wide' : ''}`}
-              initial={{ scale: 0.97, y: 12 }}
-              animate={{ scale: 1, y: 0 }}
-              onClick={(e) => e.stopPropagation()}
+              aria-describedby={undefined}
             >
+              <div className="sheet-handle" aria-hidden="true" />
               <div className="modal-header">
-                <h2>
+                <Dialog.Title asChild><h2>
                   {
                     {
                       settings: 'Workspace settings',
@@ -1435,16 +1477,13 @@ export default function App() {
                       details: 'Binding evidence',
                       dictionary: 'Recorded fields → dictionary & page object',
                       shortcuts: 'Keyboard shortcuts',
+                      preferences: 'Preferences',
                     }[modal]
                   }
-                </h2>
-                <button
-                  className="icon-button"
-                  aria-label="Close dialog"
-                  onClick={() => setModal(undefined)}
-                >
+                </h2></Dialog.Title>
+                <Dialog.Close className="icon-button" aria-label="Close dialog">
                   <X size={19} />
-                </button>
+                </Dialog.Close>
               </div>
               <div className="modal-body">
                 {modal === 'settings' && config && (
@@ -1471,6 +1510,7 @@ export default function App() {
                     recentUrls={recentUrls}
                     onSubmit={async (u) => {
                       await api('/recording/start', { url: u });
+                      markDone('record');
                       setUrl(u);
                       setRecentUrls((r) => [u, ...r.filter((x) => x !== u)].slice(0, 8));
                       setRecordStatus('recording');
@@ -1536,6 +1576,7 @@ export default function App() {
                             await loadFeature(preview.file);
                           setModal(undefined);
                           setNotice('Approved changes saved to the repository.');
+                          markDone('save');
                         })
                       }
                     >
@@ -1630,6 +1671,29 @@ export default function App() {
                     </Button>
                   </>
                 )}
+                {modal === 'preferences' && (
+                  <div className="prefs">
+                    <section>
+                      <h3>Display</h3>
+                      <div className="pref-row"><span>Density</span><Segmented label="Density" value={prefs.density} onValueChange={(v) => setPrefs({ density: v })} options={[{ value: 'comfortable', label: 'Comfortable' }, { value: 'compact', label: 'Compact' }]} /></div>
+                      <div className="pref-row"><span>Text size</span><Segmented label="Text size" value={prefs.textSize} onValueChange={(v) => setPrefs({ textSize: v })} options={[{ value: 'small', label: 'A−' }, { value: 'medium', label: 'A' }, { value: 'large', label: 'A+' }]} /></div>
+                      <div className="pref-row"><span>Accent</span><Segmented label="Accent colour" value={prefs.accent} onValueChange={(v) => setPrefs({ accent: v })} options={(['violet', 'teal', 'blue', 'amber'] as const).map((a) => ({ value: a, label: <span className={`swatch ${a}`} aria-label={a} /> }))} /></div>
+                    </section>
+                    <Separator />
+                    <section>
+                      <h3>Accessibility</h3>
+                      <Switch id="pref-motion" label="Reduce motion" description="Turns off animations and page transitions." checked={prefs.motion === 'reduce'} onCheckedChange={(v) => setPrefs({ motion: v ? 'reduce' : 'system' })} />
+                      <Switch id="pref-contrast" label="High contrast" description="Stronger borders and brighter secondary text." checked={prefs.contrast === 'high'} onCheckedChange={(v) => setPrefs({ contrast: v ? 'high' : 'normal' })} />
+                      <Switch id="pref-haptics" label="Haptic feedback" description="Short vibrations on touch devices when you accept or remove items." checked={prefs.haptics} onCheckedChange={(v) => setPrefs({ haptics: v })} />
+                    </section>
+                    <Separator />
+                    <section>
+                      <h3>Layout</h3>
+                      <Switch id="pref-sidebar" label="Show feature explorer" description="Ctrl/Cmd+B" checked={prefs.sidebar} onCheckedChange={(v) => setPrefs({ sidebar: v })} />
+                      <Switch id="pref-focus" label="Focus mode" description="Hides navigation chrome. Ctrl/Cmd+." checked={prefs.focus} onCheckedChange={(v) => setPrefs({ focus: v })} />
+                    </section>
+                  </div>
+                )}
                 {modal === 'shortcuts' && (
                   <dl className="shortcut-list">
                     {shortcuts.map(([k, d]) => (
@@ -1707,10 +1771,10 @@ export default function App() {
                   </>
                 )}
               </div>
-            </motion.section>
-          </motion.div>
-        )}
-      </AnimatePresence>
+            </Dialog.Content>
+          )}
+        </Dialog.Portal>
+      </Dialog.Root>
       </div>
     </div>
     </AppMenu>

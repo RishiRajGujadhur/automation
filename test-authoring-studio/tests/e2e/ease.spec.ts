@@ -10,7 +10,7 @@ test('step lint, suggestions, file state, palette commands, undo and accept-all'
 
   // Recorder: accept all, then remove + undo.
   await page.getByRole('button', { name: 'Accept all top matches' }).click();
-  await expect(page.getByText(/Accepted the top match for/)).toBeVisible();
+  await expect(page.getByText(/Accepted the top match for/).first()).toBeVisible();
   const count = await page.locator('.action-card').count();
   await page.locator('.action-card').last().click({ button: 'right' });
   await page.getByRole('menuitem', { name: 'Remove action' }).click();

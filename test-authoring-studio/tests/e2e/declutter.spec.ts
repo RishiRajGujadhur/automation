@@ -57,6 +57,6 @@ test('right-click menus, More navigation, shortcuts, persisted drafts and collap
   await first.focus();
   await page.keyboard.press('ArrowDown');
   await expect(page.locator('.dictionary-field').nth(1)).toBeFocused();
-  await expect(page.getByRole('button', { name: /Dictionary source/ })).toHaveAttribute('aria-expanded', 'false');
+  await expect(page.getByRole('tab', { name: 'Source' })).toHaveAttribute('aria-selected', 'false');
   expect(errors).toEqual([]);
 });

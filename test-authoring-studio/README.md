@@ -104,6 +104,30 @@ The tab bar shows only the four primary pages. To reach Step Catalog, Background
 
 The studio menu is a Radix context menu (`@radix-ui/react-context-menu`). It also offers Command palette, Start a recording, New feature, Rescan, Workspace settings and Keyboard shortcuts. Menus on cards and rows take priority over it. Text inputs and code editors keep the browser's own right-click menu (copy, paste, spellcheck).
 
+### Modern design layer (2025–2026)
+
+Styles are in `src/modern.scss`. Preferences are stored per browser and applied as `data-*` attributes on `<html>`.
+
+| Area | What you get |
+| --- | --- |
+| Radix Dialog | All dialogs: focus trap, scroll lock, Escape and outside-click close, labelled title. They become **bottom sheets with a drag handle** on phones. |
+| Radix Alert Dialog | Confirms destructive actions: clear recording, reset generator, discard unsaved edits when opening another feature. Cancel has focus by default. |
+| Radix Accordion | Test Generator steps (state persisted). **Expand all / Collapse all** buttons. Animated height. |
+| Radix Navigation Menu | Primary tabs, with arrow-key navigation between them. |
+| Radix Tabs | Editor / Builder / Recorder switch. Dictionary field details (Resolution / Locator code / Source, last tab remembered). |
+| Radix Toast | Notifications stack, **swipe to dismiss** (right on desktop, down on phones), pause on hover, have a close button and an Undo action, and are announced to screen readers. |
+| Radix Tooltip | Icon buttons show their label, plus a keyboard shortcut where one exists. |
+| Radix Progress | Busy bar, quality-gate score, "steps reusing bindings" meter, getting-started progress, test-run indicator. |
+| Radix Separator, Toggle Group, Switch | Toolbar dividers. Given/When/Then filter and preference choices. Preference switches. |
+| Radix Hover Card, Popover | Hover a matched step to preview its binding. Click "Active project" to see projects and packages. |
+| Preferences | Density (comfortable/compact), text size (A−/A/A+), accent colour (violet/teal/blue/amber), reduce motion, high contrast, haptics, show explorer, focus mode. |
+| Mobile | Bottom navigation bar, sticky generator actions, safe-area insets, `dvh` heights, 44 px touch targets on coarse pointers, haptic feedback on accept/remove/validate. |
+| Visual polish | Glass header when content scrolls under it. Fluid `clamp()` headings. `text-wrap: balance`/`pretty`. Press micro-interactions. Skeleton loaders (dashboard stats, step catalogue, dictionary list). View Transitions between pages. Accent colour reserved for primary actions and active states. |
+| Accessibility | Follows the OS reduce-motion and contrast settings (`prefers-reduced-motion`, `prefers-contrast`), with manual overrides. Focus rings use the accent colour. `scrollbar-gutter: stable` prevents layout shift. `overscroll-behavior: contain` in menus and sheets. |
+| Navigation | Deep links (`#/dictionary-inspector`, `#/features/editor`) that work with back/forward and can be shared. Copy link to this page. Focus mode (Ctrl/Cmd+.). Explorer toggle (Ctrl/Cmd+B). |
+| Onboarding | Getting-started checklist with progress on the Dashboard; open items link to the right page. |
+| Efficiency | The health check pauses while the tab is hidden. Installable as a PWA (manifest, icon, `theme-color`, `viewport-fit=cover`). |
+
 ### UI primitives (Radix)
 
 All interactive controls are built on Radix UI primitives, wrapped in `src/radix.tsx`:

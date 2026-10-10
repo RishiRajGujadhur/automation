@@ -1,6 +1,6 @@
 import * as ContextMenu from '@radix-ui/react-context-menu';
 import { createContext, useContext, useEffect, useState, type ReactNode } from 'react';
-import { Copy, Check, ChevronDown, ChevronRight } from 'lucide-react';
+import { Copy, Check } from 'lucide-react';
 import { Dropdown, MenuEntries, type MenuEntry } from './radix';
 
 export type MenuItem = MenuEntry;
@@ -81,22 +81,8 @@ export function CopyButton({ text, label = 'Copy' }: { text: string; label?: str
   );
 }
 
-/** Collapsible card: heading + one-line summary when closed, full content when open. */
-export function Collapsible({ id, title, summary, badge, children, defaultOpen = true, icon }: { id: string; title: ReactNode; summary?: ReactNode; badge?: ReactNode; children: ReactNode; defaultOpen?: boolean; icon?: ReactNode }) {
-  const [open, setOpen] = useLocalState(`open:${id}`, defaultOpen);
-  return (
-    <section className={`panel collapsible ${open ? 'open' : ''}`}>
-      <button className="collapsible-heading" aria-expanded={open} onClick={() => setOpen(!open)}>
-        {open ? <ChevronDown size={15} /> : <ChevronRight size={15} />}
-        {icon}
-        <h2>{title}</h2>
-        {!open && summary && <span className="collapsible-summary">{summary}</span>}
-        {badge && <span className="collapsible-badge">{badge}</span>}
-      </button>
-      {open && <div className="wizard-body">{children}</div>}
-    </section>
-  );
-}
+/** Collapsible card (Radix Accordion): heading + one-line summary when closed, full content when open. */
+export { AccordionSection as Collapsible } from './radix2';
 
 /** Highlights query terms in text (case-insensitive, whole query tokens). */
 export function Highlight({ text, query }: { text: string; query: string }) {

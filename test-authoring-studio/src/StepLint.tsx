@@ -3,6 +3,8 @@ import { CircleCheck, CircleAlert, CircleHelp, Lightbulb } from 'lucide-react';
 import { api, type Paged } from './api';
 import { readablePattern } from './StepCatalogue';
 import type { Binding } from './types';
+import * as HoverCard from '@radix-ui/react-hover-card';
+import { Meter } from './radix2';
 
 type Line = { keyword: string; resolved: string; text: string };
 type Status = { status: 'Matched' | 'Ambiguous' | 'Unmatched'; binding: { pattern: string; file: string; line: number } | null };
@@ -47,7 +49,20 @@ export default function StepLint({ steps, activeLine, onReplace, onSource, revis
               <span className="kw">{s.keyword}</span>
               <span className="txt">{s.text}</span>
               {st?.binding ? (
-                <button className="meta link" onClick={() => onSource(st.binding!.file, st.binding!.line)} title={st.binding.pattern}>{st.binding.file.split('/').pop()}:{st.binding.line}</button>
+                <HoverCard.Root openDelay={250} closeDelay={80}>
+                  <HoverCard.Trigger asChild>
+                    <button className="meta link" onClick={() => onSource(st.binding!.file, st.binding!.line)}>{st.binding.file.split('/').pop()}:{st.binding.line}</button>
+                  </HoverCard.Trigger>
+                  <HoverCard.Portal>
+                    <HoverCard.Content className="hover-card" side="top" sideOffset={6} collisionPadding={8}>
+                      <span className="micro-label">BOUND BY</span>
+                      <code>[{s.resolved}(@"{st.binding.pattern}")]</code>
+                      <span className="meta">{st.binding.file}:{st.binding.line}</span>
+                      <span className="subtle">Click to open the source.</span>
+                      <HoverCard.Arrow className="tooltip-arrow" />
+                    </HoverCard.Content>
+                  </HoverCard.Portal>
+                </HoverCard.Root>
               ) : (
                 <span className="meta">{st?.status === 'Ambiguous' ? 'ambiguous' : st ? 'needs binding' : '…'}</span>
               )}
@@ -56,6 +71,7 @@ export default function StepLint({ steps, activeLine, onReplace, onSource, revis
         })}
       </ol>
       <div className="lint-footer">
+        {status.length > 0 && <Meter value={matched} max={steps.length} label="Steps reusing existing bindings" />}
         <span>{status.length ? `${matched}/${steps.length} steps reuse existing bindings` : 'Checking bindings…'}</span>
       </div>
       {suggestions.length > 0 && current && (

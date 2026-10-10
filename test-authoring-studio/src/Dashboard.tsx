@@ -2,6 +2,11 @@ import { BookOpen, Blocks, FileCode2, ScanLine, Braces, Wand2, Circle, Layers3, 
 import { Indicators, useProjectModel } from './ProjectModelTree';
 import type { Index } from './types';
 import { Button } from './radix';
+import * as Popover from '@radix-ui/react-popover';
+import { useEffect, useState } from 'react';
+import { CircleCheck, CircleDashed, Info } from 'lucide-react';
+import { Meter } from './radix2';
+import { milestones, doneMilestones } from './progress';
 
 export function ContextBar({ index, config, recordStatus, revision }: { index?: Index; config?: { repositoryRoot: string; targetProject: string }; recordStatus: string; revision?: string }) {
   const { model } = useProjectModel(revision);
@@ -9,7 +14,20 @@ export function ContextBar({ index, config, recordStatus, revision }: { index?: 
   const dictionaries = index?.stats?.dictionaries ?? 0;
   return (
     <div className="context-bar" aria-label="Project context">
-      <span><strong>Active project</strong> {project}{model?.frameworks.length ? ` (${model.frameworks.join(', ')}` : ' ('}{model?.packages.some((p) => /playwright/i.test(p)) ? ' / Playwright C#)' : ')'}</span>
+      <Popover.Root>
+        <Popover.Trigger asChild>
+          <button className="context-trigger"><strong>Active project</strong> {project}{model?.frameworks.length ? ` (${model.frameworks.join(', ')}` : ' ('}{model?.packages.some((p) => /playwright/i.test(p)) ? ' / Playwright C#)' : ')'}<Info size={12} /></button>
+        </Popover.Trigger>
+        <Popover.Portal>
+          <Popover.Content className="popover" sideOffset={6} collisionPadding={12}>
+            <span className="micro-label">PROJECTS</span>
+            <ul>{(model?.projects ?? []).map((x) => <li key={x}><code>{x}</code></li>)}{!model?.projects.length && <li className="subtle">No .csproj found.</li>}</ul>
+            <span className="micro-label">PACKAGES</span>
+            <ul>{(model?.packages ?? []).map((x) => <li key={x}>{x}</li>)}{!model?.packages.length && <li className="subtle">None detected.</li>}</ul>
+            <Popover.Arrow className="tooltip-arrow" />
+          </Popover.Content>
+        </Popover.Portal>
+      </Popover.Root>
       <span><strong>Root</strong> {config?.repositoryRoot.split(/[\\/]/).slice(-2).join('/')}</span>
       <span><strong>Browser</strong> Chromium (headless: false) · {recordStatus === 'recording' ? 'recording' : 'idle'}</span>
       <span className={dictionaries ? 'ok' : 'warn'}><span className="status-dot" />{dictionaries ? `${dictionaries} dictionary fields indexed` : 'No dictionary XML found'}</span>
@@ -20,6 +38,13 @@ export function ContextBar({ index, config, recordStatus, revision }: { index?: 
 export default function Dashboard({ index, revision, onNavigate, recent = [], onSource }: { index?: Index; revision?: string; onNavigate: (tab: string) => void; recent?: string[]; onSource?: (file: string, line: number) => void }) {
   const { model } = useProjectModel(revision);
   const s = index?.stats;
+  const [done, setDone] = useState(doneMilestones);
+  useEffect(() => {
+    const h = () => setDone(doneMilestones());
+    window.addEventListener('tas:milestones', h);
+    return () => window.removeEventListener('tas:milestones', h);
+  }, []);
+  const targets: Record<string, string> = { generator: 'Test Generator', dictionary: 'Dictionary Inspector', record: 'Recorder', validate: 'Test Generator', save: 'Test Generator' };
   let draft: { featureFile?: string; area?: string; scenarioName?: string; section?: string; field?: string } | undefined;
   try { draft = JSON.parse(localStorage.getItem('tas:generator:draft') ?? 'null') ?? undefined; } catch { draft = undefined; }
   const tiles = [
@@ -36,7 +61,7 @@ export default function Dashboard({ index, revision, onNavigate, recent = [], on
         {tiles.map((t) => (
           <button key={t.label} className="panel stat-tile" onClick={() => onNavigate(t.tab)}>
             <t.icon size={18} />
-            <strong>{t.value?.toLocaleString() ?? '–'}</strong>
+            {t.value === undefined ? <span className="skeleton skeleton-number" aria-hidden="true" /> : <strong>{t.value.toLocaleString()}</strong>}
             <span>{t.label}</span>
           </button>
         ))}
@@ -48,6 +73,25 @@ export default function Dashboard({ index, revision, onNavigate, recent = [], on
           <span className="meta">{draft.area}/{draft.featureFile} · {draft.section} › {draft.field}</span>
           <ArrowRight size={16} />
         </button>
+      )}
+      {done.size < milestones.length && (
+        <section className="panel checklist" aria-label="Getting started">
+          <div className="checklist-head">
+            <div>
+              <span className="micro-label">GETTING STARTED</span>
+              <strong>{done.size} of {milestones.length} done</strong>
+            </div>
+            <Meter value={done.size} max={milestones.length} label="Getting started" tone="purple" />
+          </div>
+          <ul>
+            {milestones.map((m) => (
+              <li key={m.id} className={done.has(m.id) ? 'done' : ''}>
+                {done.has(m.id) ? <CircleCheck size={15} /> : <CircleDashed size={15} />}
+                {targets[m.id] && !done.has(m.id) ? <button className="text-button" onClick={() => onNavigate(targets[m.id])}>{m.label}</button> : <span>{m.label}</span>}
+              </li>
+            ))}
+          </ul>
+        </section>
       )}
       <div className="dashboard-grid">
         <section className="panel">
