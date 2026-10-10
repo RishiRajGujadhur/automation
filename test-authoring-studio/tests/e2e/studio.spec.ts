@@ -19,8 +19,9 @@ test('catalog to builder to validated diff; recording matches require acceptance
   await expect(page.getByRole('button', { name: 'Approve and write file' })).toBeEnabled();
   await page.getByRole('button', { name: 'Close dialog' }).click();
   await page.getByRole('button', { name: /Step Catalog/ }).click();
-  await page.getByRole('textbox', { name: 'Search Step Catalog' }).fill('the user searches');
-  await page.getByRole('button', { name: 'Add to scenario' }).click();
+  await page.getByRole('combobox', { name: 'Search Step Catalog' }).fill('the user searches');
+  await expect(page.locator('.catalog-card h3').first()).toHaveText('the user searches for "(.*)"');
+  await page.getByRole('button', { name: 'Add to scenario' }).first().click();
   await page.getByRole('dialog').getByRole('textbox').fill('Playwright');
   await page.getByRole('button', { name: 'Add existing step', exact: true }).click();
   await page.getByRole('button', { name: 'Features', exact: true }).click();

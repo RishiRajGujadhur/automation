@@ -45,9 +45,11 @@ export async function projectModel(config: Config, index: Index) {
   await walk(root);
   const csproj = files.filter((f) => f.file.endsWith('.csproj'));
   const packages = new Set<string>();
+  const frameworks = new Set<string>();
   for (const p of csproj.slice(0, 50)) {
     const xml = await fs.readFile(path.join(root, p.file), 'utf8').catch(() => '');
     for (const m of xml.matchAll(/PackageReference\s+Include="([^"]+)"/g)) packages.add(m[1]);
+    for (const m of xml.matchAll(/<TargetFrameworks?>([^<]+)</g)) for (const f of m[1].split(';')) frameworks.add(f.trim());
   }
   const has = (re: RegExp) => [...packages].some((p) => re.test(p));
   const indicators = [
@@ -66,6 +68,7 @@ export async function projectModel(config: Config, index: Index) {
     root: path.basename(root),
     projects: csproj.map((p) => p.file),
     packages: [...packages].sort(),
+    frameworks: [...frameworks].sort(),
     layers,
     indicators,
     files: files.sort((a, b) => a.file.localeCompare(b.file)),

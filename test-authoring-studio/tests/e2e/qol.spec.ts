@@ -21,7 +21,7 @@ test('Guide me visits each workflow, supports Back and restart, and restores the
   await expect(
     page.getByRole('heading', { name: 'Welcome to TestAuthoring Studio' }),
   ).toBeVisible();
-  await page.getByRole('button', { name: /^Next/ }).click();
+  await page.getByRole('button', { name: /^Next [(]/ }).click();
   await expect(page.getByRole('heading', { name: '1. Connect your .NET project' })).toBeVisible();
   await page.getByRole('button', { name: 'Back', exact: true }).click();
   await expect(
@@ -39,7 +39,7 @@ test('Guide me visits each workflow, supports Back and restart, and restores the
     '9. Review matches and proposals',
     '10. Validate and review before saving',
   ]) {
-    await page.getByRole('button', { name: /^Next/ }).click();
+    await page.getByRole('button', { name: /^Next [(]/ }).click();
     await expect(page.getByRole('heading', { name: title, exact: true })).toBeVisible();
   }
   await expect(page.getByTestId('floater')).toHaveCSS('opacity', '1');
@@ -149,7 +149,7 @@ test('mobile users can open the explorer and take or dismiss the tour', async ({
     '2. Explore your feature folders',
     '3. Create a feature in the right place',
   ]) {
-    await page.getByRole('button', { name: /^Next/ }).click();
+    await page.getByRole('button', { name: /^Next [(]/ }).click();
     await expect(page.getByRole('heading', { name: title, exact: true })).toBeVisible();
   }
   await expect(page.getByTestId('floater')).toHaveCSS('opacity', '1');

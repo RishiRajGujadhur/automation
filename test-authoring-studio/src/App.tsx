@@ -2,6 +2,15 @@ import React, { useEffect, useState, useCallback, useRef } from 'react';
 import FeatureExplorer from './FeatureExplorer';
 import StudioTour, { type TourDestination } from './StudioTour';
 import { featureDirectory } from './featureTree';
+import Dashboard, { ContextBar } from './Dashboard';
+import TestGenerator, { type GeneratorSeed } from './TestGenerator';
+import DictionaryInspector from './DictionaryInspector';
+import ProjectExplorer from './ProjectExplorer';
+import StepCatalogue from './StepCatalogue';
+import SearchPalette from './SearchPalette';
+import RecordingDictionary from './RecordingDictionary';
+import { SelectorCatalogue, BackgroundCatalogue } from './Catalogues';
+import { api } from './api';
 import '@fontsource-variable/dm-sans';
 import '@fontsource/ibm-plex-mono/400.css';
 import CodeMirror from '@uiw/react-codemirror';
@@ -53,28 +62,17 @@ import {
   Braces,
   Sparkles,
   Compass,
+  LayoutDashboard,
+  Wand2,
+  FolderTree,
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import type { Index, Feature, Binding, Action, Match } from './types';
 import './tailwind.css';
 import './styles.scss';
 import './explorer.scss';
+import './generator.scss';
 
-async function api<T = any>(url: string, body?: unknown): Promise<T> {
-  const r = await fetch(
-    `/api${url}`,
-    body === undefined
-      ? undefined
-      : {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(body),
-        },
-  );
-  const data = await r.json();
-  if (!r.ok) throw new Error(data.error ?? 'Request failed');
-  return data;
-}
 const demo: Action[] = [
   { id: 'd1', action: 'goto', url: 'https://www.google.com/' },
   { id: 'd2', action: 'fill', target: { role: 'combobox', name: 'Search' }, value: 'Dayforce.com' },
@@ -82,30 +80,28 @@ const demo: Action[] = [
   { id: 'd4', action: 'click', target: { role: 'link', description: 'first search result' } },
 ];
 const tabs = [
+  { name: 'Dashboard', icon: LayoutDashboard },
+  { name: 'Test Generator', icon: Wand2 },
   { name: 'Features', icon: FileCode2 },
   { name: 'Step Catalog', icon: BookOpen },
   { name: 'Backgrounds', icon: Blocks },
   { name: 'Selectors', icon: ScanLine },
+  { name: 'Dictionary Inspector', icon: Braces },
+  { name: 'Project Explorer', icon: FolderTree },
+  { name: 'Config', icon: Settings2 },
 ] as const;
+const headings: Record<string, string> = {
+  Dashboard: 'Repository health, classification and entry points.',
+  'Test Generator': 'Inputs, dictionary match, locator flow and the validation gate in one place.',
+  'Dictionary Inspector': 'XML selector dictionaries in document order, with optional browser verification.',
+  'Project Explorer': 'Repository files by architectural layer.',
+  Config: 'Workspace configuration for scanning and authoring.',
+};
 function Icon({ icon: Icon, className = '' }: { icon: LucideIcon; className?: string }) {
   return <Icon size={18} strokeWidth={1.7} className={`animated-icon ${className}`} />;
 }
 function Badge({ children, tone = 'muted' }: { children: React.ReactNode; tone?: string }) {
   return <span className={`badge ${tone}`}>{children}</span>;
-}
-function evidence(index: Index, binding: Binding) {
-  const visited = new Set<string>();
-  const edges: Index['callEdges'] = [];
-  const walk = (id: string, depth: number) => {
-    if (visited.has(id) || depth > 8) return;
-    visited.add(id);
-    for (const edge of index.callEdges.filter((e) => e.from === id)) {
-      edges.push(edge);
-      if (edge.resolution === 'Resolved') walk(edge.to, depth + 1);
-    }
-  };
-  walk(binding.method, 0);
-  return edges;
 }
 export default function App() {
   const [index, setIndex] = useState<Index>();
@@ -143,6 +139,10 @@ export default function App() {
   const [guideOpen, setGuideOpen] = useState(false);
   const [mobileExplorer, setMobileExplorer] = useState(false);
   const [activeFolder, setActiveFolder] = useState<string>();
+  const [paletteOpen, setPaletteOpen] = useState(false);
+  const [generatorSeed, setGeneratorSeed] = useState<GeneratorSeed>();
+  const [edges, setEdges] = useState<Index['callEdges']>([]);
+  const revision = index?.revision;
   const previousView = useRef({ tab, view, mobileExplorer });
   const navigateTour = useCallback((destination: TourDestination) => {
     if (destination.tab) setTab(destination.tab);
@@ -206,8 +206,7 @@ export default function App() {
       const data = await api('/workspace');
       setIndex(data.index);
       setConfig(data.config);
-      setFeature(data.index.features[0]);
-      setSource(data.index.features[0]?.source ?? '');
+      if (data.index.features[0]) await loadFeature(data.index.features[0].file);
       setMatches(await api('/recording/match', { actions: demo }));
     });
   }, []);
@@ -244,12 +243,7 @@ export default function App() {
       if (e.key === 'Escape') setModal(undefined);
       if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
         e.preventDefault();
-        setMobileExplorer(true);
-        requestAnimationFrame(() =>
-          (
-            document.querySelector('input[aria-label="Search features"]') as HTMLInputElement
-          )?.focus(),
-        );
+        setPaletteOpen(true);
       }
     };
     window.addEventListener('keydown', handler);
@@ -265,6 +259,18 @@ export default function App() {
       setSourceTitle(`${file}:${line}`);
       setModal('source');
     });
+  const loadFeature = async (file: string) => {
+    const full = await api<Feature>(`/feature?file=${encodeURIComponent(file)}`);
+    choose(full);
+  };
+  const select = (f: Feature) => work(() => loadFeature(f.file));
+  const navigate = (name: string) => {
+    const views: Record<string, string> = { 'Playwright Recorder': 'recorder', Recorder: 'recorder', 'Scenario Builder': 'builder', 'Feature Editor': 'editor' };
+    if (views[name]) {
+      setTab('Features');
+      setView(views[name]);
+    } else setTab(name);
+  };
   const choose = (f: Feature) => {
     setFeature(f);
     setSource(f.source);
@@ -343,6 +349,13 @@ export default function App() {
   const matched = matches.filter((m) => m.candidates.length).length;
   return (
     <div className="studio-shell">
+      <SearchPalette
+        open={paletteOpen}
+        onOpenChange={setPaletteOpen}
+        onNavigate={navigate}
+        onAdd={(b) => addBinding(b)}
+        revision={revision}
+      />
       {guideOpen && <StudioTour onNavigate={navigateTour} onFinish={finishTour} />}
       <header className="app-header">
         <div className="brand">
@@ -405,7 +418,7 @@ export default function App() {
               <Icon icon={t.icon} />
               {t.name}
               {t.name === 'Step Catalog' && (
-                <span className="nav-count">{index?.stepDefinitions.length ?? 0}</span>
+                <span className="nav-count">{index?.stats?.steps ?? 0}</span>
               )}
             </button>
           ))}
@@ -444,7 +457,7 @@ export default function App() {
             onFolder={setActiveFolder}
             onNew={beginFeature}
             onSelect={(f) => {
-              choose(f);
+              select(f);
               setTab('Features');
               setMobileExplorer(false);
             }}
@@ -457,8 +470,8 @@ export default function App() {
               <div>
                 <strong>Repository indexed</strong>
                 <span>
-                  {index?.stepDefinitions.length ?? 0} steps · {index?.selectors.length ?? 0}{' '}
-                  selectors
+                  {index?.stats?.steps ?? 0} steps · {index?.stats?.selectors ?? 0} selectors ·{' '}
+                  {index?.stats?.dictionaries ?? 0} fields
                 </span>
               </div>
               <button
@@ -500,7 +513,7 @@ export default function App() {
                   ? view === 'recorder'
                     ? 'Turn browser interactions into reusable, repository-aware tests.'
                     : 'Assemble tests from the capabilities your project already contains.'
-                  : 'Discover existing automation, with evidence from your repository.'}
+                  : (headings[tab] ?? 'Discover existing automation, with evidence from your repository.')}
               </p>
             </div>
             <div className="heading-actions">
@@ -524,6 +537,9 @@ export default function App() {
               )}
             </div>
           </div>
+          {['Dashboard', 'Test Generator'].includes(tab) && (
+            <ContextBar index={index} config={config} recordStatus={recordStatus} revision={revision} />
+          )}
           {error && (
             <div role="alert" className="error-banner">
               <TriangleAlert size={17} />
@@ -812,6 +828,10 @@ export default function App() {
                               <button className="text-button" onClick={() => setModal('proposal')}>
                                 <Plus size={14} />
                                 Propose a step
+                              </button>
+                              <button className="text-button" onClick={() => setModal('dictionary')}>
+                                <Braces size={14} />
+                                Propose dictionary entries
                               </button>
                             </div>
                           )}
@@ -1102,166 +1122,81 @@ export default function App() {
               </section>
             </div>
           )}
-          {tab !== 'Features' && (
-            <>
-              <div className="catalog-toolbar">
-                <label className="search-box">
-                  <Search size={16} />
-                  <input
-                    aria-label={`Search ${tab}`}
-                    placeholder={`Search ${tab.toLowerCase()}…`}
-                    value={catalogQuery}
-                    onChange={(e) => setCatalogQuery(e.target.value)}
-                  />
-                </label>
-                <Badge>Repository source</Badge>
-              </div>
-              <div className="catalog-grid">
-                {tab === 'Step Catalog' &&
-                  index?.stepDefinitions
-                    .filter((b) =>
-                      JSON.stringify(b).toLowerCase().includes(catalogQuery.toLowerCase()),
-                    )
-                    .map((b) => (
-                      <article className="panel catalog-card" key={b.id}>
-                        <div className="catalog-card-top">
-                          <Badge
-                            tone={
-                              b.keyword === 'Given'
-                                ? 'purple'
-                                : b.keyword === 'When'
-                                  ? 'teal'
-                                  : 'green'
-                            }
-                          >
-                            {b.keyword}
-                          </Badge>
-                          <span>{b.usages} usages</span>
-                        </div>
-                        <h3>{b.pattern}</h3>
-                        <div className="parameter-chips">
-                          {b.parameters.length ? (
-                            b.parameters.map((p) => (
-                              <Badge key={p.name}>
-                                {p.name}: {p.type}
-                              </Badge>
-                            ))
-                          ) : (
-                            <span className="subtle">No parameters</span>
-                          )}
-                        </div>
-                        <button className="source-link" onClick={() => openSource(b.file, b.line)}>
-                          <FileCode2 size={13} />
-                          {b.file}:{b.line}
-                          <ArrowUpRight size={13} />
-                        </button>
-                        <div className="catalog-card-footer">
-                          <button
-                            className="text-button"
-                            style={{ margin: 0 }}
-                            onClick={() => {
-                              setBinding(b);
-                              setModal('details');
-                            }}
-                          >
-                            Inspect evidence
-                            <GitBranch size={13} />
-                          </button>
-                          <button className="button tiny" onClick={() => addBinding(b)}>
-                            <Plus size={13} />
-                            Add to scenario
-                          </button>
-                        </div>
-                      </article>
-                    ))}
-                {tab === 'Backgrounds' &&
-                  index?.features.flatMap((f) =>
-                    f.backgrounds.map((b, i) => (
-                      <article
-                        className="panel catalog-card"
-                        key={`${f.file}-${i}`}
-                        hidden={
-                          !JSON.stringify(b).toLowerCase().includes(catalogQuery.toLowerCase())
-                        }
-                      >
-                        <div className="catalog-card-top">
-                          <Badge tone="purple">BACKGROUND</Badge>
-                          <span>{b.steps.length} steps</span>
-                        </div>
-                        <h3>{b.name || f.name}</h3>
-                        {b.steps.map((s, i) => (
-                          <p className="background-step" key={i}>
-                            <Check size={13} />
-                            <code>
-                              {s.keyword} {s.text}
-                            </code>
-                          </p>
-                        ))}
-                        <button className="source-link" onClick={() => openSource(f.file, b.line)}>
-                          {f.file}:{b.line}
-                          <ArrowUpRight size={12} />
-                        </button>
-                        <button
-                          className="button tiny"
-                          onClick={() => {
-                            setSource(
-                              `Feature: ${feature?.name ?? 'New feature'}\n\n  Background: ${b.name}\n${b.steps.map((s) => `    ${s.keyword} ${s.text}`).join('\n')}\n\n  Scenario: ${draftName}\n${draftSteps.map((s) => `    ${s.keyword} ${s.text}`).join('\n')}\n`,
-                            );
-                            setTab('Features');
-                            setView('editor');
-                          }}
-                        >
-                          <Plus size={14} />
-                          Reuse background
-                        </button>
-                      </article>
-                    )),
-                  )}
-                {tab === 'Selectors' &&
-                  index?.selectors
-                    .filter((s) =>
-                      JSON.stringify(s).toLowerCase().includes(catalogQuery.toLowerCase()),
-                    )
-                    .map((s, i) => (
-                      <article className="panel catalog-card" key={i}>
-                        <div className="catalog-card-top">
-                          <Badge tone="teal">{s.type}</Badge>
-                          <Badge tone={s.resolution === 'Static' ? 'green' : 'amber'}>
-                            {s.resolution}
-                          </Badge>
-                        </div>
-                        <h3>
-                          {s.owner}.{s.member}
-                        </h3>
-                        <code className="selector-code">{s.value}</code>
-                        <button className="source-link" onClick={() => openSource(s.file, s.line)}>
-                          <FileCode2 size={13} />
-                          {s.file}:{s.line}
-                          <ArrowUpRight size={12} />
-                        </button>
-                        <div className="catalog-card-footer">
-                          <span>Existing repository selector</span>
-                          <button
-                            className="icon-button"
-                            aria-label="Copy selector"
-                            onClick={() => {
-                              navigator.clipboard
-                                .writeText(s.value)
-                                .then(() => setNotice('Selector copied.'))
-                                .catch(() =>
-                                  setError(
-                                    'Clipboard unavailable. Select and copy the displayed selector.',
-                                  ),
-                                );
-                            }}
-                          >
-                            <Copy size={15} />
-                          </button>
-                        </div>
-                      </article>
-                    ))}
-              </div>
-            </>
+          {tab === 'Dashboard' && <Dashboard index={index} revision={revision} onNavigate={navigate} />}
+          {tab === 'Test Generator' && (
+            <TestGenerator
+              revision={revision}
+              seed={generatorSeed}
+              onSource={openSource}
+              onIndex={(i) => {
+                setIndex(i);
+                setNotice('Approved changes saved to the repository.');
+              }}
+              onExport={(text, file) => {
+                setFeature(undefined);
+                setNewFile(file);
+                setSource(text);
+                setTab('Features');
+                setView('editor');
+                setNotice(`Exported to the editor as ${file}. Preview changes to save.`);
+              }}
+            />
+          )}
+          {tab === 'Step Catalog' && (
+            <StepCatalogue
+              query={catalogQuery}
+              onQuery={setCatalogQuery}
+              revision={revision}
+              onAdd={addBinding}
+              onSource={openSource}
+              onInspect={(b) => {
+                setBinding(b);
+                setEdges([]);
+                setModal('details');
+                api(`/step?id=${encodeURIComponent(b.id)}`)
+                  .then((r) => setEdges(r.edges))
+                  .catch(() => {});
+              }}
+            />
+          )}
+          {tab === 'Backgrounds' && (
+            <BackgroundCatalogue
+              revision={revision}
+              onSource={openSource}
+              onReuse={(b) => {
+                setSource(
+                  `Feature: ${feature?.name ?? 'New feature'}\n\n  Background: ${b.name}\n${b.steps.map((s) => `    ${s.keyword} ${s.text}`).join('\n')}\n\n  Scenario: ${draftName}\n${draftSteps.map((s) => `    ${s.keyword} ${s.text}`).join('\n')}\n`,
+                );
+                setTab('Features');
+                setView('editor');
+              }}
+            />
+          )}
+          {tab === 'Selectors' && <SelectorCatalogue revision={revision} onSource={openSource} onNotice={setNotice} />}
+          {tab === 'Dictionary Inspector' && (
+            <DictionaryInspector
+              revision={revision}
+              onSource={openSource}
+              onGenerate={(e) => {
+                setGeneratorSeed({ page: e.page, section: e.section, field: e.field, fieldType: e.fieldType, file: e.file });
+                setTab('Test Generator');
+              }}
+            />
+          )}
+          {tab === 'Project Explorer' && <ProjectExplorer revision={revision} onSource={openSource} />}
+          {tab === 'Config' && config && (
+            <section className="panel config-summary">
+              <div className="panel-heading"><div><h2>Workspace</h2></div><button className="button small" onClick={() => setModal('settings')}><Settings2 size={14} />Edit workspace settings</button></div>
+              <dl>
+                <dt>Repository root</dt><dd>{config.repositoryRoot}</dd>
+                <dt>Target project</dt><dd>{config.targetProject}</dd>
+                <dt>Feature patterns</dt><dd>{config.featurePatterns.join(', ')}</dd>
+                <dt>Source patterns</dt><dd>{config.sourcePatterns.join(', ')}</dd>
+                <dt>Dictionary XML patterns</dt><dd>{config.selectorPatterns.join(', ')}</dd>
+                <dt>Reference scope</dt><dd>{config.referenceScope}</dd>
+                <dt>Ignored directories</dt><dd>{config.ignoredDirectories.join(', ')}</dd>
+              </dl>
+            </section>
           )}
         </main>
       </div>
@@ -1309,7 +1244,7 @@ export default function App() {
               role="dialog"
               aria-modal="true"
               aria-label={modal}
-              className={`modal ${['preview', 'source', 'settings'].includes(modal) ? 'wide' : ''}`}
+              className={`modal ${['preview', 'source', 'settings', 'dictionary'].includes(modal) ? 'wide' : ''}`}
               initial={{ scale: 0.97, y: 12 }}
               animate={{ scale: 1, y: 0 }}
               onClick={(e) => e.stopPropagation()}
@@ -1328,6 +1263,7 @@ export default function App() {
                       proposal: 'Propose a missing step',
                       run: 'Run repository tests',
                       details: 'Binding evidence',
+                      dictionary: 'Recorded fields → dictionary & page object',
                     }[modal]
                   }
                 </h2>
@@ -1545,8 +1481,8 @@ export default function App() {
                             approved: true,
                           });
                           setIndex(r.index);
-                          const f = r.index.features.find((f: Feature) => f.file === preview.file);
-                          if (f) choose(f);
+                          if (r.index.features.some((f: Feature) => f.file === preview.file))
+                            await loadFeature(preview.file);
                           setModal(undefined);
                           setNotice('Approved changes saved to the repository.');
                         })
@@ -1643,6 +1579,15 @@ export default function App() {
                     </button>
                   </>
                 )}
+                {modal === 'dictionary' && (
+                  <RecordingDictionary
+                    actions={actions.filter((a) => !matches.find((m) => m.action.id === a.id)?.candidates.length)}
+                    onIndex={(i) => {
+                      setIndex(i);
+                      setNotice('Approved changes saved to the repository.');
+                    }}
+                  />
+                )}
                 {modal === 'details' && binding && index && (
                   <>
                     <Badge tone="purple">{binding.keyword}</Badge>
@@ -1664,7 +1609,7 @@ export default function App() {
                     ))}
                     {!binding.examples.length && <p className="subtle">No feature usages found.</p>}
                     <h4 className="detail-heading">Static call relationships</h4>
-                    {evidence(index, binding).map((edge, i) => (
+                    {edges.map((edge, i) => (
                       <div className="evidence-edge" key={i}>
                         <Badge tone={edge.resolution === 'Resolved' ? 'green' : 'amber'}>
                           {edge.resolution}
@@ -1675,7 +1620,7 @@ export default function App() {
                         </code>
                       </div>
                     ))}
-                    {!evidence(index, binding).length && (
+                    {!edges.length && (
                       <p className="subtle">No method calls discovered.</p>
                     )}
                     <button className="button primary" onClick={() => addBinding(binding)}>
