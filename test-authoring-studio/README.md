@@ -104,7 +104,26 @@ The tab bar shows only the four primary pages. To reach Step Catalog, Background
 
 The studio menu is a Radix context menu (`@radix-ui/react-context-menu`). It also offers Command palette, Start a recording, New feature, Rescan, Workspace settings and Keyboard shortcuts. Menus on cards and rows take priority over it. Text inputs and code editors keep the browser's own right-click menu (copy, paste, spellcheck).
 
-### Studio settings (Preferences dialog)
+### Settings, themes and editor themes
+
+Settings open from the sliders icon, the studio menu, or the command palette. The layout follows Claude Code's settings:
+- **Sidebar:** a search field, then the categories: General, Appearance, Code editor, Accessibility, Layout, Ports, Playwright tracing, Workspace, Storage, and Keyboard shortcuts.
+- **Rows:** each setting is a row with a title and description on the left and its control on the right.
+- **Search:** filters rows across all categories, highlights the matches, and shows how many matches each category has.
+
+**App themes:** Studio Dark (default), Midnight, Nord, Light and **Matrix**. Matrix is phosphor green on black with monospace text everywhere. Every theme is checked with axe for WCAG 2.2 AA (`tests/e2e/themes.spec.ts`), including colour contrast.
+
+**Editor themes:** every CodeMirror instance (feature editor, scenario text, XML, C#, diffs) uses the selected theme. **Automatic** follows the app theme. The options are:
+- **Studio Dark** and **Studio Light:** tuned to meet AA contrast.
+- **Matrix**.
+- **One Dark**.
+- **ThemeMirror** (https://thememirror.net): Amy, Barf, Bespin, Birds of Paradise, Boys and Girls, Cobalt, Cool Glow, Dracula, Espresso, Ayu Light, Clouds, Noctis Lilac, Rosé Pine Dawn, Smoothy, Solarized Light and Tomorrow.
+
+A live Gherkin preview shows the selected theme. The third-party themes are offered as-is, and some (e.g. Ayu Light's strings, One Dark's red) fall slightly below AA contrast. That's why the defaults are the Studio variants.
+
+**Accent colour** drives primary buttons, active states, focus rings, the **logo**, and the **scrollbars**. Scrollbars are styled with the native CSS `scrollbar-color` / `scrollbar-width: thin`, not WebKit pseudo-elements.
+
+### Studio settings (ports, tracing, storage)
 
 | Setting | Effect |
 | --- | --- |

@@ -21,6 +21,8 @@ test('studio settings: port validation, tracing, dashboard stats, card memory an
     await expect(page.locator('.stat-grid')).toHaveCount(0);
 
     // Port validation (Formik + Yup) blocks bad values.
+    const nav = dialog.getByRole('navigation', { name: 'Settings categories' });
+    await nav.getByRole('button', { name: 'Ports' }).click();
     const web = dialog.getByLabel('WEB UI PORT');
     const apiPort = dialog.getByLabel('API PORT');
     await web.fill('80');
@@ -33,11 +35,18 @@ test('studio settings: port validation, tracing, dashboard stats, card memory an
     await expect(dialog.getByRole('button', { name: 'Save studio settings' })).toBeDisabled();
     await apiPort.fill(String(original.apiPort));
 
-    // Tracing toggle with nested options; saving the same ports needs no restart.
+    // Tracing toggle saves immediately and reveals its options.
+    await nav.getByRole('button', { name: 'Playwright tracing' }).click();
     await dialog.getByRole('switch', { name: 'Record Playwright traces' }).click();
     await expect(dialog.getByRole('switch', { name: 'Screenshots' })).toBeVisible();
-    await dialog.getByRole('button', { name: 'Save studio settings' }).click();
     await expect(page.getByText('Settings saved.').first()).toBeVisible();
+
+    // Search finds settings across categories.
+    await dialog.getByRole('searchbox', { name: 'Search settings' }).fill('matrix');
+    await expect(dialog.getByRole('heading', { name: 'Theme', exact: true })).toBeVisible();
+    await expect(dialog.getByRole('heading', { name: 'Editor theme', exact: true })).toBeVisible();
+    await dialog.getByRole('searchbox', { name: 'Search settings' }).fill('');
+    await nav.getByRole('button', { name: 'Storage' }).click();
     expect((await (await request.get('/api/settings')).json()).tracing.enabled).toBe(true);
 
     // Clear cache (AlertDialog) resets UI state, including the collapsed card and stats preference.

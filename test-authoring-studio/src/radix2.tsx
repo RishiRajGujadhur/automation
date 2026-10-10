@@ -7,6 +7,7 @@ import * as Accordion from '@radix-ui/react-accordion';
 import * as SwitchPrimitive from '@radix-ui/react-switch';
 import * as ToggleGroup from '@radix-ui/react-toggle-group';
 import { ChevronDown } from 'lucide-react';
+import type { AppThemeId, EditorThemeId } from './themes';
 
 /* ------------------------------------------------------------------ Tooltip + IconButton */
 export function Tip({ content, shortcut, children, side = 'bottom' }: { content: ReactNode; shortcut?: string; children: ReactNode; side?: 'top' | 'bottom' | 'left' | 'right' }) {
@@ -153,8 +154,8 @@ export function Segmented<T extends string>({ value, onValueChange, options, lab
 }
 
 /* ------------------------------------------------------------------ Preferences */
-export type Prefs = { density: 'comfortable' | 'compact'; textSize: 'small' | 'medium' | 'large'; motion: 'system' | 'reduce'; contrast: 'normal' | 'high'; accent: 'violet' | 'teal' | 'blue' | 'amber'; haptics: boolean; sidebar: boolean; focus: boolean; showStats: boolean };
-export const defaultPrefs: Prefs = { density: 'comfortable', textSize: 'medium', motion: 'system', contrast: 'normal', accent: 'violet', haptics: true, sidebar: true, focus: false, showStats: true };
+export type Prefs = { density: 'comfortable' | 'compact'; textSize: 'small' | 'medium' | 'large'; motion: 'system' | 'reduce'; contrast: 'normal' | 'high'; theme: AppThemeId; editorTheme: EditorThemeId; accent: 'violet' | 'teal' | 'blue' | 'amber'; haptics: boolean; sidebar: boolean; focus: boolean; showStats: boolean };
+export const defaultPrefs: Prefs = { density: 'comfortable', textSize: 'medium', motion: 'system', contrast: 'normal', theme: 'studio', editorTheme: 'auto', accent: 'violet', haptics: true, sidebar: true, focus: false, showStats: true };
 const PrefsContext = createContext<{ prefs: Prefs; setPrefs: (p: Partial<Prefs>) => void }>({ prefs: defaultPrefs, setPrefs: () => {} });
 export const usePrefs = () => useContext(PrefsContext);
 /** Applies preferences as data attributes on <html> so plain CSS can respond. */
@@ -170,6 +171,9 @@ export function PrefsProvider({ children }: { children: ReactNode }) {
     el.dataset.motion = prefs.motion;
     el.dataset.contrast = prefs.contrast;
     el.dataset.accent = prefs.accent;
+    el.dataset.theme = prefs.theme;
+    el.style.colorScheme = prefs.theme === 'light' ? 'light' : 'dark';
+    document.querySelector('meta[name="theme-color"]')?.setAttribute('content', getComputedStyle(el).getPropertyValue('--bg').trim() || '#0b0e16');
     el.dataset.focus = String(prefs.focus);
     el.dataset.sidebar = String(prefs.sidebar);
   }, [prefs]);

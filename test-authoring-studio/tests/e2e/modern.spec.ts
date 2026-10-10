@@ -34,10 +34,14 @@ test('Radix dialog, alert dialog, tabs, accordion, tooltip, toast, preferences a
   // Preferences dialog: switch + toggle group drive <html> data attributes.
   await page.getByRole('button', { name: 'Preferences' }).click();
   await expect(page.getByRole('dialog', { name: 'Preferences' })).toBeVisible();
+  const nav = page.getByRole('navigation', { name: 'Settings categories' });
+  await nav.getByRole('button', { name: 'Appearance' }).click();
   await page.getByRole('radio', { name: 'Compact' }).click();
   await expect(page.locator('html')).toHaveAttribute('data-density', 'compact');
+  await nav.getByRole('button', { name: 'Accessibility' }).click();
   await page.getByRole('switch', { name: 'High contrast' }).click();
   await expect(page.locator('html')).toHaveAttribute('data-contrast', 'high');
+  await nav.getByRole('button', { name: 'Appearance' }).click();
   await page.getByRole('radio', { name: 'teal' }).click();
   await expect(page.locator('html')).toHaveAttribute('data-accent', 'teal');
   await page.keyboard.press('Escape');

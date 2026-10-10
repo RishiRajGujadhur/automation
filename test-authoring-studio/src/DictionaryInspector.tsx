@@ -3,7 +3,7 @@ import CodeMirror from '@uiw/react-codemirror';
 import { StreamLanguage } from '@codemirror/language';
 import { xml } from '@codemirror/legacy-modes/mode/xml';
 import { csharp } from '@codemirror/legacy-modes/mode/clike';
-import { oneDark } from '@codemirror/theme-one-dark';
+import { useEditorTheme } from './themes';
 import { Search, Wand2, Copy, FileCode2 } from 'lucide-react';
 import { RowMenu, Highlight, CopyButton, Collapsible, arrowNav, copyText, clearOnEscape, useLocalState } from './ui';
 import { api, type Paged } from './api';
@@ -17,6 +17,7 @@ import { labelled } from './editor/a11y';
 const dictXml = xmlExtensions(true);
 
 export default function DictionaryInspector({ revision = '', compact = false, onSource, onGenerate }: { revision?: string; compact?: boolean; onSource?: (file: string, line: number) => void; onGenerate?: (entry: DictionaryEntry) => void }) {
+  const editorTheme = useEditorTheme();
   const [query, setQuery] = useState('');
   const [offset, setOffset] = useState(0);
   const [data, setData] = useState<Paged<DictionaryEntry>>({ items: [], total: 0, hasNext: false });
@@ -124,13 +125,13 @@ export default function DictionaryInspector({ revision = '', compact = false, on
                 {action === 'fill' && <input aria-label="Test data value" placeholder="Test data value" value={value} onChange={(e) => setValue(e.target.value)} />}
               </div>
               <div className="code-with-copy">
-                <CodeMirror value={code} theme={oneDark} extensions={[StreamLanguage.define(csharp), labelled('Locator code', true)]} editable={false} />
+                <CodeMirror value={code} theme={editorTheme} extensions={[StreamLanguage.define(csharp), labelled('Locator code', true)]} editable={false} />
                 <CopyButton text={code} label="Copy locator code" />
               </div>
                 </Tabs.Content>
                 {!compact && (
                   <Tabs.Content value="source" className="tabs-content">
-                    <CodeMirror value={source} theme={oneDark} height="320px" extensions={[...dictXml, labelled(`Dictionary source ${selected.file}`, true)]} editable={false} />
+                    <CodeMirror value={source} theme={editorTheme} height="320px" extensions={[...dictXml, labelled(`Dictionary source ${selected.file}`, true)]} editable={false} />
                   </Tabs.Content>
                 )}
               </Tabs.Root>

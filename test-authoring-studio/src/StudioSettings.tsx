@@ -1,124 +1,223 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { Formik, Form } from 'formik';
 import * as Yup from 'yup';
-import { Download, Trash2, RotateCcw } from 'lucide-react';
+import CodeMirror from '@uiw/react-codemirror';
+import { StreamLanguage } from '@codemirror/language';
+import { gherkin } from '@codemirror/legacy-modes/mode/gherkin';
+import { Download, Trash2, RotateCcw, Search, Settings2, Palette, Code2, Accessibility, PanelLeft, Network, Activity, FolderCog, HardDrive, Keyboard, X, type LucideIcon } from 'lucide-react';
 import { api } from './api';
 import { TextField } from './forms';
-import { Switch, Separator, Segmented, usePrefs, useConfirm } from './radix2';
-import { Button } from './radix';
+import { Switch as SwitchPrimitive, Segmented, usePrefs, useConfirm } from './radix2';
+import { Button, Select } from './radix';
+import { Highlight } from './ui';
+import { appThemes, editorThemes, resolveEditorTheme, type AppThemeId, type EditorThemeId } from './themes';
+import { labelled } from './editor/a11y';
 
 type Settings = { webPort: number; apiPort: number; tracing: { enabled: boolean; screenshots: boolean; snapshots: boolean; sources: boolean } };
 type Trace = { name: string; size: number; modified: string };
+type Row = { id: string; section: string; title: string; description?: string; keywords?: string; control?: ReactNode; block?: ReactNode };
 
 const port = Yup.number().typeError('Enter a number.').integer('Whole numbers only.').min(1024, 'Use 1024–65535 (lower ports need admin rights).').max(65535, 'Use 1024–65535.').required('Required.');
-const schema = Yup.object({
-  webPort: port,
-  apiPort: port.test('distinct', 'Must differ from the web port.', function (v) { return v !== this.parent.webPort; }),
-});
-
-/** Keys this app stores in localStorage (all prefixed "tas:"). */
+const portSchema = Yup.object({ webPort: port, apiPort: port.test('distinct', 'Must differ from the web port.', function (v) { return v !== this.parent.webPort; }) });
 export const cachedKeys = () => {
-  try {
-    return Object.keys(localStorage).filter((k) => k.startsWith('tas:'));
-  } catch {
-    return [];
-  }
+  try { return Object.keys(localStorage).filter((k) => k.startsWith('tas:')); } catch { return []; }
 };
+const sections: { id: string; label: string; icon: LucideIcon }[] = [
+  { id: 'General', label: 'General', icon: Settings2 },
+  { id: 'Appearance', label: 'Appearance', icon: Palette },
+  { id: 'Code editor', label: 'Code editor', icon: Code2 },
+  { id: 'Accessibility', label: 'Accessibility', icon: Accessibility },
+  { id: 'Layout', label: 'Layout', icon: PanelLeft },
+  { id: 'Ports', label: 'Ports', icon: Network },
+  { id: 'Playwright tracing', label: 'Playwright tracing', icon: Activity },
+  { id: 'Workspace', label: 'Workspace', icon: FolderCog },
+  { id: 'Storage', label: 'Storage', icon: HardDrive },
+  { id: 'Shortcuts', label: 'Keyboard shortcuts', icon: Keyboard },
+];
+const preview = `@smoke
+Feature: Checkout
+  # Reuse existing bindings
+  Scenario: Place an order
+    Given the user signs in as "buyer"
+    When they enter "john.doe@example.com" in the email field
+    Then the order is confirmed
+`;
 
-export default function StudioSettings({ onNotice }: { onNotice: (m: string) => void }) {
+/** Claude-Code-style settings: searchable sidebar of categories, rows of title/description + control. */
+export default function StudioSettings({ onNotice, onWorkspace, shortcuts, onClose }: { onNotice: (m: string) => void; onWorkspace: () => void; shortcuts: [string, string][]; onClose: () => void }) {
   const { prefs, setPrefs } = usePrefs();
   const confirm = useConfirm();
+  const [section, setSection] = useState('General');
+  const [query, setQuery] = useState('');
   const [settings, setSettings] = useState<Settings & { running?: { webPort: number; apiPort: number } }>();
   const [traces, setTraces] = useState<Trace[]>([]);
   const [error, setError] = useState('');
+  const contentRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
     api('/settings').then(setSettings).catch((e) => setError(e.message));
     api<Trace[]>('/traces').then(setTraces).catch(() => {});
   }, []);
-  const save = async (next: Settings) => {
+  const save = async (patch: Partial<Settings>) => {
+    if (!settings) return;
+    const next = { webPort: settings.webPort, apiPort: settings.apiPort, tracing: settings.tracing, ...patch };
     const r = await api<Settings & { restartRequired: boolean }>('/settings', next);
     setSettings((s) => ({ ...r, running: s?.running }));
     onNotice(r.restartRequired ? `Saved. Restart npm run dev to move to web port ${r.webPort} / API port ${r.apiPort}.` : 'Settings saved.');
   };
+  const editor = resolveEditorTheme(prefs.editorTheme, prefs.theme);
   const cacheCount = cachedKeys().length;
-  return (
-    <div className="prefs">
-      <section aria-labelledby="pref-display">
-        <h3 id="pref-display">Display</h3>
-        <div className="pref-row"><span id="lbl-density">Density</span><Segmented label="Density" value={prefs.density} onValueChange={(v) => setPrefs({ density: v })} options={[{ value: 'comfortable', label: 'Comfortable' }, { value: 'compact', label: 'Compact' }]} /></div>
-        <div className="pref-row"><span>Text size</span><Segmented label="Text size" value={prefs.textSize} onValueChange={(v) => setPrefs({ textSize: v })} options={[{ value: 'small', label: 'A−' }, { value: 'medium', label: 'A' }, { value: 'large', label: 'A+' }]} /></div>
-        <div className="pref-row"><span>Accent</span><Segmented label="Accent colour" value={prefs.accent} onValueChange={(v) => setPrefs({ accent: v })} options={(['violet', 'teal', 'blue', 'amber'] as const).map((a) => ({ value: a, label: <span className={`swatch ${a}`} aria-label={a} role="img" /> }))} /></div>
-        <Switch id="pref-stats" label="Show dashboard statistics" description="The counts row at the top of the Dashboard." checked={prefs.showStats} onCheckedChange={(v) => setPrefs({ showStats: v })} />
-      </section>
-      <Separator />
-      <section aria-labelledby="pref-a11y">
-        <h3 id="pref-a11y">Accessibility</h3>
-        <Switch id="pref-motion" label="Reduce motion" description="Turns off animations and page transitions." checked={prefs.motion === 'reduce'} onCheckedChange={(v) => setPrefs({ motion: v ? 'reduce' : 'system' })} />
-        <Switch id="pref-contrast" label="High contrast" description="Stronger borders and brighter secondary text." checked={prefs.contrast === 'high'} onCheckedChange={(v) => setPrefs({ contrast: v ? 'high' : 'normal' })} />
-        <Switch id="pref-haptics" label="Haptic feedback" description="Short vibrations on touch devices when you accept or remove items." checked={prefs.haptics} onCheckedChange={(v) => setPrefs({ haptics: v })} />
-      </section>
-      <Separator />
-      <section aria-labelledby="pref-layout">
-        <h3 id="pref-layout">Layout</h3>
-        <Switch id="pref-sidebar" label="Show feature explorer" description="Ctrl/Cmd+B" checked={prefs.sidebar} onCheckedChange={(v) => setPrefs({ sidebar: v })} />
-        <Switch id="pref-focus" label="Focus mode" description="Hides navigation chrome. Ctrl/Cmd+." checked={prefs.focus} onCheckedChange={(v) => setPrefs({ focus: v })} />
-      </section>
-      <Separator />
-      <section aria-labelledby="pref-server">
-        <h3 id="pref-server">Ports &amp; Playwright tracing</h3>
-        {error && <p className="field-error" role="alert">{error}</p>}
-        {settings && (
-          <Formik initialValues={{ webPort: settings.webPort, apiPort: settings.apiPort, tracing: settings.tracing }} validationSchema={schema} validateOnMount onSubmit={async (v, h) => { try { await save({ ...v, webPort: Number(v.webPort), apiPort: Number(v.apiPort) }); h.setStatus(undefined); } catch (e) { h.setStatus((e as Error).message); } finally { h.setSubmitting(false); } }}>
-            {({ values, setFieldValue, isValid, isSubmitting, dirty, status }) => (
-              <Form className="form-stack" noValidate>
-                <div className="form-grid">
-                  <TextField name="webPort" label="WEB UI PORT" hint={`Running on ${settings.running?.webPort ?? '?'}. Opens at http://127.0.0.1:<port>.`} />
-                  <TextField name="apiPort" label="API PORT" hint={`Running on ${settings.running?.apiPort ?? '?'}. The UI proxies /api here.`} />
-                </div>
-                <p className="field-hint">Ports are saved to <code>.local/settings.json</code> and take effect after restarting <code>npm run dev</code>. <code>STUDIO_WEB_PORT</code> / <code>STUDIO_API_PORT</code> override them.</p>
-                <Switch id="trace-enabled" label="Record Playwright traces" description="Recordings save a trace .zip you can open with npx playwright show-trace. Test runs get STUDIO_PLAYWRIGHT_TRACING=1." checked={values.tracing.enabled} onCheckedChange={(v) => setFieldValue('tracing.enabled', v)} />
-                {values.tracing.enabled && (
-                  <div className="nested-switches">
-                    <Switch id="trace-screens" label="Screenshots" checked={values.tracing.screenshots} onCheckedChange={(v) => setFieldValue('tracing.screenshots', v)} />
-                    <Switch id="trace-snaps" label="DOM snapshots" checked={values.tracing.snapshots} onCheckedChange={(v) => setFieldValue('tracing.snapshots', v)} />
-                    <Switch id="trace-sources" label="Sources" checked={values.tracing.sources} onCheckedChange={(v) => setFieldValue('tracing.sources', v)} />
-                  </div>
-                )}
-                {status && <p className="field-error" role="alert">{status}</p>}
-                <Button type="submit" variant="primary" disabled={!isValid || isSubmitting || !dirty}>Save studio settings</Button>
-              </Form>
-            )}
-          </Formik>
-        )}
-        {traces.length > 0 && (
-          <div className="trace-list">
-            <span className="micro-label">RECENT TRACES</span>
-            <ul>
-              {traces.slice(0, 5).map((t) => (
-                <li key={t.name}>
-                  <a className="text-button" href={`/api/traces/${encodeURIComponent(t.name)}`} download>
-                    <Download size={13} aria-hidden="true" />{t.name}
-                  </a>
-                  <span className="meta">{(t.size / 1024).toFixed(0)} KB</span>
-                </li>
-              ))}
-            </ul>
-          </div>
-        )}
-      </section>
-      <Separator />
-      <section aria-labelledby="pref-storage">
-        <h3 id="pref-storage">Cached UI state</h3>
-        <p className="field-hint">{cacheCount} item{cacheCount === 1 ? '' : 's'} stored in this browser: collapsed cards, drafts, filters, recent files, sidebar width and preferences. Nothing in your repository is affected.</p>
-        <div className="row-actions">
-          <Button variant="ghost" size="small" onClick={async () => { if (await confirm({ title: 'Reset collapsed cards?', description: 'Every card returns to its default open or closed state.', confirm: 'Reset cards' })) { cachedKeys().filter((k) => k.startsWith('tas:open:') || k.startsWith('tas:card:')).forEach((k) => localStorage.removeItem(k)); location.reload(); } }}>
-            <RotateCcw size={13} aria-hidden="true" />Reset card states
-          </Button>
-          <Button variant="danger" size="small" disabled={!cacheCount} onClick={async () => { if (await confirm({ title: 'Clear all cached UI state?', description: 'Removes drafts, preferences, layout and history stored in this browser, then reloads. Repository files are not touched.', confirm: 'Clear cache', danger: true })) { cachedKeys().forEach((k) => localStorage.removeItem(k)); location.reload(); } }}>
-            <Trash2 size={13} aria-hidden="true" />Clear cache
-          </Button>
+  const sw = (id: string, checked: boolean, onChange: (v: boolean) => void, label: string) => <SwitchPrimitive id={id} label={<span className="sr-only">{label}</span>} checked={checked} onCheckedChange={onChange} />;
+
+  const rows: Row[] = useMemo(() => [
+    // General
+    { id: 'stats', section: 'General', title: 'Show dashboard statistics', description: 'The counts row at the top of the Dashboard.', keywords: 'stats counts dashboard', control: sw('pref-stats', prefs.showStats, (v) => setPrefs({ showStats: v }), 'Show dashboard statistics') },
+    { id: 'haptics', section: 'General', title: 'Haptic feedback', description: 'Short vibrations on touch devices when you accept, remove or validate.', keywords: 'vibrate mobile touch', control: sw('pref-haptics', prefs.haptics, (v) => setPrefs({ haptics: v }), 'Haptic feedback') },
+    // Appearance
+    {
+      id: 'theme', section: 'Appearance', title: 'Theme', description: 'Colours for the whole studio. Editor theme "Automatic" follows this.', keywords: 'dark light matrix nord midnight colour color scheme',
+      block: (
+        <div className="theme-grid" role="radiogroup" aria-label="App theme">
+          {appThemes.map((t) => (
+            <button key={t.id} role="radio" aria-checked={prefs.theme === t.id} className={`theme-card ${prefs.theme === t.id ? 'selected' : ''}`} onClick={() => setPrefs({ theme: t.id as AppThemeId })}>
+              <span className="theme-preview" style={{ background: t.swatch[0] }} aria-hidden="true">
+                <span style={{ background: t.swatch[1] }} />
+                <span style={{ background: t.swatch[2] }} />
+              </span>
+              <strong>{t.label}</strong>
+              <small>{t.description}</small>
+            </button>
+          ))}
         </div>
-      </section>
+      ),
+    },
+    { id: 'accent', section: 'Appearance', title: 'Accent colour', description: 'Primary buttons, active states, focus rings, scrollbars and the logo.', keywords: 'accent color colour logo scrollbar', control: <Segmented label="Accent colour" value={prefs.accent} onValueChange={(v) => setPrefs({ accent: v })} options={(['violet', 'teal', 'blue', 'amber'] as const).map((a) => ({ value: a, label: <span className={`swatch ${a}`} aria-label={a} role="img" /> }))} /> },
+    { id: 'density', section: 'Appearance', title: 'Density', description: 'Spacing inside cards and forms.', keywords: 'compact comfortable spacing', control: <Segmented label="Density" value={prefs.density} onValueChange={(v) => setPrefs({ density: v })} options={[{ value: 'comfortable', label: 'Comfortable' }, { value: 'compact', label: 'Compact' }]} /> },
+    { id: 'text', section: 'Appearance', title: 'Text size', description: 'Base font size for the interface.', keywords: 'font size zoom', control: <Segmented label="Text size" value={prefs.textSize} onValueChange={(v) => setPrefs({ textSize: v })} options={[{ value: 'small', label: 'A−' }, { value: 'medium', label: 'A' }, { value: 'large', label: 'A+' }]} /> },
+    // Code editor
+    {
+      id: 'editor-theme', section: 'Code editor', title: 'Editor theme', description: 'Syntax colours for Gherkin, C#, XML and diffs. Themes from CodeMirror and ThemeMirror.', keywords: 'codemirror thememirror syntax highlighting dracula cobalt matrix',
+      control: (
+        <Select
+          ariaLabel="Editor theme"
+          value={prefs.editorTheme}
+          onValueChange={(v) => setPrefs({ editorTheme: v as EditorThemeId })}
+          options={[{ value: 'auto', label: `Automatic (${resolveEditorTheme('auto', prefs.theme).label})` }, ...editorThemes.map((e) => ({ value: e.id, label: `${e.label}${e.dark ? '' : ' · light'}` }))]}
+        />
+      ),
+      block: (
+        <div className="editor-preview">
+          <CodeMirror value={preview} theme={editor.ext} editable={false} basicSetup={{ foldGutter: false, highlightActiveLine: false }} extensions={[StreamLanguage.define(gherkin), labelled(`Preview of ${editor.label}`, true)]} />
+          <span className="meta">{editor.label} · {editor.source}</span>
+        </div>
+      ),
+    },
+    // Accessibility
+    { id: 'motion', section: 'Accessibility', title: 'Reduce motion', description: 'Turns off animations and page transitions.', keywords: 'animation transitions vestibular', control: sw('pref-motion', prefs.motion === 'reduce', (v) => setPrefs({ motion: v ? 'reduce' : 'system' }), 'Reduce motion') },
+    { id: 'contrast', section: 'Accessibility', title: 'High contrast', description: 'Stronger borders and brighter secondary text.', keywords: 'contrast wcag vision', control: sw('pref-contrast', prefs.contrast === 'high', (v) => setPrefs({ contrast: v ? 'high' : 'normal' }), 'High contrast') },
+    // Layout
+    { id: 'sidebar', section: 'Layout', title: 'Show feature explorer', description: 'Ctrl/Cmd+B. Drag its edge to resize; double-click to reset.', keywords: 'sidebar explorer width', control: sw('pref-sidebar', prefs.sidebar, (v) => setPrefs({ sidebar: v }), 'Show feature explorer') },
+    { id: 'focus', section: 'Layout', title: 'Focus mode', description: 'Hides navigation chrome. Ctrl/Cmd+.', keywords: 'zen distraction', control: sw('pref-focus', prefs.focus, (v) => setPrefs({ focus: v }), 'Focus mode') },
+    // Ports
+    {
+      id: 'ports', section: 'Ports', title: 'Web UI and API ports', description: 'Saved to .local/settings.json; applies after restarting npm run dev. STUDIO_WEB_PORT / STUDIO_API_PORT override.', keywords: 'port server proxy vite express 5173 4310',
+      block: settings ? (
+        <Formik initialValues={{ webPort: settings.webPort, apiPort: settings.apiPort }} validationSchema={portSchema} validateOnMount enableReinitialize onSubmit={async (v, h) => { try { await save({ webPort: Number(v.webPort), apiPort: Number(v.apiPort) }); h.setStatus(undefined); } catch (e) { h.setStatus((e as Error).message); } finally { h.setSubmitting(false); } }}>
+          {({ isValid, isSubmitting, dirty, status }) => (
+            <Form className="form-stack" noValidate>
+              <div className="form-grid">
+                <TextField name="webPort" label="WEB UI PORT" hint={`Running on ${settings.running?.webPort ?? '?'}.`} />
+                <TextField name="apiPort" label="API PORT" hint={`Running on ${settings.running?.apiPort ?? '?'}. The UI proxies /api here.`} />
+              </div>
+              {status && <p className="field-error" role="alert">{status}</p>}
+              <Button type="submit" variant="primary" disabled={!isValid || isSubmitting || !dirty}>Save studio settings</Button>
+            </Form>
+          )}
+        </Formik>
+      ) : <p className="subtle">{error || 'Loading…'}</p>,
+    },
+    // Tracing
+    { id: 'trace', section: 'Playwright tracing', title: 'Record Playwright traces', description: 'Recordings save a trace .zip (open with npx playwright show-trace). Test runs get STUDIO_PLAYWRIGHT_TRACING=1.', keywords: 'trace tracing debug zip show-trace', control: settings && sw('trace-enabled', settings.tracing.enabled, (v) => save({ tracing: { ...settings.tracing, enabled: v } }), 'Record Playwright traces') },
+    ...(settings?.tracing.enabled
+      ? ([
+          { id: 'trace-shots', section: 'Playwright tracing', title: 'Screenshots', description: 'Capture a screenshot after each action.', keywords: 'trace', control: sw('trace-screens', settings.tracing.screenshots, (v) => save({ tracing: { ...settings.tracing, screenshots: v } }), 'Screenshots') },
+          { id: 'trace-snaps', section: 'Playwright tracing', title: 'DOM snapshots', description: 'Snapshot the DOM so the trace viewer can inspect elements.', keywords: 'trace', control: sw('trace-snaps', settings.tracing.snapshots, (v) => save({ tracing: { ...settings.tracing, snapshots: v } }), 'DOM snapshots') },
+          { id: 'trace-src', section: 'Playwright tracing', title: 'Sources', description: 'Include source files in the trace.', keywords: 'trace', control: sw('trace-sources', settings.tracing.sources, (v) => save({ tracing: { ...settings.tracing, sources: v } }), 'Sources') },
+        ] as Row[])
+      : []),
+    {
+      id: 'traces', section: 'Playwright tracing', title: 'Recent traces', keywords: 'download zip',
+      block: traces.length ? (
+        <ul className="trace-list">
+          {traces.slice(0, 6).map((t) => (
+            <li key={t.name}>
+              <a className="text-button" href={`/api/traces/${encodeURIComponent(t.name)}`} download><Download size={13} aria-hidden="true" />{t.name}</a>
+              <span className="meta">{(t.size / 1024).toFixed(0)} KB</span>
+            </li>
+          ))}
+        </ul>
+      ) : <p className="subtle">No traces yet. Enable tracing, then record and stop a workflow.</p>,
+    },
+    // Workspace
+    { id: 'workspace', section: 'Workspace', title: 'Repository and scan patterns', description: 'Repository root, target project, feature/source/dictionary globs and ignored folders.', keywords: 'repository root csproj glob scan', control: <Button size="small" onClick={onWorkspace}>Open workspace settings</Button> },
+    // Storage
+    { id: 'cards', section: 'Storage', title: 'Reset card states', description: 'Every collapsible card returns to its default open or closed state.', keywords: 'collapse cards reset', control: <Button variant="ghost" size="small" onClick={async () => { if (await confirm({ title: 'Reset collapsed cards?', description: 'Every card returns to its default open or closed state.', confirm: 'Reset cards' })) { cachedKeys().filter((k) => k.startsWith('tas:open:') || k.startsWith('tas:card:')).forEach((k) => localStorage.removeItem(k)); location.reload(); } }}><RotateCcw size={13} aria-hidden="true" />Reset card states</Button> },
+    { id: 'cache', section: 'Storage', title: 'Clear cached UI state', description: `${cacheCount} item${cacheCount === 1 ? '' : 's'} stored in this browser: drafts, preferences, layout and history. Repository files are not affected.`, keywords: 'cache localstorage clear reset delete', control: <Button variant="danger" size="small" disabled={!cacheCount} onClick={async () => { if (await confirm({ title: 'Clear all cached UI state?', description: 'Removes drafts, preferences, layout and history stored in this browser, then reloads. Repository files are not touched.', confirm: 'Clear cache', danger: true })) { cachedKeys().forEach((k) => localStorage.removeItem(k)); location.reload(); } }}><Trash2 size={13} aria-hidden="true" />Clear cache</Button> },
+    // Shortcuts
+    { id: 'shortcuts', section: 'Shortcuts', title: 'All shortcuts', keywords: shortcuts.map((s) => s.join(' ')).join(' '), block: <dl className="shortcut-list">{shortcuts.map(([k, d]) => <div key={k} className="shortcut-row"><dt><kbd>{k}</kbd></dt><dd>{d}</dd></div>)}</dl> },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  ], [prefs, settings, traces, error, cacheCount, editor]);
+
+  const q = query.trim().toLowerCase();
+  const matches = q ? rows.filter((r) => `${r.section} ${r.title} ${r.description ?? ''} ${r.keywords ?? ''}`.toLowerCase().includes(q)) : rows.filter((r) => r.section === section);
+  const grouped = q ? sections.map((s) => ({ s, items: matches.filter((r) => r.section === s.id) })).filter((g) => g.items.length) : [{ s: sections.find((s) => s.id === section)!, items: matches }];
+  const counts = useMemo(() => Object.fromEntries(sections.map((s) => [s.id, rows.filter((r) => r.section === s.id && (!q || `${r.section} ${r.title} ${r.description ?? ''} ${r.keywords ?? ''}`.toLowerCase().includes(q))).length])), [rows, q]);
+  // Braces matter: Chromium's scrollTo() now returns a Promise, which must not be returned from an effect.
+  useEffect(() => { contentRef.current?.scrollTo({ top: 0 }); }, [section, q]);
+
+  return (
+    <div className="settings-shell">
+      <nav className="settings-nav" aria-label="Settings categories">
+        <label className="settings-search">
+          <Search size={15} aria-hidden="true" />
+          <span className="sr-only">Search settings</span>
+          <input type="search" placeholder="Search" value={query} onChange={(e) => setQuery(e.target.value)} onKeyDown={(e) => { if (e.key === 'Escape' && query) { e.stopPropagation(); setQuery(''); } }} autoFocus />
+        </label>
+        <span className="settings-nav-label">Settings</span>
+        <ul>
+          {sections.map((s) => (
+            <li key={s.id}>
+              <button
+                className={`settings-nav-item ${!q && section === s.id ? 'active' : ''} ${q && !counts[s.id] ? 'dim' : ''}`}
+                aria-current={!q && section === s.id ? 'page' : undefined}
+                onClick={() => { setQuery(''); setSection(s.id); }}
+              >
+                <s.icon size={17} aria-hidden="true" />
+                <span>{s.label}</span>
+                {q && counts[s.id] > 0 && <span className="nav-count">{counts[s.id]}</span>}
+              </button>
+            </li>
+          ))}
+        </ul>
+      </nav>
+      <div className="settings-content" ref={contentRef}>
+        <button className="icon-button settings-close" aria-label="Close settings" onClick={onClose}><X size={18} /></button>
+        {grouped.map(({ s, items }) => (
+          <section key={s.id} className="settings-section" aria-labelledby={`settings-${s.id.replace(/\W/g, '')}`}>
+            <h2 id={`settings-${s.id.replace(/\W/g, '')}`}>{s.label}</h2>
+            {items.map((r) => (
+              <div key={r.id} className={`settings-row ${r.block && !r.control ? 'stacked' : ''}`}>
+                <div className="settings-row-text">
+                  <h3><Highlight text={r.title} query={q} /></h3>
+                  {r.description && <p><Highlight text={r.description} query={q} /></p>}
+                </div>
+                {r.control && <div className="settings-row-control">{r.control}</div>}
+                {r.block && <div className="settings-row-block">{r.block}</div>}
+              </div>
+            ))}
+          </section>
+        ))}
+        {q && !grouped.length && <p className="settings-empty">No settings match “{query}”.</p>}
+      </div>
     </div>
   );
 }

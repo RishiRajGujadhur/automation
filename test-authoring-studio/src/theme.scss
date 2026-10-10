@@ -1,0 +1,656 @@
+// App themes, native scrollbars, accent logo and the Claude-Code-style settings shell.
+// Tokens are defined for every theme; "studio" keeps the original hand-tuned styles and only uses
+// tokens where new components need them. Other themes re-skin surfaces through the overrides below.
+
+:root {
+  --bg: #0b0e16;
+  --surface: #121722;
+  --surface-2: #0f1420;
+  --surface-3: #19203055;
+  --chrome: #0f121c;
+  --border: #252c3e;
+  --text: #e5e8f1;
+  --text-strong: #eef0f6;
+  --text-muted: #9aa4bb;
+  --font-ui: 'DM Sans Variable', sans-serif;
+}
+:root[data-theme='midnight'] {
+  --bg: #08111f;
+  --surface: #0f1d33;
+  --surface-2: #0b1729;
+  --surface-3: #13264255;
+  --chrome: #0a1528;
+  --border: #1e3352;
+  --text: #e2ebfa;
+  --text-strong: #f2f6ff;
+  --text-muted: #9fb2cf;
+}
+:root[data-theme='nord'] {
+  --bg: #2e3440;
+  --surface: #3b4252;
+  --surface-2: #343a47;
+  --surface-3: #434c5e88;
+  --chrome: #2b303b;
+  --border: #4c566a;
+  --text: #e5e9f0;
+  --text-strong: #eceff4;
+  --text-muted: #c0c8d6;
+}
+:root[data-theme='light'] {
+  --bg: #f4f5f9;
+  --surface: #ffffff;
+  --surface-2: #f7f8fb;
+  --surface-3: #eef0f6;
+  --chrome: #ffffff;
+  --border: #d9dde7;
+  --text: #1f2430;
+  --text-strong: #0f131b;
+  --text-muted: #565f73;
+  --accent-soft: color-mix(in srgb, var(--accent-strong) 12%, transparent);
+  color-scheme: light;
+}
+:root[data-theme='matrix'] {
+  --bg: #000000;
+  --surface: #020d05;
+  --surface-2: #010a03;
+  --surface-3: #03170a;
+  --chrome: #000000;
+  --border: #0b5a24;
+  --text: #33ff66;
+  --text-strong: #b6ffb0;
+  --text-muted: #2ecc5b;
+  --accent: #00ff41;
+  --accent-strong: #00c934;
+  --accent-soft: #00ff411f;
+  --font-ui: 'IBM Plex Mono', ui-monospace, monospace;
+}
+
+// ---- Native scrollbars that follow the accent (scrollbar-color / scrollbar-width, CSS Scrollbars L1)
+:root {
+  scrollbar-width: thin;
+  scrollbar-color: color-mix(in srgb, var(--accent) 55%, transparent) transparent;
+}
+* {
+  scrollbar-width: thin;
+  scrollbar-color: color-mix(in srgb, var(--accent) 50%, transparent) transparent;
+}
+
+// ---- Logo follows the accent
+.brand-mark {
+  background: linear-gradient(135deg, var(--accent), var(--accent-strong)) !important;
+  border-color: color-mix(in srgb, var(--accent) 70%, #fff) !important;
+  box-shadow: 0 0 18px color-mix(in srgb, var(--accent) 30%, transparent) !important;
+  color: color-mix(in srgb, var(--accent-strong) 15%, #fff);
+}
+:root[data-theme='matrix'] .brand-mark {
+  color: #001a06;
+}
+
+// ---- Header breadcrumb: it reuses the page-heading class (for tests/tools); drop that block's spacing
+.app-header .workspace-breadcrumb.page-heading {
+  margin: 0;
+  height: 100%;
+  align-items: center;
+  justify-content: flex-start;
+}
+.workspace-breadcrumb ol,
+.workspace-breadcrumb li {
+  height: 100%;
+}
+.workspace-breadcrumb .header-divider {
+  align-self: center;
+}
+
+// ---- Theme overrides (every theme except the original studio skin)
+:root:not([data-theme='studio']) {
+  body,
+  .studio-shell {
+    background: var(--bg) !important;
+    color: var(--text);
+    font-family: var(--font-ui);
+  }
+  .app-header,
+  .main-nav,
+  .status-bar,
+  .bottom-nav {
+    background: var(--chrome) !important;
+    border-color: var(--border) !important;
+  }
+  .sidebar {
+    background: var(--surface-2) !important;
+    border-color: var(--border) !important;
+  }
+  .panel,
+  .modal,
+  .stepper-step,
+  .dictionary-field,
+  .step-lint,
+  .context-bar,
+  .stat-tile,
+  .theme-card,
+  .continue-card {
+    background: var(--surface) !important;
+    border-color: var(--border) !important;
+  }
+  .panel-heading,
+  .collapsible-heading,
+  .wizard-title,
+  .card-heading,
+  .index-status {
+    background: var(--surface-3) !important;
+    border-color: var(--border) !important;
+  }
+  input,
+  textarea,
+  select,
+  .select-trigger,
+  .search-box,
+  .segmented,
+  .scenario-editor,
+  .problem-chip,
+  .crumb {
+    background: var(--surface-2) !important;
+    border-color: var(--border) !important;
+    color: var(--text) !important;
+  }
+  .button:not(.primary):not(.danger):not(.primary-soft):not(.success):not(.ghost),
+  .icon-button {
+    background: var(--surface-2) !important;
+    border-color: var(--border) !important;
+    color: var(--text) !important;
+  }
+  .button.ghost {
+    color: var(--text) !important;
+  }
+  .context-menu,
+  .select-content,
+  .tooltip,
+  .hover-card,
+  .popover,
+  .cm-tooltip {
+    background: var(--surface) !important;
+    border-color: var(--border) !important;
+    color: var(--text) !important;
+  }
+  .context-item,
+  .select-item {
+    color: var(--text) !important;
+  }
+  h1,
+  h2,
+  h3,
+  strong,
+  .card-toggle,
+  .catalog-card h3,
+  .collapsible-heading h2,
+  .dictionary-field strong,
+  .stepper-step.current,
+  .workspace-breadcrumb h1,
+  .settings-row h3 {
+    color: var(--text-strong) !important;
+  }
+  .nav-tab,
+  .workspace-breadcrumb li,
+  .brand-light,
+  .stepper-step,
+  .field-label,
+  .settings-nav-item,
+  .layer-list li,
+  .indicator-list li,
+  .step-lint .txt,
+  p,
+  dd,
+  .model-tree li button,
+  .explorer-file,
+  .explorer-folder,
+  .project-files button {
+    color: var(--text) !important;
+  }
+  .subtle,
+  .meta,
+  .field-hint,
+  .micro-label,
+  .collapsible-summary,
+  .stepper-text small,
+  .scanned-at,
+  .status-bar,
+  .footer-right,
+  .eyebrow,
+  .search-summary,
+  .settings-row p,
+  .context-label {
+    color: var(--text-muted) !important;
+  }
+  .nav-tab.active,
+  .settings-nav-item.active,
+  .stepper-step.current .stepper-dot {
+    color: var(--accent-strong) !important;
+  }
+  .separator,
+  .tabs-list,
+  .settings-row,
+  .checks-table td,
+  .checks-table th {
+    border-color: var(--border) !important;
+  }
+  .separator {
+    background: var(--border) !important;
+  }
+  .badge {
+    border-color: var(--border);
+  }
+  .meter {
+    background: var(--surface-3) !important;
+  }
+}
+// Light theme: badges and status colours need darker tints to stay ≥ 4.5:1 on white
+:root[data-theme='light'] {
+  .badge.purple, .kw { color: #5b3bd1 !important; }
+  .badge.green, .file-state.new, .step-lint li.matched svg { color: #0d7a4f !important; }
+  .badge.amber, .badge.teal { color: #8a5a00 !important; }
+  .badge.red, .field-error, .inline-error { color: #b42335 !important; }
+  .badge.teal { color: #0b6f73 !important; }
+  .nav-tab.active, .settings-nav-item.active, .segmented-item[data-state='on'], .tabs-trigger[data-state='active'] { color: #4c2fc0 !important; }
+  .text-button, a { color: #4c2fc0; }
+  .button.primary { color: #fff !important; }
+  .record-dot { background: #d6334a; }
+  .dialog-overlay { background: #1f243066; }
+  .toast { background: #e6f6ee !important; color: #0d4f33 !important; border-color: #8fd3b2 !important; }
+  .skeleton { background: linear-gradient(90deg, #eceef4 0%, #f7f8fb 50%, #eceef4 100%); background-size: 200% 100%; }
+  mark { background: #e3dcff; }
+}
+// Matrix: phosphor glow, monospace everything
+:root[data-theme='matrix'] {
+  * {
+    font-family: var(--font-ui) !important;
+  }
+  h1,
+  .brand {
+    text-shadow: 0 0 8px #00ff4166;
+  }
+  .badge {
+    color: var(--text) !important;
+    background: #00ff4110 !important;
+  }
+  .button.primary {
+    color: #001a06 !important;
+    text-shadow: none;
+  }
+  .toast {
+    background: #021a09 !important;
+    color: #7dff9a !important;
+    border-color: #0b5a24 !important;
+  }
+}
+
+// ---- Settings shell (Claude Code style)
+.modal.settings-modal {
+  width: min(1060px, calc(100vw - 32px));
+  height: min(86dvh, 780px);
+  max-height: none;
+  padding: 0;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+.settings-body {
+  flex: 1;
+  min-height: 0;
+}
+.settings-shell {
+  display: grid;
+  grid-template-columns: 260px minmax(0, 1fr);
+  height: 100%;
+}
+.settings-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 14px 12px;
+  border-right: 1px solid var(--border);
+  background: color-mix(in srgb, var(--surface-2) 70%, transparent);
+  overflow-y: auto;
+  ul {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+}
+.settings-search {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 10px;
+  height: 38px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--surface-2);
+  color: var(--text-muted);
+  margin-bottom: 14px;
+  &:focus-within {
+    border-color: var(--accent);
+  }
+  input {
+    flex: 1;
+    min-width: 0;
+    border: 0 !important;
+    background: none !important;
+    padding: 0 !important;
+    font-size: 14px;
+    outline: none;
+  }
+}
+.settings-nav-label {
+  padding: 4px 10px 6px;
+  font-size: 12px;
+  color: var(--text-muted);
+}
+.settings-nav-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 9px 10px;
+  border: 0;
+  border-radius: 9px;
+  background: none;
+  color: var(--text);
+  font-size: 14px;
+  text-align: left;
+  cursor: pointer;
+  &:hover {
+    background: color-mix(in srgb, var(--text) 6%, transparent);
+  }
+  &.active {
+    background: color-mix(in srgb, var(--text) 10%, transparent);
+    font-weight: 600;
+  }
+  &.dim {
+    opacity: 0.45;
+  }
+  .nav-count {
+    margin-left: auto;
+  }
+}
+.settings-content {
+  position: relative;
+  overflow-y: auto;
+  padding: 28px 40px 40px;
+}
+.settings-close {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  z-index: 2;
+}
+.settings-section {
+  margin-bottom: 34px;
+  h2 {
+    margin: 0 0 6px;
+    font-size: 20px;
+    font-weight: 600;
+    color: var(--text-strong);
+  }
+}
+.settings-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 8px 32px;
+  align-items: center;
+  padding: 18px 0;
+  border-bottom: 1px solid var(--border);
+  &:last-child {
+    border-bottom: 0;
+  }
+  &.stacked {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  h3 {
+    margin: 0 0 4px;
+    font-size: 15px;
+    font-weight: 500;
+    color: var(--text-strong);
+  }
+  p {
+    margin: 0;
+    font-size: 13.5px;
+    line-height: 1.5;
+    color: var(--text-muted);
+  }
+  .switch-row {
+    padding: 0;
+  }
+}
+.settings-row-control {
+  justify-self: end;
+  .select-trigger {
+    min-width: 240px;
+  }
+}
+.settings-row-block {
+  grid-column: 1 / -1;
+}
+.settings-empty {
+  color: var(--text-muted);
+}
+.theme-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
+  gap: 12px;
+}
+.theme-card {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 10px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--surface);
+  text-align: left;
+  cursor: pointer;
+  color: var(--text);
+  strong {
+    font-size: 13px;
+  }
+  small {
+    font-size: 11.5px;
+    color: var(--text-muted);
+  }
+  &.selected {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 1px var(--accent);
+  }
+  &:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+}
+.theme-preview {
+  position: relative;
+  display: block;
+  height: 54px;
+  border-radius: 8px;
+  margin-bottom: 6px;
+  border: 1px solid #ffffff1a;
+  overflow: hidden;
+  span:first-child {
+    position: absolute;
+    left: 8px;
+    top: 8px;
+    right: 30%;
+    bottom: 8px;
+    border-radius: 5px;
+  }
+  span:last-child {
+    position: absolute;
+    right: 8px;
+    bottom: 8px;
+    width: 18%;
+    height: 10px;
+    border-radius: 3px;
+  }
+}
+.editor-preview {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 6px;
+  .cm-editor {
+    border-radius: 10px;
+    border: 1px solid var(--border);
+    font-size: 12.5px;
+  }
+}
+.shortcut-row {
+  display: contents;
+}
+@media (max-width: 760px) {
+  .settings-shell {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: auto minmax(0, 1fr);
+  }
+  .settings-nav {
+    border-right: 0;
+    border-bottom: 1px solid var(--border);
+    ul {
+      flex-direction: row;
+      overflow-x: auto;
+    }
+  }
+  .settings-nav-label {
+    display: none;
+  }
+  .settings-nav-item span {
+    white-space: nowrap;
+  }
+  .settings-content {
+    padding: 20px;
+  }
+  .settings-row {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .settings-row-control {
+    justify-self: start;
+  }
+}
+
+// ---- Contrast fixes found by the per-theme axe audit ----
+// Line numbers: several CodeMirror/ThemeMirror themes ship gutters below 4.5:1. Use the editor's own
+// foreground (inherited from .cm-editor) so every theme stays readable.
+.cm-gutters {
+  color: inherit !important;
+}
+.cm-gutterElement {
+  opacity: 0.85;
+}
+:root:not([data-theme='studio']) {
+  .local-state,
+  .sidebar-heading > span,
+  .stat-tile > span,
+  .explorer-summary,
+  .context-bar strong {
+    color: var(--text-muted) !important;
+  }
+  .context-trigger {
+    color: var(--text) !important;
+  }
+}
+// Dark themes: active states use the lighter accent (accent-strong is for filled buttons)
+:root[data-theme='midnight'],
+:root[data-theme='nord'],
+:root[data-theme='matrix'] {
+  .nav-tab.active,
+  .settings-nav-item.active,
+  .stepper-step.current .stepper-dot {
+    color: var(--accent) !important;
+  }
+}
+:root[data-theme='light'] {
+  .recorder-tab {
+    color: #9b1c3a !important;
+    background: #fde8ee !important;
+    border-color: #f3b8c7 !important;
+  }
+  .context-trigger:hover {
+    color: var(--text-strong) !important;
+  }
+}
+:root:not([data-theme='studio']) {
+  .context-bar > span,
+  .context-bar .ok,
+  .context-bar .warn {
+    color: var(--text) !important;
+  }
+  .checklist li.done,
+  .checklist li.done span {
+    color: var(--text-muted) !important;
+  }
+}
+// Links on dark themes: a lightened accent keeps ≥ 4.5:1 on mid-tone surfaces such as Nord.
+:root[data-theme='midnight'],
+:root[data-theme='nord'] {
+  .text-button,
+  a:not(.button) {
+    color: color-mix(in srgb, var(--accent) 50%, #fff) !important;
+  }
+}
+:root:not([data-theme='studio']) {
+  .badge:not(.green):not(.amber):not(.red):not(.teal):not(.purple),
+  .status-bar button,
+  .status-bar span {
+    color: var(--text-muted) !important;
+  }
+}
+.panel-heading .badge,
+.card-meta .badge {
+  font-size: 10px !important;
+}
+:root:not([data-theme='studio']) .model-layer-toggle {
+  color: var(--text) !important;
+}
+:root[data-theme='midnight'],
+:root[data-theme='nord'],
+:root[data-theme='matrix'] {
+  .kw,
+  .badge.purple {
+    color: color-mix(in srgb, var(--accent) 55%, #fff) !important;
+  }
+}
+:root:not([data-theme='studio']) .segmented-item:not([data-state='on']):not([data-state='active']) {
+  color: var(--text-muted) !important;
+}
+:root[data-theme='midnight'],
+:root[data-theme='nord'],
+:root[data-theme='matrix'] {
+  .segmented-item[data-state='on'],
+  .segmented-item[data-state='active'],
+  .tabs-trigger[data-state='active'] {
+    color: color-mix(in srgb, var(--accent) 50%, #fff) !important;
+  }
+}
+:root:not([data-theme='studio']) {
+  .checkbox-row label,
+  .dictionary-field strong {
+    color: var(--text) !important;
+  }
+  .dictionary-field span,
+  .dictionary-field small,
+  .pagination,
+  .pagination span,
+  .selector-order small,
+  .model-tree .subtle,
+  .catalog-card-footer > span,
+  .project-files small {
+    color: var(--text-muted) !important;
+  }
+}
+:root:not([data-theme='studio']) .empty-state {
+  color: var(--text-muted) !important;
+}
+// Claude-style settings nav: the active item is a filled row with strong text (not accent-coloured text).
+:root[data-theme] .settings-nav-item.active.active {
+  color: var(--text-strong) !important;
+}

@@ -33,7 +33,7 @@ import CodeMirror from '@uiw/react-codemirror';
 import { StreamLanguage } from '@codemirror/language';
 import { csharp } from '@codemirror/legacy-modes/mode/clike';
 import { xml } from '@codemirror/legacy-modes/mode/xml';
-import { oneDark } from '@codemirror/theme-one-dark';
+import { useEditorTheme } from './themes';
 import { gherkin } from '@codemirror/legacy-modes/mode/gherkin';
 import { diff as diffMode } from '@codemirror/legacy-modes/mode/diff';
 import { motion, AnimatePresence } from 'motion/react';
@@ -96,6 +96,7 @@ import './explorer.scss';
 import './generator.scss';
 import './modern.scss';
 import './layout.scss';
+import './theme.scss';
 
 const demo: Action[] = [
   { id: 'd1', action: 'goto', url: 'https://www.google.com/' },
@@ -146,6 +147,7 @@ function Badge({ children, tone = 'muted' }: { children: React.ReactNode; tone?:
   return <span className={`badge ${tone}`}>{children}</span>;
 }
 export default function App() {
+  const editorTheme = useEditorTheme();
   const [index, setIndex] = useState<Index>();
   const [config, setConfig] = useState<any>();
   const [tab, setTab] = useLocalState('tab', 'Features');
@@ -1333,7 +1335,7 @@ export default function App() {
                 </div>
                 <CodeMirror
                   value={draftSource()}
-                  theme={oneDark}
+                  theme={editorTheme}
                   height="340px"
                   extensions={[StreamLanguage.define(gherkin), labelled('Generated Gherkin preview', true)]}
                   editable={false}
@@ -1487,11 +1489,11 @@ export default function App() {
           <Dialog.Overlay className="dialog-overlay" />
           {modal && (
             <Dialog.Content
-              className={`modal ${['preview', 'source', 'settings', 'dictionary'].includes(modal) ? 'wide' : ''}`}
+              className={`modal ${['preview', 'source', 'settings', 'dictionary'].includes(modal) ? 'wide' : ''} ${modal === 'preferences' ? 'settings-modal' : ''}`}
               aria-describedby={undefined}
             >
               <div className="sheet-handle" aria-hidden="true" />
-              <div className="modal-header">
+              <div className={`modal-header ${modal === 'preferences' ? 'sr-only' : ''}`}>
                 <Dialog.Title asChild><h2>
                   {
                     {
@@ -1515,7 +1517,7 @@ export default function App() {
                   <X size={19} />
                 </Dialog.Close>
               </div>
-              <div className="modal-body">
+              <div className={modal === 'preferences' ? 'settings-body' : 'modal-body'}>
                 {modal === 'settings' && config && (
                   <WorkspaceForm
                     initial={config}
@@ -1584,7 +1586,7 @@ export default function App() {
                     ))}
                     <CodeMirror
                       value={preview.diff}
-                      theme={oneDark}
+                      theme={editorTheme}
                       extensions={[StreamLanguage.define(diffMode), labelled(`Diff for ${preview.file}`, true)]}
                       height="360px"
                       editable={false}
@@ -1618,7 +1620,7 @@ export default function App() {
                 {modal === 'source' && (
                   <CodeMirror
                     value={sourcePeek}
-                    theme={oneDark}
+                    theme={editorTheme}
                     extensions={[
                       ...(sourceTitle.includes('.xml:')
                         ? xmlExtensions(true)
@@ -1698,7 +1700,7 @@ export default function App() {
                     </Button>
                   </>
                 )}
-                {modal === 'preferences' && <StudioSettings onNotice={setNotice} />}
+                {modal === 'preferences' && <StudioSettings onNotice={setNotice} onWorkspace={() => setModal('settings')} shortcuts={shortcuts} onClose={() => setModal(undefined)} />}
                 {modal === 'shortcuts' && (
                   <dl className="shortcut-list">
                     {shortcuts.map(([k, d]) => (

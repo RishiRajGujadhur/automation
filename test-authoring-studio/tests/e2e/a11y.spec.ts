@@ -45,6 +45,8 @@ test('WCAG 2.2 AA: dialogs and menus', async ({ page }) => {
   await audit(page, 'Workspace settings dialog');
   await page.keyboard.press('Escape');
   await page.getByRole('button', { name: 'Open studio menu' }).first().click();
+  await expect(page.getByRole('menu', { name: 'Studio menu' })).toBeVisible();
+  await page.waitForTimeout(250); // let the open animation finish so contrast is measured at rest
   await audit(page, 'Studio menu');
 });
 

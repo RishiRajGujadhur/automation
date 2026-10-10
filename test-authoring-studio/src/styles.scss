@@ -1107,16 +1107,9 @@ button:hover .animated-icon {
 .editor-panel .cm-editor {
   font-size: 12px;
 }
-.cm-editor {
-  background: #101621 !important;
-}
+/* Editor colours come from the selected CodeMirror/ThemeMirror theme (Settings → Code editor). */
 .cm-gutters {
-  background: #101621 !important;
-  border-right: 1px solid #252d40 !important;
-}
-.cm-activeLine,
-.cm-activeLineGutter {
-  background: #ffffff04 !important;
+  border-right: 1px solid color-mix(in srgb, currentColor 12%, transparent) !important;
 }
 .cm-scroller {
   line-height: 1.9 !important;

@@ -3,7 +3,7 @@ import CodeMirror from '@uiw/react-codemirror';
 import { StreamLanguage } from '@codemirror/language';
 import { xml } from '@codemirror/legacy-modes/mode/xml';
 import { csharp } from '@codemirror/legacy-modes/mode/clike';
-import { oneDark } from '@codemirror/theme-one-dark';
+import { useEditorTheme } from './themes';
 import { CircleCheck, CircleX, CircleAlert, CircleMinus, RefreshCw, Save, ShieldCheck, Plus, Trash2, Search, FileOutput, FileCode2, Copy, RotateCcw, PanelRightClose, PanelRightOpen, FilePlus2, FilePen, Wrench } from 'lucide-react';
 import { api, type Check, type FilePreview, type Paged } from './api';
 import DiffApproval from './DiffApproval';
@@ -70,6 +70,7 @@ function fieldSnippet(source: string, entry: DictionaryEntry) {
 const featureTitle = (file: string) => (file.split('/').pop() ?? 'New').replace(/\.feature$/, '').replace(/([a-z])([A-Z])/g, '$1 $2');
 
 export default function TestGenerator({ revision, seed, onSource, onExport, onIndex, onNotice, onSearchSteps }: { revision?: string; seed?: GeneratorSeed; onSource: (file: string, line: number) => void; onExport: (source: string, file: string) => void; onIndex: (index: Index) => void; onNotice?: (m: string) => void; onSearchSteps?: (q: string) => void }) {
+  const editorTheme = useEditorTheme();
   // Draft inputs persist per browser so a reload or tab switch never loses work.
   const [draft, setDraft] = useLocalState('generator:draft', defaults);
   const set = <K extends keyof typeof defaults>(k: K, v: (typeof defaults)[K]) => setDraft((d) => ({ ...d, [k]: v }));
@@ -254,7 +255,7 @@ export default function TestGenerator({ revision, seed, onSource, onExport, onIn
               <div className="scenario-editor" onBlur={() => touch('scenarioText')}>
                 <CodeMirror
                   value={scenarioText}
-                  theme={oneDark}
+                  theme={editorTheme}
                   minHeight={`${Math.max(3, steps.length + 1) * 22 + 12}px`}
                   extensions={scenarioExt}
                   basicSetup={{ lineNumbers: false, foldGutter: false, autocompletion: false, highlightActiveLine: false }}
@@ -300,7 +301,7 @@ export default function TestGenerator({ revision, seed, onSource, onExport, onIn
                 <p className="micro-label">LIVE DICTIONARY MATCH</p>
                 <RowMenu items={[{ label: 'Open dictionary source', icon: FileCode2, onSelect: () => onSource(plan.entry!.file, plan.entry!.line) }, { label: 'Copy field XML', icon: Copy, onSelect: () => copyText(plan.source ? fieldSnippet(plan.source, plan.entry!) : '') }]}>
                   <div className="code-with-copy" data-menu-row>
-                    <CodeMirror value={plan.source ? fieldSnippet(plan.source, plan.entry) : ''} theme={oneDark} extensions={[...snippetXml, labelled('Matched dictionary field XML', true)]} editable={false} />
+                    <CodeMirror value={plan.source ? fieldSnippet(plan.source, plan.entry) : ''} theme={editorTheme} extensions={[...snippetXml, labelled('Matched dictionary field XML', true)]} editable={false} />
                   </div>
                 </RowMenu>
                 <button className="text-button" onClick={() => onSource(plan.entry!.file, plan.entry!.line)}>Open {plan.entry.file}:{plan.entry.line}</button>
@@ -330,7 +331,7 @@ export default function TestGenerator({ revision, seed, onSource, onExport, onIn
           <details className="code-details">
             <summary>Generated locator code</summary>
             <div className="code-with-copy">
-              <CodeMirror value={code} theme={oneDark} extensions={[StreamLanguage.define(csharp), labelled('Generated locator code', true)]} editable={false} />
+              <CodeMirror value={code} theme={editorTheme} extensions={[StreamLanguage.define(csharp), labelled('Generated locator code', true)]} editable={false} />
               <CopyButton text={code} label="Copy locator code" />
             </div>
           </details>

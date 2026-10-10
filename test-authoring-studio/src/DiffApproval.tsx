@@ -2,7 +2,7 @@ import { useState } from 'react';
 import CodeMirror from '@uiw/react-codemirror';
 import { StreamLanguage } from '@codemirror/language';
 import { diff as diffMode } from '@codemirror/legacy-modes/mode/diff';
-import { oneDark } from '@codemirror/theme-one-dark';
+import { useEditorTheme } from './themes';
 import { FileCode2, Save, TriangleAlert, Check } from 'lucide-react';
 import { api, type FilePreview } from './api';
 import type { Index } from './types';
@@ -11,6 +11,7 @@ import { labelled } from './editor/a11y';
 
 /** Shows one previewed file diff; approval is the only write and consumes the one-time preview token. */
 export default function DiffApproval({ preview, onApplied, height = '260px' }: { preview: FilePreview; onApplied?: (index: Index) => void; height?: string }) {
+  const editorTheme = useEditorTheme();
   const [state, setState] = useState<'idle' | 'busy' | 'done'>('idle');
   const [error, setError] = useState('');
   return (
@@ -32,7 +33,7 @@ export default function DiffApproval({ preview, onApplied, height = '260px' }: {
           {n}
         </div>
       ))}
-      <CodeMirror value={preview.diff} theme={oneDark} extensions={[StreamLanguage.define(diffMode), labelled(`Diff for ${preview.file}`, true)]} height={height} editable={false} />
+      <CodeMirror value={preview.diff} theme={editorTheme} extensions={[StreamLanguage.define(diffMode), labelled(`Diff for ${preview.file}`, true)]} height={height} editable={false} />
       {error && <p role="alert" className="inline-error">{error}</p>}
       <Button
         variant="primary"

@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { IconButton } from '../radix2';
 import CodeMirror, { type ReactCodeMirrorRef } from '@uiw/react-codemirror';
-import { oneDark } from '@codemirror/theme-one-dark';
+import { useEditorTheme } from '../themes';
 import { lintGutter, forEachDiagnostic, nextDiagnostic, openLintPanel } from '@codemirror/lint';
 import { startCompletion } from '@codemirror/autocomplete';
 import { toggleComment, selectAll } from '@codemirror/commands';
@@ -18,6 +18,7 @@ export type Problems = { errors: number; warnings: number };
  * editor, so clipboard actions are included.
  */
 export default function GherkinEditor({ value, onChange, onPreview, onRun, onValidate, height = '470px', onNotice }: { value: string; onChange: (v: string) => void; onPreview: () => void; onRun: () => void; onValidate: () => void; height?: string; onNotice?: (m: string) => void }) {
+  const editorTheme = useEditorTheme();
   const ref = useRef<ReactCodeMirrorRef>(null);
   const [problems, setProblems] = useState<Problems>({ errors: 0, warnings: 0 });
   const wrap = useRef<HTMLDivElement>(null);
@@ -81,7 +82,7 @@ export default function GherkinEditor({ value, onChange, onPreview, onRun, onVal
             ref={ref}
             value={value}
             height={full ? 'calc(100dvh - 60px)' : height}
-            theme={oneDark}
+            theme={editorTheme}
             extensions={extensions}
             onChange={onChange}
             basicSetup={{ autocompletion: false, lintKeymap: true }}
