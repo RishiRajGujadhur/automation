@@ -130,11 +130,18 @@ export default function TestGenerator({ revision, seed, onSource, onExport, onIn
   const fieldsForSection = tree.find((t) => t.section.toLowerCase().replace(/\s/g, '') === section.toLowerCase().replace(/\s/g, ''))?.fields ?? [];
   const focusProposal = () => {
     setStepId('gen-3');
-    // Defer until step 3 has rendered (and any menu focus restoration has settled).
-    setTimeout(() => {
-      document.querySelector('[aria-label="Dictionary file"]')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
-      (document.querySelector('[aria-label="Selector 1 value"]') as HTMLInputElement | null)?.focus({ preventScroll: true });
-    }, 80);
+    // Wait (up to ~1.5 s) for step 3's form to render, then scroll to it and focus the first selector.
+    const started = performance.now();
+    const tryFocus = () => {
+      const input = document.querySelector<HTMLInputElement>('[aria-label="Selector 1 value"]');
+      if (input) {
+        document.querySelector('[aria-label="Dictionary file"]')?.scrollIntoView({ block: 'center' });
+        input.focus({ preventScroll: true });
+        if (document.activeElement === input) return;
+      }
+      if (performance.now() - started < 1500) setTimeout(tryFocus, 50);
+    };
+    setTimeout(tryFocus, 50);
   };
 
   useEffect(() => {
