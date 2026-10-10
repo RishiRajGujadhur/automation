@@ -5,7 +5,7 @@ import { xml } from '@codemirror/legacy-modes/mode/xml';
 import { csharp } from '@codemirror/legacy-modes/mode/clike';
 import { oneDark } from '@codemirror/theme-one-dark';
 import { Search, Wand2, Copy, FileCode2 } from 'lucide-react';
-import { RowMenu, Highlight, CopyButton, Collapsible, arrowNav, copyText, clearOnEscape } from './ui';
+import { RowMenu, Highlight, CopyButton, Collapsible, arrowNav, copyText, clearOnEscape, useLocalState } from './ui';
 import { api, type Paged } from './api';
 import SelectorResolution from './SelectorResolution';
 import type { DictionaryEntry } from './types';
@@ -14,7 +14,16 @@ export default function DictionaryInspector({ revision = '', compact = false, on
   const [query, setQuery] = useState('');
   const [offset, setOffset] = useState(0);
   const [data, setData] = useState<Paged<DictionaryEntry>>({ items: [], total: 0, hasNext: false });
-  const [selected, setSelected] = useState<DictionaryEntry>();
+  const [selected, setSelectedState] = useState<DictionaryEntry>();
+  const [selectedId, setSelectedId] = useLocalState('dictionary:selected', '');
+  const [warningsOnly, setWarningsOnly] = useLocalState('dictionary:warnings', false);
+  const setSelected = (e: DictionaryEntry) => { setSelectedState(e); setSelectedId(e.id); };
+  // Restore the last inspected field when it is on the current page of results.
+  useEffect(() => {
+    if (!selected && selectedId) { const hit = data.items.find((e) => e.id === selectedId); if (hit) setSelectedState(hit); }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [data]);
+  const visible = warningsOnly ? data.items.filter((e) => e.selectors.some((x) => x.warnings.length) || !e.selectors.some((x) => x.supported)) : data.items;
   const [error, setError] = useState('');
   const [source, setSource] = useState('');
   const [value, setValue] = useState('');
@@ -50,12 +59,13 @@ export default function DictionaryInspector({ revision = '', compact = false, on
           <Search size={16} />
           <input aria-label="Search dictionary" placeholder="Page, section, field, selector or file…" value={query} onChange={(e) => { setQuery(e.target.value); setOffset(0); }} onKeyDown={clearOnEscape(query, setQuery)} />
         </label>
+        <button className={`button small ghost ${warningsOnly ? 'active' : ''}`} aria-pressed={warningsOnly} onClick={() => setWarningsOnly(!warningsOnly)} title="Show only fields with brittle, XPath or unsupported selectors">Needs attention</button>
         <span className="badge">{data.total.toLocaleString()} fields</span>
       </div>
       {error && <p role="alert" className="inline-error">{error}</p>}
       <div className="dictionary-grid">
         <div className="dictionary-fields" role="listbox" aria-label="Dictionary fields" onKeyDown={arrowNav}>
-          {data.items.map((e) => (
+          {visible.map((e) => (
             <RowMenu
               key={e.id}
               items={[
@@ -74,6 +84,7 @@ export default function DictionaryInspector({ revision = '', compact = false, on
               </button>
             </RowMenu>
           ))}
+          {!visible.length && <p className="subtle">{warningsOnly && data.items.length ? 'No fields with warnings on this page.' : ''}</p>}
           {!data.items.length && <p className="subtle">No Page → Section → Field XML entries match. Configure dictionary XML patterns in Config.</p>}
           <div className="pagination">
             <button className="button tiny ghost" disabled={!offset} onClick={() => setOffset(Math.max(0, offset - 12))}>Previous</button>

@@ -4,13 +4,14 @@ import { StreamLanguage } from '@codemirror/language';
 import { xml } from '@codemirror/legacy-modes/mode/xml';
 import { csharp } from '@codemirror/legacy-modes/mode/clike';
 import { oneDark } from '@codemirror/theme-one-dark';
-import { CircleCheck, CircleX, CircleAlert, CircleMinus, RefreshCw, Save, ShieldCheck, Plus, Trash2, Search, FileOutput, FileCode2, Copy, RotateCcw, PanelRightClose, PanelRightOpen } from 'lucide-react';
+import { CircleCheck, CircleX, CircleAlert, CircleMinus, RefreshCw, Save, ShieldCheck, Plus, Trash2, Search, FileOutput, FileCode2, Copy, RotateCcw, PanelRightClose, PanelRightOpen, FilePlus2, FilePen, Wrench } from 'lucide-react';
 import { api, type Check, type FilePreview, type Paged } from './api';
 import DiffApproval from './DiffApproval';
 import SelectorResolution from './SelectorResolution';
 import ProjectModelTree, { useProjectModel } from './ProjectModelTree';
 import { Collapsible, CopyButton, RowMenu, copyText, useLocalState } from './ui';
 import type { DictionaryEntry, Index } from './types';
+import StepLint from './StepLint';
 
 type Plan = { entry: DictionaryEntry | null; source?: string; code?: string | null };
 export type GeneratorSeed = Partial<{ page: string; section: string; field: string; fieldType: string; file: string }>;
@@ -56,7 +57,7 @@ function fieldSnippet(source: string, entry: DictionaryEntry) {
 }
 const featureTitle = (file: string) => (file.split('/').pop() ?? 'New').replace(/\.feature$/, '').replace(/([a-z])([A-Z])/g, '$1 $2');
 
-export default function TestGenerator({ revision, seed, onSource, onExport, onIndex, onNotice }: { revision?: string; seed?: GeneratorSeed; onSource: (file: string, line: number) => void; onExport: (source: string, file: string) => void; onIndex: (index: Index) => void; onNotice?: (m: string) => void }) {
+export default function TestGenerator({ revision, seed, onSource, onExport, onIndex, onNotice, onSearchSteps }: { revision?: string; seed?: GeneratorSeed; onSource: (file: string, line: number) => void; onExport: (source: string, file: string) => void; onIndex: (index: Index) => void; onNotice?: (m: string) => void; onSearchSteps?: (q: string) => void }) {
   // Draft inputs persist per browser so a reload or tab switch never loses work.
   const [draft, setDraft] = useLocalState('generator:draft', defaults);
   const set = <K extends keyof typeof defaults>(k: K, v: (typeof defaults)[K]) => setDraft((d) => ({ ...d, [k]: v }));
@@ -74,8 +75,46 @@ export default function TestGenerator({ revision, seed, onSource, onExport, onIn
   const [newSelectors, setNewSelectors] = useState([{ type: 'testid', value: '' }, { type: 'ariarole.textbox', value: '' }]);
   const [sidebar, setSidebar] = useLocalState('generator:sidebar', true);
   const { model } = useProjectModel(revision);
+  const [activeLine, setActiveLine] = useState(0);
+  const [folders, setFolders] = useState<string[]>([]);
+  const [tree, setTree] = useState<{ page: string; section: string; fields: string[] }[]>([]);
+  const [fileExists, setFileExists] = useState<boolean>();
+  useEffect(() => {
+    api<string[]>('/features/folders').then(setFolders).catch(() => {});
+    api<typeof tree>('/dictionary/tree').then(setTree).catch(() => {});
+  }, [revision]);
   const file = `${area.replace(/\/+$/, '')}/${featureFile}`.replace(/^\//, '');
   const steps = useMemo(() => parseSteps(scenarioText), [scenarioText]);
+  useEffect(() => {
+    const c = new AbortController();
+    const t = setTimeout(() => api('/source?file=' + encodeURIComponent(file), undefined, c.signal).then(() => setFileExists(true)).catch(() => { if (!c.signal.aborted) setFileExists(false); }), 300);
+    return () => { clearTimeout(t); c.abort(); };
+  }, [file, revision]);
+  const caretLine = (el: HTMLTextAreaElement) => {
+    const before = el.value.slice(0, el.selectionStart).split('\n');
+    const nonEmptyBefore = before.slice(0, -1).filter((l) => l.trim()).length;
+    setActiveLine(before.at(-1)!.trim() ? nonEmptyBefore : Math.max(0, nonEmptyBefore - 1));
+  };
+  const replaceStep = (index: number, text: string) => {
+    let n = -1;
+    set('scenarioText', scenarioText.split('\n').map((l) => (l.trim() && ++n === index ? text : l)).join('\n'));
+    onNotice?.('Line replaced with an existing step. Adjust quoted values as needed.');
+  };
+  const insertKeyword = (k: string) => set('scenarioText', scenarioText.replace(/\s*$/, '') + `\n${k} `);
+  const normalizeFileName = () => {
+    let f = featureFile.trim().replace(/\.feature$/i, '');
+    f = f.replace(/[^A-Za-z0-9]+(.)?/g, (_, c: string | undefined) => (c ? c.toUpperCase() : ''));
+    f = f ? f[0].toUpperCase() + f.slice(1) : 'NewFeature';
+    if (f + '.feature' !== featureFile) set('featureFile', f + '.feature');
+  };
+  const sectionsForPage = tree.filter((t) => !page || t.page.toLowerCase() === page.toLowerCase());
+  const fieldsForSection = tree.find((t) => t.section.toLowerCase().replace(/\s/g, '') === section.toLowerCase().replace(/\s/g, ''))?.fields ?? [];
+  const focusProposal = () => {
+    try { localStorage.setItem('tas:open:gen-3', 'true'); } catch { /* ignore */ }
+    document.querySelector('[aria-label="Dictionary file"]')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    // Defer until the click (and any menu focus restoration) has settled.
+    setTimeout(() => (document.querySelector('[aria-label="Selector 1 value"]') as HTMLInputElement | null)?.focus({ preventScroll: true }), 50);
+  };
 
   useEffect(() => {
     if (!seed) return;
@@ -131,10 +170,27 @@ export default function TestGenerator({ revision, seed, onSource, onExport, onIn
         {error && <p role="alert" className="inline-error">{error}</p>}
         <Collapsible id="gen-1" icon={<span className="step-number">1</span>} title="Scenario & feature context" summary={`${file} · ${steps.length} step${steps.length === 1 ? '' : 's'}`}>
           <div className="form-grid">
-            <label className="field-label">FEATURE AREA / MODULE<input aria-label="Feature area" value={area} onChange={(e) => set('area', e.target.value)} /></label>
-            <label className="field-label">TARGET FEATURE FILE<input aria-label="Target feature file" value={featureFile} onChange={(e) => set('featureFile', e.target.value)} /></label>
+            <label className="field-label">FEATURE AREA / MODULE<input aria-label="Feature area" list="feature-folders" value={area} onChange={(e) => set('area', e.target.value)} /></label>
+            <datalist id="feature-folders">{folders.map((f) => <option key={f} value={f} />)}</datalist>
+            <label className="field-label">TARGET FEATURE FILE
+              <input aria-label="Target feature file" value={featureFile} onChange={(e) => set('featureFile', e.target.value)} onBlur={normalizeFileName} />
+              {fileExists !== undefined && (
+                <span className={`file-state ${fileExists ? 'existing' : 'new'}`}>
+                  {fileExists ? <><FilePen size={12} />Existing file. The scenario will be appended.</> : <><FilePlus2 size={12} />New file. It will be created on save.</>}
+                </span>
+              )}
+            </label>
             <label className="field-label span-2">SCENARIO NAME<input aria-label="Scenario name" value={scenarioName} onChange={(e) => set('scenarioName', e.target.value)} /></label>
-            <label className="field-label span-2">SCENARIO TEXT<textarea aria-label="Scenario text" rows={Math.max(3, steps.length + 1)} value={scenarioText} onChange={(e) => set('scenarioText', e.target.value)} spellCheck={false} /></label>
+            <div className="field-label span-2">
+              <span className="label-row">SCENARIO TEXT
+                <span className="keyword-buttons" role="group" aria-label="Insert keyword">
+                  {['Given', 'When', 'Then', 'And'].map((k) => <button key={k} className="button tiny ghost" onClick={() => insertKeyword(k)}>+ {k}</button>)}
+                  <button className="button tiny ghost" aria-label="Copy scenario as Gherkin" onClick={async () => onNotice?.((await copyText(`Scenario: ${scenarioName}\n${steps.map((x) => `  ${x.keyword} ${x.text}`).join('\n')}`)) ? 'Scenario copied.' : 'Clipboard unavailable.')}><Copy size={12} />Copy</button>
+                </span>
+              </span>
+              <textarea aria-label="Scenario text" rows={Math.max(3, steps.length + 1)} value={scenarioText} onChange={(e) => { set('scenarioText', e.target.value); caretLine(e.target); }} onKeyUp={(e) => caretLine(e.currentTarget)} onClick={(e) => caretLine(e.currentTarget)} spellCheck={false} />
+              <StepLint steps={steps} activeLine={activeLine} onReplace={replaceStep} onSource={onSource} revision={revision} />
+            </div>
           </div>
         </Collapsible>
         <Collapsible id="gen-2" icon={<span className="step-number">2</span>} title="Page object & locator mapping" summary={`${page} › ${section} › ${field} (${fieldType})`}>
@@ -152,9 +208,12 @@ export default function TestGenerator({ revision, seed, onSource, onExport, onIn
             </div>
           )}
           <div className="form-grid four">
-            <label className="field-label">PAGE NAME<input aria-label="Page name" value={page} onChange={(e) => set('page', e.target.value)} /></label>
-            <label className="field-label">SECTION NAME<input aria-label="Section name" value={section} onChange={(e) => set('section', e.target.value)} /></label>
-            <label className="field-label">FIELD NAME<input aria-label="Field name" value={field} onChange={(e) => set('field', e.target.value)} /></label>
+            <label className="field-label">PAGE NAME<input aria-label="Page name" list="dict-pages" value={page} onChange={(e) => set('page', e.target.value)} /></label>
+            <datalist id="dict-pages">{[...new Set(tree.map((t) => t.page).filter(Boolean))].map((x) => <option key={x} value={x} />)}</datalist>
+            <label className="field-label">SECTION NAME<input aria-label="Section name" list="dict-sections" value={section} onChange={(e) => set('section', e.target.value)} /></label>
+            <label className="field-label">FIELD NAME<input aria-label="Field name" list="dict-fields" value={field} onChange={(e) => set('field', e.target.value)} /></label>
+            <datalist id="dict-sections">{[...new Set(sectionsForPage.map((t) => t.section))].map((x) => <option key={x} value={x} />)}</datalist>
+            <datalist id="dict-fields">{fieldsForSection.map((x) => <option key={x} value={x} />)}</datalist>
             <label className="field-label">FIELD TYPE<select aria-label="Field type" value={fieldType} onChange={(e) => set('fieldType', e.target.value)}>{['TextBox', 'Button', 'Link', 'ComboBox', 'CheckBox', 'RadioButton', 'Label'].map((t) => <option key={t}>{t}</option>)}</select></label>
             <label className="field-label">ACTION<select aria-label="Action" value={action} onChange={(e) => set('action', e.target.value as typeof action)}><option value="fill">Fill</option><option value="click">Click</option><option value="visible">Verify visible</option></select></label>
             {action === 'fill' && <label className="field-label span-3">TEST DATA VALUE<input aria-label="Test data" value={value} onChange={(e) => set('value', e.target.value)} /></label>}
@@ -236,7 +295,12 @@ export default function TestGenerator({ revision, seed, onSource, onExport, onIn
                       <tr className={c.status} data-menu-row>
                         <td>{c.label}</td>
                         <td><span className="check-status"><I size={15} />{statusLabel[c.status]}</span></td>
-                        <td>{c.detail}{c.file && <button className="text-button" onClick={() => onSource(c.file!, c.line ?? 1)}>{c.file}{c.line ? `:${c.line}` : ''}</button>}</td>
+                        <td>
+                          {c.detail}
+                          {c.file && <button className="text-button" onClick={() => onSource(c.file!, c.line ?? 1)}>{c.file}{c.line ? `:${c.line}` : ''}</button>}
+                          {c.status !== 'pass' && c.id === 'steps' && onSearchSteps && <button className="button tiny ghost fix" onClick={() => onSearchSteps(steps.find((_, i) => true)?.text.replace(/"[^"]*"/g, '').trim() ?? '')}><Wrench size={12} />Find similar steps</button>}
+                          {c.status === 'fail' && c.id === 'dictionary' && <button className="button tiny ghost fix" onClick={focusProposal}><Wrench size={12} />Add dictionary entry</button>}
+                        </td>
                       </tr>
                     </RowMenu>
                   );

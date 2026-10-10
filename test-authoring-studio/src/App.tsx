@@ -12,6 +12,7 @@ import RecordingDictionary from './RecordingDictionary';
 import { SelectorCatalogue, BackgroundCatalogue } from './Catalogues';
 import { api } from './api';
 import { useLocalState, RowMenu, copyText } from './ui';
+import { timeAgo, useNow } from './time';
 import MoreMenu from './MoreMenu';
 import '@fontsource-variable/dm-sans';
 import '@fontsource/ibm-plex-mono/400.css';
@@ -160,6 +161,41 @@ export default function App() {
   const [edges, setEdges] = useState<Index['callEdges']>([]);
   const revision = index?.revision;
   const [recent, setRecent] = useLocalState<string[]>('recent', []);
+  const [recentPages, setRecentPages] = useLocalState<string[]>('recentPages', []);
+  const [recentUrls, setRecentUrls] = useLocalState<string[]>('recentUrls', []);
+  const [online, setOnline] = useState(true);
+  const [undo, setUndo] = useState<{ run: () => void }>();
+  const [showTop, setShowTop] = useState(false);
+  const now = useNow(30000);
+  const saveRef = useRef<() => void>(() => {});
+  const dirty = !!source && source !== (feature?.source ?? '');
+  const pageTitle = tab === 'Features' ? (view === 'recorder' ? 'Playwright recorder' : view === 'builder' ? 'Scenario builder' : (feature?.name ?? 'Feature editor')) : tab;
+  useEffect(() => {
+    document.title = `${dirty ? '● ' : ''}${pageTitle} · TestAuthoring Studio`;
+  }, [pageTitle, dirty]);
+  useEffect(() => {
+    const name = tab === 'Features' ? ({ recorder: 'Playwright Recorder', builder: 'Scenario Builder', editor: 'Feature Editor' } as Record<string, string>)[view] ?? tab : tab;
+    setRecentPages((r) => [name, ...r.filter((x) => x !== name)].slice(0, 5));
+  }, [tab, view, setRecentPages]);
+  // Warn before leaving with unsaved editor changes.
+  useEffect(() => {
+    if (!dirty) return;
+    const h = (e: BeforeUnloadEvent) => { e.preventDefault(); e.returnValue = ''; };
+    window.addEventListener('beforeunload', h);
+    return () => window.removeEventListener('beforeunload', h);
+  }, [dirty]);
+  // Local API heartbeat: surfaces a stopped dev server instead of opaque fetch errors.
+  useEffect(() => {
+    const ping = () => fetch('/api/health').then((r) => setOnline(r.ok)).catch(() => setOnline(false));
+    const t = setInterval(ping, 15000);
+    window.addEventListener('focus', ping);
+    return () => { clearInterval(t); window.removeEventListener('focus', ping); };
+  }, []);
+  useEffect(() => {
+    const h = (e: Event) => setShowTop(((e.target as HTMLElement).scrollTop ?? 0) > 500 || window.scrollY > 500);
+    document.addEventListener('scroll', h, true);
+    return () => document.removeEventListener('scroll', h, true);
+  }, []);
   const previousView = useRef({ tab, view, mobileExplorer });
   const navigateTour = useCallback((destination: TourDestination) => {
     if (destination.tab) setTab(destination.tab);
@@ -229,7 +265,7 @@ export default function App() {
   }, []);
   useEffect(() => {
     if (!notice) return;
-    const timer = setTimeout(() => setNotice(''), 4500);
+    const timer = setTimeout(() => { setNotice(''); setUndo(undefined); }, 6000);
     return () => clearTimeout(timer);
   }, [notice]);
   useEffect(() => {
@@ -258,6 +294,10 @@ export default function App() {
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
       if (e.key === 'Escape') setModal(undefined);
+      if ((e.ctrlKey || e.metaKey) && e.key === 's' && document.querySelector('.editor-panel')) {
+        e.preventDefault();
+        saveRef.current();
+      }
       const typing = /^(INPUT|TEXTAREA|SELECT)$/.test((e.target as HTMLElement)?.tagName) || (e.target as HTMLElement)?.isContentEditable;
       if (e.altKey && /^[1-4]$/.test(e.key)) {
         e.preventDefault();
@@ -359,6 +399,14 @@ export default function App() {
       setPreview(p);
       setModal('preview');
     });
+  saveRef.current = () => previewChange();
+  const acceptAllTop = () => {
+    const next = { ...accepted };
+    let n = 0;
+    for (const m of matches) if (m.candidates[0] && !next[m.action.id]) { next[m.action.id] = `${m.candidates[0].binding.keyword} ${m.candidates[0].text}`; n++; }
+    setAccepted(next);
+    setNotice(n ? `Accepted the top match for ${n} action${n === 1 ? '' : 's'}. Review before applying.` : 'No unaccepted matches.');
+  };
   const applyRecording = () => {
     const steps = actions.flatMap((a) => (accepted[a.id] ? [accepted[a.id]] : []));
     if (!steps.length) {
@@ -387,7 +435,29 @@ export default function App() {
         onNavigate={navigate}
         onAdd={(b) => addBinding(b)}
         revision={revision}
+        recentPages={recentPages}
+        commands={[
+          { label: 'Rescan repository', run: () => work(async () => { setIndex(await api('/scan', {})); setNotice('Repository index refreshed.'); }) },
+          { label: 'Start a recording', run: () => { setTab('Features'); setView('recorder'); setModal('record'); } },
+          { label: 'Create a new feature', run: () => beginFeature() },
+          { label: 'Open workspace settings', run: () => setModal('settings') },
+          { label: 'Show keyboard shortcuts', run: () => setModal('shortcuts'), shortcut: '?' },
+          { label: 'Show index diagnostics', run: () => setModal('diagnostics') },
+          { label: 'Start the guided tour', run: () => setGuideOpen(true) },
+        ]}
       />
+      {busy && <div className="progress-bar" role="progressbar" aria-label="Working" />}
+      {!online && (
+        <div className="offline-banner" role="alert">
+          <TriangleAlert size={15} /> Local API is not responding. Is <code>npm run dev</code> still running?
+          <button className="button tiny" onClick={() => fetch('/api/health').then((r) => setOnline(r.ok)).catch(() => setOnline(false))}>Retry</button>
+        </div>
+      )}
+      {showTop && (
+        <button className="back-to-top icon-button" aria-label="Back to top" onClick={() => { window.scrollTo({ top: 0, behavior: 'smooth' }); document.querySelectorAll('.main-content, .app-body').forEach((el) => el.scrollTo({ top: 0, behavior: 'smooth' })); }}>
+          <ArrowUp size={16} />
+        </button>
+      )}
       {guideOpen && <StudioTour onNavigate={navigateTour} onFinish={finishTour} />}
       <header className="app-header">
         <div className="brand">
@@ -508,6 +578,7 @@ export default function App() {
                   {index?.stats?.steps ?? 0} steps · {index?.stats?.selectors ?? 0} selectors ·{' '}
                   {index?.stats?.dictionaries ?? 0} fields
                 </span>
+                {index?.scannedAt && <span className="scanned-at" title={new Date(index.scannedAt).toLocaleString()}>Scanned {timeAgo(index.scannedAt, now)}</span>}
               </div>
               <button
                 className={`icon-button ${busy ? 'spin' : ''}`}
@@ -542,6 +613,7 @@ export default function App() {
                       ? 'Scenario builder'
                       : (feature?.name ?? 'Feature editor')
                   : tab}
+                {tab === 'Features' && view === 'editor' && dirty && <span className="dirty-dot" title="Unsaved changes (Ctrl/Cmd+S to preview)" aria-label="Unsaved changes" />}
               </h1>
               <p>
                 {tab === 'Features'
@@ -579,6 +651,9 @@ export default function App() {
             <div role="alert" className="error-banner">
               <TriangleAlert size={17} />
               <span>{error}</span>
+              <button onClick={() => copyText(error).then((ok) => ok && setNotice('Error copied.'))} aria-label="Copy error" title="Copy error">
+                <Copy size={15} />
+              </button>
               <button onClick={() => setError('')} aria-label="Dismiss error">
                 <X size={16} />
               </button>
@@ -666,7 +741,19 @@ export default function App() {
                     </div>
                     <span className="micro-label">NORMALIZED IR</span>
                   </div>
-                  <div className="action-list">
+                  <div
+                    className="action-list"
+                    onKeyDown={(e) => {
+                      if (!['ArrowDown', 'ArrowUp'].includes(e.key)) return;
+                      e.preventDefault();
+                      const i = actions.findIndex((x) => x.id === selected);
+                      const next = actions[Math.min(actions.length - 1, Math.max(0, i + (e.key === 'ArrowDown' ? 1 : -1)))];
+                      if (next) {
+                        setSelected(next.id);
+                        requestAnimationFrame(() => document.querySelectorAll<HTMLElement>('.action-card')[actions.indexOf(next)]?.focus());
+                      }
+                    }}
+                  >
                     {actions.map((a, i) => {
                       const acceptedAction = !!accepted[a.id];
                       const hasMatch = matches.find((m) => m.action.id === a.id)?.candidates.length;
@@ -691,7 +778,7 @@ export default function App() {
                           { label: 'Search steps for this target', icon: Search, onSelect: () => { setCatalogQuery(a.target?.name ?? a.target?.description ?? ''); setTab('Step Catalog'); } },
                           'separator' as const,
                           { label: 'Copy as Playwright C#', icon: Copy, onSelect: () => copyText(playwright).then((ok) => setNotice(ok ? 'Playwright code copied.' : 'Clipboard unavailable.')) },
-                          { label: 'Remove action', icon: Trash2, danger: true, onSelect: () => { setActions(actions.filter((x) => x.id !== a.id)); const { [a.id]: _, ...rest } = accepted; setAccepted(rest); } },
+                          { label: 'Remove action', icon: Trash2, danger: true, onSelect: () => { const before = actions, beforeAccepted = accepted; setActions(actions.filter((x) => x.id !== a.id)); const { [a.id]: _, ...rest } = accepted; setAccepted(rest); setNotice('Action removed.'); setUndo({ run: () => { setActions(before); setAccepted(beforeAccepted); } }); } },
                         ]}>
                         <motion.button
                           initial={{ opacity: 0, y: 8 }}
@@ -940,6 +1027,10 @@ export default function App() {
                     <RefreshCw size={15} />
                     Match all actions
                   </button>
+                  <button className="button ghost" disabled={!matches.some((m) => m.candidates.length && !accepted[m.action.id])} onClick={acceptAllTop} title="Accept the highest-ranked match for every action without one">
+                    <CheckCheck size={15} />
+                    Accept all top matches
+                  </button>
                   <button
                     className="button"
                     onClick={() => {
@@ -1180,6 +1271,7 @@ export default function App() {
               seed={generatorSeed}
               onSource={openSource}
               onNotice={setNotice}
+              onSearchSteps={(q) => { setCatalogQuery(q); setTab('Step Catalog'); }}
               onIndex={(i) => {
                 setIndex(i);
                 setNotice('Approved changes saved to the repository.');
@@ -1281,6 +1373,11 @@ export default function App() {
           >
             <Check size={17} />
             {notice}
+            {undo && (
+              <button className="button tiny" onClick={() => { undo.run(); setUndo(undefined); setNotice('Restored.'); }}>
+                Undo
+              </button>
+            )}
           </motion.div>
         )}
       </AnimatePresence>
@@ -1414,7 +1511,8 @@ export default function App() {
                     </p>
                     <label className="field-label">
                       START URL
-                      <input value={url} onChange={(e) => setUrl(e.target.value)} />
+                      <input value={url} list="recent-urls" onChange={(e) => setUrl(e.target.value)} />
+                      <datalist id="recent-urls">{recentUrls.map((u) => <option key={u} value={u} />)}</datalist>
                     </label>
                     <div className="info-box">
                       <ShieldCheck size={18} />
@@ -1429,6 +1527,7 @@ export default function App() {
                       onClick={() =>
                         work(async () => {
                           await api('/recording/start', { url });
+                          setRecentUrls((r) => [url, ...r.filter((x) => x !== url)].slice(0, 8));
                           setRecordStatus('recording');
                           setActions([]);
                           setMatches([]);

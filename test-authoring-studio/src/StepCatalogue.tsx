@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Command } from 'cmdk';
-import { Search, Plus, ChevronLeft, ChevronRight, FileCode2, GitBranch, Copy, Filter } from 'lucide-react';
+import { Search, Plus, ChevronLeft, ChevronRight, FileCode2, GitBranch, Copy, Filter, X } from 'lucide-react';
 import type { Binding } from './types';
 import { useStepSearch } from './useStepSearch';
 import { RowMenu, MenuHint, Highlight, copyText, useLocalState } from './ui';
@@ -34,6 +34,7 @@ export default function StepCatalogue({ query, onQuery, onAdd, onInspect, onSour
               placeholder="Search steps, actions, pages…  (Esc clears)"
               value={query}
               onValueChange={update}
+              autoFocus={!compact}
               onFocus={() => setFocused(true)}
               onKeyDown={(e) => {
                 if (e.key === 'Escape') {
@@ -59,6 +60,12 @@ export default function StepCatalogue({ query, onQuery, onAdd, onInspect, onSour
             </button>
           ))}
         </div>
+        {(query || keyword || unused) && (
+          <button className="button small ghost" onClick={() => { update(''); setKeyword(''); setUnused(false); }} title="Clear search and filters">
+            <X size={13} />
+            Clear
+          </button>
+        )}
         {!compact && (
           <button className={`button small ghost ${unused ? 'active' : ''}`} aria-pressed={unused} onClick={() => setUnused(!unused)} title="Show only bindings no feature uses yet">
             <Filter size={13} />
@@ -103,7 +110,14 @@ export default function StepCatalogue({ query, onQuery, onAdd, onInspect, onSour
             </article>
           </RowMenu>
         ))}
-        {!loading && !error && !items.length && <div className="empty-state">No matching steps. Try an action, page name, or shorter prefix.</div>}
+        {!loading && !error && !items.length && (
+          <div className="empty-state">
+            <p>{unused && data.items.length ? 'Every result on this page is already used. Turn off Unused to see them.' : 'No matching steps. Try an action, a page name, or a shorter prefix.'}</p>
+            <div className="chip-row">
+              {['open', 'click', 'enter', 'search', 'should'].map((q) => <button key={q} className="button tiny ghost" onClick={() => { update(q); setKeyword(''); }}>{q}</button>)}
+            </div>
+          </div>
+        )}
       </div>
       <div className="pagination">
         <button className="button small ghost" disabled={loading || offset === 0} onClick={() => setOffset(Math.max(0, offset - limit))}><ChevronLeft size={14} />Previous</button>

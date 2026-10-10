@@ -133,6 +133,33 @@ The tab bar shows only the four primary pages. Step Catalog, Backgrounds, Select
 
 **Remembered in this browser:** the last page and editor view, the Test Generator draft, the step-type filter, collapsed panels, the project sidebar setting, the selector verification URL, the Project Explorer folder, and recently opened files (listed on the Dashboard).
 
+**Writing scenarios (Test Generator):**
+- **Live step check:** each step line shows matched (with a link to its binding), ambiguous, or needs a binding, plus an "N of M steps reuse existing bindings" count.
+- **Suggestions:** existing steps are suggested for the line you're typing on. Clicking one replaces that line with the existing step's wording.
+- **Faster typing:** + Given / + When / + Then / + And buttons, and Copy-scenario-as-Gherkin.
+- **Pick lists:** feature area suggests existing feature folders. Page, section and field suggest existing dictionary entries, and the field list narrows to the chosen section.
+- **File status:** the target file shows "Existing file. The scenario will be appended." or "New file. It will be created on save." The filename is turned into PascalCase with `.feature` added when you leave the box.
+- **Quick fixes:** failed checks offer **Find similar steps** or **Add dictionary entry**. The second scrolls to the entry form and puts the cursor in it.
+
+**Recorder and editor:**
+- **Accept all top matches** in one click. Removing a recorded action can be undone from the toast.
+- Arrow keys move through recorded actions, and recent start URLs are suggested.
+- Ctrl/Cmd+S previews changes in the feature editor.
+- Unsaved edits show a dot in the heading and the browser tab title, and the browser warns before you leave the page.
+
+**Navigation and status:**
+- **Command palette commands:** rescan, start recording, new feature, settings, shortcuts, diagnostics, and the guided tour. Recently visited pages are listed first.
+- **Status signals:**
+  - The browser tab title shows the current page.
+  - A thin progress bar appears while work is running.
+  - A banner appears if the local API stops responding, with a Retry button.
+  - The sidebar shows when the repository was last scanned ("Scanned 2 min ago").
+  - Error banners have a copy button.
+  - A back-to-top button appears on long pages.
+- **Dashboard:** a "Continue where you left off" card reopens your Test Generator draft.
+- **Dictionary Inspector:** the last field you inspected is selected again when you return. **Needs attention** shows only fields with brittle, XPath or unsupported selectors.
+- **Step Catalog:** the search box is focused when the page opens. **Clear** resets the search and filters. Empty results suggest example searches.
+
 **Small conveniences:**
 - Search terms are highlighted in results.
 - An "Unused" filter shows bindings no feature uses yet.

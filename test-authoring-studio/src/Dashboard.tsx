@@ -1,4 +1,4 @@
-import { BookOpen, Blocks, FileCode2, ScanLine, Braces, Wand2, Circle, Layers3 } from 'lucide-react';
+import { BookOpen, Blocks, FileCode2, ScanLine, Braces, Wand2, Circle, Layers3, ArrowRight } from 'lucide-react';
 import { Indicators, useProjectModel } from './ProjectModelTree';
 import type { Index } from './types';
 
@@ -19,6 +19,8 @@ export function ContextBar({ index, config, recordStatus, revision }: { index?: 
 export default function Dashboard({ index, revision, onNavigate, recent = [], onSource }: { index?: Index; revision?: string; onNavigate: (tab: string) => void; recent?: string[]; onSource?: (file: string, line: number) => void }) {
   const { model } = useProjectModel(revision);
   const s = index?.stats;
+  let draft: { featureFile?: string; area?: string; scenarioName?: string; section?: string; field?: string } | undefined;
+  try { draft = JSON.parse(localStorage.getItem('tas:generator:draft') ?? 'null') ?? undefined; } catch { draft = undefined; }
   const tiles = [
     { label: 'Feature files', value: s?.features, icon: FileCode2, tab: 'Features' },
     { label: 'Scenarios', value: s?.scenarios, icon: Layers3, tab: 'Features' },
@@ -38,6 +40,14 @@ export default function Dashboard({ index, revision, onNavigate, recent = [], on
           </button>
         ))}
       </div>
+      {draft?.scenarioName && (
+        <button className="panel continue-card" onClick={() => onNavigate('Test Generator')}>
+          <span className="micro-label">CONTINUE WHERE YOU LEFT OFF</span>
+          <strong>{draft.scenarioName}</strong>
+          <span className="meta">{draft.area}/{draft.featureFile} · {draft.section} › {draft.field}</span>
+          <ArrowRight size={16} />
+        </button>
+      )}
       <div className="dashboard-grid">
         <section className="panel">
           <div className="panel-heading"><div><h2>Start authoring</h2></div></div>

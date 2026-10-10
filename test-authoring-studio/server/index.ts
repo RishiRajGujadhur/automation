@@ -12,6 +12,7 @@ import {
   parseFeature,
   matchActions,
   matchFeatureBindings,
+  bindingMatches,
 } from './core.js';
 import { Recorder } from './recorder.js';
 import { proposeCode, proposeDictionaryPageObject } from './proposals.js';
@@ -55,7 +56,7 @@ const previews = new Map<string, { file: string; source: string; hash: string; r
 const hash = (s: string) => createHash('sha256').update(s).digest('hex');
 let search:WorkspaceSearch|undefined;
 let pendingScan:Promise<Index>|undefined;
-function activate(next:Index){search?.close();index=next;index.revision=randomUUID();search=new WorkspaceSearch({steps:next.stepDefinitions,selectors:next.selectors,dictionaries:next.dictionaryEntries??[],backgrounds:next.features.flatMap(f=>f.backgrounds.map(b=>({...b,file:f.file})))});return next;}
+function activate(next:Index){search?.close();index=next;index.revision=randomUUID();index.scannedAt=new Date().toISOString();search=new WorkspaceSearch({steps:next.stepDefinitions,selectors:next.selectors,dictionaries:next.dictionaryEntries??[],backgrounds:next.features.flatMap(f=>f.backgrounds.map(b=>({...b,file:f.file})))});return next;}
 const ensure = async ():Promise<Index> => {if(index)return index;if(!pendingScan)pendingScan=scan(config).then(activate).finally(()=>{pendingScan=undefined;});return pendingScan;};
 function publicIndex(i:Index):Index{return {...i,stats:{steps:i.stepDefinitions.length,selectors:i.selectors.length,features:i.features.length,scenarios:i.features.reduce((n,f)=>n+f.scenarios.length,0),backgrounds:i.features.reduce((n,f)=>n+f.backgrounds.length,0),dictionaries:i.dictionaryEntries?.length??0,methods:i.methods.length},features:i.features.map(f=>({...f,source:'',scenarios:[],backgrounds:[]})),stepDefinitions:[],selectors:[],methods:[],callEdges:[],dictionaryEntries:[]};}
 const paging=z.object({q:z.string().max(200).default(''),offset:z.coerce.number().int().min(0).max(10000000).default(0),limit:z.coerce.number().int().min(1).max(50).default(25),keyword:z.enum(['','Given','When','Then']).default('')});
@@ -87,6 +88,19 @@ app.post('/api/generator/plan',async(req,res)=>{
  const code=!first?.code?null:action==='visible'?`await Expect(${first.code}).ToBeVisibleAsync();`:action==='click'?`await ${first.code}.ClickAsync();`:`await ${first.code}.FillAsync(${JSON.stringify(value)});`;
  res.json({entry,source,flow:entry.selectors.map((s,n)=>({...s,order:n+1,rank:selectorRank(s.type,s.value),chosen:s===first})),code});
 });
+// Per-line binding status for the generator's live step lint.
+app.post('/api/steps/match',async(req,res)=>{
+ const {steps}=z.object({steps:z.array(z.object({keyword:z.enum(['Given','When','Then']),text:z.string().max(2000)})).max(100)}).parse(req.body);
+ const i=await ensure();
+ res.json(steps.map(s=>{const hits=i.stepDefinitions.filter(b=>b.keyword===s.keyword&&bindingMatches(b,s.text));return {status:hits.length===1?'Matched':hits.length?'Ambiguous':'Unmatched',binding:hits[0]?{pattern:hits[0].pattern,file:hits[0].file,line:hits[0].line}:null};}));
+});
+app.get('/api/dictionary/tree',async(_req,res)=>{
+ const i=await ensure();const tree=new Map<string,{page:string;section:string;fields:Set<string>}>();
+ for(const e of (i.dictionaryEntries??[]).slice(0,20000)){const k=e.page+'\u0000'+e.section;if(!tree.has(k))tree.set(k,{page:e.page,section:e.section,fields:new Set()});tree.get(k)!.fields.add(e.field);}
+ res.json([...tree.values()].map(t=>({...t,fields:[...t.fields].sort()})));
+});
+app.get('/api/features/folders',async(_req,res)=>{const i=await ensure();res.json([...new Set(i.features.map(f=>f.file.split('/').slice(0,-1).join('/')).filter(Boolean))].sort());});
+app.get('/api/health',(_req,res)=>res.json({ok:true,scannedAt:index?.scannedAt??null}));
 app.get('/api/project/model',async(_req,res)=>{res.json(await projectModel(config,await ensure()));});
 app.get('/api/project/files',async(req,res)=>{const folder=z.string().default('.').parse(req.query.folder);const dir=await confined(config.repositoryRoot,folder);const entries=await fs.readdir(dir,{withFileTypes:true});const {offset,limit}=paging.parse(req.query);const filtered=entries.filter(e=>!e.isSymbolicLink()&&!e.name.startsWith('.')&&!config.ignoredDirectories.includes(e.name)).sort((a,b)=>Number(b.isDirectory())-Number(a.isDirectory())||a.name.localeCompare(b.name));res.json({folder,items:filtered.slice(offset,offset+limit).map(e=>({name:e.name,file:path.relative(config.repositoryRoot,path.join(dir,e.name)).replaceAll('\\','/'),directory:e.isDirectory()})),total:filtered.length,hasNext:offset+limit<filtered.length});});
 app.post('/api/workspace', async (req, res) => {

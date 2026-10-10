@@ -36,6 +36,7 @@ export type Selector = Source & {
 export type Index = {
   stats?: { steps:number;selectors:number;features:number;scenarios:number;backgrounds:number;dictionaries:number;methods:number };
   revision?:string;
+  scannedAt?:string;
   dictionaryEntries?: DictionaryEntry[];
   schemaVersion: number;
   workspace: string;
