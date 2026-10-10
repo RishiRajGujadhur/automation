@@ -3,7 +3,7 @@ import AxeBuilder from '@axe-core/playwright';
 
 const TAGS = ['wcag2a', 'wcag2aa', 'wcag21aa', 'wcag22aa'];
 const prefs = (theme: string, extra: Record<string, unknown> = {}) => (p: Page) =>
-  p.addInitScript(([t, x]) => localStorage.setItem('tas:prefs', JSON.stringify({ theme: t, ...x })), [theme, extra] as const);
+  p.addInitScript(([t, x]) => localStorage.setItem('tas:prefs', JSON.stringify({ mode: 'advanced', theme: t, ...x })), [theme, extra] as const);
 
 for (const theme of ['light', 'matrix', 'midnight', 'nord']) {
   test(`theme "${theme}" meets WCAG 2.2 AA on key pages`, async ({ page }) => {
@@ -33,8 +33,8 @@ test('theme picker, editor theme, accent logo and native scrollbars', async ({ p
   const nav = dialog.getByRole('navigation', { name: 'Settings categories' });
   await nav.getByRole('button', { name: 'Appearance' }).click();
   await dialog.getByRole('radio', { name: 'teal' }).click();
-  const logo = await page.locator('.brand-mark').evaluate((el) => getComputedStyle(el).backgroundImage);
-  expect(logo).toContain('95, 212, 196'); // #5fd4c4
+  const logo = await page.locator('.brand-accent').evaluate((el) => getComputedStyle(el).color);
+  expect(logo).toBe('rgb(95, 212, 196)'); // text-only wordmark uses the teal accent #5fd4c4
   const scroll = await page.evaluate(() => getComputedStyle(document.documentElement).scrollbarColor);
   // Chromium reports scrollbar-color as color(srgb r g b / a); #5fd4c4 = 0.3725 0.8314 0.7686.
   expect(scroll).toMatch(/95, 212, 196|5fd4c4|0\.37\d* 0\.83\d* 0\.76/i);

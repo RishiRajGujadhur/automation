@@ -250,8 +250,8 @@
   .badge.amber, .badge.teal { color: #8a5a00 !important; }
   .badge.red, .field-error, .inline-error { color: #b42335 !important; }
   .badge.teal { color: #0b6f73 !important; }
-  .nav-tab.active, .settings-nav-item.active, .segmented-item[data-state='on'], .tabs-trigger[data-state='active'] { color: #4c2fc0 !important; }
-  .text-button, a { color: #4c2fc0; }
+  .nav-tab.active, .settings-nav-item.active, .segmented-item[data-state='on'], .tabs-trigger[data-state='active'] { color: var(--accent-text) !important; }
+  .text-button, a { color: var(--accent-text); }
   .button.primary { color: #fff !important; }
   .record-dot { background: #d6334a; }
   .dialog-overlay { background: #1f243066; }
@@ -653,4 +653,100 @@
 // Claude-style settings nav: the active item is a filled row with strong text (not accent-coloured text).
 :root[data-theme] .settings-nav-item.active.active {
   color: var(--text-strong) !important;
+}
+
+// ---- Text-only wordmark (follows the accent) ----
+.brand {
+  gap: 10px;
+}
+.brand-word {
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: -0.3px;
+  white-space: nowrap;
+}
+.brand-accent {
+  color: var(--accent-text, var(--accent));
+}
+.button.primary {
+  color: var(--on-accent, #fff) !important;
+}
+:root[data-theme='matrix'] {
+  --on-accent: #001a06;
+  --accent-text: #00ff41;
+}
+
+// ---- Interface mode ----
+.mode-switch {
+  margin-left: 4px;
+  .segmented-item {
+    padding: 5px 10px;
+    font-size: 11px;
+  }
+}
+.mode-banner {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  padding: 10px 14px;
+  margin-bottom: 14px;
+  border: 1px solid color-mix(in srgb, var(--accent) 40%, transparent);
+  border-radius: 10px;
+  background: var(--accent-soft);
+  font-size: 12.5px;
+  span {
+    flex: 1;
+    min-width: 220px;
+  }
+}
+
+// ---- Accent picker ----
+.accent-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(118px, 1fr));
+  gap: 8px;
+}
+.accent-option {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--surface);
+  color: var(--text);
+  font-size: 12.5px;
+  text-align: left;
+  cursor: pointer;
+  small {
+    color: var(--text-muted);
+    font-size: 11px;
+  }
+  &.selected {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 1px var(--accent);
+  }
+  &:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+}
+.accent-dot {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  border: 1px solid #ffffff33;
+}
+@media (max-width: 640px) {
+  .brand > span.brand-word {
+    display: inline !important;
+    .brand-light {
+      display: none;
+    }
+  }
+  .mode-switch {
+    display: none;
+  }
 }

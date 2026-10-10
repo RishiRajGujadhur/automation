@@ -80,7 +80,6 @@ export default function Dashboard({ index, revision, onNavigate, recent = [], on
         <Card id="dash-getting-started" className="checklist" label="Getting started" title="Getting started" badge={<span className="subtle">{done.size} of {milestones.length} done</span>}>
           <div className="checklist-head">
             <div>
-              <span className="micro-label">GETTING STARTED</span>
               <strong>{done.size} of {milestones.length} done</strong>
             </div>
             <Meter value={done.size} max={milestones.length} label="Getting started" tone="purple" />

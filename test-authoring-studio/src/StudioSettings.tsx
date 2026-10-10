@@ -12,6 +12,8 @@ import { Button, Select } from './radix';
 import { Highlight } from './ui';
 import { appThemes, editorThemes, resolveEditorTheme, type AppThemeId, type EditorThemeId } from './themes';
 import { labelled } from './editor/a11y';
+import { accents, contrast } from './accents';
+import { defaultPrefs } from './radix2';
 
 type Settings = { webPort: number; apiPort: number; tracing: { enabled: boolean; screenshots: boolean; snapshots: boolean; sources: boolean } };
 type Trace = { name: string; size: number; modified: string };
@@ -70,6 +72,10 @@ export default function StudioSettings({ onNotice, onWorkspace, shortcuts, onClo
 
   const rows: Row[] = useMemo(() => [
     // General
+    {
+      id: 'mode', section: 'General', title: 'Interface mode', description: 'Basic shows Dashboard, Test Generator and Playwright Recorder. Advanced adds Features, Dictionary Inspector and the ⋯ menu (Step Catalog, Backgrounds, Selectors, Project Explorer, Config). Ctrl/Cmd+Shift+A switches.', keywords: 'basic advanced simple navigation menu hide pages',
+      control: <Segmented label="Interface mode" value={prefs.mode} onValueChange={(v) => setPrefs({ mode: v })} options={[{ value: 'basic', label: 'Basic' }, { value: 'advanced', label: 'Advanced' }]} />,
+    },
     { id: 'stats', section: 'General', title: 'Show dashboard statistics', description: 'The counts row at the top of the Dashboard.', keywords: 'stats counts dashboard', control: sw('pref-stats', prefs.showStats, (v) => setPrefs({ showStats: v }), 'Show dashboard statistics') },
     { id: 'haptics', section: 'General', title: 'Haptic feedback', description: 'Short vibrations on touch devices when you accept, remove or validate.', keywords: 'vibrate mobile touch', control: sw('pref-haptics', prefs.haptics, (v) => setPrefs({ haptics: v }), 'Haptic feedback') },
     // Appearance
@@ -90,9 +96,27 @@ export default function StudioSettings({ onNotice, onWorkspace, shortcuts, onClo
         </div>
       ),
     },
-    { id: 'accent', section: 'Appearance', title: 'Accent colour', description: 'Primary buttons, active states, focus rings, scrollbars and the logo.', keywords: 'accent color colour logo scrollbar', control: <Segmented label="Accent colour" value={prefs.accent} onValueChange={(v) => setPrefs({ accent: v })} options={(['violet', 'teal', 'blue', 'amber'] as const).map((a) => ({ value: a, label: <span className={`swatch ${a}`} aria-label={a} role="img" /> }))} /> },
+    {
+      id: 'accent', section: 'Appearance', title: 'Accent colour', description: 'Primary buttons, active states, focus rings, scrollbars and the wordmark. Every accent meets WCAG 2.2 AA (4.5:1) for text and for button labels.', keywords: 'accent color colour logo scrollbar wcag contrast violet indigo blue cyan teal green amber orange rose pink slate',
+      block: (
+        <div className="accent-grid" role="radiogroup" aria-label="Accent colour">
+          {accents.map((a) => {
+            const text = prefs.theme === 'light' ? a.strong : a.accent;
+            const bg = prefs.theme === 'light' ? '#ffffff' : '#121722';
+            return (
+              <button key={a.id} role="radio" aria-checked={prefs.accent === a.id} aria-label={a.id} className={`accent-option ${prefs.accent === a.id ? 'selected' : ''}`} onClick={() => setPrefs({ accent: a.id })} title={`${a.label}: text ${contrast(text, bg).toFixed(1)}:1, button ${contrast(a.onStrong, a.strong).toFixed(1)}:1`}>
+                <span className="accent-dot" style={{ background: `linear-gradient(135deg, ${a.accent} 50%, ${a.strong} 50%)` }} aria-hidden="true" />
+                <span>{a.label}</span>
+                <small>{contrast(text, bg).toFixed(1)}:1</small>
+              </button>
+            );
+          })}
+        </div>
+      ),
+    },
     { id: 'density', section: 'Appearance', title: 'Density', description: 'Spacing inside cards and forms.', keywords: 'compact comfortable spacing', control: <Segmented label="Density" value={prefs.density} onValueChange={(v) => setPrefs({ density: v })} options={[{ value: 'comfortable', label: 'Comfortable' }, { value: 'compact', label: 'Compact' }]} /> },
     { id: 'text', section: 'Appearance', title: 'Text size', description: 'Base font size for the interface.', keywords: 'font size zoom', control: <Segmented label="Text size" value={prefs.textSize} onValueChange={(v) => setPrefs({ textSize: v })} options={[{ value: 'small', label: 'A−' }, { value: 'medium', label: 'A' }, { value: 'large', label: 'A+' }]} /> },
+    { id: 'appearance-reset', section: 'Appearance', title: 'Reset appearance', description: 'Theme, accent, density and text size back to their defaults.', keywords: 'default reset theme accent', control: <Button variant="ghost" size="small" onClick={() => { setPrefs({ theme: defaultPrefs.theme, accent: defaultPrefs.accent, density: defaultPrefs.density, textSize: defaultPrefs.textSize, editorTheme: defaultPrefs.editorTheme }); onNotice('Appearance reset to defaults.'); }}><RotateCcw size={13} aria-hidden="true" />Reset</Button> },
     // Code editor
     {
       id: 'editor-theme', section: 'Code editor', title: 'Editor theme', description: 'Syntax colours for Gherkin, C#, XML and diffs. Themes from CodeMirror and ThemeMirror.', keywords: 'codemirror thememirror syntax highlighting dracula cobalt matrix',

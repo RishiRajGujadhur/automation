@@ -5,7 +5,14 @@ const { webPort } = readSettings();
 export default defineConfig({
   testDir: './tests/e2e',
   workers: 1,
-  use: { baseURL: `http://127.0.0.1:${webPort}`, viewport: { width: 1440, height: 1000 } },
+  // Snapshot fixtures/ before the run and restore it afterwards (returned teardown).
+  globalSetup: './tests/e2e/fixtures-guard.ts',
+  use: {
+    baseURL: `http://127.0.0.1:${webPort}`,
+    viewport: { width: 1440, height: 1000 },
+    // Most specs exercise every page, so they start in Advanced mode; basic.spec.ts overrides this.
+    storageState: { cookies: [], origins: [{ origin: `http://127.0.0.1:${webPort}`, localStorage: [{ name: 'tas:prefs', value: JSON.stringify({ mode: 'advanced' }) }] }] },
+  },
   webServer: {
     command: 'npm run dev',
     url: `http://127.0.0.1:${webPort}`,

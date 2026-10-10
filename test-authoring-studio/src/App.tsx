@@ -120,7 +120,8 @@ const moreTabs = [
 ] as const;
 const shortcuts: [string, string][] = [
   ['Ctrl/Cmd + K', 'Command palette: go to any page or add a step'],
-  ['Alt + 1…4', 'Dashboard, Test Generator, Features, Dictionary Inspector'],
+  ['Alt + 1…4', 'Main pages in navigation order (Basic: Dashboard, Test Generator, Recorder)'],
+  ['Ctrl/Cmd + Shift + A', 'Switch between Basic and Advanced mode'],
   ['/', 'Search feature files'],
   ['?', 'Show this shortcut list'],
   ['Ctrl/Cmd + .', 'Focus mode (hide navigation chrome)'],
@@ -150,7 +151,8 @@ export default function App() {
   const editorTheme = useEditorTheme();
   const [index, setIndex] = useState<Index>();
   const [config, setConfig] = useState<any>();
-  const [tab, setTab] = useLocalState('tab', 'Features');
+  const { prefs: startPrefs } = usePrefs();
+  const [tab, setTab] = useLocalState('tab', startPrefs.mode === 'advanced' ? 'Features' : 'Dashboard');
   const [view, setView] = useLocalState('view', 'recorder');
   const [feature, setFeature] = useState<Feature>();
   const [source, setSource] = useState('');
@@ -189,11 +191,22 @@ export default function App() {
   const [generatorSeed, setGeneratorSeed] = useState<GeneratorSeed>();
   const [edges, setEdges] = useState<Index['callEdges']>([]);
   const revision = index?.revision;
+  const modeRef = useRef('basic');
   const [recent, setRecent] = useLocalState<string[]>('recent', []);
   const [recentPages, setRecentPages] = useLocalState<string[]>('recentPages', []);
   const [recentUrls, setRecentUrls] = useLocalState<string[]>('recentUrls', []);
   const [online, setOnline] = useState(true);
   const { prefs, setPrefs } = usePrefs();
+  const basic = prefs.mode !== 'advanced';
+  modeRef.current = prefs.mode;
+  // Basic mode: Dashboard, Test Generator and the Playwright Recorder. Advanced: every page.
+  const navTabs = basic ? tabs.filter((t) => t.name === 'Dashboard' || t.name === 'Test Generator') : tabs;
+  const onRecorder = tab === 'Features' && view === 'recorder';
+  const hiddenInBasic = basic && !['Dashboard', 'Test Generator'].includes(tab) && !onRecorder;
+  const setMode = (mode: 'basic' | 'advanced') => {
+    setPrefs({ mode });
+    setNotice(mode === 'advanced' ? 'Advanced mode: every page is in the navigation.' : 'Basic mode: Dashboard, Test Generator and Playwright Recorder. Other pages stay reachable from Ctrl/Cmd+K.');
+  };
   const confirm = useConfirm();
   const [sidebarWidth, setSidebarWidth] = useLocalState('sidebarWidth', SIDEBAR_DEFAULT);
   const [toastKey, setToastKey] = useState(0);
@@ -338,7 +351,16 @@ export default function App() {
       const typing = /^(INPUT|TEXTAREA|SELECT)$/.test((e.target as HTMLElement)?.tagName) || (e.target as HTMLElement)?.isContentEditable;
       if (e.altKey && /^[1-4]$/.test(e.key)) {
         e.preventDefault();
-        setTab(tabs[Number(e.key) - 1].name);
+        const n = Number(e.key);
+        if (modeRef.current !== 'advanced') {
+          if (n === 1) setTab('Dashboard');
+          if (n === 2) setTab('Test Generator');
+          if (n === 3) { setTab('Features'); setView('recorder'); }
+        } else setTab(tabs[n - 1].name);
+      }
+      if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key.toLowerCase() === 'a') {
+        e.preventDefault();
+        setPrefs({ mode: modeRef.current === 'advanced' ? 'basic' : 'advanced' });
       }
       if (!typing && !e.ctrlKey && !e.metaKey && e.key === '/') {
         e.preventDefault();
@@ -481,11 +503,12 @@ export default function App() {
           : `click("${a.target?.description ?? a.target?.name ?? 'element'}")`;
   const matched = matches.filter((m) => m.candidates.length).length;
   const menuProps = {
-    pages: moreTabs.map((t) => ({ ...t })),
-    primary: tabs.map((t) => ({ name: t.name, icon: t.icon, hint: t.shortcut })),
+    pages: basic ? [] : moreTabs.map((t) => ({ ...t })),
+    primary: navTabs.map((t, i) => ({ name: t.name, icon: t.icon, hint: `Alt+${i + 1}` })),
     active: tab,
     onNavigate: navigate,
     commands: [
+        { label: basic ? 'Switch to Advanced mode' : 'Switch to Basic mode', icon: SlidersHorizontal, run: () => setMode(basic ? 'advanced' : 'basic'), shortcut: 'Ctrl Shift A' },
         { label: 'Command palette', icon: CommandIcon, run: () => setPaletteOpen(true), shortcut: 'Ctrl K' },
         { label: 'Start a recording', icon: Circle, run: () => { setTab('Features'); setView('recorder'); setModal('record'); } },
         { label: 'New feature', icon: Plus, run: () => beginFeature() },
@@ -544,11 +567,9 @@ export default function App() {
       {guideOpen && <StudioTour onNavigate={navigateTour} onFinish={finishTour} />}
       <header className="app-header">
         <div className="brand">
-          <div className="brand-mark">
-            <Layers3 size={23} />
-          </div>
-          <span>
-            TestAuthoring<span className="brand-light"> Studio</span>
+          <span className="brand-word" aria-label="TestAuthoring Studio">
+            <span className="brand-accent">TestAuthoring</span>
+            <span className="brand-light"> Studio</span>
           </span>
           <Badge tone="purple">LOCAL</Badge>
         </div>
@@ -610,13 +631,13 @@ export default function App() {
       <nav className="main-nav">
         <NavigationMenu.Root className="nav-root" aria-label="Main">
         <NavigationMenu.List className="nav-tabs">
-          {tabs.map((t) => (
+          {navTabs.map((t, i) => (
             <NavigationMenu.Item key={t.name}>
             <NavigationMenu.Link asChild active={tab === t.name}>
             <button
               key={t.name}
               className={`nav-tab ${tab === t.name ? 'active' : ''}`}
-              title={`${t.name} (${t.shortcut})`}
+              title={`${t.name} (Alt+${i + 1})`}
               onClick={() => withTransition(() => {
                 setTab(t.name);
                 setCatalogQuery('');
@@ -631,7 +652,7 @@ export default function App() {
             </NavigationMenu.Link>
             </NavigationMenu.Item>
           ))}
-          {moreTabs.filter((t) => t.name === tab).map((t) => (
+          {!basic && moreTabs.filter((t) => t.name === tab).map((t) => (
             <NavigationMenu.Item key={t.name}>
               <button className="nav-tab active" aria-current="page">
                 <Icon icon={t.icon} />
@@ -639,7 +660,7 @@ export default function App() {
               </button>
             </NavigationMenu.Item>
           ))}
-          <NavigationMenu.Item><AppMenuButton {...menuProps} /></NavigationMenu.Item>
+          {!basic && <NavigationMenu.Item><AppMenuButton {...menuProps} /></NavigationMenu.Item>}
         </NavigationMenu.List>
         </NavigationMenu.Root>
         <button
@@ -652,6 +673,10 @@ export default function App() {
           <span className="record-dot" />
           Playwright Recorder<Badge>β</Badge>
         </button>
+        <ToggleGroup.Root type="single" className="segmented mode-switch" aria-label="Interface mode" value={prefs.mode} onValueChange={(v) => { if (v) setMode(v as 'basic' | 'advanced'); }}>
+          <ToggleGroup.Item value="basic" className="segmented-item" aria-label="Basic mode" title="Basic: Dashboard, Test Generator, Recorder (Ctrl/Cmd+Shift+A)">Basic</ToggleGroup.Item>
+          <ToggleGroup.Item value="advanced" className="segmented-item" aria-label="Advanced mode" title="Advanced: every page (Ctrl/Cmd+Shift+A)">Advanced</ToggleGroup.Item>
+        </ToggleGroup.Root>
         <div className="nav-trailing">
           {tab === 'Features' ? (
             <ToggleGroup.Root type="single" className="segmented" aria-label="Feature view" value={view} onValueChange={(v) => { if (v) withTransition(() => setView(v)); }}>
@@ -733,6 +758,13 @@ export default function App() {
         )}
         <main className="main-content" id="main" tabIndex={-1} aria-describedby="page-description">
           <p id="page-description" className="sr-only">{pageDescription}</p>
+          {hiddenInBasic && (
+            <div className="mode-banner" role="status">
+              <span><strong>{pageTitle}</strong> is an Advanced page. It is hidden from the navigation in Basic mode.</span>
+              <Button size="tiny" variant="soft" onClick={() => setMode('advanced')}>Switch to Advanced</Button>
+              <Button size="tiny" variant="ghost" onClick={() => setTab('Dashboard')}>Back to Dashboard</Button>
+            </div>
+          )}
           {['Dashboard', 'Test Generator'].includes(tab) && (
             <ContextBar index={index} config={config} recordStatus={recordStatus} revision={revision} />
           )}
@@ -1438,12 +1470,18 @@ export default function App() {
         </main>
       </div>
       <nav className="bottom-nav" aria-label="Main (mobile)">
-        {tabs.map((t) => (
+        {navTabs.map((t) => (
           <button key={t.name} className={tab === t.name ? 'active' : ''} aria-current={tab === t.name ? 'page' : undefined} onClick={() => navigate(t.name)}>
             <t.icon size={20} />
             <span>{t.name.replace('Dictionary Inspector', 'Dictionary').replace('Test Generator', 'Generator')}</span>
           </button>
         ))}
+        {basic ? (
+          <button className={onRecorder ? 'active' : ''} aria-current={onRecorder ? 'page' : undefined} onClick={() => { setTab('Features'); setView('recorder'); }}>
+            <Circle size={20} />
+            <span>Recorder</span>
+          </button>
+        ) : null}
         <AppMenuButton {...menuProps} />
       </nav>
       <footer className="status-bar">

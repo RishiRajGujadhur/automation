@@ -8,6 +8,7 @@ import * as SwitchPrimitive from '@radix-ui/react-switch';
 import * as ToggleGroup from '@radix-ui/react-toggle-group';
 import { ChevronDown } from 'lucide-react';
 import type { AppThemeId, EditorThemeId } from './themes';
+import { accentById, type AccentId } from './accents';
 
 /* ------------------------------------------------------------------ Tooltip + IconButton */
 export function Tip({ content, shortcut, children, side = 'bottom' }: { content: ReactNode; shortcut?: string; children: ReactNode; side?: 'top' | 'bottom' | 'left' | 'right' }) {
@@ -154,8 +155,8 @@ export function Segmented<T extends string>({ value, onValueChange, options, lab
 }
 
 /* ------------------------------------------------------------------ Preferences */
-export type Prefs = { density: 'comfortable' | 'compact'; textSize: 'small' | 'medium' | 'large'; motion: 'system' | 'reduce'; contrast: 'normal' | 'high'; theme: AppThemeId; editorTheme: EditorThemeId; accent: 'violet' | 'teal' | 'blue' | 'amber'; haptics: boolean; sidebar: boolean; focus: boolean; showStats: boolean };
-export const defaultPrefs: Prefs = { density: 'comfortable', textSize: 'medium', motion: 'system', contrast: 'normal', theme: 'studio', editorTheme: 'auto', accent: 'violet', haptics: true, sidebar: true, focus: false, showStats: true };
+export type Prefs = { density: 'comfortable' | 'compact'; textSize: 'small' | 'medium' | 'large'; motion: 'system' | 'reduce'; contrast: 'normal' | 'high'; theme: AppThemeId; editorTheme: EditorThemeId; accent: AccentId; mode: 'basic' | 'advanced'; haptics: boolean; sidebar: boolean; focus: boolean; showStats: boolean };
+export const defaultPrefs: Prefs = { density: 'comfortable', textSize: 'medium', motion: 'system', contrast: 'normal', theme: 'studio', editorTheme: 'auto', accent: 'violet', mode: 'basic', haptics: true, sidebar: true, focus: false, showStats: true };
 const PrefsContext = createContext<{ prefs: Prefs; setPrefs: (p: Partial<Prefs>) => void }>({ prefs: defaultPrefs, setPrefs: () => {} });
 export const usePrefs = () => useContext(PrefsContext);
 /** Applies preferences as data attributes on <html> so plain CSS can respond. */
@@ -171,6 +172,11 @@ export function PrefsProvider({ children }: { children: ReactNode }) {
     el.dataset.motion = prefs.motion;
     el.dataset.contrast = prefs.contrast;
     el.dataset.accent = prefs.accent;
+    el.dataset.mode = prefs.mode;
+    // Accent tokens come from src/accents.ts (contrast-tested). Matrix keeps its own phosphor green.
+    const a = accentById(prefs.accent);
+    const vars: Record<string, string> = prefs.theme === 'matrix' ? {} : { '--accent': a.accent, '--accent-strong': a.strong, '--on-accent': a.onStrong, '--accent-text': prefs.theme === 'light' ? a.strong : a.accent, '--accent-soft': (prefs.theme === 'light' ? a.strong : a.accent) + (prefs.theme === 'light' ? '1f' : '24') };
+    for (const k of ['--accent', '--accent-strong', '--on-accent', '--accent-text', '--accent-soft']) { if (vars[k]) el.style.setProperty(k, vars[k]); else el.style.removeProperty(k); }
     el.dataset.theme = prefs.theme;
     el.style.colorScheme = prefs.theme === 'light' ? 'light' : 'dark';
     document.querySelector('meta[name="theme-color"]')?.setAttribute('content', getComputedStyle(el).getPropertyValue('--bg').trim() || '#0b0e16');

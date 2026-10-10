@@ -104,6 +104,24 @@ The tab bar shows only the four primary pages. To reach Step Catalog, Background
 
 The studio menu is a Radix context menu (`@radix-ui/react-context-menu`). It also offers Command palette, Start a recording, New feature, Rescan, Workspace settings and Keyboard shortcuts. Menus on cards and rows take priority over it. Text inputs and code editors keep the browser's own right-click menu (copy, paste, spellcheck).
 
+### Basic and Advanced mode
+
+**Basic mode is the default.** The navigation shows **Dashboard**, **Test Generator** and **Playwright Recorder**, and a new visitor lands on the Dashboard. **Advanced mode** adds Features, Dictionary Inspector and the ⋯ menu (Step Catalog, Backgrounds, Selectors, Project Explorer, Config).
+
+Ways to switch: the **Basic / Advanced** pill in the nav bar, Settings → General → Interface mode, the studio menu, or **Ctrl/Cmd+Shift+A**. In Basic mode, Alt+1/2/3 open Dashboard, Test Generator and Recorder.
+
+Hidden pages stay reachable through Ctrl/Cmd+K and links. When you open one in Basic mode, a banner explains it's an Advanced page and offers **Switch to Advanced** or **Back to Dashboard**.
+
+### Accent colours
+
+There are eleven accents: Violet, Indigo, Blue, Cyan, Teal, Green, Amber, Orange, Rose, Pink and Slate. They're defined in `src/accents.ts`. Each one has two tones:
+- a light tone for text and indicators on dark surfaces;
+- a strong tone for filled buttons (and for text on the Light theme).
+
+`tests/accents.test.ts` checks every accent against WCAG 2.x relative luminance: at least 4.5:1 as text on all dark-theme surfaces, as button labels, and as text on the Light theme's surfaces. The accent picker shows each accent's measured ratio. **Reset appearance** restores the default theme, accent, density, text size and editor theme.
+
+The **wordmark** is text only, with "TestAuthoring" in the accent colour.
+
 ### Settings, themes and editor themes
 
 Settings open from the sliders icon, the studio menu, or the command palette. The layout follows Claude Code's settings:
