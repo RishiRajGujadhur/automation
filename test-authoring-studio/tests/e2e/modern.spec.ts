@@ -53,12 +53,16 @@ test('Radix dialog, alert dialog, tabs, accordion, tooltip, toast, preferences a
   await expect(page.locator('#feature-sidebar')).toBeHidden();
   await page.keyboard.press('Control+b');
 
-  // Accordion: collapse/expand all generator steps.
+  // Wizard: Next/Back move one step at a time; step 4 auto-runs validation.
   await page.keyboard.press('Alt+2');
-  await page.getByRole('button', { name: 'Collapse all steps' }).click();
+  await page.getByRole('button', { name: /Next: Mapping/ }).click();
+  await expect(page.getByLabel('Section name')).toBeVisible();
   await expect(page.getByLabel('Scenario name')).toHaveCount(0);
-  await page.getByRole('button', { name: 'Expand all steps' }).click();
-  await expect(page.getByLabel('Scenario name')).toBeVisible();
+  await page.getByRole('button', { name: /Next: Selector/ }).click();
+  await page.getByRole('button', { name: /Next: Validate/ }).click();
+  await expect(page.getByRole('progressbar', { name: 'Quality gate' })).toBeVisible();
+  await page.getByRole('button', { name: 'Back' }).click();
+  await expect(page.getByRole('tab', { name: /Step 3: Selector/ })).toHaveAttribute('aria-selected', 'true');
 
   // Dashboard checklist shows progress.
   await page.keyboard.press('Alt+1');

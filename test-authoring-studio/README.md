@@ -104,6 +104,38 @@ The tab bar shows only the four primary pages. To reach Step Catalog, Background
 
 The studio menu is a Radix context menu (`@radix-ui/react-context-menu`). It also offers Command palette, Start a recording, New feature, Rescan, Workspace settings and Keyboard shortcuts. Menus on cards and rows take priority over it. Text inputs and code editors keep the browser's own right-click menu (copy, paste, spellcheck).
 
+### Test Generator wizard
+
+The four steps form a **wizard**: one step at a time, built on Radix Tabs. I chose this over a driver.js-style tour because it gates progress and keeps step state. The existing Joyride tour remains for walkthroughs.
+- **Stepper:** each step shows a live summary and a status (done ✓, needs attention, current). Clicking a step jumps to it. A progress bar tracks completion.
+- **Back / Next:** Next is blocked while the current step has problems, and a "Before continuing" list explains what to fix. Step 3 allows **Continue without a match**. Entering step 4 runs the dry-run validation automatically. The final step's primary button is **Regenerate code & save**.
+- **Remembered:** the current step survives a reload. "Add dictionary entry" on step 4 jumps to step 3's form.
+
+### Resizable sidebar
+
+Drag the explorer's right edge to resize it, as in the Claude desktop app.
+- **Cursor:** the edge shows a `col-resize` cursor and an accent line on hover, and the whole page keeps that cursor while dragging.
+- **Collapse and reset:** drag it nearly shut to collapse it (Ctrl/Cmd+B brings it back). Double-click resets it to 260 px.
+- **Keyboard:** the edge is focusable; ←/→ resize (Shift for bigger steps), Home/End jump to the minimum/maximum, Enter resets.
+- **Limits:** the width (180–520 px) is remembered per browser.
+
+### Feature editor
+
+The editor is CodeMirror 6 with `@codemirror/lint` and `@codemirror/autocomplete`.
+- **Syntax errors as you type:** checked with the official `@cucumber/gherkin` parser, shown with wavy underlines, gutter markers and a live "N errors · N warnings" count. F8 or the count jumps to the next problem; Ctrl+Shift+M lists them all.
+- **Binding check:** step lines are checked against the repository index. Unbound steps get a warning; ambiguous ones say how many bindings match. Scenario Outline steps with `<placeholders>` are skipped.
+- **Step autocomplete from real bindings:** type `When Login` and the existing step appears, e.g. `When Login as ${roleName} to ${appName}`. Placeholders are named after the C# method parameters, and Tab moves between them. Ctrl+Space opens suggestions. Each suggestion shows its C# attribute, class and source location.
+- **Keyword autocomplete** at the start of a line: Feature, Scenario, Scenario Outline, Background, Examples, Rule, Given…But.
+- **Hover a step** to see the binding it resolves to.
+- **Format document** (Shift+Alt+F): canonical indentation and aligned table columns. **Toggle comment** (Ctrl+/).
+- **Right-click menu:** Run tests…, Preview changes (Ctrl+S), Validate bindings (Ctrl+Enter), Suggest steps, Format, Toggle comment, Next problem, Show problems, Cut, Copy, Paste, Select all.
+
+### XML dictionary checking
+
+Dictionary XML (Dictionary Inspector source tab, source previews, and generator snippets) uses `@codemirror/lang-xml` for parsing and highlighting.
+- **Well-formedness:** errors come from the browser's XML parser, located by line and column.
+- **Dictionary rules:** missing `XRefCode`, a Field with no Selector, an unsupported selector `Type`, an empty value, duplicate fields in a section, a CSS/XPath selector listed first, brittle `nth-child` selectors, and XPath that needs a documented exception.
+
 ### Modern design layer (2025–2026)
 
 Styles are in `src/modern.scss`. Preferences are stored per browser and applied as `data-*` attributes on `<html>`.

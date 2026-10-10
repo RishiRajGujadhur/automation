@@ -21,6 +21,9 @@ import * as Tabs from '@radix-ui/react-tabs';
 import * as NavigationMenu from '@radix-ui/react-navigation-menu';
 import { IconButton, IndeterminateProgress, Separator, Switch, Segmented, usePrefs, useConfirm, haptic, withTransition, Meter } from './radix2';
 import { markDone } from './progress';
+import SidebarResizer, { SIDEBAR_DEFAULT } from './SidebarResizer';
+import GherkinEditor from './editor/GherkinEditor';
+import { xmlExtensions } from './editor/xml';
 import AppMenu, { AppMenuButton } from './AppMenu';
 import '@fontsource-variable/dm-sans';
 import '@fontsource/ibm-plex-mono/400.css';
@@ -185,27 +188,35 @@ export default function App() {
   const [online, setOnline] = useState(true);
   const { prefs, setPrefs } = usePrefs();
   const confirm = useConfirm();
+  const [sidebarWidth, setSidebarWidth] = useLocalState('sidebarWidth', SIDEBAR_DEFAULT);
   const [toastKey, setToastKey] = useState(0);
   useEffect(() => { if (notice) setToastKey((k) => k + 1); }, [notice]);
   useEffect(() => { if (index) markDone('scan'); }, [index]);
   useEffect(() => { if (tab === 'Test Generator') markDone('generator'); if (tab === 'Dictionary Inspector') markDone('dictionary'); }, [tab]);
   // Deep links: #/<tab>[/<view>] is shareable and drives back/forward.
+  const initialHash = useRef(location.hash);
+  const hashSynced = useRef(false);
   const slug = (t: string) => t.toLowerCase().replace(/\s+/g, '-');
   useEffect(() => {
-    const fromHash = () => {
-      const [, t, v] = location.hash.split('/');
+    const fromHash = (hash = location.hash) => {
+      const [, t, v] = hash.split('/');
       const all = [...tabs, ...moreTabs].map((x) => x.name);
       const match = all.find((x) => slug(x) === t);
       if (match) { setTab(match); if (v && ['editor', 'builder', 'recorder'].includes(v)) setView(v); }
     };
-    fromHash();
-    window.addEventListener('popstate', fromHash);
-    return () => window.removeEventListener('popstate', fromHash);
+    // Use the hash captured at first render: StrictMode re-runs effects after the sync effect below has rewritten it.
+    fromHash(initialHash.current);
+    const onPop = () => fromHash();
+    window.addEventListener('popstate', onPop);
+    return () => window.removeEventListener('popstate', onPop);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
   useEffect(() => {
     const next = `#/${slug(tab)}${tab === 'Features' ? '/' + view : ''}`;
-    if (location.hash !== next) history.pushState(null, '', next);
+    if (location.hash === next) return;
+    // The first sync replaces (no extra history entry); later page changes push so Back works.
+    if (!hashSynced.current) { hashSynced.current = true; if (!initialHash.current) history.replaceState(null, '', next); return; }
+    history.pushState(null, '', next);
   }, [tab, view]);
   // Glass header once content scrolls under it.
   useEffect(() => {
@@ -626,7 +637,7 @@ export default function App() {
             onClick={() => setMobileExplorer(false)}
           />
         )}
-        <aside id="feature-sidebar" className={`sidebar ${mobileExplorer ? 'mobile-open' : ''}`}>
+        <aside id="feature-sidebar" className={`sidebar ${mobileExplorer ? 'mobile-open' : ''}`} style={{ width: sidebarWidth }}>
           <FeatureExplorer
             key={index?.workspace + ':' + config?.repositoryRoot}
             features={index?.features ?? []}
@@ -675,6 +686,9 @@ export default function App() {
             </div>
           </div>
         </aside>
+        {prefs.sidebar && !prefs.focus && (
+          <SidebarResizer width={sidebarWidth} onWidth={setSidebarWidth} onCollapse={() => { setPrefs({ sidebar: false }); setSidebarWidth(SIDEBAR_DEFAULT); setNotice('Explorer hidden. Press Ctrl/Cmd+B to show it again.'); }} label="Resize feature explorer" />
+        )}
         <main className="main-content">
           <div className="page-heading">
             <div className="page-title">
@@ -1156,12 +1170,22 @@ export default function App() {
                   Validate
                 </Button>
               </div>
-              <CodeMirror
+              <GherkinEditor
                 value={source}
-                height="470px"
-                theme={oneDark}
-                extensions={[StreamLanguage.define(gherkin)]}
                 onChange={setSource}
+                onNotice={setNotice}
+                onPreview={() => previewChange()}
+                onValidate={() =>
+                  work(async () => {
+                    setValidation(await api('/scenario/validate', { source }));
+                    setNotice('Syntax is valid. Binding results are shown below.');
+                  })
+                }
+                onRun={() => {
+                  setRunProject(config.targetProject.endsWith('.csproj') ? config.targetProject : '');
+                  setRunFilter('FullyQualifiedName~' + (feature?.scenarios[0]?.name ?? '').replace(/\s/g, ''));
+                  setModal('run');
+                }}
               />
               {validation && (
                 <div className="validation-results">
@@ -1589,15 +1613,11 @@ export default function App() {
                   <CodeMirror
                     value={sourcePeek}
                     theme={oneDark}
-                    extensions={[
-                      StreamLanguage.define(
-                        sourceTitle.includes('.feature:')
-                          ? gherkin
-                          : sourceTitle.includes('.xml:')
-                            ? xml
-                            : csharp,
-                      ),
-                    ]}
+                    extensions={
+                      sourceTitle.includes('.xml:')
+                        ? xmlExtensions(true)
+                        : [StreamLanguage.define(sourceTitle.includes('.feature:') ? gherkin : csharp)]
+                    }
                     height="460px"
                     editable={false}
                   />

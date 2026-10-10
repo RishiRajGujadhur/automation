@@ -45,8 +45,10 @@ test('step lint, suggestions, file state, palette commands, undo and accept-all'
   await page.getByLabel('Target feature file').fill('Login.feature');
   await expect(page.getByText('Existing file. The scenario will be appended.')).toBeVisible();
 
-  // Quick fix on a failing dictionary check.
+  // Quick fix on a failing dictionary check (step 4 → jumps to step 3's form).
+  await page.getByRole('tab', { name: /Step 2: Page object/ }).click();
   await page.getByLabel('Field name').fill('DoesNotExist');
+  await page.getByRole('tab', { name: /Step 4: Validation/ }).click();
   await page.getByRole('button', { name: 'Run dry-run validation' }).click();
   await expect(page.getByRole('button', { name: 'Add dictionary entry' })).toBeVisible();
   await page.getByRole('button', { name: 'Add dictionary entry' }).click();

@@ -40,12 +40,14 @@ test('studio context menu and Formik validation guard every form', async ({ page
   await expect(page.getByRole('button', { name: 'Create draft' })).toBeEnabled();
   await page.keyboard.press('Escape');
 
-  // Generator: invalid draft shows a summary and blocks saving.
+  // Generator wizard: an invalid step blocks Next with a summary; Ctrl+S is guarded too.
   await page.keyboard.press('Alt+2');
   await page.getByLabel('Scenario text').fill('click the button');
-  await page.getByRole('button', { name: /Regenerate code/ }).click();
-  await expect(page.getByText(/to fix before saving/)).toBeVisible();
+  await page.getByRole('button', { name: /Next: Mapping/ }).click();
+  await expect(page.getByText('Before continuing:')).toBeVisible();
   await expect(page.getByText('Every line must start with Given, When, Then, And, But or *.').first()).toBeVisible();
+  await expect(page.getByRole('tab', { name: /Step 1: Scenario/ })).toHaveAttribute('aria-selected', 'true');
+  await page.keyboard.press('Control+s');
   await expect(page.getByRole('heading', { name: 'Review feature change' })).toHaveCount(0);
   expect(errors).toEqual([]);
 });

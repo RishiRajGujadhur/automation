@@ -36,14 +36,15 @@ test('right-click menus, More navigation, shortcuts, persisted drafts and collap
   await page.keyboard.press('Alt+2');
   await expect(page.getByRole('heading', { name: 'Test Generator', level: 1 })).toBeVisible();
 
-  // Generator: collapsible steps with summaries, persisted draft, validation row menu.
+  // Generator wizard: stepper summaries, persisted draft and step, validation row menu.
   await page.getByLabel('Scenario name').fill('Persisted draft name');
-  await page.getByRole('button', { name: /Scenario & feature context/ }).click();
-  await expect(page.getByText(/ShoppingCart\.feature · 3 steps/)).toBeVisible();
+  await expect(page.getByRole('tab', { name: /Step 1: Scenario/ })).toContainText('ShoppingCart.feature · 3 steps');
+  await page.getByRole('button', { name: /Next: Mapping/ }).click();
   await page.reload();
-  await expect(page.getByRole('heading', { name: 'Test Generator', level: 1 })).toBeVisible();
-  await page.getByRole('button', { name: /Scenario & feature context/ }).click();
+  await expect(page.getByRole('tab', { name: /Step 2: Page object/ })).toHaveAttribute('aria-selected', 'true');
+  await page.getByRole('tab', { name: /Step 1: Scenario/ }).click();
   await expect(page.getByLabel('Scenario name')).toHaveValue('Persisted draft name');
+  await page.getByRole('tab', { name: /Step 4: Validation/ }).click();
   await page.getByRole('button', { name: 'Run dry-run validation' }).click();
   const row = page.locator('.checks-table tr.pass').first();
   await expect(row).toBeVisible();

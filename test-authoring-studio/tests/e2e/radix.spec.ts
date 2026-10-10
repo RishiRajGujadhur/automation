@@ -29,6 +29,7 @@ test('Radix select, checkbox, dropdown and buttons', async ({ page }) => {
   await page.locator('.page-heading h1').click();
   await page.keyboard.press('Alt+2');
   await expect(page.getByRole('heading', { name: 'Test Generator', level: 1 })).toBeVisible();
+  await page.getByRole('tab', { name: /Step 2: Page object/ }).click();
   await page.getByRole('combobox', { name: 'Action' }).click();
   await page.getByRole('option', { name: 'Click' }).click();
   await expect(page.getByRole('combobox', { name: 'Action' })).toHaveText(/Click/);

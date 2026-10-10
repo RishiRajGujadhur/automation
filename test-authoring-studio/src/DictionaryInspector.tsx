@@ -12,6 +12,8 @@ import type { DictionaryEntry } from './types';
 import { Select, Checkbox, Button } from './radix';
 import * as Tabs from '@radix-ui/react-tabs';
 import { useLocalState as useTabState } from './ui';
+import { xmlExtensions } from './editor/xml';
+const dictXml = xmlExtensions(true);
 
 export default function DictionaryInspector({ revision = '', compact = false, onSource, onGenerate }: { revision?: string; compact?: boolean; onSource?: (file: string, line: number) => void; onGenerate?: (entry: DictionaryEntry) => void }) {
   const [query, setQuery] = useState('');
@@ -127,7 +129,7 @@ export default function DictionaryInspector({ revision = '', compact = false, on
                 </Tabs.Content>
                 {!compact && (
                   <Tabs.Content value="source" className="tabs-content">
-                    <CodeMirror value={source} theme={oneDark} height="320px" extensions={[StreamLanguage.define(xml)]} editable={false} />
+                    <CodeMirror value={source} theme={oneDark} height="320px" extensions={dictXml} editable={false} />
                   </Tabs.Content>
                 )}
               </Tabs.Root>

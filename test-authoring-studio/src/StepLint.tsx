@@ -25,16 +25,14 @@ export default function StepLint({ steps, activeLine, onReplace, onSource, revis
   }, [key, revision]);
   const current = steps[activeLine];
   const currentStatus = status[activeLine]?.status;
-  const lastQuery = useRef('');
   useEffect(() => {
     if (!current || currentStatus === 'Matched') { setSuggestions([]); return; }
     const q = current.text.replace(/"[^"]*"/g, ' ').trim();
-    if (q.length < 3 || q === lastQuery.current) return;
-    lastQuery.current = q;
+    if (q.length < 3) { setSuggestions([]); return; }
     const c = new AbortController();
     const t = setTimeout(() => api<Paged<Binding>>('/steps?' + new URLSearchParams({ q, keyword: current.resolved, limit: '4' }), undefined, c.signal).then((r) => setSuggestions(r.items)).catch(() => {}), 250);
     return () => { clearTimeout(t); c.abort(); };
-  }, [current, currentStatus]);
+  }, [current?.text, current?.resolved, currentStatus]);
   if (!steps.length) return null;
   const matched = status.filter((s) => s.status === 'Matched').length;
   return (
