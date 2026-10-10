@@ -9,6 +9,7 @@ import {
   scan,
   confined,
   projectRoot,
+  dataRoot,
   parseFeature,
   matchActions,
   matchFeatureBindings,
@@ -45,7 +46,7 @@ app.use((req, res, next) => {
   }
   next();
 });
-const configFile = path.join(projectRoot, '.local/workspace.json');
+const configFile = path.join(dataRoot, '.local/workspace.json');
 let config = configSchema.parse(
   await fs
     .readFile(configFile, 'utf8')

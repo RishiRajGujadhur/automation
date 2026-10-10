@@ -21,7 +21,7 @@ function findRoot() {
   }
   return process.cwd();
 }
-const root = findRoot();
+const root = process.env.STUDIO_DATA ? path.resolve(process.env.STUDIO_DATA) : findRoot();
 export const settingsFile = path.join(root, '.local/settings.json');
 export const tracesDir = path.join(root, '.local/traces');
 

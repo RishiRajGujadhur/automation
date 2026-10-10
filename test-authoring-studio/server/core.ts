@@ -30,7 +30,9 @@ export const configSchema = z.object({
     .default(['bin', 'obj', '.git', '.vs', 'node_modules', 'TestResults', 'playwright-report']),
 });
 export type Config = z.infer<typeof configSchema>;
-export const projectRoot = path.resolve(import.meta.dirname, '..');
+// STUDIO_ROOT / STUDIO_DATA let a host (the Electron desktop app) put read-only resources and writable state elsewhere.
+export const projectRoot = process.env.STUDIO_ROOT ? path.resolve(process.env.STUDIO_ROOT) : path.resolve(import.meta.dirname, '..');
+export const dataRoot = process.env.STUDIO_DATA ? path.resolve(process.env.STUDIO_DATA) : projectRoot;
 import { existsSync } from 'node:fs';
 const localDotnet = path.resolve(projectRoot, '../.tools/dotnet/dotnet.exe');
 export const dotnet = process.env.DOTNET_PATH || (existsSync(localDotnet) ? localDotnet : 'dotnet');
