@@ -19,7 +19,7 @@ Legend: `[x]` done · `[ ]` to do. Each feature group is committed and pushed wh
 - [x] F2 Test Design page (Advanced ⋯ menu + command palette + deep link `#/test-design`)
 - [x] F3 Combinatorial Examples generator (IPOG etc.) → Scenario Outline Examples table
 - [x] F4 Step library: reusable steps with parameters, usage counts, rename-everywhere refactor preview
-- [ ] F5 Editor: trie autocomplete from the feature corpus, duplicate-step and smell lint
+- [x] F5 Editor: trie autocomplete from the feature corpus, duplicate-step and smell lint
 - [x] F6 Suite optimizer (greedy set cover over tags/requirements) and prioritization
 - [x] F7 FSM flow → scenarios generator
 - [x] F8 Tags, saved filters (tag expressions), test plans / cycles
@@ -63,7 +63,7 @@ Legend: `[x]` done · `[ ]` to do. Each feature group is committed and pushed wh
 - [x] B14 `ngram` Character n-grams
 
 ### C. Search & autocomplete (9)
-- [ ] C1 `trie` Prefix trie autocomplete
+- [x] C1 `trie` Prefix trie autocomplete
 - [x] C2 `fuzzy` Fuzzy subsequence scoring
 - [x] C3 `bm25` BM25 ranking
 - [x] C4 `bktree` BK-tree "did you mean"
@@ -132,7 +132,7 @@ Legend: `[x]` done · `[ ]` to do. Each feature group is committed and pushed wh
 - [x] H7 `scenario-fingerprint` Duplicate scenarios
 - [x] H8 `smell-dup-names` Duplicate scenario names
 - [x] H9 `flesch` Flesch reading ease
-- [ ] H10 `duplicate-step-lint` Near-duplicate step lint
+- [x] H10 `duplicate-step-lint` Near-duplicate step lint
 
 ### I. Tags, plans & docs (4)
 - [x] I1 `tag-expression` Tag expressions

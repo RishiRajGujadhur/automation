@@ -7,6 +7,10 @@ import { EditorState, type Extension } from '@codemirror/state';
 import { StreamLanguage } from '@codemirror/language';
 import { gherkin } from '@codemirror/legacy-modes/mode/gherkin';
 import type { Binding } from '../types';
+import { Trie } from '../algorithms/search';
+import { levenshteinRatio, dice } from '../algorithms/strings';
+import { smellChecks, type QScenario } from '../algorithms/quality';
+import { algorithmOn } from '../radix2';
 
 const STEP = /^(\s*)(Given|When|Then|And|But|\*)(\s+)(.*)$/;
 const api = async <T>(url: string, body?: unknown): Promise<T> => {
@@ -82,6 +86,105 @@ export const bindingLinter = linter(
   { delay: 700 },
 );
 
+/* ------------------------------------------------------------------ corpus-backed helpers (Settings → Algorithms) */
+type CorpusStep = { keyword: string; text: string; uses: number };
+let corpusCache: { at: number; promise: Promise<{ steps: CorpusStep[]; trie: Trie }> } | undefined;
+/** Distinct steps already written in the repository's feature files, with a prefix trie. Refreshed every 30 s. */
+function corpusSteps() {
+  if (!corpusCache || Date.now() - corpusCache.at > 30_000) {
+    corpusCache = {
+      at: Date.now(),
+      promise: api<{ features: { scenarios: { steps: { keyword: string; text: string }[] }[]; backgrounds: { steps: { keyword: string; text: string }[] }[] }[] }>('/design/corpus').then((c) => {
+        const map = new Map<string, CorpusStep>();
+        for (const f of c.features) for (const block of [...f.backgrounds, ...f.scenarios]) {
+          let last = 'Given';
+          for (const s of block.steps) {
+            const k = s.keyword.trim();
+            const resolved = ['Given', 'When', 'Then'].includes(k) ? k : last;
+            last = resolved;
+            const key = `${resolved} ${s.text}`;
+            const e = map.get(key) ?? { keyword: resolved, text: s.text, uses: 0 };
+            e.uses++;
+            map.set(key, e);
+          }
+        }
+        const steps = [...map.values()];
+        const trie = new Trie();
+        steps.forEach((s) => trie.insert(`${s.keyword} ${s.text}`, s.uses));
+        return { steps, trie };
+      }),
+    };
+    corpusCache.promise.catch(() => { corpusCache = undefined; });
+  }
+  return corpusCache.promise;
+}
+
+/** Near-duplicate step lint: a step that is almost, but not exactly, an existing step (suggests reuse). */
+export const duplicateStepLinter = linter(
+  async (view) => {
+    if (!algorithmOn('duplicate-step-lint')) return [];
+    const lines = stepLines(view.state.doc.toString()).slice(0, 150);
+    if (!lines.length) return [];
+    let steps: CorpusStep[];
+    try { steps = (await corpusSteps()).steps; } catch { return []; }
+    const measure = algorithmOn('levenshtein') ? levenshteinRatio : algorithmOn('dice') ? dice : null;
+    if (!measure) return [];
+    return lines.flatMap((l): Diagnostic[] => {
+      const same = steps.filter((s) => s.keyword === l.resolved);
+      if (same.some((s) => s.text === l.text)) return [];
+      let best: CorpusStep | undefined, score = 0;
+      const mask = (x: string) => x.toLowerCase().replace(/"[^"]*"/g, '"_"');
+      const mine = mask(l.text);
+      for (const s of same) { const other = mask(s.text); if (other === mine || Math.abs(other.length - mine.length) > 12) continue; const v = measure(other, mine); if (v > score) { score = v; best = s; } }
+      if (!best || score < 0.85) return [];
+      const target = best;
+      // Keep the author's quoted arguments, in order, when adopting the existing wording.
+      const args = [...l.text.matchAll(/"[^"]*"/g)].map((x) => x[0]);
+      let n = 0;
+      const adopted = target.text.replace(/"[^"]*"/g, (q) => args[n++] ?? q);
+      return [{
+        from: l.textFrom,
+        to: l.textFrom + l.text.length,
+        severity: 'info',
+        source: 'Reuse',
+        message: `Almost identical to an existing step (${Math.round(score * 100)}%): "${target.keyword} ${target.text}" (${target.uses} use${target.uses === 1 ? '' : 's'}).`,
+        actions: [{ name: 'Use existing step', apply: (v, from, to) => v.dispatch({ changes: { from, to, insert: adopted } }) }],
+      }];
+    });
+  },
+  { delay: 900 },
+);
+
+/** Scenario smells from src/algorithms/quality.ts, on the open document. */
+export const smellLinter = linter(
+  (view) => {
+    const doc = view.state.doc.toString();
+    const enabled = Object.keys(smellChecks).filter(algorithmOn);
+    if (!enabled.length || !doc.trim()) return [];
+    const scenarios: QScenario[] = [];
+    let inDoc = false;
+    doc.split('\n').forEach((raw, i) => {
+      const t = raw.trim();
+      if (t.startsWith('"""') || t.startsWith('```')) { inDoc = !inDoc; return; }
+      if (inDoc) return;
+      const head = /^(Scenario Outline|Scenario Template|Scenario|Example):\s*(.*)$/.exec(t);
+      if (head) { scenarios.push({ name: head[2], keyword: head[1], line: i + 1, steps: [], examplesHeader: [] }); return; }
+      if (/^(Background|Rule|Feature):/.test(t)) { scenarios.push({ name: '', keyword: 'Background', line: i + 1, steps: [] }); return; }
+      const cur = scenarios[scenarios.length - 1];
+      if (!cur) return;
+      const m = STEP.exec(raw);
+      if (m) cur.steps.push({ keyword: m[2], text: m[4].trim(), line: i + 1 });
+      else if (t.startsWith('|') && cur.examplesHeader && !cur.examplesHeader.length && /^\s*Examples:/.test(doc.split('\n').slice(0, i).reverse().find((x) => x.trim() && !x.trim().startsWith('#')) ?? '')) cur.examplesHeader = t.replace(/^\||\|$/g, '').split('|').map((c) => c.trim());
+    });
+    const feature = { file: '', name: '', scenarios: scenarios.filter((s) => s.keyword !== 'Background') };
+    return enabled.flatMap((id) => smellChecks[id](feature, { maxSteps: 10 })).map((f): Diagnostic => {
+      const line = view.state.doc.line(Math.min(view.state.doc.lines, f.line));
+      return { from: line.from + (line.text.length - line.text.trimStart().length), to: line.to, severity: 'info', source: 'Smell', message: f.message };
+    });
+  },
+  { delay: 800 },
+);
+
 /** Pattern → snippet template: regex groups / Cucumber parameters become tab-stop fields named after the C# parameters. */
 export function bindingSnippet(b: Binding) {
   let n = 0;
@@ -116,10 +219,20 @@ export async function gherkinCompletions(ctx: CompletionContext): Promise<Comple
     return null;
   }
   if (ctx.aborted) return null;
+  // Steps already written in feature files (prefix trie), for wording that has no dedicated binding text yet.
+  let written: Completion[] = [];
+  if (algorithmOn('trie')) {
+    try {
+      const { trie } = await corpusSteps();
+      const seen = new Set(items.map((b) => bindingSnippet(b).replace(/\$\{([^}]+)\}/g, '$1').toLowerCase()));
+      written = trie.complete(`${resolved} ${typed}`, 6).map((x) => x.text.slice(resolved.length + 1)).filter((t) => t !== typed && !seen.has(t.toLowerCase())).map((t, i) => ({ label: t, detail: 'used in features', type: 'text', boost: 10 - i }));
+    } catch { /* corpus unavailable */ }
+  }
+  if (ctx.aborted) return null;
   return {
     from: line.from + m[1].length + m[2].length + (before.length - m[1].length - m[2].length - typed.length),
     filter: false,
-    options: items.map((b, i) => {
+    options: [...written, ...items.map((b, i) => {
       const tpl = bindingSnippet(b);
       return snippetCompletion(tpl, {
         label: tpl.replace(/\$\{([^}]+)\}/g, '$1'),
@@ -138,7 +251,7 @@ export async function gherkinCompletions(ctx: CompletionContext): Promise<Comple
         type: 'function',
         boost: 50 - i,
       });
-    }),
+    })],
   };
 }
 
@@ -221,6 +334,8 @@ export function gherkinExtensions(opts: { onSave?: () => void; onValidate?: () =
     EditorState.languageData.of(() => [{ commentTokens: { line: '#' } }]),
     gherkinSyntaxLinter,
     bindingLinter,
+    duplicateStepLinter,
+    smellLinter,
     autocompletion({ override: [gherkinCompletions], activateOnTyping: true, maxRenderedOptions: 12, icons: true }),
     stepHover,
     keymap.of([
@@ -237,6 +352,7 @@ export function scenarioExtensions(label: string): Extension[] {
     StreamLanguage.define(gherkin),
     EditorState.languageData.of(() => [{ commentTokens: { line: '#' } }]),
     bindingLinter,
+    duplicateStepLinter,
     autocompletion({ override: [gherkinCompletions], activateOnTyping: true, maxRenderedOptions: 10 }),
     stepHover,
     EditorView.contentAttributes.of({ 'aria-label': label, 'aria-multiline': 'true', tabindex: '0' }),
