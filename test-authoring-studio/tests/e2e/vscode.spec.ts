@@ -43,6 +43,22 @@ test('activity bar navigates; Features toggles the explorer like VS Code', async
   await expect(page.locator('[cmdk-input]')).toBeVisible();
 });
 
+test('short windows move extra pages into a ☰ overflow menu; nothing is cut off', async ({ page }) => {
+  await page.setViewportSize({ width: 1200, height: 560 });
+  await advanced(page);
+  const bar = page.getByRole('navigation', { name: 'Main' });
+  const more = bar.getByRole('button', { name: /^More pages \(\d+\)$/ });
+  await expect(more).toBeVisible();
+  const barBox = (await bar.boundingBox())!;
+  for (const b of await bar.locator('.activity-item').all()) { const box = (await b.boundingBox())!; expect(box.y + box.height).toBeLessThanOrEqual(barBox.y + barBox.height + 1); }
+  await more.click();
+  await page.getByRole('menuitem', { name: 'Project Explorer' }).click();
+  await expect(page).toHaveURL(/#\/project-explorer/);
+  await expect(bar.getByRole('button', { name: 'Project Explorer' })).toHaveAttribute('aria-current', 'page'); // the active page stays visible
+  await page.setViewportSize({ width: 1440, height: 1000 });
+  await expect(more).toHaveCount(0);
+});
+
 test('WCAG 2.2 AA in the VS Code layout', async ({ page }) => {
   await advanced(page);
   for (const hash of ['#/dashboard', '#/features/editor', '#/test-generator', '#/test-design', '#/step-catalog']) {

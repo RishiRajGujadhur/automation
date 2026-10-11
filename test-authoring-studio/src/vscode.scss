@@ -159,6 +159,14 @@
     display: flex;
     flex-direction: column;
   }
+  .activity-top {
+    flex: 1;
+    min-height: 0;
+    overflow: hidden;
+  }
+  .activity-bottom {
+    flex: none;
+  }
 }
 .activity-item {
   position: relative;
@@ -217,5 +225,43 @@
       height: auto;
       overflow: visible;
     }
+  }
+}
+
+// Title bar: the breadcrumb shrinks with an ellipsis instead of overlapping; the section crumb goes first.
+:root[data-layout='vscode'] .workspace-breadcrumb {
+  overflow: hidden;
+  ol {
+    display: flex;
+    align-items: center;
+    min-width: 0;
+    overflow: hidden;
+    white-space: nowrap;
+  }
+  li {
+    display: flex;
+    align-items: center;
+    min-width: 0;
+    flex: 0 1 auto;
+  }
+  li[aria-current='page'] {
+    flex-shrink: 2;
+  }
+  .crumb,
+  h1 {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+}
+@media (max-width: 1280px) {
+  :root[data-layout='vscode'] .workspace-breadcrumb .crumb-section {
+    display: none;
+  }
+}
+@media (max-width: 1050px) {
+  :root[data-layout='vscode'] .app-header .guide-button {
+    display: none;
   }
 }

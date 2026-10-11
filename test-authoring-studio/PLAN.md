@@ -233,3 +233,4 @@ Researched: ISO/IEC/IEEE 29119-4 technique catalogue (classification tree, cause
 - [x] P3 Individual algorithm switches only under Custom (Custom starts from the current preset); Turn on buttons switch to Custom
 - [x] P4 Desktop View menu: Layout and Algorithm Preset submenus
 
+- [x] P5 Activity bar overflow: pages that don't fit the window height move into a ☰ menu (active page stays visible); title-bar breadcrumb truncates instead of overlapping
