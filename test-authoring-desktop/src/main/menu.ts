@@ -25,7 +25,7 @@ const openAndRebuild = (f: string) => openRepository(f).then(buildMenu).catch(fa
 
 const themes = [['studio', 'Studio Dark'], ['midnight', 'Midnight'], ['nord', 'Nord'], ['light', 'Light'], ['matrix', 'Matrix']];
 const accentIds = ['violet', 'indigo', 'blue', 'cyan', 'teal', 'green', 'amber', 'orange', 'rose', 'pink', 'slate'];
-const designTools = [['examples', 'Examples Generator'], ['library', 'Step Library'], ['suite', 'Suite Optimizer'], ['flow', 'Flow Generator'], ['quality', 'Duplicates & Smells'], ['results', 'Results & Flakiness'], ['plans', 'Plans & Filters'], ['docs', 'Living Docs'], ['lab', 'Similarity Lab']];
+const designTools = [['examples', 'Examples Generator'], ['logic', 'Logic & Techniques'], ['library', 'Step Library'], ['suite', 'Suite Optimizer'], ['flow', 'Flow Generator'], ['impact', 'Impact & Risk'], ['quality', 'Duplicates & Smells'], ['results', 'Results & Flakiness'], ['plans', 'Plans & Filters'], ['docs', 'Living Docs'], ['lab', 'Similarity Lab']];
 // Chromium zoom level n = 1.2^n scale.
 const zoomLevels: [string, number][] = [['90 %', Math.log(0.9) / Math.log(1.2)], ['100 %', 0], ['110 %', Math.log(1.1) / Math.log(1.2)], ['125 %', Math.log(1.25) / Math.log(1.2)], ['150 %', Math.log(1.5) / Math.log(1.2)]];
 
