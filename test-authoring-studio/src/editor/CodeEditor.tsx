@@ -12,6 +12,7 @@ import { stepLenses, setLenses, type StepLens } from './lens';
 import { runGutter, setRunMarks, type RunMark } from './runGutter';
 import { changeGutter } from './changeGutter';
 import { useChangeBars } from './useChangeBars';
+import { cursorTracker } from './cursor';
 import { api, type FilePreview } from '../api';
 import { Button } from '../radix';
 import { IconButton } from '../radix2';
@@ -284,6 +285,8 @@ export default function CodeEditor({ file, reveal, active = true, onNotice, onIn
     try { setPreview(await api<FilePreview>('/file/preview', { file, source: value })); } catch (e) { onNotice?.((e as Error).message); }
   };
   // Ctrl+S saves straight to disk (the latest buffer is read through a ref, so the keymap never rebuilds).
+  const eolRef = useRef<'CRLF' | 'LF'>('LF');
+  eolRef.current = loaded?.source.includes('\r\n') ? 'CRLF' : 'LF';
   const saveRef = useRef(save);
   saveRef.current = save;
   useEffect(() => { const h = () => { if (auto.dirty) void auto.save(); }; window.addEventListener(SAVE_ALL_EVENT, h); return () => window.removeEventListener(SAVE_ALL_EVENT, h); });
@@ -292,6 +295,7 @@ export default function CodeEditor({ file, reveal, active = true, onNotice, onIn
     lintGutter(),
     ...(browser ? [] : [changeGutter()]),
     labelled(`Source of ${file}`, false),
+    cursorTracker(file, () => eolRef.current),
     keymap.of([
       { key: 'Mod-s', preventDefault: true, run: () => { void saveRef.current(); return true; } },
       ...(isCs && !browser ? [{ key: 'Mod-r Mod-g', preventDefault: true, run: () => { void organizeRef.current(); return true; } }] : []),

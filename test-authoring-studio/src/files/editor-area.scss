@@ -1359,3 +1359,30 @@
     }
   }
 }
+
+// Status bar (right side)
+.status-bar .status-right {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin-left: auto;
+}
+.status-items {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  .status-item {
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    padding: 0 6px;
+    border: 0;
+    background: transparent;
+    white-space: nowrap;
+  }
+}
+@media (max-width: 760px) {
+  .status-items .status-item:not(button) {
+    display: none;
+  }
+}

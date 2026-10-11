@@ -17,6 +17,7 @@ import BuildPanel from './build/BuildPanel';
 import TestExplorer from './testing/TestExplorer';
 import SearchView from './search/SearchView';
 import GitView from './git/GitView';
+import StatusBarItems from './StatusBarItems';
 import GoToAll from './search/GoToAll';
 import { runTests, getTestRun, discoverTests, useTestRun, outcomeOf, combine, type DiscoveredTest } from './testing/store';
 import type { RunMark } from './editor/runGutter';
@@ -1965,14 +1966,17 @@ export default function App() {
           <span className="status-dot" />
           {busy ? 'Working…' : 'Ready'}
           <span className="muted-separator">│</span>
-          <GitBranch size={12} />
+          <Folder size={12} />
           {index?.workspace ?? 'No repository'}
           {execution.status === 'running' && (<><Separator vertical /><span className="status-run">Running tests</span><Meter value={60} label="Test run" tone="purple" /></>)}
         </span>
-        <button onClick={() => setModal('diagnostics')}>
-          <TriangleAlert size={12} />
-          {index?.diagnostics.length ?? 0} diagnostics
-        </button>
+        <span className="status-right">
+          <StatusBarItems repository={config?.repositoryRoot} onGit={showGit} onErrors={() => { setTab('Features'); if (view !== 'code' && view !== 'editor') setView('editor'); setBuildOpen(true); try { localStorage.setItem('tas:buildTab', '"errors"'); } catch { /* storage blocked */ } }} />
+          <button onClick={() => setModal('diagnostics')}>
+            <TriangleAlert size={12} />
+            {index?.diagnostics.length ?? 0} diagnostics
+          </button>
+        </span>
       </footer>
       <Toast.Provider swipeDirection={typeof window !== 'undefined' && matchMedia('(max-width: 640px)').matches ? 'down' : 'right'} duration={6000}>
         <Toast.Root

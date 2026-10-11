@@ -90,7 +90,7 @@ Status: ✅ done · 🟡 partial · ⬜ to do. Priority: **P1** next, **P2** aft
 | W3 | Themes, accents, density | ✅ | — |
 | W4 | Auto save, hot exit, file conflict detection | ✅ | — |
 | W5 | Open Folder (desktop native, web File System Access) | ✅ | — |
-| W6 | Status bar: branch, errors/warnings, configuration, line/column, encoding | 🟡 | P2 |
+| W6 | Status bar: branch, errors/warnings, configuration, line/column, encoding | ✅ (configuration lives in the build windows) | P2 |
 
 ## Proposed first slice (P1, solution support)
 1. S1–S4: open `.sln`/`.slnx`/`.csproj`, parse it, scan every project, real Solution Explorer tree.
@@ -118,3 +118,4 @@ Status: ✅ done · 🟡 partial · ⬜ to do. Priority: **P1** next, **P2** aft
 - 2026-10-12 — **Breakpoint settings (D2).** Conditions go to netcoredbg; hit counts (`5`, `>= 5`, `% 5`) and tracepoints (log message with `{expressions}`, continues) are handled by the server on stop; enabled flag, Enable/Disable All; margin markers per kind (conditional +, tracepoint diamond, disabled hollow); right-click a breakpoint for Breakpoint Settings. Fixed: parameterized-test filters contained `(`, which vstest/NUnit reject.
 - 2026-10-12 — **Autos, Immediate, Run to Cursor (D4).** Autos evaluates the variables of the current and previous line; Immediate window evaluates expressions in the paused frame (history with ↑/↓); Run to Cursor (Ctrl+F10) sets a one-shot breakpoint removed at the next stop. Fixed: Ctrl+F10 also stepped over.
 - 2026-10-12 — **Exception Settings (D3).** Debug windows toolbar: Break on Unhandled / All thrown / Never (netcoredbg `user-unhandled` / `all` filters), applied to the live session and remembered.
+- 2026-10-12 — **Status bar (W6).** Ln/Col (and selection length), line endings and encoding of the focused editor; errors / warnings of the last build (opens the Error List); Git branch with pending-changes mark and ahead / behind (opens Git Changes).
