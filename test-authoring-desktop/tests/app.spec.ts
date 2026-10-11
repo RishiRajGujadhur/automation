@@ -2,6 +2,11 @@ import { test, expect, _electron as electron, type ElectronApplication, type Pag
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
+import { spawn } from 'node:child_process';
+import { createRequire } from 'node:module';
+
+// The Electron binary for the dev build, or the packaged exe.
+const electronPath: string = process.env.TAS_EXE ? path.resolve(process.env.TAS_EXE) : (createRequire(import.meta.url)('electron') as unknown as string);
 
 let appProcess: ElectronApplication;
 let page: Page;
@@ -73,6 +78,22 @@ test('navigation away from the app is blocked', async () => {
 test('theme changes reach the native window', async () => {
   await page.evaluate(() => (window as any).desktop.setTheme({ background: '#f4f5f9', text: '#1f2430', dark: false }));
   await expect.poll(() => appProcess.evaluate(({ nativeTheme }) => nativeTheme.themeSource)).toBe('light');
+});
+
+test('dropping a folder opens it, and file changes on disk refresh the index', async () => {
+  const repo = fs.mkdtempSync(path.join(os.tmpdir(), 'tas-repo-'));
+  fs.cpSync(path.resolve(import.meta.dirname, '../../test-authoring-studio/fixtures'), repo, { recursive: true });
+  const features = () => page.evaluate(() => fetch('/api/workspace').then((r) => r.json()).then((d) => d.index.stats.features as number));
+  // A second launch with a folder argument hands it to the running instance (also how the jump list reopens repositories).
+  const second = spawn(electronPath, [...(process.env.TAS_EXE ? [] : ['.']), `--user-data-dir=${userData}`, repo], { cwd: path.resolve(import.meta.dirname, '..'), stdio: 'ignore' });
+  await new Promise((r) => second.on('exit', r));
+  await expect.poll(() => appProcess.evaluate(({ BrowserWindow }) => BrowserWindow.getAllWindows()[0].getTitle()), { timeout: 30_000 }).toContain(path.basename(repo));
+  await page.waitForURL(/127\.0\.0\.1/);
+  await expect(page.getByText('Repository indexed')).toBeVisible({ timeout: 30_000 });
+  const before = await features();
+  fs.writeFileSync(path.join(repo, 'Features', 'Added.feature'), 'Feature: Added on disk\n  Scenario: S\n    Given the browser is started\n');
+  await expect(page.getByText('Files changed on disk. Repository index refreshed.').first()).toBeVisible({ timeout: 15_000 });
+  expect(await features()).toBe(before + 1);
 });
 
 test('stores state in the user-data folder, not the app folder', async () => {

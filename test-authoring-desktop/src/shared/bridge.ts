@@ -1,6 +1,6 @@
 /** Contract between the preload script and the studio web app (`window.desktop`). */
 export type MenuCommand =
-  | 'palette' | 'preferences' | 'shortcuts' | 'workspace-settings' | 'new-feature' | 'record' | 'tour' | 'toggle-mode' | 'toggle-explorer' | 'focus-mode';
+  | 'palette' | 'preferences' | 'shortcuts' | 'workspace-settings' | 'new-feature' | 'record' | 'tour' | 'toggle-mode' | 'toggle-explorer' | 'focus-mode' | 'repository-changed';
 
 export type DesktopBridge = {
   platform: NodeJS.Platform;
@@ -30,4 +30,5 @@ export const IPC = {
   progress: 'desktop:progress',
   theme: 'desktop:theme',
   menu: 'desktop:menu',
+  dropFolder: 'desktop:drop-folder',
 } as const;

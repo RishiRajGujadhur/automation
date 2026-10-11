@@ -7,6 +7,7 @@ type Shape = {
   window?: { x?: number; y?: number; width: number; height: number; maximized: boolean };
   zoom?: number;
   recent?: string[];
+  autoRescan?: boolean;
 };
 const file = () => path.join(dataRoot(), 'desktop.json');
 let cache: Shape | undefined;

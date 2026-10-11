@@ -9,6 +9,7 @@ import { ctx } from './context';
 import { buildMenu } from './menu';
 import { lockDown, registerIpc } from './ipc';
 import { currentConfig, openRepository, updateTitle } from './workspace';
+import { stopWatching, watchRepository } from './watcher';
 
 // D3: one instance; a second launch focuses the existing window (and opens a folder passed on the command line).
 if (!app.requestSingleInstanceLock()) app.quit();
@@ -78,6 +79,7 @@ async function boot() {
     if (folder) await openRepository(folder).catch(() => undefined);
     await win.loadURL(`${ctx.origin}/#/dashboard`);
     updateTitle();
+    watchRepository();
   } catch (e) {
     dialog.showErrorBox('TestAuthoring Studio could not start', (e as Error).message);
     app.quit();
@@ -93,5 +95,6 @@ app.on('before-quit', (e) => {
   if (quitting || !ctx.origin) return;
   e.preventDefault();
   quitting = true;
+  stopWatching();
   Promise.race([apiCall(ctx.origin, '/recording/stop', {}).catch(() => undefined), new Promise((r) => setTimeout(r, 1500))]).finally(() => app.quit());
 });

@@ -21,13 +21,16 @@ Legend: `[x]` done · `[ ]` to do. Every feature is committed and pushed when fi
 - [x] D9 External links open in the system browser; navigation locked to the app origin; permission requests denied
 - [x] D10 Native theme sync (title bar colour follows app theme; nativeTheme)
 - [x] D11 Native notifications when a scan or test run finishes while the window is unfocused; taskbar progress during work
-- [x] D12 Drag a repository folder onto the window to open it
+- [x] D12 Drag a repository folder onto the window to open it (preload drop handler; also a folder argument / second launch)
 - [x] D13 App icon generated from the studio's `public/icon.svg`
 - [x] D14 Packaging with electron-builder (Windows NSIS installer + portable)
 - [x] D15 Automated tests: Playwright `_electron` smoke test (launch, API, navigation, desktop bridge)
 - [x] D16 README: build, run, package, architecture, limits
 
 - [x] D17 Self-contained Roslyn scanner bundled (no .NET runtime needed on the user's machine)
+- [x] D18 Watch the repository: auto-rescan when .feature/.cs/.xml files change on disk (toggle in View menu)
+- [ ] D19 Windows taskbar tasks (jump list): New feature, Start a recording, Open repository
+- [ ] D20 Playwright Chromium check on start + Help → Install Playwright Browsers with progress
 
 ## Quality-of-life
 - [x] Q1 Zoom in/out/reset (Ctrl +/−/0) persisted

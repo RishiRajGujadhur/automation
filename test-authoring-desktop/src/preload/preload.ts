@@ -1,4 +1,4 @@
-import { contextBridge, ipcRenderer } from 'electron';
+import { contextBridge, ipcRenderer, webUtils } from 'electron';
 import { IPC, type DesktopBridge, type MenuCommand } from '../shared/bridge';
 
 const bridge: DesktopBridge = {
@@ -18,3 +18,12 @@ const bridge: DesktopBridge = {
   },
 };
 contextBridge.exposeInMainWorld('desktop', bridge);
+
+// D12: a folder dropped anywhere the page doesn't handle drops itself (e.g. not a CSV/report drop zone) opens it as the repository.
+window.addEventListener('dragover', (e) => { if (e.dataTransfer?.types.includes('Files') && !e.defaultPrevented) e.preventDefault(); });
+window.addEventListener('drop', (e) => {
+  if (e.defaultPrevented || !e.dataTransfer?.files.length) return;
+  e.preventDefault();
+  const p = webUtils.getPathForFile(e.dataTransfer.files[0]);
+  if (p) ipcRenderer.send(IPC.dropFolder, p);
+});

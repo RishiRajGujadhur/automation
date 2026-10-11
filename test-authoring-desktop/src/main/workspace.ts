@@ -5,6 +5,7 @@ import { ctx } from './context';
 import { apiCall } from './server';
 import { addRecent, read } from './store';
 import { dataRoot, resourcesRoot } from './paths';
+import { watchRepository } from './watcher';
 
 type Config = { repositoryRoot: string; [k: string]: unknown };
 
@@ -35,6 +36,7 @@ export async function openRepository(folder: string) {
     ctx.win?.setProgressBar(-1);
   }
   ctx.repository = dir;
+  watchRepository(dir);
   addRecent(dir);
   app.addRecentDocument(dir); // Windows jump list / macOS Dock menu
   updateTitle();

@@ -1,7 +1,9 @@
 import { BrowserWindow, dialog, ipcMain, nativeTheme, Notification, shell, type IpcMainEvent, type IpcMainInvokeEvent } from 'electron';
 import { ctx } from './context';
 import { IPC } from '../shared/bridge';
-import { repositoryFile } from './workspace';
+import fs from 'node:fs';
+import { openRepository, repositoryFile } from './workspace';
+import { buildMenu } from './menu';
 
 /** Only the app's own page, loaded from the in-process API origin, may call privileged handlers. */
 function trusted(e: IpcMainEvent | IpcMainInvokeEvent) {
@@ -33,6 +35,11 @@ export function registerIpc() {
     const n = new Notification({ title: String(title).slice(0, 120), body: String(body).slice(0, 400) });
     n.on('click', () => { ctx.win?.show(); ctx.win?.focus(); });
     n.show();
+  });
+  ipcMain.on(IPC.dropFolder, (e, folder: string) => {
+    if (!trusted(e)) return;
+    try { if (!fs.statSync(String(folder)).isDirectory()) return; } catch { return; }
+    openRepository(String(folder)).then(buildMenu).catch((err) => dialog.showErrorBox('Could not open the repository', (err as Error).message));
   });
   ipcMain.on(IPC.progress, (e, value: number) => { if (trusted(e)) ctx.win?.setProgressBar(Number(value)); });
   ipcMain.on(IPC.theme, (e, c: { background: string; text: string; dark: boolean }) => {

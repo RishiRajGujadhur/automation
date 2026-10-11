@@ -5,6 +5,7 @@ import { openRepository, pickAndOpenRepository, recentRepositories } from './wor
 import { apiCall } from './server';
 import { dataRoot, logFile } from './paths';
 import { write } from './store';
+import { autoRescanEnabled, setAutoRescan } from './watcher';
 
 const send = (c: MenuCommand) => ctx.win?.webContents.send(IPC.menu, c);
 /** Pages are deep links (#/page), so navigation needs no web-app changes. */
@@ -44,6 +45,7 @@ export function buildMenu() {
         { label: 'Toggle Basic / Advanced Mode', click: () => send('toggle-mode') },
         { label: 'Toggle Feature Explorer', click: () => send('toggle-explorer') },
         { label: 'Focus Mode', click: () => send('focus-mode') },
+        { label: 'Auto-rescan When Files Change', type: 'checkbox', checked: autoRescanEnabled(), click: (item) => setAutoRescan(item.checked) },
         { type: 'separator' },
         { role: 'reload' }, { role: 'forceReload' }, { role: 'toggleDevTools' },
         { type: 'separator' },
