@@ -56,6 +56,13 @@ test('native menu has the expected menus and navigates by deep link', async () =
   await expect(page.getByRole('tab', { name: 'Examples generator' })).toBeVisible();
 });
 
+test('File menu: Open Folder, Save, Save All, Close Editor; Debug keys are not swallowed by the menu', async () => {
+  const file = await appProcess.evaluate(({ Menu }) => Menu.getApplicationMenu()!.items.find((i) => i.label.includes('File'))!.submenu!.items.map((i) => i.label));
+  expect(file).toEqual(expect.arrayContaining(['Open Folder…', 'Save', 'Save All', 'Close Editor', 'Close All Editors']));
+  // The web File menu is hidden in the desktop app (the native one replaces it).
+  await expect(page.getByRole('button', { name: 'File menu' })).toHaveCount(0);
+});
+
 test('menu commands reach the web app (Preferences)', async () => {
   await appProcess.evaluate(({ Menu }) => Menu.getApplicationMenu()!.items.find((i) => i.label.includes('File'))!.submenu!.items.find((i) => i.label.startsWith('Preferences'))!.click());
   await expect(page.getByRole('dialog', { name: 'Preferences' })).toBeVisible();

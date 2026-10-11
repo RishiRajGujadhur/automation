@@ -39,10 +39,11 @@ test('feature editor: context menu, live syntax errors, unbound-step warnings an
   const editor = page.locator('.gherkin-editor .cm-content');
   await expect(editor).toBeVisible();
 
-  // Right-click shows Run tests and Preview changes.
+  // Right-click shows Run tests, Save and Review changes.
   await editor.click({ button: 'right' });
   await expect(page.getByRole('menuitem', { name: /Run tests/ })).toBeVisible();
-  await expect(page.getByRole('menuitem', { name: /Preview changes/ })).toBeVisible();
+  await expect(page.getByRole('menuitem', { name: /^Save/ })).toBeVisible();
+  await expect(page.getByRole('menuitem', { name: /Review changes/ })).toBeVisible();
   await page.getByRole('menuitem', { name: /Run tests/ }).click();
   await expect(page.getByRole('dialog', { name: 'Run repository tests' })).toBeVisible();
   await page.keyboard.press('Escape');

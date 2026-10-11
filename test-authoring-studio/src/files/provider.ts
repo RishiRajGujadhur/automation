@@ -1,0 +1,36 @@
+import { useSyncExternalStore } from 'react';
+import { api } from '../api';
+import { readText, writeText, browserRoot } from './fsa';
+
+/**
+ * Where editor files come from: the studio server (the indexed repository path) or a folder opened in the
+ * browser with the File System Access API. Editors read and save through here, so both behave the same.
+ */
+export type FileSource = { kind: 'server'; root?: string } | { kind: 'browser'; name: string };
+let source: FileSource = { kind: 'server' };
+const listeners = new Set<() => void>();
+export function setFileSource(s: FileSource) { source = s; for (const l of listeners) l(); }
+export const fileSource = () => source;
+export const useFileSource = () => useSyncExternalStore((l) => { listeners.add(l); return () => listeners.delete(l); }, fileSource);
+export const isBrowser = () => source.kind === 'browser' && !!browserRoot();
+
+async function digest(text: string) {
+  const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(text));
+  return [...new Uint8Array(buf)].map((b) => b.toString(16).padStart(2, '0')).join('');
+}
+
+export async function readFile(file: string): Promise<{ source: string; hash: string }> {
+  if (isBrowser()) { const text = await readText(file); return { source: text, hash: await digest(text) }; }
+  return api<{ source: string; hash: string }>(`/source?file=${encodeURIComponent(file)}`);
+}
+
+/** Writes only when the file on disk is still the one the editor loaded (baseHash); otherwise refuses. */
+export async function saveFile(file: string, text: string, baseHash: string): Promise<{ hash: string }> {
+  if (isBrowser()) {
+    const current = await readText(file).then(digest, () => null);
+    if (current !== null && current !== baseHash) throw new Error(`${file} changed outside the studio since it was opened. Reload it before saving.`);
+    await writeText(file, text);
+    return { hash: await digest(text) };
+  }
+  return api<{ hash: string }>('/file/save', { file, source: text, baseHash });
+}

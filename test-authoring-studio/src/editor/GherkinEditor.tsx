@@ -18,7 +18,7 @@ export type Problems = { errors: number; warnings: number };
  * right-click menu with Run tests / Preview changes. The menu replaces the browser menu inside the
  * editor, so clipboard actions are included.
  */
-export default function GherkinEditor({ file, value, onChange, onPreview, onRun, onValidate, height = '470px', onNotice, onDefinition }: { file?: string; onDefinition?: (step: { keyword: string; text: string; line: number }) => void; value: string; onChange: (v: string) => void; onPreview: () => void; onRun: () => void; onValidate: () => void; height?: string; onNotice?: (m: string) => void }) {
+export default function GherkinEditor({ file, onSave, value, onChange, onPreview, onRun, onValidate, height = '470px', onNotice, onDefinition }: { file?: string; onSave?: () => void; onDefinition?: (step: { keyword: string; text: string; line: number }) => void; value: string; onChange: (v: string) => void; onPreview: () => void; onRun: () => void; onValidate: () => void; height?: string; onNotice?: (m: string) => void }) {
   const editorTheme = useEditorTheme();
   const ref = useRef<ReactCodeMirrorRef>(null);
   const [problems, setProblems] = useState<Problems>({ errors: 0, warnings: 0 });
@@ -44,9 +44,9 @@ export default function GherkinEditor({ file, value, onChange, onPreview, onRun,
     window.addEventListener('keydown', key);
     return () => { document.removeEventListener('fullscreenchange', sync); window.removeEventListener('keydown', esc); window.removeEventListener('keydown', key); };
   });
-  const handlers = useRef<{ onPreview: () => void; onValidate: () => void; onDefinition?: (s: { keyword: string; text: string; line: number }) => void }>({ onPreview, onValidate, onDefinition });
-  handlers.current = { onPreview, onValidate, onDefinition };
-  const extensions = useMemo(() => [...gherkinExtensions({ onSave: () => handlers.current.onPreview(), onValidate: () => handlers.current.onValidate(), onDefinition: (s) => handlers.current.onDefinition?.(s) }), lintGutter(), labelled('Gherkin source'), ...(file ? [breakpoints(file)] : [])], [file]);
+  const handlers = useRef<{ onPreview: () => void; onSave?: () => void; onValidate: () => void; onDefinition?: (s: { keyword: string; text: string; line: number }) => void }>({ onPreview, onSave, onValidate, onDefinition });
+  handlers.current = { onPreview, onSave, onValidate, onDefinition };
+  const extensions = useMemo(() => [...gherkinExtensions({ onSave: () => (handlers.current.onSave ?? handlers.current.onPreview)(), onValidate: () => handlers.current.onValidate(), onDefinition: (s) => handlers.current.onDefinition?.(s) }), lintGutter(), labelled('Gherkin source'), ...(file ? [breakpoints(file)] : [])], [file]);
   const view = () => ref.current?.view;
   const withView = (fn: (v: NonNullable<ReturnType<typeof view>>) => void) => () => { const v = view(); if (v) { fn(v); v.focus(); } };
   const selection = () => { const v = view(); if (!v) return ''; const r = v.state.selection.main; return v.state.sliceDoc(r.from, r.to); };
@@ -61,7 +61,8 @@ export default function GherkinEditor({ file, value, onChange, onPreview, onRun,
         label="Editor actions"
         items={[
           { label: 'Run tests…', icon: Play, onSelect: onRun },
-          { label: 'Preview changes', icon: Save, shortcut: 'Ctrl S', onSelect: onPreview },
+          { label: 'Save', icon: Save, shortcut: 'Ctrl S', onSelect: onSave ?? onPreview },
+          { label: 'Review changes (diff)…', icon: Save, onSelect: onPreview },
           { label: 'Validate bindings', icon: Check, shortcut: 'Ctrl ↵', onSelect: onValidate },
           'separator',
           { label: 'Suggest steps', icon: Sparkles, shortcut: 'Ctrl Space', onSelect: withView((v) => startCompletion(v)) },

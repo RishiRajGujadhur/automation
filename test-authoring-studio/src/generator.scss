@@ -424,7 +424,8 @@ $red: #ff8a8a;
 // Dashboard
 .stat-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  // auto-fit: the cards share the full width instead of leaving empty columns.
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
   gap: 12px;
   margin-bottom: 16px;
 }

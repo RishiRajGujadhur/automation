@@ -10,7 +10,14 @@ import TestDesign, { designTools } from './TestDesign';
 import ActivityBar from './ActivityBar';
 import CreateStepDialog from './CreateStepDialog';
 import CodeEditor from './editor/CodeEditor';
-import { readDraft, sha256, useAutoSave } from './editor/autosave';
+import { readDraft, sha256, useAutoSave, unsavedFiles, editedThisSession } from './editor/autosave';
+import EditorTabs, { EditorActions } from './files/EditorTabs';
+import { useTabs, openTab, closeTab, closeAll as closeAllTabs, kindOf, cycleTab, getTabs, reloadTabs } from './files/tabs';
+import { useFileSource, setFileSource, fileSource } from './files/provider';
+import { fsaSupported, pickFolder, restoreFolder, closeFolder as closeBrowserFolder, lastFolderName } from './files/fsa';
+import { browserSolution } from './files/browserSolution';
+import type { Solution } from './SolutionExplorer';
+import { SAVE_ALL_EVENT } from './editor/events';
 import { snapshot } from './algorithms/registry';
 import { desktop, type DesktopMenuCommand } from './desktop';
 import StepCatalogue from './StepCatalogue';
@@ -109,9 +116,10 @@ import './theme.scss';
 import './design.scss';
 import './vscode.scss';
 import './debug/debug.scss';
+import './files/editor-area.scss';
 import DebugPanel from './debug/DebugPanel';
 import { useDebug, startDebugging, debugControl, isLive, getSnapshot, clearBreakpoints } from './debug/store';
-import { Bug } from 'lucide-react';
+import { Bug, GitCompareArrows, Database, Settings } from 'lucide-react';
 
 const demo: Action[] = [
   { id: 'd1', action: 'goto', url: 'https://www.google.com/' },
@@ -215,7 +223,13 @@ export default function App() {
   const [paletteOpen, setPaletteOpen] = useState(false);
   const [designKey, setDesignKey] = useState(0);
   // Source file open in the code editor (Features → code view); line to reveal.
+  // Open editors (tabs). `codeFile` is the single file of earlier versions, opened as a tab once.
   const [codeFile, setCodeFile] = useLocalState<{ file: string; line?: number } | null>('codeFile', null);
+  const openEditors = useTabs();
+  const activeEditor = openEditors.tabs.find((t) => t.file === openEditors.active);
+  const featureTabActive = activeEditor?.kind === 'feature';
+  // Line to reveal per code tab (a new object each request, so asking again for the same line still jumps).
+  const [codeLines, setCodeLines] = useState<Record<string, { line: number } | undefined>>({});
   // F12 on a step: open its C# binding in the code editor; unbound steps say so.
   const goToDefinition = async (keyword: string, text: string) => {
     try {
@@ -224,7 +238,63 @@ export default function App() {
       else setNotice(r?.status === 'Ambiguous' ? 'More than one binding matches this step.' : 'No step definition yet. Use “Create step definition” to add one.');
     } catch (e) { setNotice((e as Error).message); }
   };
-  const editFile = (file: string, line?: number) => { setCodeFile({ file, line }); setTab('Features'); setView('code'); setModal(undefined); };
+  const editFile = (file: string, line?: number) => {
+    const kind = kindOf(file);
+    if (line) setCodeLines((l) => ({ ...l, [file]: { line } }));
+    openTab(file, kind);
+    setTab('Features');
+    setView(kind === 'code' ? 'code' : 'editor');
+    setModal(undefined);
+  };
+  // File ▸ Open Folder…: the desktop app opens the folder natively and indexes it; a browser opens it with the
+  // File System Access API (read and write in place, no upload) — indexing then needs the folder's path.
+  const fileSrc = useFileSource();
+  const [browserSol, setBrowserSol] = useState<Solution>();
+  const [browserFolderName, setBrowserFolderName] = useState<string>();
+  useEffect(() => { if (fsaSupported()) lastFolderName().then(setBrowserFolderName, () => {}); }, [fileSrc]);
+  const enterBrowserFolder = async (name: string, announce = true) => {
+    setFileSource({ kind: 'browser', name });
+    reloadTabs();
+    setBrowserSol(await browserSolution(name));
+    if (announce) { setTab('Features'); setView('editor'); setNotice(`Opened ${name} from your disk. Files open and save in place. For step bindings and debugging, use File ▸ Index Folder with Studio Server….`); }
+  };
+  const leaveBrowserFolder = async () => { if (fileSource().kind !== 'browser') return; await closeBrowserFolder(); setBrowserSol(undefined); };
+  const openFolder = async () => {
+    if (desktop?.pickFolder) {
+      const folder = await desktop.pickFolder('Open Folder');
+      if (folder) work(async () => {
+        const r = await api('/workspace', { ...config, repositoryRoot: folder });
+        setFileSource({ kind: 'server', root: r.config.repositoryRoot }); reloadTabs();
+        setIndex(r.index); setConfig(r.config); setActiveFolder(undefined); setQuery('');
+        setNotice(`Opened ${folder}.`);
+      });
+      return;
+    }
+    if (!fsaSupported()) { setNotice('This browser cannot open local folders directly (the File System Access API needs Chrome, Edge or Opera). Enter the folder path instead.'); setModal('settings'); return; }
+    try { await enterBrowserFolder(await pickFolder()); } catch (e) { if ((e as DOMException).name !== 'AbortError') setNotice((e as Error).message); }
+  };
+  const reopenBrowserFolder = async () => { const name = await restoreFolder(true); if (name) await enterBrowserFolder(name); else setNotice('The folder is no longer available. Use File ▸ Open Folder….'); };
+  const closeFolder = async () => { await leaveBrowserFolder(); setFileSource({ kind: 'server', root: config?.repositoryRoot }); reloadTabs(); setNotice('Folder closed. Showing the indexed repository.'); };
+  /** Save All: every open editor with unsaved edits writes itself (editors listen for this event). */
+  const saveAll = () => window.dispatchEvent(new Event(SAVE_ALL_EVENT));
+  useEffect(() => { const h = () => { if (feature && featureAuto.dirty) void featureAuto.save(); }; window.addEventListener(SAVE_ALL_EVENT, h); return () => window.removeEventListener(SAVE_ALL_EVENT, h); });
+  // Editor keys (VS Code): Ctrl+F4 / Ctrl+W (desktop) close, Ctrl+PageDown/PageUp switch tabs, Ctrl+Alt+S save all,
+  // Ctrl+S outside an editor saves the active one.
+  const editorKeys = useRef<(e: KeyboardEvent) => void>(() => {});
+  editorKeys.current = (e) => {
+    if (!(e.ctrlKey || e.metaKey)) return;
+    const active = getTabs().active;
+    if (e.key === 'F4' || (desktop && e.key.toLowerCase() === 'w' && !e.shiftKey)) { if (active) { e.preventDefault(); void closeEditor(active); } }
+    else if (e.key === 'PageDown' || e.key === 'PageUp') { e.preventDefault(); cycleTab(e.key === 'PageDown' ? 1 : -1); }
+    else if (e.altKey && e.key.toLowerCase() === 's') { e.preventDefault(); saveAll(); }
+    else if (e.key.toLowerCase() === 's' && !e.altKey && !e.shiftKey && !(e.target as HTMLElement | null)?.closest?.('.cm-editor') && tab === 'Features' && active) { e.preventDefault(); if (featureTabActive) saveFeature(); else saveAll(); }
+  };
+  useEffect(() => { const h = (e: KeyboardEvent) => editorKeys.current(e); window.addEventListener('keydown', h); return () => window.removeEventListener('keydown', h); }, []);
+  /** Closing a tab with unsaved edits keeps them (hot exit) after a confirmation. */
+  const closeEditor = async (file: string) => {
+    if (unsavedFiles().includes(file) && !(await confirm({ title: `Close ${file.split('/').pop()}?`, description: 'It has unsaved changes. They stay in this browser and come back when you reopen the file; press Ctrl+S first to write them to disk.', confirm: 'Close' }))) return;
+    closeTab(file);
+  };
   // Debugger: the debug windows dock under the editor while a session runs (or when opened).
   const debug = useDebug();
   const [debugOpen, setDebugOpen] = useLocalState('debugOpen', false);
@@ -285,12 +355,11 @@ export default function App() {
   // VS Code-style shell (activity bar, slim title bar, full-height editor) unless the classic tab layout is chosen.
   const vscode = prefs.layout !== 'classic';
   const featureViewSwitch = (
-    <ToggleGroup.Root type="single" className="segmented" aria-label="Feature view" value={view} onValueChange={(v) => { if (v) withTransition(() => setView(v)); }}>
+    <ToggleGroup.Root type="single" className="segmented" aria-label="Feature view" value={view === 'code' ? 'editor' : view} onValueChange={(v) => { if (v) withTransition(() => setView(v)); }}>
       {[
         { id: 'editor', icon: Code2, label: 'Editor' },
         { id: 'builder', icon: Blocks, label: 'Builder' },
         { id: 'recorder', icon: Circle, label: 'Recorder' },
-        ...(codeFile ? [{ id: 'code', icon: FileCode2, label: codeFile.file.split('/').pop()! }] : []),
       ].map((v) => (
         <ToggleGroup.Item key={v.id} value={v.id} className="segmented-item" aria-label={v.label}>
           <v.icon size={14} aria-hidden="true" />
@@ -343,7 +412,6 @@ export default function App() {
   const [undo, setUndo] = useState<{ run: () => void }>();
   const [showTop, setShowTop] = useState(false);
   const now = useNow(30000);
-  const saveRef = useRef<() => void>(() => {});
   // Feature editor buffer: auto save + hot exit (see editor/autosave.ts). Unsaved = differs from what is on disk.
   const [featureBase, setFeatureBase] = useState<{ file: string; source: string; hash: string }>();
   const [featureRestore, setFeatureRestore] = useState<string | null>(null);
@@ -352,6 +420,20 @@ export default function App() {
   useEffect(() => { setFeatureLinks(undefined); if (feature?.file) api(`/feature/links?file=${encodeURIComponent(feature.file)}`).then(setFeatureLinks).catch(() => {}); }, [feature?.file, revision]);
   useEffect(() => { let live = true; setFeatureBase(undefined); if (feature) sha256(feature.source).then((hash) => live && setFeatureBase({ file: feature.file, source: feature.source, hash })); return () => { live = false; }; }, [feature]);
   const featureAuto = useAutoSave({ file: feature?.file, value: source, loaded: featureBase });
+  // Ctrl+S / the save icon write the feature straight to disk; a new (unsaved) feature goes through the diff.
+  const saveFeature = () => { if (feature) void featureAuto.save().then((ok) => setNotice(ok ? `${feature.file} saved.` : 'Not saved: see the editor status.')); else previewChange(); };
+  // The active tab drives the editor area: a feature tab loads into the feature editor, a code tab shows its editor.
+  useEffect(() => {
+    const t = activeEditor;
+    if (!t) return;
+    if (t.kind === 'code') { if (tab === 'Features' && view === 'editor') setView('code'); return; }
+    if (tab === 'Features' && view === 'code') setView('editor');
+    if (feature?.file === t.file || (!feature && newFile === t.file)) return;
+    if (index?.features.some((f) => f.file === t.file)) loadFeature(t.file).catch((e) => setNotice((e as Error).message));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [openEditors.active, index?.revision]);
+  // A new, not yet saved feature draft gets its own tab.
+  useEffect(() => { if (!feature && newFile && source && tab === 'Features') openTab(newFile, 'feature'); }, [feature, newFile, !!source, tab]); // eslint-disable-line react-hooks/exhaustive-deps
   const dirty = feature ? featureAuto.dirty : !!source && source !== '';
   const pageDescription =
     tab === 'Features'
@@ -417,9 +499,16 @@ export default function App() {
   useEffect(() => {
     work(async () => {
       const data = await api('/workspace');
+      // A browser folder from the last session comes back without a prompt when the browser still allows it.
+      const browserFolder = fsaSupported() ? await restoreFolder(false).catch(() => undefined) : undefined;
+      if (browserFolder) await enterBrowserFolder(browserFolder, false);
+      else { setFileSource({ kind: 'server', root: data.config.repositoryRoot }); reloadTabs(); }
+      // The single code file of earlier versions becomes a tab.
+      if (codeFile) { openTab(codeFile.file, 'code'); setCodeFile(null); }
       setIndex(data.index);
       setConfig(data.config);
-      if (data.index.features[0]) await loadFeature(data.index.features[0].file);
+      // Open editors come back as they were; a first visit opens the first feature.
+      if (!getTabs().tabs.length && !browserFolder && data.index.features[0]) await loadFeature(data.index.features[0].file);
       setMatches(await api('/recording/match', { actions: demo }));
     });
   }, []);
@@ -448,10 +537,6 @@ export default function App() {
   }, [execution.status]);
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
-      if ((e.ctrlKey || e.metaKey) && e.key === 's' && document.querySelector('.editor-panel')) {
-        e.preventDefault();
-        saveRef.current();
-      }
       const typing = /^(INPUT|TEXTAREA|SELECT)$/.test((e.target as HTMLElement)?.tagName) || (e.target as HTMLElement)?.isContentEditable;
       if (e.altKey && /^[1-4]$/.test(e.key)) {
         e.preventDefault();
@@ -471,12 +556,12 @@ export default function App() {
       if ((e.ctrlKey || e.metaKey) && e.key === ';') {
         e.preventDefault();
         setMobileExplorer(true);
-        requestAnimationFrame(() => document.querySelector<HTMLInputElement>('input[aria-label="Search Solution Explorer"]')?.focus());
+        requestAnimationFrame(() => document.querySelector<HTMLInputElement>('input[aria-label="Search Explorer"]')?.focus());
       }
       if (!typing && !e.ctrlKey && !e.metaKey && e.key === '/') {
         e.preventDefault();
         setMobileExplorer(true);
-        requestAnimationFrame(() => document.querySelector<HTMLInputElement>('input[aria-label="Search Solution Explorer"]')?.focus());
+        requestAnimationFrame(() => document.querySelector<HTMLInputElement>('input[aria-label="Search Explorer"]')?.focus());
       }
       if ((e.ctrlKey || e.metaKey) && e.key === '.') {
         e.preventDefault();
@@ -520,6 +605,11 @@ export default function App() {
       else if (['stop', 'pause', 'continue', 'next', 'stepIn', 'stepOut'].includes(arg)) void debugControl(arg as Parameters<typeof debugControl>[0]).catch((e) => setNotice((e as Error).message));
       return;
     }
+    if (c === 'open-folder') { void openFolder(); return; }
+    if (c === 'save') { if (featureTabActive) saveFeature(); else saveAll(); return; }
+    if (c === 'save-all') { saveAll(); return; }
+    if (c === 'close-editor') { const a = getTabs().active; if (a) void closeEditor(a); return; }
+    if (c === 'close-all-editors') { closeAllTabs(); return; }
     if (c === 'diagnostics') { setModal('diagnostics'); return; }
     if (c === 'run-tests') { setModal('run'); return; }
     if (c === 'continue-draft') { setTab('Test Generator'); return; }
@@ -578,9 +668,11 @@ export default function App() {
   };
   const choose = (f: Feature) => {
     setFeature(f);
-    setSource(f.source);
+    openTab(f.file, 'feature');
     const draft = readDraft(f.file);
-    setFeatureRestore(draft !== null && draft !== f.source ? draft : null);
+    const changed = draft !== null && draft !== f.source;
+    // Edited earlier in this session (then another tab was opened): bring the buffer back without asking.
+    if (changed && editedThisSession(f.file)) { setSource(draft); setFeatureRestore(null); } else { setSource(f.source); setFeatureRestore(changed ? draft : null); }
     setValidation(undefined);
     setPreview(undefined);
     setActiveFolder(featureDirectory(f.file));
@@ -637,7 +729,6 @@ export default function App() {
       setPreview(p);
       setModal('preview');
     });
-  saveRef.current = () => previewChange();
   const acceptAllTop = () => {
     const next = { ...accepted };
     let n = 0;
@@ -739,13 +830,37 @@ export default function App() {
           </span>
           <Badge tone="purple">LOCAL</Badge>
         </div>
+        {/* VS Code style File menu (the desktop app has the native one). */}
+        {!desktop && (
+          <Dropdown
+            label="File"
+            className="menubar"
+            trigger={<button className="menubar-item" aria-label="File menu">File</button>}
+            entries={[
+              { label: 'New Feature', icon: Plus, onSelect: () => beginFeature() },
+              'separator' as const,
+              { label: 'Open Folder…', icon: FolderOpen, onSelect: () => void openFolder() },
+              ...(fileSrc.kind !== 'browser' && browserFolderName ? [{ label: `Reopen ${browserFolderName} (from disk)`, icon: Folder, onSelect: () => void reopenBrowserFolder() }] : []),
+              { label: 'Index Folder with Studio Server…', icon: Database, onSelect: () => setModal('settings') },
+              'separator' as const,
+              { label: 'Save', icon: Save, shortcut: 'Ctrl S', disabled: !openEditors.active, onSelect: () => (featureTabActive ? saveFeature() : saveAll()) },
+              { label: 'Save All', shortcut: 'Ctrl Alt S', onSelect: saveAll },
+              'separator' as const,
+              { label: 'Close Editor', shortcut: 'Ctrl F4', disabled: !openEditors.active, onSelect: () => { if (openEditors.active) void closeEditor(openEditors.active); } },
+              { label: 'Close All Editors', disabled: !openEditors.tabs.length, onSelect: () => closeAllTabs() },
+              ...(fileSrc.kind === 'browser' ? [{ label: 'Close Folder', onSelect: () => void closeFolder() }] : []),
+              'separator' as const,
+              { label: 'Preferences…', icon: Settings, shortcut: 'Ctrl ,', onSelect: () => setModal('preferences') },
+            ]}
+          />
+        )}
         <nav className="workspace-breadcrumb page-heading" aria-label="Breadcrumb">
           <span className="header-divider" aria-hidden="true" />
           <ol>
             <li>
               <button className="crumb" onClick={() => setModal('settings')} title="Workspace settings">
                 <Folder size={14} aria-hidden="true" />
-                {index?.workspace ?? 'Loading workspace'}
+                {fileSrc.kind === 'browser' ? fileSrc.name : (index?.workspace ?? 'Loading workspace')}
                 <ChevronDown size={12} aria-hidden="true" />
               </button>
             </li>
@@ -879,9 +994,10 @@ export default function App() {
         <aside id="feature-sidebar" className={`sidebar ${mobileExplorer ? 'mobile-open' : ''}`} style={{ width: sidebarWidth }}>
           <SolutionExplorer
             key={index?.workspace + ':' + config?.repositoryRoot}
-            features={index?.features ?? []}
+            features={fileSrc.kind === 'browser' ? [] : (index?.features ?? [])}
+            browserSolution={fileSrc.kind === 'browser' ? browserSol : undefined}
             revision={revision}
-            activeFile={tab === 'Features' && view === 'code' ? codeFile?.file : feature?.file}
+            activeFile={openEditors.active ?? feature?.file}
             onOpenFile={(file, line) => { editFile(file, line); setMobileExplorer(false); }}
             query={query}
             activeFolder={activeFolder ?? featureDirectory(feature?.file)}
@@ -1361,21 +1477,25 @@ export default function App() {
               </div>
             </>
           )}
-          {tab === 'Features' && view === 'code' && codeFile && (
-            <CodeEditor key={codeFile.file} file={codeFile.file} line={codeFile.line} onNotice={setNotice} onIndex={setIndex} />
-          )}
-          {tab === 'Features' && view === 'editor' && (
+          {tab === 'Features' && (view === 'code' || view === 'editor') && (
+            <div className="editor-area">
+            <EditorTabs onClose={closeEditor}>
+            {!openEditors.tabs.length && !newFile && (
+              <div className="editor-empty" role="note">
+                <FileCode2 size={40} aria-hidden="true" />
+                <p>Open a file from the Explorer, or File ▸ Open Folder….</p>
+              </div>
+            )}
+            {(featureTabActive || (!openEditors.tabs.length && !!newFile)) && (
             <section className="panel editor-panel">
-              <div className="panel-heading">
-                <div>
-                  <FileCode2 size={17} />
-                  <h2>{feature?.file ?? newFile}</h2>
-                </div>
+              <h2 className="sr-only">{feature?.file ?? newFile}</h2>
+              <EditorActions>
+                {feature && featureAuto.state !== 'saved' && <span className={`save-state ${featureAuto.state}`} role="status">{featureAuto.state === 'dirty' ? '● Unsaved' : featureAuto.state === 'saving' ? 'Saving…' : featureAuto.error}</span>}
                 {feature && (
                   <Dropdown
                     label="Debug"
                     align="end"
-                    trigger={<Button size="tiny" variant="ghost" aria-label="Debug" disabled={debugLive}><Bug size={13} />Debug</Button>}
+                    trigger={<Button size="tiny" variant="ghost" className="icon-only" aria-label="Debug" title="Debug" disabled={debugLive}><Bug size={14} /></Button>}
                     entries={[
                       { label: 'Start Debugging (F5)', icon: Bug, onSelect: () => debugFeature() },
                       ...feature.scenarios.map((sc) => ({ label: `Debug scenario: ${sc.name}`, onSelect: () => debugFeature(sc.name) })),
@@ -1388,7 +1508,7 @@ export default function App() {
                   <Dropdown
                     label="Step definitions"
                     align="end"
-                    trigger={<Button size="tiny" variant="ghost" aria-label="Step definitions"><Braces size={13} />Step definitions</Button>}
+                    trigger={<Button size="tiny" variant="ghost" className="icon-only" aria-label="Step definitions" title="Step definitions"><Braces size={14} /></Button>}
                     entries={[
                       ...(featureLinks?.stepFiles ?? []).map((s) => ({ label: `${s.file} (${s.steps})`, icon: FileCode2, onSelect: () => editFile(s.file) })),
                       ...(featureLinks?.codeBehind ? [{ label: `${featureLinks.codeBehind} (generated)`, icon: FileCode2, onSelect: () => editFile(featureLinks.codeBehind!) }] : []),
@@ -1398,19 +1518,11 @@ export default function App() {
                     ]}
                   />
                 )}
-                <Button
-                  size="tiny"
-                  onClick={() =>
-                    work(async () => {
-                      setValidation(await api('/scenario/validate', { source }));
-                      setNotice('Syntax is valid. Binding results are shown below.');
-                    })
-                  }
-                >
-                  <Check size={14} />
-                  Validate
-                </Button>
-              </div>
+                <IconButton label="Validate" shortcut="Ctrl Enter" onClick={() => work(async () => { setValidation(await api('/scenario/validate', { source })); setNotice('Syntax is valid. Binding results are shown below.'); })}><Check size={14} /></IconButton>
+                <IconButton label="Run tests" onClick={() => { setRunProject(config.targetProject.endsWith('.csproj') ? config.targetProject : ''); setRunFilter('FullyQualifiedName~' + (feature?.scenarios[0]?.name ?? '').replace(/\s/g, '')); setModal('run'); }}><Play size={14} /></IconButton>
+                <IconButton label="Review changes (diff)" onClick={() => previewChange()}><GitCompareArrows size={14} /></IconButton>
+                <IconButton label={feature ? 'Save' : 'Save new feature…'} shortcut="Ctrl S" disabled={!!feature && !featureAuto.dirty} onClick={saveFeature}><Save size={14} /></IconButton>
+              </EditorActions>
               {featureRestore !== null && feature && (
                 <div className="info-box restore-box" role="status">
                   <TriangleAlert size={14} /> Unsaved changes to {feature.file} from an earlier session were kept.
@@ -1421,11 +1533,12 @@ export default function App() {
               <GherkinEditor
                 file={feature?.file}
                 onDefinition={(s) => goToDefinition(s.keyword, s.text)}
-                height={vscode ? 'calc(100dvh - 205px - var(--debug-h, 0px))' : undefined}
+                height={vscode ? '100%' : undefined}
                 value={source}
                 onChange={setSource}
                 onNotice={setNotice}
                 onPreview={() => previewChange()}
+                onSave={saveFeature}
                 onValidate={() =>
                   work(async () => {
                     setValidation(await api('/scenario/validate', { source }));
@@ -1452,32 +1565,13 @@ export default function App() {
                     ))}
                 </div>
               )}
-              <div className="editor-bottom">
-                <Button
-                 
-                  onClick={() => {
-                    setRunProject(
-                      config.targetProject.endsWith('.csproj') ? config.targetProject : '',
-                    );
-                    setRunFilter(
-                      'FullyQualifiedName~' +
-                        (feature?.scenarios[0]?.name ?? '').replace(/\s/g, ''),
-                    );
-                    setModal('run');
-                  }}
-                >
-                  <Play size={14} />
-                  Run tests
-                </Button>
-                <span className="subtle">
-                  {source === feature?.source ? 'Saved source' : 'Unsaved changes'} · UTF-8
-                </span>
-                <Button variant="primary" onClick={() => previewChange()}>
-                  <Save size={16} />
-                  Preview changes
-                </Button>
-              </div>
             </section>
+          )}
+            {openEditors.tabs.filter((t) => t.kind === 'code').map((t) => (
+              <CodeEditor key={t.file} file={t.file} reveal={codeLines[t.file]} active={t.file === openEditors.active} onNotice={setNotice} onIndex={setIndex} />
+            ))}
+            </EditorTabs>
+            </div>
           )}
           {tab === 'Features' && (view === 'code' || view === 'editor') && showDebug && (
             <DebugPanel onOpen={openAt} onNotice={setNotice} onClose={() => { setDebugOpen(false); if (debugLive) setNotice('The session keeps running. Stop it with Shift+F5.'); }} />
@@ -1572,7 +1666,7 @@ export default function App() {
                   </button>
                 </div>
               </section>
-              <section className="panel">
+              <section className="panel builder-preview">
                 <div className="panel-heading">
                   <div>
                     <Code2 size={18} />
@@ -1582,7 +1676,7 @@ export default function App() {
                 <CodeMirror
                   value={draftSource()}
                   theme={editorTheme}
-                  height="340px"
+                  height={vscode ? '100%' : '340px'}
                   extensions={[StreamLanguage.define(gherkin), labelled('Generated Gherkin preview', true)]}
                   editable={false}
                 />
@@ -1780,6 +1874,9 @@ export default function App() {
                     initial={config}
                     onSubmit={async (values) => {
                       const r = await api('/workspace', values);
+                      await leaveBrowserFolder();
+                      setFileSource({ kind: 'server', root: r.config.repositoryRoot });
+                      reloadTabs();
                       setIndex(r.index);
                       setConfig(r.config);
                       setActiveFolder(undefined);

@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { api } from '../api';
+import { saveFile } from '../files/provider';
 import { usePrefs } from '../radix2';
 
 /** SHA-256 hex, identical to the server's createHash('sha256') so the editor can prove what it loaded. */
@@ -8,8 +8,12 @@ export async function sha256(text: string) {
   return [...new Uint8Array(buf)].map((b) => b.toString(16).padStart(2, '0')).join('');
 }
 const draftKey = (file: string) => `tas:unsaved:${file}`;
+// Files edited in this browser session: switching tabs brings their buffer back without asking.
+const sessionKey = 'tas:session-edits';
+export function editedThisSession(file: string) { try { return (JSON.parse(sessionStorage.getItem(sessionKey) ?? '[]') as string[]).includes(file); } catch { return false; } }
+function markSession(file: string) { try { const l = JSON.parse(sessionStorage.getItem(sessionKey) ?? '[]') as string[]; if (!l.includes(file)) sessionStorage.setItem(sessionKey, JSON.stringify([...l, file])); } catch { /* storage blocked */ } }
 export function readDraft(file: string): string | null { try { return localStorage.getItem(draftKey(file)); } catch { return null; } }
-function writeDraft(file: string, value: string | null) { try { if (value === null) localStorage.removeItem(draftKey(file)); else localStorage.setItem(draftKey(file), value); } catch { /* storage full or blocked */ } }
+function writeDraft(file: string, value: string | null) { if (value !== null) markSession(file); try { if (value === null) localStorage.removeItem(draftKey(file)); else localStorage.setItem(draftKey(file), value); } catch { /* storage full or blocked */ } }
 /** Files with unsaved edits kept in this browser (the explorer's pending-changes filter). */
 export function unsavedFiles() { try { return Object.keys(localStorage).filter((k) => k.startsWith('tas:unsaved:')).map((k) => k.slice('tas:unsaved:'.length)); } catch { return []; } }
 export const UNSAVED_EVENT = 'tas:unsaved-changed';
@@ -45,7 +49,7 @@ export function useAutoSave({ file, value, loaded }: { file?: string; value: str
     if (!file || !base.current || base.current.file !== file || value === base.current.source) return true;
     setState('saving');
     try {
-      const r = await api<{ hash: string }>('/file/save', { file, source: value, baseHash: base.current.hash });
+      const r = await saveFile(file, value, base.current.hash);
       base.current = { file, source: value, hash: r.hash };
       writeDraft(file, null);
       window.dispatchEvent(new Event(UNSAVED_EVENT));

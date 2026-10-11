@@ -259,3 +259,12 @@ Reference: Visual Studio debugger (breakpoints, Step Into/Over/Out, Locals, Watc
 - [x] H4 Locals (expandable), Watch 1 (add/remove expressions, kept per browser, re-evaluated per frame), Call Stack (switch frames; framework frames collapse to [External Code]), Output, DataTips on hover while paused
 - [x] H5 Runnable sample `samples/Calculator` (SpecFlow + NUnit, no browser) and `npm run debugger:setup` to install netcoredbg; desktop app bundles it
 - [x] Bug: the code editor's toolbar (save state, Revert, Save…) was hidden behind the title bar (inherited the feature editor's floating-toolbar position)
+
+## Editor tabs, full-screen layout and Open Folder (2026-10-11)
+- [x] T1 Full width and height: the editor area, Test Generator, Builder, Dashboard and Dictionary Inspector fill the window (flex layout instead of fixed heights); no page margins in the VS Code layout
+- [x] T2 Explorer heading is just "EXPLORER"
+- [x] T3 Editor tabs like VS Code: several files open at once, ● for unsaved, ×/middle-click/Ctrl+F4 to close, Close Others / to the Right / All, Ctrl+PageDown/PageUp; when tabs do not fit, ‹ › arrows reveal the next hidden tab and ⌄ lists all open editors; kept per folder
+- [x] T4 Save with Ctrl+S or the save icon straight to disk (C# and feature files); Review changes (diff) and Revert stay as icons; File ▸ Save All (Ctrl+Alt+S); edits from this session survive tab switches and reloads
+- [x] T5 File menu in the web title bar (New Feature, Open Folder…, Save, Save All, Close Editor, Close All, Close Folder, Preferences); the desktop app's native File menu gains Open Folder…, Save, Save All, Close Editor (Ctrl+W; window close moves to Ctrl+Shift+W)
+- [x] T6 Web Open Folder uses the File System Access API: the folder is read and written in place (no upload), the Explorer is built in the browser, files open in tabs and save with Ctrl+S; the folder is reopened on the next visit when the browser allows. Indexing and debugging need the folder's path (the API never reveals it): File ▸ Index Folder with Studio Server…
+

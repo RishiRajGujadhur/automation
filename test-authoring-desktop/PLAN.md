@@ -180,3 +180,7 @@ Legend: `[x]` done · `[ ]` to do. Every feature is committed and pushed when fi
 - [x] D1 Debug menu like Visual Studio (Start Debugging / Continue F5, Stop Shift+F5, Restart, Break All, Step Into F11, Step Over F10, Step Out Shift+F11, Toggle Breakpoint F9, Delete All Breakpoints, Windows)
 - [x] D2 Rescan Repository moves from F5 to Ctrl+Alt+R and Full Screen from F11 to Shift+Alt+Enter (Visual Studio keys) so the debug keys reach the editor
 - [x] D3 netcoredbg bundled in the installer (STUDIO_NETCOREDBG); packaged test debugs the Calculator sample
+
+## Tabs and Open Folder (2026-10-11)
+- [x] D4 File menu: Open Folder… (was Open Repository…), Save, Save All, Close Editor (Ctrl+W), Close All Editors; Window ▸ Close moves to Ctrl+Shift+W; tray says Open Folder…
+

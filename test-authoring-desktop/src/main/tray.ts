@@ -42,7 +42,7 @@ export function updateTray() {
   tray.setContextMenu(Menu.buildFromTemplate([
     { label: ctx.win?.isVisible() ? 'Hide TestAuthoring Studio' : 'Show TestAuthoring Studio', click: toggleWindow },
     { type: 'separator' },
-    { label: 'Open Repository…', click: a.openRepository },
+    { label: 'Open Folder…', click: a.openRepository },
     { label: 'Open Recent', submenu: recent.length ? recent.map((f) => ({ label: path.basename(f), sublabel: f, click: () => a.openRecent(f) })) : [{ label: 'No recent repositories', enabled: false }] },
     { label: 'Rescan Repository', click: a.rescan },
     { label: state.recording ? 'Recording…' : 'Start a Recording', enabled: !state.recording, click: () => { toggleWindowOpen(); ctx.win?.webContents.send(IPC.menu, 'record'); } },

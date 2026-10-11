@@ -4,15 +4,20 @@ import { StreamLanguage } from '@codemirror/language';
 import { csharp } from '@codemirror/legacy-modes/mode/clike';
 import { forEachDiagnostic, linter, lintGutter, type Diagnostic } from '@codemirror/lint';
 import { keymap, EditorView } from '@codemirror/view';
-import { Save, FileCode2, TriangleAlert, RotateCcw, CircleCheck, CloudOff, Loader } from 'lucide-react';
+import { Save, TriangleAlert, RotateCcw, CircleCheck, CloudOff, Loader, GitCompareArrows } from 'lucide-react';
 import { api, type FilePreview } from '../api';
 import { Button } from '../radix';
+import { IconButton } from '../radix2';
 import DiffApproval from '../DiffApproval';
 import { useEditorTheme } from '../themes';
 import { labelled } from './a11y';
-import { readDraft, useAutoSave } from './autosave';
+import { readDraft, useAutoSave, editedThisSession } from './autosave';
 import { xmlExtensions } from './xml';
 import { breakpoints } from './breakpoints';
+import { gherkinSyntaxExtensions } from './gherkin';
+import { readFile, isBrowser } from '../files/provider';
+import { EditorActions } from '../files/EditorTabs';
+import { SAVE_ALL_EVENT } from './events';
 import type { Index } from '../types';
 
 type CsDiagnostic = { line: number; column: number; endLine: number; endColumn: number; severity: 'error' | 'warning'; id: string; message: string };
@@ -35,11 +40,19 @@ const csharpLinter = (file: string) => linter(async (view) => {
   }
 }, { delay: 600 });
 
+function languageOf(file: string, browser: boolean) {
+  if (file.endsWith('.cs')) return [...(browser ? [] : [breakpoints(file)]), StreamLanguage.define(csharp), csharpLinter(file)];
+  if (/\.(xml|csproj|props|targets|config|runsettings|resx)$/.test(file)) return xmlExtensions(false);
+  if (file.endsWith('.feature')) return [...(browser ? [] : [breakpoints(file)]), ...gherkinSyntaxExtensions()];
+  return [];
+}
+
 /**
- * Editor for repository source files (C# step definitions and page objects, dictionary XML): syntax colouring,
- * Roslyn diagnostics for C#, auto save / hot exit, and Ctrl+S to preview the diff and approve the write.
+ * Editor for one open file tab (C# step definitions and page objects, dictionary XML, and any file of a browser
+ * folder): syntax colouring, Roslyn diagnostics for C#, auto save / hot exit, Ctrl+S or the save icon to write it.
+ * Inactive tabs stay mounted (hidden) so their undo history and scroll position survive tab switches.
  */
-export default function CodeEditor({ file, line, onNotice, onIndex }: { file: string; line?: number; onNotice?: (m: string) => void; onIndex?: (i: Index) => void }) {
+export default function CodeEditor({ file, reveal, active = true, onNotice, onIndex }: { file: string; reveal?: { line: number }; active?: boolean; onNotice?: (m: string) => void; onIndex?: (i: Index) => void }) {
   const theme = useEditorTheme();
   const ref = useRef<ReactCodeMirrorRef>(null);
   const [loaded, setLoaded] = useState<{ file: string; source: string; hash: string }>();
@@ -48,18 +61,19 @@ export default function CodeEditor({ file, line, onNotice, onIndex }: { file: st
   const [restorable, setRestorable] = useState<string | null>(null);
   const [preview, setPreview] = useState<FilePreview>();
   const [problems, setProblems] = useState({ errors: 0, warnings: 0 });
-  const isCs = file.endsWith('.cs');
+  const browser = isBrowser();
 
   useEffect(() => {
     let live = true;
     setLoaded(undefined); setPreview(undefined); setError('');
-    api<{ source: string; hash: string }>(`/source?file=${encodeURIComponent(file)}`)
+    readFile(file)
       .then((r) => {
         if (!live) return;
         setLoaded({ file, ...r });
         const draft = readDraft(file);
-        setRestorable(draft !== null && draft !== r.source ? draft : null);
-        setValue(r.source);
+        const changed = draft !== null && draft !== r.source;
+        // Edited earlier in this session (e.g. before switching tabs): bring the buffer straight back.
+        if (changed && editedThisSession(file)) { setValue(draft); setRestorable(null); } else { setRestorable(changed ? draft : null); setValue(r.source); }
       })
       .catch((e) => live && setError((e as Error).message));
     return () => { live = false; };
@@ -69,42 +83,43 @@ export default function CodeEditor({ file, line, onNotice, onIndex }: { file: st
   // Jump to the requested line once the document is in place.
   useEffect(() => {
     const view = ref.current?.view;
-    if (!view || !loaded || !line) return;
-    const l = view.state.doc.line(Math.max(1, Math.min(line, view.state.doc.lines)));
+    if (!view || !loaded || !reveal) return;
+    const l = view.state.doc.line(Math.max(1, Math.min(reveal.line, view.state.doc.lines)));
     view.dispatch({ selection: { anchor: l.from, head: l.to }, effects: EditorView.scrollIntoView(l.from, { y: 'center' }) });
     view.focus();
-  }, [loaded, line]);
+  }, [loaded, reveal]);
+  useEffect(() => { if (active) requestAnimationFrame(() => ref.current?.view?.requestMeasure()); }, [active]);
 
-  const previewSave = async () => {
+  const save = () => auto.save().then((ok) => onNotice?.(ok ? `${file} saved.` : 'Not saved: see the editor status.'));
+  const compare = async () => {
     try { setPreview(await api<FilePreview>('/file/preview', { file, source: value })); } catch (e) { onNotice?.((e as Error).message); }
   };
-  // Ctrl+S reads the latest buffer through a ref so the keymap (and the linter) never need rebuilding.
-  const saveRef = useRef<() => void>(() => {});
-  saveRef.current = () => { if (useDiffOnSave()) previewSave(); else auto.save().then((ok) => onNotice?.(ok ? `${file} saved.` : 'Not saved: see the editor status.')); };
+  // Ctrl+S saves straight to disk (the latest buffer is read through a ref, so the keymap never rebuilds).
+  const saveRef = useRef(save);
+  saveRef.current = save;
+  useEffect(() => { const h = () => { if (auto.dirty) void auto.save(); }; window.addEventListener(SAVE_ALL_EVENT, h); return () => window.removeEventListener(SAVE_ALL_EVENT, h); });
   const extensions = useMemo(() => [
-    ...(isCs ? [breakpoints(file), StreamLanguage.define(csharp), csharpLinter(file)] : xmlExtensions(false)),
+    ...languageOf(file, browser),
     lintGutter(),
     labelled(`Source of ${file}`, false),
-    keymap.of([{ key: 'Mod-s', preventDefault: true, run: () => { saveRef.current(); return true; } }]),
+    keymap.of([{ key: 'Mod-s', preventDefault: true, run: () => { void saveRef.current(); return true; } }]),
     // Stable per file: rebuilding extensions on every keystroke would reset the linter before it reports.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  ], [file, isCs]);
+  ], [file, browser]);
 
   return (
-    <section className="code-editor panel" aria-label={`Editing ${file}`}>
-      <div className="editor-toolbar">
-        <span className="editor-file"><FileCode2 size={14} aria-hidden="true" />{file}</span>
+    <section className="code-editor" aria-label={`Editing ${file}`} hidden={!active}>
+      <EditorActions active={active}>
         <span className={`save-state ${auto.state}`} role="status">
           {auto.state === 'saved' && <><CircleCheck size={12} />Saved</>}
           {auto.state === 'dirty' && <>● Unsaved</>}
           {auto.state === 'saving' && <><Loader size={12} className="spin" />Saving…</>}
           {(auto.state === 'conflict' || auto.state === 'error') && <><CloudOff size={12} />{auto.error}</>}
         </span>
-        <span className="toolbar-spacer" />
         {problems.errors + problems.warnings > 0 && <span className="meta">{problems.errors} errors · {problems.warnings} warnings</span>}
-        <Button size="small" variant="ghost" disabled={!auto.dirty} onClick={() => loaded && setValue(loaded.source)}><RotateCcw size={13} />Revert</Button>
-        <Button size="small" variant="primary" disabled={!auto.dirty} onClick={previewSave} title="Preview the diff, then approve (Ctrl+S)"><Save size={13} />Save…</Button>
-      </div>
+        {!browser && <IconButton label="Compare with saved" disabled={!auto.dirty} onClick={compare}><GitCompareArrows size={14} /></IconButton>}
+        <IconButton label="Revert file" disabled={!auto.dirty} onClick={() => loaded && setValue(loaded.source)}><RotateCcw size={14} /></IconButton>
+        <IconButton label="Save" shortcut="Ctrl S" disabled={!auto.dirty} onClick={save}><Save size={14} /></IconButton>
+      </EditorActions>
       {restorable !== null && (
         <div className="info-box restore-box" role="status">
           <TriangleAlert size={14} /> Unsaved changes from an earlier session were kept.
@@ -119,7 +134,7 @@ export default function CodeEditor({ file, line, onNotice, onIndex }: { file: st
             ref={ref}
             value={value}
             theme={theme}
-            height="var(--code-editor-height)"
+            height="100%"
             extensions={extensions}
             // Word completion is not C# IntelliSense: it hijacks Enter (e.g. "test" → DateTimeOffset), so it stays off.
             basicSetup={{ autocompletion: false }}
@@ -136,13 +151,9 @@ export default function CodeEditor({ file, line, onNotice, onIndex }: { file: st
       {preview && (
         <div className="code-editor-preview">
           <DiffApproval preview={preview} height="200px" onApplied={(i) => { auto.markSaved(value); setPreview(undefined); onIndex?.(i); onNotice?.(`${file} written.`); }} />
-          <Button size="small" variant="ghost" onClick={() => setPreview(undefined)}>Close preview</Button>
+          <Button size="small" variant="ghost" onClick={() => setPreview(undefined)}>Close comparison</Button>
         </div>
       )}
     </section>
   );
-}
-/** Ctrl+S previews a diff unless auto save is on (then it saves directly, like VS Code). */
-function useDiffOnSave() {
-  try { return (JSON.parse(localStorage.getItem('tas:prefs') ?? '{}').autoSave ?? 'afterDelay') === 'off'; } catch { return true; }
 }

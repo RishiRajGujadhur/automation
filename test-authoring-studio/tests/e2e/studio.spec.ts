@@ -14,7 +14,7 @@ test('catalog to builder to validated diff; recording matches require acceptance
   await page.getByRole('button', { name: 'Apply to editor' }).click();
   await page.getByRole('button', { name: 'Validate', exact: true }).click();
   await expect(page.getByText('Syntax is valid.', { exact: false }).first()).toBeVisible();
-  await page.getByRole('button', { name: 'Preview changes', exact: true }).click();
+  await page.getByRole('button', { name: 'Review changes (diff)', exact: true }).click();
   await expect(page.getByRole('dialog')).toBeVisible();
   await expect(page.getByRole('button', { name: 'Approve and write file' })).toBeEnabled();
   await page.getByRole('button', { name: 'Close dialog' }).click();

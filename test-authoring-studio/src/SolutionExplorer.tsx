@@ -9,7 +9,7 @@ import { normalizeFeaturePath, parentFolders } from './featureTree';
 import { UNSAVED_EVENT, unsavedFiles } from './editor/autosave';
 import type { Feature } from './types';
 
-type Solution = {
+export type Solution = {
   name: string;
   projects: { file: string; name: string; dir: string }[];
   packages: string[];
@@ -32,6 +32,8 @@ type Props = {
   onFolder: (folder: string) => void;
   onNew: (folder?: string) => void;
   onSource?: (file: string, line: number) => void;
+  /** A folder opened in the browser (File System Access): its tree is built client-side instead of by the server. */
+  browserSolution?: Solution;
 };
 /** Layers hidden until "Show all files" (build output and unclassified files). */
 const HIDDEN_LAYERS = new Set(['Output', 'Other']);
@@ -61,15 +63,16 @@ function buildTree(files: { file: string; layer: string }[]): Node[] {
  * with file nesting (a feature shows the step files its steps bind to, and its generated code-behind),
  * Sync with Active Document, a pending-changes filter, Collapse All, Show All Files and search (Ctrl+;).
  */
-export default function SolutionExplorer({ features, revision, activeFile, query, activeFolder, onQuery, onSelect, onOpenFile, onFolder, onNew, onSource }: Props) {
-  const [solution, setSolution] = useState<Solution>();
+export default function SolutionExplorer({ features, revision, activeFile, query, activeFolder, onQuery, onSelect, onOpenFile, onFolder, onNew, onSource, browserSolution }: Props) {
+  const [serverSolution, setSolution] = useState<Solution>();
+  const solution = browserSolution ?? serverSolution;
   const [collapsed, setCollapsed] = useState<Set<string>>(() => new Set(['@deps']));
   const [openNests, setOpenNests] = useState<Set<string>>(new Set());
   const [showAll, setShowAll] = useState(false);
   const [pendingOnly, setPendingOnly] = useState(false);
   const [pending, setPending] = useState<string[]>(unsavedFiles);
   const tree = useRef<HTMLElement>(null);
-  useEffect(() => { api<Solution>('/solution').then(setSolution).catch(() => {}); }, [revision]);
+  useEffect(() => { if (!browserSolution) api<Solution>('/solution').then(setSolution).catch(() => {}); }, [revision, browserSolution]);
   useEffect(() => { const h = () => setPending(unsavedFiles()); window.addEventListener(UNSAVED_EVENT, h); return () => window.removeEventListener(UNSAVED_EVENT, h); }, []);
 
   // Files: the solution model plus any indexed feature it does not know yet (e.g. just created).
@@ -104,8 +107,7 @@ export default function SolutionExplorer({ features, revision, activeFile, query
   const open = (file: string) => {
     const feature = featureByPath.get(file);
     if (feature) onSelect(feature);
-    else if (/\.(cs|xml)$/i.test(file)) onOpenFile(file);
-    else onSource?.(file, 1);
+    else onOpenFile(file);
   };
   const isActive = (p: string) => !!activeFile && normalizeFeaturePath(activeFile) === p;
   const fileRow = (path: string, name: string, depth: number, extra?: { linked?: boolean; note?: string }) => {
@@ -191,10 +193,10 @@ export default function SolutionExplorer({ features, revision, activeFile, query
     <button className={`icon-button ${pressed ? 'pressed' : ''}`} aria-label={label} title={label} aria-pressed={pressed} onClick={onClick} {...extra}><Icon size={14} /></button>
   );
   return (
-    <section className="feature-explorer solution-explorer" aria-label="Solution Explorer">
+    <section className="feature-explorer solution-explorer" aria-label="Explorer">
       {/* The tour spotlights the heading, not the whole (tall) tree, so its buttons stay on screen on phones. */}
       <div className="sidebar-heading" data-tour="explorer">
-        <span>SOLUTION EXPLORER</span>
+        <span>EXPLORER</span>
         <div className="se-tools">
           {tool('Sync with Active Document', LocateFixed, sync)}
           {tool(pendingOnly ? 'Show all changes filter off' : 'Pending changes filter', PencilLine, () => setPendingOnly(!pendingOnly), pendingOnly)}
@@ -205,7 +207,7 @@ export default function SolutionExplorer({ features, revision, activeFile, query
       </div>
       <label className="search-box">
         <Search size={14} />
-        <input aria-label="Search Solution Explorer" placeholder="Search Solution Explorer (Ctrl+;)" value={query} onChange={(e) => onQuery(e.target.value)} onKeyDown={(e) => { if (e.key === 'Escape' && query) { e.stopPropagation(); onQuery(''); } }} />
+        <input aria-label="Search Explorer" placeholder="Search Explorer (Ctrl+;)" value={query} onChange={(e) => onQuery(e.target.value)} onKeyDown={(e) => { if (e.key === 'Escape' && query) { e.stopPropagation(); onQuery(''); } }} />
         {query && <button className="icon-button" aria-label="Clear search" onClick={() => onQuery('')}><X size={13} /></button>}
       </label>
       <div className="explorer-summary" role="status">

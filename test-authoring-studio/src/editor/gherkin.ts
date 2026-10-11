@@ -363,3 +363,8 @@ export function scenarioExtensions(label: string): Extension[] {
     EditorView.lineWrapping,
   ];
 }
+
+/** Gherkin highlighting and syntax checks only: for feature files outside the indexed repository (no binding checks). */
+export function gherkinSyntaxExtensions(): Extension[] {
+  return [StreamLanguage.define(gherkin), EditorState.languageData.of(() => [{ commentTokens: { line: '#' } }]), gherkinSyntaxLinter];
+}

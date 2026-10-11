@@ -68,7 +68,7 @@ export function buildMenu() {
     {
       label: '&File',
       submenu: [
-        { label: 'Open Repository…', accelerator: 'CmdOrCtrl+Shift+O', click: () => pickAndOpenRepository().then(buildMenu) },
+        { label: 'Open Folder…', accelerator: 'CmdOrCtrl+Shift+O', click: () => pickAndOpenRepository().then(buildMenu) },
         { label: 'Open Recent', submenu: recentMenu() },
         { label: 'Reopen Last Closed Repository', accelerator: 'CmdOrCtrl+Shift+T', enabled: !!s.lastClosed && fs.existsSync(s.lastClosed), click: () => { if (s.lastClosed) openAndRebuild(s.lastClosed); } },
         { label: 'Open Sample Repository', click: () => openAndRebuild(path.join(resourcesRoot(), 'fixtures')) },
@@ -77,6 +77,12 @@ export function buildMenu() {
         { label: 'New Feature', accelerator: 'CmdOrCtrl+N', click: () => send('new-feature') },
         { label: 'Start a Recording', accelerator: 'CmdOrCtrl+Shift+R', click: () => send('record') },
         { label: 'Run Tests…', click: () => send('run-tests') },
+        { type: 'separator' },
+        // Handled by the page (the focused editor saves itself), so the keys are shown but not registered here.
+        { label: 'Save', accelerator: 'CmdOrCtrl+S', registerAccelerator: false, click: () => send('save') },
+        { label: 'Save All', accelerator: 'CmdOrCtrl+Alt+S', registerAccelerator: false, click: () => send('save-all') },
+        { label: 'Close Editor', accelerator: 'CmdOrCtrl+W', registerAccelerator: false, click: () => send('close-editor') },
+        { label: 'Close All Editors', click: () => send('close-all-editors') },
         { label: 'Rescan Repository', accelerator: 'CmdOrCtrl+Alt+R', click: () => rescan() },
         { type: 'separator' },
         {
@@ -218,7 +224,7 @@ export function buildMenu() {
         { label: 'Center Window', click: () => ctx.win?.center() },
         { label: 'Reset Window Size', click: () => { const w = ctx.win; if (!w) return; if (w.isMaximized()) w.unmaximize(); w.setSize(1440, 920); w.center(); } },
         { role: 'zoom', visible: isMac },
-        ...(isMac ? [{ role: 'front' as const }] : [{ role: 'close' as const }]),
+        ...(isMac ? [{ role: 'front' as const }] : [{ role: 'close' as const, accelerator: 'CmdOrCtrl+Shift+W' }]),
       ],
     },
     {

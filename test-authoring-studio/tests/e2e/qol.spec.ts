@@ -84,7 +84,7 @@ test('nested feature search preserves ancestry and new drafts use the selected f
       .getByRole('button', { name: 'Collapse folder Features/Payroll', exact: true })
       .click();
     await expect(page.getByRole('button', { name: 'Create.feature', exact: true })).toHaveCount(0);
-    await page.getByRole('textbox', { name: 'Search Solution Explorer' }).fill('payroll salary');
+    await page.getByRole('textbox', { name: 'Search Explorer' }).fill('payroll salary');
     await expect(
       page.getByRole('button', { name: 'Collapse folder Features/Payroll/Salary', exact: true }),
     ).toBeVisible();
@@ -104,7 +104,7 @@ test('nested feature search preserves ancestry and new drafts use the selected f
       .getByLabel('FEATURE FILE')
       .fill('Features/Payroll/Salary/Adjustments/NewSalary.feature');
     await page.getByRole('button', { name: 'Create draft', exact: true }).click();
-    await page.getByRole('button', { name: 'Preview changes', exact: true }).click();
+    await page.getByRole('button', { name: 'Save new feature…', exact: true }).click();
     await expect(
       page
         .getByText('Features/Payroll/Salary/Adjustments/NewSalary.feature', { exact: true })
@@ -112,7 +112,7 @@ test('nested feature search preserves ancestry and new drafts use the selected f
     ).toBeVisible();
     await page.getByRole('button', { name: 'Approve and write file' }).click();
     await expect(
-      page.getByRole('button', { name: 'NewSalary.feature', exact: true }),
+      page.getByRole('navigation').getByRole('button', { name: 'NewSalary.feature', exact: true }),
     ).toBeVisible();
     expect(
       await fs.readFile(
@@ -120,7 +120,7 @@ test('nested feature search preserves ancestry and new drafts use the selected f
         'utf8',
       ),
     ).toContain('Feature:');
-    await page.getByRole('textbox', { name: 'Search Solution Explorer' }).fill('no-such-feature');
+    await page.getByRole('textbox', { name: 'Search Explorer' }).fill('no-such-feature');
     await expect(page.getByText('Nothing matches your search.')).toBeVisible();
     await page.getByRole('button', { name: 'Clear search' }).click();
     await expect(page.getByRole('button', { name: 'Login.feature', exact: true })).toBeVisible();
@@ -140,9 +140,9 @@ test('mobile users can open the explorer and take or dismiss the tour', async ({
   await page.goto('/');
   await expect(page.getByRole('button', { name: 'Guide me' })).toBeEnabled();
   await page.getByRole('button', { name: 'Toggle feature explorer' }).click();
-  await expect(page.getByRole('textbox', { name: 'Search Solution Explorer' })).toBeVisible();
+  await expect(page.getByRole('textbox', { name: 'Search Explorer' })).toBeVisible();
   await page.getByRole('button', { name: 'Login.feature', exact: true }).click();
-  await expect(page.getByRole('textbox', { name: 'Search Solution Explorer' })).not.toBeVisible();
+  await expect(page.getByRole('textbox', { name: 'Search Explorer' })).not.toBeVisible();
   await page.getByRole('button', { name: 'Guide me' }).click();
   for (const title of [
     '1. Connect your .NET project',

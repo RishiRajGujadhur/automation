@@ -1,0 +1,335 @@
+// Editor area: VS Code style tabs over the active editor; editors fill all remaining width and height.
+.editor-area {
+  display: flex;
+  flex-direction: column;
+  height: calc(100dvh - 170px - var(--debug-h, 0px));
+  min-height: 360px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  overflow: hidden;
+  background: var(--surface);
+}
+.editor-tabs {
+  display: flex;
+  align-items: stretch;
+  flex: none;
+  height: 35px;
+  background: var(--surface-2);
+  border-bottom: 1px solid var(--border);
+}
+.tab-strip {
+  display: flex;
+  flex: 0 1 auto;
+  min-width: 0;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scrollbar-width: none;
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}
+.editor-tab {
+  position: relative;
+  display: flex;
+  align-items: center;
+  flex: none;
+  max-width: 240px;
+  border-right: 1px solid var(--border);
+  color: var(--text-muted);
+  &.active {
+    background: var(--surface);
+    color: var(--text-strong);
+    box-shadow: inset 0 2px 0 var(--accent);
+  }
+  &:hover:not(.active) {
+    background: color-mix(in srgb, var(--surface) 50%, var(--surface-2));
+  }
+}
+.editor-tab-label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  height: 100%;
+  padding: 0 4px 0 10px;
+  background: transparent;
+  border: 0;
+  color: inherit;
+  font-size: 13px;
+  span {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  small {
+    color: var(--text-muted);
+    font-size: 11px;
+  }
+}
+.editor-tab-close {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 24px;
+  height: 24px;
+  margin-right: 4px;
+  padding: 0;
+  border: 0;
+  border-radius: 4px;
+  background: transparent;
+  color: inherit;
+  opacity: 0;
+  > * {
+    grid-area: 1 / 1;
+  }
+  .dot {
+    display: none;
+    font-size: 10px;
+  }
+  &:hover {
+    background: color-mix(in srgb, var(--text) 12%, transparent);
+  }
+}
+.editor-tab.active .editor-tab-close,
+.editor-tab:hover .editor-tab-close,
+.editor-tab-close:focus-visible {
+  opacity: 1;
+}
+// Unsaved: a dot that turns into × on hover, like VS Code.
+.editor-tab.unsaved .editor-tab-close {
+  opacity: 1;
+  .dot {
+    display: block;
+  }
+  svg {
+    visibility: hidden;
+  }
+  &:hover,
+  &:focus-visible {
+    .dot {
+      display: none;
+    }
+    svg {
+      visibility: visible;
+    }
+  }
+}
+.tab-scroll {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 26px;
+  padding: 0;
+  border: 0;
+  border-right: 1px solid var(--border);
+  background: var(--surface-2);
+  color: var(--text-muted);
+  &:hover {
+    color: var(--text-strong);
+  }
+}
+.editor-tab-actions {
+  display: flex;
+  align-items: center;
+  flex: none;
+  gap: 2px;
+  margin-left: auto;
+  padding: 0 6px;
+  font-size: 12px;
+  .icon-button {
+    width: 28px;
+    height: 28px;
+  }
+  .button {
+    height: 26px;
+  }
+  .save-state,
+  .meta {
+    margin-right: 6px;
+    white-space: nowrap;
+  }
+  .save-state.conflict,
+  .save-state.error {
+    color: var(--red, #f85149);
+    max-width: 320px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+}
+
+// Editors fill the area below the tabs.
+.editor-area > .code-editor,
+.editor-area > .editor-panel {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  margin: 0;
+  border: 0;
+  border-radius: 0;
+}
+.editor-area > .code-editor[hidden] {
+  display: none !important;
+}
+.code-editor-surface {
+  flex: 1;
+  min-height: 0;
+  > .cm-theme,
+  > div {
+    height: 100%;
+  }
+}
+.editor-area > .editor-panel {
+  .gherkin-editor {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    min-height: 0;
+  }
+  .gherkin-editor-surface {
+    flex: 1;
+    min-height: 0;
+    > .cm-theme,
+    > div {
+      height: 100%;
+    }
+  }
+  // Problems: one slim row (the hint text is in the editor's right-click menu and the shortcut list).
+  .editor-problems {
+    flex: none;
+    min-height: 24px;
+    padding: 0 8px;
+    .subtle {
+      display: none;
+    }
+    .problem-chip {
+      min-height: 20px;
+      padding: 0 6px;
+    }
+  }
+  .validation-results {
+    flex: none;
+    max-height: 30%;
+    overflow: auto;
+  }
+}
+.editor-empty {
+  display: grid;
+  flex: 1;
+  place-content: center;
+  justify-items: center;
+  gap: 10px;
+  color: var(--text-muted);
+  font-size: 13px;
+}
+
+// VS Code layout: no margins; the editor area takes the whole column and the debug windows dock below it.
+:root[data-layout='vscode'] {
+  .main-content:has(> .editor-area) {
+    display: flex;
+    flex-direction: column;
+    padding: 0;
+    overflow: hidden;
+    scrollbar-gutter: auto;
+  }
+  .editor-area {
+    flex: 1;
+    height: auto;
+    min-height: 0;
+    border: 0;
+    border-radius: 0;
+  }
+  .editor-area > .editor-panel {
+    min-height: 0;
+  }
+  .main-content > .debug-panel {
+    flex: none;
+    position: static;
+    box-shadow: none;
+  }
+  // Builder, Test Generator and other pages use the full height too.
+  .main-content:has(> .builder-grid) {
+    display: flex;
+    flex-direction: column;
+    padding: 0;
+  }
+  .builder-grid {
+    flex: 1;
+    gap: 0;
+    min-height: 0;
+    > .panel {
+      border-width: 0 1px 0 0;
+      border-radius: 0;
+      min-height: 100%;
+    }
+  }
+  .builder-preview {
+    display: flex;
+    flex-direction: column;
+    > .cm-theme {
+      flex: 1;
+      min-height: 0;
+    }
+  }
+  // Test Generator: the step fills the height and its actions sit on the bottom edge.
+  .main-content:has(> .generator-layout) {
+    display: flex;
+    flex-direction: column;
+  }
+  .generator-layout {
+    flex: 1;
+    min-height: 0;
+    align-items: stretch;
+  }
+  .generator-main {
+    display: flex;
+    flex-direction: column;
+  }
+  .generator-main > .wizard {
+    flex: 1;
+    > .wizard-panel {
+      flex: 1;
+    }
+  }
+  .generator-actions {
+    margin-top: auto;
+  }
+  // Dashboard and Dictionary Inspector stretch to the bottom of the window.
+  .dashboard {
+    display: flex;
+    flex-direction: column;
+    min-height: 100%;
+  }
+  .dashboard-grid {
+    flex: 1;
+  }
+  .dictionary-inspector {
+    display: flex;
+    flex-direction: column;
+    min-height: 100%;
+  }
+  .dictionary-grid {
+    flex: 1;
+    grid-template-columns: minmax(280px, 26%) minmax(0, 1fr);
+  }
+}
+
+// Title-bar File menu (web; the desktop app has a native menu bar).
+.menubar-item {
+  height: 26px;
+  padding: 0 8px;
+  border: 0;
+  border-radius: 4px;
+  background: transparent;
+  color: var(--text);
+  font-size: 13px;
+  &:hover,
+  &[data-state='open'] {
+    background: color-mix(in srgb, var(--text) 12%, transparent);
+  }
+}
+.editor-tab-actions .button.icon-only {
+  width: 28px;
+  padding: 0;
+  justify-content: center;
+}

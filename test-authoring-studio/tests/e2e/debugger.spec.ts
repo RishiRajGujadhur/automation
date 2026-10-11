@@ -38,7 +38,7 @@ test('breakpoint on a feature line, step into the C# step, watch, step out, call
 
     // F11: Step Into goes from the Gherkin step into its C# step definition.
     await page.keyboard.press('F11');
-    await expect(page.locator('.code-editor .editor-file')).toHaveText('Steps/CalculatorSteps.cs');
+    await expect(page.locator('.editor-tab-label[aria-current="true"]')).toHaveAttribute('title', 'Steps/CalculatorSteps.cs');
     await expect(page.locator('.code-editor .cm-exec-line')).toBeVisible();
     await page.keyboard.press('F10');
     await expect(page.locator('.code-editor .cm-exec-line')).toHaveText(/result = calculator.Add\(\);/);

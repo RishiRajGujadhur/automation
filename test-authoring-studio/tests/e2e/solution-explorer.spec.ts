@@ -2,7 +2,7 @@ import { test, expect } from '@playwright/test';
 
 test('Solution Explorer: solution → project → dependencies → folders, nesting, open C#, search and filters', async ({ page }) => {
   await page.goto('/#/features/editor');
-  const se = page.getByRole('region', { name: 'Solution Explorer' });
+  const se = page.getByRole('region', { name: 'Explorer' });
   await expect(se.getByText("Solution 'fixtures' (1 project)")).toBeVisible();
   await expect(se.getByRole('button', { name: 'Collapse project Fixtures' })).toBeVisible();
   await se.getByRole('button', { name: 'Expand Dependencies' }).click();
@@ -12,10 +12,10 @@ test('Solution Explorer: solution → project → dependencies → folders, nest
   await expect(se.locator('.nested-link').filter({ hasText: 'SearchSteps.cs' })).toBeVisible();
   // C# files open in the code editor.
   await se.getByRole('button', { name: 'AuthSteps.cs', exact: true }).first().click();
-  await expect(page.locator('.code-editor .editor-file')).toHaveText('Steps/AuthSteps.cs');
+  await expect(page.locator('.editor-tab-label[aria-current="true"]')).toHaveAttribute('title', 'Steps/AuthSteps.cs');
   // Ctrl+; searches.
   await page.keyboard.press('Control+;');
-  await expect(se.getByRole('textbox', { name: 'Search Solution Explorer' })).toBeFocused();
+  await expect(se.getByRole('textbox', { name: 'Search Explorer' })).toBeFocused();
   await page.keyboard.type('login');
   await expect(se.getByRole('button', { name: 'Login.feature', exact: true })).toBeVisible();
   await expect(se.getByRole('button', { name: 'GoogleSearch.feature', exact: true })).toHaveCount(0);

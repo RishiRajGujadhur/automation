@@ -17,7 +17,7 @@ test('create a step definition for an unbound step, then land on it in the C# ed
     await expect(dialog.getByText('PendingStepException').first()).toBeVisible();
     await dialog.getByRole('button', { name: /Approve and write/ }).click();
     await expect(page.locator('.code-editor')).toBeVisible();
-    await expect(page.locator('.code-editor .editor-file')).toHaveText('Steps/AuthSteps.cs');
+    await expect(page.locator('.editor-tab-label[aria-current="true"]')).toHaveAttribute('title', 'Steps/AuthSteps.cs');
     await expect(page.getByLabel('Source of Steps/AuthSteps.cs')).toContainText('throw new PendingStepException();');
     expect((await read(page, 'Steps/AuthSteps.cs')).source).toContain('PendingStepException');
   } finally {
@@ -33,5 +33,5 @@ test('F12 on a step opens its C# definition; the Step definitions menu lists lin
   await page.keyboard.press('Escape');
   await page.locator('.gherkin-editor .cm-line', { hasText: 'the user searches for' }).first().click();
   await page.keyboard.press('F12');
-  await expect(page.locator('.code-editor .editor-file')).toHaveText('Steps/SearchSteps.cs');
+  await expect(page.locator('.editor-tab-label[aria-current="true"]')).toHaveAttribute('title', 'Steps/SearchSteps.cs');
 });

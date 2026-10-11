@@ -49,8 +49,12 @@ test('unsaved edits are kept and offered back (hot exit) when auto save is off',
   await page.keyboard.type('# kept across sessions');
   await page.waitForTimeout(400);
   page.on('dialog', (d) => d.accept());
+  // Same browser session (reload): the buffer comes straight back, like VS Code's hot exit.
   await page.reload();
-  await page.getByRole('button', { name: 'Login.feature', exact: true }).first().click();
+  await expect(editor).toContainText('# kept across sessions');
+  // A later session: the kept edits are offered back.
+  await page.evaluate(() => sessionStorage.removeItem('tas:session-edits'));
+  await page.reload();
   await expect(page.getByText(/Unsaved changes to Features\/Auth\/Login.feature/)).toBeVisible();
   await page.getByRole('button', { name: 'Restore' }).click();
   await expect(editor).toContainText('# kept across sessions');

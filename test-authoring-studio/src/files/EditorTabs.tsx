@@ -1,0 +1,99 @@
+import { createContext, useContext, useEffect, useLayoutEffect, useRef, useState, type ReactNode } from 'react';
+import { createPortal } from 'react-dom';
+import { ChevronLeft, ChevronRight, ChevronDown, X, FileText, FileCode2, Braces, FileCog, Copy, XCircle } from 'lucide-react';
+import { RowMenu, copyText } from '../ui';
+import { Dropdown } from '../radix';
+import { UNSAVED_EVENT, unsavedFiles } from '../editor/autosave';
+import { useTabs, activateTab, closeOthers, closeToRight, closeAll, type EditorTab } from './tabs';
+
+const iconOf = (file: string) => (file.endsWith('.feature') ? FileText : file.endsWith('.xml') ? Braces : /\.(csproj|json|config|props|targets)$/.test(file) ? FileCog : FileCode2);
+const base = (f: string) => f.split('/').pop()!;
+
+/** Editors render their toolbar (save state, Save, Run…) into the tab strip, like VS Code's editor actions. */
+const ActionsSlot = createContext<HTMLElement | null>(null);
+export function EditorActions({ children, active = true }: { children: ReactNode; active?: boolean }) {
+  const el = useContext(ActionsSlot);
+  return el && active ? createPortal(children, el) : null;
+}
+
+/**
+ * VS Code style editor tabs: click to switch, × or middle-click to close, ● for unsaved files, a context menu
+ * (Close, Close Others, Close to the Right, Close All, Copy Path). When the tabs do not fit, ‹ › arrows reveal
+ * the hidden ones and ⌄ lists every open editor.
+ */
+export default function EditorTabs({ onClose, children }: { onClose: (file: string) => void; children?: ReactNode }) {
+  const { tabs, active } = useTabs();
+  const strip = useRef<HTMLDivElement>(null);
+  const [overflow, setOverflow] = useState({ left: false, right: false });
+  const [slot, setSlot] = useState<HTMLElement | null>(null);
+  const [dirty, setDirty] = useState<string[]>(unsavedFiles);
+  useEffect(() => { const h = () => setDirty(unsavedFiles()); window.addEventListener(UNSAVED_EVENT, h); return () => window.removeEventListener(UNSAVED_EVENT, h); }, []);
+
+  const measure = () => { const s = strip.current; if (s) setOverflow({ left: s.scrollLeft > 1, right: s.scrollLeft + s.clientWidth < s.scrollWidth - 1 }); };
+  useLayoutEffect(() => {
+    const s = strip.current;
+    if (!s) return;
+    measure();
+    const ro = new ResizeObserver(measure);
+    ro.observe(s);
+    return () => ro.disconnect();
+  }, [tabs.length]);
+  // Keep the active tab in view.
+  useEffect(() => { strip.current?.querySelector<HTMLElement>('[aria-current="true"]')?.scrollIntoView({ block: 'nearest', inline: 'nearest' }); measure(); }, [active, tabs.length]);
+  /** Reveals the next tab hidden off the given edge. */
+  const reveal = (dir: 1 | -1) => {
+    const s = strip.current;
+    if (!s) return;
+    const box = s.getBoundingClientRect();
+    const items = [...s.querySelectorAll<HTMLElement>('.editor-tab')];
+    const hidden = dir > 0 ? items.find((t) => t.getBoundingClientRect().right > box.right + 1) : [...items].reverse().find((t) => t.getBoundingClientRect().left < box.left - 1);
+    if (!hidden) return;
+    const r = hidden.getBoundingClientRect();
+    s.scrollLeft += dir > 0 ? r.right - box.right : r.left - box.left;
+    measure();
+  };
+  const dup = (f: string) => tabs.filter((t) => base(t.file) === base(f)).length > 1;
+
+  return (
+    <ActionsSlot.Provider value={slot}>
+      <div className="editor-tabs">
+        {overflow.left && <button className="tab-scroll" aria-label="Show previous tabs" onClick={() => reveal(-1)}><ChevronLeft size={14} /></button>}
+        <div className="tab-strip" role="group" aria-label="Open editors" ref={strip} onScroll={measure} onWheel={(e) => { if (strip.current && e.deltaY) strip.current.scrollLeft += e.deltaY; }}>
+          {tabs.map((t: EditorTab) => {
+            const Icon = iconOf(t.file);
+            const selected = t.file === active;
+            const unsaved = dirty.includes(t.file);
+            return (
+              <RowMenu key={t.file} label={`${base(t.file)} tab`} items={[
+                { label: 'Close', shortcut: 'Ctrl F4', onSelect: () => onClose(t.file) },
+                { label: 'Close Others', onSelect: () => closeOthers(t.file) },
+                { label: 'Close to the Right', onSelect: () => closeToRight(t.file) },
+                { label: 'Close All', icon: XCircle, onSelect: () => closeAll() },
+                'separator',
+                { label: 'Copy Relative Path', icon: Copy, onSelect: () => copyText(t.file) },
+              ]}>
+                <div className={`editor-tab ${selected ? 'active' : ''} ${unsaved ? 'unsaved' : ''}`} data-menu-row>
+                  <button aria-current={selected ? 'true' : undefined} title={t.file} className="editor-tab-label" onClick={() => activateTab(t.file)} onAuxClick={(e) => { if (e.button === 1) { e.preventDefault(); onClose(t.file); } }}>
+                    <Icon size={14} aria-hidden="true" />
+                    <span>{base(t.file)}</span>
+                    {dup(t.file) && <small>{t.file.split('/').slice(-2, -1)[0] ?? ''}</small>}
+                  </button>
+                  <button className="editor-tab-close" aria-label={`Close ${base(t.file)}${unsaved ? ' (unsaved)' : ''}`} title={unsaved ? 'Unsaved changes. Close' : 'Close (Ctrl+F4)'} onClick={() => onClose(t.file)}>
+                    <span className="dot" aria-hidden="true">●</span><X size={14} aria-hidden="true" />
+                  </button>
+                </div>
+              </RowMenu>
+            );
+          })}
+        </div>
+        {overflow.right && <button className="tab-scroll" aria-label="Show next tabs" onClick={() => reveal(1)}><ChevronRight size={14} /></button>}
+        {tabs.length > 1 && (
+          <Dropdown label="Open editors" align="end" trigger={<button className="tab-scroll" aria-label="Show opened editors" title="Show opened editors"><ChevronDown size={14} /></button>}
+            entries={tabs.map((t) => ({ label: `${dirty.includes(t.file) ? '● ' : ''}${t.file}`, icon: iconOf(t.file), onSelect: () => activateTab(t.file) }))} />
+        )}
+        <div className="editor-tab-actions" ref={setSlot} />
+      </div>
+      {children}
+    </ActionsSlot.Provider>
+  );
+}
