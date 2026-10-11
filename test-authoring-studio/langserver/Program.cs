@@ -70,6 +70,8 @@ sealed class LanguageService
             "hover" => await Hover(doc, Math.Min(Pos(text), text.Length)),
             "definition" => await Definition(doc, Math.Min(Pos(text), text.Length)),
             "references" => await References(doc, Math.Min(Pos(text), text.Length)),
+            "implementations" => await Implementations(doc, Math.Min(Pos(text), text.Length)),
+            "base" => await BaseOf(doc, Math.Min(Pos(text), text.Length)),
             "rename" => await Rename(doc, Math.Min(Pos(text), text.Length), (string)req["newName"]!),
             "organize" => await Organize(doc),
             "signature" => await Signature(doc, Math.Min(Pos(text), text.Length)),
@@ -506,6 +508,37 @@ sealed class LanguageService
         var refs = await SymbolFinder.FindReferencesAsync(symbol, doc.Project.Solution);
         var locations = refs.SelectMany(r => r.Locations.Select(l => l.Location).Concat(r.Definition.Locations)).Where(InRepo).Distinct().Select(Location).ToList();
         return new { name = symbol.ToDisplayString(), locations };
+    }
+
+    /// <summary>Go To Implementation (Ctrl+F12): implementations of an interface / abstract / virtual member, or the classes derived from a type.</summary>
+    async Task<object> Implementations(Document doc, int position)
+    {
+        var symbol = await SymbolAt(doc, position) ?? throw new InvalidOperationException("No symbol at the cursor.");
+        var solution = doc.Project.Solution;
+        IEnumerable<ISymbol> found = symbol switch
+        {
+            INamedTypeSymbol { TypeKind: TypeKind.Interface } t => await SymbolFinder.FindImplementationsAsync(t, solution),
+            INamedTypeSymbol t => await SymbolFinder.FindDerivedClassesAsync(t, solution),
+            IMethodSymbol or IPropertySymbol or IEventSymbol => (await SymbolFinder.FindImplementationsAsync(symbol, solution)).Concat(await SymbolFinder.FindOverridesAsync(symbol, solution)),
+            _ => [],
+        };
+        var locations = found.SelectMany(s => s.Locations).Where(InRepo).Distinct().Select(Location).ToList();
+        return new { name = symbol.ToDisplayString(), locations };
+    }
+    /// <summary>Go To Base: the member this one overrides / implements, or a type's base type and interfaces.</summary>
+    async Task<object> BaseOf(Document doc, int position)
+    {
+        var symbol = await SymbolAt(doc, position) ?? throw new InvalidOperationException("No symbol at the cursor.");
+        IEnumerable<ISymbol> found = symbol switch
+        {
+            INamedTypeSymbol t => new ISymbol?[] { t.BaseType }.OfType<ISymbol>().Concat(t.Interfaces),
+            IMethodSymbol m => new ISymbol?[] { m.OverriddenMethod }.OfType<ISymbol>().Concat(m.ContainingType.AllInterfaces.SelectMany(i => i.GetMembers().OfType<IMethodSymbol>()).Where(i => SymbolEqualityComparer.Default.Equals(m.ContainingType.FindImplementationForInterfaceMember(i), m))),
+            IPropertySymbol p => new ISymbol?[] { p.OverriddenProperty }.OfType<ISymbol>(),
+            _ => [],
+        };
+        var list = found.ToList();
+        var locations = list.SelectMany(s => s.Locations).Where(InRepo).Distinct().Select(Location).ToList();
+        return new { name = symbol.ToDisplayString(), locations, external = locations.Count == 0 ? list.FirstOrDefault()?.ToDisplayString() : null };
     }
 
     /// <summary>Renames the symbol at the cursor and every reference to it, like Visual Studio's Rename (F2).</summary>

@@ -35,7 +35,7 @@ Status: ✅ done · 🟡 partial · ⬜ to do. Priority: **P1** next, **P2** aft
 | E2 | IntelliSense completion, quick info on hover | ✅ | — |
 | E3 | Signature help (parameter info while typing `(`) | ✅ (overloads Alt+↑/↓, Ctrl+Shift+Space) | P1 |
 | E4 | Go To Definition (F12, Ctrl+click), Find All References (Shift+F12) | ✅ | — |
-| E5 | Peek Definition (Alt+F12), Go To Implementation (Ctrl+F12), Go to Base | ⬜ | P2 |
+| E5 | Peek Definition (Alt+F12), Go To Implementation (Ctrl+F12), Go to Base | ✅ | P2 |
 | E6 | Rename symbol across the solution (F2 / Ctrl+R,R) | ✅ | — |
 | E7 | Remove and Sort Usings | ✅ | — |
 | E8 | Quick Actions and Refactorings (Ctrl+.): add using, generate method, extract method, implement interface, fix code style | ✅ (Roslyn's code fixes for compiler diagnostics + refactorings; no analyzer (IDE*) style fixes yet, no lightbulb icon) | P1 |
@@ -114,3 +114,4 @@ Status: ✅ done · 🟡 partial · ⬜ to do. Priority: **P1** next, **P2** aft
 - 2026-10-12 — **Git Changes (V1).** `server/git.ts` (status relative to the workspace folder inside a larger repo, stage/unstage, discard to HEAD or delete untracked, commit / Commit All / amend, HEAD text, history); Git Changes side-bar view with branch and ahead/behind, Commit Staged / Commit All (Ctrl+Enter), per-file and bulk stage / unstage / discard (confirmed), history. Tests: the global teardown now always points the dev server back at fixtures/.
 - 2026-10-12 — **Change bars (V1 complete).** Feature and C# editors show added / modified / deleted lines against the last commit (`/api/git/head`, `diffLines`), refreshed after commits, discards and window focus; line-ending differences ignored.
 - 2026-10-12 — **Branches and sync (V2 partial).** Branch picker in Git Changes (local and remote branches, New Branch…), Fetch, Pull (fast-forward only) and Push (publishes a new branch with its upstream), ahead / behind counts; tested against a local bare remote.
+- 2026-10-12 — **Peek / Implementation / Base (E5).** Language service `implementations` (interface members, overrides, derived classes) and `base`; C# editor: Alt+F12 peek window (read-only, highlighted, Open), Ctrl+F12, Go To Base; several results go to the references list.

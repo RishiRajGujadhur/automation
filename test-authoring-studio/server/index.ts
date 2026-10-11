@@ -269,7 +269,7 @@ app.post('/api/file/save', async (req, res) => {
 // C# language service (Roslyn): IntelliSense, quick info, go to definition, references, rename, organize usings.
 const lang = new LanguageService();
 const csPosition = z.object({ file: z.string().max(400).regex(/\.cs$/), source: z.string().max(1_000_000).optional(), line: z.number().int().min(1), column: z.number().int().min(1) });
-for (const op of ['complete', 'hover', 'definition', 'references', 'signature'] as const) {
+for (const op of ['complete', 'hover', 'definition', 'references', 'signature', 'implementations', 'base'] as const) {
   app.post(`/api/csharp/${op}`, async (req, res) => {
     const body = csPosition.parse(req.body);
     await confined(config.repositoryRoot, body.file, false);

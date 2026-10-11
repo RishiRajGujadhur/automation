@@ -1328,3 +1328,34 @@
     }
   }
 }
+
+// Peek Definition
+.cm-peek {
+  position: absolute;
+  left: 40px;
+  right: 16px;
+  z-index: 22;
+  border: 1px solid var(--accent);
+  border-radius: 4px;
+  background: var(--surface);
+  box-shadow: 0 8px 28px #000a;
+  overflow: hidden;
+  .cm-peek-head {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 3px 8px;
+    border-bottom: 1px solid var(--border);
+    background: color-mix(in srgb, var(--accent) 12%, var(--surface-2));
+    font-size: 12px;
+    .button {
+      margin-left: auto;
+      height: 22px;
+      padding: 0 10px;
+    }
+    .icon-button {
+      width: 22px;
+      height: 22px;
+    }
+  }
+}

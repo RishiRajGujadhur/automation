@@ -211,3 +211,34 @@ test('Step usages CodeLens above step definitions lists the feature lines and op
   await panel.getByRole('button', { name: /Search for Dayforce/ }).click();
   await expect(page.locator('.editor-tab-label[aria-current="true"]')).toHaveAttribute('title', 'Features/GoogleSearch.feature');
 });
+
+test('Peek Definition (Alt+F12), Go To Implementation (Ctrl+F12) and Go To Base', async ({ page }) => {
+  await fs.writeFile(path.join(temp, 'Steps/Pages.cs'), 'namespace Demo;\npublic interface IAppPage\n{\n    void Open();\n}\npublic class LoginPage : IAppPage\n{\n    public void Open() { }\n}\npublic class CartPage : IAppPage\n{\n    public void Open() { }\n}\n');
+  await open(page);
+  await explorerFile(page, 'SearchSteps.cs').click();
+  const file = 'Steps/SearchSteps.cs';
+  await line(page, file, 'await page.Search(searchText)').getByText('Search', { exact: true }).last().click();
+  await page.keyboard.press('Alt+F12');
+  const peek = page.getByRole('region', { name: /Peek Definition/ });
+  await expect(peek).toContainText('public async Task Search(string text)', { timeout: 30_000 });
+  await page.keyboard.press('Escape');
+  await expect(peek).toHaveCount(0);
+
+  await explorerFile(page, 'Pages.cs').click();
+  const pages = 'Steps/Pages.cs';
+  await line(page, pages, 'public interface IAppPage').getByText('IAppPage').click();
+  await page.keyboard.press('Control+F12');
+  const list = page.getByRole('region', { name: /Implementations of/ });
+  await expect(list).toContainText('Steps/Pages.cs');
+  await expect(list.getByRole('button')).toHaveCount(3); // close + two implementations
+  // Go To Base from an implementation lands on the interface member.
+  await line(page, pages, 'public void Open() { }').getByText('Open').first().click();
+  await line(page, pages, 'public void Open() { }').getByText('Open').first().click({ button: 'right' });
+  await page.getByRole('menuitem', { name: 'Go To Base' }).click();
+  await expect(page.locator('.code-editor:not([hidden]) .cm-activeLine')).toContainText('void Open();');
+  // Peek, then Open goes to the definition in its file.
+  await line(page, pages, 'public class LoginPage').getByText('IAppPage').click();
+  await page.keyboard.press('Alt+F12');
+  await peek.getByRole('button', { name: 'Open' }).click();
+  await expect(page.locator('.code-editor:not([hidden]) .cm-activeLine')).toContainText('public interface IAppPage');
+});

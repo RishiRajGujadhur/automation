@@ -4,7 +4,7 @@ import { StreamLanguage } from '@codemirror/language';
 import { csharp } from '@codemirror/legacy-modes/mode/clike';
 import { forEachDiagnostic, linter, lintGutter, type Diagnostic } from '@codemirror/lint';
 import { keymap, EditorView } from '@codemirror/view';
-import { Save, TriangleAlert, RotateCcw, CircleCheck, CloudOff, Loader, GitCompareArrows, Navigation, ListTree, TextCursorInput, ListOrdered, Scissors, Copy, ClipboardPaste, X, Lightbulb, Wrench, AlignLeft } from 'lucide-react';
+import { Save, TriangleAlert, RotateCcw, CircleCheck, CloudOff, Loader, GitCompareArrows, Navigation, ListTree, TextCursorInput, ListOrdered, Scissors, Copy, ClipboardPaste, X, Lightbulb, Wrench, AlignLeft, Eye } from 'lucide-react';
 import { RowMenu } from '../ui';
 import { csharpLanguage, lineCol, offsetOf, replaceText, type CsHandlers, type CsLocation } from './csharp';
 import { FILES_CHANGED_EVENT } from './events';
@@ -91,6 +91,15 @@ export default function CodeEditor({ file, reveal, active = true, onNotice, onIn
     }, () => {});
   };
   const [busyOp, setBusyOp] = useState('');
+  // Peek Definition (Alt+F12): the definition's code in a window under the cursor.
+  const [peek, setPeek] = useState<{ file: string; line: number; column: number; source: string; name: string; top: number }>();
+  // Escape closes the peek window while the editor keeps focus (as in Visual Studio).
+  useEffect(() => {
+    if (!peek) return;
+    const h = (e: KeyboardEvent) => { if (e.key === 'Escape') { e.stopPropagation(); setPeek(undefined); ref.current?.view?.focus(); } };
+    window.addEventListener('keydown', h, true);
+    return () => window.removeEventListener('keydown', h, true);
+  }, [peek]);
   // Quick Actions popup (Ctrl+.): the actions Roslyn offers at the cursor, shown under it.
   const [quick, setQuick] = useState<{ items: { id: string; title: string; kind: string }[]; top: number; left: number; index: number }>();
 
@@ -148,7 +157,15 @@ export default function CodeEditor({ file, reveal, active = true, onNotice, onIn
   });
 
   const position = (pos: number) => { const v = ref.current!.view!; return { file, source: v.state.doc.toString(), ...lineCol(v.state.doc, pos) }; };
-  const csHandlers = useRef<CsHandlers>({ definition: () => {}, references: () => {}, rename: () => {}, actions: () => {}, format: () => {} });
+  const csHandlers = useRef<CsHandlers>({ definition: () => {}, references: () => {}, rename: () => {}, actions: () => {}, format: () => {}, implementations: () => {}, peek: () => {} });
+  /** One location: go there; several: list them (Find All References panel). */
+  const goToAny = (name: string, locations: CsLocation[], none: string) => {
+    if (!locations.length) { onNotice?.(none); return; }
+    if (locations.length > 1) { setRefs({ name, locations }); return; }
+    const l = locations[0];
+    if (l.file === file) { const v = ref.current!.view!; const at = offsetOf(v.state.doc, l.line, l.column); v.dispatch({ selection: { anchor: at }, effects: EditorView.scrollIntoView(at, { y: 'center' }) }); v.focus(); }
+    else onOpen?.(l.file, l.line, l.column);
+  };
   csHandlers.current = {
     definition: async (pos) => {
       try {
@@ -163,6 +180,22 @@ export default function CodeEditor({ file, reveal, active = true, onNotice, onIn
     references: async (pos) => {
       setBusyOp('Finding references…');
       try { setRefs(await api('/csharp/references', position(pos))); } catch (e) { onNotice?.((e as Error).message); } finally { setBusyOp(''); }
+    },
+    implementations: async (pos) => {
+      try { const r = await api<{ name: string; locations: CsLocation[] }>('/csharp/implementations', position(pos)); goToAny(`Implementations of ${r.name}`, r.locations, `No implementations of ${r.name} in this repository.`); } catch (e) { onNotice?.((e as Error).message); }
+    },
+    peek: async (pos) => {
+      const v = ref.current?.view;
+      if (!v) return;
+      try {
+        const r = await api<{ name: string; locations: CsLocation[]; external?: string }>('/csharp/definition', position(pos));
+        const l = r.locations[0];
+        if (!l) { onNotice?.(`${r.name} is defined in ${r.external ?? 'a referenced assembly'}.`); return; }
+        const src = l.file === file ? v.state.doc.toString() : (await readFile(l.file)).source;
+        const box = v.coordsAtPos(pos);
+        const host = v.dom.getBoundingClientRect();
+        setPeek({ ...l, source: src, name: r.name, top: (box?.bottom ?? host.top) - host.top + 4 });
+      } catch (e) { onNotice?.((e as Error).message); }
     },
     actions: async (from, to) => {
       const v = ref.current?.view;
@@ -293,6 +326,9 @@ export default function CodeEditor({ file, reveal, active = true, onNotice, onIn
         <RowMenu label="Editor actions" items={[
           ...(isCs && !browser ? [
             { label: 'Go To Definition', icon: Navigation, shortcut: 'F12', onSelect: () => csHandlers.current.definition(ref.current!.view!.state.selection.main.head) },
+            { label: 'Peek Definition', icon: Eye, shortcut: 'Alt F12', onSelect: () => void csHandlers.current.peek(ref.current!.view!.state.selection.main.head) },
+            { label: 'Go To Implementation', icon: Navigation, shortcut: 'Ctrl F12', onSelect: () => void csHandlers.current.implementations(ref.current!.view!.state.selection.main.head) },
+            { label: 'Go To Base', icon: Navigation, onSelect: async () => { try { const r = await api<{ name: string; locations: CsLocation[]; external?: string }>('/csharp/base', position(ref.current!.view!.state.selection.main.head)); goToAny(`Base of ${r.name}`, r.locations, r.external ? `The base is ${r.external} (outside this repository).` : `${r.name} has no base in this repository.`); } catch (e) { onNotice?.((e as Error).message); } } },
             { label: 'Find All References', icon: ListTree, shortcut: 'Shift F12', onSelect: () => csHandlers.current.references(ref.current!.view!.state.selection.main.head) },
             { label: 'Find Step Usages', icon: ListTree, onSelect: () => {
               const v = ref.current!.view!;
@@ -365,6 +401,24 @@ export default function CodeEditor({ file, reveal, active = true, onNotice, onIn
                 </li>
               ))}
             </ul>
+          )}
+          {peek && (
+            <section className="cm-peek" aria-label={`Peek Definition: ${peek.name}`} style={{ top: peek.top }} onKeyDown={(e) => { if (e.key === 'Escape') { setPeek(undefined); ref.current?.view?.focus(); } }}>
+              <div className="cm-peek-head">
+                <strong>{peek.file.split('/').pop()}</strong><span className="meta">{peek.file}:{peek.line}</span>
+                <button className="button" onClick={() => { const p = peek; setPeek(undefined); if (p.file === file) { const v = ref.current!.view!; const at = offsetOf(v.state.doc, p.line, p.column); v.dispatch({ selection: { anchor: at }, effects: EditorView.scrollIntoView(at, { y: 'center' }) }); v.focus(); } else onOpen?.(p.file, p.line, p.column); }}>Open</button>
+                <IconButton label="Close peek" onClick={() => { setPeek(undefined); ref.current?.view?.focus(); }}><X size={13} /></IconButton>
+              </div>
+              <CodeMirror
+                value={peek.source}
+                theme={theme}
+                height="220px"
+                editable={false}
+                basicSetup={{ autocompletion: false, foldGutter: false }}
+                extensions={[StreamLanguage.define(csharp), EditorView.contentAttributes.of({ 'aria-label': `Definition of ${peek.name}` })]}
+                onCreateEditor={(v) => { const l = v.state.doc.line(Math.min(peek.line, v.state.doc.lines)); v.dispatch({ selection: { anchor: l.from, head: l.to }, effects: EditorView.scrollIntoView(l.from, { y: 'start', yMargin: 40 }) }); }}
+              />
+            </section>
           )}
           {busyOp && <span className="cm-busy" role="status"><Loader size={12} className="spin" />{busyOp}</span>}
         </div>

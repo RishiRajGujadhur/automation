@@ -16,6 +16,10 @@ export type CsHandlers = {
   actions: (from: number, to: number) => void;
   /** Shift+Alt+F / Ctrl+K, Ctrl+D: Format Document (or the selection). */
   format: () => void;
+  /** Ctrl+F12: Go To Implementation. */
+  implementations: (pos: number) => void;
+  /** Alt+F12: Peek Definition. */
+  peek: (pos: number) => void;
 };
 
 /** 1-based line/column for a document offset (the language service's convention). */
@@ -176,6 +180,8 @@ export function csharpLanguage(file: string, handlers: { current: CsHandlers }):
     keymap.of([
       { key: 'F12', preventDefault: true, run: (v) => { handlers.current.definition(at(v)); return true; } },
       { key: 'Shift-F12', preventDefault: true, run: (v) => { handlers.current.references(at(v)); return true; } },
+      { key: 'Mod-F12', preventDefault: true, run: (v) => { handlers.current.implementations(at(v)); return true; } },
+      { key: 'Alt-F12', preventDefault: true, run: (v) => { handlers.current.peek(at(v)); return true; } },
       { key: 'F2', preventDefault: true, run: (v) => { handlers.current.rename(at(v)); return true; } },
       { key: 'Mod-.', preventDefault: true, run: (v) => { const r = v.state.selection.main; handlers.current.actions(r.from, r.to); return true; } },
       { key: 'Shift-Alt-f', preventDefault: true, run: () => { handlers.current.format(); return true; } },
