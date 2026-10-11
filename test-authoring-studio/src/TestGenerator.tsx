@@ -1,4 +1,5 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import type { ViewUpdate } from '@codemirror/view';
 import CodeMirror from '@uiw/react-codemirror';
 import { StreamLanguage } from '@codemirror/language';
 import { xml } from '@codemirror/legacy-modes/mode/xml';
@@ -18,6 +19,7 @@ import GeneratorRecorder from './GeneratorRecorder';
 import { scenarioExtensions } from './editor/gherkin';
 import { labelled } from './editor/a11y';
 const scenarioExt = scenarioExtensions('Scenario text');
+const SCENARIO_SETUP = { lineNumbers: true, foldGutter: false, autocompletion: false, highlightActiveLine: false };
 import { DictionaryEntryForm } from './forms';
 import { generatorSchema, validateSync } from './validators';
 import { Select, Button } from './radix';
@@ -224,6 +226,13 @@ export default function TestGenerator({ revision, seed, onSource, onExport, onIn
   };
   const matchBadge = plan?.entry ? <span className="badge green">Matched</span> : plan?.entry === null ? <span className="badge amber">Missing</span> : null;
 
+  // Stable editor callbacks (latest handlers through a ref): new functions each render would make
+  // @uiw/react-codemirror reconfigure the scenario editor on every keystroke.
+  const scenarioHandlers = useRef({ set, caretLine });
+  scenarioHandlers.current = { set, caretLine };
+  const onScenarioChange = useCallback((v: string, vu: ViewUpdate) => { scenarioHandlers.current.set('scenarioText', v); scenarioHandlers.current.caretLine(v, vu.state.selection.main.head); }, []);
+  const onScenarioUpdate = useCallback((u: ViewUpdate) => { if (u.selectionSet && !u.docChanged) scenarioHandlers.current.caretLine(u.state.doc.toString(), u.state.selection.main.head); }, []);
+
   return (
     <div className={`generator-layout ${sidebar ? '' : 'no-sidebar'}`}>
       <div className="generator-main">
@@ -272,9 +281,9 @@ export default function TestGenerator({ revision, seed, onSource, onExport, onIn
                   theme={editorTheme}
                   height="var(--scenario-editor-height)"
                   extensions={scenarioExt}
-                  basicSetup={{ lineNumbers: true, foldGutter: false, autocompletion: false, highlightActiveLine: false }}
-                  onChange={(v, vu) => { set('scenarioText', v); caretLine(v, vu.state.selection.main.head); }}
-                  onUpdate={(u) => { if (u.selectionSet && !u.docChanged) caretLine(u.state.doc.toString(), u.state.selection.main.head); }}
+                  basicSetup={SCENARIO_SETUP}
+                  onChange={onScenarioChange}
+                  onUpdate={onScenarioUpdate}
                 />
               </div>
               <div className="scenario-hints">

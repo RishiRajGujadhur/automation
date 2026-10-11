@@ -1,5 +1,6 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import CodeMirror, { type ReactCodeMirrorRef } from '@uiw/react-codemirror';
+import type { ViewUpdate } from '@codemirror/view';
 import { StreamLanguage } from '@codemirror/language';
 import { csharp } from '@codemirror/legacy-modes/mode/clike';
 import { forEachDiagnostic, linter, lintGutter, type Diagnostic } from '@codemirror/lint';
@@ -28,6 +29,10 @@ import { EditorActions } from '../files/EditorTabs';
 import { SAVE_ALL_EVENT } from './events';
 import type { Index } from '../types';
 
+// Constant setups: @uiw/react-codemirror reconfigures the editor whenever this prop changes identity, which would drop
+// state added at runtime (snippet fields, appended extensions) on every React render.
+const CODE_SETUP = { autocompletion: false };
+const PEEK_SETUP = { autocompletion: false, foldGutter: false };
 type CsDiagnostic = { line: number; column: number; endLine: number; endColumn: number; severity: 'error' | 'warning'; id: string; message: string };
 
 /** Roslyn diagnostics (syntax + step-binding checks) from the scanner, as CodeMirror lint. */
@@ -304,6 +309,13 @@ export default function CodeEditor({ file, reveal, active = true, onNotice, onIn
     // Stable per file: rebuilding extensions on every keystroke would reset the linter before it reports.
   ], [file, browser]);
 
+  // Stable: a new function each render would make @uiw/react-codemirror reconfigure the editor every time.
+  const countProblems = useCallback((u: ViewUpdate) => {
+    if (!u.docChanged && !u.transactions.some((t) => t.effects.length)) return;
+    let errors = 0, warnings = 0;
+    forEachDiagnostic(u.state, (d) => { if (d.severity === 'error') errors++; else if (d.severity === 'warning') warnings++; });
+    setProblems((p) => (p.errors === errors && p.warnings === warnings ? p : { errors, warnings }));
+  }, []);
   return (
     <section className="code-editor" aria-label={`Editing ${file}`} hidden={!active}>
       <EditorActions active={active}>
@@ -361,14 +373,9 @@ export default function CodeEditor({ file, reveal, active = true, onNotice, onIn
             height="100%"
             extensions={extensions}
             // Word completion is not C# IntelliSense: it hijacks Enter (e.g. "test" → DateTimeOffset), so it stays off.
-            basicSetup={{ autocompletion: false }}
+            basicSetup={CODE_SETUP}
             onChange={setValue}
-            onUpdate={(u) => {
-              if (!u.docChanged && !u.transactions.some((t) => t.effects.length)) return;
-              let errors = 0, warnings = 0;
-              forEachDiagnostic(u.state, (d) => { if (d.severity === 'error') errors++; else if (d.severity === 'warning') warnings++; });
-              setProblems((p) => (p.errors === errors && p.warnings === warnings ? p : { errors, warnings }));
-            }}
+            onUpdate={countProblems}
           />
           {renameAt && (
             <input
@@ -418,7 +425,7 @@ export default function CodeEditor({ file, reveal, active = true, onNotice, onIn
                 theme={theme}
                 height="220px"
                 editable={false}
-                basicSetup={{ autocompletion: false, foldGutter: false }}
+                basicSetup={PEEK_SETUP}
                 extensions={[StreamLanguage.define(csharp), EditorView.contentAttributes.of({ 'aria-label': `Definition of ${peek.name}` })]}
                 onCreateEditor={(v) => { const l = v.state.doc.line(Math.min(peek.line, v.state.doc.lines)); v.dispatch({ selection: { anchor: l.from, head: l.to }, effects: EditorView.scrollIntoView(l.from, { y: 'start', yMargin: 40 }) }); }}
               />

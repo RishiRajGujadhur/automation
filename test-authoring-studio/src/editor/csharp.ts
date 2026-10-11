@@ -2,6 +2,7 @@ import { autocompletion, type Completion, type CompletionContext, type Completio
 import { EditorView, hoverTooltip, keymap, showTooltip, ViewPlugin, type Tooltip, type ViewUpdate } from '@codemirror/view';
 import { StateEffect, StateField, type Extension, type Text } from '@codemirror/state';
 import { api } from '../api';
+import { snippetOptions, snippetTab } from './snippets';
 
 export type CsLocation = { file: string; line: number; column: number; endLine?: number; endColumn?: number };
 type Item = { label: string; insert: string; filter: string; sort: string; kind: string; detail?: string; preselect?: boolean };
@@ -46,15 +47,18 @@ function completionSource(file: string) {
     const { line, column } = lineCol(ctx.state.doc, ctx.pos);
     let r: { from: { line: number; column: number }; items: Item[] };
     try { r = await api('/csharp/complete', { file, source: ctx.state.doc.toString(), line, column }); } catch { return null; }
-    if (ctx.aborted || !r.items.length) return null;
-    const options: Completion[] = r.items.map((i, n) => ({
+    if (ctx.aborted) return null;
+    // Code snippets join IntelliSense when typing a word (not after "."), as in Visual Studio.
+    const snippets = before === '.' || word.from === word.to ? [] : snippetOptions(ctx.view!, ctx.pos);
+    if (!r.items.length && !snippets.length) return null;
+    const options: Completion[] = [...snippets, ...r.items.map((i, n) => ({
       label: i.label,
       apply: i.insert,
       type: kinds[i.kind] ?? 'text',
       detail: i.detail || undefined,
       // Roslyn's own order (sort text) as a tie-breaker; its preselection on top.
       boost: (i.preselect ? 99 : 0) - Math.min(98, n / 50),
-    }));
+    }))];
     return { from: offsetOf(ctx.state.doc, r.from.line, r.from.column), options, validFor: /^[\w@]*$/ };
   };
 }
@@ -188,6 +192,7 @@ export function csharpLanguage(file: string, handlers: { current: CsHandlers }):
       { key: 'Mod-k Mod-d', preventDefault: true, run: () => { handlers.current.format(); return true; } },
     ]),
     ...signatureHelp(file),
+    snippetTab(),
     // Ctrl+click (Cmd+click) goes to definition, as in Visual Studio and VS Code.
     EditorView.domEventHandlers({
       mousedown: (e, view) => {

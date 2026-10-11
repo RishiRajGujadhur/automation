@@ -1,6 +1,7 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { IconButton } from '../radix2';
 import CodeMirror, { type ReactCodeMirrorRef } from '@uiw/react-codemirror';
+import type { ViewUpdate } from '@codemirror/view';
 import { useEditorTheme } from '../themes';
 import { lintGutter, forEachDiagnostic, nextDiagnostic, openLintPanel } from '@codemirror/lint';
 import { startCompletion } from '@codemirror/autocomplete';
@@ -15,6 +16,8 @@ import { changeGutter } from './changeGutter';
 import { useChangeBars } from './useChangeBars';
 import { cursorTracker } from './cursor';
 
+// Constant: a new object each render would make @uiw/react-codemirror reconfigure the editor (dropping snippet fields).
+const GHERKIN_SETUP = { autocompletion: false, lintKeymap: true };
 export type Problems = { errors: number; warnings: number };
 
 /**
@@ -60,6 +63,13 @@ export default function GherkinEditor({ file, onSave, runMarks, onRunLine, value
   const view = () => ref.current?.view;
   const withView = (fn: (v: NonNullable<ReturnType<typeof view>>) => void) => () => { const v = view(); if (v) { fn(v); v.focus(); } };
   const selection = () => { const v = view(); if (!v) return ''; const r = v.state.selection.main; return v.state.sliceDoc(r.from, r.to); };
+  // Stable: a new function each render would make @uiw/react-codemirror reconfigure the editor every time.
+  const countProblems = useCallback((u: ViewUpdate) => {
+    if (!u.docChanged && !u.transactions.some((t) => t.effects.length)) return;
+    let errors = 0, warnings = 0;
+    forEachDiagnostic(u.state, (d) => { if (d.severity === 'error') errors++; else if (d.severity === 'warning') warnings++; });
+    setProblems((p) => (p.errors === errors && p.warnings === warnings ? p : { errors, warnings }));
+  }, []);
   return (
     <div className={`gherkin-editor ${full ? 'is-fullscreen' : ''}`} ref={wrap} role={full ? 'dialog' : undefined} aria-label={full ? 'Feature editor (full screen)' : undefined}>
       <div className="editor-toolbar">
@@ -97,13 +107,8 @@ export default function GherkinEditor({ file, onSave, runMarks, onRunLine, value
             theme={editorTheme}
             extensions={extensions}
             onChange={onChange}
-            basicSetup={{ autocompletion: false, lintKeymap: true }}
-            onUpdate={(u) => {
-              if (!u.docChanged && !u.transactions.some((t) => t.effects.length)) return;
-              let errors = 0, warnings = 0;
-              forEachDiagnostic(u.state, (d) => { if (d.severity === 'error') errors++; else if (d.severity === 'warning') warnings++; });
-              setProblems((p) => (p.errors === errors && p.warnings === warnings ? p : { errors, warnings }));
-            }}
+            basicSetup={GHERKIN_SETUP}
+            onUpdate={countProblems}
           />
         </div>
       </RowMenu>

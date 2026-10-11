@@ -242,3 +242,27 @@ test('Peek Definition (Alt+F12), Go To Implementation (Ctrl+F12) and Go To Base'
   await peek.getByRole('button', { name: 'Open' }).click();
   await expect(page.locator('.code-editor:not([hidden]) .cm-activeLine')).toContainText('public interface IAppPage');
 });
+
+test('Code snippets: prop + Tab with fields, ctor + Tab uses the class name', async ({ page }) => {
+  await open(page);
+  await explorerFile(page, 'SearchSteps.cs').click();
+  const file = 'Steps/SearchSteps.cs';
+  const editor = page.getByLabel(`Source of ${file}`);
+  await line(page, file, 'private readonly SearchPage page').click();
+  await page.keyboard.press('End');
+  await page.keyboard.press('Enter');
+  await page.keyboard.type('prop');
+  await page.keyboard.press('Escape'); // close IntelliSense if it opened
+  await page.keyboard.press('Tab');
+  await page.keyboard.type('string');
+  await page.keyboard.press('Tab');
+  await page.keyboard.type('Name');
+  await expect(editor).toContainText('public string Name { get; set; }');
+  await page.keyboard.press('Escape');
+  await page.keyboard.press('End');
+  await page.keyboard.press('Enter');
+  await page.keyboard.type('ctor');
+  await page.keyboard.press('Escape');
+  await page.keyboard.press('Tab');
+  await expect(editor).toContainText('public SearchSteps()');
+});
