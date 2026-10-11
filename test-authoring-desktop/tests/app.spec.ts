@@ -96,6 +96,15 @@ test('dropping a folder opens it, and file changes on disk refresh the index', a
   expect(await features()).toBe(before + 1);
 });
 
+test('jump-list style --command arguments reach the running window', async () => {
+  const second = spawn(electronPath, [...(process.env.TAS_EXE ? [] : ['.']), `--user-data-dir=${userData}`, '--command=palette'], { cwd: path.resolve(import.meta.dirname, '..'), stdio: 'ignore' });
+  await new Promise((r) => second.on('exit', r));
+  await expect(page.locator('[cmdk-input]')).toBeVisible({ timeout: 10_000 });
+  await page.keyboard.press('Escape');
+  const tasks = await appProcess.evaluate(({ Menu }) => Menu.getApplicationMenu()!.items.find((i) => i.label.includes('Help'))!.submenu!.items.map((i) => i.label));
+  expect(tasks).toContain('Playwright Browsers…');
+});
+
 test('stores state in the user-data folder, not the app folder', async () => {
   const dataDir = await appProcess.evaluate(({ app }) => app.getPath('userData'));
   expect(path.resolve(dataDir)).toBe(path.resolve(userData));

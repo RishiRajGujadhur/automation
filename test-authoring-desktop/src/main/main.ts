@@ -1,5 +1,6 @@
 import { app, BrowserWindow, dialog } from 'electron';
 import fs from 'node:fs';
+import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { apiCall, startApi } from './server';
 import { devIcon, preloadPath } from './paths';
@@ -10,6 +11,8 @@ import { buildMenu } from './menu';
 import { lockDown, registerIpc } from './ipc';
 import { currentConfig, openRepository, updateTitle } from './workspace';
 import { stopWatching, watchRepository } from './watcher';
+import { commandArg, registerTasks, runCommand } from './tasks';
+import { offerChromium } from './browsers';
 
 // D3: one instance; a second launch focuses the existing window (and opens a folder passed on the command line).
 if (!app.requestSingleInstanceLock()) app.quit();
@@ -21,9 +24,11 @@ app.on('second-instance', (_e, argv) => {
   win.focus();
   const folder = folderArg(argv.slice(1));
   if (folder) openRepository(folder).then(buildMenu).catch(() => {});
+  const command = commandArg(argv);
+  if (command) runCommand(command);
 });
 /** A directory given as a command-line argument (also how the Windows jump list reopens repositories). */
-const folderArg = (argv: string[]) => argv.find((a) => !a.startsWith('-') && a !== '.' && fs.existsSync(a) && fs.statSync(a).isDirectory());
+const folderArg = (argv: string[]) => argv.find((a) => !a.startsWith('-') && a !== '.' && path.resolve(a) !== path.resolve(app.getAppPath()) && fs.existsSync(a) && fs.statSync(a).isDirectory());
 
 const loadingPage = `data:text/html;charset=utf-8,${encodeURIComponent(`<!doctype html><html lang="en"><head><meta charset="utf-8"><title>TestAuthoring Studio</title><style>
 body{margin:0;height:100vh;display:grid;place-items:center;background:#0b0e16;color:#9aa4bb;font:15px system-ui,sans-serif}
@@ -80,6 +85,10 @@ async function boot() {
     await win.loadURL(`${ctx.origin}/#/dashboard`);
     updateTitle();
     watchRepository();
+    registerTasks();
+    const command = commandArg(process.argv);
+    if (command) setTimeout(() => runCommand(command), 800); // let the page subscribe to menu commands first
+    offerChromium();
   } catch (e) {
     dialog.showErrorBox('TestAuthoring Studio could not start', (e as Error).message);
     app.quit();

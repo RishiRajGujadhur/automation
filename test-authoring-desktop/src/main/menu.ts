@@ -6,6 +6,7 @@ import { apiCall } from './server';
 import { dataRoot, logFile } from './paths';
 import { write } from './store';
 import { autoRescanEnabled, setAutoRescan } from './watcher';
+import { browsersMenu } from './browsers';
 
 const send = (c: MenuCommand) => ctx.win?.webContents.send(IPC.menu, c);
 /** Pages are deep links (#/page), so navigation needs no web-app changes. */
@@ -81,6 +82,7 @@ export function buildMenu() {
         { label: 'Keyboard Shortcuts', accelerator: 'F1', click: () => send('shortcuts') },
         { label: 'Guided Tour', click: () => send('tour') },
         { type: 'separator' },
+        { label: 'Playwright Browsers…', click: browsersMenu },
         { label: 'Open Data Folder', click: () => shell.openPath(dataRoot()) },
         { label: 'Open Log File', click: () => shell.openPath(logFile()) },
         { type: 'separator' },

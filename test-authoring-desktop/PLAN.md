@@ -29,8 +29,8 @@ Legend: `[x]` done · `[ ]` to do. Every feature is committed and pushed when fi
 
 - [x] D17 Self-contained Roslyn scanner bundled (no .NET runtime needed on the user's machine)
 - [x] D18 Watch the repository: auto-rescan when .feature/.cs/.xml files change on disk (toggle in View menu)
-- [ ] D19 Windows taskbar tasks (jump list): New feature, Start a recording, Open repository
-- [ ] D20 Playwright Chromium check on start + Help → Install Playwright Browsers with progress
+- [x] D19 Windows taskbar tasks (jump list): New feature, Start a recording, Open repository
+- [x] D20 Playwright Chromium check on start + Help → Install Playwright Browsers with progress
 
 ## Quality-of-life
 - [x] Q1 Zoom in/out/reset (Ctrl +/−/0) persisted

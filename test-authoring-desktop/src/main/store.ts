@@ -8,6 +8,7 @@ type Shape = {
   zoom?: number;
   recent?: string[];
   autoRescan?: boolean;
+  chromiumOffered?: boolean;
 };
 const file = () => path.join(dataRoot(), 'desktop.json');
 let cache: Shape | undefined;
