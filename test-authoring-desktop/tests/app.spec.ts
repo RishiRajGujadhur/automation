@@ -111,3 +111,8 @@ test('stores state in the user-data folder, not the app folder', async () => {
   await page.evaluate(() => fetch('/api/scan', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{}' }));
   expect(fs.existsSync(path.join(userData, 'desktop.json')) || fs.existsSync(path.join(userData, '.local'))).toBeTruthy();
 });
+
+test('C# diagnostics run on the bundled self-contained scanner', async () => {
+  const items = await page.evaluate(() => fetch('/api/csharp/diagnostics', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ source: 'class A { void B() { x } }', path: 'A.cs' }) }).then((r) => r.json()));
+  expect(items.some((d: { severity: string }) => d.severity === 'error')).toBe(true);
+});
