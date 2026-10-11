@@ -136,7 +136,11 @@ export function breakpoints(file: string): Extension {
         },
       },
     })),
-    keymap.of([{ key: 'F9', preventDefault: true, run: (v) => toggle(v, v.state.selection.main.head) }]),
+    keymap.of([
+      { key: 'F9', preventDefault: true, run: (v) => toggle(v, v.state.selection.main.head) },
+      // Run To Cursor (Ctrl+F10) while paused.
+      { key: 'Mod-F10', preventDefault: true, run: (v) => { if (getSnapshot().state.status !== 'paused') return false; void api('/debug/run-to', { file, line: v.state.doc.lineAt(v.state.selection.main.head).number }).catch(() => {}); return true; } },
+    ]),
     sync,
     dataTips,
   ];

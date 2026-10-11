@@ -53,6 +53,8 @@ export class Debugger extends EventEmitter {
   private generation = 0;
   /** Hits per breakpoint (file:line) in the current session, for hit conditions. */
   private hits = new Map<string, number>();
+  /** Run to Cursor: a one-shot breakpoint, removed at the next stop (netcoredbg has no native "run to"). */
+  private runTo?: { file: string; line: number };
 
   private update(patch: Partial<DebugState>) {
     this.state = { ...this.state, ...patch, version: this.state.version + 1 };
@@ -80,7 +82,8 @@ export class Debugger extends EventEmitter {
     // Disabled breakpoints stay listed but are not set; conditions go to the debugger, hit counts and log messages are ours.
     const active = all.filter((b) => b.enabled !== false);
     try {
-      const r = await this.dap!.request<{ breakpoints: { line?: number; verified: boolean }[] }>('setBreakpoints', { source: { path: path.resolve(this.root, file) }, breakpoints: active.map((b) => ({ line: b.line, ...(b.condition?.trim() ? { condition: b.condition.trim() } : {}) })) });
+      const oneShot = this.runTo?.file === file && !active.some((b) => b.line === this.runTo!.line) ? [{ line: this.runTo.line }] : [];
+      const r = await this.dap!.request<{ breakpoints: { line?: number; verified: boolean }[] }>('setBreakpoints', { source: { path: path.resolve(this.root, file) }, breakpoints: [...active.map((b) => ({ line: b.line, ...(b.condition?.trim() ? { condition: b.condition.trim() } : {}) })), ...oneShot] });
       // netcoredbg reports pending breakpoints as unverified until the module loads; they still bind.
       const marks = all.map((b) => { const i = active.indexOf(b); return { ...b, verified: i >= 0 && !!r.breakpoints[i]?.verified }; });
       if (this.state.breakpoints[file]) this.update({ breakpoints: { ...this.state.breakpoints, [file]: marks } });
@@ -154,6 +157,8 @@ export class Debugger extends EventEmitter {
     if (event === 'output' && body.category !== 'telemetry') this.log(body.output ?? '');
     else if (event === 'stopped') {
       const threadId = body.threadId ?? this.state.threadId;
+      // Any stop ends a Run to Cursor: take its one-shot breakpoint out again.
+      if (this.runTo) { const done = this.runTo; this.runTo = undefined; await this.send(done.file); }
       if (body.reason === 'breakpoint' && (await this.tracepointOrSkip(threadId))) return;
       let exception: string | undefined;
       if (body.reason === 'exception') exception = await this.dap!.request('exceptionInfo', { threadId }).then((r: any) => `${r.details?.typeName ?? r.exceptionId}: ${r.description ?? r.details?.message ?? ''}`, () => body.text);
@@ -209,6 +214,22 @@ export class Debugger extends EventEmitter {
     if (this.state.status !== 'paused') throw new Error('The debugger is not paused.');
     this.update({ status: 'running', frames: [], reason: undefined, exception: undefined });
     await this.dap.request(action, { threadId });
+  }
+
+  /** Run to Cursor (Ctrl+F10): continue until the given line (or an earlier breakpoint). */
+  async runToCursor(file: string, line: number) {
+    if (!this.dap || this.state.status !== 'paused') throw new Error('The debugger is not paused.');
+    this.runTo = { file, line };
+    await this.send(file);
+    await this.control('continue');
+  }
+  /** Immediate window: evaluate an expression (may have side effects, like Visual Studio's) in a frame. */
+  async immediate(expression: string, frameId?: number) {
+    if (!this.dap || this.state.status !== 'paused') return { error: 'The debugger is not paused.' };
+    try {
+      const r = await this.dap.request<{ result: string; type?: string }>('evaluate', { expression, frameId, context: 'repl' }, 15_000);
+      return { result: r.result, type: r.type };
+    } catch (e) { return { error: (e as Error).message.replace(/^Failed command 'evaluate' : /, '') }; }
   }
 
   async scopes(frameId: number) {

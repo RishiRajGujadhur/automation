@@ -5,6 +5,9 @@ import { IconButton } from '../radix2';
 import { api } from '../api';
 import { useDebug, debugControl, selectFrame, setWatches, setBreakpoints, clearBreakpoints, startDebugging, isLive, breakpointsOf, updateBreakpoint, enableAllBreakpoints, type Variable, type DebugFrame } from './store';
 import { useLocalState } from '../ui';
+import { readFile } from '../files/provider';
+
+const CS_KEYWORDS = new Set('var new return if else for foreach while do in is as await async public private protected internal static readonly void int string bool double decimal long float char object true false null this base typeof sizeof nameof using namespace class struct interface enum get set value throw try catch finally switch case default break continue out ref params let'.split(' '));
 
 const statusText: Record<string, string> = { idle: 'Not debugging', building: 'Building…', starting: 'Starting test host…', running: 'Running', paused: 'Paused', ended: 'Ended' };
 
@@ -52,6 +55,40 @@ export default function DebugPanel({ onOpen, onNotice, onClose, editingRequest =
   const [locals, setLocals] = useState<Variable[]>([]);
   const [values, setValues] = useState<{ result?: string; type?: string; error?: string; variablesReference?: number }[]>([]);
   const [draft, setDraft] = useState('');
+  // Autos: variables used on the current and previous line (Visual Studio's Autos window).
+  const [autos, setAutos] = useState<{ name: string; value: string; type?: string; variablesReference: number }[]>([]);
+  useEffect(() => {
+    if (!frame?.file) { setAutos([]); return; }
+    let live = true;
+    (async () => {
+      const source = await readFile(frame.file!).then((r) => r.source, () => '');
+      const lines = source.split(/\r?\n/);
+      const text = `${lines[frame.line - 2] ?? ''}\n${lines[frame.line - 1] ?? ''}`;
+      // Whole member chains; a chain that is called ("page.Add(") contributes its object ("page"), not the method.
+      const found = [...text.matchAll(/(?<![\w."])[A-Za-z_]\w*(?:\.[A-Za-z_]\w*)*/g)].map((m) => {
+        const called = /^\s*\(/.test(text.slice((m.index ?? 0) + m[0].length));
+        return called ? (m[0].includes('.') ? m[0].slice(0, m[0].lastIndexOf('.')) : '') : m[0];
+      });
+      const names = [...new Set(found.filter((n) => n && !CS_KEYWORDS.has(n.split('.')[0])))].slice(0, 20);
+      if (!names.length) { if (live) setAutos([]); return; }
+      const results = await api<{ result?: string; type?: string; error?: string; variablesReference?: number }[]>('/debug/evaluate', { expressions: names, frameId: frame.id }).catch(() => []);
+      if (live) setAutos(names.map((name, i) => ({ name, value: results[i]?.result ?? '', type: results[i]?.type, variablesReference: results[i]?.variablesReference ?? 0, ok: !results[i]?.error && results[i]?.result !== undefined })).filter((a) => a.ok));
+    })();
+    return () => { live = false; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [frameKey]);
+  // Immediate window: evaluate expressions while paused; ↑ recalls earlier ones.
+  const [immediate, setImmediate] = useState<{ expr: string; out: string; error?: boolean }[]>([]);
+  const [immDraft, setImmDraft] = useState('');
+  const [immIndex, setImmIndex] = useState(-1);
+  const runImmediate = async () => {
+    const expr = immDraft.trim();
+    if (!expr) return;
+    setImmDraft('');
+    setImmIndex(-1);
+    const r = await api<{ result?: string; type?: string; error?: string }>('/debug/immediate', { expression: expr, frameId: frame?.id }).catch((e): { result?: string; type?: string; error?: string } => ({ error: (e as Error).message }));
+    setImmediate((list) => [...list, { expr, out: r.error ?? `${r.result}${r.type ? `  (${r.type})` : ''}`, error: !!r.error }]);
+  };
 
   useEffect(() => {
     if (!frame) { setLocals([]); return; }
@@ -110,12 +147,34 @@ export default function DebugPanel({ onOpen, onNotice, onClose, editingRequest =
       {state.exception && <p className="field-error debug-error" role="alert">Exception thrown: {state.exception}</p>}
       <Tabs.Root className="debug-tabs" value={tab} onValueChange={setTab}>
         <Tabs.List className="debug-tablist" aria-label="Debug windows">
+          <Tabs.Trigger value="autos">Autos</Tabs.Trigger>
           <Tabs.Trigger value="locals">Locals</Tabs.Trigger>
           <Tabs.Trigger value="watch">Watch 1</Tabs.Trigger>
           <Tabs.Trigger value="stack">Call Stack</Tabs.Trigger>
           <Tabs.Trigger value="breakpoints">Breakpoints{bpList.length ? ` (${bpList.length})` : ''}</Tabs.Trigger>
+          <Tabs.Trigger value="immediate">Immediate</Tabs.Trigger>
           <Tabs.Trigger value="output">Output</Tabs.Trigger>
         </Tabs.List>
+        <Tabs.Content value="autos" className="debug-body">
+          {frame ? <Grid label="Autos">{autos.map((v) => <VariableRow key={v.name} v={v} depth={0} frameKey={frameKey} />)}</Grid> : <p className="subtle debug-empty">Autos appear when the debugger is paused.</p>}
+        </Tabs.Content>
+        <Tabs.Content value="immediate" className="debug-body immediate">
+          <div className="immediate-log" aria-label="Immediate results" role="log">
+            {immediate.map((r, i) => <div key={i}><code>&gt; {r.expr}</code><pre className={r.error ? 'error' : ''}>{r.out}</pre></div>)}
+          </div>
+          <input
+            aria-label="Immediate expression"
+            placeholder={frame ? 'Expression (Enter to evaluate, ↑ for history)' : 'Pause the debugger to evaluate expressions'}
+            disabled={!frame}
+            value={immDraft}
+            onChange={(e) => setImmDraft(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') { e.preventDefault(); void runImmediate(); }
+              else if (e.key === 'ArrowUp' && immediate.length) { e.preventDefault(); const i = immIndex < 0 ? immediate.length - 1 : Math.max(0, immIndex - 1); setImmIndex(i); setImmDraft(immediate[i].expr); }
+              else if (e.key === 'ArrowDown' && immIndex >= 0) { e.preventDefault(); const i = immIndex + 1; if (i >= immediate.length) { setImmIndex(-1); setImmDraft(''); } else { setImmIndex(i); setImmDraft(immediate[i].expr); } }
+            }}
+          />
+        </Tabs.Content>
         <Tabs.Content value="locals" className="debug-body">
           {frame ? <Grid label="Locals">{locals.map((v) => <VariableRow key={v.name} v={v} depth={0} frameKey={frameKey} />)}</Grid> : <p className="subtle debug-empty">Locals appear when the debugger is paused.</p>}
         </Tabs.Content>

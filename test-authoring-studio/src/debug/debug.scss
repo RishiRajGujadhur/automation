@@ -382,3 +382,38 @@
     align-items: end;
   }
 }
+
+// Immediate window
+.debug-body.immediate {
+  display: flex;
+  flex-direction: column;
+  .immediate-log {
+    flex: 1;
+    min-height: 0;
+    overflow: auto;
+    padding: 4px 10px;
+    font-family: var(--font-mono, monospace);
+    font-size: 12px;
+    code {
+      color: var(--text-muted);
+    }
+    pre {
+      margin: 0 0 4px;
+      white-space: pre-wrap;
+      &.error {
+        color: var(--red, #f85149);
+      }
+    }
+  }
+  input {
+    flex: none;
+    height: 26px;
+    margin: 4px 8px 6px;
+    padding: 0 8px;
+    border: 1px solid var(--border);
+    border-radius: 3px;
+    background: var(--surface);
+    color: var(--text);
+    font-family: var(--font-mono, monospace);
+  }
+}

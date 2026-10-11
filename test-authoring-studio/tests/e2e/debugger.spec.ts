@@ -64,6 +64,19 @@ test('breakpoint on a feature line, step into the C# step, watch, step out, call
     await expect(panel.getByRole('treegrid', { name: 'Locals' })).toContainText('calculator');
     await page.screenshot({ path: 'test-results/debugger-step-out.png' });
 
+    // Autos: variables of the current and previous line.
+    await panel.getByRole('tab', { name: 'Autos' }).click();
+    await expect(panel.getByRole('treegrid', { name: 'Autos' })).toContainText('calculator');
+    // Immediate window: evaluate an expression in the paused frame.
+    await panel.getByRole('tab', { name: 'Immediate' }).click();
+    await panel.getByLabel('Immediate expression').fill('calculator.First * 2');
+    await panel.getByLabel('Immediate expression').press('Enter');
+    await expect(panel.getByRole('log', { name: 'Immediate results' })).toContainText('100');
+    // Run To Cursor (Ctrl+F10): continue to the assertion of the Then step.
+    await page.getByLabel('Source of Steps/CalculatorSteps.cs').locator('.cm-line', { hasText: 'Assert.That(result' }).click();
+    await page.keyboard.press('Control+F10');
+    await expect(page.locator('.code-editor:not([hidden]) .cm-exec-line')).toHaveText(/Assert\.That\(result/, { timeout: 30_000 });
+
     // F5: continue to the end; the test passes.
     await page.keyboard.press('F5');
     await expect(panel.getByRole('status')).toHaveText(/Ended · Tests passed/, { timeout: 60_000 });

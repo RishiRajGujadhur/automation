@@ -663,6 +663,15 @@ app.post('/api/debug/control', async (req, res) => {
   if (action === 'stop') await debug.stop(); else await debug.control(action);
   res.json(debug.state);
 });
+app.post('/api/debug/run-to', async (req, res) => {
+  const { file, line } = z.object({ file: repoFile, line: z.number().int().min(1) }).parse(req.body);
+  await debug.runToCursor(file.replaceAll('\\', '/'), line);
+  res.json(debug.state);
+});
+app.post('/api/debug/immediate', async (req, res) => {
+  const { expression, frameId } = z.object({ expression: z.string().min(1).max(2000), frameId: z.number().int().optional() }).parse(req.body);
+  res.json(await debug.immediate(expression, frameId));
+});
 app.post('/api/debug/scopes', async (req, res) => {
   const { frameId } = z.object({ frameId: z.number().int() }).parse(req.body);
   res.json(await debug.scopes(frameId));

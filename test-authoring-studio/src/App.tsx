@@ -420,7 +420,8 @@ export default function App() {
     if (e.key === 'F9' && e.shiftKey && e.ctrlKey) { e.preventDefault(); clearBreakpoints(); return; }
     if (e.key === 'F5' && e.shiftKey && !e.ctrlKey) { if (isLive(s)) act('stop'); else e.preventDefault(); }
     else if (e.key === 'F5' && !e.ctrlKey) { if (s === 'paused') act('continue'); else if (!isLive(s) && feature && tab === 'Features') { e.preventDefault(); debugFeature(); } }
-    else if (e.key === 'F10' && s === 'paused') act('next');
+    // Ctrl+F10 is Run To Cursor (handled by the editor).
+    else if (e.key === 'F10' && !e.ctrlKey && !e.metaKey && s === 'paused') act('next');
     else if (e.key === 'F11' && e.shiftKey && s === 'paused') act('stepOut');
     else if (e.key === 'F11' && s === 'paused') act('stepIn');
   };
