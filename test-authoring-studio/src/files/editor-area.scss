@@ -1279,3 +1279,52 @@
     transform: translateY(-4px);
   }
 }
+
+.git-view {
+  .git-branch {
+    padding: 0 4px 6px 6px;
+  }
+  .git-branch-button {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 2px 6px;
+    border: 1px solid transparent;
+    border-radius: 3px;
+    background: transparent;
+    color: var(--text);
+    font-size: 12px;
+    &:hover {
+      border-color: var(--border);
+    }
+  }
+  .git-sync {
+    display: inline-flex;
+    margin-left: auto;
+    .icon-button {
+      width: auto;
+      min-width: 26px;
+      height: 24px;
+      gap: 2px;
+      padding: 0 4px;
+      small {
+        font-size: 11px;
+      }
+    }
+  }
+  .git-new-branch {
+    display: flex;
+    gap: 6px;
+    padding: 0 6px 8px;
+    input {
+      flex: 1;
+      min-width: 0;
+      height: 26px;
+      padding: 0 6px;
+      border: 1px solid var(--accent);
+      border-radius: 3px;
+      background: var(--surface);
+      color: var(--text);
+    }
+  }
+}

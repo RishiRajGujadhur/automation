@@ -71,3 +71,47 @@ test('Git Changes: see changes, stage, unstage, discard, commit; history', async
     await fs.rm(root, { recursive: true, force: true, maxRetries: 5 }).catch(() => {});
   }
 });
+
+test('Git branches: New Branch, publish with Push, switch back, Fetch', async ({ page, request }) => {
+  const previous = (await (await request.get('/api/workspace')).json()).config;
+  const base = await fs.mkdtemp(path.join(os.tmpdir(), 'studio-branch-'));
+  const remote = path.join(base, 'remote.git');
+  const root = path.join(base, 'work');
+  const run = (cwd: string, ...args: string[]) => execFileSync('git', args, { cwd, encoding: 'utf8' });
+  run(base, 'init', '-q', '--bare', '-b', 'main', remote);
+  await fs.cp(path.resolve(import.meta.dirname, '../../fixtures'), root, { recursive: true });
+  run(root, 'init', '-q', '-b', 'main');
+  run(root, 'config', 'user.email', 'test@example.com');
+  run(root, 'config', 'user.name', 'Test');
+  run(root, 'add', '-A');
+  run(root, 'commit', '-q', '-m', 'Initial');
+  run(root, 'remote', 'add', 'origin', remote);
+  run(root, 'push', '-q', '-u', 'origin', 'main');
+  try {
+    expect((await request.post('/api/workspace', { data: { repositoryRoot: root, targetProject: '.' } })).ok()).toBe(true);
+    await page.addInitScript(() => { if (!sessionStorage.getItem('seeded')) { localStorage.setItem('tas:prefs', JSON.stringify({ mode: 'advanced' })); sessionStorage.setItem('seeded', '1'); } });
+    await page.goto('/#/features/editor');
+    await expect(page.getByText('Repository indexed')).toBeVisible();
+    await page.getByRole('button', { name: 'Git Changes' }).click();
+    const view = page.getByRole('region', { name: 'Git Changes' });
+    await view.getByRole('button', { name: 'Branch main' }).click();
+    await page.getByRole('menuitem', { name: 'New Branch…' }).click();
+    await view.getByLabel('New branch name').fill('feature/login');
+    await view.getByRole('button', { name: 'Create' }).click();
+    await expect(view.getByRole('button', { name: 'Branch feature/login' })).toBeVisible();
+    expect(run(root, 'branch', '--show-current').trim()).toBe('feature/login');
+    // Publish: Push sets the upstream.
+    await view.getByRole('button', { name: /^Push/ }).click();
+    await expect(page.getByText('Pushed.').first()).toBeVisible();
+    expect(run(remote, 'branch', '--list', 'feature/login').trim()).toContain('feature/login');
+    // Switch back to main from the branch list.
+    await view.getByRole('button', { name: 'Branch feature/login' }).click();
+    await page.getByRole('menuitem', { name: 'main', exact: true }).click();
+    await expect(view.getByRole('button', { name: 'Branch main' })).toBeVisible();
+    await view.getByRole('button', { name: 'Fetch' }).click();
+    await expect(page.getByText('Fetched.').first()).toBeVisible();
+  } finally {
+    await request.post('/api/workspace', { data: previous });
+    await fs.rm(base, { recursive: true, force: true, maxRetries: 5 }).catch(() => {});
+  }
+});

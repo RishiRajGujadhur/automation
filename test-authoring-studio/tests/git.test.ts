@@ -73,3 +73,41 @@ describe('Commit All', () => {
     } finally { await fs.rm(top, { recursive: true, force: true }); }
   });
 });
+
+describe('Branches and sync', () => {
+  it('creates and switches branches, pushes (setting upstream), fetches and pulls', async () => {
+    const { branches, checkout, createBranch, sync } = await import('../server/git');
+    const base = await fs.mkdtemp(path.join(os.tmpdir(), 'tas-git-sync-'));
+    const remote = path.join(base, 'remote.git');
+    const a = path.join(base, 'a');
+    const b = path.join(base, 'b');
+    const setup = async (dir: string) => { await git(dir, ['config', 'user.email', 't@example.com']); await git(dir, ['config', 'user.name', 'T']); await git(dir, ['config', 'core.autocrlf', 'false']); };
+    try {
+      await git(base, ['init', '-q', '--bare', '-b', 'main', remote]);
+      await git(base, ['clone', '-q', remote, a]);
+      await setup(a);
+      await fs.writeFile(path.join(a, 'A.cs'), 'class A {}\n');
+      await commit(a, 'first', { all: true });
+      await sync(a, 'push'); // no upstream yet: push -u origin main
+      expect((await status(a)).upstream).toBe('origin/main');
+
+      await createBranch(a, 'feature/login');
+      expect((await branches(a)).local.find((x) => x.current)?.name).toBe('feature/login');
+      await expect(createBranch(a, 'bad name')).rejects.toThrow('not a valid branch name');
+      await checkout(a, 'main');
+      expect((await status(a)).branch).toBe('main');
+
+      // A second clone pushes; the first fetches (behind 1) and pulls.
+      await git(base, ['clone', '-q', remote, b]);
+      await setup(b);
+      await fs.writeFile(path.join(b, 'B.cs'), 'class B {}\n');
+      await commit(b, 'from b', { all: true });
+      await sync(b, 'push');
+      await sync(a, 'fetch');
+      expect((await status(a)).behind).toBe(1);
+      await sync(a, 'pull');
+      expect(await fs.readFile(path.join(a, 'B.cs'), 'utf8')).toBe('class B {}\n');
+      expect((await status(a)).behind).toBe(0);
+    } finally { await fs.rm(base, { recursive: true, force: true }); }
+  }, 60_000);
+});

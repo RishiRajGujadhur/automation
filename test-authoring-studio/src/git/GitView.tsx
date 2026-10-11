@@ -1,5 +1,6 @@
 import { useEffect, useState, type ReactNode } from 'react';
-import { GitBranch, Plus, Minus, Undo2, RefreshCw, ChevronDown, ChevronRight, ArrowUp, ArrowDown, Check, History } from 'lucide-react';
+import { GitBranch, Plus, Minus, Undo2, RefreshCw, ChevronDown, ChevronRight, ArrowUp, ArrowDown, Check, History, CloudDownload, GitBranchPlus, Cloud } from 'lucide-react';
+import { Dropdown } from '../radix';
 import { api } from '../api';
 import { useConfirm } from '../radix2';
 import { fileType } from '../files/fileTypes';
@@ -22,6 +23,9 @@ export default function GitView({ onOpen, onNotice, onChanged }: { onOpen: (file
   const [busy, setBusy] = useState(false);
   const [closed, setClosed] = useState<Set<string>>(new Set(['history']));
   const [history, setHistory] = useState<Commit[]>([]);
+  const [branches, setBranches] = useState<{ local: { name: string; current: boolean; upstream?: string; when: string }[]; remote: string[] }>({ local: [], remote: [] });
+  const [newBranch, setNewBranch] = useState<string | null>(null);
+  const loadBranches = () => api<typeof branches>('/git/branches').then(setBranches, () => {});
   const refresh = () => api<GitStatus>('/git/status').then(setSt, () => {});
   useEffect(() => {
     void refresh();
@@ -50,6 +54,19 @@ export default function GitView({ onOpen, onNotice, onChanged }: { onOpen: (file
     if (!(await confirm({ title: files.length === 1 ? `Discard changes to ${files[0].split('/').pop()}?` : `Discard ${files.length} changes?`, description: `${untracked ? `${untracked} new file${untracked === 1 ? '' : 's'} will be deleted. ` : ''}Changes go back to the last commit. This cannot be undone.`, confirm: 'Discard', danger: true }))) return;
     await act(async () => { await api('/git/discard', { files, approved: true }); window.dispatchEvent(new CustomEvent(FILES_CHANGED_EVENT, { detail: files })); window.dispatchEvent(new Event(GIT_CHANGED_EVENT)); onChanged(); });
   };
+  /** Switch / create a branch; Fetch, Pull, Push (Push publishes a new branch with its upstream). */
+  const switchTo = (name: string, create = false) => act(async () => {
+    await api('/git/checkout', { name, create });
+    window.dispatchEvent(new Event(GIT_CHANGED_EVENT));
+    onChanged();
+    onNotice(create ? `Created and switched to ${name}.` : `Switched to ${name}.`);
+    void loadBranches();
+  });
+  const syncAction = (action: 'fetch' | 'pull' | 'push') => act(async () => {
+    await api('/git/sync', { action });
+    if (action === 'pull') { window.dispatchEvent(new Event(GIT_CHANGED_EVENT)); onChanged(); }
+    onNotice({ fetch: 'Fetched.', pull: 'Pulled.', push: 'Pushed.' }[action]);
+  });
   const toggle = (k: string) => setClosed((p) => { const n = new Set(p); if (n.has(k)) n.delete(k); else n.add(k); return n; });
   const row = (f: GitFile) => {
     const { icon: Icon, color } = fileType(f.file);
@@ -97,11 +114,29 @@ export default function GitView({ onOpen, onNotice, onChanged }: { onOpen: (file
         <div className="se-tools"><button className="icon-button" aria-label="Refresh Git status" title="Refresh" onClick={() => void refresh()}><RefreshCw size={14} /></button></div>
       </div>
       {st?.branch && (
-        <p className="git-branch" title={st.upstream ? `Tracking ${st.upstream}` : 'No upstream branch'}>
-          <GitBranch size={14} aria-hidden="true" /><strong>{st.branch}</strong>
-          {st.ahead > 0 && <span title="Commits to push"><ArrowUp size={12} />{st.ahead}</span>}
-          {st.behind > 0 && <span title="Commits to pull"><ArrowDown size={12} />{st.behind}</span>}
-        </p>
+        <div className="git-branch">
+          <Dropdown
+            label="Branches"
+            trigger={<button className="git-branch-button" aria-label={`Branch ${st.branch}`} title={st.upstream ? `Tracking ${st.upstream}. Switch branch` : 'No upstream branch. Switch branch'} onClick={() => void loadBranches()}><GitBranch size={14} aria-hidden="true" /><strong>{st.branch}</strong><ChevronDown size={12} /></button>}
+            entries={[
+              { label: 'New Branch…', icon: GitBranchPlus, onSelect: () => setNewBranch('') },
+              'separator' as const,
+              ...branches.local.map((b) => ({ label: `${b.current ? '✓ ' : ''}${b.name}`, icon: GitBranch, disabled: b.current, onSelect: () => void switchTo(b.name) })),
+              ...(branches.remote.length ? ['separator' as const, ...branches.remote.map((r) => ({ label: r, icon: Cloud, onSelect: () => void switchTo(r) }))] : []),
+            ]}
+          />
+          <span className="git-sync">
+            <button className="icon-button" aria-label="Fetch" title="Fetch" disabled={busy} onClick={() => void syncAction('fetch')}><CloudDownload size={14} /></button>
+            <button className="icon-button" aria-label={`Pull${st.behind ? ` (${st.behind})` : ''}`} title="Pull" disabled={busy || !st.upstream} onClick={() => void syncAction('pull')}><ArrowDown size={14} />{st.behind > 0 && <small>{st.behind}</small>}</button>
+            <button className="icon-button" aria-label={`Push${st.ahead ? ` (${st.ahead})` : ''}`} title={st.upstream ? 'Push' : 'Push (publish branch)'} disabled={busy} onClick={() => void syncAction('push')}><ArrowUp size={14} />{st.ahead > 0 && <small>{st.ahead}</small>}</button>
+          </span>
+        </div>
+      )}
+      {newBranch !== null && (
+        <form className="git-new-branch" onSubmit={(e) => { e.preventDefault(); if (newBranch.trim()) { void switchTo(newBranch.trim(), true); setNewBranch(null); } }}>
+          <input autoFocus aria-label="New branch name" placeholder={`New branch from ${st?.branch ?? 'HEAD'}`} value={newBranch} onChange={(e) => setNewBranch(e.target.value)} onKeyDown={(e) => { if (e.key === 'Escape') setNewBranch(null); }} />
+          <button className="button primary" type="submit" disabled={!newBranch.trim()}>Create</button>
+        </form>
       )}
       <div className="git-commit">
         <textarea aria-label="Commit message" placeholder={`Message (Ctrl+Enter to commit${st?.branch ? ` on "${st.branch}"` : ''})`} value={message} onChange={(e) => setMessage(e.target.value)}

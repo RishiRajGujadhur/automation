@@ -104,3 +104,37 @@ export async function log(root: string, max = 30) {
     return out.split('\n').filter(Boolean).map((l) => { const [hash, author, when, subject] = l.split('\x1f'); return { hash, author, when, subject }; });
   } catch { return []; }
 }
+
+/** Local and remote branches (remote ones without a local counterpart), current first. */
+export async function branches(root: string) {
+  const { top } = await locate(root);
+  const out = await git(top, ['branch', '-a', '--format=%(HEAD)%00%(refname:short)%00%(upstream:short)%00%(committerdate:relative)']);
+  const local: { name: string; current: boolean; upstream?: string; when: string }[] = [];
+  const remote: string[] = [];
+  for (const line of out.split('\n').filter(Boolean)) {
+    const [head, name, upstream, when] = line.split('\0');
+    if (name.endsWith('/HEAD') || name === 'HEAD' || name.startsWith('(')) continue;
+    if (/^[^/]+\/.+/.test(name) && !local.some((l) => l.name === name) && (await git(top, ['show-ref', '--verify', '--quiet', `refs/remotes/${name}`]).then(() => true, () => false))) remote.push(name);
+    else local.push({ name, current: head === '*', upstream: upstream || undefined, when });
+  }
+  return { local: local.sort((a, b) => Number(b.current) - Number(a.current) || a.name.localeCompare(b.name)), remote: remote.filter((r) => !local.some((l) => r.endsWith(`/${l.name}`))) };
+}
+/** Switch branch (a remote branch gets a local tracking branch); refuses when local changes would be overwritten. */
+export async function checkout(root: string, name: string) {
+  const { top } = await locate(root);
+  if (name.includes('/') && (await git(top, ['show-ref', '--verify', '--quiet', `refs/remotes/${name}`]).then(() => true, () => false))) await git(top, ['switch', '--track', name]);
+  else await git(top, ['switch', name]);
+}
+export async function createBranch(root: string, name: string, checkoutIt = true) {
+  const { top } = await locate(root);
+  await git(top, ['check-ref-format', '--branch', name]).catch(() => { throw new Error(`'${name}' is not a valid branch name.`); });
+  await git(top, checkoutIt ? ['switch', '-c', name] : ['branch', name]);
+}
+/** Fetch / Pull / Push for the current branch (Push sets the upstream the first time, like Visual Studio). */
+export async function sync(root: string, action: 'fetch' | 'pull' | 'push') {
+  const { top } = await locate(root);
+  if (action === 'fetch') return git(top, ['fetch', '--prune']);
+  if (action === 'pull') return git(top, ['pull', '--ff-only']);
+  const st = await status(root);
+  return st.upstream ? git(top, ['push']) : git(top, ['push', '-u', 'origin', st.branch ?? 'HEAD']);
+}

@@ -79,7 +79,7 @@ Status: ✅ done · 🟡 partial · ⬜ to do. Priority: **P1** next, **P2** aft
 | # | Feature | Status | Pri |
 | --- | --- | --- | --- |
 | V1 | Git Changes: status, stage, commit, amend, discard; gutter change markers | ✅ | P1 |
-| V2 | Branches (create, switch, merge), pull/push/fetch, sync | ⬜ | P2 |
+| V2 | Branches (create, switch, merge), pull/push/fetch, sync | 🟡 (create, switch incl. remote branches, fetch / pull --ff-only / push with publish; no merge yet) | P2 |
 | V3 | History, blame, compare with previous | 🟡 (recent history list) | P2 |
 
 ## 8. Environment
@@ -113,3 +113,4 @@ Status: ✅ done · 🟡 partial · ⬜ to do. Priority: **P1** next, **P2** aft
 - 2026-10-12 — **Run glyphs in the editor margin (T2, D5).** Feature editor: ▶ beside every scenario and the Feature line; C# editor: beside every test method; the glyph shows the last outcome (✓ / ✕ / running), click runs, Shift+click debugs. Fixed: files of a project whose .csproj is at the repository root were hidden in the Explorer when unclassified; test results of a previous repository were kept after opening another.
 - 2026-10-12 — **Git Changes (V1).** `server/git.ts` (status relative to the workspace folder inside a larger repo, stage/unstage, discard to HEAD or delete untracked, commit / Commit All / amend, HEAD text, history); Git Changes side-bar view with branch and ahead/behind, Commit Staged / Commit All (Ctrl+Enter), per-file and bulk stage / unstage / discard (confirmed), history. Tests: the global teardown now always points the dev server back at fixtures/.
 - 2026-10-12 — **Change bars (V1 complete).** Feature and C# editors show added / modified / deleted lines against the last commit (`/api/git/head`, `diffLines`), refreshed after commits, discards and window focus; line-ending differences ignored.
+- 2026-10-12 — **Branches and sync (V2 partial).** Branch picker in Git Changes (local and remote branches, New Branch…), Fetch, Pull (fast-forward only) and Push (publishes a new branch with its upstream), ahead / behind counts; tested against a local bare remote.
