@@ -136,3 +136,34 @@ test('Breakpoint settings: hit count (right-click in the margin), tracepoint log
     await fs.rm(temp, { recursive: true, force: true, maxRetries: 5 }).catch(() => {});
   }
 });
+
+test('Exception Settings: break on all thrown exceptions stops on a caught one; unhandled-only runs through', async ({ request }) => {
+  const previous = (await (await request.get('/api/workspace')).json()).config;
+  const temp = await fs.mkdtemp(path.join(os.tmpdir(), 'studio-exc-'));
+  await fs.cp(path.resolve(import.meta.dirname, '../../samples/Calculator'), temp, { recursive: true, filter: (s) => !/[\/](bin|obj)$/.test(s) });
+  const tests = path.join(temp, 'Tests/CalculatorTests.cs');
+  await fs.writeFile(tests, (await fs.readFile(tests, 'utf8')).replace(/\}\s*$/, '\n    [Test]\n    public void CatchesInside()\n    {\n        try { throw new InvalidOperationException("boom"); } catch (InvalidOperationException) { }\n    }\n}\n'));
+  const state = async () => (await (await request.get('/api/debug')).json()) as { status: string; reason?: string; exception?: string };
+  const run = async () => {
+    await request.post('/api/debug/start', { data: { project: 'Calculator.csproj', filter: 'FullyQualifiedName=Calculator.Tests.CalculatorTests.CatchesInside' } });
+    await expect.poll(async () => (await state()).status, { timeout: 240_000, intervals: [1000] }).toMatch(/paused|ended/);
+    return state();
+  };
+  try {
+    expect((await request.post('/api/solution/open', { data: { path: path.join(temp, 'Calculator.csproj') } })).ok()).toBe(true);
+    await request.post('/api/debug/exceptions', { data: { breakOn: 'all' } });
+    let s = await run();
+    expect(s.status).toBe('paused');
+    expect(s.reason).toBe('exception');
+    expect(s.exception).toContain('InvalidOperationException');
+    await request.post('/api/debug/control', { data: { action: 'stop' } });
+    await request.post('/api/debug/exceptions', { data: { breakOn: 'unhandled' } });
+    s = await run();
+    expect(s.status).toBe('ended');
+  } finally {
+    await request.post('/api/debug/control', { data: { action: 'stop' } }).catch(() => {});
+    await request.post('/api/debug/exceptions', { data: { breakOn: 'unhandled' } }).catch(() => {});
+    await request.post('/api/workspace', { data: { ...previous, solution: '' } });
+    await fs.rm(temp, { recursive: true, force: true, maxRetries: 5 }).catch(() => {});
+  }
+});

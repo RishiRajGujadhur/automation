@@ -55,6 +55,9 @@ export default function DebugPanel({ onOpen, onNotice, onClose, editingRequest =
   const [locals, setLocals] = useState<Variable[]>([]);
   const [values, setValues] = useState<{ result?: string; type?: string; error?: string; variablesReference?: number }[]>([]);
   const [draft, setDraft] = useState('');
+  // Exception Settings (kept per browser, sent to the server so the next session uses them too).
+  const [breakOn, setBreakOn] = useLocalState<'unhandled' | 'all' | 'never'>('breakOn', 'unhandled');
+  useEffect(() => { void api('/debug/exceptions', { breakOn }).catch(() => {}); }, [breakOn]);
   // Autos: variables used on the current and previous line (Visual Studio's Autos window).
   const [autos, setAutos] = useState<{ name: string; value: string; type?: string; variablesReference: number }[]>([]);
   useEffect(() => {
@@ -139,6 +142,15 @@ export default function DebugPanel({ onOpen, onNotice, onClose, editingRequest =
         <IconButton label="Step Into" shortcut="F11" disabled={!paused} onClick={() => act('stepIn')}><ArrowDownToLine size={14} /></IconButton>
         <IconButton label="Step Over" shortcut="F10" disabled={!paused} onClick={() => act('next')}><Redo2 size={14} /></IconButton>
         <IconButton label="Step Out" shortcut="Shift F11" disabled={!paused} onClick={() => act('stepOut')}><ArrowUpFromLine size={14} /></IconButton>
+        <span className="debug-sep" />
+        <label className="debug-breakon" title="Exception Settings: when to break on .NET exceptions">
+          Break on
+          <select aria-label="Break on exceptions" value={breakOn} onChange={(e) => setBreakOn(e.target.value as typeof breakOn)}>
+            <option value="unhandled">Unhandled exceptions</option>
+            <option value="all">All thrown exceptions</option>
+            <option value="never">Never</option>
+          </select>
+        </label>
         <span className="toolbar-spacer" />
         {state.target && <span className="meta debug-target" title={state.target.filter}>{state.target.label}</span>}
         <IconButton label="Close debug windows" onClick={onClose}><X size={14} /></IconButton>

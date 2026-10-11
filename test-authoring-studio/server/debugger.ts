@@ -55,6 +55,8 @@ export class Debugger extends EventEmitter {
   private hits = new Map<string, number>();
   /** Run to Cursor: a one-shot breakpoint, removed at the next stop (netcoredbg has no native "run to"). */
   private runTo?: { file: string; line: number };
+  /** Exception Settings: break when user code leaves an exception unhandled (default), on every throw, or never. */
+  breakOn: 'unhandled' | 'all' | 'never' = 'unhandled';
 
   private update(patch: Partial<DebugState>) {
     this.state = { ...this.state, ...patch, version: this.state.version + 1 };
@@ -147,6 +149,7 @@ export class Debugger extends EventEmitter {
     await dap.request('initialize', { clientID: 'tas', adapterID: 'coreclr', linesStartAt1: true, columnsStartAt1: true, pathFormat: 'path' });
     await dap.request('attach', { processId: pid, justMyCode: true });
     for (const file of Object.keys(this.state.breakpoints)) await this.send(file);
+    await this.sendExceptions();
     // netcoredbg rejects configurationDone after attach; the waiting test host continues once a debugger is attached.
     await dap.request('configurationDone').catch(() => {});
     this.log(`Debugger attached to the test host (process ${pid}).\n`);
@@ -215,6 +218,13 @@ export class Debugger extends EventEmitter {
     this.update({ status: 'running', frames: [], reason: undefined, exception: undefined });
     await this.dap.request(action, { threadId });
   }
+
+  private async sendExceptions() {
+    if (!this.dap) return;
+    const filters = this.breakOn === 'all' ? ['all'] : this.breakOn === 'unhandled' ? ['user-unhandled'] : [];
+    await this.dap.request('setExceptionBreakpoints', { filters }).catch((e) => this.log(`Exception settings: ${(e as Error).message}\n`));
+  }
+  async setBreakOn(mode: 'unhandled' | 'all' | 'never') { this.breakOn = mode; await this.sendExceptions(); }
 
   /** Run to Cursor (Ctrl+F10): continue until the given line (or an earlier breakpoint). */
   async runToCursor(file: string, line: number) {

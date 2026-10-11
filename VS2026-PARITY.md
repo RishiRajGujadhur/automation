@@ -71,7 +71,7 @@ Status: ✅ done · 🟡 partial · ⬜ to do. Priority: **P1** next, **P2** aft
 | --- | --- | --- | --- |
 | D1 | Breakpoints in .feature and .cs, F5/F10/F11/Shift+F11, Locals, Watch, Call Stack, DataTips | ✅ | — |
 | D2 | Conditional, hit-count and log-point breakpoints; enable/disable | ✅ (right-click a breakpoint for its settings; Enable/Disable All) | P2 |
-| D3 | Exception settings (break on thrown/unhandled), Exception helper | 🟡 | P2 |
+| D3 | Exception settings (break on thrown/unhandled), Exception helper | ✅ (Break on: unhandled / all thrown / never; exception type and message shown when stopped) | P2 |
 | D4 | Autos, Immediate window, Run to Cursor, Set Next Statement | 🟡 (Autos, Immediate, Run to Cursor Ctrl+F10; Set Next Statement not supported by netcoredbg) | P2 |
 | D5 | Debug from Test Explorer and from a scenario's gutter | ✅ (Shift+click a margin glyph) | P1 |
 
@@ -117,3 +117,4 @@ Status: ✅ done · 🟡 partial · ⬜ to do. Priority: **P1** next, **P2** aft
 - 2026-10-12 — **Peek / Implementation / Base (E5).** Language service `implementations` (interface members, overrides, derived classes) and `base`; C# editor: Alt+F12 peek window (read-only, highlighted, Open), Ctrl+F12, Go To Base; several results go to the references list.
 - 2026-10-12 — **Breakpoint settings (D2).** Conditions go to netcoredbg; hit counts (`5`, `>= 5`, `% 5`) and tracepoints (log message with `{expressions}`, continues) are handled by the server on stop; enabled flag, Enable/Disable All; margin markers per kind (conditional +, tracepoint diamond, disabled hollow); right-click a breakpoint for Breakpoint Settings. Fixed: parameterized-test filters contained `(`, which vstest/NUnit reject.
 - 2026-10-12 — **Autos, Immediate, Run to Cursor (D4).** Autos evaluates the variables of the current and previous line; Immediate window evaluates expressions in the paused frame (history with ↑/↓); Run to Cursor (Ctrl+F10) sets a one-shot breakpoint removed at the next stop. Fixed: Ctrl+F10 also stepped over.
+- 2026-10-12 — **Exception Settings (D3).** Debug windows toolbar: Break on Unhandled / All thrown / Never (netcoredbg `user-unhandled` / `all` filters), applied to the live session and remembered.

@@ -663,6 +663,12 @@ app.post('/api/debug/control', async (req, res) => {
   if (action === 'stop') await debug.stop(); else await debug.control(action);
   res.json(debug.state);
 });
+app.get('/api/debug/exceptions', (_req, res) => res.json({ breakOn: debug.breakOn }));
+app.post('/api/debug/exceptions', async (req, res) => {
+  const { breakOn } = z.object({ breakOn: z.enum(['unhandled', 'all', 'never']) }).parse(req.body);
+  await debug.setBreakOn(breakOn);
+  res.json({ breakOn });
+});
 app.post('/api/debug/run-to', async (req, res) => {
   const { file, line } = z.object({ file: repoFile, line: z.number().int().min(1) }).parse(req.body);
   await debug.runToCursor(file.replaceAll('\\', '/'), line);
