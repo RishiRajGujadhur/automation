@@ -11,7 +11,8 @@
     "test:e2e": "playwright test",
     "cli": "tsx server/cli.ts",
     "scanner:build": "node scripts/build-scanner.mjs",
-    "debugger:setup": "node scripts/setup-debugger.mjs"
+    "debugger:setup": "node scripts/setup-debugger.mjs",
+    "langserver:build": "node scripts/build-langserver.mjs"
   },
   "keywords": [],
   "author": "",

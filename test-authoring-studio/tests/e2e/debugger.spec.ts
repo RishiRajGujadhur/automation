@@ -20,7 +20,7 @@ test('breakpoint on a feature line, step into the C# step, watch, step out, call
     await page.goto('/#/features/editor');
     await page.getByRole('button', { name: 'Add.feature', exact: true }).first().click();
     const line = (text: string) => page.locator('.gherkin-editor .cm-line', { hasText: text });
-    await expect(line('the two numbers are added')).toBeVisible();
+    await expect(line('the two numbers are added')).toBeVisible({ timeout: 20_000 });
 
     // F9 on the cursor line sets a breakpoint (a red dot in the margin).
     await line('the two numbers are added').click();

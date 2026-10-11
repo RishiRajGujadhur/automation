@@ -4,7 +4,10 @@ import { StreamLanguage } from '@codemirror/language';
 import { csharp } from '@codemirror/legacy-modes/mode/clike';
 import { forEachDiagnostic, linter, lintGutter, type Diagnostic } from '@codemirror/lint';
 import { keymap, EditorView } from '@codemirror/view';
-import { Save, TriangleAlert, RotateCcw, CircleCheck, CloudOff, Loader, GitCompareArrows } from 'lucide-react';
+import { Save, TriangleAlert, RotateCcw, CircleCheck, CloudOff, Loader, GitCompareArrows, Navigation, ListTree, TextCursorInput, ListOrdered, Scissors, Copy, ClipboardPaste, X } from 'lucide-react';
+import { RowMenu } from '../ui';
+import { csharpLanguage, lineCol, offsetOf, replaceText, type CsHandlers, type CsLocation } from './csharp';
+import { FILES_CHANGED_EVENT } from './events';
 import { api, type FilePreview } from '../api';
 import { Button } from '../radix';
 import { IconButton } from '../radix2';
@@ -52,7 +55,7 @@ function languageOf(file: string, browser: boolean) {
  * folder): syntax colouring, Roslyn diagnostics for C#, auto save / hot exit, Ctrl+S or the save icon to write it.
  * Inactive tabs stay mounted (hidden) so their undo history and scroll position survive tab switches.
  */
-export default function CodeEditor({ file, reveal, active = true, onNotice, onIndex }: { file: string; reveal?: { line: number }; active?: boolean; onNotice?: (m: string) => void; onIndex?: (i: Index) => void }) {
+export default function CodeEditor({ file, reveal, active = true, onNotice, onIndex, onOpen }: { file: string; reveal?: { line: number; column?: number }; onOpen?: (file: string, line: number, column?: number) => void; active?: boolean; onNotice?: (m: string) => void; onIndex?: (i: Index) => void }) {
   const theme = useEditorTheme();
   const ref = useRef<ReactCodeMirrorRef>(null);
   const [loaded, setLoaded] = useState<{ file: string; source: string; hash: string }>();
@@ -62,6 +65,11 @@ export default function CodeEditor({ file, reveal, active = true, onNotice, onIn
   const [preview, setPreview] = useState<FilePreview>();
   const [problems, setProblems] = useState({ errors: 0, warnings: 0 });
   const browser = isBrowser();
+  const isCs = file.endsWith('.cs');
+  // C# language features (Roslyn): rename box over the symbol, Find All References results.
+  const [renameAt, setRenameAt] = useState<{ pos: number; name: string; top: number; left: number }>();
+  const [refs, setRefs] = useState<{ name: string; locations: CsLocation[] }>();
+  const [busyOp, setBusyOp] = useState('');
 
   useEffect(() => {
     let live = true;
@@ -85,12 +93,92 @@ export default function CodeEditor({ file, reveal, active = true, onNotice, onIn
     const view = ref.current?.view;
     if (!view || !loaded || !reveal) return;
     const l = view.state.doc.line(Math.max(1, Math.min(reveal.line, view.state.doc.lines)));
-    view.dispatch({ selection: { anchor: l.from, head: l.to }, effects: EditorView.scrollIntoView(l.from, { y: 'center' }) });
+    // A column (go to definition) puts the cursor on the symbol; a line alone selects the line.
+    const at = reveal.column ? Math.min(l.to, l.from + reveal.column - 1) : undefined;
+    view.dispatch({ selection: at !== undefined ? { anchor: at } : { anchor: l.from, head: l.to }, effects: EditorView.scrollIntoView(l.from, { y: 'center' }) });
     view.focus();
   }, [loaded, reveal]);
   useEffect(() => { if (active) requestAnimationFrame(() => ref.current?.view?.requestMeasure()); }, [active]);
+  // Another editor's rename (or a file operation) changed this file on disk: reload it unless it has unsaved edits.
+  useEffect(() => {
+    const h = (e: Event) => {
+      if (!(e as CustomEvent<string[]>).detail.includes(file)) return;
+      readFile(file).then((r) => {
+        if (auto.dirty) { onNotice?.(`${file} changed on disk while it has unsaved edits; saving will ask you to reload.`); return; }
+        setLoaded({ file, ...r });
+        setValue(r.source);
+      }, () => {});
+    };
+    window.addEventListener(FILES_CHANGED_EVENT, h);
+    return () => window.removeEventListener(FILES_CHANGED_EVENT, h);
+  });
 
-  const save = () => auto.save().then((ok) => onNotice?.(ok ? `${file} saved.` : 'Not saved: see the editor status.'));
+  const position = (pos: number) => { const v = ref.current!.view!; return { file, source: v.state.doc.toString(), ...lineCol(v.state.doc, pos) }; };
+  const csHandlers = useRef<CsHandlers>({ definition: () => {}, references: () => {}, rename: () => {} });
+  csHandlers.current = {
+    definition: async (pos) => {
+      try {
+        const r = await api<{ name: string; locations: CsLocation[]; external?: string }>('/csharp/definition', position(pos));
+        const here = r.locations.find((l) => l.file === file);
+        const target = here ?? r.locations[0];
+        if (!target) { onNotice?.(`${r.name} is defined in ${r.external ?? 'a referenced assembly'} (no source in this repository).`); return; }
+        if (target.file === file) { const v = ref.current!.view!; const at = offsetOf(v.state.doc, target.line, target.column); v.dispatch({ selection: { anchor: at }, effects: EditorView.scrollIntoView(at, { y: 'center' }) }); v.focus(); }
+        else onOpen?.(target.file, target.line, target.column);
+      } catch (e) { onNotice?.((e as Error).message); }
+    },
+    references: async (pos) => {
+      setBusyOp('Finding references…');
+      try { setRefs(await api('/csharp/references', position(pos))); } catch (e) { onNotice?.((e as Error).message); } finally { setBusyOp(''); }
+    },
+    rename: (pos) => {
+      const v = ref.current?.view;
+      const word = v?.state.wordAt(pos);
+      if (!v || !word) return;
+      const box = v.coordsAtPos(word.from);
+      const host = v.dom.getBoundingClientRect();
+      if (!box) return;
+      setRenameAt({ pos: word.from, name: v.state.sliceDoc(word.from, word.to), top: box.bottom - host.top + 2, left: box.left - host.left });
+    },
+  };
+  /** Rename symbol (F2): every reference in the repository; other files are written, this one gets the new text. */
+  const doRename = async (newName: string) => {
+    const at = renameAt;
+    setRenameAt(undefined);
+    const v = ref.current?.view;
+    if (!at || !v || !newName || newName === at.name) { v?.focus(); return; }
+    setBusyOp(`Renaming ${at.name}…`);
+    try {
+      const r = await api<{ current: string | null; written: string[]; changes: { file: string; edits: number }[] }>('/csharp/rename', { ...position(at.pos), newName });
+      if (r.current !== null) replaceText(v, r.current);
+      if (r.written.length) window.dispatchEvent(new CustomEvent(FILES_CHANGED_EVENT, { detail: r.written }));
+      const edits = r.changes.reduce((n, c) => n + c.edits, 0);
+      onNotice?.(`Renamed ${at.name} to ${newName}: ${edits} change${edits === 1 ? '' : 's'} in ${r.changes.length} file${r.changes.length === 1 ? '' : 's'}.`);
+    } catch (e) { onNotice?.((e as Error).message); } finally { setBusyOp(''); v.focus(); }
+  };
+  /** Organize Usings: remove unnecessary usings and sort them (System first), like Visual Studio's Ctrl+R, Ctrl+G. */
+  const organize = async () => {
+    const v = ref.current?.view;
+    if (!v) return;
+    try {
+      const r = await api<{ text: string; removed: number }>('/csharp/organize', { file, source: v.state.doc.toString() });
+      replaceText(v, r.text);
+      if (r.removed) onNotice?.(`Removed ${r.removed} unnecessary using${r.removed === 1 ? '' : 's'}.`);
+    } catch (e) { onNotice?.((e as Error).message); }
+  };
+  const organizeRef = useRef(organize);
+  organizeRef.current = organize;
+  const clip = (action: 'cut' | 'copy' | 'paste') => {
+    const v = ref.current?.view;
+    if (!v) return;
+    const r = v.state.selection.main;
+    if (action === 'paste') { navigator.clipboard?.readText().then((t) => v.dispatch(v.state.replaceSelection(t)), () => onNotice?.('Paste with Ctrl+V; the browser blocked clipboard access.')); return; }
+    void navigator.clipboard?.writeText(v.state.sliceDoc(r.from, r.to));
+    if (action === 'cut') v.dispatch(v.state.replaceSelection(''));
+  };
+
+
+  // Quiet on success (the tab's ● disappears); only a failure is announced.
+  const save = () => auto.save().then((ok) => { if (!ok) onNotice?.('Not saved: see the editor status.'); });
   const compare = async () => {
     try { setPreview(await api<FilePreview>('/file/preview', { file, source: value })); } catch (e) { onNotice?.((e as Error).message); }
   };
@@ -102,7 +190,11 @@ export default function CodeEditor({ file, reveal, active = true, onNotice, onIn
     ...languageOf(file, browser),
     lintGutter(),
     labelled(`Source of ${file}`, false),
-    keymap.of([{ key: 'Mod-s', preventDefault: true, run: () => { void saveRef.current(); return true; } }]),
+    keymap.of([
+      { key: 'Mod-s', preventDefault: true, run: () => { void saveRef.current(); return true; } },
+      ...(isCs && !browser ? [{ key: 'Mod-r Mod-g', preventDefault: true, run: () => { void organizeRef.current(); return true; } }] : []),
+    ]),
+    ...(isCs && !browser ? csharpLanguage(file, csHandlers) : []),
     // Stable per file: rebuilding extensions on every keystroke would reset the linter before it reports.
   ], [file, browser]);
 
@@ -129,7 +221,22 @@ export default function CodeEditor({ file, reveal, active = true, onNotice, onIn
       )}
       {error && <p className="field-error" role="alert">{error}</p>}
       {loaded && (
-        <div className="code-editor-surface" onBlur={auto.onBlur}>
+        <RowMenu label="Editor actions" items={[
+          ...(isCs && !browser ? [
+            { label: 'Go To Definition', icon: Navigation, shortcut: 'F12', onSelect: () => csHandlers.current.definition(ref.current!.view!.state.selection.main.head) },
+            { label: 'Find All References', icon: ListTree, shortcut: 'Shift F12', onSelect: () => csHandlers.current.references(ref.current!.view!.state.selection.main.head) },
+            { label: 'Rename…', icon: TextCursorInput, shortcut: 'F2', onSelect: () => csHandlers.current.rename(ref.current!.view!.state.selection.main.head) },
+            'separator' as const,
+            { label: 'Remove and Sort Usings', icon: ListOrdered, shortcut: 'Ctrl R, Ctrl G', onSelect: () => void organize() },
+            'separator' as const,
+          ] : []),
+          { label: 'Cut', icon: Scissors, shortcut: 'Ctrl X', onSelect: () => clip('cut') },
+          { label: 'Copy', icon: Copy, shortcut: 'Ctrl C', onSelect: () => clip('copy') },
+          { label: 'Paste', icon: ClipboardPaste, shortcut: 'Ctrl V', onSelect: () => clip('paste') },
+          'separator' as const,
+          { label: 'Save', icon: Save, shortcut: 'Ctrl S', onSelect: () => void save() },
+        ]}>
+        <div className="code-editor-surface" onBlur={auto.onBlur} data-menu-row>
           <CodeMirror
             ref={ref}
             value={value}
@@ -146,7 +253,34 @@ export default function CodeEditor({ file, reveal, active = true, onNotice, onIn
               setProblems((p) => (p.errors === errors && p.warnings === warnings ? p : { errors, warnings }));
             }}
           />
+          {renameAt && (
+            <input
+              className="cm-rename-box"
+              aria-label={`Rename ${renameAt.name}`}
+              defaultValue={renameAt.name}
+              autoFocus
+              style={{ top: renameAt.top, left: renameAt.left }}
+              onFocus={(e) => e.currentTarget.select()}
+              onKeyDown={(e) => { e.stopPropagation(); if (e.key === 'Enter') void doRename(e.currentTarget.value.trim()); if (e.key === 'Escape') { setRenameAt(undefined); ref.current?.view?.focus(); } }}
+              onBlur={() => setRenameAt(undefined)}
+            />
+          )}
+          {busyOp && <span className="cm-busy" role="status"><Loader size={12} className="spin" />{busyOp}</span>}
         </div>
+        </RowMenu>
+      )}
+      {refs && (
+        <section className="references-panel" aria-label={`References to ${refs.name}`}>
+          <div className="references-head">
+            <strong>{refs.locations.length} reference{refs.locations.length === 1 ? '' : 's'}</strong> <span className="meta">{refs.name}</span>
+            <IconButton label="Close references" onClick={() => setRefs(undefined)}><X size={13} /></IconButton>
+          </div>
+          <ul>
+            {refs.locations.map((l, i) => (
+              <li key={i}><button onClick={() => { if (l.file === file) { const v = ref.current!.view!; const at = offsetOf(v.state.doc, l.line, l.column); v.dispatch({ selection: { anchor: at }, effects: EditorView.scrollIntoView(at, { y: 'center' }) }); v.focus(); } else onOpen?.(l.file, l.line, l.column); }}>{l.file}<span className="meta">({l.line}, {l.column})</span></button></li>
+            ))}
+          </ul>
+        </section>
       )}
       {preview && (
         <div className="code-editor-preview">

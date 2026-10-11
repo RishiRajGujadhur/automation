@@ -1,8 +1,9 @@
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import {
   ChevronDown, ChevronRight, Folder, FolderOpen, FileCode2, FileText, FileCog, Braces, Plus, Search, X, Copy, ChevronsDownUp, ChevronsUpDown,
-  Eye, Package, Boxes, Link2, LocateFixed, PencilLine, Files, Layers, SquareStack,
+  Eye, Package, Boxes, Link2, LocateFixed, PencilLine, Files, Layers, SquareStack, Scissors, ClipboardPaste, Trash2, TextCursorInput,
 } from 'lucide-react';
+import { fileType } from './files/fileTypes';
 import { RowMenu, copyText } from './ui';
 import { api } from './api';
 import { normalizeFeaturePath, parentFolders } from './featureTree';
@@ -34,7 +35,12 @@ type Props = {
   onSource?: (file: string, line: number) => void;
   /** A folder opened in the browser (File System Access): its tree is built client-side instead of by the server. */
   browserSolution?: Solution;
+  /** Explorer file operations (Rename, Paste of a Copy/Cut, Delete); the App applies them and refreshes. */
+  onFileOp?: (op: FileOp) => Promise<void>;
 };
+export type FileOp = { kind: 'rename' | 'copy' | 'delete'; from: string; to?: string; folder?: boolean };
+/** Explorer clipboard (Copy / Cut, then Paste on a folder or beside a file), kept while the app is open. */
+let clipboard: { mode: 'copy' | 'cut'; path: string } | null = null;
 /** Layers hidden until "Show all files" (build output and unclassified files). */
 const HIDDEN_LAYERS = new Set(['Output', 'Other']);
 const icon = (file: string) => (file.endsWith('.feature') ? FileText : file.endsWith('.xml') ? Braces : file.endsWith('.csproj') || file.endsWith('.json') || file.endsWith('.config') ? FileCog : FileCode2);
@@ -63,7 +69,57 @@ function buildTree(files: { file: string; layer: string }[]): Node[] {
  * with file nesting (a feature shows the step files its steps bind to, and its generated code-behind),
  * Sync with Active Document, a pending-changes filter, Collapse All, Show All Files and search (Ctrl+;).
  */
-export default function SolutionExplorer({ features, revision, activeFile, query, activeFolder, onQuery, onSelect, onOpenFile, onFolder, onNew, onSource, browserSolution }: Props) {
+export default function SolutionExplorer({ features, revision, activeFile, query, activeFolder, onQuery, onSelect, onOpenFile, onFolder, onNew, onSource, browserSolution, onFileOp }: Props) {
+  const [renaming, setRenaming] = useState<string | null>(null);
+  const [clip, setClip] = useState(clipboard);
+  const setClipboard = (c: typeof clipboard) => { clipboard = c; setClip(c); };
+  const dirOf = (p: string) => (p.includes('/') ? p.slice(0, p.lastIndexOf('/')) : '');
+  const join = (dir: string, name: string) => (dir ? `${dir}/${name}` : name);
+  const paste = async (folder: string) => {
+    if (!clip || !onFileOp) return;
+    const to = join(folder, clip.path.split('/').pop()!);
+    if (clip.mode === 'cut') { if (to !== clip.path) await onFileOp({ kind: 'rename', from: clip.path, to }); setClipboard(null); }
+    else await onFileOp({ kind: 'copy', from: clip.path, to });
+  };
+  const commitRename = async (path: string, name: string, folder: boolean) => {
+    setRenaming(null);
+    const next = name.trim();
+    if (!next || next === path.split('/').pop() || !onFileOp) return;
+    if (/[\\/:*?"<>|]/.test(next)) return;
+    await onFileOp({ kind: 'rename', from: path, to: join(dirOf(path), next), folder });
+  };
+  /** Inline rename box, as in Visual Studio (F2): the name is selected without its extension. */
+  const renameBox = (path: string, folder: boolean) => (
+    <input
+      className="se-rename"
+      aria-label={`New name for ${path.split('/').pop()}`}
+      defaultValue={path.split('/').pop()}
+      autoFocus
+      onFocus={(e) => { const v = e.currentTarget.value; const dot = folder ? -1 : v.lastIndexOf('.'); e.currentTarget.setSelectionRange(0, dot > 0 ? dot : v.length); }}
+      onKeyDown={(e) => { e.stopPropagation(); if (e.key === 'Enter') e.currentTarget.blur(); if (e.key === 'Escape') { e.currentTarget.value = path.split('/').pop()!; e.currentTarget.blur(); } }}
+      onBlur={(e) => void commitRename(path, e.currentTarget.value, folder)}
+    />
+  );
+  /** Edit entries shared by file and folder context menus. */
+  const editItems = (path: string, folder: boolean) => onFileOp ? [
+    'separator' as const,
+    { label: 'Cut', icon: Scissors, shortcut: 'Ctrl X', onSelect: () => setClipboard({ mode: 'cut', path }) },
+    { label: 'Copy', icon: Copy, shortcut: 'Ctrl C', onSelect: () => setClipboard({ mode: 'copy', path }) },
+    { label: 'Paste', icon: ClipboardPaste, shortcut: 'Ctrl V', disabled: !clip, onSelect: () => void paste(folder ? path : dirOf(path)) },
+    'separator' as const,
+    { label: 'Rename', icon: TextCursorInput, shortcut: 'F2', onSelect: () => setRenaming(path) },
+    { label: 'Delete', icon: Trash2, shortcut: 'Del', onSelect: () => void onFileOp({ kind: 'delete', from: path, folder }) },
+  ] : [];
+  /** F2, Delete, Ctrl+C / Ctrl+X / Ctrl+V on a focused Explorer row. */
+  const rowKeys = (path: string, folder: boolean) => (e: React.KeyboardEvent) => {
+    if (!onFileOp) return;
+    const mod = e.ctrlKey || e.metaKey;
+    if (e.key === 'F2') { e.preventDefault(); setRenaming(path); }
+    else if (e.key === 'Delete') { e.preventDefault(); void onFileOp({ kind: 'delete', from: path, folder }); }
+    else if (mod && e.key.toLowerCase() === 'c') { e.preventDefault(); setClipboard({ mode: 'copy', path }); }
+    else if (mod && e.key.toLowerCase() === 'x') { e.preventDefault(); setClipboard({ mode: 'cut', path }); }
+    else if (mod && e.key.toLowerCase() === 'v') { e.preventDefault(); void paste(folder ? path : dirOf(path)); }
+  };
   const [serverSolution, setSolution] = useState<Solution>();
   const solution = browserSolution ?? serverSolution;
   const [collapsed, setCollapsed] = useState<Set<string>>(() => new Set(['@deps']));
@@ -111,7 +167,7 @@ export default function SolutionExplorer({ features, revision, activeFile, query
   };
   const isActive = (p: string) => !!activeFile && normalizeFeaturePath(activeFile) === p;
   const fileRow = (path: string, name: string, depth: number, extra?: { linked?: boolean; note?: string }) => {
-    const Icon = extra?.linked ? Link2 : icon(path);
+    const Icon = extra?.linked ? Link2 : fileType(path).icon;
     const kids = !extra?.linked ? solution?.nesting[path] ?? [] : [];
     const expanded = kids.length > 0 && openNests.has(path); // nested files start collapsed, as in Visual Studio
     const unsaved = pending.includes(path);
@@ -121,6 +177,7 @@ export default function SolutionExplorer({ features, revision, activeFile, query
         ...(onSource ? [{ label: 'View source', icon: Eye, onSelect: () => onSource(path, 1) }] : []),
         { label: 'Copy path', icon: Copy, onSelect: () => copyText(path) },
         ...(path.endsWith('.feature') ? ['separator' as const, { label: 'New feature beside this', icon: Plus, onSelect: () => onNew(path.split('/').slice(0, -1).join('/')) }] : []),
+        ...(extra?.linked ? [] : editItems(path, false)),
       ]}>
         <li className={extra?.linked ? 'nested-link' : undefined}>
           <div className="se-row">
@@ -129,17 +186,18 @@ export default function SolutionExplorer({ features, revision, activeFile, query
                 {expanded ? <ChevronDown size={12} /> : <ChevronRight size={12} />}
               </button>
             ) : <span className="se-twisty-space" style={{ marginLeft: 4 + depth * 12 }} />}
-            <button
-              className={`explorer-file ${isActive(path) && !extra?.linked ? 'selected' : ''}`}
+            {renaming === path && !extra?.linked ? renameBox(path, false) : <button
+              className={`explorer-file ${isActive(path) && !extra?.linked ? 'selected' : ''} ${clip?.mode === 'cut' && clip.path === path ? 'cut' : ''}`}
+              onKeyDown={extra?.linked ? undefined : rowKeys(path, false)}
               data-path={extra?.linked ? undefined : path}
               title={extra?.note ? `${path} · ${extra.note}` : path}
               aria-current={isActive(path) && !extra?.linked ? 'page' : undefined}
               onClick={() => open(path)}
             >
-              <Icon size={14} aria-hidden="true" />
+              <Icon size={14} aria-hidden="true" style={{ color: extra?.linked ? undefined : fileType(path).color }} />
               <span>{name}</span>
               {extra?.note && <small>{extra.note}</small>}
-            </button>
+            </button>}
             {unsaved && <span className="se-dirty" role="img" title="Unsaved changes" aria-label={`${name} has unsaved changes`}>●</span>}
           </div>
           {expanded && (
@@ -166,16 +224,18 @@ export default function SolutionExplorer({ features, revision, activeFile, query
             { label: 'Expand all folders', icon: ChevronsUpDown, onSelect: () => setCollapsed(new Set()) },
             'separator' as const,
             { label: 'Copy folder path', icon: Copy, onSelect: () => copyText(n.path) },
+            ...editItems(n.path, true),
           ]}>
             <li>
               <div className={`explorer-folder-row ${activeFolder === n.path ? 'active-folder' : ''}`}>
-                <button className="explorer-folder" style={{ paddingLeft: 4 + depth * 12 }} title={n.path} aria-label={`${expanded ? 'Collapse' : 'Expand'} folder ${n.path}`} aria-expanded={expanded}
+                {renaming === n.path ? <span className="explorer-folder" style={{ paddingLeft: 4 + depth * 12 }}><Folder size={14} />{renameBox(n.path, true)}</span> : <button className={`explorer-folder ${clip?.mode === 'cut' && clip.path === n.path ? 'cut' : ''}`} style={{ paddingLeft: 4 + depth * 12 }} title={n.path} aria-label={`${expanded ? 'Collapse' : 'Expand'} folder ${n.path}`} aria-expanded={expanded}
+                  onKeyDown={rowKeys(n.path, true)}
                   onClick={() => { onFolder(n.path); if (!searching) toggle(n.path); }}>
                   {expanded ? <ChevronDown size={12} /> : <ChevronRight size={12} />}
                   {expanded ? <FolderOpen size={14} /> : <Folder size={14} />}
                   <span>{n.name}</span>
                   <small>{n.count}</small>
-                </button>
+                </button>}
                 {isFeatureFolder && <button className="folder-add icon-button" aria-label={`New feature in ${n.path}`} title={`New feature in ${n.path}`} onClick={() => onNew(n.path)}><Plus size={13} /></button>}
               </div>
               {expanded && render(n.children, depth + 1)}

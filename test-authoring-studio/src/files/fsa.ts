@@ -92,3 +92,56 @@ export async function writeText(file: string, text: string) {
   await w.write(text);
   await w.close();
 }
+
+/* Explorer file operations on a browser folder (files and folders). */
+async function parentOf(path: string, create = false) {
+  const parts = path.split('/').filter(Boolean);
+  if (!parts.length || parts.some((p) => p === '..' || p === '.')) throw new Error('Invalid path.');
+  let dir: FileSystemDirectoryHandle = need();
+  for (const p of parts.slice(0, -1)) dir = await dir.getDirectoryHandle(p, { create });
+  return { dir, name: parts[parts.length - 1] };
+}
+async function entry(path: string): Promise<FileSystemHandle | undefined> {
+  const { dir, name } = await parentOf(path);
+  try { return await dir.getFileHandle(name); } catch { /* not a file */ }
+  try { return await dir.getDirectoryHandle(name); } catch { return undefined; }
+}
+export const pathExists = async (path: string) => !!(await entry(path).catch(() => undefined));
+async function copyInto(src: FileSystemHandle, to: string) {
+  if (src.kind === 'file') {
+    const { dir, name } = await parentOf(to, true);
+    const out = await dir.getFileHandle(name, { create: true });
+    const w = await (out as FileSystemFileHandle & { createWritable(): Promise<FileSystemWritableFileStream> }).createWritable();
+    await w.write(await (src as FileSystemFileHandle).getFile());
+    await w.close();
+    return;
+  }
+  const { dir, name } = await parentOf(to, true);
+  await dir.getDirectoryHandle(name, { create: true });
+  for await (const child of (src as DirHandle).values()) await copyInto(child, `${to}/${child.name}`);
+}
+/** Copy; an existing destination becomes "Name - Copy.ext" like Visual Studio. Returns the new path. */
+export async function copyPath(from: string, to: string) {
+  const src = await entry(from);
+  if (!src) throw new Error(`${from} was not found.`);
+  const dot = to.lastIndexOf('.') > to.lastIndexOf('/') ? to.lastIndexOf('.') : to.length;
+  let dest = to;
+  for (let n = 1; await pathExists(dest); n++) dest = `${to.slice(0, dot)} - Copy${n > 1 ? ` (${n})` : ''}${to.slice(dot)}`;
+  await copyInto(src, dest);
+  return dest;
+}
+export async function deletePath(path: string) {
+  const { dir, name } = await parentOf(path);
+  await dir.removeEntry(name, { recursive: true });
+}
+export async function renamePath(from: string, to: string) {
+  if (from === to) return;
+  if (from.toLowerCase() !== to.toLowerCase() && (await pathExists(to))) throw new Error(`${to} already exists.`);
+  const src = await entry(from);
+  if (!src) throw new Error(`${from} was not found.`);
+  // Chromium's move() renames in place; otherwise copy, then delete the original.
+  const movable = src as FileSystemHandle & { move?: (dir: FileSystemDirectoryHandle, name: string) => Promise<void> };
+  if (movable.move) { const { dir, name } = await parentOf(to, true); await movable.move(dir, name); return; }
+  await copyInto(src, to);
+  await deletePath(from);
+}

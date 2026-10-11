@@ -6,3 +6,5 @@ export const requestCreateStep = (r: CreateStepRequest) => window.dispatchEvent(
 
 /** File ▸ Save All: each open editor with unsaved edits saves itself. */
 export const SAVE_ALL_EVENT = 'tas:save-all';
+/** Files changed on disk by the studio (e.g. a rename across files): open editors reload them. Detail: file paths. */
+export const FILES_CHANGED_EVENT = 'tas:files-changed';

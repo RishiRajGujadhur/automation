@@ -1,12 +1,12 @@
 import { createContext, useContext, useEffect, useLayoutEffect, useRef, useState, type ReactNode } from 'react';
 import { createPortal } from 'react-dom';
-import { ChevronLeft, ChevronRight, ChevronDown, X, FileText, FileCode2, Braces, FileCog, Copy, XCircle } from 'lucide-react';
+import { ChevronLeft, ChevronRight, ChevronDown, X, Copy, XCircle, Pin, PinOff } from 'lucide-react';
 import { RowMenu, copyText } from '../ui';
 import { Dropdown } from '../radix';
 import { UNSAVED_EVENT, unsavedFiles } from '../editor/autosave';
-import { useTabs, activateTab, closeOthers, closeToRight, closeAll, type EditorTab } from './tabs';
+import { useTabs, activateTab, closeOthers, closeToRight, closeAll, setPinned, type EditorTab } from './tabs';
+import { fileType } from './fileTypes';
 
-const iconOf = (file: string) => (file.endsWith('.feature') ? FileText : file.endsWith('.xml') ? Braces : /\.(csproj|json|config|props|targets)$/.test(file) ? FileCog : FileCode2);
 const base = (f: string) => f.split('/').pop()!;
 
 /** Editors render their toolbar (save state, Save, Run…) into the tab strip, like VS Code's editor actions. */
@@ -60,11 +60,13 @@ export default function EditorTabs({ onClose, children }: { onClose: (file: stri
         {overflow.left && <button className="tab-scroll" aria-label="Show previous tabs" onClick={() => reveal(-1)}><ChevronLeft size={14} /></button>}
         <div className="tab-strip" role="group" aria-label="Open editors" ref={strip} onScroll={measure} onWheel={(e) => { if (strip.current && e.deltaY) strip.current.scrollLeft += e.deltaY; }}>
           {tabs.map((t: EditorTab) => {
-            const Icon = iconOf(t.file);
+            const { icon: Icon, color } = fileType(t.file);
             const selected = t.file === active;
             const unsaved = dirty.includes(t.file);
             return (
               <RowMenu key={t.file} label={`${base(t.file)} tab`} items={[
+                { label: t.pinned ? 'Unpin' : 'Pin', icon: t.pinned ? PinOff : Pin, onSelect: () => setPinned(t.file, !t.pinned) },
+                'separator',
                 { label: 'Close', shortcut: 'Ctrl F4', onSelect: () => onClose(t.file) },
                 { label: 'Close Others', onSelect: () => closeOthers(t.file) },
                 { label: 'Close to the Right', onSelect: () => closeToRight(t.file) },
@@ -72,15 +74,21 @@ export default function EditorTabs({ onClose, children }: { onClose: (file: stri
                 'separator',
                 { label: 'Copy Relative Path', icon: Copy, onSelect: () => copyText(t.file) },
               ]}>
-                <div className={`editor-tab ${selected ? 'active' : ''} ${unsaved ? 'unsaved' : ''}`} data-menu-row>
+                <div className={`editor-tab ${selected ? 'active' : ''} ${unsaved ? 'unsaved' : ''} ${t.pinned ? 'pinned' : ''}`} data-menu-row style={{ '--file-color': color } as React.CSSProperties}>
                   <button aria-current={selected ? 'true' : undefined} title={t.file} className="editor-tab-label" onClick={() => activateTab(t.file)} onAuxClick={(e) => { if (e.button === 1) { e.preventDefault(); onClose(t.file); } }}>
                     <Icon size={14} aria-hidden="true" />
                     <span>{base(t.file)}</span>
                     {dup(t.file) && <small>{t.file.split('/').slice(-2, -1)[0] ?? ''}</small>}
                   </button>
-                  <button className="editor-tab-close" aria-label={`Close ${base(t.file)}${unsaved ? ' (unsaved)' : ''}`} title={unsaved ? 'Unsaved changes. Close' : 'Close (Ctrl+F4)'} onClick={() => onClose(t.file)}>
-                    <span className="dot" aria-hidden="true">●</span><X size={14} aria-hidden="true" />
-                  </button>
+                  {t.pinned ? (
+                    <button className="editor-tab-close pin" aria-label={`Unpin ${base(t.file)}`} title={unsaved ? 'Pinned, unsaved changes. Unpin' : 'Pinned. Unpin'} onClick={() => setPinned(t.file, false)}>
+                      {unsaved ? <span className="dot" aria-hidden="true">●</span> : <Pin size={13} aria-hidden="true" />}
+                    </button>
+                  ) : (
+                    <button className="editor-tab-close" aria-label={`Close ${base(t.file)}${unsaved ? ' (unsaved)' : ''}`} title={unsaved ? 'Unsaved changes. Close' : 'Close (Ctrl+F4)'} onClick={() => onClose(t.file)}>
+                      <span className="dot" aria-hidden="true">●</span><X size={14} aria-hidden="true" />
+                    </button>
+                  )}
                 </div>
               </RowMenu>
             );
@@ -89,7 +97,7 @@ export default function EditorTabs({ onClose, children }: { onClose: (file: stri
         {overflow.right && <button className="tab-scroll" aria-label="Show next tabs" onClick={() => reveal(1)}><ChevronRight size={14} /></button>}
         {tabs.length > 1 && (
           <Dropdown label="Open editors" align="end" trigger={<button className="tab-scroll" aria-label="Show opened editors" title="Show opened editors"><ChevronDown size={14} /></button>}
-            entries={tabs.map((t) => ({ label: `${dirty.includes(t.file) ? '● ' : ''}${t.file}`, icon: iconOf(t.file), onSelect: () => activateTab(t.file) }))} />
+            entries={tabs.map((t) => ({ label: `${dirty.includes(t.file) ? '● ' : ''}${t.file}`, icon: fileType(t.file).icon, onSelect: () => activateTab(t.file) }))} />
         )}
         <div className="editor-tab-actions" ref={setSlot} />
       </div>

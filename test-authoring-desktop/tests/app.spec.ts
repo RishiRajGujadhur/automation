@@ -155,3 +155,18 @@ test('debugs a feature with the bundled netcoredbg: .feature breakpoint, step in
     fs.rmSync(repo, { recursive: true, force: true, maxRetries: 5 });
   }
 });
+
+test('C# IntelliSense and go to definition run on the bundled language service', async () => {
+  test.setTimeout(120_000);
+  const fixtures = path.resolve(import.meta.dirname, '../../test-authoring-studio/fixtures');
+  await page.evaluate((root) => fetch('/api/workspace', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ repositoryRoot: root, targetProject: '.' }) }), fixtures);
+  const call = (url: string, body: unknown) => page.evaluate(({ url, body }) => fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) }).then((r) => r.json()), { url, body });
+  const source = 'namespace Demo;
+class Probe { void M(SearchPage page) { page. } }
+';
+  const r = await call('/api/csharp/complete', { file: 'Steps/Probe.cs', source, line: 2, column: 46 });
+  expect(r.items.map((i: { label: string }) => i.label)).toEqual(expect.arrayContaining(['Search', 'Results', 'Open']));
+  const d = await call('/api/csharp/definition', { file: 'Steps/Probe.cs', source, line: 2, column: 25 });
+  expect(d.locations[0].file).toBe('Steps/SearchSteps.cs');
+});
+

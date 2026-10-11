@@ -12,11 +12,12 @@ import CreateStepDialog from './CreateStepDialog';
 import CodeEditor from './editor/CodeEditor';
 import { readDraft, sha256, useAutoSave, unsavedFiles, editedThisSession } from './editor/autosave';
 import EditorTabs, { EditorActions } from './files/EditorTabs';
-import { useTabs, openTab, closeTab, closeAll as closeAllTabs, kindOf, cycleTab, getTabs, reloadTabs } from './files/tabs';
+import { useTabs, openTab, closeTab, closeAll as closeAllTabs, kindOf, cycleTab, getTabs, reloadTabs, movedPath, deletedPath } from './files/tabs';
 import { useFileSource, setFileSource, fileSource } from './files/provider';
 import { fsaSupported, pickFolder, restoreFolder, closeFolder as closeBrowserFolder, lastFolderName } from './files/fsa';
 import { browserSolution } from './files/browserSolution';
-import type { Solution } from './SolutionExplorer';
+import type { Solution, FileOp } from './SolutionExplorer';
+import { renamePath, copyPath, deletePath } from './files/provider';
 import { SAVE_ALL_EVENT } from './editor/events';
 import { snapshot } from './algorithms/registry';
 import { desktop, type DesktopMenuCommand } from './desktop';
@@ -229,7 +230,7 @@ export default function App() {
   const activeEditor = openEditors.tabs.find((t) => t.file === openEditors.active);
   const featureTabActive = activeEditor?.kind === 'feature';
   // Line to reveal per code tab (a new object each request, so asking again for the same line still jumps).
-  const [codeLines, setCodeLines] = useState<Record<string, { line: number } | undefined>>({});
+  const [codeLines, setCodeLines] = useState<Record<string, { line: number; column?: number } | undefined>>({});
   // F12 on a step: open its C# binding in the code editor; unbound steps say so.
   const goToDefinition = async (keyword: string, text: string) => {
     try {
@@ -238,9 +239,9 @@ export default function App() {
       else setNotice(r?.status === 'Ambiguous' ? 'More than one binding matches this step.' : 'No step definition yet. Use “Create step definition” to add one.');
     } catch (e) { setNotice((e as Error).message); }
   };
-  const editFile = (file: string, line?: number) => {
+  const editFile = (file: string, line?: number, column?: number) => {
     const kind = kindOf(file);
-    if (line) setCodeLines((l) => ({ ...l, [file]: { line } }));
+    if (line) setCodeLines((l) => ({ ...l, [file]: { line, column } }));
     openTab(file, kind);
     setTab('Features');
     setView(kind === 'code' ? 'code' : 'editor');
@@ -290,6 +291,28 @@ export default function App() {
     else if (e.key.toLowerCase() === 's' && !e.altKey && !e.shiftKey && !(e.target as HTMLElement | null)?.closest?.('.cm-editor') && tab === 'Features' && active) { e.preventDefault(); if (featureTabActive) saveFeature(); else saveAll(); }
   };
   useEffect(() => { const h = (e: KeyboardEvent) => editorKeys.current(e); window.addEventListener('keydown', h); return () => window.removeEventListener('keydown', h); }, []);
+  /** Explorer Rename / Paste (copy or move) / Delete: applied on disk (server or browser folder), then tabs follow. */
+  const fileOp = async (op: FileOp) => {
+    const name = op.from.split('/').pop();
+    try {
+      if (op.kind === 'delete') {
+        if (!(await confirm({ title: `Delete ${name}?`, description: op.folder ? `The folder ${op.from} and everything in it will be deleted from disk.` : `${op.from} will be deleted from disk.`, confirm: 'Delete', danger: true }))) return;
+        await deletePath(op.from);
+        deletedPath(op.from);
+      } else if (op.kind === 'rename') {
+        await renamePath(op.from, op.to!);
+        movedPath(op.from, op.to!);
+        if (feature && (feature.file === op.from || feature.file.startsWith(`${op.from}/`))) setFeature(undefined);
+      } else {
+        const created = await copyPath(op.from, op.to!);
+        if (!op.folder) editFile(created);
+      }
+      if (fileSource().kind === 'browser') setBrowserSol(await browserSolution((fileSource() as { name: string }).name));
+      else setIndex(await api('/scan', {}));
+    } catch (e) {
+      setNotice((e as Error).message);
+    }
+  };
   /** Closing a tab with unsaved edits keeps them (hot exit) after a confirmation. */
   const closeEditor = async (file: string) => {
     if (unsavedFiles().includes(file) && !(await confirm({ title: `Close ${file.split('/').pop()}?`, description: 'It has unsaved changes. They stay in this browser and come back when you reopen the file; press Ctrl+S first to write them to disk.', confirm: 'Close' }))) return;
@@ -421,7 +444,8 @@ export default function App() {
   useEffect(() => { let live = true; setFeatureBase(undefined); if (feature) sha256(feature.source).then((hash) => live && setFeatureBase({ file: feature.file, source: feature.source, hash })); return () => { live = false; }; }, [feature]);
   const featureAuto = useAutoSave({ file: feature?.file, value: source, loaded: featureBase });
   // Ctrl+S / the save icon write the feature straight to disk; a new (unsaved) feature goes through the diff.
-  const saveFeature = () => { if (feature) void featureAuto.save().then((ok) => setNotice(ok ? `${feature.file} saved.` : 'Not saved: see the editor status.')); else previewChange(); };
+  // Saving is quiet (the tab's ● and the status show it); only failures are announced.
+  const saveFeature = () => { if (feature) void featureAuto.save().then((ok) => { if (!ok) setNotice('Not saved: see the editor status.'); }); else previewChange(); };
   // The active tab drives the editor area: a feature tab loads into the feature editor, a code tab shows its editor.
   useEffect(() => {
     const t = activeEditor;
@@ -996,6 +1020,7 @@ export default function App() {
             key={index?.workspace + ':' + config?.repositoryRoot}
             features={fileSrc.kind === 'browser' ? [] : (index?.features ?? [])}
             browserSolution={fileSrc.kind === 'browser' ? browserSol : undefined}
+            onFileOp={fileOp}
             revision={revision}
             activeFile={openEditors.active ?? feature?.file}
             onOpenFile={(file, line) => { editFile(file, line); setMobileExplorer(false); }}
@@ -1480,13 +1505,13 @@ export default function App() {
           {tab === 'Features' && (view === 'code' || view === 'editor') && (
             <div className="editor-area">
             <EditorTabs onClose={closeEditor}>
-            {!openEditors.tabs.length && !newFile && (
+            {!openEditors.tabs.length && (
               <div className="editor-empty" role="note">
                 <FileCode2 size={40} aria-hidden="true" />
                 <p>Open a file from the Explorer, or File ▸ Open Folder….</p>
               </div>
             )}
-            {(featureTabActive || (!openEditors.tabs.length && !!newFile)) && (
+            {featureTabActive && (
             <section className="panel editor-panel">
               <h2 className="sr-only">{feature?.file ?? newFile}</h2>
               <EditorActions>
@@ -1568,7 +1593,7 @@ export default function App() {
             </section>
           )}
             {openEditors.tabs.filter((t) => t.kind === 'code').map((t) => (
-              <CodeEditor key={t.file} file={t.file} reveal={codeLines[t.file]} active={t.file === openEditors.active} onNotice={setNotice} onIndex={setIndex} />
+              <CodeEditor key={t.file} file={t.file} reveal={codeLines[t.file]} onOpen={editFile} active={t.file === openEditors.active} onNotice={setNotice} onIndex={setIndex} />
             ))}
             </EditorTabs>
             </div>

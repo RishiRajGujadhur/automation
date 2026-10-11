@@ -24,6 +24,7 @@ import { validate } from './validation.js';
 import { projectModel } from './projectModel.js';
 import { command, dotnet } from './core.js';
 import { Debugger, owningProject } from './debugger.js';
+import { LanguageService } from './langService.js';
 import type { Index } from '../src/types.js';
 import { readSettings, writeSettings, settingsSchema, tracesDir } from './settings.js';
 import { WorkspaceSearch } from './stepSearch.js';
@@ -216,7 +217,73 @@ app.post('/api/file/save', async (req, res) => {
   // Re-index shortly after the last save so bindings and features stay current without rescanning on every keystroke.
   clearTimeout(rescanTimer);
   rescanTimer = setTimeout(() => { scan(config).then(activate).catch((e) => console.error('Rescan after save failed:', (e as Error).message)); }, 1500);
+  lang.notify(config.repositoryRoot, [file]);
   res.json({ ok: true, hash: hash(source) });
+});
+// C# language service (Roslyn): IntelliSense, quick info, go to definition, references, rename, organize usings.
+const lang = new LanguageService();
+const csPosition = z.object({ file: z.string().max(400).regex(/\.cs$/), source: z.string().max(1_000_000).optional(), line: z.number().int().min(1), column: z.number().int().min(1) });
+for (const op of ['complete', 'hover', 'definition', 'references'] as const) {
+  app.post(`/api/csharp/${op}`, async (req, res) => {
+    const body = csPosition.parse(req.body);
+    await confined(config.repositoryRoot, body.file, false);
+    res.json(await lang.request(config.repositoryRoot, { op, ...body }, op === 'complete' ? 20_000 : 60_000));
+  });
+}
+/** Rename symbol: every changed file except the one being edited is written; the editor applies its own new text. */
+app.post('/api/csharp/rename', async (req, res) => {
+  const body = csPosition.extend({ newName: z.string().min(1).max(200) }).parse(req.body);
+  await confined(config.repositoryRoot, body.file, false);
+  const r = await lang.request<{ name: string; newName: string; changes: { file: string; text: string; edits: number }[] }>(config.repositoryRoot, { op: 'rename', ...body }, 120_000);
+  const written: string[] = [];
+  for (const c of r.changes) {
+    if (c.file === body.file) continue;
+    const target = await confined(config.repositoryRoot, c.file);
+    await fs.writeFile(target, c.text, 'utf8');
+    written.push(c.file);
+  }
+  if (written.length) { clearTimeout(rescanTimer); rescanTimer = setTimeout(() => { scan(config).then(activate).catch(() => {}); }, 1500); }
+  res.json({ ...r, written, current: r.changes.find((c) => c.file === body.file)?.text ?? null });
+});
+app.post('/api/csharp/organize', async (req, res) => {
+  const body = z.object({ file: z.string().max(400).regex(/\.cs$/), source: z.string().max(1_000_000) }).parse(req.body);
+  await confined(config.repositoryRoot, body.file, false);
+  res.json(await lang.request(config.repositoryRoot, { op: 'organize', ...body }, 60_000));
+});
+// Explorer file operations (Rename, Copy/Cut + Paste, Delete), confined to the repository like every other write.
+const afterFileChange = (files: string[]) => { lang.notify(config.repositoryRoot, files); clearTimeout(rescanTimer); rescanTimer = setTimeout(() => { scan(config).then(activate).catch(() => {}); }, 500); };
+const exists = (p: string) => fs.access(p).then(() => true, () => false);
+app.post('/api/file/rename', async (req, res) => {
+  const { from, to } = z.object({ from: z.string().min(1).max(400), to: z.string().min(1).max(400) }).parse(req.body);
+  const src = await confined(config.repositoryRoot, from);
+  const dest = await confined(config.repositoryRoot, to, false);
+  if (src === dest) { res.json({ ok: true, file: to }); return; }
+  if (await exists(dest) && src.toLowerCase() !== dest.toLowerCase()) throw new Error(`${to} already exists.`);
+  await fs.mkdir(path.dirname(dest), { recursive: true });
+  await fs.rename(src, dest);
+  afterFileChange([from, to]);
+  res.json({ ok: true, file: to });
+});
+app.post('/api/file/copy', async (req, res) => {
+  const { from, to } = z.object({ from: z.string().min(1).max(400), to: z.string().min(1).max(400) }).parse(req.body);
+  const src = await confined(config.repositoryRoot, from);
+  let dest = await confined(config.repositoryRoot, to, false);
+  // Like Visual Studio: pasting onto an existing name makes "Name - Copy.ext", "Name - Copy (2).ext"…
+  const ext = path.extname(dest), stem = dest.slice(0, dest.length - ext.length);
+  for (let n = 1; await exists(dest); n++) dest = `${stem} - Copy${n > 1 ? ` (${n})` : ''}${ext}`;
+  await fs.mkdir(path.dirname(dest), { recursive: true });
+  await fs.cp(src, dest, { recursive: true, errorOnExist: true, force: false });
+  const file = path.relative(config.repositoryRoot, dest).replaceAll('\\', '/');
+  afterFileChange([file]);
+  res.json({ ok: true, file });
+});
+app.post('/api/file/delete', async (req, res) => {
+  const { file } = z.object({ file: z.string().min(1).max(400), approved: z.literal(true) }).parse(req.body);
+  const target = await confined(config.repositoryRoot, file);
+  if (target === path.resolve(config.repositoryRoot)) throw new Error('The repository root cannot be deleted.');
+  await fs.rm(target, { recursive: true });
+  afterFileChange([file]);
+  res.json({ ok: true });
 });
 app.get('/api/source', async (req, res) => {
   const file = await confined(config.repositoryRoot, String(req.query.file));

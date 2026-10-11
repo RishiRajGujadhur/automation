@@ -63,6 +63,20 @@ if (!existsSync(path.join(scannerOut, exeName)) || process.argv.includes('--scan
   }
 }
 if (existsSync(path.join(scannerOut, exeName))) cpSync(scannerOut, path.join(app, 'scanner', rid), { recursive: true });
+// Self-contained C# language service (IntelliSense, go to definition, rename, organize usings). Cached between builds.
+const langOut = path.join(root, '.cache/langserver', rid);
+const langExe = process.platform === 'win32' ? 'LangServer.exe' : 'LangServer';
+if (!existsSync(path.join(langOut, langExe)) || process.argv.includes('--scanner')) {
+  step(`Publishing the self-contained C# language service (${rid})…`);
+  const localSdk = path.resolve(root, '../.tools/dotnet', process.platform === 'win32' ? 'dotnet.exe' : 'dotnet');
+  const dotnet = process.env.DOTNET_PATH || (existsSync(localSdk) ? localSdk : 'dotnet');
+  try {
+    execSync(`"${dotnet}" publish "${path.join(studio, 'langserver/LangServer.csproj')}" -c Release -r ${rid} --self-contained true -o "${langOut}"`, { stdio: 'inherit' });
+  } catch {
+    console.warn('  Language service publish failed (needs the .NET 10 SDK); C# IntelliSense will be unavailable.');
+  }
+}
+if (existsSync(path.join(langOut, langExe))) cpSync(langOut, path.join(app, 'langserver', rid), { recursive: true });
 // netcoredbg for the Debug windows (breakpoints, stepping, watch). Cached between builds.
 const debuggerOut = path.join(root, '.cache/netcoredbg', rid);
 try {

@@ -1,6 +1,6 @@
 import { useSyncExternalStore } from 'react';
 import { api } from '../api';
-import { readText, writeText, browserRoot } from './fsa';
+import { readText, writeText, browserRoot, copyPath as fsaCopy, deletePath as fsaDelete, renamePath as fsaRename } from './fsa';
 
 /**
  * Where editor files come from: the studio server (the indexed repository path) or a folder opened in the
@@ -33,4 +33,16 @@ export async function saveFile(file: string, text: string, baseHash: string): Pr
     return { hash: await digest(text) };
   }
   return api<{ hash: string }>('/file/save', { file, source: text, baseHash });
+}
+
+/* Explorer file operations, on the studio server's repository or the browser folder. */
+export async function renamePath(from: string, to: string) {
+  if (isBrowser()) await fsaRename(from, to); else await api('/file/rename', { from, to });
+}
+export async function copyPath(from: string, to: string): Promise<string> {
+  if (isBrowser()) return fsaCopy(from, to);
+  return (await api<{ file: string }>('/file/copy', { from, to })).file;
+}
+export async function deletePath(file: string) {
+  if (isBrowser()) await fsaDelete(file); else await api('/file/delete', { file, approved: true });
 }
