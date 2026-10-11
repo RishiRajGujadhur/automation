@@ -19,6 +19,7 @@ import {
 } from './core.js';
 import { Recorder } from './recorder.js';
 import { proposeCode, proposeDictionaryPageObject } from './proposals.js';
+import { insertMethod, newStepFile } from './stepScaffold.js';
 import { validate } from './validation.js';
 import { projectModel } from './projectModel.js';
 import { command, dotnet } from './core.js';
@@ -109,6 +110,44 @@ app.get('/api/features/folders',async(_req,res)=>{const i=await ensure();res.jso
 app.get('/api/design/corpus',async(_req,res)=>{const i=await ensure();res.json({revision:i.revision,features:i.features.map(f=>({file:f.file,name:f.name,tags:f.tags,line:f.line,source:f.source,scenarios:f.scenarios,backgrounds:f.backgrounds})),bindings:i.stepDefinitions.map(b=>({id:b.id,keyword:b.keyword,pattern:b.pattern,expression:b.expression,usages:b.usages,file:b.file,line:b.line,parameters:b.parameters}))});});
 // Test impact analysis: files changed vs. a git ref (default HEAD) plus untracked files. Read-only git commands.
 app.get('/api/design/changed',async(req,res)=>{const base=z.string().regex(/^[\w./~^@-]{1,80}$/).default('HEAD').parse(req.query.base??'HEAD');const root=config.repositoryRoot;try{const top=(await command('git',['rev-parse','--show-toplevel'],'',root)).trim();const diff=await command('git',['diff','--name-only',base,'--','.'],'',root);const untracked=await command('git',['ls-files','--others','--exclude-standard','--','.'],'',root);const rel=(f:string)=>path.relative(root,path.join(top,f)).replaceAll('\\','/');res.json({base,files:[...new Set([...diff.split('\n').filter(Boolean).map(rel),...untracked.split('\n').filter(Boolean)])].filter(f=>!f.startsWith('..'))});}catch(e){res.status(400).json({error:`git is unavailable for this repository: ${(e as Error).message.split('\n')[0]}`});}});
+// Feature ↔ C#: the step files a feature's steps bind to (by use count), the naming-convention step file,
+// and SpecFlow's generated code-behind when present. Used for file nesting and "go to step definitions".
+app.get('/api/feature/links',async(req,res)=>{
+  const i=await ensure();const file=z.string().max(400).parse(req.query.file);
+  const f=i.features.find(x=>x.file===file);if(!f){res.status(404).json({error:'Feature not found'});return;}
+  const byId=new Map(i.stepDefinitions.map(b=>[b.id,b]));const counts=new Map<string,number>();
+  for(const block of [...f.backgrounds,...f.scenarios])for(const s of block.steps)for(const id of s.candidates){const b=byId.get(id);if(b)counts.set(b.file,(counts.get(b.file)??0)+1);}
+  const stepFiles=[...counts].sort((a,b)=>b[1]-a[1]).map(([file,steps])=>({file,steps}));
+  const base=path.basename(file,'.feature');
+  const folders=[...new Set(i.stepDefinitions.map(b=>path.posix.dirname(b.file)))];
+  const folder=stepFiles[0]?path.posix.dirname(stepFiles[0].file):folders[0]??'Steps';
+  const convention=`${folder}/${base}Steps.cs`;
+  const exists=async(p:string)=>fs.access(await confined(config.repositoryRoot,p,false)).then(()=>true,()=>false);
+  res.json({stepFiles,convention,conventionExists:await exists(convention),codeBehind:(await exists(file+'.cs'))?file+'.cs':null,stepFolders:folders.length?folders:['Steps']});
+});
+// Step definition files known to the index (for "create step definition").
+app.get('/api/steps/files',async(_req,res)=>{const i=await ensure();res.json([...new Set(i.stepDefinitions.map(b=>b.file))].sort());});
+// Create a step definition for an unbound step: appended to an existing [Binding] class or a new file in the
+// repository's style (regex vs. Cucumber expressions by majority). Previewed; written only on approval.
+app.post('/api/steps/scaffold',async(req,res)=>{
+  const {keyword,text,file}=z.object({keyword:z.enum(['Given','When','Then']),text:z.string().min(1).max(500),file:z.string().max(400).regex(/.cs$/i)}).parse(req.body);
+  const i=await ensure();
+  const cucumber=i.stepDefinitions.filter(b=>b.expression==='Cucumber').length;
+  const style=cucumber>i.stepDefinitions.length/2?'cucumber':'regex';
+  const target=await confined(config.repositoryRoot,file,false);
+  const before=await fs.readFile(target,'utf8').catch((e)=>{if(e.code==='ENOENT')return '';throw e;});
+  let result;
+  if(before)result=insertMethod(before,keyword,text,style);
+  else{
+    const sampleFile=i.stepDefinitions[0]?.file;
+    const sample=sampleFile?await fs.readFile(await confined(config.repositoryRoot,sampleFile,false),'utf8').catch(()=>undefined):undefined;
+    const cls=path.basename(file,'.cs').replace(/[^A-Za-z0-9_]/g,'')||'NewSteps';
+    result=newStepFile(/^[A-Za-z_]/.test(cls)?cls:'Steps'+cls,keyword,text,style,sample);
+  }
+  const id=randomUUID();
+  previews.set(id,{file,source:result.source,hash:hash(before),root:config.repositoryRoot});
+  res.json({id,file,line:result.line,method:result.method.name,pattern:result.method.pattern,created:!before,changed:true,diff:createPatch(file,before,result.source,'repository','proposed')});
+});
 app.get('/api/health',(_req,res)=>res.json({ok:true,scannedAt:index?.scannedAt??null}));
 app.get('/api/project/model',async(_req,res)=>{res.json(await projectModel(config,await ensure()));});
 app.get('/api/project/files',async(req,res)=>{const folder=z.string().default('.').parse(req.query.folder);const dir=await confined(config.repositoryRoot,folder);const entries=await fs.readdir(dir,{withFileTypes:true});const {offset,limit}=paging.parse(req.query);const filtered=entries.filter(e=>!e.isSymbolicLink()&&!e.name.startsWith('.')&&!config.ignoredDirectories.includes(e.name)).sort((a,b)=>Number(b.isDirectory())-Number(a.isDirectory())||a.name.localeCompare(b.name));res.json({folder,items:filtered.slice(offset,offset+limit).map(e=>({name:e.name,file:path.relative(config.repositoryRoot,path.join(dir,e.name)).replaceAll('\\','/'),directory:e.isDirectory()})),total:filtered.length,hasNext:offset+limit<filtered.length});});

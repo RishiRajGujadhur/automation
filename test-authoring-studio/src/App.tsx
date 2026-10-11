@@ -8,6 +8,7 @@ import DictionaryInspector from './DictionaryInspector';
 import ProjectExplorer from './ProjectExplorer';
 import TestDesign, { designTools } from './TestDesign';
 import ActivityBar from './ActivityBar';
+import CreateStepDialog from './CreateStepDialog';
 import CodeEditor from './editor/CodeEditor';
 import { readDraft, sha256, useAutoSave } from './editor/autosave';
 import { snapshot } from './algorithms/registry';
@@ -20,7 +21,7 @@ import { api } from './api';
 import { useLocalState, RowMenu, copyText } from './ui';
 import { timeAgo, useNow } from './time';
 import { WorkspaceForm, RecordForm, NewFeatureForm, ParametersForm, RunForm } from './forms';
-import { Select, Checkbox, Button } from './radix';
+import { Select, Checkbox, Button, Dropdown } from './radix';
 import * as Dialog from '@radix-ui/react-dialog';
 import * as Toast from '@radix-ui/react-toast';
 import * as ToggleGroup from '@radix-ui/react-toggle-group';
@@ -204,6 +205,14 @@ export default function App() {
   const [designKey, setDesignKey] = useState(0);
   // Source file open in the code editor (Features → code view); line to reveal.
   const [codeFile, setCodeFile] = useLocalState<{ file: string; line?: number } | null>('codeFile', null);
+  // F12 on a step: open its C# binding in the code editor; unbound steps say so.
+  const goToDefinition = async (keyword: string, text: string) => {
+    try {
+      const [r] = await api<{ status: string; binding: { file: string; line: number } | null }[]>('/steps/match', { steps: [{ keyword, text }] });
+      if (r?.binding) editFile(r.binding.file, r.binding.line);
+      else setNotice(r?.status === 'Ambiguous' ? 'More than one binding matches this step.' : 'No step definition yet. Use “Create step definition” to add one.');
+    } catch (e) { setNotice((e as Error).message); }
+  };
   const editFile = (file: string, line?: number) => { setCodeFile({ file, line }); setTab('Features'); setView('code'); setModal(undefined); };
   const [generatorSeed, setGeneratorSeed] = useState<GeneratorSeed>();
   const [edges, setEdges] = useState<Index['callEdges']>([]);
@@ -285,6 +294,9 @@ export default function App() {
   // Feature editor buffer: auto save + hot exit (see editor/autosave.ts). Unsaved = differs from what is on disk.
   const [featureBase, setFeatureBase] = useState<{ source: string; hash: string }>();
   const [featureRestore, setFeatureRestore] = useState<string | null>(null);
+  // Feature ↔ C#: step files this feature binds to (for the editor menu and the explorer's file nesting).
+  const [featureLinks, setFeatureLinks] = useState<{ stepFiles: { file: string; steps: number }[]; convention: string; conventionExists: boolean; codeBehind: string | null; stepFolders: string[] }>();
+  useEffect(() => { setFeatureLinks(undefined); if (feature?.file) api(`/feature/links?file=${encodeURIComponent(feature.file)}`).then(setFeatureLinks).catch(() => {}); }, [feature?.file, revision]);
   useEffect(() => { let live = true; setFeatureBase(undefined); if (feature) sha256(feature.source).then((hash) => live && setFeatureBase({ source: feature.source, hash })); return () => { live = false; }; }, [feature]);
   const featureAuto = useAutoSave({ file: feature?.file, value: source, loaded: featureBase });
   const dirty = feature ? featureAuto.dirty : !!source && source !== '';
@@ -615,6 +627,7 @@ export default function App() {
           if ((e.target as HTMLElement).closest('input, textarea, select, .cm-editor, [contenteditable="true"], pre, code')) e.stopPropagation();
         }}
       >
+      <CreateStepDialog onOpen={(file, line) => editFile(file, line)} onIndex={setIndex} onNotice={setNotice} />
       <SearchPalette
         open={paletteOpen}
         onOpenChange={setPaletteOpen}
@@ -1286,8 +1299,21 @@ export default function App() {
                 <div>
                   <FileCode2 size={17} />
                   <h2>{feature?.file ?? newFile}</h2>
-                  <Badge tone="purple">GHERKIN</Badge>
                 </div>
+                {feature && (
+                  <Dropdown
+                    label="Step definitions"
+                    align="end"
+                    trigger={<Button size="tiny" variant="ghost" aria-label="Step definitions"><Braces size={13} />Step definitions</Button>}
+                    entries={[
+                      ...(featureLinks?.stepFiles ?? []).map((s) => ({ label: `${s.file} (${s.steps})`, icon: FileCode2, onSelect: () => editFile(s.file) })),
+                      ...(featureLinks?.codeBehind ? [{ label: `${featureLinks.codeBehind} (generated)`, icon: FileCode2, onSelect: () => editFile(featureLinks.codeBehind!) }] : []),
+                      ...(!featureLinks?.stepFiles.length && !featureLinks?.codeBehind ? [{ label: 'No step definitions yet', onSelect: () => {}, disabled: true }] : []),
+                      'separator' as const,
+                      { label: 'Go to definition of current step (F12)', onSelect: () => setNotice('Put the cursor on a step and press F12.') },
+                    ]}
+                  />
+                )}
                 <Button
                   size="tiny"
                   onClick={() =>
@@ -1309,6 +1335,7 @@ export default function App() {
                 </div>
               )}
               <GherkinEditor
+                onDefinition={(s) => goToDefinition(s.keyword, s.text)}
                 height={vscode ? 'calc(100dvh - 205px)' : undefined}
                 value={source}
                 onChange={setSource}

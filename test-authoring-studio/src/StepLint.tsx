@@ -1,3 +1,4 @@
+import { requestCreateStep } from './editor/events';
 import { useEffect, useRef, useState } from 'react';
 import { CircleCheck, CircleAlert, CircleHelp, Lightbulb } from 'lucide-react';
 import { api, type Paged } from './api';
@@ -62,7 +63,10 @@ export default function StepLint({ steps, activeLine, onReplace, onSource, revis
                   </HoverCard.Portal>
                 </HoverCard.Root>
               ) : (
-                <span className="meta">{st?.status === 'Ambiguous' ? 'ambiguous' : st ? 'needs binding' : '…'}</span>
+                <span className="meta">
+                  {st?.status === 'Ambiguous' ? 'ambiguous' : st ? 'needs binding' : '…'}
+                  {st && st.status !== 'Ambiguous' && <button className="text-button create-step" onClick={() => requestCreateStep({ keyword: s.resolved, text: s.text })}>Create</button>}
+                </span>
               )}
             </li>
           );

@@ -7,6 +7,7 @@ import { EditorState, type Extension } from '@codemirror/state';
 import { StreamLanguage } from '@codemirror/language';
 import { gherkin } from '@codemirror/legacy-modes/mode/gherkin';
 import type { Binding } from '../types';
+import { requestCreateStep } from './events';
 import { Trie } from '../algorithms/search';
 import { levenshteinRatio, dice } from '../algorithms/strings';
 import { smellChecks, type QScenario } from '../algorithms/quality';
@@ -76,7 +77,8 @@ export const bindingLinter = linter(
           to,
           severity: r.status === 'Ambiguous' ? 'warning' : 'warning',
           source: 'Bindings',
-          message: r.status === 'Ambiguous' ? `Ambiguous: more than one ${l.resolved} binding matches this text.` : `No ${l.resolved} binding matches this step. Use autocomplete (Ctrl+Space) to pick an existing step, or propose a new binding.`,
+          message: r.status === 'Ambiguous' ? `Ambiguous: more than one ${l.resolved} binding matches this text.` : `No ${l.resolved} binding matches this step. Use autocomplete (Ctrl+Space) to pick an existing step, or create a step definition.`,
+          actions: r.status === 'Ambiguous' ? [] : [{ name: 'Create step definition', apply: () => requestCreateStep({ keyword: l.resolved, text: l.text }) }],
         }];
       });
     } catch {
@@ -328,7 +330,7 @@ export function formatGherkin(src: string) {
   return out.join('\n').replace(/\n{3,}/g, '\n\n').replace(/\s*$/, '\n');
 }
 
-export function gherkinExtensions(opts: { onSave?: () => void; onValidate?: () => void } = {}): Extension[] {
+export function gherkinExtensions(opts: { onSave?: () => void; onValidate?: () => void; onDefinition?: (step: { keyword: string; text: string; line: number }) => void } = {}): Extension[] {
   return [
     StreamLanguage.define(gherkin),
     EditorState.languageData.of(() => [{ commentTokens: { line: '#' } }]),
@@ -341,6 +343,8 @@ export function gherkinExtensions(opts: { onSave?: () => void; onValidate?: () =
     keymap.of([
       { key: 'Mod-s', preventDefault: true, run: () => { opts.onSave?.(); return true; } },
       { key: 'Mod-Enter', preventDefault: true, run: () => { opts.onValidate?.(); return true; } },
+      // F12: go to the C# step definition of the step under the cursor (like VS Code / Visual Studio).
+      { key: 'F12', preventDefault: true, run: (v: EditorView) => { const n = v.state.doc.lineAt(v.state.selection.main.head).number; const s = stepLines(v.state.doc.toString()).find((x) => x.line === n); if (s) opts.onDefinition?.({ keyword: s.resolved, text: s.text, line: n }); return true; } },
       { key: 'Shift-Alt-f', preventDefault: true, run: (v: EditorView) => { const next = formatGherkin(v.state.doc.toString()); v.dispatch({ changes: { from: 0, to: v.state.doc.length, insert: next } }); return true; } },
     ]),
   ];
