@@ -3,7 +3,8 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { ctx } from './context';
 import { apiCall } from './server';
-import { addRecent, read } from './store';
+import { addRecent, read, write } from './store';
+import { updateTray } from './tray';
 import { dataRoot, resourcesRoot } from './paths';
 import { watchRepository } from './watcher';
 
@@ -25,9 +26,15 @@ export async function currentConfig(): Promise<Config> {
 }
 
 /** Points the studio at a repository folder (keeps the other scan settings) and reloads the UI. */
-export async function openRepository(folder: string) {
+export async function openRepository(folder: string, opts: { reload?: boolean } = {}) {
   const dir = path.resolve(folder);
   if (!fs.existsSync(dir) || !fs.statSync(dir).isDirectory()) throw new Error(`Not a folder: ${dir}`);
+  // R6: a folder with no feature or C# files is probably the wrong one.
+  if (!looksLikeTestRepo(dir) && ctx.win) {
+    const r = await dialog.showMessageBox(ctx.win, { type: 'warning', buttons: ['Open anyway', 'Cancel'], defaultId: 1, cancelId: 1, message: 'No .feature or .cs files found', detail: `${dir}\n\nThe studio looks for SpecFlow feature files and C# step bindings. Open this folder anyway?` });
+    if (r.response !== 0) throw new Error('Cancelled.');
+  }
+  const previous = ctx.repository;
   const config = await currentConfig();
   ctx.win?.setProgressBar(2);
   try {
@@ -36,12 +43,26 @@ export async function openRepository(folder: string) {
     ctx.win?.setProgressBar(-1);
   }
   ctx.repository = dir;
+  if (previous && previous.toLowerCase() !== dir.toLowerCase()) write({ lastClosed: previous }); // R4
   watchRepository(dir);
   addRecent(dir);
   app.addRecentDocument(dir); // Windows jump list / macOS Dock menu
   updateTitle();
-  ctx.win?.webContents.reload();
+  updateTray();
+  if (opts.reload !== false && ctx.win) {
+    const saved = read().lastPage?.[dir.toLowerCase()];
+    await ctx.win.loadURL(`${ctx.origin}/${saved && /^#\/[\w/-]+$/.test(saved) ? saved : '#/dashboard'}`); // W2
+  }
   return dir;
+}
+
+/** Any .feature or .cs file within four levels (skipping build output). */
+export function looksLikeTestRepo(dir: string, depth = 0): boolean {
+  if (depth > 4) return false;
+  let entries: fs.Dirent[] = [];
+  try { entries = fs.readdirSync(dir, { withFileTypes: true }); } catch { return false; }
+  if (entries.some((e) => e.isFile() && /\.(feature|cs)$/i.test(e.name))) return true;
+  return entries.some((e) => e.isDirectory() && !/^(\.|bin$|obj$|node_modules$)/.test(e.name) && looksLikeTestRepo(path.join(dir, e.name), depth + 1));
 }
 
 export async function pickAndOpenRepository() {

@@ -46,7 +46,15 @@
     "nsis": {
       "oneClick": false,
       "allowToChangeInstallationDirectory": true
-    }
+    },
+    "protocols": [
+      {
+        "name": "TestAuthoring Studio link",
+        "schemes": [
+          "testauthoring"
+        ]
+      }
+    ]
   },
   "devDependencies": {
     "@playwright/test": "^1.64.0",

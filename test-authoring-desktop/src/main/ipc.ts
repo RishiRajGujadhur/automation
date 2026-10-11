@@ -1,9 +1,11 @@
-import { BrowserWindow, dialog, ipcMain, nativeTheme, Notification, shell, type IpcMainEvent, type IpcMainInvokeEvent } from 'electron';
+import { BrowserWindow, clipboard, dialog, ipcMain, nativeTheme, shell, type IpcMainEvent, type IpcMainInvokeEvent } from 'electron';
 import { ctx } from './context';
 import { IPC } from '../shared/bridge';
 import fs from 'node:fs';
 import { openRepository, repositoryFile } from './workspace';
 import { buildMenu } from './menu';
+import { notify } from './notify';
+import { openInPreferredEditor } from './tools';
 
 /** Only the app's own page, loaded from the in-process API origin, may call privileged handlers. */
 function trusted(e: IpcMainEvent | IpcMainInvokeEvent) {
@@ -22,20 +24,11 @@ export function registerIpc() {
     const r = await (win ? dialog.showOpenDialog(win, { title: String(title ?? 'Choose a folder'), properties: ['openDirectory'], defaultPath: ctx.repository }) : dialog.showOpenDialog({ properties: ['openDirectory'] }));
     return r.canceled ? null : r.filePaths[0] ?? null;
   }));
-  ipcMain.handle(IPC.openInEditor, guard(async (_e, file: string) => {
-    const abs = await repositoryFile(String(file));
-    const err = await shell.openPath(abs);
-    if (err) throw new Error(err);
-    return abs;
-  }));
+  ipcMain.handle(IPC.openInEditor, guard(async (_e, file: string, line?: number) => openInPreferredEditor(await repositoryFile(String(file)), Number(line) || undefined)));
+  ipcMain.handle(IPC.copyPath, guard(async (_e, file: string) => { const abs = await repositoryFile(String(file)); clipboard.writeText(abs); return abs; }));
   ipcMain.handle(IPC.reveal, guard(async (_e, file: string) => { shell.showItemInFolder(await repositoryFile(String(file))); }));
   ipcMain.handle(IPC.openExternal, guard(async (_e, url: string) => { if (!safeUrl(String(url))) throw new Error('Only http(s) and mailto links open externally.'); await shell.openExternal(String(url)); }));
-  ipcMain.on(IPC.notify, (e, title: string, body: string) => {
-    if (!trusted(e) || ctx.win?.isFocused() || !Notification.isSupported()) return;
-    const n = new Notification({ title: String(title).slice(0, 120), body: String(body).slice(0, 400) });
-    n.on('click', () => { ctx.win?.show(); ctx.win?.focus(); });
-    n.show();
-  });
+  ipcMain.on(IPC.notify, (e, title: string, body: string) => { if (trusted(e)) notify(String(title), String(body)); });
   ipcMain.on(IPC.dropFolder, (e, folder: string) => {
     if (!trusted(e)) return;
     try { if (!fs.statSync(String(folder)).isDirectory()) return; } catch { return; }

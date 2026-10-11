@@ -1,6 +1,6 @@
 /** Contract between the preload script and the studio web app (`window.desktop`). */
 export type MenuCommand =
-  | 'palette' | 'preferences' | 'shortcuts' | 'workspace-settings' | 'new-feature' | 'record' | 'tour' | 'toggle-mode' | 'toggle-explorer' | 'focus-mode' | 'repository-changed';
+  | 'palette' | 'preferences' | 'shortcuts' | 'workspace-settings' | 'new-feature' | 'record' | 'tour' | 'toggle-mode' | 'toggle-explorer' | 'focus-mode' | 'repository-changed' | 'set-pref' | 'diagnostics' | 'run-tests' | 'continue-draft' | 'design-tool';
 
 export type DesktopBridge = {
   platform: NodeJS.Platform;
@@ -8,7 +8,9 @@ export type DesktopBridge = {
   /** Native folder picker; resolves to an absolute path or null when cancelled. */
   pickFolder(title?: string): Promise<string | null>;
   /** Opens a repository file (relative to the current repository root) in the OS default app. */
-  openInEditor(file: string): Promise<string>;
+  openInEditor(file: string, line?: number): Promise<string>;
+  /** Copies the absolute path of a repository file. */
+  copyPath(file: string): Promise<string>;
   /** Shows a repository file in Explorer/Finder. */
   reveal(file: string): Promise<void>;
   openExternal(url: string): Promise<void>;
@@ -18,7 +20,7 @@ export type DesktopBridge = {
   setProgress(value: number): void;
   setTheme(colors: { background: string; text: string; dark: boolean }): void;
   /** Commands from the native menu that the web app handles. Returns an unsubscribe function. */
-  onMenu(cb: (command: MenuCommand) => void): () => void;
+  onMenu(cb: (command: MenuCommand, arg?: unknown) => void): () => void;
 };
 
 export const IPC = {
@@ -31,4 +33,5 @@ export const IPC = {
   theme: 'desktop:theme',
   menu: 'desktop:menu',
   dropFolder: 'desktop:drop-folder',
+  copyPath: 'desktop:copy-path',
 } as const;

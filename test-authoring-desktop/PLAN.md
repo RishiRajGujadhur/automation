@@ -35,126 +35,126 @@ Legend: `[x]` done · `[ ]` to do. Every feature is committed and pushed when fi
 ## Quality-of-life, round 2 (100)
 
 ### Window (12)
-- [ ] W1 Reopen the last page on launch instead of the Dashboard
-- [ ] W2 Remember the last page per repository
-- [ ] W3 View → Always on Top (persisted)
-- [ ] W4 View → Auto-hide Menu Bar (Alt shows it; persisted)
-- [ ] W5 Full screen state persisted across launches
-- [ ] W6 Zoom percentage shown in a toast when zoom changes
-- [ ] W7 Window → Reset Window Size
-- [ ] W8 Window → Center Window
-- [ ] W9 Zoom presets (90 / 100 / 110 / 125 / 150 %) in View → Zoom
-- [ ] W10 Flash the taskbar button when a test run finishes in the background
-- [ ] W11 Taskbar overlay badge while a Playwright recording is running
-- [ ] W12 Keep the PC awake while a test run or recording is in progress
+- [x] W1 Reopen the last page on launch instead of the Dashboard
+- [x] W2 Remember the last page per repository
+- [x] W3 View → Always on Top (persisted)
+- [x] W4 View → Auto-hide Menu Bar (Alt shows it; persisted)
+- [x] W5 Full screen state persisted across launches
+- [x] W6 Zoom percentage shown in a toast when zoom changes
+- [x] W7 Window → Reset Window Size
+- [x] W8 Window → Center Window
+- [x] W9 Zoom presets (90 / 100 / 110 / 125 / 150 %) in View → Zoom
+- [x] W10 Flash the taskbar button when a test run finishes in the background
+- [x] W11 Taskbar overlay badge while a Playwright recording is running
+- [x] W12 Keep the PC awake while a test run or recording is in progress
 
 ### Tray (8)
-- [ ] T1 System tray icon
-- [ ] T2 Tray menu: Show/Hide, Open Repository, Recent, Start Recording, Quit
-- [ ] T3 Click the tray icon to show or hide the window
-- [ ] T4 Option: minimize to tray
-- [ ] T5 Option: close to tray (keep running in the background)
-- [ ] T6 Tray tooltip shows the repository and recording state
-- [ ] T7 One-time balloon explaining that the app is still running in the tray
-- [ ] T8 Tray "Rescan Repository"
+- [x] T1 System tray icon
+- [x] T2 Tray menu: Show/Hide, Open Repository, Recent, Start Recording, Quit
+- [x] T3 Click the tray icon to show or hide the window
+- [x] T4 Option: minimize to tray
+- [x] T5 Option: close to tray (keep running in the background)
+- [x] T6 Tray tooltip shows the repository and recording state
+- [x] T7 One-time balloon explaining that the app is still running in the tray
+- [x] T8 Tray "Rescan Repository"
 
 ### Repositories (12)
-- [ ] R1 Remove a single repository from Open Recent
-- [ ] R2 Pinned repositories (pin/unpin the current one) at the top of Open Recent
-- [ ] R3 Recent items show the folder name with the full path as a tooltip-like sublabel
-- [ ] R4 Reopen Last Closed Repository (Ctrl+Shift+T)
-- [ ] R5 Open Sample Repository (bundled fixtures)
-- [ ] R6 Warn before opening a folder with no .feature or .cs files
-- [ ] R7 Clear Recent asks for confirmation
-- [ ] R8 Open Repository in File Explorer
-- [ ] R9 Open Terminal in Repository
-- [ ] R10 Open Repository in VS Code (when `code` is on PATH)
-- [ ] R11 Copy Repository Path
-- [ ] R12 Rescan reports counts in a notification when the window is in the background
+- [x] R1 Remove a single repository from Open Recent
+- [x] R2 Pinned repositories (pin/unpin the current one) at the top of Open Recent
+- [x] R3 Recent items show the folder name with the full path as a tooltip-like sublabel
+- [x] R4 Reopen Last Closed Repository (Ctrl+Shift+T)
+- [x] R5 Open Sample Repository (bundled fixtures)
+- [x] R6 Warn before opening a folder with no .feature or .cs files
+- [x] R7 Clear Recent asks for confirmation
+- [x] R8 Open Repository in File Explorer
+- [x] R9 Open Terminal in Repository
+- [x] R10 Open Repository in VS Code (when `code` is on PATH)
+- [x] R11 Copy Repository Path
+- [x] R12 Rescan reports counts in a notification when the window is in the background
 
 ### Files & tools (10)
-- [ ] F1 Preferred external editor setting (system default, VS Code, Visual Studio, Rider, Notepad++)
-- [ ] F2 "Open in default editor" jumps to the line when the editor supports it (VS Code `-g`, Rider `--line`)
-- [ ] F3 Copy absolute path of the open source file
-- [ ] F4 Open Features folder
-- [ ] F5 Open Dictionaries folder
-- [ ] F6 Open Traces folder
-- [ ] F7 Open Latest Trace in the Playwright Trace Viewer
-- [ ] F8 Open studio settings file (settings.json)
-- [ ] F9 Open workspace file (workspace.json)
-- [ ] F10 Open the README / user guide
+- [x] F1 Preferred external editor setting (system default, VS Code, Visual Studio, Rider, Notepad++)
+- [x] F2 "Open in default editor" jumps to the line when the editor supports it (VS Code `-g`, Rider `--line`)
+- [x] F3 Copy absolute path of the open source file
+- [x] F4 Open Features folder
+- [x] F5 Open Dictionaries folder
+- [x] F6 Open Traces folder
+- [x] F7 Open Latest Trace in the Playwright Trace Viewer
+- [x] F8 Open studio settings file (settings.json)
+- [x] F9 Open workspace file (workspace.json)
+- [x] F10 Open the README / user guide
 
 ### Notifications & feedback (10)
-- [ ] N1 Notify when a recording stops in the background
-- [ ] N2 Notify when a background rescan (auto-rescan) changes feature/step counts
-- [ ] N3 Do Not Disturb toggle for desktop notifications
-- [ ] N4 Clicking a notification focuses the window and the relevant page
-- [ ] N5 Loading page shows startup stages (starting API, scanning repository)
-- [ ] N6 Loading page shows a hint after 8 s ("large repositories take longer")
-- [ ] N7 Startup failure page with Retry, Open Log and Quit (instead of quitting)
-- [ ] N8 Dialog with Reload when the page crashes (render-process-gone)
-- [ ] N9 Dialog with Wait / Reload when the page stops responding
-- [ ] N10 Banner-style notice when the in-process API stops answering health checks
+- [x] N1 Notify when a recording stops in the background
+- [x] N2 Notify when a background rescan (auto-rescan) changes feature/step counts
+- [x] N3 Do Not Disturb toggle for desktop notifications
+- [x] N4 Clicking a notification focuses the window and the relevant page
+- [x] N5 Loading page shows startup stages (starting API, scanning repository)
+- [x] N6 Loading page shows a hint after 8 s ("large repositories take longer")
+- [x] N7 Startup failure page with Retry, Open Log and Quit (instead of quitting)
+- [x] N8 Dialog with Reload when the page crashes (render-process-gone)
+- [x] N9 Dialog with Wait / Reload when the page stops responding
+- [x] N10 Banner-style notice when the in-process API stops answering health checks
 
 ### Keyboard & navigation (8)
-- [ ] K1 Optional global shortcut to show/hide the app (Ctrl+Alt+T; off by default)
-- [ ] K2 Ctrl+L copies a deep link to the current page
-- [ ] K3 Esc leaves full screen
-- [ ] K4 Go → Test Design tools submenu (all nine tools)
-- [ ] K5 Go → Previous Page (Ctrl+Alt+Left) mirrors browser back from anywhere
-- [ ] K6 Help → Keyboard Shortcuts lists desktop-only accelerators too
-- [ ] K7 Mouse back/forward buttons navigate pages
-- [ ] K8 Ctrl+Shift+N opens a second window on the same API
+- [x] K1 Optional global shortcut to show/hide the app (Ctrl+Alt+T; off by default)
+- [x] K2 Ctrl+L copies a deep link to the current page
+- [x] K3 Esc leaves full screen
+- [x] K4 Go → Test Design tools submenu (all nine tools)
+- [x] K5 Go → Previous Page (Ctrl+Alt+Left) mirrors browser back from anywhere
+- [x] K6 Help → Keyboard Shortcuts lists desktop-only accelerators too
+- [x] K7 Mouse back/forward buttons navigate pages
+- [x] K8 Ctrl+Shift+N opens a second window on the same API
 
 ### Deep links (5)
-- [ ] L1 Register the `testauthoring://` protocol
-- [ ] L2 `testauthoring://open?path=C:\Repo` opens a repository
-- [ ] L3 `testauthoring://page/test-design` navigates to a page
-- [ ] L4 Deep links work when the app is closed (cold start) and when it is running
-- [ ] L5 Jump-list task: Test Design
+- [x] L1 Register the `testauthoring://` protocol
+- [x] L2 `testauthoring://open?path=C:\Repo` opens a repository
+- [x] L3 `testauthoring://page/test-design` navigates to a page
+- [x] L4 Deep links work when the app is closed (cold start) and when it is running
+- [x] L5 Jump-list task: Test Design
 
 ### Settings & data (10)
-- [ ] S1 Launch at login toggle
-- [ ] S2 Hardware acceleration toggle (applies after restart)
-- [ ] S3 Spellcheck toggle
-- [ ] S4 File → Restart
-- [ ] S5 Reset desktop settings (window, zoom, recents, toggles) with confirmation
-- [ ] S6 Clear web storage and cache with confirmation
-- [ ] S7 Export settings (desktop + studio settings + workspace) to a JSON file
-- [ ] S8 Import settings from a JSON file
-- [ ] S9 Log file rotation (keep it under 5 MB)
-- [ ] S10 Settings menu items show their current state as checkboxes
+- [x] S1 Launch at login toggle
+- [x] S2 Hardware acceleration toggle (applies after restart)
+- [x] S3 Spellcheck toggle
+- [x] S4 File → Restart
+- [x] S5 Reset desktop settings (window, zoom, recents, toggles) with confirmation
+- [x] S6 Clear web storage and cache with confirmation
+- [x] S7 Export settings (desktop + studio settings + workspace) to a JSON file
+- [x] S8 Import settings from a JSON file
+- [x] S9 Log file rotation (keep it under 5 MB)
+- [x] S10 Settings menu items show their current state as checkboxes
 
 ### Context menu & editing (8)
-- [ ] E1 Native context menu for text fields: Cut / Copy / Paste / Select All
-- [ ] E2 Spelling suggestions in the context menu
-- [ ] E3 "Add to dictionary" in the context menu
-- [ ] E4 "Search the web for …" for selected text
-- [ ] E5 Copy link address on links
-- [ ] E6 Undo / Redo in the context menu of editable fields
-- [ ] E7 Inspect Element in the context menu (development builds)
-- [ ] E8 Paste as plain text (Ctrl+Shift+V)
+- [x] E1 Native context menu for text fields: Cut / Copy / Paste / Select All
+- [x] E2 Spelling suggestions in the context menu
+- [x] E3 "Add to dictionary" in the context menu
+- [x] E4 "Search the web for …" for selected text
+- [x] E5 Copy link address on links
+- [x] E6 Undo / Redo in the context menu of editable fields
+- [x] E7 Inspect Element in the context menu (development builds)
+- [x] E8 Paste as plain text (Ctrl+Shift+V)
 
 ### Studio commands from the menu (9)
-- [ ] C1 View → Theme submenu (every app theme)
-- [ ] C2 View → Accent submenu
-- [ ] C3 View → Density (Comfortable / Compact)
-- [ ] C4 Help → Index Diagnostics
-- [ ] C5 File → Run Tests…
-- [ ] C6 View → Text Size (A− / A / A+)
-- [ ] C7 View → Reduce Motion toggle
-- [ ] C8 View → High Contrast toggle
-- [ ] C9 Go → Test Generator draft ("Continue where you left off")
+- [x] C1 View → Theme submenu (every app theme)
+- [x] C2 View → Accent submenu
+- [x] C3 View → Density (Comfortable / Compact)
+- [x] C4 Help → Index Diagnostics
+- [x] C5 File → Run Tests…
+- [x] C6 View → Text Size (A− / A / A+)
+- [x] C7 View → Reduce Motion toggle
+- [x] C8 View → High Contrast toggle
+- [x] C9 Go → Test Generator draft ("Continue where you left off")
 
 ### Diagnostics & help (8)
-- [ ] H1 Help → System Information (OS, memory, CPU, data folder size)
-- [ ] H2 Help → Copy Diagnostics (versions, paths, ports) to the clipboard
-- [ ] H3 Help → Check API Health
-- [ ] H4 Help → Report an Issue (GitHub issue prefilled with versions)
-- [ ] H5 Help → Open Crash Reports folder (local crash reporter, never uploaded)
-- [ ] H6 First run: follow the OS light/dark theme
-- [ ] H7 First run: follow the OS high-contrast setting
-- [ ] H8 First run: pick the studio accent closest to the Windows accent colour
+- [x] H1 Help → System Information (OS, memory, CPU, data folder size)
+- [x] H2 Help → Copy Diagnostics (versions, paths, ports) to the clipboard
+- [x] H3 Help → Check API Health
+- [x] H4 Help → Report an Issue (GitHub issue prefilled with versions)
+- [x] H5 Help → Open Crash Reports folder (local crash reporter, never uploaded)
+- [x] H6 First run: follow the OS light/dark theme
+- [x] H7 First run: follow the OS high-contrast setting
+- [x] H8 First run: pick the studio accent closest to the Windows accent colour
 
 ## Quality-of-life
 - [x] Q1 Zoom in/out/reset (Ctrl +/−/0) persisted
