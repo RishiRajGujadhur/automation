@@ -36,6 +36,17 @@ export async function startApi(): Promise<{ origin: string; port: number }> {
   process.env.STUDIO_WEB_PORT = String(port); // UI and API share one origin in the desktop app
   process.env.STUDIO_ROOT = resourcesRoot();
   process.env.STUDIO_DATA = dataRoot();
+  // The studio looks for a local SDK at <root>/../.tools; in the desktop app <root> moved, so look in the usual places.
+  if (!process.env.DOTNET_PATH) {
+    const exe = process.platform === 'win32' ? 'dotnet.exe' : 'dotnet';
+    const candidates = [
+      path.resolve(resourcesRoot(), '../../.tools/dotnet', exe), // F:\Development\Automation\.tools during development
+      path.resolve(resourcesRoot(), '../.tools/dotnet', exe),
+      path.join(process.env.USERPROFILE ?? process.env.HOME ?? '', '.dotnet', exe),
+    ];
+    const found = candidates.find((c) => fs.existsSync(c));
+    if (found) process.env.DOTNET_PATH = found;
+  }
   const entry = path.join(resourcesRoot(), 'server/index.mjs');
   if (!fs.existsSync(entry)) throw new Error(`The bundled API is missing (${entry}). Run "npm run build".`);
   await import(pathToFileURL(entry).href);

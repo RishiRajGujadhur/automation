@@ -31,6 +31,46 @@ test('exposes the desktop bridge, and no Node globals', async () => {
   expect(info).toEqual({ bridge: 'function', platform: process.platform, require: 'undefined', process: 'undefined' });
 });
 
+test('native menu has the expected menus and navigates by deep link', async () => {
+  const labels = await appProcess.evaluate(({ Menu }) => Menu.getApplicationMenu()!.items.map((i) => i.label.replace('&', '')));
+  expect(labels).toEqual(expect.arrayContaining(['File', 'Edit', 'View', 'Go', 'Window', 'Help']));
+  await appProcess.evaluate(({ Menu }) => {
+    const go = Menu.getApplicationMenu()!.items.find((i) => i.label.includes('Go'))!;
+    go.submenu!.items.find((i) => i.label === 'Test Design')!.click();
+  });
+  await expect(page).toHaveURL(/#\/test-design/);
+  await expect(page.getByRole('tab', { name: 'Examples generator' })).toBeVisible();
+});
+
+test('menu commands reach the web app (Preferences)', async () => {
+  await appProcess.evaluate(({ Menu }) => Menu.getApplicationMenu()!.items.find((i) => i.label.includes('File'))!.submenu!.items.find((i) => i.label.startsWith('Preferences'))!.click());
+  await expect(page.getByRole('dialog', { name: 'Preferences' })).toBeVisible();
+  await page.keyboard.press('Escape');
+});
+
+test('window title shows the page and the repository', async () => {
+  await expect.poll(() => appProcess.evaluate(({ BrowserWindow }) => BrowserWindow.getAllWindows()[0].getTitle())).toMatch(/Test Design — fixtures — TestAuthoring Studio/);
+});
+
+test('bridge refuses files outside the repository and non-http links', async () => {
+  const outside = await page.evaluate(() => (window as any).desktop.openInEditor('../../outside.txt').then(() => 'opened', (e: Error) => e.message));
+  expect(outside).toMatch(/outside the repository/);
+  const link = await page.evaluate(() => (window as any).desktop.openExternal('file:///C:/Windows').then(() => 'opened', (e: Error) => e.message));
+  expect(link).toMatch(/Only http/);
+});
+
+test('navigation away from the app is blocked', async () => {
+  const before = page.url();
+  await page.evaluate(() => { location.href = 'https://example.com/'; }).catch(() => {});
+  await page.waitForTimeout(500);
+  expect(page.url()).toBe(before);
+});
+
+test('theme changes reach the native window', async () => {
+  await page.evaluate(() => (window as any).desktop.setTheme({ background: '#f4f5f9', text: '#1f2430', dark: false }));
+  await expect.poll(() => appProcess.evaluate(({ nativeTheme }) => nativeTheme.themeSource)).toBe('light');
+});
+
 test('stores state in the user-data folder, not the app folder', async () => {
   const dataDir = await appProcess.evaluate(({ app }) => app.getPath('userData'));
   expect(path.resolve(dataDir)).toBe(path.resolve(userData));

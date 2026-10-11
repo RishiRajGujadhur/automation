@@ -1,7 +1,7 @@
 import { BrowserWindow, screen } from 'electron';
 import { read, write } from './store';
 
-const DEFAULT = { width: 1440, height: 920, maximized: false };
+const DEFAULT: { x?: number; y?: number; width: number; height: number; maximized: boolean } = { width: 1440, height: 920, maximized: false };
 
 /** Saved bounds, discarded if they no longer intersect any display (monitor unplugged). */
 export function initialBounds() {
