@@ -8,7 +8,7 @@ import { Download, Trash2, RotateCcw, Search, Settings2, Palette, Code2, Accessi
 import { api } from './api';
 import { TextField } from './forms';
 import { Switch as SwitchPrimitive, Segmented, usePrefs, useConfirm, useAlgorithms, Tip } from './radix2';
-import { algorithms, categories } from './algorithms/registry';
+import { algorithms, categories, presetById, presets } from './algorithms/registry';
 import { Button, Select } from './radix';
 import { Highlight } from './ui';
 import { appThemes, editorThemes, resolveEditorTheme, type AppThemeId, type EditorThemeId } from './themes';
@@ -71,7 +71,8 @@ export default function StudioSettings({ onNotice, onWorkspace, shortcuts, onClo
   };
   const editor = resolveEditorTheme(prefs.editorTheme, prefs.theme);
   const cacheCount = cachedKeys().length;
-  const sw = (id: string, checked: boolean, onChange: (v: boolean) => void, label: string) => <SwitchPrimitive id={id} label={<span className="sr-only">{label}</span>} checked={checked} onCheckedChange={onChange} />;
+  const sw = (id: string, checked: boolean, onChange: (v: boolean) => void, label: string, disabled = false) => <SwitchPrimitive id={id} label={<span className="sr-only">{label}</span>} checked={checked} onCheckedChange={onChange} disabled={disabled} />;
+  const custom = algo.preset === 'custom';
 
   const rows: Row[] = useMemo(() => [
     // General
@@ -117,6 +118,7 @@ export default function StudioSettings({ onNotice, onWorkspace, shortcuts, onClo
         </div>
       ),
     },
+    { id: 'layout', section: 'Appearance', title: 'Layout', description: 'VS Code: activity bar on the left, slim title bar, full-height editor and an accent status bar. Classic: tabs across the top.', keywords: 'vscode visual studio code activity bar classic tabs layout', control: <Segmented label="Layout" value={prefs.layout} onValueChange={(v) => setPrefs({ layout: v })} options={[{ value: 'vscode', label: 'VS Code' }, { value: 'classic', label: 'Classic' }]} /> },
     { id: 'density', section: 'Appearance', title: 'Density', description: 'Spacing inside cards and forms.', keywords: 'compact comfortable spacing', control: <Segmented label="Density" value={prefs.density} onValueChange={(v) => setPrefs({ density: v })} options={[{ value: 'comfortable', label: 'Comfortable' }, { value: 'compact', label: 'Compact' }]} /> },
     { id: 'text', section: 'Appearance', title: 'Text size', description: 'Base font size for the interface.', keywords: 'font size zoom', control: <Segmented label="Text size" value={prefs.textSize} onValueChange={(v) => setPrefs({ textSize: v })} options={[{ value: 'small', label: 'A−' }, { value: 'medium', label: 'A' }, { value: 'large', label: 'A+' }]} /> },
     { id: 'appearance-reset', section: 'Appearance', title: 'Reset appearance', description: 'Theme, accent, density and text size back to their defaults.', keywords: 'default reset theme accent', control: <Button variant="ghost" size="small" onClick={() => { setPrefs({ theme: defaultPrefs.theme, accent: defaultPrefs.accent, density: defaultPrefs.density, textSize: defaultPrefs.textSize, editorTheme: defaultPrefs.editorTheme }); onNotice('Appearance reset to defaults.'); }}><RotateCcw size={13} aria-hidden="true" />Reset</Button> },
@@ -188,24 +190,33 @@ export default function StudioSettings({ onNotice, onWorkspace, shortcuts, onClo
     { id: 'workspace', section: 'Workspace', title: 'Repository and scan patterns', description: 'Repository root, target project, feature/source/dictionary globs and ignored folders.', keywords: 'repository root csproj glob scan', control: <Button size="small" onClick={onWorkspace}>Open workspace settings</Button> },
     // Algorithms
     {
-      id: 'algo-all', section: 'Algorithms', title: `${algorithms.filter((x) => algo.on(x.id)).length} of ${algorithms.length} algorithms on`, description: 'Deterministic (non-AI) algorithms used by Test Design, the feature editor and search. Turn any of them off; tools that need a disabled algorithm say so and offer to turn it back on. Hover ⓘ for what each one does.', keywords: 'algorithm enable disable all reset',
+      id: 'algo-preset', section: 'Algorithms', title: 'Algorithm preset', description: `${presetById.get(algo.preset)?.description ?? ''} ${algorithms.filter((x) => algo.on(x.id)).length} of ${algorithms.length} on.`, keywords: 'algorithm preset essentials custom everything minimal regression model combinatorial bdd enable disable',
       control: (
         <div className="button-row">
-          <Button size="small" onClick={() => algo.set(Object.fromEntries(algorithms.map((x) => [x.id, true])))}>Enable all</Button>
-          <Button size="small" variant="ghost" onClick={() => algo.set(Object.fromEntries(algorithms.map((x) => [x.id, false])))}>Disable all</Button>
-          <Button size="small" variant="ghost" onClick={() => { algo.reset(); onNotice('Algorithms reset to defaults.'); }}><RotateCcw size={13} aria-hidden="true" />Reset</Button>
+          <Select ariaLabel="Algorithm preset" value={algo.preset} onValueChange={(v) => { algo.setPreset(v); onNotice(`Preset: ${presetById.get(v)?.label}.`); }} options={presets.map((p) => ({ value: p.id, label: p.label }))} />
+          <Button size="small" variant="ghost" onClick={() => { algo.reset(); onNotice('Algorithms reset to the Essentials preset.'); }}><RotateCcw size={13} aria-hidden="true" />Reset</Button>
         </div>
       ),
     },
+    ...(custom
+      ? [{
+          id: 'algo-all', section: 'Algorithms', title: 'Custom selection', description: 'Turn individual algorithms on or off. Hover ⓘ for what each one does.', keywords: 'enable all disable all',
+          control: (
+            <div className="button-row">
+              <Button size="small" onClick={() => algo.set(Object.fromEntries(algorithms.map((x) => [x.id, true])))}>Enable all</Button>
+              <Button size="small" variant="ghost" onClick={() => algo.set(Object.fromEntries(algorithms.map((x) => [x.id, false])))}>Disable all</Button>
+            </div>
+          ),
+        } as Row]
+      : [{ id: 'algo-locked', section: 'Algorithms', title: 'Switches follow the preset', description: 'Choose Custom to turn individual algorithms on or off. Custom starts from the current preset.', keywords: 'custom locked', control: <Button size="small" onClick={() => algo.setPreset('custom')}>Customize</Button> } as Row]),
     ...categories.flatMap((c): Row[] => {
       const list = algorithms.filter((x) => x.category === c);
       const onCount = list.filter((x) => algo.on(x.id)).length;
       return [
-        { id: `algo-cat-${c}`, section: 'Algorithms', title: c, description: `${onCount} of ${list.length} on · used in ${list[0].usedIn}.`, keywords: list.map((x) => x.name).join(' '), control: sw(`algo-cat-${c.replace(/\W/g, '')}`, onCount === list.length, (v) => algo.set(Object.fromEntries(list.map((x) => [x.id, v]))), `All ${c} algorithms`) },
-        ...list.map((x): Row => ({ id: `algo-${x.id}`, sub: true, section: 'Algorithms', title: x.name, tip: x.tooltip, description: x.tooltip.split('. ')[0].replace(/\.$/, '') + '.', keywords: `${x.id} ${x.tooltip} ${c}`, control: sw(`algo-${x.id}`, algo.on(x.id), (v) => algo.set({ [x.id]: v }), x.name) })),
+        { id: `algo-cat-${c}`, section: 'Algorithms', title: c, description: `${onCount} of ${list.length} on · used in ${list[0].usedIn}.`, keywords: list.map((x) => x.name).join(' '), control: sw(`algo-cat-${c.replace(/\W/g, '')}`, onCount === list.length, (v) => algo.set(Object.fromEntries(list.map((x) => [x.id, v]))), `All ${c} algorithms`, !custom) },
+        ...list.map((x): Row => ({ id: `algo-${x.id}`, sub: true, section: 'Algorithms', title: x.name, tip: x.tooltip, description: x.tooltip.split('. ')[0].replace(/\.$/, '') + '.', keywords: `${x.id} ${x.tooltip} ${c}`, control: sw(`algo-${x.id}`, algo.on(x.id), (v) => algo.set({ [x.id]: v }), x.name, !custom) })),
       ];
-    }),
-    // Storage    { id: 'cards', section: 'Storage', title: 'Reset card states', description: 'Every collapsible card returns to its default open or closed state.', keywords: 'collapse cards reset', control: <Button variant="ghost" size="small" onClick={async () => { if (await confirm({ title: 'Reset collapsed cards?', description: 'Every card returns to its default open or closed state.', confirm: 'Reset cards' })) { cachedKeys().filter((k) => k.startsWith('tas:open:') || k.startsWith('tas:card:')).forEach((k) => localStorage.removeItem(k)); location.reload(); } }}><RotateCcw size={13} aria-hidden="true" />Reset card states</Button> },
+    }),    // Storage    { id: 'cards', section: 'Storage', title: 'Reset card states', description: 'Every collapsible card returns to its default open or closed state.', keywords: 'collapse cards reset', control: <Button variant="ghost" size="small" onClick={async () => { if (await confirm({ title: 'Reset collapsed cards?', description: 'Every card returns to its default open or closed state.', confirm: 'Reset cards' })) { cachedKeys().filter((k) => k.startsWith('tas:open:') || k.startsWith('tas:card:')).forEach((k) => localStorage.removeItem(k)); location.reload(); } }}><RotateCcw size={13} aria-hidden="true" />Reset card states</Button> },
     { id: 'cache', section: 'Storage', title: 'Clear cached UI state', description: `${cacheCount} item${cacheCount === 1 ? '' : 's'} stored in this browser: drafts, preferences, layout and history. Repository files are not affected.`, keywords: 'cache localstorage clear reset delete', control: <Button variant="danger" size="small" disabled={!cacheCount} onClick={async () => { if (await confirm({ title: 'Clear all cached UI state?', description: 'Removes drafts, preferences, layout and history stored in this browser, then reloads. Repository files are not touched.', confirm: 'Clear cache', danger: true })) { cachedKeys().forEach((k) => localStorage.removeItem(k)); location.reload(); } }}><Trash2 size={13} aria-hidden="true" />Clear cache</Button> },
     // Shortcuts
     { id: 'shortcuts', section: 'Shortcuts', title: 'All shortcuts', keywords: shortcuts.map((s) => s.join(' ')).join(' '), block: <dl className="shortcut-list">{shortcuts.map(([k, d]) => <div key={k} className="shortcut-row"><dt><kbd>{k}</kbd></dt><dd>{d}</dd></div>)}</dl> },

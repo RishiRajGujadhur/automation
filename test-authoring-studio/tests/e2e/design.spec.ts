@@ -35,8 +35,9 @@ test('turning an algorithm off removes it from the tools, Turn on restores it', 
   await expect(page.getByText(/Transitions \d+\/\d+/)).toBeVisible();
   await page.getByRole('button', { name: 'Preferences' }).click();
   await page.getByRole('dialog').getByRole('button', { name: 'Algorithms' }).click();
+  await page.getByRole('button', { name: 'Customize' }).click();
   await page.locator('#algo-fsm-parse').click();
-  await expect(page.getByText(/139 of 140 algorithms on/)).toBeVisible();
+  await expect(page.getByText(/139 of 140 on/)).toBeVisible();
   await page.keyboard.press('Escape');
   await expect(page.getByText(/State-machine model is turned off/)).toBeVisible();
   await page.getByRole('button', { name: 'Turn on' }).first().click();

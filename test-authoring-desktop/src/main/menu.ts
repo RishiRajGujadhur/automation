@@ -142,6 +142,8 @@ export function buildMenu() {
         { type: 'separator' },
         { label: 'Theme', submenu: themes.map(([id, label]) => ({ label, click: () => pref({ theme: id }) })) },
         { label: 'Accent', submenu: accentIds.map((id) => ({ label: id[0].toUpperCase() + id.slice(1), click: () => pref({ accent: id }) })) },
+        { label: 'Layout', submenu: [{ label: 'VS Code', click: () => pref({ layout: 'vscode' }) }, { label: 'Classic (tabs)', click: () => pref({ layout: 'classic' }) }] },
+        { label: 'Algorithm Preset', submenu: [['essentials', 'Essentials'], ['bdd-authoring', 'BDD authoring'], ['combinatorial', 'Combinatorial & logic'], ['model-based', 'Model-based'], ['regression', 'Regression & CI'], ['minimal', 'Minimal'], ['everything', 'Everything'], ['custom', 'Custom…']].map(([id, label]) => ({ label, click: () => { pref({ algorithmPreset: id }); if (id === 'custom') send('preferences'); } })) },
         { label: 'Density', submenu: [{ label: 'Comfortable', click: () => pref({ density: 'comfortable' }) }, { label: 'Compact', click: () => pref({ density: 'compact' }) }] },
         { label: 'Text Size', submenu: [{ label: 'Small (A−)', click: () => pref({ textSize: 'small' }) }, { label: 'Medium (A)', click: () => pref({ textSize: 'medium' }) }, { label: 'Large (A+)', click: () => pref({ textSize: 'large' }) }] },
         { label: 'Reduce Motion', click: () => ctx.win?.webContents.executeJavaScript('document.documentElement.dataset.motion').then((m) => pref({ motion: m === 'reduce' ? 'system' : 'reduce' })) },

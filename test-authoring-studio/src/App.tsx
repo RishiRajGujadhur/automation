@@ -7,6 +7,8 @@ import TestGenerator, { type GeneratorSeed } from './TestGenerator';
 import DictionaryInspector from './DictionaryInspector';
 import ProjectExplorer from './ProjectExplorer';
 import TestDesign, { designTools } from './TestDesign';
+import ActivityBar from './ActivityBar';
+import { snapshot } from './algorithms/registry';
 import { desktop, type DesktopMenuCommand } from './desktop';
 import StepCatalogue from './StepCatalogue';
 import SearchPalette from './SearchPalette';
@@ -102,6 +104,7 @@ import './modern.scss';
 import './layout.scss';
 import './theme.scss';
 import './design.scss';
+import './vscode.scss';
 
 const demo: Action[] = [
   { id: 'd1', action: 'goto', url: 'https://www.google.com/' },
@@ -212,6 +215,28 @@ export default function App() {
   const navTabs = basic ? tabs.filter((t) => t.name === 'Dashboard' || t.name === 'Test Generator') : tabs;
   const onRecorder = tab === 'Features' && view === 'recorder';
   const hiddenInBasic = basic && !['Dashboard', 'Test Generator'].includes(tab) && !onRecorder;
+  // VS Code-style shell (activity bar, slim title bar, full-height editor) unless the classic tab layout is chosen.
+  const vscode = prefs.layout !== 'classic';
+  const modeSwitch = (
+    <ToggleGroup.Root type="single" className="segmented mode-switch" aria-label="Interface mode" value={prefs.mode} onValueChange={(v) => { if (v) setMode(v as 'basic' | 'advanced'); }}>
+      <ToggleGroup.Item value="basic" className="segmented-item" aria-label="Basic mode" title="Basic: Dashboard, Test Generator, Recorder (Ctrl/Cmd+Shift+A)">Basic</ToggleGroup.Item>
+      <ToggleGroup.Item value="advanced" className="segmented-item" aria-label="Advanced mode" title="Advanced: every page (Ctrl/Cmd+Shift+A)">Advanced</ToggleGroup.Item>
+    </ToggleGroup.Root>
+  );
+  const featureViewSwitch = (
+    <ToggleGroup.Root type="single" className="segmented" aria-label="Feature view" value={view} onValueChange={(v) => { if (v) withTransition(() => setView(v)); }}>
+      {[
+        { id: 'editor', icon: Code2, label: 'Editor' },
+        { id: 'builder', icon: Blocks, label: 'Builder' },
+        { id: 'recorder', icon: Circle, label: 'Recorder' },
+      ].map((v) => (
+        <ToggleGroup.Item key={v.id} value={v.id} className="segmented-item" aria-label={v.label}>
+          <v.icon size={14} aria-hidden="true" />
+          {v.label}
+        </ToggleGroup.Item>
+      ))}
+    </ToggleGroup.Root>
+  );
   const setMode = (mode: 'basic' | 'advanced') => {
     setPrefs({ mode });
     setNotice(mode === 'advanced' ? 'Advanced mode: every page is in the navigation.' : 'Basic mode: Dashboard, Test Generator and Playwright Recorder. Other pages stay reachable from Ctrl/Cmd+K.');
@@ -402,8 +427,10 @@ export default function App() {
   menuRef.current = (c, arg) => {
     // Preference changes from the native View menu (and first-run OS defaults). Only known keys pass.
     if (c === 'set-pref' && arg && typeof arg === 'object') {
-      const allowed = ['theme', 'accent', 'density', 'textSize', 'motion', 'contrast', 'mode'] as const;
+      const allowed = ['theme', 'accent', 'density', 'textSize', 'motion', 'contrast', 'mode', 'layout', 'algorithmPreset'] as const;
       const patch = Object.fromEntries(Object.entries(arg as Record<string, unknown>).filter(([k, v]) => (allowed as readonly string[]).includes(k) && typeof v === 'string'));
+      // Switching to Custom starts from what the current preset enables.
+      if (patch.algorithmPreset === 'custom' && prefs.algorithmPreset !== 'custom') Object.assign(patch, { algorithms: snapshot({ preset: prefs.algorithmPreset, overrides: prefs.algorithms }) });
       if (Object.keys(patch).length) setPrefs(patch as Partial<typeof prefs>);
       return;
     }
@@ -643,6 +670,16 @@ export default function App() {
             </li>
           </ol>
         </nav>
+        {vscode && (
+          <button className="command-center" onClick={() => setPaletteOpen(true)} aria-label="Search pages, commands and steps (Ctrl+K)">
+            <Search size={13} aria-hidden="true" />
+            <span>{index?.workspace ?? 'Search'}</span>
+            <kbd>Ctrl K</kbd>
+          </button>
+        )}
+        {vscode && tab === 'Features' && featureViewSwitch}
+        {vscode && modeSwitch}
+        {vscode && !basic && <AppMenuButton {...menuProps} />}
         <Button
           id="guide-me" className="guide-button"
           disabled={!index || busy}
@@ -664,21 +701,25 @@ export default function App() {
         >
           <Folder size={19} />
         </IconButton>
-        <IconButton
-          label="Preferences"
-          onClick={() => setModal('preferences')}
-        >
-          <SlidersHorizontal size={18} />
-        </IconButton>
-        <IconButton
-          data-tour="workspace"
-          label="Workspace settings"
-          onClick={() => setModal('settings')}
-        >
-          <Settings2 size={19} />
-        </IconButton>
+        {!vscode && (
+          <IconButton
+            label="Preferences"
+            onClick={() => setModal('preferences')}
+          >
+            <SlidersHorizontal size={18} />
+          </IconButton>
+        )}
+        {!vscode && (
+          <IconButton
+            data-tour="workspace"
+            label="Workspace settings"
+            onClick={() => setModal('settings')}
+          >
+            <Settings2 size={19} />
+          </IconButton>
+        )}
       </header>
-      <nav className="main-nav">
+      {!vscode && <nav className="main-nav">
         <NavigationMenu.Root className="nav-root" aria-label="Main">
         <NavigationMenu.List className="nav-tabs">
           {navTabs.map((t, i) => (
@@ -723,30 +764,24 @@ export default function App() {
           <span className="record-dot" />
           Playwright Recorder<Badge>β</Badge>
         </button>
-        <ToggleGroup.Root type="single" className="segmented mode-switch" aria-label="Interface mode" value={prefs.mode} onValueChange={(v) => { if (v) setMode(v as 'basic' | 'advanced'); }}>
-          <ToggleGroup.Item value="basic" className="segmented-item" aria-label="Basic mode" title="Basic: Dashboard, Test Generator, Recorder (Ctrl/Cmd+Shift+A)">Basic</ToggleGroup.Item>
-          <ToggleGroup.Item value="advanced" className="segmented-item" aria-label="Advanced mode" title="Advanced: every page (Ctrl/Cmd+Shift+A)">Advanced</ToggleGroup.Item>
-        </ToggleGroup.Root>
+        {modeSwitch}
         <div className="nav-trailing">
-          {tab === 'Features' ? (
-            <ToggleGroup.Root type="single" className="segmented" aria-label="Feature view" value={view} onValueChange={(v) => { if (v) withTransition(() => setView(v)); }}>
-              {[
-                { id: 'editor', icon: Code2, label: 'Editor' },
-                { id: 'builder', icon: Blocks, label: 'Builder' },
-                { id: 'recorder', icon: Circle, label: 'Recorder' },
-              ].map((v) => (
-                <ToggleGroup.Item key={v.id} value={v.id} className="segmented-item" aria-label={v.label}>
-                  <v.icon size={14} aria-hidden="true" />
-                  {v.label}
-                </ToggleGroup.Item>
-              ))}
-            </ToggleGroup.Root>
-          ) : (
-            <span className="local-state"><span aria-hidden="true" />Local workspace</span>
-          )}
+          {tab === 'Features' ? featureViewSwitch : <span className="local-state"><span aria-hidden="true" />Local workspace</span>}
         </div>
-      </nav>
+      </nav>}
       <div className="app-body">
+        {vscode && (
+          <ActivityBar
+            active={tab === 'Features' && view === 'recorder' ? 'Recorder' : tab}
+            basic={basic}
+            sidebarOpen={prefs.sidebar}
+            onSelect={(id) => withTransition(() => { if (id === 'Recorder') { setTab('Features'); setView('recorder'); } else { setTab(id); if (id === 'Features' && view === 'recorder') setView('editor'); if (id === 'Features') setPrefs({ sidebar: true }); } setCatalogQuery(''); })}
+            onToggleSidebar={() => setPrefs({ sidebar: !prefs.sidebar })}
+            onPreferences={() => setModal('preferences')}
+            onWorkspace={() => setModal('settings')}
+            onMore={() => setMode('advanced')}
+          />
+        )}
         {mobileExplorer && (
           <button
             className="explorer-backdrop"
@@ -1261,6 +1296,7 @@ export default function App() {
                 </Button>
               </div>
               <GherkinEditor
+                height={vscode ? 'calc(100dvh - 205px)' : undefined}
                 value={source}
                 onChange={setSource}
                 onNotice={setNotice}

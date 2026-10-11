@@ -9,7 +9,7 @@ import { betaPosterior, entropy, ewma, flakyScore, flipRate, parseCucumberJson, 
 import { duplicateScenarios, flesch, smellChecks, type QFeature } from '../src/algorithms/quality';
 import { cooccurrence, matchTags, parseTagExpression, rollup, rollupTree } from '../src/algorithms/tags';
 import { livingDocsHtml, livingDocsMarkdown } from '../src/algorithms/docs';
-import { algorithms, isEnabled } from '../src/algorithms/registry';
+import { algorithmById, algorithms, enabledCount, isEnabled, presets } from '../src/algorithms/registry';
 
 const P: Param[] = [
   { name: 'browser', values: ['Chrome', 'Firefox', 'Safari'] },
@@ -282,8 +282,15 @@ describe('registry', () => {
     expect(new Set(algorithms.map((a) => a.id)).size).toBe(algorithms.length);
     expect(algorithms.every((a) => a.tooltip.length > 30)).toBe(true);
   });
-  it('overrides win over defaults', () => {
+  it('presets decide; Custom uses the explicit map', () => {
     expect(isEnabled({}, 'ipog')).toBe(true);
-    expect(isEnabled({ ipog: false }, 'ipog')).toBe(false);
+    expect(isEnabled({}, 'genetic')).toBe(false);
+    expect(isEnabled({ preset: 'everything' }, 'genetic')).toBe(true);
+    expect(isEnabled({ preset: 'minimal' }, 'ipog')).toBe(false);
+    expect(isEnabled({ preset: 'essentials', overrides: { ipog: false } }, 'ipog')).toBe(true);
+    expect(isEnabled({ preset: 'custom', overrides: { ipog: false } }, 'ipog')).toBe(false);
+    expect(isEnabled({ preset: 'custom', overrides: {} }, 'ipog')).toBe(true);
+    expect(enabledCount({ preset: 'essentials' })).toBeLessThan(algorithms.length / 2);
+    for (const p of presets.filter((x) => x.ids)) expect(p.ids!.every((id) => algorithmById.has(id))).toBe(true);
   });
 });

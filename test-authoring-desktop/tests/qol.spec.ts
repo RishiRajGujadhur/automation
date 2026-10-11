@@ -47,6 +47,23 @@ test('C1–C3, C6: View menu changes studio preferences', async () => {
   await menu('View', 'Theme', 'Studio Dark');
 });
 
+test('VS Code layout by default; View → Layout and Algorithm Preset menus', async () => {
+  await expect(page.locator('html')).toHaveAttribute('data-layout', 'vscode');
+  await expect(page.locator('.activity-bar')).toBeVisible();
+  await menu('View', 'Layout', 'Classic (tabs)');
+  await expect(page.locator('html')).toHaveAttribute('data-layout', 'classic');
+  await menu('View', 'Layout', 'VS Code');
+  await expect(page.locator('html')).toHaveAttribute('data-layout', 'vscode');
+  const preset = () => page.evaluate(() => JSON.parse(localStorage.getItem('tas:prefs') ?? '{}'));
+  expect((await preset()).algorithmPreset ?? 'essentials').toBe('essentials');
+  await menu('View', 'Algorithm Preset', 'Everything');
+  await expect.poll(async () => (await preset()).algorithmPreset).toBe('everything');
+  await menu('View', 'Algorithm Preset', 'Custom…');
+  await expect.poll(async () => (await preset()).algorithmPreset).toBe('custom');
+  expect(Object.values((await preset()).algorithms).filter(Boolean).length).toBe(140); // Custom starts from Everything
+  await page.keyboard.press('Escape');
+});
+
 test('C7/C8: Reduce Motion and High Contrast toggle', async () => {
   await menu('View', 'High Contrast');
   await expect(page.locator('html')).toHaveAttribute('data-contrast', 'high');

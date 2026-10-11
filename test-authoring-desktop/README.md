@@ -38,6 +38,8 @@ $env:TAS_EXE='release/win-unpacked/TestAuthoring Studio.exe'; npx playwright tes
 
 The first build publishes the scanner into `.cache/scanner/<rid>`. Pass `--scanner` to `scripts/build.mjs` to republish it.
 
+The desktop app has the same features as the web app, including the VS Code layout and the algorithm presets, because it serves the same UI. View → Layout and View → Algorithm Preset switch them from the menu.
+
 ## What the desktop app adds
 
 - **Native menu.**

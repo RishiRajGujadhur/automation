@@ -104,6 +104,17 @@ The tab bar shows only the four primary pages. To reach Step Catalog, Background
 
 The studio menu is a Radix context menu (`@radix-ui/react-context-menu`). It also offers Command palette, Start a recording, New feature, Rescan, Workspace settings and Keyboard shortcuts. Menus on cards and rows take priority over it. Text inputs and code editors keep the browser's own right-click menu (copy, paste, spellcheck).
 
+### VS Code layout
+
+The default layout follows Visual Studio Code, to give the editor as much room as possible:
+- a 36 px **title bar** with the breadcrumb, a **command centre** (opens the Ctrl/Cmd+K palette), and the Basic/Advanced and Editor/Builder/Recorder switches;
+- an **activity bar** on the left with one icon per page (clicking Features again hides or shows the explorer, like VS Code);
+- the resizable **explorer** side bar;
+- a page area that scrolls on its own, with the feature editor filling the window height;
+- a 22 px **status bar** in the accent colour.
+
+The page itself never scrolls. Phones keep the bottom navigation. The previous tab layout is still available: Settings → Appearance → Layout → Classic.
+
 ### Basic and Advanced mode
 
 **Basic mode is the default.** The navigation shows **Dashboard**, **Test Generator** and **Playwright Recorder**, and a new visitor lands on the Dashboard. **Advanced mode** adds Features, Dictionary Inspector and the ⋯ menu (Step Catalog, Backgrounds, Selectors, Project Explorer, Config).
@@ -201,6 +212,8 @@ Batch 2 also extends existing tools:
 - **Similarity lab:** Needleman–Wunsch scenario alignment.
 
 The **feature editor** uses the same library: steps already written in feature files appear in autocomplete after the bindings, a step that is almost identical to an existing one gets a **Use existing step** quick fix (quoted values are kept), and scenario smells show as info diagnostics.
+
+**Presets.** Not every algorithm is on by default. Settings → Algorithms has a **preset** dropdown: Essentials (default, about 55 algorithms), BDD authoring, Combinatorial & logic, Model-based, Regression & CI, Minimal and Everything. Only the **Custom** preset lets you switch individual algorithms on or off; it starts from the preset you had.
 
 **Settings → Algorithms** lists every algorithm with a switch and an ⓘ tooltip explaining it. There are also per-category switches, Enable all / Disable all / Reset, and an "N of 140 on" count. Settings search matches what an algorithm does (try "phonetic"). A tool whose algorithm is off says so and offers **Turn on**. The full checklist and research notes are in [PLAN.md](PLAN.md).
 

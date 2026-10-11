@@ -178,7 +178,43 @@ export const algorithms: Algorithm[] = [
 
 export const algorithmById = new Map(algorithms.map((x) => [x.id, x]));
 export const categories = [...new Set(algorithms.map((x) => x.category))];
-export function isEnabled(overrides: Record<string, boolean> | undefined, id: string) {
-  const v = overrides?.[id];
-  return v === undefined ? (algorithmById.get(id)?.defaultEnabled ?? true) : v;
+
+/* ------------------------------------------------------------------ presets */
+const byCategory = (...cs: AlgorithmCategory[]) => algorithms.filter((a) => cs.includes(a.category)).map((a) => a.id);
+/** The everyday set: one good algorithm per job, so tools stay simple. */
+const essentials = [
+  'ipog', 'bva', 'equivalence', 'constraints', 'seeds', 'tway-coverage', 'decision-table', 'quine-mccluskey',
+  'levenshtein', 'jaccard', 'stopwords', 'synonyms',
+  'trie', 'fuzzy', 'bm25', 'aho-corasick', 'frecency',
+  'template-inference', 'param-types', 'union-find', 'rename-refactor', 'cucumber-to-regex', 'regex-to-cucumber', 'keyword-resolution',
+  'fsm-parse', 'bfs', 'transition-coverage', 'state-coverage', 'reachability', 'dijkstra', 'kahn',
+  'greedy-set-cover', 'additional-greedy', 'apfd',
+  'junit-parse', 'cucumber-json', 'flaky-score', 'flip-rate', 'wilson',
+  'smell-missing-then', 'smell-long', 'smell-order', 'smell-outline', 'smell-dup-names', 'scenario-fingerprint', 'duplicate-step-lint',
+  'tag-expression', 'status-rollup', 'living-docs',
+  'mcdc', 'test-impact', 'rtm', 'quarantine',
+];
+const parsers = ['fsm-parse', 'junit-parse', 'cucumber-json', 'tag-expression', 'keyword-resolution', 'cucumber-to-regex'];
+export type Preset = { id: string; label: string; description: string; ids?: string[] };
+export const presets: Preset[] = [
+  { id: 'essentials', label: 'Essentials', description: 'One proven algorithm per task: pairwise Examples, step search and reuse, transition coverage, minimal suites, flakiness, core smells, living docs.', ids: essentials },
+  { id: 'bdd-authoring', label: 'BDD authoring', description: 'Essentials plus every similarity measure, step-library clustering, Gherkin quality checks and wording/sequence analysis.', ids: [...essentials, ...byCategory('String similarity', 'Search & autocomplete', 'Step library', 'Gherkin quality', 'Text & sequences')] },
+  { id: 'combinatorial', label: 'Combinatorial & logic', description: 'Essentials plus every covering-array generator and the logic techniques (MC/DC, cause–effect, classification trees, domain testing).', ids: [...essentials, ...byCategory('Combinatorial design', 'Logic & specification')] },
+  { id: 'model-based', label: 'Model-based', description: 'Essentials plus all state-machine coverage criteria, path algorithms and usage models.', ids: [...essentials, ...byCategory('Model-based testing')] },
+  { id: 'regression', label: 'Regression & CI', description: 'Essentials plus suite optimization, run-history statistics, test impact, risk and prediction.', ids: [...essentials, ...byCategory('Suite optimization', 'Results & flakiness', 'Impact & risk')] },
+  { id: 'minimal', label: 'Minimal', description: 'Only the parsers the tools need to read your input. Everything else is off.', ids: parsers },
+  { id: 'everything', label: 'Everything', description: `All ${algorithms.length} algorithms.`, ids: algorithms.map((a) => a.id) },
+  { id: 'custom', label: 'Custom', description: 'Choose each algorithm yourself. Starts from the preset you had selected.' },
+];
+export const presetById = new Map(presets.map((p) => [p.id, p]));
+export const DEFAULT_PRESET = 'essentials';
+const presetSets = new Map(presets.filter((p) => p.ids).map((p) => [p.id, new Set(p.ids)]));
+/** Effective state: a preset decides, except under Custom where the explicit map decides (unset → Essentials). */
+export function isEnabled(state: { preset?: string; overrides?: Record<string, boolean> } | undefined, id: string) {
+  const preset = state?.preset && presetById.has(state.preset) ? state.preset : DEFAULT_PRESET;
+  if (preset === 'custom') { const v = state?.overrides?.[id]; return v === undefined ? presetSets.get(DEFAULT_PRESET)!.has(id) : v; }
+  return presetSets.get(preset)!.has(id);
 }
+/** The explicit map that reproduces a preset (used when switching to Custom). */
+export const snapshot = (state: { preset?: string; overrides?: Record<string, boolean> }) => Object.fromEntries(algorithms.map((a) => [a.id, isEnabled(state, a.id)]));
+export const enabledCount = (state: { preset?: string; overrides?: Record<string, boolean> }) => algorithms.filter((a) => isEnabled(state, a.id)).length;

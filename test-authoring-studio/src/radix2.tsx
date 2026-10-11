@@ -1,4 +1,4 @@
-import { createContext, forwardRef, useCallback, useContext, useEffect, useRef, useState, type ButtonHTMLAttributes, type ReactNode } from 'react';
+import { createContext, forwardRef, useCallback, useContext, useEffect, useMemo, useRef, useState, type ButtonHTMLAttributes, type ReactNode } from 'react';
 import * as Tooltip from '@radix-ui/react-tooltip';
 import * as AlertDialog from '@radix-ui/react-alert-dialog';
 import * as Progress from '@radix-ui/react-progress';
@@ -9,7 +9,7 @@ import * as ToggleGroup from '@radix-ui/react-toggle-group';
 import { ChevronDown } from 'lucide-react';
 import type { AppThemeId, EditorThemeId } from './themes';
 import { accentById, type AccentId } from './accents';
-import { isEnabled } from './algorithms/registry';
+import { DEFAULT_PRESET, isEnabled, snapshot } from './algorithms/registry';
 import { syncDesktopTheme } from './desktop';
 
 /* ------------------------------------------------------------------ Tooltip + IconButton */
@@ -131,14 +131,14 @@ export function AccordionSection({ id, title, summary, badge, icon, children, de
 }
 
 /* ------------------------------------------------------------------ Switch, ToggleGroup */
-export function Switch({ id, checked, onCheckedChange, label, description }: { id: string; checked: boolean; onCheckedChange: (v: boolean) => void; label: ReactNode; description?: ReactNode }) {
+export function Switch({ id, checked, onCheckedChange, label, description, disabled }: { id: string; checked: boolean; onCheckedChange: (v: boolean) => void; label: ReactNode; description?: ReactNode; disabled?: boolean }) {
   return (
     <div className="switch-row">
       <div>
         <label htmlFor={id}>{label}</label>
         {description && <span className="field-hint">{description}</span>}
       </div>
-      <SwitchPrimitive.Root id={id} className="switch" checked={checked} onCheckedChange={onCheckedChange}>
+      <SwitchPrimitive.Root id={id} className="switch" checked={checked} onCheckedChange={onCheckedChange} disabled={disabled}>
         <SwitchPrimitive.Thumb className="switch-thumb" />
       </SwitchPrimitive.Root>
     </div>
@@ -157,22 +157,27 @@ export function Segmented<T extends string>({ value, onValueChange, options, lab
 }
 
 /* ------------------------------------------------------------------ Preferences */
-export type Prefs = { density: 'comfortable' | 'compact'; textSize: 'small' | 'medium' | 'large'; motion: 'system' | 'reduce'; contrast: 'normal' | 'high'; theme: AppThemeId; editorTheme: EditorThemeId; accent: AccentId; mode: 'basic' | 'advanced'; haptics: boolean; sidebar: boolean; focus: boolean; showStats: boolean; algorithms: Record<string, boolean> };
-export const defaultPrefs: Prefs = { density: 'comfortable', textSize: 'medium', motion: 'system', contrast: 'normal', theme: 'studio', editorTheme: 'auto', accent: 'violet', mode: 'basic', haptics: true, sidebar: true, focus: false, showStats: true, algorithms: {} };
+export type Prefs = { density: 'comfortable' | 'compact'; textSize: 'small' | 'medium' | 'large'; motion: 'system' | 'reduce'; contrast: 'normal' | 'high'; theme: AppThemeId; editorTheme: EditorThemeId; accent: AccentId; mode: 'basic' | 'advanced'; haptics: boolean; sidebar: boolean; focus: boolean; showStats: boolean; algorithms: Record<string, boolean>; algorithmPreset: string; layout: 'vscode' | 'classic' };
+export const defaultPrefs: Prefs = { density: 'comfortable', textSize: 'medium', motion: 'system', contrast: 'normal', theme: 'studio', editorTheme: 'auto', accent: 'violet', mode: 'basic', haptics: true, sidebar: true, focus: false, showStats: true, algorithms: {}, algorithmPreset: 'essentials', layout: 'vscode' };
 const PrefsContext = createContext<{ prefs: Prefs; setPrefs: (p: Partial<Prefs>) => void }>({ prefs: defaultPrefs, setPrefs: () => {} });
 export const usePrefs = () => useContext(PrefsContext);
 /** Whether an algorithm from src/algorithms/registry.ts is switched on (Settings → Algorithms). */
 export function useAlgorithms() {
   const { prefs, setPrefs } = usePrefs();
-  const on = useCallback((id: string) => isEnabled(prefs.algorithms, id), [prefs.algorithms]);
-  const set = useCallback((patch: Record<string, boolean>) => setPrefs({ algorithms: { ...prefs.algorithms, ...patch } }), [prefs.algorithms, setPrefs]);
-  return { on, set, overrides: prefs.algorithms, reset: () => setPrefs({ algorithms: {} }) };
+  const state = useMemo(() => ({ preset: prefs.algorithmPreset, overrides: prefs.algorithms }), [prefs.algorithmPreset, prefs.algorithms]);
+  const on = useCallback((id: string) => isEnabled(state, id), [state]);
+  /** Changing individual algorithms always means Custom: the current preset is copied first. */
+  const set = useCallback((patch: Record<string, boolean>) => {
+    const base = state.preset === 'custom' ? state.overrides : snapshot(state);
+    setPrefs({ algorithmPreset: 'custom', algorithms: { ...base, ...patch } });
+  }, [state, setPrefs]);
+  const setPreset = useCallback((preset: string) => setPrefs(preset === 'custom' ? { algorithmPreset: 'custom', algorithms: state.preset === 'custom' ? state.overrides : snapshot(state) } : { algorithmPreset: preset }), [state, setPrefs]);
+  return { on, set, setPreset, preset: state.preset, overrides: prefs.algorithms, reset: () => setPrefs({ algorithmPreset: DEFAULT_PRESET, algorithms: {} }) };
 }
-/** Non-React read (editor extensions): current overrides from storage. */
+/** Non-React read (editor extensions): current preset and overrides from storage. */
 export function algorithmOn(id: string) {
-  try { return isEnabled(JSON.parse(localStorage.getItem('tas:prefs') ?? '{}').algorithms, id); } catch { return isEnabled(undefined, id); }
-}
-/** Applies preferences as data attributes on <html> so plain CSS can respond. */
+  try { const p = JSON.parse(localStorage.getItem('tas:prefs') ?? '{}'); return isEnabled({ preset: p.algorithmPreset, overrides: p.algorithms }, id); } catch { return isEnabled(undefined, id); }
+}/** Applies preferences as data attributes on <html> so plain CSS can respond. */
 export function PrefsProvider({ children }: { children: ReactNode }) {
   const [prefs, set] = useState<Prefs>(() => {
     try { return { ...defaultPrefs, ...JSON.parse(localStorage.getItem('tas:prefs') ?? '{}') }; } catch { return defaultPrefs; }
@@ -195,6 +200,7 @@ export function PrefsProvider({ children }: { children: ReactNode }) {
     document.querySelector('meta[name="theme-color"]')?.setAttribute('content', getComputedStyle(el).getPropertyValue('--bg').trim() || '#0b0e16');
     el.dataset.focus = String(prefs.focus);
     el.dataset.sidebar = String(prefs.sidebar);
+    el.dataset.layout = prefs.layout;
     syncDesktopTheme(prefs.theme);
   }, [prefs]);
   const setPrefs = useCallback((p: Partial<Prefs>) => set((x) => ({ ...x, ...p })), []);

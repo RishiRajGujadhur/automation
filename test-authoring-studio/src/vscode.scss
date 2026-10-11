@@ -1,0 +1,221 @@
+// VS Code-style shell (prefs.layout = 'vscode', the default): slim title bar, activity bar, explorer side bar,
+// a full-height editor area that scrolls on its own, and a compact accent status bar.
+:root[data-layout='vscode'] {
+  body {
+    overflow: hidden;
+  }
+  #root {
+    height: 100dvh;
+    display: flex;
+    flex-direction: column;
+  }
+  .app-header {
+    position: relative;
+    flex: none;
+    height: 36px;
+    padding: 0 8px 0 12px;
+    gap: 10px;
+    background: var(--chrome);
+    border-bottom: 1px solid var(--border);
+    box-shadow: none;
+  }
+  .brand {
+    font-size: 13px;
+    .badge {
+      display: none;
+    }
+  }
+  .workspace-breadcrumb {
+    flex: 0 1 auto;
+    min-width: 0;
+    font-size: 12.5px;
+    h1 {
+      font-size: 12.5px;
+    }
+  }
+  .command-center {
+    flex: 0 1 460px;
+    min-width: 160px;
+    height: 24px;
+    margin: 0 auto;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 0 10px;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    background: color-mix(in srgb, var(--text) 5%, transparent);
+    color: var(--text-muted);
+    font: inherit;
+    font-size: 12.5px;
+    cursor: pointer;
+    span {
+      flex: 1;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      text-align: center;
+    }
+    kbd {
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+    &:hover,
+    &:focus-visible {
+      border-color: var(--accent);
+      color: var(--text-strong);
+    }
+  }
+  .app-header .segmented {
+    height: 26px;
+    flex: none;
+    .segmented-item {
+      height: 22px;
+      padding: 0 8px;
+      font-size: 12px;
+    }
+  }
+  .guide-button {
+    height: 26px;
+    padding: 0 10px;
+    font-size: 12px;
+  }
+  .app-body {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    overflow: hidden;
+  }
+  .sidebar {
+    height: 100%;
+    overflow-y: auto;
+    padding: 8px 10px 0;
+    background: var(--chrome);
+  }
+  .main-content {
+    height: 100%;
+    overflow: auto;
+    max-width: none;
+    margin: 0;
+    padding: 12px 16px 16px;
+    scrollbar-gutter: stable;
+  }
+  .status-bar {
+    flex: none;
+    height: 22px !important;
+    padding: 0 10px;
+    gap: 14px;
+    border-top: 0;
+    background: var(--accent-strong, #6a46d8);
+    color: var(--on-accent, #fff) !important;
+    font-size: 11.5px !important;
+    button,
+    .footer-right,
+    span,
+    svg {
+      color: var(--on-accent, #fff) !important;
+      font-size: 11.5px !important;
+    }
+    button:hover {
+      background: color-mix(in srgb, #fff 14%, transparent);
+    }
+    .status-dot {
+      background: currentColor;
+    }
+    .muted-separator {
+      opacity: 0.7;
+    }
+  }
+  .back-to-top {
+    bottom: 34px;
+  }
+  .bottom-nav {
+    display: none;
+  }
+}
+:root[data-layout='vscode'][data-theme='matrix'] .status-bar {
+  background: #003b12;
+  &,
+  button,
+  span,
+  svg {
+    color: #00ff41 !important;
+  }
+}
+
+.activity-bar {
+  flex: none;
+  width: 48px;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  background: var(--chrome);
+  border-right: 1px solid var(--border);
+  ul {
+    margin: 0;
+    padding: 4px 0;
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+  }
+}
+.activity-item {
+  position: relative;
+  width: 48px;
+  height: 46px;
+  display: grid;
+  place-items: center;
+  border: 0;
+  background: transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+  &::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 6px;
+    bottom: 6px;
+    width: 2px;
+    border-radius: 1px;
+    background: transparent;
+  }
+  &:hover {
+    color: var(--text-strong);
+  }
+  &.active {
+    color: var(--text-strong);
+    &::before {
+      background: var(--accent);
+    }
+  }
+  &:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: -4px;
+  }
+}
+
+// Phones keep the bottom navigation: the activity bar would take too much width.
+@media (max-width: 760px) {
+  :root[data-layout='vscode'] {
+    body {
+      overflow: auto;
+    }
+    #root {
+      height: auto;
+    }
+    .activity-bar,
+    .command-center {
+      display: none;
+    }
+    .bottom-nav {
+      display: flex;
+    }
+    .app-body,
+    .main-content,
+    .sidebar {
+      height: auto;
+      overflow: visible;
+    }
+  }
+}

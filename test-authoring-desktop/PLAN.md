@@ -165,3 +165,10 @@ Legend: `[x]` done · `[ ]` to do. Every feature is committed and pushed when fi
 - [x] Q6 Reload keeps the current page (hash routes)
 - [x] Q7 Graceful shutdown (server closed, recorder stopped) on quit
 - [x] Q8 About dialog with versions (app, Electron, Chromium, Node)
+
+## Layout & presets (2026-10-11)
+- [x] P1 VS Code layout (default) in the web app and desktop app: activity bar, slim title bar with command centre, explorer side bar, full-height editor, accent status bar; Classic tab layout kept in Settings → Appearance → Layout
+- [x] P2 Algorithm presets: Essentials (default), BDD authoring, Combinatorial & logic, Model-based, Regression & CI, Minimal, Everything, Custom
+- [x] P3 Individual algorithm switches only under Custom (Custom starts from the current preset); Turn on buttons switch to Custom
+- [x] P4 Desktop View menu: Layout and Algorithm Preset submenus
+
