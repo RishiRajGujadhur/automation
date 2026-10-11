@@ -265,3 +265,107 @@
     display: none;
   }
 }
+
+/* ------------------------------------------------------------------ density (VS Code layout)
+   VS Code packs views edge to edge: thin borders instead of gutters, 22–35px headers, tight lists. */
+:root[data-layout='vscode'] {
+  .main-content {
+    padding: 8px 10px 10px;
+  }
+  .sidebar {
+    padding: 4px 6px 0;
+    .search-box {
+      margin: 6px 2px 8px;
+    }
+  }
+  .sidebar-bottom {
+    padding: 8px 0 6px;
+  }
+  .index-status {
+    padding: 8px 10px;
+  }
+  .page-heading,
+  .mode-banner {
+    margin-bottom: 8px;
+  }
+  // Grids and stacks
+  .recorder-grid,
+  .builder-grid,
+  .dashboard-grid,
+  .stat-grid,
+  .generator-layout,
+  .design-columns,
+  .test-design,
+  .design-tool {
+    gap: 8px;
+  }
+  .generator-main,
+  .form-stack {
+    gap: 8px;
+  }
+  // Panels: flat, small radius, compact headers
+  .panel {
+    border-radius: 4px;
+    background: var(--surface);
+  }
+  .panel-heading,
+  .card-heading,
+  .collapsible-heading {
+    height: 34px;
+    min-height: 34px;
+    padding: 0 10px;
+  }
+  .design-tool .panel {
+    padding: 10px 12px;
+    gap: 8px;
+  }
+  .wizard-body {
+    padding: 10px 12px;
+  }
+  .collapsible + .collapsible,
+  .panel + .panel {
+    margin-top: 0;
+  }
+  // Recorder
+  .recording-toolbar {
+    padding: 6px 10px;
+    margin-bottom: 8px;
+    border-radius: 4px;
+  }
+  .actions-panel {
+    min-height: 0;
+  }
+  .action-list {
+    padding: 6px;
+    gap: 4px;
+  }
+  .action-card {
+    min-height: 0;
+    padding: 8px 10px;
+    border-radius: 4px;
+    gap: 10px;
+  }
+  .matcher-content,
+  .builder-content {
+    padding: 10px 12px;
+  }
+  // Editor
+  .editor-panel .editor-toolbar,
+  .gherkin-editor .editor-toolbar {
+    min-height: 32px;
+    padding-top: 2px;
+    padding-bottom: 2px;
+  }
+  // Test Design tabs act like a VS Code view container
+  .design-tabs {
+    top: 0;
+  }
+  .design-tab {
+    min-height: 30px;
+    padding: 4px 8px;
+    border-radius: 3px;
+  }
+  .design-intro {
+    margin-bottom: 6px;
+  }
+}

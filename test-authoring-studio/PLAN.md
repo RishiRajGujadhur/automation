@@ -234,3 +234,4 @@ Researched: ISO/IEC/IEEE 29119-4 technique catalogue (classification tree, cause
 - [x] P4 Desktop View menu: Layout and Algorithm Preset submenus
 
 - [x] P5 Activity bar overflow: pages that don't fit the window height move into a ☰ menu (active page stays visible); title-bar breadcrumb truncates instead of overlapping
+- [x] P6 VS Code density: 8px gutters, flat 4px panels, 34px panel headers, compact recorder toolbar/action cards, tighter explorer and Test Design
