@@ -1,6 +1,7 @@
-﻿node_modules/
+node_modules/
 out/
-app/
+studio/
 release/
 test-results/
 build/icon.png
+.cache/

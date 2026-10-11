@@ -4,13 +4,23 @@ import path from 'node:path';
 import { ctx } from './context';
 import { apiCall } from './server';
 import { addRecent, read } from './store';
+import { dataRoot, resourcesRoot } from './paths';
 
 type Config = { repositoryRoot: string; [k: string]: unknown };
 
-export async function currentConfig() {
-  const r = await apiCall<{ config: Config }>(ctx.origin, '/workspace');
-  ctx.repository = r.config.repositoryRoot;
-  return r.config;
+export async function currentConfig(): Promise<Config> {
+  try {
+    const r = await apiCall<{ config: Config }>(ctx.origin, '/workspace');
+    ctx.repository = r.config.repositoryRoot;
+    return r.config;
+  } catch {
+    // GET /workspace scans first; if scanning fails the saved config (or the bundled fixtures) still names the repository.
+    let saved: Config | undefined;
+    try { saved = JSON.parse(fs.readFileSync(path.join(dataRoot(), '.local/workspace.json'), 'utf8')) as Config; } catch { /* first run */ }
+    const config = saved ?? { repositoryRoot: path.join(resourcesRoot(), 'fixtures') };
+    ctx.repository = config.repositoryRoot;
+    return config;
+  }
 }
 
 /** Points the studio at a repository folder (keeps the other scan settings) and reloads the UI. */

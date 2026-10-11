@@ -10,7 +10,11 @@ let userData: string;
 test.beforeAll(async () => {
   // A throwaway profile: window state, workspace and settings never touch the real user-data folder.
   userData = fs.mkdtempSync(path.join(os.tmpdir(), 'tas-desktop-'));
-  appProcess = await electron.launch({ args: ['.', `--user-data-dir=${userData}`], cwd: path.resolve(import.meta.dirname, '..'), env: { ...process.env, TAS_TEST: '1' } });
+  // TAS_EXE=release/win-unpacked/TestAuthoring Studio.exe runs the same checks against a packaged build.
+  const exe = process.env.TAS_EXE;
+  appProcess = exe
+    ? await electron.launch({ executablePath: path.resolve(exe), args: [`--user-data-dir=${userData}`], env: { ...process.env, TAS_TEST: '1' } })
+    : await electron.launch({ args: ['.', `--user-data-dir=${userData}`], cwd: path.resolve(import.meta.dirname, '..'), env: { ...process.env, TAS_TEST: '1' } });
   page = await appProcess.firstWindow();
   await page.waitForURL(/127\.0\.0\.1:\d+\/#\//, { timeout: 30_000 });
 });

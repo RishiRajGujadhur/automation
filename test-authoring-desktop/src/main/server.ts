@@ -36,6 +36,10 @@ export async function startApi(): Promise<{ origin: string; port: number }> {
   process.env.STUDIO_WEB_PORT = String(port); // UI and API share one origin in the desktop app
   process.env.STUDIO_ROOT = resourcesRoot();
   process.env.STUDIO_DATA = dataRoot();
+  // Prefer the bundled self-contained scanner: indexing then works without any .NET install.
+  const rid = process.platform === 'win32' ? 'win-x64' : process.platform === 'darwin' ? 'osx-arm64' : 'linux-x64';
+  const bundled = path.join(resourcesRoot(), 'scanner', rid, process.platform === 'win32' ? 'Scanner.exe' : 'Scanner');
+  if (!process.env.STUDIO_SCANNER_EXE && fs.existsSync(bundled)) process.env.STUDIO_SCANNER_EXE = bundled;
   // The studio looks for a local SDK at <root>/../.tools; in the desktop app <root> moved, so look in the usual places.
   if (!process.env.DOTNET_PATH) {
     const exe = process.platform === 'win32' ? 'dotnet.exe' : 'dotnet';

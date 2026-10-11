@@ -16,7 +16,8 @@
     "typecheck": "tsc --noEmit",
     "test": "node scripts/build.mjs --skip-studio && playwright test",
     "icon": "node scripts/icon.mjs",
-    "dist": "node scripts/build.mjs && electron-builder --win"
+    "dist": "node scripts/icon.mjs && node scripts/build.mjs && electron-builder --win",
+    "pack": "node scripts/icon.mjs && node scripts/build.mjs && electron-builder --win --dir"
   },
   "build": {
     "appId": "dev.testauthoring.studio",
@@ -30,8 +31,8 @@
     ],
     "extraResources": [
       {
-        "from": "app",
-        "to": "app"
+        "from": "studio",
+        "to": "studio"
       }
     ],
     "asar": true,
@@ -47,16 +48,14 @@
       "allowToChangeInstallationDirectory": true
     }
   },
-  "dependencies": {
-    "playwright": "^1.64.0"
-  },
   "devDependencies": {
     "@playwright/test": "^1.64.0",
     "@types/node": "^26.6.5",
     "electron": "^44.7.0",
     "electron-builder": "^26.15.3",
     "esbuild": "^0.28.2",
-    "typescript": "^7.0.2"
+    "typescript": "^7.0.2",
+    "playwright": "^1.64.0"
   },
   "allowScripts": {
     "electron@44.7.0": true,

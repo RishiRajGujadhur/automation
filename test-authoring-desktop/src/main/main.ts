@@ -2,7 +2,7 @@ import { app, BrowserWindow, dialog } from 'electron';
 import fs from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { apiCall, startApi } from './server';
-import { preloadPath } from './paths';
+import { devIcon, preloadPath } from './paths';
 import { initialBounds, trackWindowState } from './windowState';
 import { read, write } from './store';
 import { ctx } from './context';
@@ -40,6 +40,7 @@ function createWindow() {
     show: false,
     backgroundColor: '#0b0e16',
     title: 'TestAuthoring Studio',
+    icon: devIcon() && fs.existsSync(devIcon()!) ? devIcon() : undefined,
     webPreferences: { preload: preloadPath(), contextIsolation: true, sandbox: true, nodeIntegration: false, spellcheck: true },
   });
   ctx.win = win;
