@@ -148,6 +148,23 @@ app.post('/api/steps/scaffold',async(req,res)=>{
   previews.set(id,{file,source:result.source,hash:hash(before),root:config.repositoryRoot});
   res.json({id,file,line:result.line,method:result.method.name,pattern:result.method.pattern,created:!before,changed:true,diff:createPatch(file,before,result.source,'repository','proposed')});
 });
+// Solution Explorer model: projects (.csproj) with their files and package dependencies, plus file nesting
+// (each feature → the step files its steps bind to, and SpecFlow's generated .feature.cs code-behind).
+app.get('/api/solution',async(_req,res)=>{
+  const i=await ensure();const model=await projectModel(config,i);
+  const byId=new Map(i.stepDefinitions.map(b=>[b.id,b]));
+  const all=new Set(model.files.map(x=>x.file));
+  const nesting:Record<string,{file:string;kind:'steps'|'code-behind';steps?:number}[]>={};
+  for(const f of i.features){
+    const counts=new Map<string,number>();
+    for(const block of [...f.backgrounds,...f.scenarios])for(const s of block.steps)for(const id of s.candidates){const b=byId.get(id);if(b)counts.set(b.file,(counts.get(b.file)??0)+1);}
+    const kids:{file:string;kind:'steps'|'code-behind';steps?:number}[]=[...counts].sort((a,b)=>b[1]-a[1]).map(([file,steps])=>({file,kind:'steps',steps}));
+    if(all.has(f.file+'.cs'))kids.unshift({file:f.file+'.cs',kind:'code-behind'});
+    if(kids.length)nesting[f.file]=kids;
+  }
+  const projects=(model.projects.length?model.projects:['.']).map(p=>({file:p,name:path.posix.basename(p).replace(/.csproj$/i,'')||model.root,dir:path.posix.dirname(p)==='.'?'':path.posix.dirname(p)}));
+  res.json({name:model.root,projects,packages:model.packages,frameworks:model.frameworks,files:model.files,nesting,truncated:model.truncated});
+});
 app.get('/api/health',(_req,res)=>res.json({ok:true,scannedAt:index?.scannedAt??null}));
 app.get('/api/project/model',async(_req,res)=>{res.json(await projectModel(config,await ensure()));});
 app.get('/api/project/files',async(req,res)=>{const folder=z.string().default('.').parse(req.query.folder);const dir=await confined(config.repositoryRoot,folder);const entries=await fs.readdir(dir,{withFileTypes:true});const {offset,limit}=paging.parse(req.query);const filtered=entries.filter(e=>!e.isSymbolicLink()&&!e.name.startsWith('.')&&!config.ignoredDirectories.includes(e.name)).sort((a,b)=>Number(b.isDirectory())-Number(a.isDirectory())||a.name.localeCompare(b.name));res.json({folder,items:filtered.slice(offset,offset+limit).map(e=>({name:e.name,file:path.relative(config.repositoryRoot,path.join(dir,e.name)).replaceAll('\\','/'),directory:e.isDirectory()})),total:filtered.length,hasNext:offset+limit<filtered.length});});

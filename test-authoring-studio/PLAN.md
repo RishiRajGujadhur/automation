@@ -247,6 +247,6 @@ Reference: Visual Studio Solution Explorer (Microsoft Learn "Use Solution Explor
 - [x] G3 Recording updates selectors: choose an existing dictionary XML or a new file (same Page → Section → Field → Selector format); new fields only, previewed as a diff before writing
 - [x] G4 Create a step definition for an unbound step: pick an existing step class (default: the feature's associated one) or a new file; the method is appended, previewed, written, then opened at its line
 - [x] G5 C# editor: open .cs files, C# syntax highlighting, Roslyn syntax diagnostics plus binding checks (parameters vs. pattern groups, duplicate patterns), save with diff
-- [ ] G6 Feature ↔ C# association: the step files a feature's steps bind to (plus naming convention); nested under the feature in the explorer; F12 goes to a step's definition
+- [x] G6 Feature ↔ C# association: the step files a feature's steps bind to (plus naming convention); nested under the feature in the explorer; F12 goes to a step's definition
 - [x] G7 Auto save (Settings → Code editor): Off / After delay / On focus change, like VS Code; unsaved buffers are always kept and restored; disk writes refuse files changed outside the studio
-- [ ] G8 Solution Explorer (Visual Studio style): Solution → projects → Dependencies → folders → files with file nesting, toolbar (Sync with active document, pending changes filter, collapse all, show all files), search (Ctrl+;), context menu
+- [x] G8 Solution Explorer (Visual Studio style): Solution → projects → Dependencies → folders → files with file nesting, toolbar (Sync with active document, pending changes filter, collapse all, show all files), search (Ctrl+;), context menu

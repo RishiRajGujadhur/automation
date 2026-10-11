@@ -27,7 +27,7 @@ test('create a step definition for an unbound step, then land on it in the C# ed
 
 test('F12 on a step opens its C# definition; the Step definitions menu lists linked files', async ({ page }) => {
   await page.goto('/#/features/editor');
-  await page.getByRole('button', { name: 'GoogleSearch.feature' }).first().click();
+  await page.getByRole('button', { name: 'GoogleSearch.feature', exact: true }).first().click();
   await page.getByRole('button', { name: 'Step definitions' }).click();
   await expect(page.getByRole('menuitem', { name: /Steps\/SearchSteps.cs \(\d+\)/ })).toBeVisible();
   await page.keyboard.press('Escape');

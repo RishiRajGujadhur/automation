@@ -22,28 +22,31 @@ export type SaveState = 'saved' | 'dirty' | 'saving' | 'conflict' | 'error';
  * - auto save (Settings → Code editor): Off, After delay (ms), or On focus change, written with /api/file/save,
  *   which refuses when the file changed on disk since it was loaded (no silent overwrite).
  */
-export function useAutoSave({ file, value, loaded }: { file?: string; value: string; loaded?: { source: string; hash: string } }) {
+export function useAutoSave({ file, value, loaded }: { file?: string; value: string; loaded?: { file: string; source: string; hash: string } }) {
   const { prefs } = usePrefs();
   const [state, setState] = useState<SaveState>('saved');
   const [error, setError] = useState('');
-  const base = useRef<{ source: string; hash: string }>(undefined);
+  // The on-disk copy the buffer is compared with. It belongs to one file: while switching files the old copy
+  // must never be compared with the new buffer (that would overwrite the new file's kept draft).
+  const base = useRef<{ file: string; source: string; hash: string }>(undefined);
   useEffect(() => { base.current = loaded; setState('saved'); setError(''); }, [loaded]);
-  const dirty = !!loaded && value !== loaded.source && value !== base.current?.source;
+  const current = loaded && loaded.file === file ? loaded : undefined;
+  const dirty = !!current && value !== current.source && value !== base.current?.source;
 
   // Hot exit: mirror unsaved edits into storage; clear when back in sync.
   useEffect(() => {
-    if (!file || !base.current) return;
+    if (!file || !base.current || base.current.file !== file) return;
     writeDraft(file, value !== base.current.source ? value : null);
     window.dispatchEvent(new Event(UNSAVED_EVENT));
     if (value !== base.current.source) setState((s) => (s === 'conflict' ? s : 'dirty'));
   }, [file, value]);
 
   const save = useCallback(async () => {
-    if (!file || !base.current || value === base.current.source) return true;
+    if (!file || !base.current || base.current.file !== file || value === base.current.source) return true;
     setState('saving');
     try {
       const r = await api<{ hash: string }>('/file/save', { file, source: value, baseHash: base.current.hash });
-      base.current = { source: value, hash: r.hash };
+      base.current = { file, source: value, hash: r.hash };
       writeDraft(file, null);
       window.dispatchEvent(new Event(UNSAVED_EVENT));
       setState('saved');
@@ -73,7 +76,7 @@ export function useAutoSave({ file, value, loaded }: { file?: string; value: str
 
   /** Marks the buffer as matching what was just written by another path (e.g. an approved diff). */
   const markSaved = useCallback(async (source: string) => {
-    base.current = { source, hash: await sha256(source) };
+    if (file) base.current = { file, source, hash: await sha256(source) };
     if (file) writeDraft(file, null);
     window.dispatchEvent(new Event(UNSAVED_EVENT));
     setState('saved');

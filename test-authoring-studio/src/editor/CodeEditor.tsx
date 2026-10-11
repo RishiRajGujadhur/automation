@@ -41,7 +41,7 @@ const csharpLinter = (file: string) => linter(async (view) => {
 export default function CodeEditor({ file, line, onNotice, onIndex }: { file: string; line?: number; onNotice?: (m: string) => void; onIndex?: (i: Index) => void }) {
   const theme = useEditorTheme();
   const ref = useRef<ReactCodeMirrorRef>(null);
-  const [loaded, setLoaded] = useState<{ source: string; hash: string }>();
+  const [loaded, setLoaded] = useState<{ file: string; source: string; hash: string }>();
   const [value, setValue] = useState('');
   const [error, setError] = useState('');
   const [restorable, setRestorable] = useState<string | null>(null);
@@ -55,7 +55,7 @@ export default function CodeEditor({ file, line, onNotice, onIndex }: { file: st
     api<{ source: string; hash: string }>(`/source?file=${encodeURIComponent(file)}`)
       .then((r) => {
         if (!live) return;
-        setLoaded(r);
+        setLoaded({ file, ...r });
         const draft = readDraft(file);
         setRestorable(draft !== null && draft !== r.source ? draft : null);
         setValue(r.source);

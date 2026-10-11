@@ -260,9 +260,12 @@
     display: none;
   }
 }
+// Narrow windows: Guide me shrinks to its icon (its text stays the accessible name).
 @media (max-width: 1050px) {
   :root[data-layout='vscode'] .app-header .guide-button {
-    display: none;
+    font-size: 0;
+    gap: 0;
+    padding: 0 6px;
   }
 }
 

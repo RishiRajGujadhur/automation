@@ -42,7 +42,7 @@ test('auto save never overwrites a file changed outside the studio', async ({ pa
 
 test('unsaved edits are kept and offered back (hot exit) when auto save is off', async ({ page }) => {
   await open(page, { autoSave: 'off' });
-  await page.getByRole('button', { name: 'Login.feature' }).first().click();
+  await page.getByRole('button', { name: 'Login.feature', exact: true }).first().click();
   const editor = page.locator('.gherkin-editor .cm-content');
   await editor.click();
   await page.keyboard.press('Control+End');
@@ -50,7 +50,7 @@ test('unsaved edits are kept and offered back (hot exit) when auto save is off',
   await page.waitForTimeout(400);
   page.on('dialog', (d) => d.accept());
   await page.reload();
-  await page.getByRole('button', { name: 'Login.feature' }).first().click();
+  await page.getByRole('button', { name: 'Login.feature', exact: true }).first().click();
   await expect(page.getByText(/Unsaved changes to Features\/Auth\/Login.feature/)).toBeVisible();
   await page.getByRole('button', { name: 'Restore' }).click();
   await expect(editor).toContainText('# kept across sessions');

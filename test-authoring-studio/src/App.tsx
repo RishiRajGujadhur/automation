@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useCallback, useRef } from 'react';
-import FeatureExplorer from './FeatureExplorer';
+import SolutionExplorer from './SolutionExplorer';
 import StudioTour, { type TourDestination } from './StudioTour';
 import { featureDirectory } from './featureTree';
 import Dashboard, { ContextBar } from './Dashboard';
@@ -292,12 +292,12 @@ export default function App() {
   const now = useNow(30000);
   const saveRef = useRef<() => void>(() => {});
   // Feature editor buffer: auto save + hot exit (see editor/autosave.ts). Unsaved = differs from what is on disk.
-  const [featureBase, setFeatureBase] = useState<{ source: string; hash: string }>();
+  const [featureBase, setFeatureBase] = useState<{ file: string; source: string; hash: string }>();
   const [featureRestore, setFeatureRestore] = useState<string | null>(null);
   // Feature ↔ C#: step files this feature binds to (for the editor menu and the explorer's file nesting).
   const [featureLinks, setFeatureLinks] = useState<{ stepFiles: { file: string; steps: number }[]; convention: string; conventionExists: boolean; codeBehind: string | null; stepFolders: string[] }>();
   useEffect(() => { setFeatureLinks(undefined); if (feature?.file) api(`/feature/links?file=${encodeURIComponent(feature.file)}`).then(setFeatureLinks).catch(() => {}); }, [feature?.file, revision]);
-  useEffect(() => { let live = true; setFeatureBase(undefined); if (feature) sha256(feature.source).then((hash) => live && setFeatureBase({ source: feature.source, hash })); return () => { live = false; }; }, [feature]);
+  useEffect(() => { let live = true; setFeatureBase(undefined); if (feature) sha256(feature.source).then((hash) => live && setFeatureBase({ file: feature.file, source: feature.source, hash })); return () => { live = false; }; }, [feature]);
   const featureAuto = useAutoSave({ file: feature?.file, value: source, loaded: featureBase });
   const dirty = feature ? featureAuto.dirty : !!source && source !== '';
   const pageDescription =
@@ -414,10 +414,16 @@ export default function App() {
         e.preventDefault();
         setPrefs({ mode: modeRef.current === 'advanced' ? 'basic' : 'advanced' });
       }
+      // Ctrl+; searches Solution Explorer (Visual Studio); "/" too.
+      if ((e.ctrlKey || e.metaKey) && e.key === ';') {
+        e.preventDefault();
+        setMobileExplorer(true);
+        requestAnimationFrame(() => document.querySelector<HTMLInputElement>('input[aria-label="Search Solution Explorer"]')?.focus());
+      }
       if (!typing && !e.ctrlKey && !e.metaKey && e.key === '/') {
         e.preventDefault();
         setMobileExplorer(true);
-        requestAnimationFrame(() => document.querySelector<HTMLInputElement>('input[aria-label="Search features"]')?.focus());
+        requestAnimationFrame(() => document.querySelector<HTMLInputElement>('input[aria-label="Search Solution Explorer"]')?.focus());
       }
       if ((e.ctrlKey || e.metaKey) && e.key === '.') {
         e.preventDefault();
@@ -808,10 +814,12 @@ export default function App() {
           />
         )}
         <aside id="feature-sidebar" className={`sidebar ${mobileExplorer ? 'mobile-open' : ''}`} style={{ width: sidebarWidth }}>
-          <FeatureExplorer
+          <SolutionExplorer
             key={index?.workspace + ':' + config?.repositoryRoot}
             features={index?.features ?? []}
-            selectedFile={feature?.file}
+            revision={revision}
+            activeFile={tab === 'Features' && view === 'code' ? codeFile?.file : feature?.file}
+            onOpenFile={(file, line) => { editFile(file, line); setMobileExplorer(false); }}
             query={query}
             activeFolder={activeFolder ?? featureDirectory(feature?.file)}
             onQuery={setQuery}
