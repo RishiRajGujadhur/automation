@@ -447,7 +447,9 @@ Dictionary inspector / generator        ─> GET /api/dictionaries  ─┘    co
 | `server/projectModel.ts` | Layer classification, packages, frameworks, indicators |
 | `server/recorder.ts` | Playwright capture, redaction, selector verification |
 | `server/proposals.ts` | C# binding scaffolds and dictionary-backed page objects |
+| `server/debugger.ts`, `server/dap.ts` | Debugger: builds and runs `dotnet test` under netcoredbg (Debug Adapter Protocol); breakpoints, stepping, call stack, locals, watch |
 | `scanner/` | Roslyn static scanner. It never runs MSBuild or project code |
+| `samples/Calculator` | Small runnable SpecFlow project for trying the debugger (`npm run debugger:setup` installs netcoredbg first) |
 | `src/` | React client: `App.tsx` shell, `Dashboard`, `TestGenerator`, `DictionaryInspector`, `SelectorResolution`, `ProjectExplorer`, `Catalogues`, `StepCatalogue`, `SearchPalette`, `RecordingDictionary`, `DiffApproval` |
 | `fixtures/` | Small sample repository (features, steps, hooks, a checkout dictionary, a `.csproj`). It is not executable |
 

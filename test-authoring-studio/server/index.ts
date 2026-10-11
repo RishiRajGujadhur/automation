@@ -23,6 +23,7 @@ import { insertMethod, newStepFile } from './stepScaffold.js';
 import { validate } from './validation.js';
 import { projectModel } from './projectModel.js';
 import { command, dotnet } from './core.js';
+import { Debugger, owningProject } from './debugger.js';
 import type { Index } from '../src/types.js';
 import { readSettings, writeSettings, settingsSchema, tracesDir } from './settings.js';
 import { WorkspaceSearch } from './stepSearch.js';
@@ -415,6 +416,57 @@ app.get('/api/traces', async (_req, res) => {
 app.get('/api/traces/:name', (req, res) => {
   const name = z.string().regex(/^[\w.-]+\.zip$/, 'Invalid trace name').parse(req.params.name);
   res.download(path.join(tracesDir, name), name);
+});
+// Debugger (Visual Studio style): breakpoints in .feature and .cs files, stepping, call stack, locals and watch.
+const debug = new Debugger();
+// Never leave a test host waiting for a debugger when the studio exits or reloads.
+for (const signal of ['SIGINT', 'SIGTERM', 'SIGHUP'] as const) process.once(signal, () => { void debug.stop().finally(() => process.exit(0)); });
+process.once('exit', () => { void debug.stop(); });
+const repoFile = z.string().min(1).max(500).refine((v) => !v.split(/[\\/]/).includes('..'), 'Path cannot contain ..');
+app.get('/api/debug', (_req, res) => res.json(debug.state));
+app.get('/api/debug/events', (req, res) => {
+  res.writeHead(200, { 'Content-Type': 'text/event-stream', 'Cache-Control': 'no-cache', Connection: 'keep-alive' });
+  const send = (s: unknown) => res.write(`data: ${JSON.stringify(s)}\n\n`);
+  send(debug.state);
+  debug.on('state', send);
+  // Heartbeat: the client reconnects when it stops (e.g. a proxy kept a dead connection open).
+  const ping = setInterval(() => res.write('event: ping\ndata: 1\n\n'), 10_000);
+  req.on('close', () => { clearInterval(ping); debug.off('state', send); });
+});
+app.post('/api/debug/breakpoints', async (req, res) => {
+  const { file, lines } = z.object({ file: repoFile, lines: z.array(z.number().int().min(1)).max(500) }).parse(req.body);
+  await confined(config.repositoryRoot, file);
+  res.json(await debug.setBreakpoints(config.repositoryRoot, file.replaceAll('\\', '/'), lines));
+});
+app.post('/api/debug/start', async (req, res) => {
+  const body = z.object({ file: repoFile.optional(), scenario: z.string().max(500).optional(), project: repoFile.optional(), filter: z.string().max(500).optional() }).parse(req.body);
+  const root = config.repositoryRoot;
+  if (body.file && !body.file.endsWith('.feature')) throw new Error('Choose a .feature file to debug.');
+  const project = body.project ?? (body.file ? await owningProject(root, body.file) : undefined) ?? (config.targetProject.endsWith('.csproj') ? config.targetProject : undefined);
+  if (!project?.endsWith('.csproj')) throw new Error('No test project (.csproj) was found for this feature. Set the target project in Workspace settings.');
+  await confined(root, project);
+  const label = body.file ? (body.scenario ? `${body.scenario} — ${body.file}` : body.file) : project;
+  void debug.start({ root, project, filter: body.filter, label, featureFile: body.file, scenario: body.scenario });
+  res.json(debug.state);
+});
+app.post('/api/debug/control', async (req, res) => {
+  const { action } = z.object({ action: z.enum(['continue', 'next', 'stepIn', 'stepOut', 'pause', 'stop']) }).parse(req.body);
+  if (action === 'stop') await debug.stop(); else await debug.control(action);
+  res.json(debug.state);
+});
+app.post('/api/debug/scopes', async (req, res) => {
+  const { frameId } = z.object({ frameId: z.number().int() }).parse(req.body);
+  res.json(await debug.scopes(frameId));
+});
+app.post('/api/debug/variables', async (req, res) => {
+  const { ref } = z.object({ ref: z.number().int().min(1) }).parse(req.body);
+  res.json(await debug.variables(ref));
+});
+app.post('/api/debug/evaluate', async (req, res) => {
+  const { expressions, frameId } = z.object({ expressions: z.array(z.string().min(1).max(500)).max(50), frameId: z.number().int().optional() }).parse(req.body);
+  const results = [];
+  for (const e of expressions) results.push(await debug.evaluate(e, frameId));
+  res.json(results);
 });
 app.use(express.static(path.join(projectRoot, 'dist')));
 app.use(

@@ -108,6 +108,10 @@ import './layout.scss';
 import './theme.scss';
 import './design.scss';
 import './vscode.scss';
+import './debug/debug.scss';
+import DebugPanel from './debug/DebugPanel';
+import { useDebug, startDebugging, debugControl, isLive, getSnapshot, clearBreakpoints } from './debug/store';
+import { Bug } from 'lucide-react';
 
 const demo: Action[] = [
   { id: 'd1', action: 'goto', url: 'https://www.google.com/' },
@@ -146,6 +150,13 @@ const shortcuts: [string, string][] = [
   ['↑ / ↓', 'Move through dictionary fields'],
   ['Right-click empty space', 'Studio menu: Step Catalog, Backgrounds, Selectors, Project Explorer, Config and common actions'],
   ['Right-click a card or row', 'Actions for that item'],
+  ['F12', 'Go to the C# definition of the step under the cursor'],
+  ['F9', 'Toggle a breakpoint on the cursor line (.feature or .cs); or click the left margin'],
+  ['F5', 'Start debugging the open feature / Continue'],
+  ['Shift + F5', 'Stop debugging'],
+  ['Ctrl + Shift + F5', 'Restart debugging'],
+  ['F10 / F11 / Shift + F11', 'Step Over / Step Into / Step Out'],
+  ['Ctrl + Shift + F9', 'Delete all breakpoints'],
 ];
 const headings: Record<string, string> = {
   Dashboard: 'Repository health, classification and entry points.',
@@ -214,6 +225,48 @@ export default function App() {
     } catch (e) { setNotice((e as Error).message); }
   };
   const editFile = (file: string, line?: number) => { setCodeFile({ file, line }); setTab('Features'); setView('code'); setModal(undefined); };
+  // Debugger: the debug windows dock under the editor while a session runs (or when opened).
+  const debug = useDebug();
+  const [debugOpen, setDebugOpen] = useLocalState('debugOpen', false);
+  const debugLive = isLive(debug.state.status);
+  const showDebug = debugOpen || debugLive;
+  const debugFeature = (scenario?: string) => {
+    if (!feature) { setNotice('Open a saved feature file to debug it.'); return; }
+    setDebugOpen(true);
+    startDebugging({ file: feature.file, scenario }).catch((e) => setNotice((e as Error).message));
+  };
+  // Open the file the debugger stopped in (a .feature step or C#), at the stopped line.
+  const openAt = (file: string, line: number) => {
+    if (file.endsWith('.feature')) {
+      setTab('Features'); setView('editor');
+      if (feature?.file !== file) void loadFeature(file);
+    } else editFile(file, line);
+  };
+  const stopKey = debug.state.status === 'paused' ? `${debug.state.version}:${debug.state.frames[debug.frameIndex]?.id}` : '';
+  useEffect(() => {
+    const f = debug.state.status === 'paused' ? debug.state.frames[debug.frameIndex] : undefined;
+    if (f?.file) openAt(f.file, f.line);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [stopKey]);
+  // The editors give up the debug windows' height (vscode.scss reads --debug-h).
+  useEffect(() => { document.documentElement.style.setProperty('--debug-h', showDebug && tab === 'Features' ? '260px' : '0px'); }, [showDebug, tab]);
+  const debugKeys = useRef<(e: KeyboardEvent) => void>(() => {});
+  debugKeys.current = (e) => {
+    const s = getSnapshot().state.status;
+    const act = (a: Parameters<typeof debugControl>[0]) => { e.preventDefault(); debugControl(a).catch((x) => setNotice((x as Error).message)); };
+    if (e.key === 'F5' && e.shiftKey && e.ctrlKey) { e.preventDefault(); menuRef.current('debug', 'restart'); return; }
+    if (e.key === 'F9' && e.shiftKey && e.ctrlKey) { e.preventDefault(); clearBreakpoints(); return; }
+    if (e.key === 'F5' && e.shiftKey && !e.ctrlKey) { if (isLive(s)) act('stop'); else e.preventDefault(); }
+    else if (e.key === 'F5' && !e.ctrlKey) { if (s === 'paused') act('continue'); else if (!isLive(s) && feature && tab === 'Features') { e.preventDefault(); debugFeature(); } }
+    else if (e.key === 'F10' && s === 'paused') act('next');
+    else if (e.key === 'F11' && e.shiftKey && s === 'paused') act('stepOut');
+    else if (e.key === 'F11' && s === 'paused') act('stepIn');
+  };
+  useEffect(() => {
+    const h = (e: KeyboardEvent) => debugKeys.current(e);
+    window.addEventListener('keydown', h);
+    return () => window.removeEventListener('keydown', h);
+  }, []);
   const [generatorSeed, setGeneratorSeed] = useState<GeneratorSeed>();
   const [edges, setEdges] = useState<Index['callEdges']>([]);
   const revision = index?.revision;
@@ -455,6 +508,16 @@ export default function App() {
       // Switching to Custom starts from what the current preset enables.
       if (patch.algorithmPreset === 'custom' && prefs.algorithmPreset !== 'custom') Object.assign(patch, { algorithms: snapshot({ preset: prefs.algorithmPreset, overrides: prefs.algorithms }) });
       if (Object.keys(patch).length) setPrefs(patch as Partial<typeof prefs>);
+      return;
+    }
+    if (c === 'debug' && typeof arg === 'string') {
+      const st = getSnapshot().state.status;
+      if (arg === 'start') { if (st === 'paused') void debugControl('continue').catch((e) => setNotice((e as Error).message)); else if (!isLive(st)) debugFeature(); }
+      else if (arg === 'restart') { const t = getSnapshot().state.target; void (async () => { if (isLive(st)) await debugControl('stop').catch(() => {}); if (t) await startDebugging({ project: t.project, filter: t.filter }).catch((e) => setNotice((e as Error).message)); else debugFeature(); })(); }
+      else if (arg === 'toggleBreakpoint') { const ed = document.querySelector<HTMLElement>('.cm-editor.cm-focused .cm-content') ?? document.querySelector<HTMLElement>('.code-editor .cm-content, .gherkin-editor .cm-content'); ed?.focus(); ed?.dispatchEvent(new KeyboardEvent('keydown', { key: 'F9', bubbles: true, cancelable: true })); }
+      else if (arg === 'deleteAllBreakpoints') clearBreakpoints();
+      else if (arg === 'windows') { setTab('Features'); if (view !== 'code') setView('editor'); setDebugOpen(true); }
+      else if (['stop', 'pause', 'continue', 'next', 'stepIn', 'stepOut'].includes(arg)) void debugControl(arg as Parameters<typeof debugControl>[0]).catch((e) => setNotice((e as Error).message));
       return;
     }
     if (c === 'diagnostics') { setModal('diagnostics'); return; }
@@ -1310,6 +1373,19 @@ export default function App() {
                 </div>
                 {feature && (
                   <Dropdown
+                    label="Debug"
+                    align="end"
+                    trigger={<Button size="tiny" variant="ghost" aria-label="Debug" disabled={debugLive}><Bug size={13} />Debug</Button>}
+                    entries={[
+                      { label: 'Start Debugging (F5)', icon: Bug, onSelect: () => debugFeature() },
+                      ...feature.scenarios.map((sc) => ({ label: `Debug scenario: ${sc.name}`, onSelect: () => debugFeature(sc.name) })),
+                      'separator' as const,
+                      { label: showDebug ? 'Hide debug windows' : 'Show debug windows', onSelect: () => setDebugOpen(!debugOpen) },
+                    ]}
+                  />
+                )}
+                {feature && (
+                  <Dropdown
                     label="Step definitions"
                     align="end"
                     trigger={<Button size="tiny" variant="ghost" aria-label="Step definitions"><Braces size={13} />Step definitions</Button>}
@@ -1343,8 +1419,9 @@ export default function App() {
                 </div>
               )}
               <GherkinEditor
+                file={feature?.file}
                 onDefinition={(s) => goToDefinition(s.keyword, s.text)}
-                height={vscode ? 'calc(100dvh - 205px)' : undefined}
+                height={vscode ? 'calc(100dvh - 205px - var(--debug-h, 0px))' : undefined}
                 value={source}
                 onChange={setSource}
                 onNotice={setNotice}
@@ -1401,6 +1478,9 @@ export default function App() {
                 </Button>
               </div>
             </section>
+          )}
+          {tab === 'Features' && (view === 'code' || view === 'editor') && showDebug && (
+            <DebugPanel onOpen={openAt} onNotice={setNotice} onClose={() => { setDebugOpen(false); if (debugLive) setNotice('The session keeps running. Stop it with Shift+F5.'); }} />
           )}
           {tab === 'Features' && view === 'builder' && (
             <div className="builder-grid">

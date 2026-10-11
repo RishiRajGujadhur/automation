@@ -250,3 +250,12 @@ Reference: Visual Studio Solution Explorer (Microsoft Learn "Use Solution Explor
 - [x] G6 Feature ↔ C# association: the step files a feature's steps bind to (plus naming convention); nested under the feature in the explorer; F12 goes to a step's definition
 - [x] G7 Auto save (Settings → Code editor): Off / After delay / On focus change, like VS Code; unsaved buffers are always kept and restored; disk writes refuse files changed outside the studio
 - [x] G8 Solution Explorer (Visual Studio style): Solution → projects → Dependencies → folders → files with file nesting, toolbar (Sync with active document, pending changes filter, collapse all, show all files), search (Ctrl+;), context menu
+
+## Debugger (2026-10-11)
+Reference: Visual Studio debugger (breakpoints, Step Into/Over/Out, Locals, Watch, Call Stack). Engine: netcoredbg (Samsung, MIT) over the Debug Adapter Protocol; `dotnet test` runs with VSTEST_HOST_DEBUG and the debugger attaches to the test host. SpecFlow/Reqnroll code-behind carries `#line` directives, so .feature lines are real breakpoint locations.
+- [x] H1 Breakpoints in .feature and .cs editors: click the left margin or F9; red dots follow edits; kept per browser and sent to the live session; Breakpoints window (go to, delete, delete all)
+- [x] H2 Start Debugging (F5, or Debug ▸ feature / one scenario): builds the owning .csproj, filters to the feature's generated test class (or the scenario's method), attaches, stops at breakpoints
+- [x] H3 Stepping like Visual Studio: Continue (F5), Step Over (F10), Step Into (F11, from a Gherkin step into its C# step definition), Step Out (Shift+F11), Break All, Stop (Shift+F5), Restart (Ctrl+Shift+F5); next-statement arrow and line; the stopped file opens automatically
+- [x] H4 Locals (expandable), Watch 1 (add/remove expressions, kept per browser, re-evaluated per frame), Call Stack (switch frames; framework frames collapse to [External Code]), Output, DataTips on hover while paused
+- [x] H5 Runnable sample `samples/Calculator` (SpecFlow + NUnit, no browser) and `npm run debugger:setup` to install netcoredbg; desktop app bundles it
+- [x] Bug: the code editor's toolbar (save state, Revert, Save…) was hidden behind the title bar (inherited the feature editor's floating-toolbar position)

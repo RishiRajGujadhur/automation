@@ -10,7 +10,8 @@
     "test": "vitest run",
     "test:e2e": "playwright test",
     "cli": "tsx server/cli.ts",
-    "scanner:build": "node scripts/build-scanner.mjs"
+    "scanner:build": "node scripts/build-scanner.mjs",
+    "debugger:setup": "node scripts/setup-debugger.mjs"
   },
   "keywords": [],
   "author": "",

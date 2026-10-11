@@ -3,7 +3,7 @@
  * (../test-authoring-desktop exposes `window.desktop` from its preload script). In a browser every
  * helper here is a no-op, so call sites never need to branch on more than `desktop`.
  */
-export type DesktopMenuCommand = 'palette' | 'preferences' | 'shortcuts' | 'workspace-settings' | 'new-feature' | 'record' | 'tour' | 'toggle-mode' | 'toggle-explorer' | 'focus-mode' | 'repository-changed' | 'set-pref' | 'diagnostics' | 'run-tests' | 'continue-draft' | 'design-tool';
+export type DesktopMenuCommand = 'palette' | 'preferences' | 'shortcuts' | 'workspace-settings' | 'new-feature' | 'record' | 'tour' | 'toggle-mode' | 'toggle-explorer' | 'focus-mode' | 'repository-changed' | 'set-pref' | 'diagnostics' | 'run-tests' | 'continue-draft' | 'design-tool' | 'debug';
 type DesktopBridge = {
   platform: string;
   versions: Record<string, string>;

@@ -77,7 +77,7 @@ export function buildMenu() {
         { label: 'New Feature', accelerator: 'CmdOrCtrl+N', click: () => send('new-feature') },
         { label: 'Start a Recording', accelerator: 'CmdOrCtrl+Shift+R', click: () => send('record') },
         { label: 'Run Tests…', click: () => send('run-tests') },
-        { label: 'Rescan Repository', accelerator: 'F5', click: () => rescan() },
+        { label: 'Rescan Repository', accelerator: 'CmdOrCtrl+Alt+R', click: () => rescan() },
         { type: 'separator' },
         {
           label: 'Repository',
@@ -156,12 +156,35 @@ export function buildMenu() {
             { type: 'separator' as const }, { role: 'resetZoom' as const }, { role: 'zoomIn' as const }, { role: 'zoomIn' as const, accelerator: 'CmdOrCtrl+=', visible: false }, { role: 'zoomOut' as const },
           ],
         },
-        { role: 'togglefullscreen' },
+        // F11 is Step Into (Visual Studio); full screen uses Visual Studio's Shift+Alt+Enter.
+        { role: 'togglefullscreen', accelerator: 'Shift+Alt+Enter' },
         toggle('Always on Top', 'alwaysOnTop', (v) => ctx.win?.setAlwaysOnTop(v)),
         toggle('Auto-hide Menu Bar', 'autoHideMenu', (v) => { ctx.win?.setAutoHideMenuBar(v); ctx.win?.setMenuBarVisibility(!v); }),
         { label: 'Auto-rescan When Files Change', type: 'checkbox', checked: autoRescanEnabled(), click: (item) => setAutoRescan(item.checked) },
         { type: 'separator' },
         { role: 'reload' }, { role: 'forceReload' }, { role: 'toggleDevTools' },
+      ],
+    },
+    {
+      // Visual Studio's Debug menu. The page handles the keys itself (the editor needs F9 at the cursor), so the
+      // accelerators are shown but not registered here.
+      label: '&Debug',
+      submenu: [
+        ...([
+          ['Start Debugging / Continue', 'F5', 'start'],
+          ['Stop Debugging', 'Shift+F5', 'stop'],
+          ['Restart', 'CmdOrCtrl+Shift+F5', 'restart'],
+          ['Break All', 'CmdOrCtrl+Alt+Pause', 'pause'],
+          null,
+          ['Step Into', 'F11', 'stepIn'],
+          ['Step Over', 'F10', 'next'],
+          ['Step Out', 'Shift+F11', 'stepOut'],
+          null,
+          ['Toggle Breakpoint', 'F9', 'toggleBreakpoint'],
+          ['Delete All Breakpoints', 'CmdOrCtrl+Shift+F9', 'deleteAllBreakpoints'],
+          null,
+          ['Windows (Locals, Watch, Call Stack)', undefined, 'windows'],
+        ] as const).map((row): MenuItemConstructorOptions => (row ? { label: row[0], accelerator: row[1], registerAccelerator: false, click: () => send('debug', row[2]) } : { type: 'separator' })),
       ],
     },
     {
@@ -250,8 +273,8 @@ export function navigateForward() { const h = ctx.win?.webContents.navigationHis
 function desktopShortcuts() {
   const rows = [
     ['Ctrl+Shift+O', 'Open repository'], ['Ctrl+Shift+T', 'Reopen last closed repository'], ['Ctrl+N', 'New feature'], ['Ctrl+Shift+R', 'Start a recording'],
-    ['F5', 'Rescan repository'], ['Ctrl+,', 'Preferences'], ['Ctrl+Shift+P', 'Command palette'], ['Ctrl+L', 'Copy link to this page'], ['Ctrl+Shift+V', 'Paste as plain text'],
-    ['Alt+1…5', 'Pages'], ['Alt+← / Alt+→', 'Back / forward (also mouse buttons)'], ['Ctrl+Shift+N', 'New window'], ['Ctrl + / − / 0', 'Zoom'], ['F11', 'Full screen (Esc leaves)'],
+    ['F5 / F10 / F11', 'Debug: continue / step over / step into'], ['Ctrl+Alt+R', 'Rescan repository'], ['Ctrl+,', 'Preferences'], ['Ctrl+Shift+P', 'Command palette'], ['Ctrl+L', 'Copy link to this page'], ['Ctrl+Shift+V', 'Paste as plain text'],
+    ['Alt+1…5', 'Pages'], ['Alt+← / Alt+→', 'Back / forward (also mouse buttons)'], ['Ctrl+Shift+N', 'New window'], ['Ctrl + / − / 0', 'Zoom'], ['Shift+Alt+Enter', 'Full screen (Esc leaves)'],
     ['Ctrl+Alt+T', 'Show/hide the app (when enabled)'], ['F1', 'Studio shortcuts'],
   ];
   if (ctx.win) dialog.showMessageBox(ctx.win, { type: 'info', title: 'Desktop shortcuts', message: 'Desktop shortcuts', detail: rows.map(([k, d]) => `${k.padEnd(18)} ${d}`).join('\n') });

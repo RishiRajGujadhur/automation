@@ -9,6 +9,7 @@ import { Play, Save, Check, Wand2, Copy, Scissors, ClipboardPaste, MessageSquare
 import { gherkinExtensions, formatGherkin } from './gherkin';
 import { RowMenu } from '../ui';
 import { labelled } from './a11y';
+import { breakpoints } from './breakpoints';
 
 export type Problems = { errors: number; warnings: number };
 
@@ -17,7 +18,7 @@ export type Problems = { errors: number; warnings: number };
  * right-click menu with Run tests / Preview changes. The menu replaces the browser menu inside the
  * editor, so clipboard actions are included.
  */
-export default function GherkinEditor({ value, onChange, onPreview, onRun, onValidate, height = '470px', onNotice, onDefinition }: { onDefinition?: (step: { keyword: string; text: string; line: number }) => void; value: string; onChange: (v: string) => void; onPreview: () => void; onRun: () => void; onValidate: () => void; height?: string; onNotice?: (m: string) => void }) {
+export default function GherkinEditor({ file, value, onChange, onPreview, onRun, onValidate, height = '470px', onNotice, onDefinition }: { file?: string; onDefinition?: (step: { keyword: string; text: string; line: number }) => void; value: string; onChange: (v: string) => void; onPreview: () => void; onRun: () => void; onValidate: () => void; height?: string; onNotice?: (m: string) => void }) {
   const editorTheme = useEditorTheme();
   const ref = useRef<ReactCodeMirrorRef>(null);
   const [problems, setProblems] = useState<Problems>({ errors: 0, warnings: 0 });
@@ -45,7 +46,7 @@ export default function GherkinEditor({ value, onChange, onPreview, onRun, onVal
   });
   const handlers = useRef<{ onPreview: () => void; onValidate: () => void; onDefinition?: (s: { keyword: string; text: string; line: number }) => void }>({ onPreview, onValidate, onDefinition });
   handlers.current = { onPreview, onValidate, onDefinition };
-  const extensions = useMemo(() => [...gherkinExtensions({ onSave: () => handlers.current.onPreview(), onValidate: () => handlers.current.onValidate(), onDefinition: (s) => handlers.current.onDefinition?.(s) }), lintGutter(), labelled('Gherkin source')], []);
+  const extensions = useMemo(() => [...gherkinExtensions({ onSave: () => handlers.current.onPreview(), onValidate: () => handlers.current.onValidate(), onDefinition: (s) => handlers.current.onDefinition?.(s) }), lintGutter(), labelled('Gherkin source'), ...(file ? [breakpoints(file)] : [])], [file]);
   const view = () => ref.current?.view;
   const withView = (fn: (v: NonNullable<ReturnType<typeof view>>) => void) => () => { const v = view(); if (v) { fn(v); v.focus(); } };
   const selection = () => { const v = view(); if (!v) return ''; const r = v.state.selection.main; return v.state.sliceDoc(r.from, r.to); };

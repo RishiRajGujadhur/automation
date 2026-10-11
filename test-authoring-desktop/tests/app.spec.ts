@@ -8,6 +8,11 @@ import { createRequire } from 'node:module';
 // The Electron binary for the dev build, or the packaged exe.
 const electronPath: string = process.env.TAS_EXE ? path.resolve(process.env.TAS_EXE) : (createRequire(import.meta.url)('electron') as unknown as string);
 
+// The debugger test builds a .NET project: use the repository's local SDK when there is one (a packaged copy
+// outside the repository cannot find it on its own).
+const localSdk = path.resolve(import.meta.dirname, '../../.tools/dotnet', process.platform === 'win32' ? 'dotnet.exe' : 'dotnet');
+if (!process.env.DOTNET_PATH && fs.existsSync(localSdk)) process.env.DOTNET_PATH = localSdk;
+
 let appProcess: ElectronApplication;
 let page: Page;
 let userData: string;
@@ -115,4 +120,31 @@ test('stores state in the user-data folder, not the app folder', async () => {
 test('C# diagnostics run on the bundled self-contained scanner', async () => {
   const items = await page.evaluate(() => fetch('/api/csharp/diagnostics', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ source: 'class A { void B() { x } }', path: 'A.cs' }) }).then((r) => r.json()));
   expect(items.some((d: { severity: string }) => d.severity === 'error')).toBe(true);
+});
+
+test('debugs a feature with the bundled netcoredbg: .feature breakpoint, step into C#, watch, run to the end', async () => {
+  test.setTimeout(300_000);
+  const repo = fs.mkdtempSync(path.join(os.tmpdir(), 'tas-debug-'));
+  fs.cpSync(path.resolve(import.meta.dirname, '../../test-authoring-studio/samples/Calculator'), repo, { recursive: true, filter: (s) => !/[\\/](bin|obj)$/.test(s) });
+  const call = (url: string, body?: unknown) => page.evaluate(({ url, body }) => fetch(url, body === undefined ? undefined : { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) }).then((r) => r.json()), { url, body });
+  const state = () => call('/api/debug') as Promise<{ status: string; reason?: string; error?: string; output: string; frames: { id: number; file?: string; line: number }[] }>;
+  const until = async (status: string, timeout = 60_000) => { await expect.poll(async () => { const s = await state(); return s.status === 'ended' && status !== 'ended' ? `ended: ${s.error ?? s.output.slice(-500)}` : s.status; }, { timeout, intervals: [500] }).toBe(status); return state(); };
+  try {
+    await call('/api/workspace', { repositoryRoot: repo, targetProject: '.' });
+    await call('/api/debug/breakpoints', { file: 'Features/Add.feature', lines: [6] });
+    await call('/api/debug/start', { file: 'Features/Add.feature' });
+    let s = await until('paused', 240_000);
+    expect(s.frames[0]).toMatchObject({ file: 'Features/Add.feature', line: 6 });
+    await call('/api/debug/control', { action: 'stepIn' });
+    s = await until('paused');
+    expect(s.frames[0].file).toBe('Steps/CalculatorSteps.cs');
+    const [watch] = await call('/api/debug/evaluate', { expressions: ['calculator.First + calculator.Second'], frameId: s.frames[0].id });
+    expect(watch.result).toBe('120');
+    await call('/api/debug/control', { action: 'continue' });
+    s = await until('ended');
+    expect(s.reason).toBe('Tests passed');
+  } finally {
+    await call('/api/debug/control', { action: 'stop' }).catch(() => {});
+    fs.rmSync(repo, { recursive: true, force: true, maxRetries: 5 });
+  }
 });

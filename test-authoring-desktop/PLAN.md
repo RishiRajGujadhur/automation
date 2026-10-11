@@ -175,3 +175,8 @@ Legend: `[x]` done · `[ ]` to do. Every feature is committed and pushed when fi
 - [x] Bug: installed app failed with "Cannot find package 'playwright'" — electron-builder dropped studio/node_modules from extra resources; now copied explicitly, and `npm run test:packaged` tests a copy outside the project
 - [x] Bug: window title doubled the app name on the loading/failure page
 - [x] Bug: SPRT called always-failing tests flaky; now "failing"
+
+## Debugger (2026-10-11)
+- [x] D1 Debug menu like Visual Studio (Start Debugging / Continue F5, Stop Shift+F5, Restart, Break All, Step Into F11, Step Over F10, Step Out Shift+F11, Toggle Breakpoint F9, Delete All Breakpoints, Windows)
+- [x] D2 Rescan Repository moves from F5 to Ctrl+Alt+R and Full Screen from F11 to Shift+Alt+Enter (Visual Studio keys) so the debug keys reach the editor
+- [x] D3 netcoredbg bundled in the installer (STUDIO_NETCOREDBG); packaged test debugs the Calculator sample

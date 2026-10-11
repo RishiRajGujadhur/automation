@@ -12,6 +12,7 @@ import { useEditorTheme } from '../themes';
 import { labelled } from './a11y';
 import { readDraft, useAutoSave } from './autosave';
 import { xmlExtensions } from './xml';
+import { breakpoints } from './breakpoints';
 import type { Index } from '../types';
 
 type CsDiagnostic = { line: number; column: number; endLine: number; endColumn: number; severity: 'error' | 'warning'; id: string; message: string };
@@ -81,7 +82,7 @@ export default function CodeEditor({ file, line, onNotice, onIndex }: { file: st
   const saveRef = useRef<() => void>(() => {});
   saveRef.current = () => { if (useDiffOnSave()) previewSave(); else auto.save().then((ok) => onNotice?.(ok ? `${file} saved.` : 'Not saved: see the editor status.')); };
   const extensions = useMemo(() => [
-    ...(isCs ? [StreamLanguage.define(csharp), csharpLinter(file)] : xmlExtensions(false)),
+    ...(isCs ? [breakpoints(file), StreamLanguage.define(csharp), csharpLinter(file)] : xmlExtensions(false)),
     lintGutter(),
     labelled(`Source of ${file}`, false),
     keymap.of([{ key: 'Mod-s', preventDefault: true, run: () => { saveRef.current(); return true; } }]),

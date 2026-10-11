@@ -47,6 +47,8 @@ export async function startApi(): Promise<{ origin: string; port: number }> {
   const rid = process.platform === 'win32' ? 'win-x64' : process.platform === 'darwin' ? 'osx-arm64' : 'linux-x64';
   const bundled = path.join(resourcesRoot(), 'scanner', rid, process.platform === 'win32' ? 'Scanner.exe' : 'Scanner');
   if (!process.env.STUDIO_SCANNER_EXE && fs.existsSync(bundled)) process.env.STUDIO_SCANNER_EXE = bundled;
+  const debuggerExe = path.join(resourcesRoot(), 'netcoredbg', process.platform === 'win32' ? 'netcoredbg.exe' : 'netcoredbg');
+  if (!process.env.STUDIO_NETCOREDBG && fs.existsSync(debuggerExe)) process.env.STUDIO_NETCOREDBG = debuggerExe;
   // The studio looks for a local SDK at <root>/../.tools; in the desktop app <root> moved, so look in the usual places.
   if (!process.env.DOTNET_PATH) {
     const exe = process.platform === 'win32' ? 'dotnet.exe' : 'dotnet';

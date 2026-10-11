@@ -63,6 +63,14 @@ if (!existsSync(path.join(scannerOut, exeName)) || process.argv.includes('--scan
   }
 }
 if (existsSync(path.join(scannerOut, exeName))) cpSync(scannerOut, path.join(app, 'scanner', rid), { recursive: true });
+// netcoredbg for the Debug windows (breakpoints, stepping, watch). Cached between builds.
+const debuggerOut = path.join(root, '.cache/netcoredbg', rid);
+try {
+  execSync(`node "${path.join(studio, 'scripts/setup-debugger.mjs')}" "${debuggerOut}"`, { stdio: 'inherit' });
+  cpSync(debuggerOut, path.join(app, 'netcoredbg'), { recursive: true });
+} catch {
+  console.warn('  netcoredbg download failed; debugging will need netcoredbg on PATH.');
+}
 const scanner = path.join(studio, 'scanner/bin/Release');
 if (!existsSync(path.join(scannerOut, exeName)) && existsSync(scanner)) cpSync(scanner, path.join(app, 'scanner/bin/Release'), { recursive: true });
 // The API bundle sits outside app.asar (worker threads and the scanner need real files), so modules it keeps
