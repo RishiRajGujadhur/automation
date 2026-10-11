@@ -15,6 +15,8 @@ import EditorTabs, { EditorActions } from './files/EditorTabs';
 import OpenSolution from './OpenSolution';
 import BuildPanel from './build/BuildPanel';
 import TestExplorer from './testing/TestExplorer';
+import SearchView from './search/SearchView';
+import GoToAll from './search/GoToAll';
 import { runTests, getTestRun, type DiscoveredTest } from './testing/store';
 import { useBuild, startBuild, cancelBuild, getBuild } from './build/store';
 import { useTabs, openTab, closeTab, closeAll as closeAllTabs, kindOf, cycleTab, getTabs, reloadTabs, movedPath, deletedPath } from './files/tabs';
@@ -290,6 +292,9 @@ export default function App() {
   editorKeys.current = (e) => {
     if (!(e.ctrlKey || e.metaKey)) return;
     if (!desktop && e.shiftKey && !e.altKey && e.key.toLowerCase() === 'o') { e.preventDefault(); setModal('solution'); return; }
+    if (e.shiftKey && !e.altKey && e.key.toLowerCase() === 'f') { e.preventDefault(); showSearch(false); return; }
+    if (e.shiftKey && !e.altKey && e.key.toLowerCase() === 'h') { e.preventDefault(); showSearch(true); return; }
+    if (!e.shiftKey && !e.altKey && (e.key.toLowerCase() === 't' || e.key.toLowerCase() === 'p')) { e.preventDefault(); setModal('goto'); return; }
     if (e.shiftKey && !e.altKey && e.key.toLowerCase() === 'b') { e.preventDefault(); if (getBuild().status !== 'running') runBuild('build'); return; }
     if (e.key === 'Pause' || e.key === 'Cancel') { if (getBuild().status === 'running') { e.preventDefault(); void cancelBuild(); } return; }
     const active = getTabs().active;
@@ -336,7 +341,10 @@ export default function App() {
   const [buildOpen, setBuildOpen] = useLocalState('buildOpen', false);
   const showBuild = buildOpen || build.status === 'running';
   // Side bar view: the Explorer or the Test Explorer (activity bar, Test menu).
-  const [sidebarView, setSidebarView] = useLocalState<'explorer' | 'tests'>('sidebarView', 'explorer');
+  const [sidebarView, setSidebarView] = useLocalState<'explorer' | 'tests' | 'search'>('sidebarView', 'explorer');
+  // Find in Files (Ctrl+Shift+F) / Replace in Files (Ctrl+Shift+H): the Search view; the key re-focuses it.
+  const [searchKey, setSearchKey] = useState({ n: 0, replace: false });
+  const showSearch = (replace = false) => { setTab('Features'); if (view !== 'code' && view !== 'editor') setView('editor'); setSidebarView('search'); setPrefs({ sidebar: true }); setSearchKey((k) => ({ n: k.n + 1, replace })); };
   const showTests = () => { setTab('Features'); if (view !== 'code' && view !== 'editor') setView('editor'); setSidebarView('tests'); setPrefs({ sidebar: true }); };
   const debugTest = (t: DiscoveredTest) => {
     setDebugOpen(true);
@@ -663,6 +671,9 @@ export default function App() {
     if (c === 'build' || c === 'rebuild' || c === 'clean') { runBuild(c); return; }
     if (c === 'cancel-build') { void cancelBuild(); return; }
     if (c === 'test-explorer') { showTests(); return; }
+    if (c === 'find-in-files') { showSearch(false); return; }
+    if (c === 'replace-in-files') { showSearch(true); return; }
+    if (c === 'go-to-all') { setModal('goto'); return; }
     if (c === 'run-all-tests') { showTests(); runTests('all').catch((e) => setNotice((e as Error).message)); return; }
     if (c === 'build-windows') { setTab('Features'); if (view !== 'code' && view !== 'editor') setView('editor'); setBuildOpen(true); return; }
     if (c === 'save') { if (featureTabActive) saveFeature(); else saveAll(); return; }
@@ -916,6 +927,19 @@ export default function App() {
         )}
         {!desktop && (
           <Dropdown
+            label="Edit"
+            className="menubar"
+            trigger={<button className="menubar-item" aria-label="Edit menu">Edit</button>}
+            entries={[
+              { label: 'Go to All…', icon: Search, shortcut: 'Ctrl T', onSelect: () => setModal('goto') },
+              'separator' as const,
+              { label: 'Find in Files', icon: Search, shortcut: 'Ctrl Shift F', onSelect: () => showSearch(false) },
+              { label: 'Replace in Files', shortcut: 'Ctrl Shift H', onSelect: () => showSearch(true) },
+            ]}
+          />
+        )}
+        {!desktop && (
+          <Dropdown
             label="Build"
             className="menubar"
             trigger={<button className="menubar-item" aria-label="Build menu">Build</button>}
@@ -1061,10 +1085,10 @@ export default function App() {
       <div className="app-body">
         {vscode && (
           <ActivityBar
-            active={tab === 'Features' && view === 'recorder' ? 'Recorder' : tab === 'Features' && sidebarView === 'tests' ? 'Testing' : tab}
+            active={tab === 'Features' && view === 'recorder' ? 'Recorder' : tab === 'Features' && sidebarView === 'tests' ? 'Testing' : tab === 'Features' && sidebarView === 'search' ? 'Search' : tab}
             basic={basic}
             sidebarOpen={prefs.sidebar}
-            onSelect={(id) => withTransition(() => { if (id === 'Testing') { showTests(); return; } if (id === 'Features') setSidebarView('explorer'); if (id === 'Recorder') { setTab('Features'); setView('recorder'); } else { setTab(id); if (id === 'Features' && view === 'recorder') setView('editor'); if (id === 'Features') setPrefs({ sidebar: true }); } setCatalogQuery(''); })}
+            onSelect={(id) => withTransition(() => { if (id === 'Testing') { showTests(); return; } if (id === 'Search') { showSearch(); return; } if (id === 'Features') setSidebarView('explorer'); if (id === 'Recorder') { setTab('Features'); setView('recorder'); } else { setTab(id); if (id === 'Features' && view === 'recorder') setView('editor'); if (id === 'Features') setPrefs({ sidebar: true }); } setCatalogQuery(''); })}
             onToggleSidebar={() => setPrefs({ sidebar: !prefs.sidebar })}
             onPreferences={() => setModal('preferences')}
             onWorkspace={() => setModal('settings')}
@@ -1079,7 +1103,9 @@ export default function App() {
           />
         )}
         <aside id="feature-sidebar" className={`sidebar ${mobileExplorer ? 'mobile-open' : ''}`} style={{ width: sidebarWidth }}>
-          {tab === 'Features' && sidebarView === 'tests' ? (
+          {tab === 'Features' && sidebarView === 'search' ? (
+            <SearchView key={searchKey.n} initialReplace={searchKey.replace} onOpen={(file, line, column) => editFile(file, line, column)} onNotice={setNotice} onChanged={() => { api('/scan', {}).then(setIndex, () => {}); }} />
+          ) : tab === 'Features' && sidebarView === 'tests' ? (
             <TestExplorer revision={revision} onOpen={(file, line) => editFile(file, line)} onDebug={debugTest} onNotice={setNotice} />
           ) : <SolutionExplorer
             key={index?.workspace + ':' + config?.repositoryRoot}
@@ -1943,6 +1969,7 @@ export default function App() {
                     {
                       settings: 'Workspace settings',
                       solution: 'Open Project/Solution',
+                      goto: 'Go to All',
                       record: 'Record a browser workflow',
                       new: 'Create a feature',
                       parameters: 'Configure step parameters',
@@ -1963,6 +1990,9 @@ export default function App() {
                 </Dialog.Close>
               </div>
               <div className={modal === 'preferences' ? 'settings-body' : 'modal-body'}>
+                {modal === 'goto' && (
+                  <GoToAll features={index?.features ?? []} onOpen={(file, line, column) => editFile(file, line, column)} onClose={() => setModal(undefined)} />
+                )}
                 {modal === 'solution' && (
                   <OpenSolution root={config?.repositoryRoot} onOpened={async (r) => {
                     await leaveBrowserFolder();

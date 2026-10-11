@@ -60,6 +60,7 @@ sealed class LanguageService
         if (workspace == null) throw new InvalidOperationException("Not initialised.");
         if (op == "update") { foreach (var f in req["files"]!.AsArray()) Refresh((string)f!); return true; }
         if (op == "tests") return await DiscoverTests();
+        if (op == "symbols") return await Symbols((string)req["query"]!);
         var doc = Document((string)req["file"]!, (string?)req["source"]);
         int Pos(SourceText t) => t.Lines[Math.Clamp((int)req["line"]! - 1, 0, t.Lines.Count - 1)].Start + (int)req["column"]! - 1;
         var text = await doc.GetTextAsync();
@@ -388,6 +389,32 @@ sealed class LanguageService
         workspace.TryApplyChanges(changed);
         actions.Clear();
         return new { title = action.Title, changes };
+    }
+
+    /// <summary>Go to All (Ctrl+T): types and members declared in the solution, matched like Visual Studio (CamelHumps, substrings).</summary>
+    async Task<object> Symbols(string query)
+    {
+        var found = await SymbolFinder.FindSourceDeclarationsWithPatternAsync(workspace!.CurrentSolution, query, SymbolFilter.TypeAndMember);
+        return found
+            .Where(s => s.Locations.Any(InRepo) && !s.IsImplicitlyDeclared && s is not IMethodSymbol { MethodKind: not (MethodKind.Ordinary or MethodKind.Constructor) })
+            .Select(s => (Symbol: s, Loc: s.Locations.First(InRepo)))
+            .OrderBy(x => x.Symbol.Name.Equals(query, StringComparison.OrdinalIgnoreCase) ? 0 : x.Symbol.Name.StartsWith(query, StringComparison.OrdinalIgnoreCase) ? 1 : 2)
+            .ThenBy(x => x.Symbol.Name.Length)
+            .Take(100)
+            .Select(x =>
+            {
+                var span = x.Loc.GetLineSpan();
+                return new
+                {
+                    name = x.Symbol.Name,
+                    kind = x.Symbol is INamedTypeSymbol t ? t.TypeKind.ToString() : x.Symbol.Kind.ToString(),
+                    container = x.Symbol.ContainingType?.ToDisplayString() ?? x.Symbol.ContainingNamespace?.ToDisplayString(),
+                    file = Rel(span.Path),
+                    line = span.StartLinePosition.Line + 1,
+                    column = span.StartLinePosition.Character + 1,
+                };
+            })
+            .ToList();
     }
 
     // ------------------------------------------------------------------ test discovery

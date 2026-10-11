@@ -39,7 +39,8 @@ export default function GherkinEditor({ file, onSave, value, onChange, onPreview
     const sync = () => { if (!document.fullscreenElement && full) setFull(false); };
     document.addEventListener('fullscreenchange', sync);
     const esc = (e: KeyboardEvent) => { if (e.key === 'Escape' && full && !document.fullscreenElement) setFull(false); };
-    const key = (e: KeyboardEvent) => { if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key.toLowerCase() === 'f') { e.preventDefault(); void toggleFull(); } };
+    // Shift+Alt+Enter (Visual Studio's full screen); Ctrl+Shift+F is Find in Files.
+    const key = (e: KeyboardEvent) => { if (e.shiftKey && e.altKey && e.key === 'Enter') { e.preventDefault(); void toggleFull(); } };
     window.addEventListener('keydown', esc);
     window.addEventListener('keydown', key);
     return () => { document.removeEventListener('fullscreenchange', sync); window.removeEventListener('keydown', esc); window.removeEventListener('keydown', key); };
@@ -53,7 +54,7 @@ export default function GherkinEditor({ file, onSave, value, onChange, onPreview
   return (
     <div className={`gherkin-editor ${full ? 'is-fullscreen' : ''}`} ref={wrap} role={full ? 'dialog' : undefined} aria-label={full ? 'Feature editor (full screen)' : undefined}>
       <div className="editor-toolbar">
-        <IconButton label={full ? 'Exit full screen' : 'Full screen editor'} shortcut="Ctrl Shift F" side="left" onClick={() => void toggleFull()} aria-pressed={full}>
+        <IconButton label={full ? 'Exit full screen' : 'Full screen editor'} shortcut="Shift Alt Enter" side="left" onClick={() => void toggleFull()} aria-pressed={full}>
           {full ? <Minimize2 size={15} /> : <Maximize2 size={15} />}
         </IconButton>
       </div>
@@ -76,7 +77,7 @@ export default function GherkinEditor({ file, onSave, value, onChange, onPreview
           { label: 'Paste', icon: ClipboardPaste, shortcut: 'Ctrl V', onSelect: withView((v) => { navigator.clipboard?.readText().then((t) => v.dispatch(v.state.replaceSelection(t))).catch(() => onNotice?.('Paste with Ctrl+V; the browser blocked clipboard access.')); }) },
           { label: 'Select all', icon: TextSelect, shortcut: 'Ctrl A', onSelect: withView((v) => selectAll(v)) },
           'separator',
-          { label: full ? 'Exit full screen' : 'Full screen', icon: full ? Minimize2 : Maximize2, shortcut: 'Ctrl Shift F', onSelect: () => void toggleFull() },
+          { label: full ? 'Exit full screen' : 'Full screen', icon: full ? Minimize2 : Maximize2, shortcut: 'Shift Alt Enter', onSelect: () => void toggleFull() },
         ]}
       >
         <div data-menu-row className="gherkin-editor-surface">

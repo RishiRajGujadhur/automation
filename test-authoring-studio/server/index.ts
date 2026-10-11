@@ -27,6 +27,7 @@ import { Debugger, owningProject, featureTests } from './debugger.js';
 import { TestRunner } from './testRunner.js';
 import { readSolution, projectInfo, findSolutions } from './solution.js';
 import { Builder } from './build.js';
+import { findInFiles, replaceInFiles } from './search.js';
 import { LanguageService } from './langService.js';
 import type { Index } from '../src/types.js';
 import { readSettings, writeSettings, settingsSchema, tracesDir } from './settings.js';
@@ -291,6 +292,23 @@ app.post('/api/csharp/organize', async (req, res) => {
   const body = z.object({ file: z.string().max(400).regex(/\.cs$/), source: z.string().max(1_000_000) }).parse(req.body);
   await confined(config.repositoryRoot, body.file, false);
   res.json(await lang.request(config.repositoryRoot, { op: 'organize', ...body }, 60_000));
+});
+// Find in Files (Ctrl+Shift+F) and Replace All; Go to All (Ctrl+T) symbols from the language service.
+const searchOptions = z.object({ query: z.string().min(1).max(500), regex: z.boolean().optional(), matchCase: z.boolean().optional(), wholeWord: z.boolean().optional(), include: z.string().max(500).optional(), exclude: z.string().max(500).optional() });
+app.post('/api/search/text', async (req, res) => {
+  const options = searchOptions.parse(req.body);
+  if (options.regex) { try { new RegExp(options.query); } catch (e) { throw new Error(`Invalid regular expression: ${(e as Error).message}`); } }
+  res.json(await findInFiles(config.repositoryRoot, config.ignoredDirectories, options));
+});
+app.post('/api/search/replace', async (req, res) => {
+  const { replacement, files, approved: _approved, ...options } = searchOptions.extend({ replacement: z.string().max(5000), files: z.array(z.string().max(400)).max(5000).optional(), approved: z.literal(true) }).parse(req.body);
+  const changed = await replaceInFiles(config.repositoryRoot, config.ignoredDirectories, options, replacement, files);
+  if (changed.length) { lang.notify(config.repositoryRoot, changed.map((c) => c.file)); rescanSoon(500); }
+  res.json({ changed });
+});
+app.get('/api/symbols', async (req, res) => {
+  const q = z.string().min(1).max(200).parse(req.query.q);
+  res.json(await lang.request(config.repositoryRoot, { op: 'symbols', query: q }, 30_000).catch(() => []));
 });
 /** Format Document / Selection (Roslyn formatter with the project's .editorconfig). */
 app.post('/api/csharp/format', async (req, res) => {

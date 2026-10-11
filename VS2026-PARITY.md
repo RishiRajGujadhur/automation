@@ -17,8 +17,8 @@ Status: ✅ done · 🟡 partial · ⬜ to do. Priority: **P1** next, **P2** aft
 | S7 | Startup project / test project selection; active configuration dropdown in the toolbar | 🟡 (configuration box in the build windows) | P2 |
 | S8 | Add ▸ New Project / Existing Project, Remove project, Unload/Reload project | ⬜ | P3 |
 | S9 | Edit project file (`.csproj`) with XML IntelliSense for common properties | 🟡 (XML editor) | P3 |
-| S10 | Solution-wide search (Ctrl+Shift+F, Find in Files) with replace | ⬜ | P1 |
-| S11 | Go to All (Ctrl+T): files, types, members, features, steps | 🟡 (Ctrl+K palette) | P1 |
+| S10 | Solution-wide search (Ctrl+Shift+F, Find in Files) with replace | ✅ (match case, whole word, regex, include/exclude globs, Replace All / per file) | P1 |
+| S11 | Go to All (Ctrl+T): files, types, members, features, steps | ✅ (Ctrl+T desktop / Ctrl+P web; CamelHumps via Roslyn; steps still in the Ctrl+K palette) | P1 |
 
 ## 2. Build
 | # | Feature | Status | Pri |
@@ -106,3 +106,6 @@ Status: ✅ done · 🟡 partial · ⬜ to do. Priority: **P1** next, **P2** aft
 - 2026-10-11 — **Build (B1, B2).** `server/build.ts` runs `dotnet build|clean` (rebuild = `--no-incremental`) for the open solution / project, streams Output and parses diagnostics into an Error List (`/api/build`, `/api/build/events`); Build menu (web title bar and desktop), Ctrl+Shift+B, Ctrl+Break to cancel, configuration box. Also fixed: go-to-line in a newly opened tab landed on line 1.
 - 2026-10-11 — **Test Explorer (T1, T2; T3 and D5 partial).** Roslyn discovers NUnit/xUnit/MSTest methods per project (`op: tests`); scenarios come from the index (class/method from the generated code-behind). `server/testRunner.ts` runs `dotnet test --logger trx` and parses TRX (outcome, duration, message, stack). Side bar Test Explorer (activity bar, Test menu): Run All, Run selected, Run Failed, Debug, filter, details with stack links. Calculator sample gains NUnit tests.
 - 2026-10-11 — **Signature help, Quick Actions, Format (E3, E8, E9).** Language service: `signature` (overloads + active parameter from the invocation), `actions`/`applyAction` (Roslyn's exported CodeFixProviders and CodeRefactoringProviders, loaded by reflection; multi-file changes written by the server), `format` (Formatter with `.editorconfig` analyzer-config documents, original line endings kept). Editor: parameter-info tooltip, Ctrl+. popup, Shift+Alt+F.
+- 2026-10-11 — **Find in Files and Go to All (S10, S11).** `server/search.ts` (find / replace with case, whole word, regex, globs; skips build output), `/api/search/text|replace`; language service `symbols` (Roslyn pattern search). Search side-bar view (Ctrl+Shift+F, Ctrl+Shift+H) and Go to All dialog (Ctrl+T, Ctrl+P in browsers) with Files / Types / Members / Features filters; Edit menus in both apps. Feature editor full screen moves to Shift+Alt+Enter.
+
+**Slice 1 (P1) complete:** S1–S5, B1–B2, T1–T2, E3/E8/E9, S10–S11. Next candidates: W1 dockable tool windows, D5 gutter debug/run icons, G3 step usages, V1 Git Changes.
