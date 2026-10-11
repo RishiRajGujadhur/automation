@@ -77,7 +77,7 @@ export default function StudioSettings({ onNotice, onWorkspace, shortcuts, onClo
   const rows: Row[] = useMemo(() => [
     // General
     {
-      id: 'mode', section: 'General', title: 'Interface mode', description: 'Basic shows Dashboard, Test Generator and Playwright Recorder. Advanced adds Features, Dictionary Inspector and the ⋯ menu (Step Catalog, Backgrounds, Selectors, Project Explorer, Config). Ctrl/Cmd+Shift+A switches.', keywords: 'basic advanced simple navigation menu hide pages',
+      id: 'mode', section: 'General', title: 'Interface mode (Basic / Advanced)', description: 'Basic shows Dashboard, Test Generator and Playwright Recorder. Advanced adds Features, Dictionary Inspector and the ⋯ menu (Step Catalog, Backgrounds, Selectors, Project Explorer, Config). Ctrl/Cmd+Shift+A switches.', keywords: 'basic advanced simple navigation menu hide pages',
       control: <Segmented label="Interface mode" value={prefs.mode} onValueChange={(v) => setPrefs({ mode: v })} options={[{ value: 'basic', label: 'Basic' }, { value: 'advanced', label: 'Advanced' }]} />,
     },
     { id: 'stats', section: 'General', title: 'Show dashboard statistics', description: 'The counts row at the top of the Dashboard.', keywords: 'stats counts dashboard', control: sw('pref-stats', prefs.showStats, (v) => setPrefs({ showStats: v }), 'Show dashboard statistics') },

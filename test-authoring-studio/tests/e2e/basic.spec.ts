@@ -32,12 +32,15 @@ test('Basic mode is the default and shows Dashboard, Test Generator and Recorder
   await expect(nav.getByRole('button', { name: /Dictionary Inspector/ })).toBeVisible();
   await expect(page.getByRole('button', { name: 'Open studio menu' })).toBeVisible();
 
-  // Nav pill and Ctrl/Cmd+Shift+A switch back.
+  // Ctrl/Cmd+Shift+A and Settings → General → Interface mode switch back.
   await page.locator('.page-heading h1').click();
   await page.keyboard.press('Control+Shift+A');
   await expect(page.locator('html')).toHaveAttribute('data-mode', 'basic');
-  await page.getByRole('radio', { name: 'Advanced mode' }).click();
+  await expect(page.getByRole('radio', { name: 'Advanced mode' })).toHaveCount(0); // not on the toolbar any more
+  await page.getByRole('button', { name: 'Preferences' }).click();
+  await page.getByRole('dialog').getByRole('radio', { name: 'Advanced' }).click();
   await expect(page.locator('html')).toHaveAttribute('data-mode', 'advanced');
+  await page.keyboard.press('Escape');
 
   const r = await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag21aa', 'wcag22aa']).analyze();
   expect(r.violations.map((v) => v.id)).toEqual([]);

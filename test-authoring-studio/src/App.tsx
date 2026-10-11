@@ -217,12 +217,6 @@ export default function App() {
   const hiddenInBasic = basic && !['Dashboard', 'Test Generator'].includes(tab) && !onRecorder;
   // VS Code-style shell (activity bar, slim title bar, full-height editor) unless the classic tab layout is chosen.
   const vscode = prefs.layout !== 'classic';
-  const modeSwitch = (
-    <ToggleGroup.Root type="single" className="segmented mode-switch" aria-label="Interface mode" value={prefs.mode} onValueChange={(v) => { if (v) setMode(v as 'basic' | 'advanced'); }}>
-      <ToggleGroup.Item value="basic" className="segmented-item" aria-label="Basic mode" title="Basic: Dashboard, Test Generator, Recorder (Ctrl/Cmd+Shift+A)">Basic</ToggleGroup.Item>
-      <ToggleGroup.Item value="advanced" className="segmented-item" aria-label="Advanced mode" title="Advanced: every page (Ctrl/Cmd+Shift+A)">Advanced</ToggleGroup.Item>
-    </ToggleGroup.Root>
-  );
   const featureViewSwitch = (
     <ToggleGroup.Root type="single" className="segmented" aria-label="Feature view" value={view} onValueChange={(v) => { if (v) withTransition(() => setView(v)); }}>
       {[
@@ -663,8 +657,8 @@ export default function App() {
             {tab !== pageTitle && <li className="crumb-section"><ChevronRight size={12} aria-hidden="true" />{tab}</li>}
             <li aria-current="page">
               <ChevronRight size={12} aria-hidden="true" />
-              <h1 title={pageDescription}>
-                {pageTitle}
+              <h1 title={pageTitle}>
+                <span className="page-title-text">{pageTitle}</span>
                 {tab === 'Features' && view === 'editor' && dirty && <span className="dirty-dot" role="img" aria-label="Unsaved changes" title="Unsaved changes (Ctrl/Cmd+S to preview)" />}
               </h1>
             </li>
@@ -678,7 +672,6 @@ export default function App() {
           </button>
         )}
         {vscode && tab === 'Features' && featureViewSwitch}
-        {vscode && modeSwitch}
         {vscode && !basic && <AppMenuButton {...menuProps} />}
         <Button
           id="guide-me" className="guide-button"
@@ -764,7 +757,6 @@ export default function App() {
           <span className="record-dot" />
           Playwright Recorder<Badge>β</Badge>
         </button>
-        {modeSwitch}
         <div className="nav-trailing">
           {tab === 'Features' ? featureViewSwitch : <span className="local-state"><span aria-hidden="true" />Local workspace</span>}
         </div>

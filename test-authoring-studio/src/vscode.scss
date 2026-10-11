@@ -369,3 +369,65 @@
     margin-bottom: 6px;
   }
 }
+
+/* ------------------------------------------------------------------ no gutters (VS Code layout)
+   Views touch the activity bar, side bar and title bar; only a 1px border separates them. */
+:root[data-layout='vscode'] {
+  // Editor, builder and recorder go edge to edge; other pages keep an 8px margin.
+  .main-content {
+    padding: 8px;
+  }
+  .main-content:has(> .editor-panel, > .builder-panel, > .recording-toolbar) {
+    padding: 0;
+  }
+  .editor-panel,
+  .builder-panel {
+    border: 0;
+    border-radius: 0;
+    min-height: 100%;
+  }
+  .recording-toolbar {
+    margin: 0;
+    border-width: 0 0 1px;
+    border-radius: 0;
+  }
+  .recorder-grid {
+    padding: 8px;
+  }
+  .sidebar {
+    border-right: 1px solid var(--border);
+  }
+  .sidebar-resizer {
+    margin: 0 -4px 0 -5px;
+  }
+  // Title-bar heading: smaller, ellipsis, full name on hover (title attribute).
+  .workspace-breadcrumb {
+    flex: 0 0 auto;
+    max-width: 42%;
+    height: auto;
+    align-self: center;
+    h1 {
+      font-size: 12px;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      min-width: 0;
+      gap: 4px;
+    }
+    .page-title-text {
+      min-width: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .crumb {
+      font-size: 12px;
+      max-width: 160px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+  }
+  .command-center {
+    flex: 1 3 420px;
+  }
+}
