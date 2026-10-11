@@ -43,7 +43,7 @@ Status: ✅ done · 🟡 partial · ⬜ to do. Priority: **P1** next, **P2** aft
 | E10 | CodeLens: reference counts, test status above methods | 🟡 (step-usage lens on step definitions) | P2 |
 | E11 | Inlay hints (parameter names, types) | ⬜ | P3 |
 | E12 | Code folding, outlining, sticky scroll, bracket matching, multi-caret, column select | 🟡 (CodeMirror basics) | P2 |
-| E13 | Navigation bar (project / type / member dropdowns) and breadcrumbs | ⬜ | P2 |
+| E13 | Navigation bar (project / type / member dropdowns) and breadcrumbs | ✅ | P2 |
 | E14 | Snippets (prop, ctor, for, test method, step definition) | ✅ (shortcut + Tab, or from IntelliSense; Tab between fields) | P2 |
 | E15 | Comment/uncomment, duplicate line, move line, go to line (Ctrl+G) | 🟡 | P2 |
 | E16 | Split editor, tab groups, preview tab, pinned tabs, colour-coded tabs | 🟡 (pinned + colours) | P2 |
@@ -120,3 +120,4 @@ Status: ✅ done · 🟡 partial · ⬜ to do. Priority: **P1** next, **P2** aft
 - 2026-10-12 — **Exception Settings (D3).** Debug windows toolbar: Break on Unhandled / All thrown / Never (netcoredbg `user-unhandled` / `all` filters), applied to the live session and remembered.
 - 2026-10-12 — **Status bar (W6).** Ln/Col (and selection length), line endings and encoding of the focused editor; errors / warnings of the last build (opens the Error List); Git branch with pending-changes mark and ahead / behind (opens Git Changes).
 - 2026-10-12 — **Code snippets (E14).** prop, propfull, ctor (class name filled in), for, foreach, if, else, while, try, tryf, using, switch, cw, class, interface, test, testa, fact, given / when / then step definitions; shortcut + Tab or from IntelliSense. Fixed: the editors (and the Test Generator's) passed new `basicSetup` / `onUpdate` objects each render, so @uiw/react-codemirror reconfigured them on every keystroke (dropping snippet fields).
+- 2026-10-12 — **Navigation bar (E13).** Language service `outline` (types and members with ranges, from syntax); a 22px breadcrumb above the C# editor shows project › type › member at the cursor, and the type / member parts list the file's types and the type's members to jump to.

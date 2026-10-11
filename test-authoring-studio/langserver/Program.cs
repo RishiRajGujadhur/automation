@@ -74,6 +74,7 @@ sealed class LanguageService
             "base" => await BaseOf(doc, Math.Min(Pos(text), text.Length)),
             "rename" => await Rename(doc, Math.Min(Pos(text), text.Length), (string)req["newName"]!),
             "organize" => await Organize(doc),
+            "outline" => await Outline(doc),
             "signature" => await Signature(doc, Math.Min(Pos(text), text.Length)),
             "format" => await Format(doc, req),
             "actions" => await Actions(doc, Math.Min(Pos(text), text.Length), req["endLine"] is null ? null : text.Lines[Math.Clamp((int)req["endLine"]! - 1, 0, text.Lines.Count - 1)].Start + (int)req["endColumn"]! - 1),
@@ -508,6 +509,40 @@ sealed class LanguageService
         var refs = await SymbolFinder.FindReferencesAsync(symbol, doc.Project.Solution);
         var locations = refs.SelectMany(r => r.Locations.Select(l => l.Location).Concat(r.Definition.Locations)).Where(InRepo).Distinct().Select(Location).ToList();
         return new { name = symbol.ToDisplayString(), locations };
+    }
+
+    /// <summary>Navigation bar: the document's project, its types and their members, with line ranges (syntax only).</summary>
+    async Task<object> Outline(Document doc)
+    {
+        var root = (await doc.GetSyntaxRootAsync())!;
+        var text = await doc.GetTextAsync();
+        object Range(SyntaxNode n, SyntaxToken id) => new
+        {
+            line = text.Lines.GetLinePosition(id.SpanStart).Line + 1,
+            column = text.Lines.GetLinePosition(id.SpanStart).Character + 1,
+            start = text.Lines.GetLinePosition(n.SpanStart).Line + 1,
+            end = text.Lines.GetLinePosition(n.Span.End).Line + 1,
+        };
+        string Kind(SyntaxNode n) => n switch
+        {
+            ClassDeclarationSyntax => "class", InterfaceDeclarationSyntax => "interface", StructDeclarationSyntax => "struct", RecordDeclarationSyntax => "record", EnumDeclarationSyntax => "enum",
+            MethodDeclarationSyntax => "method", ConstructorDeclarationSyntax => "constructor", PropertyDeclarationSyntax => "property", FieldDeclarationSyntax => "field", EventFieldDeclarationSyntax or EventDeclarationSyntax => "event", _ => "member",
+        };
+        var types = root.DescendantNodes().OfType<BaseTypeDeclarationSyntax>().Select(t =>
+        {
+            var members = (t as TypeDeclarationSyntax)?.Members.SelectMany(m => m switch
+            {
+                MethodDeclarationSyntax x => new[] { (Name: $"{x.Identifier.Text}({string.Join(", ", x.ParameterList.Parameters.Select(p => p.Type?.ToString()))})", Node: (SyntaxNode)x, Id: x.Identifier) },
+                ConstructorDeclarationSyntax x => [($"{x.Identifier.Text}({string.Join(", ", x.ParameterList.Parameters.Select(p => p.Type?.ToString()))})", x, x.Identifier)],
+                PropertyDeclarationSyntax x => [(x.Identifier.Text, x, x.Identifier)],
+                FieldDeclarationSyntax x => x.Declaration.Variables.Select(v => (v.Identifier.Text, (SyntaxNode)x, v.Identifier)).ToArray(),
+                EventDeclarationSyntax x => [(x.Identifier.Text, x, x.Identifier)],
+                _ => [],
+            }).Select(m => new { name = m.Item1, kind = Kind(m.Item2), range = Range(m.Item2, m.Item3) }).ToList() ?? [];
+            var name = string.Join(".", t.AncestorsAndSelf().OfType<BaseTypeDeclarationSyntax>().Select(x => x.Identifier.Text).Reverse());
+            return new { name, kind = Kind(t), range = Range(t, t.Identifier), members };
+        }).ToList();
+        return new { project = doc.Project.Name, types };
     }
 
     /// <summary>Go To Implementation (Ctrl+F12): implementations of an interface / abstract / virtual member, or the classes derived from a type.</summary>

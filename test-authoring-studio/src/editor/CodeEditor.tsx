@@ -14,6 +14,7 @@ import { runGutter, setRunMarks, type RunMark } from './runGutter';
 import { changeGutter } from './changeGutter';
 import { useChangeBars } from './useChangeBars';
 import { cursorTracker } from './cursor';
+import NavBar from './NavBar';
 import { api, type FilePreview } from '../api';
 import { Button } from '../radix';
 import { IconButton } from '../radix2';
@@ -290,6 +291,9 @@ export default function CodeEditor({ file, reveal, active = true, onNotice, onIn
     try { setPreview(await api<FilePreview>('/file/preview', { file, source: value })); } catch (e) { onNotice?.((e as Error).message); }
   };
   // Ctrl+S saves straight to disk (the latest buffer is read through a ref, so the keymap never rebuilds).
+  // Cursor line for the navigation bar.
+  const [caretLine, setCaretLine] = useState(1);
+  const caretTracker = useMemo(() => EditorView.updateListener.of((u) => { if (u.selectionSet || u.docChanged) setCaretLine(u.state.doc.lineAt(u.state.selection.main.head).number); }), []);
   const eolRef = useRef<'CRLF' | 'LF'>('LF');
   eolRef.current = loaded?.source.includes('\r\n') ? 'CRLF' : 'LF';
   const saveRef = useRef(save);
@@ -301,6 +305,7 @@ export default function CodeEditor({ file, reveal, active = true, onNotice, onIn
     ...(browser ? [] : [changeGutter()]),
     labelled(`Source of ${file}`, false),
     cursorTracker(file, () => eolRef.current),
+    caretTracker,
     keymap.of([
       { key: 'Mod-s', preventDefault: true, run: () => { void saveRef.current(); return true; } },
       ...(isCs && !browser ? [{ key: 'Mod-r Mod-g', preventDefault: true, run: () => { void organizeRef.current(); return true; } }] : []),
@@ -338,6 +343,9 @@ export default function CodeEditor({ file, reveal, active = true, onNotice, onIn
         </div>
       )}
       {error && <p className="field-error" role="alert">{error}</p>}
+      {loaded && isCs && !browser && (
+        <NavBar file={file} source={value} line={caretLine} onGo={(l, c) => { const v = ref.current?.view; if (!v) return; const at = offsetOf(v.state.doc, l, c); v.dispatch({ selection: { anchor: at }, effects: EditorView.scrollIntoView(at, { y: 'center' }) }); v.focus(); }} />
+      )}
       {loaded && (
         <RowMenu label="Editor actions" items={[
           ...(isCs && !browser ? [

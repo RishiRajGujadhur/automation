@@ -266,3 +266,21 @@ test('Code snippets: prop + Tab with fields, ctor + Tab uses the class name', as
   await page.keyboard.press('Tab');
   await expect(editor).toContainText('public SearchSteps()');
 });
+
+test('Navigation bar: project › type › member follows the cursor; jump to another type and member', async ({ page }) => {
+  await open(page);
+  await explorerFile(page, 'SearchSteps.cs').click();
+  const file = 'Steps/SearchSteps.cs';
+  const nav = page.getByRole('navigation', { name: 'Navigation bar' });
+  await line(page, file, 'await page.Search(searchText)').click();
+  await expect(nav.getByRole('button', { name: 'Type: SearchSteps' })).toBeVisible({ timeout: 30_000 });
+  await expect(nav.getByRole('button', { name: 'Member: Search(string)' })).toBeVisible();
+  await expect(nav).toContainText('Fixtures');
+  await nav.getByRole('button', { name: 'Type: SearchSteps' }).click();
+  await page.getByRole('menuitem', { name: /^SearchPage/ }).click();
+  await expect(page.locator('.code-editor:not([hidden]) .cm-activeLine')).toContainText('public class SearchPage');
+  await expect(nav.getByRole('button', { name: 'Type: SearchPage' })).toBeVisible();
+  await nav.getByRole('button', { name: /^Member:/ }).click();
+  await page.getByRole('menuitem', { name: 'Results()' }).click();
+  await expect(page.locator('.code-editor:not([hidden]) .cm-activeLine')).toContainText('public async Task Results() { await Result.WaitForAsync(); }');
+});
