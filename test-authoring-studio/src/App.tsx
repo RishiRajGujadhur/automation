@@ -398,8 +398,19 @@ export default function App() {
     return () => window.removeEventListener('keydown', handler);
   }, []);
   // Desktop app (window.desktop): native menu commands, taskbar progress and run-finished notifications.
-  const menuRef = useRef<(c: DesktopMenuCommand) => void>(() => {});
-  menuRef.current = (c) => {
+  const menuRef = useRef<(c: DesktopMenuCommand, arg?: unknown) => void>(() => {});
+  menuRef.current = (c, arg) => {
+    // Preference changes from the native View menu (and first-run OS defaults). Only known keys pass.
+    if (c === 'set-pref' && arg && typeof arg === 'object') {
+      const allowed = ['theme', 'accent', 'density', 'textSize', 'motion', 'contrast', 'mode'] as const;
+      const patch = Object.fromEntries(Object.entries(arg as Record<string, unknown>).filter(([k, v]) => (allowed as readonly string[]).includes(k) && typeof v === 'string'));
+      if (Object.keys(patch).length) setPrefs(patch as Partial<typeof prefs>);
+      return;
+    }
+    if (c === 'diagnostics') { setModal('diagnostics'); return; }
+    if (c === 'run-tests') { setModal('run'); return; }
+    if (c === 'continue-draft') { setTab('Test Generator'); return; }
+    if (c === 'design-tool' && typeof arg === 'string') { try { localStorage.setItem('tas:design:tool', JSON.stringify(arg)); } catch { /* storage blocked */ } setDesignKey((k) => k + 1); setTab('Test Design'); return; }
     if (c === 'palette') setPaletteOpen(true);
     else if (c === 'preferences') setModal('preferences');
     else if (c === 'shortcuts') setModal('shortcuts');
@@ -410,9 +421,15 @@ export default function App() {
     else if (c === 'toggle-mode') setPrefs({ mode: prefs.mode === 'advanced' ? 'basic' : 'advanced' });
     else if (c === 'toggle-explorer') setPrefs({ sidebar: !prefs.sidebar });
     else if (c === 'focus-mode') setPrefs({ focus: !prefs.focus });
-    else if (c === 'repository-changed' && !busy) api<Index>('/scan', {}).then((i) => { setIndex(i); setNotice('Files changed on disk. Repository index refreshed.'); }).catch(() => {});
+    else if (c === 'repository-changed' && !busy) api<Index>('/scan', {}).then((i) => {
+      const a = index?.stats, b = i.stats;
+      setIndex(i);
+      setNotice('Files changed on disk. Repository index refreshed.');
+      if (a && b && (a.features !== b.features || a.scenarios !== b.scenarios || a.steps !== b.steps)) desktop?.notify('Repository changed', `Now ${b.features} features · ${b.scenarios} scenarios · ${b.steps} step bindings.`);
+    }).catch(() => {});
   };
-  useEffect(() => desktop?.onMenu((c) => menuRef.current(c)), []);
+  useEffect(() => desktop?.onMenu((c, arg) => menuRef.current(c, arg)), []);
+  useEffect(() => { const h = (e: Event) => setNotice(String((e as CustomEvent).detail)); window.addEventListener('tas:desktop-notice', h); return () => window.removeEventListener('tas:desktop-notice', h); }, []);
   useEffect(() => { desktop?.setProgress(busy || execution.status === 'running' ? 2 : -1); }, [busy, execution.status]);
   const lastRun = useRef(execution.status);
   useEffect(() => {
@@ -1699,8 +1716,9 @@ export default function App() {
                 )}
                 {modal === 'source' && desktop && (
                   <div className="button-row desktop-source-actions">
-                    <Button size="small" onClick={() => desktop!.openInEditor(sourceTitle.replace(/:\d+$/, '')).catch((e) => setNotice((e as Error).message))}><ExternalLink size={13} />Open in default editor</Button>
+                    <Button size="small" onClick={() => desktop!.openInEditor(sourceTitle.replace(/:\d+$/, ''), Number(/:(\d+)$/.exec(sourceTitle)?.[1]) || undefined).catch((e) => setNotice((e as Error).message))}><ExternalLink size={13} />Open in default editor</Button>
                     <Button size="small" variant="ghost" onClick={() => desktop!.reveal(sourceTitle.replace(/:\d+$/, '')).catch((e) => setNotice((e as Error).message))}><FolderOpen size={13} />Show in folder</Button>
+                    <Button size="small" variant="ghost" onClick={() => desktop!.copyPath(sourceTitle.replace(/:\d+$/, '')).then(() => setNotice('Full path copied.'), (e) => setNotice((e as Error).message))}><Copy size={13} />Copy full path</Button>
                   </div>
                 )}
                 {modal === 'source' && (
