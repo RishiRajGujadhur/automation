@@ -92,6 +92,11 @@ export async function headText(root: string, file: string) {
     return await git(top, ['show', `HEAD:${toRepo(prefix, file)}`]);
   } catch { return null; }
 }
+/** For change bars: whether the folder is under Git at all, and the file's HEAD text (null = new file). */
+export async function headInfo(root: string, file: string) {
+  try { await locate(root); } catch { return { repo: false, text: null }; }
+  return { repo: true, text: await headText(root, file) };
+}
 export async function log(root: string, max = 30) {
   try {
     // History of the workspace folder (run from it so "." is the folder, not the whole repository).

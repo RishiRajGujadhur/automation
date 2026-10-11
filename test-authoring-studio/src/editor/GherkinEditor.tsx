@@ -11,6 +11,8 @@ import { RowMenu } from '../ui';
 import { labelled } from './a11y';
 import { breakpoints } from './breakpoints';
 import { runGutter, setRunMarks, type RunMark } from './runGutter';
+import { changeGutter } from './changeGutter';
+import { useChangeBars } from './useChangeBars';
 
 export type Problems = { errors: number; warnings: number };
 
@@ -48,7 +50,8 @@ export default function GherkinEditor({ file, onSave, runMarks, onRunLine, value
   });
   const handlers = useRef<{ onRunLine?: (line: number, debug: boolean) => void; onPreview: () => void; onSave?: () => void; onValidate: () => void; onDefinition?: (s: { keyword: string; text: string; line: number }) => void }>({ onRunLine, onPreview, onSave, onValidate, onDefinition });
   handlers.current = { onRunLine, onPreview, onSave, onValidate, onDefinition };
-  const extensions = useMemo(() => [...gherkinExtensions({ onSave: () => (handlers.current.onSave ?? handlers.current.onPreview)(), onValidate: () => handlers.current.onValidate(), onDefinition: (s) => handlers.current.onDefinition?.(s) }), lintGutter(), labelled('Gherkin source'), ...(file ? [breakpoints(file), runGutter((l, d) => handlers.current.onRunLine?.(l, d))] : [])], [file]);
+  const extensions = useMemo(() => [...gherkinExtensions({ onSave: () => (handlers.current.onSave ?? handlers.current.onPreview)(), onValidate: () => handlers.current.onValidate(), onDefinition: (s) => handlers.current.onDefinition?.(s) }), lintGutter(), labelled('Gherkin source'), ...(file ? [breakpoints(file), runGutter((l, d) => handlers.current.onRunLine?.(l, d)), changeGutter()] : [])], [file]);
+  useChangeBars(ref, file, true);
   // Run / debug glyphs beside scenarios (outcome of the last run).
   useEffect(() => { let tries = 0; const apply = () => { const v = ref.current?.view; if (v) v.dispatch({ effects: setRunMarks.of(runMarks ?? []) }); else if (tries++ < 30) requestAnimationFrame(apply); }; apply(); }, [runMarks, file]);
   const view = () => ref.current?.view;

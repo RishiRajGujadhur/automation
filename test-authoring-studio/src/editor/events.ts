@@ -10,3 +10,5 @@ export const SAVE_ALL_EVENT = 'tas:save-all';
 export const FILES_CHANGED_EVENT = 'tas:files-changed';
 /** A file was saved (views like Git Changes refresh). */
 export const UNSAVED_REFRESH = 'tas:unsaved-changed';
+/** HEAD or the index changed (commit, discard): change bars re-read the committed text. */
+export const GIT_CHANGED_EVENT = 'tas:git-changed';

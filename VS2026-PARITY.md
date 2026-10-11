@@ -78,7 +78,7 @@ Status: ✅ done · 🟡 partial · ⬜ to do. Priority: **P1** next, **P2** aft
 ## 7. Source control (Git)
 | # | Feature | Status | Pri |
 | --- | --- | --- | --- |
-| V1 | Git Changes: status, stage, commit, amend, discard; gutter change markers | 🟡 (Git Changes view done; gutter markers next) | P1 |
+| V1 | Git Changes: status, stage, commit, amend, discard; gutter change markers | ✅ | P1 |
 | V2 | Branches (create, switch, merge), pull/push/fetch, sync | ⬜ | P2 |
 | V3 | History, blame, compare with previous | 🟡 (recent history list) | P2 |
 
@@ -112,3 +112,4 @@ Status: ✅ done · 🟡 partial · ⬜ to do. Priority: **P1** next, **P2** aft
 - 2026-10-11 — **Step usages (G3).** `/api/steps/lenses` maps each binding in a C# file to the feature steps that bind to it; the C# editor shows a CodeLens line above every [Given]/[When]/[Then] ("2 step usages · 2 scenarios") that lists them in the references panel; context menu Find Step Usages.
 - 2026-10-12 — **Run glyphs in the editor margin (T2, D5).** Feature editor: ▶ beside every scenario and the Feature line; C# editor: beside every test method; the glyph shows the last outcome (✓ / ✕ / running), click runs, Shift+click debugs. Fixed: files of a project whose .csproj is at the repository root were hidden in the Explorer when unclassified; test results of a previous repository were kept after opening another.
 - 2026-10-12 — **Git Changes (V1).** `server/git.ts` (status relative to the workspace folder inside a larger repo, stage/unstage, discard to HEAD or delete untracked, commit / Commit All / amend, HEAD text, history); Git Changes side-bar view with branch and ahead/behind, Commit Staged / Commit All (Ctrl+Enter), per-file and bulk stage / unstage / discard (confirmed), history. Tests: the global teardown now always points the dev server back at fixtures/.
+- 2026-10-12 — **Change bars (V1 complete).** Feature and C# editors show added / modified / deleted lines against the last commit (`/api/git/head`, `diffLines`), refreshed after commits, discards and window focus; line-ending differences ignored.

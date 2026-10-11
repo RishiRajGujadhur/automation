@@ -10,6 +10,8 @@ import { csharpLanguage, lineCol, offsetOf, replaceText, type CsHandlers, type C
 import { FILES_CHANGED_EVENT } from './events';
 import { stepLenses, setLenses, type StepLens } from './lens';
 import { runGutter, setRunMarks, type RunMark } from './runGutter';
+import { changeGutter } from './changeGutter';
+import { useChangeBars } from './useChangeBars';
 import { api, type FilePreview } from '../api';
 import { Button } from '../radix';
 import { IconButton } from '../radix2';
@@ -108,6 +110,7 @@ export default function CodeEditor({ file, reveal, active = true, onNotice, onIn
     return () => { live = false; };
   }, [file]);
   const auto = useAutoSave({ file, value, loaded });
+  useChangeBars(ref, file, !!loaded);
 
   // Jump to the requested line once the document is in place.
   // A newly opened tab gets its text a moment after the editor exists, so wait (a few frames) for it.
@@ -254,6 +257,7 @@ export default function CodeEditor({ file, reveal, active = true, onNotice, onIn
   const extensions = useMemo(() => [
     ...languageOf(file, browser),
     lintGutter(),
+    ...(browser ? [] : [changeGutter()]),
     labelled(`Source of ${file}`, false),
     keymap.of([
       { key: 'Mod-s', preventDefault: true, run: () => { void saveRef.current(); return true; } },

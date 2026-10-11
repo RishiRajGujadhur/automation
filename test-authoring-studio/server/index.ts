@@ -28,7 +28,7 @@ import { TestRunner } from './testRunner.js';
 import { readSolution, projectInfo, findSolutions } from './solution.js';
 import { Builder } from './build.js';
 import { findInFiles, replaceInFiles } from './search.js';
-import { status as gitStatus, stage as gitStage, unstage as gitUnstage, discard as gitDiscard, commit as gitCommit, headText, log as gitLog } from './git.js';
+import { status as gitStatus, stage as gitStage, unstage as gitUnstage, discard as gitDiscard, commit as gitCommit, headInfo, log as gitLog } from './git.js';
 import { LanguageService } from './langService.js';
 import type { Index } from '../src/types.js';
 import { readSettings, writeSettings, settingsSchema, tracesDir } from './settings.js';
@@ -303,7 +303,7 @@ app.get('/api/git/log', async (_req, res) => res.json(await gitLog(config.reposi
 app.get('/api/git/head', async (req, res) => {
   const file = z.string().min(1).max(400).parse(req.query.file);
   await confined(config.repositoryRoot, file, false);
-  res.json({ text: await headText(config.repositoryRoot, file) });
+  res.json(await headInfo(config.repositoryRoot, file));
 });
 app.post('/api/git/stage', async (req, res) => { await gitStage(config.repositoryRoot, gitFiles.parse(req.body).files); res.json(await gitStatus(config.repositoryRoot)); });
 app.post('/api/git/unstage', async (req, res) => { await gitUnstage(config.repositoryRoot, gitFiles.parse(req.body).files); res.json(await gitStatus(config.repositoryRoot)); });

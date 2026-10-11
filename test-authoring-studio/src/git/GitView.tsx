@@ -3,7 +3,7 @@ import { GitBranch, Plus, Minus, Undo2, RefreshCw, ChevronDown, ChevronRight, Ar
 import { api } from '../api';
 import { useConfirm } from '../radix2';
 import { fileType } from '../files/fileTypes';
-import { FILES_CHANGED_EVENT, UNSAVED_REFRESH } from '../editor/events';
+import { FILES_CHANGED_EVENT, UNSAVED_REFRESH, GIT_CHANGED_EVENT } from '../editor/events';
 
 type GitFile = { file: string; staged: boolean; status: 'M' | 'A' | 'D' | 'R' | 'U' | '?'; from?: string };
 type GitStatus = { repo: boolean; branch?: string; upstream?: string; ahead: number; behind: number; files: GitFile[] };
@@ -41,13 +41,14 @@ export default function GitView({ onOpen, onNotice, onChanged }: { onOpen: (file
     const r = await api<{ summary: string }>('/git/commit', { message, all, amend });
     setMessage('');
     setAmend(false);
+    window.dispatchEvent(new Event(GIT_CHANGED_EVENT));
     onNotice(`Committed ${r.summary}.`);
     api<Commit[]>('/git/log').then(setHistory, () => {});
   });
   const discard = async (files: string[]) => {
     const untracked = files.filter((f) => changes.some((c) => c.file === f && c.status === '?')).length;
     if (!(await confirm({ title: files.length === 1 ? `Discard changes to ${files[0].split('/').pop()}?` : `Discard ${files.length} changes?`, description: `${untracked ? `${untracked} new file${untracked === 1 ? '' : 's'} will be deleted. ` : ''}Changes go back to the last commit. This cannot be undone.`, confirm: 'Discard', danger: true }))) return;
-    await act(async () => { await api('/git/discard', { files, approved: true }); window.dispatchEvent(new CustomEvent(FILES_CHANGED_EVENT, { detail: files })); onChanged(); });
+    await act(async () => { await api('/git/discard', { files, approved: true }); window.dispatchEvent(new CustomEvent(FILES_CHANGED_EVENT, { detail: files })); window.dispatchEvent(new Event(GIT_CHANGED_EVENT)); onChanged(); });
   };
   const toggle = (k: string) => setClosed((p) => { const n = new Set(p); if (n.has(k)) n.delete(k); else n.add(k); return n; });
   const row = (f: GitFile) => {

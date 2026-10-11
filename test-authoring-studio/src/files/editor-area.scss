@@ -1252,3 +1252,30 @@
     }
   }
 }
+
+// Change bars (against the last commit)
+.cm-change-gutter {
+  width: 4px;
+  .cm-gutterElement {
+    padding: 0 !important;
+  }
+}
+.cm-change {
+  display: block;
+  width: 3px;
+  height: 100%;
+  &.cm-change-added {
+    background: #2ea043;
+  }
+  &.cm-change-modified {
+    background: #1f6feb;
+  }
+  &.cm-change-deleted {
+    height: 0;
+    width: 0;
+    border-style: solid;
+    border-width: 4px 0 4px 5px;
+    border-color: transparent transparent transparent var(--red, #f85149);
+    transform: translateY(-4px);
+  }
+}

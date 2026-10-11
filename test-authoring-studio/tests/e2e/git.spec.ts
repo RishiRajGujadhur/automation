@@ -35,6 +35,10 @@ test('Git Changes: see changes, stage, unstage, discard, commit; history', async
     await expect(changes.getByRole('button', { name: /^New.feature/ })).toBeVisible();
     await expect(changes.getByLabel('Untracked')).toHaveCount(1);
 
+    // Change bars: the appended line is marked as added against HEAD.
+    await changes.getByRole('button', { name: /^SearchSteps.cs/ }).click();
+    const bars = page.locator('.code-editor:not([hidden]) .cm-change-added');
+    await expect(bars).toHaveCount(1);
     // Discard the mistake (asks first).
     await view.getByRole('button', { name: 'Discard changes to Steps/AuthSteps.cs' }).click();
     await page.getByRole('button', { name: 'Discard', exact: true }).click();
@@ -52,6 +56,8 @@ test('Git Changes: see changes, stage, unstage, discard, commit; history', async
     await view.getByRole('button', { name: 'Commit Staged' }).click();
     await expect(page.getByText(/Committed main [0-9a-f]+/).first()).toBeVisible();
     expect(git('log', '-1', '--pretty=%s').trim()).toBe('Change search steps');
+    // Committed: no more change bars.
+    await expect(bars).toHaveCount(0);
     expect(git('status', '--porcelain').trim()).toBe('?? Features/New.feature');
 
     // Commit All (Ctrl+Enter) takes the remaining new file.
