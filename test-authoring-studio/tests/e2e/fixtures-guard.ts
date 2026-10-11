@@ -22,7 +22,18 @@ export async function restoreFixtures() {
   await fs.cp(snapshot, fixtures, { recursive: true });
   await fs.rm(snapshot, { recursive: true, force: true });
 }
+/**
+ * Specs that open another folder restore the workspace in `finally`, but a test that times out loses its request
+ * context first. Point the dev server back at fixtures/ at the end of every run, whatever happened.
+ */
+async function resetWorkspace() {
+  try {
+    const { readSettings } = await import('../../server/settings');
+    const { apiPort } = readSettings();
+    await fetch(`http://127.0.0.1:${apiPort}/api/workspace`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ repositoryRoot: fixtures, targetProject: '.', solution: '' }) });
+  } catch { /* server already stopped */ }
+}
 export default async function globalSetup() {
   await snapshotFixtures();
-  return async () => restoreFixtures();
+  return async () => { await resetWorkspace(); await restoreFixtures(); };
 }

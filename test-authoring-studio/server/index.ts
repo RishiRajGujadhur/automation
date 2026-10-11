@@ -28,6 +28,7 @@ import { TestRunner } from './testRunner.js';
 import { readSolution, projectInfo, findSolutions } from './solution.js';
 import { Builder } from './build.js';
 import { findInFiles, replaceInFiles } from './search.js';
+import { status as gitStatus, stage as gitStage, unstage as gitUnstage, discard as gitDiscard, commit as gitCommit, headText, log as gitLog } from './git.js';
 import { LanguageService } from './langService.js';
 import type { Index } from '../src/types.js';
 import { readSettings, writeSettings, settingsSchema, tracesDir } from './settings.js';
@@ -294,6 +295,30 @@ app.post('/api/csharp/organize', async (req, res) => {
   const body = z.object({ file: z.string().max(400).regex(/\.cs$/), source: z.string().max(1_000_000) }).parse(req.body);
   await confined(config.repositoryRoot, body.file, false);
   res.json(await lang.request(config.repositoryRoot, { op: 'organize', ...body }, 60_000));
+});
+// Git Changes: status, stage / unstage, discard (approved), commit, history, HEAD text for change markers.
+const gitFiles = z.object({ files: z.array(z.string().min(1).max(400).refine((v) => !v.split(/[\\/]/).includes('..'), 'Path cannot contain ..')).min(1).max(5000) });
+app.get('/api/git/status', async (_req, res) => res.json(await gitStatus(config.repositoryRoot)));
+app.get('/api/git/log', async (_req, res) => res.json(await gitLog(config.repositoryRoot)));
+app.get('/api/git/head', async (req, res) => {
+  const file = z.string().min(1).max(400).parse(req.query.file);
+  await confined(config.repositoryRoot, file, false);
+  res.json({ text: await headText(config.repositoryRoot, file) });
+});
+app.post('/api/git/stage', async (req, res) => { await gitStage(config.repositoryRoot, gitFiles.parse(req.body).files); res.json(await gitStatus(config.repositoryRoot)); });
+app.post('/api/git/unstage', async (req, res) => { await gitUnstage(config.repositoryRoot, gitFiles.parse(req.body).files); res.json(await gitStatus(config.repositoryRoot)); });
+app.post('/api/git/discard', async (req, res) => {
+  const { files } = gitFiles.extend({ approved: z.literal(true) }).parse(req.body);
+  for (const f of files) await confined(config.repositoryRoot, f, false);
+  await gitDiscard(config.repositoryRoot, files);
+  lang.notify(config.repositoryRoot, files);
+  rescanSoon(300);
+  res.json(await gitStatus(config.repositoryRoot));
+});
+app.post('/api/git/commit', async (req, res) => {
+  const { message, all, amend } = z.object({ message: z.string().trim().min(1, 'Enter a commit message.').max(20000), all: z.boolean().optional(), amend: z.boolean().optional() }).parse(req.body);
+  const summary = await gitCommit(config.repositoryRoot, message, { all, amend });
+  res.json({ summary, status: await gitStatus(config.repositoryRoot) });
 });
 /** Step usages (CodeLens for step definitions): for each binding in a C# file, the feature lines that use it. */
 app.get('/api/steps/lenses', async (req, res) => {

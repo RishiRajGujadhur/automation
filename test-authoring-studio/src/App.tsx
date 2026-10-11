@@ -16,6 +16,7 @@ import OpenSolution from './OpenSolution';
 import BuildPanel from './build/BuildPanel';
 import TestExplorer from './testing/TestExplorer';
 import SearchView from './search/SearchView';
+import GitView from './git/GitView';
 import GoToAll from './search/GoToAll';
 import { runTests, getTestRun, discoverTests, useTestRun, outcomeOf, combine, type DiscoveredTest } from './testing/store';
 import type { RunMark } from './editor/runGutter';
@@ -128,7 +129,7 @@ import './debug/debug.scss';
 import './files/editor-area.scss';
 import DebugPanel from './debug/DebugPanel';
 import { useDebug, startDebugging, debugControl, isLive, getSnapshot, clearBreakpoints } from './debug/store';
-import { Bug, GitCompareArrows, Database, Settings, Layers, Hammer, TestTubeDiagonal } from 'lucide-react';
+import { Bug, GitCompareArrows, Database, Settings, Layers, Hammer, TestTubeDiagonal, GitBranch as GitBranchIcon } from 'lucide-react';
 
 const demo: Action[] = [
   { id: 'd1', action: 'goto', url: 'https://www.google.com/' },
@@ -343,7 +344,8 @@ export default function App() {
   const [buildOpen, setBuildOpen] = useLocalState('buildOpen', false);
   const showBuild = buildOpen || build.status === 'running';
   // Side bar view: the Explorer or the Test Explorer (activity bar, Test menu).
-  const [sidebarView, setSidebarView] = useLocalState<'explorer' | 'tests' | 'search'>('sidebarView', 'explorer');
+  const [sidebarView, setSidebarView] = useLocalState<'explorer' | 'tests' | 'search' | 'git'>('sidebarView', 'explorer');
+  const showGit = () => { setTab('Features'); if (view !== 'code' && view !== 'editor') setView('editor'); setSidebarView('git'); setPrefs({ sidebar: true }); };
   // Find in Files (Ctrl+Shift+F) / Replace in Files (Ctrl+Shift+H): the Search view; the key re-focuses it.
   const [searchKey, setSearchKey] = useState({ n: 0, replace: false });
   const showSearch = (replace = false) => { setTab('Features'); if (view !== 'code' && view !== 'editor') setView('editor'); setSidebarView('search'); setPrefs({ sidebar: true }); setSearchKey((k) => ({ n: k.n + 1, replace })); };
@@ -701,6 +703,7 @@ export default function App() {
     if (c === 'find-in-files') { showSearch(false); return; }
     if (c === 'replace-in-files') { showSearch(true); return; }
     if (c === 'go-to-all') { setModal('goto'); return; }
+    if (c === 'git-changes') { showGit(); return; }
     if (c === 'run-all-tests') { showTests(); runTests('all').catch((e) => setNotice((e as Error).message)); return; }
     if (c === 'build-windows') { setTab('Features'); if (view !== 'code' && view !== 'editor') setView('editor'); setBuildOpen(true); return; }
     if (c === 'save') { if (featureTabActive) saveFeature(); else saveAll(); return; }
@@ -946,6 +949,8 @@ export default function App() {
               'separator' as const,
               { label: 'Close Editor', shortcut: 'Ctrl F4', disabled: !openEditors.active, onSelect: () => { if (openEditors.active) void closeEditor(openEditors.active); } },
               { label: 'Close All Editors', disabled: !openEditors.tabs.length, onSelect: () => closeAllTabs() },
+              'separator' as const,
+              { label: 'Git Changes', icon: GitBranchIcon, onSelect: showGit },
               ...(fileSrc.kind === 'browser' ? [{ label: 'Close Folder', onSelect: () => void closeFolder() }] : []),
               'separator' as const,
               { label: 'Preferences…', icon: Settings, shortcut: 'Ctrl ,', onSelect: () => setModal('preferences') },
@@ -1112,10 +1117,10 @@ export default function App() {
       <div className="app-body">
         {vscode && (
           <ActivityBar
-            active={tab === 'Features' && view === 'recorder' ? 'Recorder' : tab === 'Features' && sidebarView === 'tests' ? 'Testing' : tab === 'Features' && sidebarView === 'search' ? 'Search' : tab}
+            active={tab === 'Features' && view === 'recorder' ? 'Recorder' : tab === 'Features' && sidebarView === 'tests' ? 'Testing' : tab === 'Features' && sidebarView === 'search' ? 'Search' : tab === 'Features' && sidebarView === 'git' ? 'Git' : tab}
             basic={basic}
             sidebarOpen={prefs.sidebar}
-            onSelect={(id) => withTransition(() => { if (id === 'Testing') { showTests(); return; } if (id === 'Search') { showSearch(); return; } if (id === 'Features') setSidebarView('explorer'); if (id === 'Recorder') { setTab('Features'); setView('recorder'); } else { setTab(id); if (id === 'Features' && view === 'recorder') setView('editor'); if (id === 'Features') setPrefs({ sidebar: true }); } setCatalogQuery(''); })}
+            onSelect={(id) => withTransition(() => { if (id === 'Testing') { showTests(); return; } if (id === 'Search') { showSearch(); return; } if (id === 'Git') { showGit(); return; } if (id === 'Features') setSidebarView('explorer'); if (id === 'Recorder') { setTab('Features'); setView('recorder'); } else { setTab(id); if (id === 'Features' && view === 'recorder') setView('editor'); if (id === 'Features') setPrefs({ sidebar: true }); } setCatalogQuery(''); })}
             onToggleSidebar={() => setPrefs({ sidebar: !prefs.sidebar })}
             onPreferences={() => setModal('preferences')}
             onWorkspace={() => setModal('settings')}
@@ -1130,7 +1135,9 @@ export default function App() {
           />
         )}
         <aside id="feature-sidebar" className={`sidebar ${mobileExplorer ? 'mobile-open' : ''}`} style={{ width: sidebarWidth }}>
-          {tab === 'Features' && sidebarView === 'search' ? (
+          {tab === 'Features' && sidebarView === 'git' ? (
+            <GitView onOpen={(file) => editFile(file)} onNotice={setNotice} onChanged={() => { api('/scan', {}).then(setIndex, () => {}); }} />
+          ) : tab === 'Features' && sidebarView === 'search' ? (
             <SearchView key={searchKey.n} initialReplace={searchKey.replace} onOpen={(file, line, column) => editFile(file, line, column)} onNotice={setNotice} onChanged={() => { api('/scan', {}).then(setIndex, () => {}); }} />
           ) : tab === 'Features' && sidebarView === 'tests' ? (
             <TestExplorer revision={revision} onOpen={(file, line) => editFile(file, line)} onDebug={debugTest} onNotice={setNotice} />

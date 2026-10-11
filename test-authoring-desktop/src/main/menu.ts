@@ -177,6 +177,12 @@ export function buildMenu() {
       ],
     },
     {
+      label: 'Gi&t',
+      submenu: [
+        { label: 'Git Changes', click: () => send('git-changes') },
+      ],
+    },
+    {
       label: '&Build',
       submenu: [
         // Handled by the page (it owns the build state), so the keys are shown but not registered here.

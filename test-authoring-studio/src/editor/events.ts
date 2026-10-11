@@ -8,3 +8,5 @@ export const requestCreateStep = (r: CreateStepRequest) => window.dispatchEvent(
 export const SAVE_ALL_EVENT = 'tas:save-all';
 /** Files changed on disk by the studio (e.g. a rename across files): open editors reload them. Detail: file paths. */
 export const FILES_CHANGED_EVENT = 'tas:files-changed';
+/** A file was saved (views like Git Changes refresh). */
+export const UNSAVED_REFRESH = 'tas:unsaved-changed';
