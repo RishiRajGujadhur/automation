@@ -236,3 +236,5 @@ Researched: ISO/IEC/IEEE 29119-4 technique catalogue (classification tree, cause
 - [x] P5 Activity bar overflow: pages that don't fit the window height move into a ☰ menu (active page stays visible); title-bar breadcrumb truncates instead of overlapping
 - [x] P6 VS Code density: 8px gutters, flat 4px panels, 34px panel headers, compact recorder toolbar/action cards, tighter explorer and Test Design
 - [x] P7 Editor/builder/recorder flush against the title bar and explorer; Basic/Advanced moved from the toolbar to Settings → General; title-bar heading smaller, ellipsis, full name on hover
+- [x] P8 Test Generator: new Step 0 (feature area, target file, scenario name); Step 1 is a full-height scenario editor with step hints beside it
+- [x] Bug: desktop app took port 4310 (the web dev API's port); on Windows both bound it and the web app's POSTs were rejected with "Origin not allowed". Desktop now uses its own stable port 47310; the web API refuses to start when its port is taken

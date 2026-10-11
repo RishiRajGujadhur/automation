@@ -27,6 +27,7 @@ test('step lint, suggestions, file state, palette commands, undo and accept-all'
 
   // Generator: live lint, keyword insert, suggestions, file state, filename normalization.
   await page.keyboard.press('Alt+2');
+  await page.getByRole('tab', { name: /Step 1: Scenario steps/ }).click();
   await expect(page.getByText(/steps reuse existing bindings/)).toBeVisible();
   await expect(page.locator('.step-lint li.matched')).toHaveCount(1);
   await page.getByRole('button', { name: '+ When' }).click();
@@ -37,6 +38,7 @@ test('step lint, suggestions, file state, palette commands, undo and accept-all'
   await expect(page.getByRole('list', { name: 'Step suggestions' })).toBeVisible();
   await page.locator('.suggestion').first().click();
   await expect(textarea).toContainText('When the user searches for "<searchText>"');
+  await page.getByRole('tab', { name: /Step 0: Feature/ }).click();
   await expect(page.getByText('New file. It will be created on save.')).toBeVisible();
   await page.getByLabel('Target feature file').fill('my login flow');
   await page.getByLabel('Scenario name').click();

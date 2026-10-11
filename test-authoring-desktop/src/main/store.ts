@@ -25,6 +25,7 @@ export type Shape = {
   spellcheck?: boolean;
   editor?: Editor;
   firstRunDone?: boolean;
+  apiPort?: number;
 };
 const file = () => path.join(dataRoot(), 'desktop.json');
 let cache: Shape | undefined;

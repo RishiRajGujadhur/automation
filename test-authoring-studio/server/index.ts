@@ -1,6 +1,7 @@
 import express from 'express';
 import fs from 'node:fs/promises';
 import path from 'node:path';
+import net from 'node:net';
 import { randomUUID, createHash } from 'node:crypto';
 import { createPatch } from 'diff';
 import { z } from 'zod';
@@ -332,4 +333,15 @@ app.use(
     res.status(400).json({ error: error.message });
   },
 );
-app.listen(studio.apiPort, '127.0.0.1', () => console.log(`Local API: http://127.0.0.1:${studio.apiPort} (web UI on ${studio.webPort})`));
+// Windows lets a second server bind a port that is already listening, and connections then go to the
+// other process (e.g. the desktop app). Refuse to start instead of serving nothing.
+const portTaken = await new Promise<boolean>((resolve) => {
+  const probe = net.connect({ host: '127.0.0.1', port: studio.apiPort });
+  probe.once('connect', () => { probe.destroy(); resolve(true); });
+  probe.once('error', () => resolve(false));
+});
+if (portTaken) {
+  console.error(`Port ${studio.apiPort} is already in use by another program (is the TestAuthoring Studio desktop app running?). Close it, or set STUDIO_API_PORT / change the API port in Settings → Ports.`);
+  process.exit(1);
+}
+app.listen(studio.apiPort, '127.0.0.1', () => console.log(`Local API: http://127.0.0.1:${studio.apiPort} (web UI on ${studio.webPort})`)).on('error', (e) => { console.error(`Local API could not start: ${e.message}`); process.exit(1); });

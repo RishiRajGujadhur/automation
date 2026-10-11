@@ -192,24 +192,28 @@ export default function TestGenerator({ revision, seed, onSource, onExport, onIn
   const highlight = [file, plan?.entry?.file, ...(checks?.map((c) => c.file) ?? [])].filter(Boolean) as string[];
   const passed = checks?.filter((c) => c.status === 'pass').length ?? 0;
   const failed = checks?.filter((c) => c.status === 'fail').length ?? 0;
-  const [stepId, setStepId] = useLocalState('generator:step', 'gen-1');
+  const [stepId, setStepId] = useLocalState('generator:step', 'gen-0');
   const stepIssues: Record<string, string[]> = {
-    'gen-1': ['area', 'featureFile', 'scenarioName', 'scenarioText'].filter((k) => issues[k]).map((k) => issues[k]),
+    'gen-0': ['area', 'featureFile', 'scenarioName'].filter((k) => issues[k]).map((k) => issues[k]),
+    'gen-1': ['scenarioText'].filter((k) => issues[k]).map((k) => issues[k]),
     'gen-2': ['page', 'section', 'field', 'value'].filter((k) => issues[k]).map((k) => issues[k]),
     'gen-3': plan?.entry ? [] : ['Add a dictionary entry for this field, or pick an existing one in step 2.'],
     'gen-4': checks ? checks.filter((c) => c.status === 'fail').map((c) => `${c.label}: ${c.detail}`) : ['Run the dry-run validation.'],
   };
   const wizard = [
-    { id: 'gen-1', title: 'Scenario & feature context', short: 'Scenario', summary: `${file} · ${steps.length} step${steps.length === 1 ? '' : 's'}` },
+    { id: 'gen-0', title: 'Feature & scenario', short: 'Feature', summary: `${file} · ${scenarioName || 'unnamed'}` },
+    { id: 'gen-1', title: 'Scenario steps', short: 'Scenario', summary: `${file} · ${steps.length} step${steps.length === 1 ? '' : 's'}` },
     { id: 'gen-2', title: 'Page object & locator mapping', short: 'Mapping', summary: `${page} › ${section} › ${field} (${fieldType})` },
     { id: 'gen-3', title: 'Selector resolution & dictionary match', short: 'Selector', summary: plan?.entry ? `${plan.entry.selectors.length} selectors · ${plan.entry.file}` : 'No dictionary entry' },
     { id: 'gen-4', title: 'Validation & quality gate', short: 'Validate', summary: checks ? `${passed}/${checks.length} passed` : 'Not run yet' },
   ];
   const at = Math.max(0, wizard.findIndex((w) => w.id === stepId));
   const current = wizard[at];
-  const blocked = stepIssues[current.id].length > 0 && at < 3;
+  const lastStep = wizard.length - 1;
+  const selectorStep = wizard.findIndex((w) => w.id === 'gen-3');
+  const blocked = stepIssues[current.id].length > 0 && at < lastStep;
   const goNext = () => {
-    if (blocked && at < 2) { setTouchedFields((t) => ({ ...t, __all: true })); onNotice?.(`Fix ${stepIssues[current.id].length} problem${stepIssues[current.id].length === 1 ? '' : 's'} in this step first.`); return; }
+    if (blocked && at < selectorStep) { setTouchedFields((t) => ({ ...t, __all: true })); onNotice?.(`Fix ${stepIssues[current.id].length} problem${stepIssues[current.id].length === 1 ? '' : 's'} in this step first.`); return; }
     const next = wizard[at + 1];
     if (next) { setStepId(next.id); if (next.id === 'gen-4' && !checks) validateNow(); }
   };
@@ -224,8 +228,8 @@ export default function TestGenerator({ revision, seed, onSource, onExport, onIn
             const ok = stepIssues[w.id].length === 0;
             const state = w.id === current.id ? 'current' : ok ? 'done' : i < at ? 'attention' : 'todo';
             return (
-              <Tabs.Trigger key={w.id} value={w.id} className={`stepper-step ${state}`} aria-label={`Step ${i + 1}: ${w.title}`}>
-                <span className="stepper-dot">{state === 'done' ? <CheckIcon size={13} strokeWidth={3} /> : state === 'attention' ? <AlertIcon size={13} /> : i + 1}</span>
+              <Tabs.Trigger key={w.id} value={w.id} className={`stepper-step ${state}`} aria-label={`Step ${i}: ${w.title}`}>
+                <span className="stepper-dot">{state === 'done' ? <CheckIcon size={13} strokeWidth={3} /> : state === 'attention' ? <AlertIcon size={13} /> : i}</span>
                 <span className="stepper-text">
                   <strong>{w.short}</strong>
                   <small>{w.summary}</small>
@@ -235,11 +239,11 @@ export default function TestGenerator({ revision, seed, onSource, onExport, onIn
           })}
         </Tabs.List>
         <div className="wizard-meter">
-          <Meter value={wizard.filter((w) => stepIssues[w.id].length === 0).length} max={4} label="Wizard completion" tone="purple" />
-          <span className="subtle">Step {at + 1} of 4 · {current.title}</span>
+          <Meter value={wizard.filter((w) => stepIssues[w.id].length === 0).length} max={wizard.length} label="Wizard completion" tone="purple" />
+          <span className="subtle">Step {at} of {lastStep} · {current.title}</span>
         </div>
         {error && <p role="alert" className="inline-error">{error}</p>}
-        <Tabs.Content value="gen-1" className="panel wizard-panel"><h2 className="wizard-title"><span className="step-number">1</span>Scenario & feature context</h2><div className="wizard-body">
+        <Tabs.Content value="gen-0" className="panel wizard-panel"><h2 className="wizard-title"><span className="step-number">0</span>Feature & scenario</h2><div className="wizard-body">
           <div className="form-grid" onBlur={(e) => { const l = (e.target as HTMLElement).getAttribute('aria-label'); const map: Record<string, string> = { 'Feature area': 'area', 'Scenario name': 'scenarioName' }; if (l && map[l]) touch(map[l]); }}>
             <label className="field-label">FEATURE AREA / MODULE<input aria-label="Feature area" list="feature-folders" value={area} onChange={(e) => set('area', e.target.value)} />{err('area')}</label>
             <datalist id="feature-folders">{folders.map((f) => <option key={f} value={f} />)}</datalist>
@@ -252,28 +256,34 @@ export default function TestGenerator({ revision, seed, onSource, onExport, onIn
               )}
             </label>
             <label className="field-label span-2">SCENARIO NAME<input aria-label="Scenario name" value={scenarioName} onChange={(e) => set('scenarioName', e.target.value)} />{err('scenarioName')}</label>
-            <div className="field-label span-2">
+          </div>
+        </div></Tabs.Content>
+        <Tabs.Content value="gen-1" className="panel wizard-panel scenario-text-panel"><h2 className="wizard-title"><span className="step-number">1</span>Scenario steps</h2><div className="wizard-body">
+          <div className="field-label scenario-text-step">
               <span className="label-row">SCENARIO TEXT
                 <span className="keyword-buttons" role="group" aria-label="Insert keyword">
                   {['Given', 'When', 'Then', 'And'].map((k) => <Button key={k} variant="ghost" size="tiny" onClick={() => insertKeyword(k)}>+ {k}</Button>)}
                   <Button variant="ghost" size="tiny" aria-label="Copy scenario as Gherkin" onClick={async () => onNotice?.((await copyText(`Scenario: ${scenarioName}\n${steps.map((x) => `  ${x.keyword} ${x.text}`).join('\n')}`)) ? 'Scenario copied.' : 'Clipboard unavailable.')}><Copy size={12} />Copy</Button>
                 </span>
               </span>
+              <div className="scenario-text-columns">
               <div className="scenario-editor" onBlur={() => touch('scenarioText')}>
                 <CodeMirror
                   value={scenarioText}
                   theme={editorTheme}
-                  minHeight={`${Math.max(3, steps.length + 1) * 22 + 12}px`}
+                  height="var(--scenario-editor-height)"
                   extensions={scenarioExt}
-                  basicSetup={{ lineNumbers: false, foldGutter: false, autocompletion: false, highlightActiveLine: false }}
+                  basicSetup={{ lineNumbers: true, foldGutter: false, autocompletion: false, highlightActiveLine: false }}
                   onChange={(v, vu) => { set('scenarioText', v); caretLine(v, vu.state.selection.main.head); }}
                   onUpdate={(u) => { if (u.selectionSet && !u.docChanged) caretLine(u.state.doc.toString(), u.state.selection.main.head); }}
                 />
               </div>
+              <div className="scenario-hints">
+                <StepLint steps={steps} activeLine={activeLine} onReplace={replaceStep} onSource={onSource} revision={revision} />
+              </div>
+              </div>
               {err('scenarioText')}
-              <StepLint steps={steps} activeLine={activeLine} onReplace={replaceStep} onSource={onSource} revision={revision} />
             </div>
-          </div>
         </div></Tabs.Content>
         <Tabs.Content value="gen-2" className="panel wizard-panel"><h2 className="wizard-title"><span className="step-number">2</span>Page object & locator mapping</h2><div className="wizard-body">
           <label className="search-box">
@@ -382,13 +392,13 @@ export default function TestGenerator({ revision, seed, onSource, onExport, onIn
           )}
         </div></Tabs.Content>
         </Tabs.Root>
-        {stepIssues[current.id].length > 0 && (touchedFields.__all || current.id === 'gen-3') && at < 3 && (
+        {stepIssues[current.id].length > 0 && (touchedFields.__all || current.id === 'gen-3') && at < lastStep && (
           <div className="form-summary" role="alert">
             <strong>Before continuing:</strong>
             <ul>{stepIssues[current.id].map((m) => <li key={m}>{m}</li>)}</ul>
           </div>
         )}
-        {at === 3 && invalid && (touchedFields.__all || Object.keys(touchedFields).length > 0) && (
+        {at === lastStep && invalid && (touchedFields.__all || Object.keys(touchedFields).length > 0) && (
           <div className="form-summary" role="alert">
             <strong>{Object.keys(issues).length} thing{Object.keys(issues).length === 1 ? '' : 's'} to fix before saving:</strong>
             <ul>{Object.entries(issues).map(([k, m]) => <li key={k}>{m}</li>)}</ul>
@@ -397,13 +407,13 @@ export default function TestGenerator({ revision, seed, onSource, onExport, onIn
         {/* Keep focus where it is on mouse-down: blurring a field first would reveal its error, shift the layout and swallow the click. */}
         <div className="generator-actions" role="toolbar" aria-label="Generator actions" onMouseDown={(e) => { if ((e.target as HTMLElement).closest('button')) e.preventDefault(); }}>
           <Button variant="ghost" disabled={at === 0} onClick={() => setStepId(wizard[at - 1].id)}><ArrowLeft size={15} />Back</Button>
-          {at < 3 && (
+          {at < lastStep && (
             <Button variant="primary" onClick={goNext} aria-describedby={blocked ? 'wizard-blocked' : undefined}>
-              {at === 2 && blocked ? 'Continue without a match' : `Next: ${wizard[at + 1].short}`}<ArrowRight size={15} />
+              {at === selectorStep && blocked ? 'Continue without a match' : `Next: ${wizard[at + 1].short}`}<ArrowRight size={15} />
             </Button>
           )}
-          {blocked && at < 2 && <span id="wizard-blocked" className="sr-only">This step has problems to fix.</span>}
-          {at === 3 && <Button variant="primary" disabled={!!busy || !steps.length} onClick={guard(() => run('save', async () => setPreview(await api<FilePreview>('/generation/preview', { file, source: await composeFeature() }))))} title="Preview the feature-file diff, then approve to write (Ctrl+S)">
+          {blocked && at < selectorStep && <span id="wizard-blocked" className="sr-only">This step has problems to fix.</span>}
+          {at === lastStep && <Button variant="primary" disabled={!!busy || !steps.length} onClick={guard(() => run('save', async () => setPreview(await api<FilePreview>('/generation/preview', { file, source: await composeFeature() }))))} title="Preview the feature-file diff, then approve to write (Ctrl+S)">
             <Save size={15} />{busy === 'save' ? 'Preparing diff…' : 'Regenerate code & save'}
           </Button>}
           <Button variant="ghost" disabled={!!busy} onClick={validateNow} title="Ctrl+Enter"><ShieldCheck size={15} />{busy === 'validate' ? 'Validating…' : 'Run dry-run validation'}</Button>

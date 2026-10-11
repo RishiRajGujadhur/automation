@@ -3,9 +3,12 @@ import net from 'node:net';
 import path from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { dataRoot, logFile, resourcesRoot } from './paths';
+import { read, write } from './store';
+
+export const DESKTOP_PORT = 47310;
 
 /** A free loopback port (falls back to the OS choice when the preferred one is taken). */
-export function freePort(preferred = 4310): Promise<number> {
+export function freePort(preferred = 0): Promise<number> {
   const tryPort = (p: number) => new Promise<number>((resolve, reject) => {
     const s = net.createServer();
     s.once('error', reject);
@@ -31,7 +34,11 @@ function teeLogs() {
  */
 export async function startApi(): Promise<{ origin: string; port: number }> {
   teeLogs();
-  const port = await freePort(Number(process.env.STUDIO_API_PORT) || 4310);
+  // Its own stable port (browser storage is per origin, so a changing port would forget preferences). Not 4310: that is the
+  // web app's dev API, and Windows lets two servers share a port silently. Falls back to a free port when taken.
+  const preferred = Number(process.env.STUDIO_API_PORT) || read().apiPort || DESKTOP_PORT;
+  const port = await freePort(preferred);
+  if (port !== read().apiPort) write({ apiPort: port });
   process.env.STUDIO_API_PORT = String(port);
   process.env.STUDIO_WEB_PORT = String(port); // UI and API share one origin in the desktop app
   process.env.STUDIO_ROOT = resourcesRoot();

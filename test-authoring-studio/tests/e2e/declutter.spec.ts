@@ -39,10 +39,11 @@ test('right-click menus, More navigation, shortcuts, persisted drafts and collap
   // Generator wizard: stepper summaries, persisted draft and step, validation row menu.
   await page.getByLabel('Scenario name').fill('Persisted draft name');
   await expect(page.getByRole('tab', { name: /Step 1: Scenario/ })).toContainText('ShoppingCart.feature · 3 steps');
+  await page.getByRole('button', { name: /Next: Scenario/ }).click();
   await page.getByRole('button', { name: /Next: Mapping/ }).click();
   await page.reload();
   await expect(page.getByRole('tab', { name: /Step 2: Page object/ })).toHaveAttribute('aria-selected', 'true');
-  await page.getByRole('tab', { name: /Step 1: Scenario/ }).click();
+  await page.getByRole('tab', { name: /Step 0: Feature/ }).click();
   await expect(page.getByLabel('Scenario name')).toHaveValue('Persisted draft name');
   await page.getByRole('tab', { name: /Step 4: Validation/ }).click();
   await page.getByRole('button', { name: 'Run dry-run validation' }).click();

@@ -79,6 +79,7 @@ test('feature editor full-screen toggle and compact header', async ({ page }) =>
 
 test('Test Generator scenario text has Gherkin highlighting and autocomplete', async ({ page }) => {
   await page.goto('/#/test-generator');
+  await page.getByRole('tab', { name: /Step 1: Scenario steps/ }).click();
   const scenario = page.getByLabel('Scenario text');
   await expect(scenario.locator('.ͼ1, [class*="ͼ"]').first()).toBeVisible();
   await expect(page.locator('.scenario-editor .cm-line span').first()).toBeVisible();

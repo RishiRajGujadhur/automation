@@ -1268,3 +1268,52 @@ textarea[aria-invalid='true'] {
     height: 26px;
   }
 }
+
+// Step 1: the scenario text editor fills the window (the stepper, title and actions take the rest).
+.scenario-text-step {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 0;
+  .scenario-editor .cm-editor {
+    height: var(--scenario-editor-height);
+  }
+}
+.wizard-title-meta {
+  margin-left: auto;
+  font-weight: 400;
+  max-width: 50%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.scenario-text-columns {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(240px, 34%);
+  gap: 8px;
+  align-items: stretch;
+}
+.scenario-hints {
+  max-height: var(--scenario-editor-height);
+  overflow: auto;
+  min-width: 0;
+}
+// Editor height = window − (title bar, context bar, stepper, step title, actions bar).
+.wizard {
+  --scenario-editor-height: max(260px, calc(100dvh - 495px));
+}
+:root[data-layout='vscode'] .wizard {
+  --scenario-editor-height: max(260px, calc(100dvh - 420px));
+}
+.scenario-text-panel .wizard-title {
+  padding-top: 8px;
+  padding-bottom: 8px;
+}
+@media (max-width: 1000px) {
+  .scenario-text-columns {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .scenario-hints {
+    max-height: none;
+  }
+}

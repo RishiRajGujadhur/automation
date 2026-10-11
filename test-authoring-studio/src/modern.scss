@@ -845,7 +845,7 @@ p,
 }
 .stepper {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat(5, minmax(0, 1fr));
   gap: 8px;
   counter-reset: step;
 }
@@ -948,7 +948,7 @@ p,
 }
 @media (max-width: 900px) {
   .stepper {
-    grid-template-columns: repeat(4, auto);
+    grid-template-columns: repeat(5, auto);
     overflow-x: auto;
     scroll-snap-type: x mandatory;
   }

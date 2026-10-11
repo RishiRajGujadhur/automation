@@ -59,6 +59,7 @@ test('Radix dialog, alert dialog, tabs, accordion, tooltip, toast, preferences a
 
   // Wizard: Next/Back move one step at a time; step 4 auto-runs validation.
   await page.keyboard.press('Alt+2');
+  await page.getByRole('button', { name: /Next: Scenario/ }).click();
   await page.getByRole('button', { name: /Next: Mapping/ }).click();
   await expect(page.getByLabel('Section name')).toBeVisible();
   await expect(page.getByLabel('Scenario name')).toHaveCount(0);
