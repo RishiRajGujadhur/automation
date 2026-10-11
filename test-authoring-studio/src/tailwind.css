@@ -1,1 +1,2 @@
-@import 'tailwindcss';
+/* Only the studio's own sources contain class names; repository files (fixtures, user repos) are not scanned. */
+@import 'tailwindcss' source('../src');

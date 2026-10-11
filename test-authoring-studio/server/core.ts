@@ -39,7 +39,7 @@ export const dotnet = process.env.DOTNET_PATH || (existsSync(localDotnet) ? loca
 export const scannerDll = path.join(projectRoot, 'scanner/bin/Release/net10.0/Scanner.dll');
 // A self-contained scanner build (the desktop app ships one) runs without an installed .NET runtime.
 const scannerExe = process.env.STUDIO_SCANNER_EXE;
-const scanner = (args: string[] = []): [string, string[]] => (scannerExe ? [scannerExe, args] : [dotnet, [scannerDll, ...args]]);
+export const scanner = (args: string[] = []): [string, string[]] => (scannerExe ? [scannerExe, args] : [dotnet, [scannerDll, ...args]]);
 export const relative = (root: string, file: string) =>
   path.relative(root, file).replaceAll('\\', '/');
 export async function confined(root: string, file: string, existing = true) {

@@ -56,6 +56,48 @@ if (args.Contains("--match"))
     }
     Console.Write(JsonSerializer.Serialize(new { results, diagnostics })); return;
 }
+if (args.Contains("--diagnostics"))
+{
+    // Editor diagnostics for one C# file: Roslyn syntax errors plus step-binding checks
+    // (parameter count vs. pattern placeholders, duplicate patterns). Input: { "source": "...", "path": "..." }.
+    using var document = JsonDocument.Parse(Console.In.ReadToEnd());
+    var source = document.RootElement.GetProperty("source").GetString() ?? "";
+    var path = document.RootElement.TryGetProperty("path", out var p) ? p.GetString() ?? "" : "";
+    var tree = CSharpSyntaxTree.ParseText(source, path: path);
+    var items = new List<object>();
+    void Add(Location location, string severity, string id, string message)
+    {
+        var span = location.GetLineSpan();
+        items.Add(new { line = span.StartLinePosition.Line + 1, column = span.StartLinePosition.Character + 1, endLine = span.EndLinePosition.Line + 1, endColumn = span.EndLinePosition.Character + 1, severity, id, message });
+    }
+    foreach (var d in tree.GetDiagnostics())
+        Add(d.Location, d.Severity == DiagnosticSeverity.Error ? "error" : "warning", d.Id, d.GetMessage());
+    var seen = new Dictionary<string, int>();
+    foreach (var method in tree.GetRoot().DescendantNodes().OfType<MethodDeclarationSyntax>())
+    {
+        foreach (var attribute in method.AttributeLists.SelectMany(a => a.Attributes))
+        {
+            var name = attribute.Name.ToString().Split('.').Last().Replace("Attribute", "");
+            if (name is not ("Given" or "When" or "Then" or "StepDefinition")) continue;
+            if (attribute.ArgumentList?.Arguments.FirstOrDefault()?.Expression is not LiteralExpressionSyntax literal) continue;
+            var pattern = literal.Token.ValueText;
+            var key = name + " " + pattern;
+            if (seen.TryGetValue(key, out var firstLine))
+                Add(attribute.GetLocation(), "warning", "TAS002", $"Duplicate [{name}] pattern; the same pattern is bound on line {firstLine}. SpecFlow reports this step as ambiguous.");
+            else seen[key] = attribute.GetLocation().GetLineSpan().StartLinePosition.Line + 1;
+            int groups;
+            try { groups = new Regex(ToRegex(pattern)).GetGroupNumbers().Length - 1; }
+            catch (ArgumentException e) { Add(literal.GetLocation(), "error", "TAS003", "Invalid step pattern: " + e.Message); continue; }
+            if (IsCucumber(pattern)) groups = Regex.Matches(pattern, @"\{[A-Za-z]*\}").Count; // {string} expands to two alternatives
+            var parameters = method.ParameterList.Parameters;
+            // A trailing Table or DocString argument is allowed on top of the pattern's captures.
+            var extra = parameters.Count > 0 && parameters.Last().Type?.ToString() is "Table" or "string" && parameters.Count == groups + 1 ? 1 : 0;
+            if (parameters.Count - extra != groups)
+                Add(method.ParameterList.GetLocation(), "error", "TAS001", $"The pattern has {groups} placeholder{(groups == 1 ? "" : "s")} but the method takes {parameters.Count} parameter{(parameters.Count == 1 ? "" : "s")}.");
+        }
+    }
+    Console.Write(JsonSerializer.Serialize(items)); return;
+}
 var input = JsonSerializer.Deserialize<string[]>(Console.In.ReadToEnd())!;
 var trees = input.Select(f => CSharpSyntaxTree.ParseText(File.ReadAllText(f), path: f)).ToArray();
 var compilation = CSharpCompilation.Create("StaticIndex", trees, new[] { MetadataReference.CreateFromFile(typeof(object).Assembly.Location) });

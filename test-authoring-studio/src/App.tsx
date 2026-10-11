@@ -8,6 +8,8 @@ import DictionaryInspector from './DictionaryInspector';
 import ProjectExplorer from './ProjectExplorer';
 import TestDesign, { designTools } from './TestDesign';
 import ActivityBar from './ActivityBar';
+import CodeEditor from './editor/CodeEditor';
+import { readDraft, sha256, useAutoSave } from './editor/autosave';
 import { snapshot } from './algorithms/registry';
 import { desktop, type DesktopMenuCommand } from './desktop';
 import StepCatalogue from './StepCatalogue';
@@ -200,6 +202,9 @@ export default function App() {
   const [activeFolder, setActiveFolder] = useState<string>();
   const [paletteOpen, setPaletteOpen] = useState(false);
   const [designKey, setDesignKey] = useState(0);
+  // Source file open in the code editor (Features → code view); line to reveal.
+  const [codeFile, setCodeFile] = useLocalState<{ file: string; line?: number } | null>('codeFile', null);
+  const editFile = (file: string, line?: number) => { setCodeFile({ file, line }); setTab('Features'); setView('code'); setModal(undefined); };
   const [generatorSeed, setGeneratorSeed] = useState<GeneratorSeed>();
   const [edges, setEdges] = useState<Index['callEdges']>([]);
   const revision = index?.revision;
@@ -223,6 +228,7 @@ export default function App() {
         { id: 'editor', icon: Code2, label: 'Editor' },
         { id: 'builder', icon: Blocks, label: 'Builder' },
         { id: 'recorder', icon: Circle, label: 'Recorder' },
+        ...(codeFile ? [{ id: 'code', icon: FileCode2, label: codeFile.file.split('/').pop()! }] : []),
       ].map((v) => (
         <ToggleGroup.Item key={v.id} value={v.id} className="segmented-item" aria-label={v.label}>
           <v.icon size={14} aria-hidden="true" />
@@ -250,7 +256,7 @@ export default function App() {
       const [, t, v] = hash.split('/');
       const all = [...tabs, ...moreTabs].map((x) => x.name);
       const match = all.find((x) => slug(x) === t);
-      if (match) { setTab(match); if (v && ['editor', 'builder', 'recorder'].includes(v)) setView(v); }
+      if (match) { setTab(match); if (v && ['editor', 'builder', 'recorder', 'code'].includes(v)) setView(v); }
     };
     // Use the hash captured at first render: StrictMode re-runs effects after the sync effect below has rewritten it.
     fromHash(initialHash.current);
@@ -276,7 +282,12 @@ export default function App() {
   const [showTop, setShowTop] = useState(false);
   const now = useNow(30000);
   const saveRef = useRef<() => void>(() => {});
-  const dirty = !!source && source !== (feature?.source ?? '');
+  // Feature editor buffer: auto save + hot exit (see editor/autosave.ts). Unsaved = differs from what is on disk.
+  const [featureBase, setFeatureBase] = useState<{ source: string; hash: string }>();
+  const [featureRestore, setFeatureRestore] = useState<string | null>(null);
+  useEffect(() => { let live = true; setFeatureBase(undefined); if (feature) sha256(feature.source).then((hash) => live && setFeatureBase({ source: feature.source, hash })); return () => { live = false; }; }, [feature]);
+  const featureAuto = useAutoSave({ file: feature?.file, value: source, loaded: featureBase });
+  const dirty = feature ? featureAuto.dirty : !!source && source !== '';
   const pageDescription =
     tab === 'Features'
       ? view === 'recorder'
@@ -487,6 +498,8 @@ export default function App() {
   const choose = (f: Feature) => {
     setFeature(f);
     setSource(f.source);
+    const draft = readDraft(f.file);
+    setFeatureRestore(draft !== null && draft !== f.source ? draft : null);
     setValidation(undefined);
     setPreview(undefined);
     setActiveFolder(featureDirectory(f.file));
@@ -1264,6 +1277,9 @@ export default function App() {
               </div>
             </>
           )}
+          {tab === 'Features' && view === 'code' && codeFile && (
+            <CodeEditor key={codeFile.file} file={codeFile.file} line={codeFile.line} onNotice={setNotice} onIndex={setIndex} />
+          )}
           {tab === 'Features' && view === 'editor' && (
             <section className="panel editor-panel">
               <div className="panel-heading">
@@ -1285,6 +1301,13 @@ export default function App() {
                   Validate
                 </Button>
               </div>
+              {featureRestore !== null && feature && (
+                <div className="info-box restore-box" role="status">
+                  <TriangleAlert size={14} /> Unsaved changes to {feature.file} from an earlier session were kept.
+                  <Button size="tiny" onClick={() => { setSource(featureRestore); setFeatureRestore(null); }}>Restore</Button>
+                  <Button size="tiny" variant="ghost" onClick={() => setFeatureRestore(null)}>Discard</Button>
+                </div>
+              )}
               <GherkinEditor
                 height={vscode ? 'calc(100dvh - 205px)' : undefined}
                 value={source}
@@ -1735,6 +1758,11 @@ export default function App() {
                       Approve and write file
                     </Button>
                   </>
+                )}
+                {modal === 'source' && /.(cs|xml)(:d+)?$/.test(sourceTitle) && (
+                  <div className="button-row">
+                    <Button size="small" variant="primary" onClick={() => editFile(sourceTitle.replace(/:d+$/, ''), Number(/:(d+)$/.exec(sourceTitle)?.[1]) || undefined)}><FileCode2 size={13} />Edit in studio</Button>
+                  </div>
                 )}
                 {modal === 'source' && desktop && (
                   <div className="button-row desktop-source-actions">

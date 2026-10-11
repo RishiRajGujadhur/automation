@@ -11,6 +11,7 @@ import {
   confined,
   projectRoot,
   dataRoot,
+  scanner,
   parseFeature,
   matchActions,
   matchFeatureBindings,
@@ -128,11 +129,44 @@ app.post('/api/scan', async (_req, res) => {
 app.get('/api/features',async(req,res)=>{const i=await ensure();const {q,offset,limit}=paging.parse(req.query);const items=i.features.filter(f=>(f.name+' '+f.file).toLowerCase().includes(q.toLowerCase()));res.json({items:items.slice(offset,offset+limit).map(f=>({...f,source:''})),total:items.length,hasNext:offset+limit<items.length});});
 app.get('/api/selectors',async(req,res)=>{await ensure();const {q,offset,limit}=paging.parse(req.query);res.json(await search!.query('selectors',q,offset,limit,z.string().max(40).default('').parse(req.query.type)));});
 app.get('/api/backgrounds',async(req,res)=>{await ensure();const {q,offset,limit}=paging.parse(req.query);res.json(await search!.query('backgrounds',q,offset,limit));});
+// ---- Code editing (C#, feature, XML) --------------------------------------------------------------
+const editable = /.(cs|feature|xml)$/i;
+// Roslyn syntax diagnostics + step-binding checks for one C# buffer (scanner --diagnostics).
+app.post('/api/csharp/diagnostics', async (req, res) => {
+  const { source, path: file } = z.object({ source: z.string().max(1_000_000), path: z.string().max(400).default('') }).parse(req.body);
+  res.json(JSON.parse(await command(...scanner(['--diagnostics']), JSON.stringify({ source, path: file }))));
+});
+// Diff preview for any editable file; approval goes through /api/generation/apply like every other write.
+app.post('/api/file/preview', async (req, res) => {
+  const { file, source } = z.object({ file: z.string().max(400).regex(editable), source: z.string().max(1_000_000) }).parse(req.body);
+  if (file.endsWith('.feature')) parseFeature(source, file, []);
+  const target = await confined(config.repositoryRoot, file, false);
+  const before = await fs.readFile(target, 'utf8').catch((e) => { if (e.code === 'ENOENT') return ''; throw e; });
+  const id = randomUUID();
+  previews.set(id, { file, source, hash: hash(before), root: config.repositoryRoot });
+  res.json({ id, file, diff: createPatch(file, before, source, 'repository', 'proposed'), changed: before !== source, created: !before });
+});
+// Direct save (auto save). Refuses when the file changed on disk since the editor loaded it (baseHash).
+let rescanTimer: NodeJS.Timeout | undefined;
+app.post('/api/file/save', async (req, res) => {
+  const { file, source, baseHash } = z.object({ file: z.string().max(400).regex(editable), source: z.string().max(1_000_000), baseHash: z.string().max(80) }).parse(req.body);
+  if (file.endsWith('.feature')) parseFeature(source, file, []);
+  const target = await confined(config.repositoryRoot, file, false);
+  const before = await fs.readFile(target, 'utf8').catch((e) => { if (e.code === 'ENOENT') return ''; throw e; });
+  if (hash(before) !== baseHash) { res.status(409).json({ error: `${file} changed outside the studio. Reload it before saving.`, hash: hash(before) }); return; }
+  await fs.mkdir(path.dirname(target), { recursive: true });
+  await fs.writeFile(target, source, 'utf8');
+  // Re-index shortly after the last save so bindings and features stay current without rescanning on every keystroke.
+  clearTimeout(rescanTimer);
+  rescanTimer = setTimeout(() => { scan(config).then(activate).catch((e) => console.error('Rescan after save failed:', (e as Error).message)); }, 1500);
+  res.json({ ok: true, hash: hash(source) });
+});
 app.get('/api/source', async (req, res) => {
   const file = await confined(config.repositoryRoot, String(req.query.file));
   if (!/\.(cs|feature|xml|csproj|json|config|runsettings|props|targets|sln|md|yaml|yml|csv|txt|resx)$/.test(file)) throw new Error('Unsupported source file');
   if((await fs.stat(file)).size>2_000_000)throw new Error('Source preview is limited to 2 MB. Open this file in your IDE.');
-  res.json({ source: await fs.readFile(file, 'utf8') });
+  const source = await fs.readFile(file, 'utf8');
+  res.json({ source, hash: hash(source) });
 });
 app.post('/api/scenario/validate', async (req, res) => {
   const source = z.string().max(200000).parse(req.body.source);

@@ -553,3 +553,54 @@
     gap: 2px;
   }
 }
+
+// Code editor (C#, XML): fills the editor area like a VS Code editor group.
+.code-editor {
+  --code-editor-height: calc(100dvh - 300px);
+  display: flex;
+  flex-direction: column;
+  .editor-toolbar {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 4px 10px;
+    border-bottom: 1px solid var(--border);
+    font-size: 12px;
+  }
+  .editor-file {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-weight: 600;
+  }
+  .toolbar-spacer {
+    flex: 1;
+  }
+  .save-state {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    color: var(--text-muted);
+    &.dirty {
+      color: var(--text-strong);
+    }
+    &.conflict,
+    &.error {
+      color: var(--red, #f85149);
+    }
+  }
+  .restore-box {
+    margin: 0;
+    border-radius: 0;
+    gap: 8px;
+  }
+  .code-editor-preview {
+    border-top: 1px solid var(--border);
+    padding: 8px 10px;
+  }
+}
+:root[data-layout='vscode'] .code-editor {
+  --code-editor-height: calc(100dvh - 124px);
+  border: 0;
+  border-radius: 0;
+}

@@ -141,6 +141,11 @@ export default function StudioSettings({ onNotice, onWorkspace, shortcuts, onClo
         </div>
       ),
     },
+    {
+      id: 'autosave', section: 'Code editor', title: 'Auto save', description: 'Like VS Code. After delay saves shortly after you stop typing; On focus change saves when you leave the editor or the window; Off saves only with Ctrl+S (which then shows the diff first). Unsaved edits are always kept in this browser and offered back when you reopen the file. Files changed outside the studio are never overwritten.', keywords: 'autosave auto save hot exit unsaved changes files.autoSave',
+      control: <Segmented label="Auto save" value={prefs.autoSave} onValueChange={(v) => setPrefs({ autoSave: v })} options={[{ value: 'off', label: 'Off' }, { value: 'afterDelay', label: 'After delay' }, { value: 'onFocusChange', label: 'On focus change' }]} />,
+    },
+    ...(prefs.autoSave === 'afterDelay' ? [{ id: 'autosave-delay', section: 'Code editor', title: 'Auto save delay', description: 'Milliseconds after the last edit.', keywords: 'autosave delay', control: <input type="number" className="settings-number" aria-label="Auto save delay in milliseconds" min={200} max={60000} step={100} value={prefs.autoSaveDelay} onChange={(e) => setPrefs({ autoSaveDelay: Math.max(200, Math.min(60000, Number(e.target.value) || 1000)) })} /> } as Row] : []),
     // Accessibility
     { id: 'motion', section: 'Accessibility', title: 'Reduce motion', description: 'Turns off animations and page transitions.', keywords: 'animation transitions vestibular', control: sw('pref-motion', prefs.motion === 'reduce', (v) => setPrefs({ motion: v ? 'reduce' : 'system' }), 'Reduce motion') },
     { id: 'contrast', section: 'Accessibility', title: 'High contrast', description: 'Stronger borders and brighter secondary text.', keywords: 'contrast wcag vision', control: sw('pref-contrast', prefs.contrast === 'high', (v) => setPrefs({ contrast: v ? 'high' : 'normal' }), 'High contrast') },

@@ -11,7 +11,8 @@ export default defineConfig({
     host: '127.0.0.1',
     port: webPort,
     strictPort: true,
-    watch: { ignored: ['**/scanner/bin/**', '**/scanner/obj/**', '**/.local/**'] },
+    // The sample repository lives inside the project: editing it from the studio must not reload the page.
+    watch: { ignored: ['**/scanner/bin/**', '**/scanner/obj/**', '**/.local/**', '**/fixtures/**', '**/test-results/**'] },
     proxy: { '/api': `http://127.0.0.1:${apiPort}` },
   },
 });
