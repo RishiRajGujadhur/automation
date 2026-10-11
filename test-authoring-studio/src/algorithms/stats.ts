@@ -22,6 +22,8 @@ export function cusum(series: number[], target?: number, k = 0.05, h = 1.5) {
  */
 export function sprt(outcomes: boolean[] /* true = failed */, p0 = 0.01, p1 = 0.2, alpha = 0.05, beta = 0.1) {
   const A = Math.log((1 - beta) / alpha), B = Math.log(beta / (1 - alpha));
+  // Failing every run (with enough runs) is a regression, not flakiness.
+  if (outcomes.length >= 3 && outcomes.every(Boolean)) return { decision: 'failing' as const, llr: Infinity, upper: A, lower: B };
   let llr = 0;
   for (const f of outcomes) {
     llr += f ? Math.log(p1 / p0) : Math.log((1 - p1) / (1 - p0));

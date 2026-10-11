@@ -172,3 +172,6 @@ Legend: `[x]` done · `[ ]` to do. Every feature is committed and pushed when fi
 - [x] P3 Individual algorithm switches only under Custom (Custom starts from the current preset); Turn on buttons switch to Custom
 - [x] P4 Desktop View menu: Layout and Algorithm Preset submenus
 
+- [x] Bug: installed app failed with "Cannot find package 'playwright'" — electron-builder dropped studio/node_modules from extra resources; now copied explicitly, and `npm run test:packaged` tests a copy outside the project
+- [x] Bug: window title doubled the app name on the loading/failure page
+- [x] Bug: SPRT called always-failing tests flaky; now "failing"

@@ -78,7 +78,8 @@ export const recentRepositories = () => (read().recent ?? []).filter((f) => fs.e
 export function updateTitle() {
   if (!ctx.win) return;
   const repo = ctx.repository ? path.basename(ctx.repository) : '';
-  const page = ctx.win.webContents.getTitle().replace(/ · TestAuthoring Studio$/, '');
+  const raw = ctx.win.webContents.getTitle().replace(/ · TestAuthoring Studio$/, '');
+  const page = raw === 'TestAuthoring Studio' ? '' : raw; // loading and failure pages are titled with the app name only
   ctx.win.setTitle([page, repo, 'TestAuthoring Studio'].filter(Boolean).join(' — '));
 }
 

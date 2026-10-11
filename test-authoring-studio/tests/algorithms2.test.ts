@@ -128,6 +128,7 @@ describe('result statistics', () => {
     expect(cusum(series, 0.05).changeAt).toBe(10);
     expect(sprt([true, false, true, false, true]).decision).toBe('flaky');
     expect(sprt(Array(40).fill(false)).decision).toBe('stable');
+    expect(sprt([true, true, true, true]).decision).toBe('failing');
   });
   it('Mann–Kendall, MAD, percentiles, MTBF, co-failure', () => {
     expect(mannKendall([1, 2, 3, 4, 5, 6, 7, 8]).trend).toBe('increasing');

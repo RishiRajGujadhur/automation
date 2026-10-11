@@ -17,7 +17,8 @@
     "test": "node scripts/build.mjs --skip-studio && playwright test",
     "icon": "node scripts/icon.mjs",
     "dist": "node scripts/icon.mjs && node scripts/build.mjs && electron-builder --win",
-    "pack": "node scripts/icon.mjs && node scripts/build.mjs && electron-builder --win --dir"
+    "pack": "node scripts/icon.mjs && node scripts/build.mjs && electron-builder --win --dir",
+    "test:packaged": "node scripts/test-packaged.mjs"
   },
   "build": {
     "appId": "dev.testauthoring.studio",
@@ -32,7 +33,17 @@
     "extraResources": [
       {
         "from": "studio",
-        "to": "studio"
+        "to": "studio",
+        "filter": [
+          "**/*"
+        ]
+      },
+      {
+        "from": "studio/node_modules",
+        "to": "studio/node_modules",
+        "filter": [
+          "**/*"
+        ]
       }
     ],
     "asar": true,

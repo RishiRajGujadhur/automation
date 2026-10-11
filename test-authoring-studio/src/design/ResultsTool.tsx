@@ -105,7 +105,7 @@ function RunStatistics({ runs, onNotice }: { runs: Run[]; onNotice: (m: string) 
             <tr key={r.name}>
               <td>{r.name}</td>
               {on('cusum') && <td>{r.cusum.changeAt >= 0 ? `run ${r.cusum.changeAt + 1}` : '–'}</td>}
-              {on('sprt') && <td><span className={`badge ${r.sprt.decision === 'flaky' ? 'amber' : r.sprt.decision === 'stable' ? 'green' : 'muted'}`}>{r.sprt.decision}</span>{r.sprt.decision === 'continue' && 'rerunsToStable' in r.sprt && <span className="meta"> ~{r.sprt.rerunsToStable} more passes</span>}</td>}
+              {on('sprt') && <td><span className={`badge ${r.sprt.decision === 'failing' ? 'red' : r.sprt.decision === 'flaky' ? 'amber' : r.sprt.decision === 'stable' ? 'green' : 'muted'}`}>{r.sprt.decision}</span>{r.sprt.decision === 'continue' && 'rerunsToStable' in r.sprt && <span className="meta"> ~{r.sprt.rerunsToStable} more passes</span>}</td>}
               {on('mtbf') && <td>{r.mtbf === Infinity ? 'never failed' : r.mtbf.toFixed(1)}</td>}
               {on('percentiles') && <td>{r.durations.length ? `${r.p.p50.toFixed(2)} / ${r.p.p90.toFixed(2)} / ${r.p.p95.toFixed(2)} s` : '–'}</td>}
               {on('mann-kendall') && <td>{r.mk ? <span className={`badge ${r.mk.trend === 'increasing' ? 'amber' : r.mk.trend === 'decreasing' ? 'green' : 'muted'}`}>{r.mk.trend}</span> : '–'}</td>}

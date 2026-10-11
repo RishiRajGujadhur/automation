@@ -28,6 +28,7 @@ npm test           # Playwright _electron smoke tests (9) against the dev build
 npm run pack       # unpacked build: release/win-unpacked/TestAuthoring Studio.exe
 npm run dist       # Windows installer (NSIS) and portable .exe in release/
 npm run typecheck
+npm run test:packaged   # tests the packaged app copied outside the project, like a real install
 ```
 
 To run the tests against the packaged app, set `TAS_EXE` first:
