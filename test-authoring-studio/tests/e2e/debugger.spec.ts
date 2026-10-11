@@ -75,3 +75,51 @@ test('breakpoint on a feature line, step into the C# step, watch, step out, call
     await fs.rm(temp, { recursive: true, force: true, maxRetries: 5 }).catch(() => {});
   }
 });
+
+test('Breakpoint settings: hit count (right-click in the margin), tracepoint log message, condition, disable', async ({ page, request }) => {
+  const previous = (await (await request.get('/api/workspace')).json()).config;
+  const temp = await fs.mkdtemp(path.join(os.tmpdir(), 'studio-bp-'));
+  await fs.cp(path.resolve(import.meta.dirname, '../../samples/Calculator'), temp, { recursive: true, filter: (s) => !/[\/](bin|obj)$/.test(s) });
+  const state = async () => (await (await request.get('/api/debug')).json()) as { status: string; output: string; frames: { id: number; file?: string; line: number }[] };
+  try {
+    expect((await request.post('/api/solution/open', { data: { path: path.join(temp, 'Calculator.csproj') } })).ok()).toBe(true);
+    await page.addInitScript(() => { if (!sessionStorage.getItem('seeded')) { localStorage.setItem('tas:prefs', JSON.stringify({ mode: 'advanced' })); sessionStorage.setItem('seeded', '1'); } });
+    await page.goto('/#/features/editor');
+    await expect(page.getByText('Repository indexed')).toBeVisible();
+    await page.getByRole('navigation').getByRole('button', { name: 'CalculatorTests.cs', exact: true }).first().click();
+    const editor = page.getByLabel('Source of Tests/CalculatorTests.cs');
+    const caseLine = editor.locator('.cm-line', { hasText: 'var calculator = new Calculator { First = first' });
+    await caseLine.click();
+    await page.keyboard.press('F9');
+    // Right-click the red dot: Breakpoint Settings; break on the 2nd hit only.
+    const dot = page.locator('.code-editor:not([hidden]) .cm-breakpoint-gutter .cm-bp:visible');
+    await dot.click({ button: 'right' });
+    const settings = page.getByRole('form', { name: /Breakpoint settings for Tests\/CalculatorTests\.cs/ });
+    await settings.getByLabel('Hit count').fill('2');
+    await settings.getByRole('button', { name: 'Close' }).click();
+    await expect(dot).toHaveClass(/conditional/);
+    await expect(page.getByRole('region', { name: 'Debugger' }).getByText('hit count 2')).toBeVisible();
+
+    // A tracepoint in Calculator.Add logs both cases and does not stop.
+    const steps = 'Steps/CalculatorSteps.cs';
+    const addLine = (await fs.readFile(path.join(temp, steps), 'utf8')).split(/\r?\n/).findIndex((l) => l.includes('var sum = First + Second;')) + 1;
+    await request.post('/api/debug/breakpoints', { data: { file: steps, breakpoints: [{ line: addLine, logMessage: 'sum of {First} and {Second}' }] } });
+
+    await request.post('/api/debug/start', { data: { project: 'Calculator.csproj', filter: 'FullyQualifiedName~Calculator.Tests.CalculatorTests.AddsCases' } });
+    await expect.poll(async () => (await state()).status, { timeout: 240_000, intervals: [1000] }).toBe('paused');
+    let s = await state();
+    expect(s.frames[0]).toMatchObject({ file: 'Tests/CalculatorTests.cs' });
+    // Paused on the second hit: the second case runs (first = -4); the tracepoint already logged the first case.
+    const [first] = await (await request.post('/api/debug/evaluate', { data: { expressions: ['first'], frameId: s.frames[0].id } })).json();
+    expect(first.result).toBe('-4');
+    expect(s.output).toMatch(/\[Tracepoint\] Steps\/CalculatorSteps\.cs:\d+: sum of 1 and 1/);
+    await request.post('/api/debug/control', { data: { action: 'continue' } });
+    await expect.poll(async () => (await state()).status, { timeout: 60_000 }).toBe('ended');
+    s = await state();
+    expect(s.output).toMatch(/sum of -4 and 4/);
+  } finally {
+    await request.post('/api/debug/control', { data: { action: 'stop' } }).catch(() => {});
+    await request.post('/api/workspace', { data: { ...previous, solution: '' } });
+    await fs.rm(temp, { recursive: true, force: true, maxRetries: 5 }).catch(() => {});
+  }
+});

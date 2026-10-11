@@ -70,7 +70,7 @@ Status: ✅ done · 🟡 partial · ⬜ to do. Priority: **P1** next, **P2** aft
 | # | Feature | Status | Pri |
 | --- | --- | --- | --- |
 | D1 | Breakpoints in .feature and .cs, F5/F10/F11/Shift+F11, Locals, Watch, Call Stack, DataTips | ✅ | — |
-| D2 | Conditional, hit-count and log-point breakpoints; enable/disable | ⬜ | P2 |
+| D2 | Conditional, hit-count and log-point breakpoints; enable/disable | ✅ (right-click a breakpoint for its settings; Enable/Disable All) | P2 |
 | D3 | Exception settings (break on thrown/unhandled), Exception helper | 🟡 | P2 |
 | D4 | Autos, Immediate window, Run to Cursor, Set Next Statement | ⬜ | P2 |
 | D5 | Debug from Test Explorer and from a scenario's gutter | ✅ (Shift+click a margin glyph) | P1 |
@@ -115,3 +115,4 @@ Status: ✅ done · 🟡 partial · ⬜ to do. Priority: **P1** next, **P2** aft
 - 2026-10-12 — **Change bars (V1 complete).** Feature and C# editors show added / modified / deleted lines against the last commit (`/api/git/head`, `diffLines`), refreshed after commits, discards and window focus; line-ending differences ignored.
 - 2026-10-12 — **Branches and sync (V2 partial).** Branch picker in Git Changes (local and remote branches, New Branch…), Fetch, Pull (fast-forward only) and Push (publishes a new branch with its upstream), ahead / behind counts; tested against a local bare remote.
 - 2026-10-12 — **Peek / Implementation / Base (E5).** Language service `implementations` (interface members, overrides, derived classes) and `base`; C# editor: Alt+F12 peek window (read-only, highlighted, Open), Ctrl+F12, Go To Base; several results go to the references list.
+- 2026-10-12 — **Breakpoint settings (D2).** Conditions go to netcoredbg; hit counts (`5`, `>= 5`, `% 5`) and tracepoints (log message with `{expressions}`, continues) are handled by the server on stop; enabled flag, Enable/Disable All; margin markers per kind (conditional +, tracepoint diamond, disabled hollow); right-click a breakpoint for Breakpoint Settings. Fixed: parameterized-test filters contained `(`, which vstest/NUnit reject.

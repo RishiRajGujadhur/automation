@@ -70,3 +70,15 @@ describe('DapClient', () => {
     }
   });
 });
+
+describe('hit count conditions', async () => {
+  const { hitMatches } = await import('../server/debugger');
+  it('equal, at least, multiple of; empty or unknown always breaks', () => {
+    expect([1, 2, 3].map((n) => hitMatches(n, '2'))).toEqual([false, true, false]);
+    expect([1, 2, 3].map((n) => hitMatches(n, '= 2'))).toEqual([false, true, false]);
+    expect([1, 2, 3].map((n) => hitMatches(n, '>= 2'))).toEqual([false, true, true]);
+    expect([1, 2, 3, 4, 6].map((n) => hitMatches(n, '% 2'))).toEqual([false, true, false, true, true]);
+    expect(hitMatches(7, '')).toBe(true);
+    expect(hitMatches(7, 'when x')).toBe(true);
+  });
+});

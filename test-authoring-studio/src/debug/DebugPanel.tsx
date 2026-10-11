@@ -1,9 +1,9 @@
 import { useEffect, useState } from 'react';
 import * as Tabs from '@radix-ui/react-tabs';
-import { ChevronRight, ChevronDown, Play, Pause, Square, RotateCw, ArrowDownToLine, ArrowUpFromLine, Redo2, X, CircleDot, Trash2, Bug, Loader } from 'lucide-react';
+import { ChevronRight, ChevronDown, Play, Pause, Square, RotateCw, ArrowDownToLine, ArrowUpFromLine, Redo2, X, CircleDot, Trash2, Bug, Loader, CircleOff, Settings2 } from 'lucide-react';
 import { IconButton } from '../radix2';
 import { api } from '../api';
-import { useDebug, debugControl, selectFrame, setWatches, setBreakpoints, clearBreakpoints, startDebugging, isLive, type Variable, type DebugFrame } from './store';
+import { useDebug, debugControl, selectFrame, setWatches, setBreakpoints, clearBreakpoints, startDebugging, isLive, breakpointsOf, updateBreakpoint, enableAllBreakpoints, type Variable, type DebugFrame } from './store';
 import { useLocalState } from '../ui';
 
 const statusText: Record<string, string> = { idle: 'Not debugging', building: 'Building…', starting: 'Starting test host…', running: 'Running', paused: 'Paused', ended: 'Ended' };
@@ -44,7 +44,7 @@ const Grid = ({ label, children }: { label: string; children: React.ReactNode })
  * The debug windows docked under the editor: toolbar (Continue F5, Break All, Stop Shift+F5, Restart,
  * Step Into F11, Step Over F10, Step Out Shift+F11), Locals, Watch, Call Stack, Breakpoints and Output.
  */
-export default function DebugPanel({ onOpen, onNotice, onClose }: { onOpen: (file: string, line: number) => void; onNotice: (m: string) => void; onClose: () => void }) {
+export default function DebugPanel({ onOpen, onNotice, onClose, editingRequest = null, editingNonce = null }: { onOpen: (file: string, line: number) => void; onNotice: (m: string) => void; onClose: () => void; editingRequest?: string | null; editingNonce?: string | null }) {
   const { state, watches, frameIndex, breakpoints } = useDebug();
   const [tab, setTab] = useLocalState('debugTab', 'locals');
   const frame: DebugFrame | undefined = state.status === 'paused' ? state.frames[frameIndex] : undefined;
@@ -80,7 +80,10 @@ export default function DebugPanel({ onOpen, onNotice, onClose }: { onOpen: (fil
     if (live) await debugControl('stop').catch(() => {});
     if (target) startDebugging({ project: target.project, filter: target.filter }).catch((e) => onNotice((e as Error).message));
   };
-  const bpList = Object.entries(breakpoints).flatMap(([file, lines]) => lines.map((line) => ({ file, line, verified: state.breakpoints[file]?.find((b) => b.line === line)?.verified })));
+  const bpList = Object.entries(breakpoints).flatMap(([file, specs]) => specs.map((b) => ({ ...b, file, verified: state.breakpoints[file]?.find((x) => x.line === b.line)?.verified })));
+  // Breakpoint Settings being edited (Visual Studio's peek under the breakpoint): file:line.
+  const [editing, setEditing] = useState<string | null>(editingRequest);
+  useEffect(() => { if (editingRequest) { setTab('breakpoints'); setEditing(editingRequest); } }, [editingNonce]); // eslint-disable-line react-hooks/exhaustive-deps
   const addWatch = () => { const e = draft.trim(); if (e) setWatches([...watches, e]); setDraft(''); };
 
   return (
@@ -154,16 +157,34 @@ export default function DebugPanel({ onOpen, onNotice, onClose }: { onOpen: (fil
         <Tabs.Content value="breakpoints" className="debug-body">
           <div className="dbg-list-tools">
             <IconButton label="Delete all breakpoints" disabled={!bpList.length} onClick={clearBreakpoints}><Trash2 size={13} /></IconButton>
+            <IconButton label="Disable all breakpoints" disabled={!bpList.some((b) => b.enabled !== false)} onClick={() => enableAllBreakpoints(false)}><CircleOff size={13} /></IconButton>
+            <IconButton label="Enable all breakpoints" disabled={!bpList.some((b) => b.enabled === false)} onClick={() => enableAllBreakpoints(true)}><CircleDot size={13} /></IconButton>
           </div>
           {bpList.length ? (
             <ul className="dbg-list" aria-label="Breakpoints">
-              {bpList.map((b) => (
-                <li key={`${b.file}:${b.line}`} className="dbg-bp">
-                  <CircleDot size={12} className={`bp-dot ${b.verified === false && live ? 'pending' : ''}`} aria-hidden="true" />
-                  <button className="dbg-frame" onClick={() => onOpen(b.file, b.line)}><span className="dbg-frame-name">{b.file.split('/').pop()}, line {b.line}</span><span className="meta">{b.file}</span></button>
-                  <IconButton label={`Delete breakpoint ${b.file}:${b.line}`} onClick={() => setBreakpoints(b.file, breakpoints[b.file].filter((l) => l !== b.line))}><X size={12} /></IconButton>
-                </li>
-              ))}
+              {bpList.map((b) => {
+                const key = `${b.file}:${b.line}`;
+                const detail = [b.condition?.trim() && `when ${b.condition.trim()}`, b.hitCondition?.trim() && `hit count ${b.hitCondition.trim()}`, b.logMessage?.trim() && `log "${b.logMessage.trim()}"`].filter(Boolean).join(' · ');
+                return (
+                  <li key={key} className={`dbg-bp ${b.enabled === false ? 'disabled' : ''}`}>
+                    <div className="dbg-bp-row">
+                      <input type="checkbox" aria-label={`Enable breakpoint ${key}`} checked={b.enabled !== false} onChange={(e) => updateBreakpoint(b.file, b.line, { enabled: e.target.checked })} />
+                      <CircleDot size={12} className={`bp-dot ${b.verified === false && live ? 'pending' : ''} ${b.logMessage?.trim() ? 'tracepoint' : ''}`} aria-hidden="true" />
+                      <button className="dbg-frame" onClick={() => onOpen(b.file, b.line)}><span className="dbg-frame-name">{b.file.split('/').pop()}, line {b.line}</span>{detail && <span className="bp-detail">{detail}</span>}<span className="meta">{b.file}</span></button>
+                      <IconButton label={`Breakpoint settings ${key}`} onClick={() => setEditing(editing === key ? null : key)}><Settings2 size={12} /></IconButton>
+                      <IconButton label={`Delete breakpoint ${key}`} onClick={() => setBreakpoints(b.file, breakpointsOf(b.file).filter((l) => l !== b.line))}><X size={12} /></IconButton>
+                    </div>
+                    {editing === key && (
+                      <form className="bp-settings" aria-label={`Breakpoint settings for ${key}`} onSubmit={(e) => { e.preventDefault(); const f = new FormData(e.currentTarget); updateBreakpoint(b.file, b.line, { condition: String(f.get('condition') ?? ''), hitCondition: String(f.get('hit') ?? ''), logMessage: String(f.get('log') ?? '') }); setEditing(null); }}>
+                        <label>Condition <input name="condition" defaultValue={b.condition ?? ''} placeholder="C# expression, e.g. number > 50" autoFocus /></label>
+                        <label>Hit count <input name="hit" defaultValue={b.hitCondition ?? ''} placeholder="5, >= 5 or % 5" /></label>
+                        <label>Log message <input name="log" defaultValue={b.logMessage ?? ''} placeholder="Value is {number} (continues without breaking)" /></label>
+                        <div><button className="button primary" type="submit">Close</button></div>
+                      </form>
+                    )}
+                  </li>
+                );
+              })}
             </ul>
           ) : <p className="subtle debug-empty">Click the margin left of a line number, or press F9, to set a breakpoint in a .feature or .cs file.</p>}
         </Tabs.Content>

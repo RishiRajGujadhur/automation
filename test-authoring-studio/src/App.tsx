@@ -128,7 +128,7 @@ import './vscode.scss';
 import './debug/debug.scss';
 import './files/editor-area.scss';
 import DebugPanel from './debug/DebugPanel';
-import { useDebug, startDebugging, debugControl, isLive, getSnapshot, clearBreakpoints } from './debug/store';
+import { useDebug, startDebugging, debugControl, isLive, getSnapshot, clearBreakpoints, BREAKPOINT_SETTINGS_EVENT } from './debug/store';
 import { Bug, GitCompareArrows, Database, Settings, Layers, Hammer, TestTubeDiagonal, GitBranch as GitBranchIcon } from 'lucide-react';
 
 const demo: Action[] = [
@@ -338,6 +338,9 @@ export default function App() {
   const debug = useDebug();
   const [debugOpen, setDebugOpen] = useLocalState('debugOpen', false);
   const debugLive = isLive(debug.state.status);
+  // Right-click a breakpoint: the Breakpoints window opens on its settings.
+  const [bpSettings, setBpSettings] = useState<string | null>(null);
+  useEffect(() => { const h = (e: Event) => { setDebugOpen(true); setBpSettings(`${(e as CustomEvent<string>).detail}#${Date.now()}`); }; window.addEventListener(BREAKPOINT_SETTINGS_EVENT, h); return () => window.removeEventListener(BREAKPOINT_SETTINGS_EVENT, h); }, []); // eslint-disable-line react-hooks/exhaustive-deps
   const showDebug = debugOpen || debugLive;
   // Build ▸ Build / Rebuild / Clean: the Error List and Output dock under the editor like the debug windows.
   const build = useBuild();
@@ -1729,7 +1732,7 @@ export default function App() {
             <BuildPanel onOpen={(file, line, column) => editFile(file, line, column)} onNotice={setNotice} onClose={() => setBuildOpen(false)} />
           )}
           {tab === 'Features' && (view === 'code' || view === 'editor') && showDebug && (
-            <DebugPanel onOpen={openAt} onNotice={setNotice} onClose={() => { setDebugOpen(false); if (debugLive) setNotice('The session keeps running. Stop it with Shift+F5.'); }} />
+            <DebugPanel editingRequest={bpSettings?.split('#')[0] ?? null} editingNonce={bpSettings} onOpen={openAt} onNotice={setNotice} onClose={() => { setDebugOpen(false); if (debugLive) setNotice('The session keeps running. Stop it with Shift+F5.'); }} />
           )}
           {tab === 'Features' && view === 'builder' && (
             <div className="builder-grid">

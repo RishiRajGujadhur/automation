@@ -310,3 +310,75 @@
   z-index: 6;
   box-shadow: 0 -8px 24px #0006;
 }
+
+// Breakpoint kinds (margin) and Breakpoint Settings
+.cm-bp.conditional {
+  position: relative;
+  &::after {
+    content: '+';
+    position: absolute;
+    inset: -3px 0 0;
+    color: #fff;
+    font-size: 10px;
+    font-weight: 700;
+    line-height: 12px;
+    text-align: center;
+  }
+}
+.cm-bp.tracepoint {
+  border-radius: 1px;
+  transform: rotate(45deg) scale(0.85);
+}
+.cm-bp.disabled {
+  background: transparent;
+  border: 1.5px solid #e51414;
+}
+.dbg-bp {
+  flex-direction: column;
+  align-items: stretch !important;
+  &.disabled .dbg-frame-name {
+    opacity: 0.6;
+  }
+  .dbg-bp-row {
+    display: flex;
+    align-items: center;
+    gap: 2px;
+  }
+  .bp-dot.tracepoint {
+    fill: transparent;
+  }
+  .bp-detail {
+    color: var(--accent-text, #9cdcfe);
+    font-size: 11px;
+    white-space: nowrap;
+  }
+}
+.bp-settings {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 6px 10px;
+  margin: 2px 8px 8px 28px;
+  padding: 8px;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  background: var(--surface);
+  font-size: 12px;
+  label {
+    display: grid;
+    gap: 2px;
+    color: var(--text-muted);
+  }
+  input {
+    height: 24px;
+    padding: 0 6px;
+    border: 1px solid var(--border);
+    border-radius: 3px;
+    background: var(--surface-2);
+    color: var(--text);
+    font-family: var(--font-mono, monospace);
+  }
+  div {
+    display: flex;
+    align-items: end;
+  }
+}

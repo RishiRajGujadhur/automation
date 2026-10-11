@@ -1,25 +1,28 @@
 import { Prec, StateEffect, StateField, RangeSet, type Extension, type Text } from '@codemirror/state';
 import { Decoration, EditorView, GutterMarker, ViewPlugin, gutter, hoverTooltip, keymap, type DecorationSet } from '@codemirror/view';
 import { api } from '../api';
-import { breakpointsOf, currentFrame, getSnapshot, setBreakpoints, subscribe, toggleBreakpoint } from '../debug/store';
+import { breakpointsOf, currentFrame, getSnapshot, setBreakpoints, subscribe, toggleBreakpoint, specsOf, BREAKPOINT_SETTINGS_EVENT, type BreakpointSpec } from '../debug/store';
 
+type Kind = 'plain' | 'conditional' | 'tracepoint' | 'disabled';
+const kindOf = (b?: BreakpointSpec): Kind => (!b ? 'plain' : b.enabled === false ? 'disabled' : b.logMessage?.trim() ? 'tracepoint' : b.condition?.trim() || b.hitCondition?.trim() ? 'conditional' : 'plain');
 class BreakpointMarker extends GutterMarker {
-  constructor(readonly verified: boolean) { super(); }
-  eq(o: BreakpointMarker) { return o.verified === this.verified; }
+  constructor(readonly kind: Kind) { super(); }
+  eq(o: BreakpointMarker) { return o.kind === this.kind; }
   toDOM() {
     const el = document.createElement('span');
-    el.className = `cm-bp ${this.verified ? '' : 'pending'}`;
-    el.title = 'Breakpoint (F9 to toggle)';
+    el.className = `cm-bp ${this.kind}`;
+    el.title = { plain: 'Breakpoint (F9 toggles, right-click for settings)', conditional: 'Conditional breakpoint (right-click for settings)', tracepoint: 'Tracepoint: logs a message and continues (right-click for settings)', disabled: 'Disabled breakpoint (right-click for settings)' }[this.kind];
     return el;
   }
 }
+const kinds: Record<Kind, BreakpointMarker> = { plain: new BreakpointMarker('plain'), conditional: new BreakpointMarker('conditional'), tracepoint: new BreakpointMarker('tracepoint'), disabled: new BreakpointMarker('disabled') };
 class ExecMarker extends GutterMarker {
   toDOM() { const el = document.createElement('span'); el.className = 'cm-exec-arrow'; el.title = 'Next statement'; return el; }
 }
-const bpMarker = new BreakpointMarker(true);
+const bpMarker = kinds.plain;
 const execMarker = new ExecMarker();
 
-const setLines = StateEffect.define<number[]>();
+const setLines = StateEffect.define<{ line: number; kind: Kind }[]>();
 const setExec = StateEffect.define<number | null>();
 
 const clampLines = (doc: Text, lines: number[]) => lines.filter((l) => l >= 1 && l <= doc.lines);
@@ -28,7 +31,13 @@ const linesOf = (doc: Text, set: RangeSet<GutterMarker>) => {
   set.between(0, doc.length, (from) => { out.push(doc.lineAt(from).number); });
   return [...new Set(out)];
 };
-const toSet = (doc: Text, lines: number[]) => RangeSet.of(clampLines(doc, [...new Set(lines)].sort((a, b) => a - b)).map((l) => bpMarker.range(doc.line(l).from)));
+const marksOf = (doc: Text, set: RangeSet<GutterMarker>) => {
+  const out: string[] = [];
+  set.between(0, doc.length, (from, _to, m) => { out.push(`${doc.lineAt(from).number}:${(m as BreakpointMarker).kind}`); });
+  return out;
+};
+const wanted = (doc: Text, file: string) => specsOf(file).filter((b) => b.line >= 1 && b.line <= doc.lines).sort((a, b) => a.line - b.line).map((b) => ({ line: b.line, kind: kindOf(b) }));
+const toSet = (doc: Text, list: { line: number; kind: Kind }[]) => RangeSet.of(list.filter((b) => b.line >= 1 && b.line <= doc.lines).map((b) => kinds[b.kind].range(doc.line(b.line).from)));
 
 const execLine = Decoration.line({ class: 'cm-exec-line' });
 
@@ -39,7 +48,7 @@ const execLine = Decoration.line({ class: 'cm-exec-line' });
  */
 export function breakpoints(file: string): Extension {
   const field = StateField.define<RangeSet<GutterMarker>>({
-    create: (state) => toSet(state.doc, breakpointsOf(file)),
+    create: (state) => toSet(state.doc, wanted(state.doc, file)),
     update(value, tr) {
       for (const e of tr.effects) if (e.is(setLines)) return toSet(tr.state.doc, e.value);
       return value.map(tr.changes);
@@ -60,12 +69,12 @@ export function breakpoints(file: string): Extension {
   const toggle = (view: EditorView, pos: number) => { toggleBreakpoint(file, view.state.doc.lineAt(pos).number); return true; };
   const sync = ViewPlugin.define((view) => {
     const apply = () => {
-      const want = clampLines(view.state.doc, breakpointsOf(file));
-      const have = linesOf(view.state.doc, view.state.field(field));
+      const want = wanted(view.state.doc, file);
+      const have = marksOf(view.state.doc, view.state.field(field));
       const frame = currentFrame();
       const line = frame?.file === file ? frame.line : null;
       const effects: StateEffect<unknown>[] = [];
-      if (want.join() !== have.sort((a, b) => a - b).join()) effects.push(setLines.of(want));
+      if (want.map((b) => `${b.line}:${b.kind}`).join() !== have.join()) effects.push(setLines.of(want));
       if (line !== view.state.field(exec).line) effects.push(setExec.of(line));
       if (!effects.length) return;
       // Dispatching during another view update is not allowed; defer to the next frame.
@@ -115,7 +124,17 @@ export function breakpoints(file: string): Extension {
       class: 'cm-breakpoint-gutter',
       markers: (v) => RangeSet.join([v.state.field(field), v.state.field(exec).marks]),
       initialSpacer: () => bpMarker,
-      domEventHandlers: { mousedown: (view, block) => toggle(view, block.from) },
+      domEventHandlers: {
+        mousedown: (view, block, e) => ((e as MouseEvent).button === 0 ? toggle(view, block.from) : false),
+        // Right-click a breakpoint: Breakpoint Settings (condition, hit count, log message), as in Visual Studio.
+        contextmenu: (view, block, e) => {
+          const line = view.state.doc.lineAt(block.from).number;
+          if (!breakpointsOf(file).includes(line)) return false;
+          e.preventDefault();
+          window.dispatchEvent(new CustomEvent(BREAKPOINT_SETTINGS_EVENT, { detail: `${file}:${line}` }));
+          return true;
+        },
+      },
     })),
     keymap.of([{ key: 'F9', preventDefault: true, run: (v) => toggle(v, v.state.selection.main.head) }]),
     sync,

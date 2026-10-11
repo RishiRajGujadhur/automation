@@ -1,6 +1,8 @@
 import { useSyncExternalStore } from 'react';
 import { api } from '../api';
 
+/** Breakpoint settings (Visual Studio's Breakpoint Settings): condition, hit count, log message (tracepoint), enabled. */
+export type BreakpointSpec = { line: number; condition?: string; hitCondition?: string; logMessage?: string; enabled?: boolean };
 export type DebugFrame = { id: number; name: string; file?: string; line: number; column: number; external: boolean };
 export type DebugStatus = 'idle' | 'building' | 'starting' | 'running' | 'paused' | 'ended';
 export type DebugState = {
@@ -13,7 +15,7 @@ export type DebugState = {
   threadId?: number;
   frames: DebugFrame[];
   output: string;
-  breakpoints: Record<string, { line: number; verified: boolean }[]>;
+  breakpoints: Record<string, (BreakpointSpec & { verified: boolean })[]>;
 };
 export type Variable = { name: string; value: string; type?: string; variablesReference: number };
 
@@ -22,13 +24,14 @@ export type Variable = { name: string; value: string; type?: string; variablesRe
  * Breakpoints and watch expressions are kept per browser, like Visual Studio's .suo, and pushed to the
  * server, which forwards them to the live session. Session state streams from /api/debug/events.
  */
-type Snapshot = { state: DebugState; breakpoints: Record<string, number[]>; watches: string[]; frameIndex: number };
+type Snapshot = { state: DebugState; breakpoints: Record<string, BreakpointSpec[]>; watches: string[]; frameIndex: number };
 const read = <T,>(key: string, fallback: T): T => { try { return JSON.parse(localStorage.getItem(key) ?? '') as T; } catch { return fallback; } };
 const write = (key: string, value: unknown) => { try { localStorage.setItem(key, JSON.stringify(value)); } catch { /* storage blocked */ } };
 
 let snapshot: Snapshot = {
   state: { status: 'idle', version: 0, frames: [], output: '', breakpoints: {} },
-  breakpoints: read<Record<string, number[]>>('tas:breakpoints', {}),
+  // Earlier versions stored plain line numbers.
+  breakpoints: Object.fromEntries(Object.entries(read<Record<string, (number | BreakpointSpec)[]>>('tas:breakpoints', {})).map(([f, list]) => [f, list.map((b) => (typeof b === 'number' ? { line: b } : b))])),
   watches: read<string[]>('tas:watches', []),
   frameIndex: 0,
 };
@@ -70,24 +73,41 @@ export const getSnapshot = () => snapshot;
 export function useDebug() { return useSyncExternalStore(subscribe, getSnapshot); }
 
 async function pushAll() {
-  for (const [file, lines] of Object.entries(snapshot.breakpoints)) await api('/debug/breakpoints', { file, lines }).catch(() => {});
+  for (const [file, breakpoints] of Object.entries(snapshot.breakpoints)) await api('/debug/breakpoints', { file, breakpoints }).catch(() => {});
 }
-export function breakpointsOf(file: string) { return snapshot.breakpoints[file] ?? []; }
-export function setBreakpoints(file: string, lines: number[]) {
-  const unique = [...new Set(lines)].sort((a, b) => a - b);
-  const current = snapshot.breakpoints[file] ?? [];
-  if (unique.length === current.length && unique.every((l, i) => l === current[i])) return;
+/** Breakpoint lines of a file (the editor margin). */
+export function breakpointsOf(file: string) { return (snapshot.breakpoints[file] ?? []).map((b) => b.line); }
+export function specsOf(file: string) { return snapshot.breakpoints[file] ?? []; }
+export function specAt(file: string, line: number) { return specsOf(file).find((b) => b.line === line); }
+function store(file: string, specs: BreakpointSpec[]) {
   const breakpoints = { ...snapshot.breakpoints };
-  if (unique.length) breakpoints[file] = unique; else delete breakpoints[file];
+  if (specs.length) breakpoints[file] = specs; else delete breakpoints[file];
   write('tas:breakpoints', breakpoints);
   set({ breakpoints });
-  void api('/debug/breakpoints', { file, lines: unique }).catch(() => {});
+  void api('/debug/breakpoints', { file, breakpoints: specs }).catch(() => {});
+}
+/**
+ * New breakpoint lines for a file. Settings stay with their breakpoint: same line, or (when edits moved every line
+ * and the count is unchanged) the breakpoint in the same position.
+ */
+export function setBreakpoints(file: string, lines: number[]) {
+  const unique = [...new Set(lines)].sort((a, b) => a - b);
+  const current = specsOf(file);
+  if (unique.length === current.length && unique.every((l, i) => l === current[i].line)) return;
+  const moved = unique.length === current.length;
+  store(file, unique.map((line, i) => ({ ...(current.find((b) => b.line === line) ?? (moved ? current[i] : {})), line })));
+}
+/** Breakpoint Settings: condition, hit count, log message, enabled. */
+export function updateBreakpoint(file: string, line: number, patch: Partial<BreakpointSpec>) {
+  store(file, specsOf(file).map((b) => (b.line === line ? { ...b, ...patch, line } : b)));
 }
 export function toggleBreakpoint(file: string, line: number) {
   const lines = breakpointsOf(file);
   setBreakpoints(file, lines.includes(line) ? lines.filter((l) => l !== line) : [...lines, line]);
 }
-export function clearBreakpoints() { for (const file of Object.keys(snapshot.breakpoints)) setBreakpoints(file, []); }
+export function clearBreakpoints() { for (const file of Object.keys(snapshot.breakpoints)) store(file, []); }
+/** Debug ▸ Disable All / Enable All Breakpoints. */
+export function enableAllBreakpoints(enabled: boolean) { for (const file of Object.keys(snapshot.breakpoints)) store(file, specsOf(file).map((b) => ({ ...b, enabled }))); }
 
 export function setWatches(watches: string[]) { write('tas:watches', watches); set({ watches }); }
 export function selectFrame(frameIndex: number) { set({ frameIndex }); }
@@ -96,3 +116,6 @@ export function currentFrame() { const s = snapshot; return s.state.status === '
 export const startDebugging = (target: { file?: string; scenario?: string; project?: string; filter?: string }) => api<DebugState>('/debug/start', target);
 export const debugControl = (action: 'continue' | 'next' | 'stepIn' | 'stepOut' | 'pause' | 'stop') => api<DebugState>('/debug/control', { action });
 export const isLive = (s: DebugStatus) => s === 'building' || s === 'starting' || s === 'running' || s === 'paused';
+
+/** Right-click on a breakpoint in the margin: open its settings in the Breakpoints window. Detail: "file:line". */
+export const BREAKPOINT_SETTINGS_EVENT = 'tas:breakpoint-settings';

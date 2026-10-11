@@ -10,6 +10,17 @@ const localDebugger = path.resolve(projectRoot, '../.tools/netcoredbg/netcoredbg
 /** netcoredbg (Samsung, MIT): a .NET debugger speaking the Debug Adapter Protocol. The desktop app bundles one. */
 export const netcoredbg = process.env.STUDIO_NETCOREDBG || (existsSync(localDebugger) ? localDebugger : 'netcoredbg');
 
+/** A breakpoint as Visual Studio has it: condition, hit count ("5", ">= 5", "% 3"), log message (tracepoint), enabled. */
+export type BreakpointSpec = { line: number; condition?: string; hitCondition?: string; logMessage?: string; enabled?: boolean };
+/** Whether the n-th hit satisfies a hit condition: "5" / "= 5" (equal), ">= 5", "% 3" (every third). */
+export function hitMatches(hits: number, condition?: string) {
+  const c = (condition ?? '').trim();
+  if (!c) return true;
+  const m = /^(>=|=|==|%)?\s*(\d+)$/.exec(c);
+  if (!m) return true;
+  const n = Number(m[2]);
+  return m[1] === '>=' ? hits >= n : m[1] === '%' ? n > 0 && hits % n === 0 : hits === n;
+}
 export type DebugFrame = { id: number; name: string; file?: string; line: number; column: number; external: boolean };
 export type DebugStatus = 'idle' | 'building' | 'starting' | 'running' | 'paused' | 'ended';
 export type DebugState = {
@@ -23,7 +34,7 @@ export type DebugState = {
   frames: DebugFrame[];
   output: string;
   /** Breakpoint lines per repository file, with whether the debugger resolved them. */
-  breakpoints: Record<string, { line: number; verified: boolean }[]>;
+  breakpoints: Record<string, (BreakpointSpec & { verified: boolean })[]>;
 };
 
 const MAX_OUTPUT = 60_000;
@@ -40,6 +51,8 @@ export class Debugger extends EventEmitter {
   private test?: ChildProcess;
   private root = '';
   private generation = 0;
+  /** Hits per breakpoint (file:line) in the current session, for hit conditions. */
+  private hits = new Map<string, number>();
 
   private update(patch: Partial<DebugState>) {
     this.state = { ...this.state, ...patch, version: this.state.version + 1 };
@@ -52,20 +65,24 @@ export class Debugger extends EventEmitter {
   get active() { return ['building', 'starting', 'running', 'paused'].includes(this.state.status); }
 
   /** Replaces the breakpoints of one repository file; sent to the debugger right away when a session is live. */
-  async setBreakpoints(root: string, file: string, lines: number[]) {
-    const unique = [...new Set(lines.filter((l) => Number.isInteger(l) && l > 0))].sort((a, b) => a - b);
+  async setBreakpoints(root: string, file: string, specs: BreakpointSpec[]) {
+    const byLine = new Map<number, BreakpointSpec>();
+    for (const b of specs) if (Number.isInteger(b.line) && b.line > 0) byLine.set(b.line, b);
+    const unique = [...byLine.values()].sort((a, b) => a.line - b.line);
     const breakpoints = { ...this.state.breakpoints };
-    if (unique.length) breakpoints[file] = unique.map((line) => ({ line, verified: false })); else delete breakpoints[file];
+    if (unique.length) breakpoints[file] = unique.map((b) => ({ ...b, verified: false })); else delete breakpoints[file];
     this.update({ breakpoints });
     if (this.dap && this.root === root && this.state.status !== 'building' && this.state.status !== 'ended') await this.send(file);
     return this.state.breakpoints[file] ?? [];
   }
   private async send(file: string) {
-    const lines = (this.state.breakpoints[file] ?? []).map((b) => b.line);
+    const all = this.state.breakpoints[file] ?? [];
+    // Disabled breakpoints stay listed but are not set; conditions go to the debugger, hit counts and log messages are ours.
+    const active = all.filter((b) => b.enabled !== false);
     try {
-      const r = await this.dap!.request<{ breakpoints: { line?: number; verified: boolean }[] }>('setBreakpoints', { source: { path: path.resolve(this.root, file) }, breakpoints: lines.map((line) => ({ line })) });
+      const r = await this.dap!.request<{ breakpoints: { line?: number; verified: boolean }[] }>('setBreakpoints', { source: { path: path.resolve(this.root, file) }, breakpoints: active.map((b) => ({ line: b.line, ...(b.condition?.trim() ? { condition: b.condition.trim() } : {}) })) });
       // netcoredbg reports pending breakpoints as unverified until the module loads; they still bind.
-      const marks = lines.map((line, i) => ({ line: r.breakpoints[i]?.line ?? line, verified: !!r.breakpoints[i]?.verified }));
+      const marks = all.map((b) => { const i = active.indexOf(b); return { ...b, verified: i >= 0 && !!r.breakpoints[i]?.verified }; });
       if (this.state.breakpoints[file]) this.update({ breakpoints: { ...this.state.breakpoints, [file]: marks } });
     } catch (e) {
       this.log(`Breakpoints for ${file}: ${(e as Error).message}\n`);
@@ -77,6 +94,7 @@ export class Debugger extends EventEmitter {
     if (netcoredbg !== 'netcoredbg' && !existsSync(netcoredbg)) throw new Error(`The .NET debugger was not found at ${netcoredbg}.`);
     const generation = ++this.generation;
     this.root = root;
+    this.hits.clear();
     this.update({ status: 'building', target: { project, filter: filter ?? '', label }, reason: undefined, exception: undefined, error: undefined, threadId: undefined, frames: [], output: `Building ${project}…\n` });
     const fail = (e: unknown) => {
       if (generation !== this.generation) return;
@@ -136,12 +154,39 @@ export class Debugger extends EventEmitter {
     if (event === 'output' && body.category !== 'telemetry') this.log(body.output ?? '');
     else if (event === 'stopped') {
       const threadId = body.threadId ?? this.state.threadId;
+      if (body.reason === 'breakpoint' && (await this.tracepointOrSkip(threadId))) return;
       let exception: string | undefined;
       if (body.reason === 'exception') exception = await this.dap!.request('exceptionInfo', { threadId }).then((r: any) => `${r.details?.typeName ?? r.exceptionId}: ${r.description ?? r.details?.message ?? ''}`, () => body.text);
       const frames = await this.frames(threadId);
       this.update({ status: 'paused', reason: body.reason, threadId, frames, exception });
     } else if (event === 'continued') this.update({ status: 'running', frames: [], reason: undefined, exception: undefined });
     else if (event === 'terminated' || event === 'exited') { if (this.active) this.update({ status: 'ended', frames: [], threadId: undefined }); }
+  }
+
+  /**
+   * Hit counts and tracepoints (log messages), which the debugger itself does not do: count the hit, log the message
+   * (with {expressions} evaluated in the stopped frame) and continue without pausing when the breakpoint says so.
+   */
+  private async tracepointOrSkip(threadId: number) {
+    const top = (await this.frames(threadId)).find((f) => !f.external);
+    const bp = top?.file ? this.state.breakpoints[top.file]?.find((b) => b.line === top.line) : undefined;
+    if (!bp || (!bp.hitCondition?.trim() && !bp.logMessage?.trim())) return false;
+    const key = `${top!.file}:${bp.line}`;
+    const hits = (this.hits.get(key) ?? 0) + 1;
+    this.hits.set(key, hits);
+    if (!hitMatches(hits, bp.hitCondition)) { await this.dap!.request('continue', { threadId }).catch(() => {}); return true; }
+    if (bp.logMessage?.trim()) {
+      let message = bp.logMessage;
+      for (const m of bp.logMessage.matchAll(/\{([^{}]+)\}/g)) {
+        // Evaluated directly: the session is not shown as paused while a tracepoint runs.
+        const r = await this.dap!.request<{ result: string }>('evaluate', { expression: m[1], frameId: top!.id, context: 'watch' }, 10_000).then((x) => x.result, (e) => `<${(e as Error).message.replace(/^Failed command 'evaluate' : /, '')}>`);
+        message = message.replace(m[0], r);
+      }
+      this.log(`[Tracepoint] ${top!.file}:${bp.line}: ${message}\n`);
+      await this.dap!.request('continue', { threadId }).catch(() => {});
+      return true;
+    }
+    return false;
   }
 
   private async frames(threadId: number): Promise<DebugFrame[]> {

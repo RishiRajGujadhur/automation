@@ -641,9 +641,11 @@ app.get('/api/debug/events', (req, res) => {
   req.on('close', () => { clearInterval(ping); debug.off('state', send); });
 });
 app.post('/api/debug/breakpoints', async (req, res) => {
-  const { file, lines } = z.object({ file: repoFile, lines: z.array(z.number().int().min(1)).max(500) }).parse(req.body);
+  const spec = z.object({ line: z.number().int().min(1), condition: z.string().max(500).optional(), hitCondition: z.string().max(40).optional(), logMessage: z.string().max(1000).optional(), enabled: z.boolean().optional() });
+  // `lines` is the plain form (older clients); `breakpoints` carries conditions, hit counts, log messages, enabled.
+  const { file, lines, breakpoints } = z.object({ file: repoFile, lines: z.array(z.number().int().min(1)).max(500).optional(), breakpoints: z.array(spec).max(500).optional() }).parse(req.body);
   await confined(config.repositoryRoot, file);
-  res.json(await debug.setBreakpoints(config.repositoryRoot, file.replaceAll('\\', '/'), lines));
+  res.json(await debug.setBreakpoints(config.repositoryRoot, file.replaceAll('\\', '/'), breakpoints ?? (lines ?? []).map((line) => ({ line }))));
 });
 app.post('/api/debug/start', async (req, res) => {
   const body = z.object({ file: repoFile.optional(), scenario: z.string().max(500).optional(), project: repoFile.optional(), filter: z.string().max(500).optional() }).parse(req.body);
@@ -705,6 +707,8 @@ app.post('/api/build', async (req, res) => {
 });
 app.post('/api/build/cancel', (_req, res) => res.json(builder.cancel()));
 // Test Explorer: C# test methods (Roslyn) and feature scenarios, run with `dotnet test` (results from TRX).
+/** Escapes a value for a vstest --filter expression. */
+const vsEscape = (v: string) => v.replace(/[\\()&|=!~]/g, (c) => '\\' + c);
 type DiscoveredTest = { id: string; kind: 'test' | 'scenario'; project: string; projectFile?: string; className: string; method: string; name: string; file: string; line: number; filter: string; feature?: string; cases?: number };
 app.get('/api/tests', async (_req, res) => {
   const root = config.repositoryRoot;
@@ -714,7 +718,9 @@ app.get('/api/tests', async (_req, res) => {
   try {
     const found = await lang.request<{ project: string; projectFile?: string; className: string; method: string; file: string; line: number; framework: string; cases: number }[]>(root, { op: 'tests' }, 120_000);
     for (const t of found) tests.push({ id: `cs:${t.className}.${t.method}`, kind: 'test', project: t.project, projectFile: t.projectFile, className: t.className, method: t.method, name: t.method, file: t.file, line: t.line, cases: t.cases,
-      filter: t.cases ? `FullyQualifiedName~${t.className}.${t.method}(` : `FullyQualifiedName=${t.className}.${t.method}` });
+      // Parameterized cases are "Method(args)": match the prefix. No "(" in the filter: NUnit's adapter parses filters
+      // itself and rejects it even escaped (a sibling "MethodMore" would also run; harmless).
+      filter: t.cases ? `FullyQualifiedName~${vsEscape(`${t.className}.${t.method}`)}` : `FullyQualifiedName=${vsEscape(`${t.className}.${t.method}`)}` });
   } catch (e) { warning = `C# tests were not discovered: ${(e as Error).message}`; }
   for (const f of i.features) {
     const proj = await owningProject(root, f.file);
