@@ -263,12 +263,6 @@ export default function TestGenerator({ revision, seed, onSource, onExport, onIn
         </div></Tabs.Content>
         <Tabs.Content value="gen-1" className="panel wizard-panel scenario-text-panel"><h2 className="wizard-title sr-only"><span className="step-number">1</span>Scenario steps</h2><div className="wizard-body">
           <div className="field-label scenario-text-step">
-              <span className="label-row"><span className="sr-only">Scenario text</span>
-                <span className="keyword-buttons" role="group" aria-label="Insert keyword">
-                  {['Given', 'When', 'Then', 'And'].map((k) => <Button key={k} variant="ghost" size="tiny" onClick={() => insertKeyword(k)}>+ {k}</Button>)}
-                  <Button variant="ghost" size="tiny" aria-label="Copy scenario as Gherkin" onClick={async () => onNotice?.((await copyText(`Scenario: ${scenarioName}\n${steps.map((x) => `  ${x.keyword} ${x.text}`).join('\n')}`)) ? 'Scenario copied.' : 'Clipboard unavailable.')}><Copy size={12} />Copy</Button>
-                </span>
-              </span>
               <div className="scenario-text-columns">
               <div className="scenario-editor" onBlur={() => touch('scenarioText')}>
                 <CodeMirror
@@ -282,6 +276,13 @@ export default function TestGenerator({ revision, seed, onSource, onExport, onIn
                 />
               </div>
               <div className="scenario-hints">
+                <div className="hints-toolbar">
+                  <span className="sr-only">Scenario text</span>
+                  <span className="keyword-buttons" role="group" aria-label="Insert keyword">
+                  {['Given', 'When', 'Then', 'And'].map((k) => <Button key={k} variant="ghost" size="tiny" onClick={() => insertKeyword(k)}>+ {k}</Button>)}
+                  <Button variant="ghost" size="tiny" aria-label="Copy scenario as Gherkin" onClick={async () => onNotice?.((await copyText(`Scenario: ${scenarioName}\n${steps.map((x) => `  ${x.keyword} ${x.text}`).join('\n')}`)) ? 'Scenario copied.' : 'Clipboard unavailable.')}><Copy size={12} />Copy</Button>
+                </span>
+                </div>
                 <StepLint steps={steps} activeLine={activeLine} onReplace={replaceStep} onSource={onSource} revision={revision} />
               </div>
               </div>

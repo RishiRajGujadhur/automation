@@ -511,3 +511,45 @@
     margin: 4px 10px;
   }
 }
+
+// Scenario steps: editor and hints share the whole step body, split by a 1px line (like an editor + side panel).
+:root[data-layout='vscode'] {
+  .wizard-panel.scenario-text-panel .wizard-body {
+    padding: 0 !important;
+  }
+  .scenario-text-columns {
+    gap: 0;
+  }
+  .scenario-text-step {
+    gap: 0;
+  }
+  .scenario-text-step .scenario-editor .cm-editor {
+    border: 0;
+  }
+  .scenario-hints {
+    max-height: none;
+    height: var(--scenario-editor-height);
+    border-left: 1px solid var(--border);
+    padding: 0 8px 8px;
+    .step-lint {
+      border-radius: 0;
+    }
+  }
+  .wizard {
+    --scenario-editor-height: max(260px, calc(100dvh - 207px));
+  }
+}
+.hints-toolbar {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  display: flex;
+  justify-content: flex-end;
+  padding: 4px 0;
+  background: var(--surface);
+  .keyword-buttons {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 2px;
+  }
+}
