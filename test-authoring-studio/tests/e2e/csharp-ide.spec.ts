@@ -284,3 +284,26 @@ test('Navigation bar: project › type › member follows the cursor; jump to an
   await page.getByRole('menuitem', { name: 'Results()' }).click();
   await expect(page.locator('.code-editor:not([hidden]) .cm-activeLine')).toContainText('public async Task Results() { await Result.WaitForAsync(); }');
 });
+
+test('Rename Step: new wording for a step definition re-words every bound feature line, keeping the values', async ({ page }) => {
+  await open(page);
+  await explorerFile(page, 'SearchSteps.cs').click();
+  const file = 'Steps/SearchSteps.cs';
+  await expect(page.locator('.code-editor:not([hidden]) .cm-lens').first()).toBeVisible({ timeout: 30_000 });
+  await line(page, file, 'the user searches for').click();
+  await line(page, file, 'the user searches for').click({ button: 'right' });
+  await page.getByRole('menuitem', { name: 'Rename Step…' }).click();
+  const panel = page.getByRole('region', { name: 'Rename Step' });
+  await expect(panel.getByLabel('Step pattern')).toHaveValue('the user searches for "(.*)"');
+  await panel.getByLabel('Step pattern').fill('the customer looks up "(.*)"');
+  const changes = panel.getByRole('list', { name: 'Changes' });
+  await expect(changes).toContainText('the customer looks up "Dayforce.com"');
+  await expect(changes).toContainText('the customer looks up "<searchText>"');
+  await panel.getByRole('button', { name: /^Apply/ }).click();
+  await expect(page.getByText(/Renamed the step: 2 feature lines updated in 1 file/).first()).toBeVisible({ timeout: 30_000 });
+  const feature = await disk('Features/GoogleSearch.feature');
+  expect(feature).toContain('When the customer looks up "Dayforce.com"');
+  expect(feature).toContain('When the customer looks up "<searchText>"');
+  expect(await disk(file)).toContain('[When(@"the customer looks up ""(.*)""")]');
+  await expect(page.getByLabel(`Source of ${file}`)).toContainText('the customer looks up');
+});

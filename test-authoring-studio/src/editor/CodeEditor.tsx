@@ -15,6 +15,7 @@ import { changeGutter } from './changeGutter';
 import { useChangeBars } from './useChangeBars';
 import { cursorTracker } from './cursor';
 import NavBar from './NavBar';
+import RenameStep from './RenameStep';
 import { api, type FilePreview } from '../api';
 import { Button } from '../radix';
 import { IconButton } from '../radix2';
@@ -82,6 +83,9 @@ export default function CodeEditor({ file, reveal, active = true, onNotice, onIn
   const [refs, setRefs] = useState<{ name: string; locations: (CsLocation & { text?: string })[] }>();
   // Step usages (CodeLens above [Given]/[When]/[Then]): which feature lines use each binding of this file.
   const lenses = useRef<StepLens[]>([]);
+  const [renameStep, setRenameStep] = useState<StepLens>();
+  /** The step definition at the cursor: the lens on this line or the nearest one above it. */
+  const lensAtCursor = () => { const v = ref.current?.view; if (!v) return undefined; const n = v.state.doc.lineAt(v.state.selection.main.head).number; return [...lenses.current].sort((a, b) => b.line - a.line).find((x) => x.line <= n); };
   const showUsages = (l: StepLens) => setRefs({ name: `${l.keyword} ${l.pattern}`, locations: l.usages.map((u) => ({ file: u.file, line: u.line, column: 1, text: `${u.text} — ${u.scenario}` })) });
   const runRef = useRef(onRunLine);
   runRef.current = onRunLine;
@@ -360,6 +364,7 @@ export default function CodeEditor({ file, reveal, active = true, onNotice, onIn
               const l = [...lenses.current].sort((a, b) => b.line - a.line).find((x) => x.line <= line);
               if (l) showUsages(l); else onNotice?.('Put the cursor in a step definition ([Given], [When], [Then]).');
             } },
+            { label: 'Rename Step…', icon: TextCursorInput, onSelect: () => { const l = lensAtCursor(); if (l) setRenameStep(l); else onNotice?.('Put the cursor in a step definition ([Given], [When], [Then]).'); } },
             { label: 'Rename…', icon: TextCursorInput, shortcut: 'F2', onSelect: () => csHandlers.current.rename(ref.current!.view!.state.selection.main.head) },
             { label: 'Quick Actions and Refactorings…', icon: Lightbulb, shortcut: 'Ctrl .', onSelect: () => { const r = ref.current!.view!.state.selection.main; void csHandlers.current.actions(r.from, r.to); } },
             'separator' as const,
@@ -442,6 +447,18 @@ export default function CodeEditor({ file, reveal, active = true, onNotice, onIn
           {busyOp && <span className="cm-busy" role="status"><Loader size={12} className="spin" />{busyOp}</span>}
         </div>
         </RowMenu>
+      )}
+      {renameStep && (
+        <RenameStep
+          key={`${renameStep.line}`}
+          file={file}
+          line={renameStep.line}
+          pattern={renameStep.pattern}
+          onNotice={(m) => onNotice?.(m)}
+          beforeApply={async () => (auto.dirty ? auto.save() : true)}
+          onClose={() => { setRenameStep(undefined); ref.current?.view?.focus(); }}
+          onDone={(written, index) => { setRenameStep(undefined); window.dispatchEvent(new CustomEvent(FILES_CHANGED_EVENT, { detail: written })); onIndex?.(index); setTimeout(loadLenses, 300); }}
+        />
       )}
       {refs && (
         <section className="references-panel" aria-label={`References to ${refs.name}`}>

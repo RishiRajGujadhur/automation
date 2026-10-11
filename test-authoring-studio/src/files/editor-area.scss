@@ -1416,3 +1416,58 @@
     color: var(--text);
   }
 }
+
+// Rename Step
+.rename-step {
+  flex: none;
+  display: grid;
+  gap: 6px;
+  max-height: 40%;
+  overflow: auto;
+  padding: 6px 10px 10px;
+  border-top: 1px solid var(--accent);
+  background: var(--surface-2);
+  font-size: 12px;
+  .rename-step-head {
+    display: flex;
+    align-items: center;
+    .icon-button {
+      margin-left: auto;
+      width: 22px;
+      height: 22px;
+    }
+  }
+  input {
+    height: 26px;
+    padding: 0 8px;
+    border: 1px solid var(--accent);
+    border-radius: 3px;
+    background: var(--surface);
+    color: var(--text);
+    font-family: var(--font-mono, monospace);
+  }
+  .rename-step-list {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    li {
+      display: grid;
+      grid-template-columns: minmax(120px, auto) 1fr 1fr;
+      gap: 8px;
+      padding: 2px 0;
+      &:first-child {
+        grid-template-columns: 1fr 1fr;
+      }
+    }
+    .before {
+      color: var(--red, #f85149);
+      text-decoration: line-through;
+    }
+    .after {
+      color: #3fb950;
+    }
+  }
+  .button {
+    justify-self: start;
+  }
+}

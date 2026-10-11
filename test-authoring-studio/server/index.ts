@@ -28,6 +28,7 @@ import { TestRunner } from './testRunner.js';
 import { readSolution, projectInfo, findSolutions } from './solution.js';
 import { Builder } from './build.js';
 import { findInFiles, replaceInFiles } from './search.js';
+import { values, render, parameterCount, replaceAttributePattern } from './stepRename.js';
 import { status as gitStatus, stage as gitStage, unstage as gitUnstage, discard as gitDiscard, commit as gitCommit, headInfo, log as gitLog, branches as gitBranches, checkout as gitCheckout, createBranch as gitCreateBranch, sync as gitSync } from './git.js';
 import { LanguageService } from './langService.js';
 import type { Index } from '../src/types.js';
@@ -337,6 +338,46 @@ app.post('/api/git/commit', async (req, res) => {
   const { message, all, amend } = z.object({ message: z.string().trim().min(1, 'Enter a commit message.').max(20000), all: z.boolean().optional(), amend: z.boolean().optional() }).parse(req.body);
   const summary = await gitCommit(config.repositoryRoot, message, { all, amend });
   res.json({ summary, status: await gitStatus(config.repositoryRoot) });
+});
+/**
+ * Rename Step: new pattern for the binding at file:line; every bound feature line is re-worded with its parameter
+ * values carried over. Without `apply` it is a preview; with `apply` the C# attribute and the feature files are written.
+ */
+app.post('/api/steps/rename', async (req, res) => {
+  const { file, line, newPattern, apply } = z.object({ file: z.string().min(1).max(400), line: z.number().int().min(1), newPattern: z.string().trim().min(1).max(1000), apply: z.boolean().optional() }).parse(req.body);
+  const i = await ensure();
+  const b = i.stepDefinitions.find((x) => x.file === file && x.line === line);
+  if (!b) throw new Error('Put the cursor on a step definition attribute ([Given], [When], [Then]).');
+  if (parameterCount(newPattern) !== parameterCount(b.pattern)) throw new Error(`The new pattern needs ${parameterCount(b.pattern)} parameter${parameterCount(b.pattern) === 1 ? '' : 's'}, like the current one.`);
+  const csPath = await confined(config.repositoryRoot, file);
+  const csLines = (await fs.readFile(csPath, 'utf8')).split('\n');
+  const attrBefore = csLines[line - 1] ?? '';
+  const attrAfter = replaceAttributePattern(attrBefore, b.pattern, newPattern);
+  if (attrAfter === null) throw new Error('The pattern string was not found on that line (is it built from constants?).');
+  const steps: { file: string; line: number; before: string; after: string }[] = [];
+  let unmatched = 0;
+  for (const f of i.features) for (const block of [...f.backgrounds, ...f.scenarios]) for (const s of block.steps) {
+    if (!s.candidates.includes(b.id)) continue;
+    const vals = values(b.pattern, s.text);
+    if (!vals) { unmatched++; continue; }
+    steps.push({ file: f.file, line: s.line, before: s.text, after: render(newPattern, vals) });
+  }
+  if (!apply) { res.json({ binding: { file, line, before: attrBefore.trim(), after: attrAfter.trim() }, steps, unmatched }); return; }
+  csLines[line - 1] = attrAfter;
+  await fs.writeFile(csPath, csLines.join('\n'), 'utf8');
+  const written = new Set([file]);
+  const byFile = new Map<string, typeof steps>();
+  for (const s of steps) byFile.set(s.file, [...(byFile.get(s.file) ?? []), s]);
+  for (const [featureFile, edits] of byFile) {
+    const p = await confined(config.repositoryRoot, featureFile);
+    const lines = (await fs.readFile(p, 'utf8')).split('\n');
+    for (const e of edits) { const at = lines[e.line - 1]; if (at?.includes(e.before)) lines[e.line - 1] = at.replace(e.before, e.after); }
+    await fs.writeFile(p, lines.join('\n'), 'utf8');
+    written.add(featureFile);
+  }
+  lang.notify(config.repositoryRoot, [...written]);
+  activate(await scan(config));
+  res.json({ written: [...written], steps: steps.length, index: publicIndex(index!) });
 });
 /** Step usages (CodeLens for step definitions): for each binding in a C# file, the feature lines that use it. */
 app.get('/api/steps/lenses', async (req, res) => {

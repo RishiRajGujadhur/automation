@@ -54,7 +54,7 @@ Status: ✅ done · 🟡 partial · ⬜ to do. Priority: **P1** next, **P2** aft
 | G1 | Feature editor: colouring, binding checks, step completion, F12 to step definition | ✅ | — |
 | G2 | Create step definition for unbound steps | ✅ | — |
 | G3 | Find step usages (from a C# binding back to feature lines) | ✅ (CodeLens above each binding + Find Step Usages) | P1 |
-| G4 | Rename step (update pattern and all feature usages) | ⬜ | P2 |
+| G4 | Rename step (update pattern and all feature usages) | ✅ (regex and Cucumber expressions; parameter values carried over; preview before apply) | P2 |
 | G5 | Table formatting, Scenario Outline examples editing | 🟡 | P2 |
 
 ## 5. Testing
@@ -121,3 +121,4 @@ Status: ✅ done · 🟡 partial · ⬜ to do. Priority: **P1** next, **P2** aft
 - 2026-10-12 — **Status bar (W6).** Ln/Col (and selection length), line endings and encoding of the focused editor; errors / warnings of the last build (opens the Error List); Git branch with pending-changes mark and ahead / behind (opens Git Changes).
 - 2026-10-12 — **Code snippets (E14).** prop, propfull, ctor (class name filled in), for, foreach, if, else, while, try, tryf, using, switch, cw, class, interface, test, testa, fact, given / when / then step definitions; shortcut + Tab or from IntelliSense. Fixed: the editors (and the Test Generator's) passed new `basicSetup` / `onUpdate` objects each render, so @uiw/react-codemirror reconfigured them on every keystroke (dropping snippet fields).
 - 2026-10-12 — **Navigation bar (E13).** Language service `outline` (types and members with ranges, from syntax); a 22px breadcrumb above the C# editor shows project › type › member at the cursor, and the type / member parts list the file's types and the type's members to jump to.
+- 2026-10-12 — **Rename Step (G4).** `server/stepRename.ts` (top-level capture groups / Cucumber parameters, values carried into the new wording, verbatim / regular C# string rewriting) and `/api/steps/rename` (preview, apply); C# editor: Rename Step… on a step definition with a live before → after preview of the attribute and every bound feature line.
