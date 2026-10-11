@@ -239,3 +239,14 @@ Researched: ISO/IEC/IEEE 29119-4 technique catalogue (classification tree, cause
 - [x] P8 Test Generator: new Step 0 (feature area, target file, scenario name); Step 1 is a full-height scenario editor with step hints beside it
 - [x] Bug: desktop app took port 4310 (the web dev API's port); on Windows both bound it and the web app's POSTs were rejected with "Origin not allowed". Desktop now uses its own stable port 47310; the web API refuses to start when its port is taken
 - [x] P9 Project model panel hidden by default (Settings → General → Show project model); Test Generator edge to edge; step titles, SCENARIO TEXT label and step counter moved to screen-reader only; decorative labels removed (NORMALIZED IR, DETERMINISTIC, Rules §, status-bar slogans; status bar shows the repository)
+
+## Recording, C# and Solution Explorer (2026-10-11)
+Reference: Visual Studio Solution Explorer (Microsoft Learn "Use Solution Explorer"): solution/project/dependencies tree, file nesting, Sync with Active Document, pending-changes filter, collapse all, search.
+- [ ] G1 Test Generator density: keyword buttons move into the hints column header; editor and hints fill the step with no empty bands
+- [ ] G2 Record steps with Playwright from the Test Generator: recorded actions become Gherkin lines (existing bindings when matched, proposed wording otherwise); missing bindings are highlighted by the step check
+- [ ] G3 Recording updates selectors: choose an existing dictionary XML or a new file (same Page → Section → Field → Selector format); new fields only, previewed as a diff before writing
+- [ ] G4 Create a step definition for an unbound step: pick an existing step class (default: the feature's associated one) or a new file; the method is appended, previewed, written, then opened at its line
+- [ ] G5 C# editor: open .cs files, C# syntax highlighting, Roslyn syntax diagnostics plus binding checks (parameters vs. pattern groups, duplicate patterns), save with diff
+- [ ] G6 Feature ↔ C# association: the step files a feature's steps bind to (plus naming convention); nested under the feature in the explorer; F12 goes to a step's definition
+- [ ] G7 Auto save (Settings → Code editor): Off / After delay / On focus change, like VS Code; unsaved buffers are always kept and restored; disk writes refuse files changed outside the studio
+- [ ] G8 Solution Explorer (Visual Studio style): Solution → projects → Dependencies → folders → files with file nesting, toolbar (Sync with active document, pending changes filter, collapse all, show all files), search (Ctrl+;), context menu
