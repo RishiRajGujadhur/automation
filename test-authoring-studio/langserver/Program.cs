@@ -37,13 +37,20 @@ sealed class LanguageService
 {
     static readonly string[] Ignored = ["bin", "obj", ".git", ".vs", "node_modules", "TestResults"];
     AdhocWorkspace? workspace;
-    ProjectId? projectId;
+    /// <summary>Roslyn project per .csproj (folder, id), deepest folder first; plus a project for files outside them.</summary>
+    List<(string Dir, ProjectId Id)> owners = [];
+    ProjectId? miscId;
     string root = "";
 
     public async Task<object?> Handle(JsonObject req)
     {
         var op = (string)req["op"]!;
-        if (op == "init") { Init((string)req["root"]!); return new { files = workspace!.CurrentSolution.GetProject(projectId!)!.DocumentIds.Count }; }
+        if (op == "init")
+        {
+            Init((string)req["root"]!);
+            var sol = workspace!.CurrentSolution;
+            return new { files = sol.Projects.Sum(p => p.DocumentIds.Count), projects = sol.Projects.Select(p => new { name = p.Name, documents = p.DocumentIds.Count, references = p.ProjectReferences.Select(r => sol.GetProject(r.ProjectId)?.Name) }).ToList() };
+        }
         if (workspace == null) throw new InvalidOperationException("Not initialised.");
         if (op == "update") { foreach (var f in req["files"]!.AsArray()) Refresh((string)f!); return true; }
         var doc = Document((string)req["file"]!, (string?)req["source"]);
@@ -62,59 +69,81 @@ sealed class LanguageService
     }
 
     // ------------------------------------------------------------------ workspace
+    static readonly string ImplicitUsings = string.Join("\n", new[] { "System", "System.Collections.Generic", "System.IO", "System.Linq", "System.Net.Http", "System.Threading", "System.Threading.Tasks" }.Select(n => $"global using global::{n};"));
+    static readonly CSharpCompilationOptions Options = new(OutputKind.DynamicallyLinkedLibrary, nullableContextOptions: NullableContextOptions.Enable);
+    static readonly CSharpParseOptions Parse = new(LanguageVersion.Latest);
+
+    bool IsIgnored(string path) => Path.GetRelativePath(root, path).Split(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar).Any(p => Ignored.Contains(p, StringComparer.OrdinalIgnoreCase));
+
+    /// <summary>
+    /// One Roslyn project per .csproj, like Visual Studio's solution: each with its own NuGet packages (and their
+    /// dependencies), the .NET framework assemblies, and project references to the other projects it references.
+    /// Files outside every project go to a "Miscellaneous Files" project that sees all of them.
+    /// </summary>
     void Init(string folder)
     {
         root = Path.GetFullPath(folder);
-        var host = MefHostServices.Create(MefHostServices.DefaultAssemblies);
-        workspace = new AdhocWorkspace(host);
-        var info = ProjectInfo.Create(ProjectId.CreateNewId(), VersionStamp.Create(), "Workspace", "Workspace", LanguageNames.CSharp,
-            compilationOptions: new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary, nullableContextOptions: NullableContextOptions.Enable),
-            parseOptions: new CSharpParseOptions(LanguageVersion.Latest),
-            metadataReferences: References());
-        var project = workspace.AddProject(info);
-        projectId = project.Id;
-        var solution = workspace.CurrentSolution;
-        foreach (var file in SourceFiles()) solution = solution.AddDocument(DocumentId.CreateNewId(projectId), Path.GetFileName(file), SourceText.From(File.ReadAllText(file)), filePath: file);
+        workspace = new AdhocWorkspace(MefHostServices.Create(MefHostServices.DefaultAssemblies));
+        var framework = FrameworkReferences();
+        var cache = Environment.GetEnvironmentVariable("NUGET_PACKAGES") ?? Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), ".nuget", "packages");
+        var csprojs = Directory.EnumerateFiles(root, "*.csproj", SearchOption.AllDirectories).Where(p => !IsIgnored(p)).Take(200).Select(Path.GetFullPath).ToList();
+        var ids = csprojs.ToDictionary(p => p, p => ProjectId.CreateNewId(Path.GetFileNameWithoutExtension(p)), StringComparer.OrdinalIgnoreCase);
+        var infos = new List<ProjectInfo>();
+        var allPackages = new Dictionary<string, MetadataReference>(StringComparer.OrdinalIgnoreCase);
+        foreach (var proj in csprojs)
+        {
+            XDocument? xml = null;
+            try { xml = XDocument.Load(proj); } catch { }
+            var dir = Path.GetDirectoryName(proj)!;
+            var refs = new Dictionary<string, MetadataReference>(StringComparer.OrdinalIgnoreCase);
+            foreach (var pr in xml?.Descendants().Where(e => e.Name.LocalName == "PackageReference") ?? [])
+            {
+                var package = (string?)pr.Attribute("Include");
+                var version = (string?)pr.Attribute("Version") ?? pr.Elements().FirstOrDefault(e => e.Name.LocalName == "Version")?.Value;
+                if (package == null) continue;
+                foreach (var dll in PackageAssemblies(cache, package, version, new HashSet<string>(StringComparer.OrdinalIgnoreCase)))
+                    if (!refs.ContainsKey(Path.GetFileName(dll)) && Load(dll) is { } r) { refs[Path.GetFileName(dll)] = r; allPackages.TryAdd(Path.GetFileName(dll), r); }
+            }
+            // Built output of the project itself (dependencies of dependencies), when the repository has been built.
+            foreach (var dll in Directory.EnumerateFiles(dir, "*.dll", SearchOption.AllDirectories).Where(f => f.Contains($"{Path.DirectorySeparatorChar}bin{Path.DirectorySeparatorChar}")).Take(300))
+                if (!refs.ContainsKey(Path.GetFileName(dll)) && !ids.Keys.Any(k => Path.GetFileNameWithoutExtension(k).Equals(Path.GetFileNameWithoutExtension(dll), StringComparison.OrdinalIgnoreCase)) && Load(dll) is { } r) refs[Path.GetFileName(dll)] = r;
+            var projectRefs = (xml?.Descendants().Where(e => e.Name.LocalName == "ProjectReference") ?? [])
+                .Select(e => (string?)e.Attribute("Include")).OfType<string>()
+                .Select(i => Path.GetFullPath(Path.Combine(dir, i.Replace('\\', Path.DirectorySeparatorChar))))
+                .Where(ids.ContainsKey).Where(p => !p.Equals(proj, StringComparison.OrdinalIgnoreCase)).Distinct(StringComparer.OrdinalIgnoreCase)
+                .Select(p => new ProjectReference(ids[p])).ToList();
+            var name = Path.GetFileNameWithoutExtension(proj);
+            infos.Add(ProjectInfo.Create(ids[proj], VersionStamp.Create(), name, name, LanguageNames.CSharp, filePath: proj,
+                compilationOptions: Options, parseOptions: Parse, metadataReferences: framework.Concat(refs.Values), projectReferences: projectRefs));
+        }
+        owners = csprojs.Select(p => (Path.GetDirectoryName(p)!, ids[p])).OrderByDescending(o => o.Item1.Length).ToList();
+        var files = SourceFiles().ToList();
+        miscId = null;
+        if (owners.Count == 0 || files.Any(f => Owner(f) == null))
+        {
+            miscId = ProjectId.CreateNewId("Miscellaneous Files");
+            infos.Add(ProjectInfo.Create(miscId, VersionStamp.Create(), owners.Count == 0 ? "Workspace" : "Miscellaneous Files", "Miscellaneous", LanguageNames.CSharp,
+                compilationOptions: Options, parseOptions: Parse, metadataReferences: framework.Concat(allPackages.Values), projectReferences: ids.Values.Select(i => new ProjectReference(i))));
+        }
+        var solution = workspace.AddSolution(SolutionInfo.Create(SolutionId.CreateNewId(), VersionStamp.Create(), projects: infos));
+        foreach (var file in files) solution = solution.AddDocument(DocumentId.CreateNewId(Owner(file) ?? miscId!), Path.GetFileName(file), SourceText.From(File.ReadAllText(file)), filePath: file);
         // Implicit usings of SDK-style projects (dotnet new), so `Task`, `List<>`… resolve as they do in the build.
-        solution = solution.AddDocument(DocumentId.CreateNewId(projectId), "GlobalUsings.g.cs", SourceText.From(string.Join("\n", new[] { "System", "System.Collections.Generic", "System.IO", "System.Linq", "System.Net.Http", "System.Threading", "System.Threading.Tasks" }.Select(n => $"global using global::{n};"))));
+        foreach (var p in infos) solution = solution.AddDocument(DocumentId.CreateNewId(p.Id), "GlobalUsings.g.cs", SourceText.From(ImplicitUsings));
         workspace.TryApplyChanges(solution);
     }
 
-    IEnumerable<string> SourceFiles() =>
-        Directory.EnumerateFiles(root, "*.cs", SearchOption.AllDirectories)
-            .Where(f => !Path.GetRelativePath(root, f).Split(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar).Any(p => Ignored.Contains(p, StringComparer.OrdinalIgnoreCase)))
-            .Take(20000);
+    ProjectId? Owner(string path) => owners.FirstOrDefault(o => path.StartsWith(o.Dir + Path.DirectorySeparatorChar, StringComparison.OrdinalIgnoreCase)).Id;
 
-    /// <summary>The running .NET runtime's assemblies plus the NuGet packages the repository's projects reference (from the local package cache).</summary>
-    IEnumerable<MetadataReference> References()
-    {
-        var paths = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
-        foreach (var p in ((string?)AppContext.GetData("TRUSTED_PLATFORM_ASSEMBLIES") ?? "").Split(Path.PathSeparator, StringSplitOptions.RemoveEmptyEntries))
-            if (!Path.GetFileName(p).StartsWith("Microsoft.CodeAnalysis", StringComparison.OrdinalIgnoreCase)) paths[Path.GetFileName(p)] = p;
-        var cache = Environment.GetEnvironmentVariable("NUGET_PACKAGES") ?? Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), ".nuget", "packages");
-        var visited = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
-        foreach (var proj in Directory.EnumerateFiles(root, "*.csproj", SearchOption.AllDirectories).Take(50))
-        {
-            XDocument xml;
-            try { xml = XDocument.Load(proj); } catch { continue; }
-            foreach (var pr in xml.Descendants().Where(e => e.Name.LocalName == "PackageReference"))
-            {
-                var name = (string?)pr.Attribute("Include");
-                var version = (string?)pr.Attribute("Version") ?? pr.Elements().FirstOrDefault(e => e.Name.LocalName == "Version")?.Value;
-                if (name == null) continue;
-                foreach (var dll in PackageAssemblies(cache, name, version, visited)) paths.TryAdd(Path.GetFileName(dll), dll);
-            }
-        }
-        // Built output next to the projects (dependencies of dependencies), when the repository has been built.
-        foreach (var dll in Directory.EnumerateFiles(root, "*.dll", SearchOption.AllDirectories).Where(f => f.Contains($"{Path.DirectorySeparatorChar}bin{Path.DirectorySeparatorChar}")).Take(500))
-            paths.TryAdd(Path.GetFileName(dll), dll);
-        foreach (var p in paths.Values)
-        {
-            MetadataReference? r = null;
-            try { r = MetadataReference.CreateFromFile(p); } catch { }
-            if (r != null) yield return r;
-        }
-    }
+    IEnumerable<string> SourceFiles() =>
+        Directory.EnumerateFiles(root, "*.cs", SearchOption.AllDirectories).Where(f => !IsIgnored(f)).Select(Path.GetFullPath).Take(20000);
+
+    static MetadataReference? Load(string path) { try { return MetadataReference.CreateFromFile(path); } catch { return null; } }
+
+    /// <summary>The running .NET runtime's assemblies (reference set for every project).</summary>
+    static List<MetadataReference> FrameworkReferences() =>
+        ((string?)AppContext.GetData("TRUSTED_PLATFORM_ASSEMBLIES") ?? "").Split(Path.PathSeparator, StringSplitOptions.RemoveEmptyEntries)
+            .Where(p => !Path.GetFileName(p).StartsWith("Microsoft.CodeAnalysis", StringComparison.OrdinalIgnoreCase))
+            .Select(Load).OfType<MetadataReference>().ToList();
 
     /// <summary>A package's assemblies and, through its .nuspec dependencies, those of the packages it depends on.</summary>
     static IEnumerable<string> PackageAssemblies(string cache, string name, string? version, HashSet<string> visited)
@@ -161,7 +190,7 @@ sealed class LanguageService
         var solution = workspace!.CurrentSolution;
         var id = solution.GetDocumentIdsWithFilePath(path).FirstOrDefault();
         var text = SourceText.From(source ?? (File.Exists(path) ? File.ReadAllText(path) : ""));
-        if (id == null) { id = DocumentId.CreateNewId(projectId!); solution = solution.AddDocument(id, Path.GetFileName(path), text, filePath: path); }
+        if (id == null) { id = DocumentId.CreateNewId(Owner(path) ?? miscId ?? solution.ProjectIds[0]); solution = solution.AddDocument(id, Path.GetFileName(path), text, filePath: path); }
         else if (source != null) solution = solution.WithDocumentText(id, text);
         if (solution != workspace.CurrentSolution) workspace.TryApplyChanges(solution);
         return workspace.CurrentSolution.GetDocument(id)!;
@@ -173,7 +202,7 @@ sealed class LanguageService
         var solution = workspace!.CurrentSolution;
         var id = solution.GetDocumentIdsWithFilePath(path).FirstOrDefault();
         if (!File.Exists(path)) { if (id != null) solution = solution.RemoveDocument(id); }
-        else if (id == null) solution = solution.AddDocument(DocumentId.CreateNewId(projectId!), Path.GetFileName(path), SourceText.From(File.ReadAllText(path)), filePath: path);
+        else if (id == null) solution = solution.AddDocument(DocumentId.CreateNewId(Owner(path) ?? miscId ?? solution.ProjectIds[0]), Path.GetFileName(path), SourceText.From(File.ReadAllText(path)), filePath: path);
         else solution = solution.WithDocumentText(id, SourceText.From(File.ReadAllText(path)));
         workspace.TryApplyChanges(solution);
     }

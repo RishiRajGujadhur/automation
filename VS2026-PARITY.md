@@ -12,7 +12,7 @@ Status: ✅ done · 🟡 partial · ⬜ to do. Priority: **P1** next, **P2** aft
 | S2 | Parse `.sln` and `.slnx`: projects, solution folders, configurations (Debug/Release), platforms | ✅ | P1 |
 | S3 | Scan the whole solution: every project indexed (features, steps, selectors) with per-project index and a combined view | 🟡 (solution folder scanned as one index; projects outside it not yet) | P1 |
 | S4 | Solution Explorer shows the real solution: solution folders → projects → Dependencies (Packages, Projects, Frameworks, Analyzers) → files | ✅ (files relative to each project; Miscellaneous Files; browser folders too) | P1 |
-| S5 | Project references between projects; language service loads one Roslyn project per `.csproj` with correct references | ⬜ | P1 |
+| S5 | Project references between projects; language service loads one Roslyn project per `.csproj` with correct references | ✅ (own NuGet packages + project references; Miscellaneous Files project for the rest) | P1 |
 | S6 | Recent solutions list + Start Window (Open recent, Clone repository, Open folder, Open solution) | 🟡 (recent solutions and folders; no Start Window yet) | P2 |
 | S7 | Startup project / test project selection; active configuration dropdown in the toolbar | ⬜ | P2 |
 | S8 | Add ▸ New Project / Existing Project, Remove project, Unload/Reload project | ⬜ | P3 |
@@ -102,4 +102,4 @@ Status: ✅ done · 🟡 partial · ⬜ to do. Priority: **P1** next, **P2** aft
 
 ## Progress log
 - 2026-10-11 — **Open and scan a solution (S1, S2, S4; S3 partial).** `server/solution.ts` + `src/solutionFormat.ts` parse `.sln`/`.slnx`; `/api/solution/open`, `/api/solution/find`; workspace config gains `solution`; Explorer renders solution folders, multiple projects with their own Dependencies (frameworks, packages with versions, project references) and files. Desktop: File ▸ Open Project/Solution… (Ctrl+Shift+O; Open Folder moves to Ctrl+Shift+Alt+O), `.sln` on the command line. Also fixed: a delayed rescan could overwrite the index after switching workspaces.
-
+- 2026-10-11 — **Per-project language service (S5).** `langserver` builds a Roslyn solution with one project per `.csproj`: its own packages (and their dependencies), framework assemblies, built output, and `ProjectReference`s; files outside projects go to a Miscellaneous Files project. Go to definition, completion and rename now follow project boundaries (`tests/langserver.test.ts`).
