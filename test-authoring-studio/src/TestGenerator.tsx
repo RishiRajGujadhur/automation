@@ -11,9 +11,10 @@ import SelectorResolution from './SelectorResolution';
 import ProjectModelTree, { useProjectModel } from './ProjectModelTree';
 import { CopyButton, RowMenu, copyText, useLocalState } from './ui';
 import * as Tabs from '@radix-ui/react-tabs';
-import { ArrowLeft, ArrowRight, Check as CheckIcon, CircleAlert as AlertIcon } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Circle, Check as CheckIcon, CircleAlert as AlertIcon } from 'lucide-react';
 import type { DictionaryEntry, Index } from './types';
 import StepLint from './StepLint';
+import GeneratorRecorder from './GeneratorRecorder';
 import { scenarioExtensions } from './editor/gherkin';
 import { labelled } from './editor/a11y';
 const scenarioExt = scenarioExtensions('Scenario text');
@@ -88,6 +89,7 @@ export default function TestGenerator({ revision, seed, onSource, onExport, onIn
   // Project model panel: hidden by default, Settings → General → Show project model.
   const { prefs: genPrefs, setPrefs: setGenPrefs } = usePrefs();
   const sidebar = genPrefs.showProjectModel;
+  const [recording, setRecording] = useState(false);
   const setSidebar = (v: boolean) => setGenPrefs({ showProjectModel: v });
   const { model } = useProjectModel(revision);
   const confirm = useConfirm();
@@ -278,11 +280,13 @@ export default function TestGenerator({ revision, seed, onSource, onExport, onIn
               <div className="scenario-hints">
                 <div className="hints-toolbar">
                   <span className="sr-only">Scenario text</span>
+                  <Button variant={recording ? 'soft' : 'ghost'} size="tiny" aria-pressed={recording} aria-label="Record steps with Playwright" onClick={() => setRecording(!recording)} title="Record steps with Playwright"><Circle size={11} />Record</Button>
                   <span className="keyword-buttons" role="group" aria-label="Insert keyword">
                   {['Given', 'When', 'Then', 'And'].map((k) => <Button key={k} variant="ghost" size="tiny" onClick={() => insertKeyword(k)}>+ {k}</Button>)}
                   <Button variant="ghost" size="tiny" aria-label="Copy scenario as Gherkin" onClick={async () => onNotice?.((await copyText(`Scenario: ${scenarioName}\n${steps.map((x) => `  ${x.keyword} ${x.text}`).join('\n')}`)) ? 'Scenario copied.' : 'Clipboard unavailable.')}><Copy size={12} />Copy</Button>
                 </span>
                 </div>
+                {recording && <GeneratorRecorder continuing={steps.length > 0} onLines={(lines) => set('scenarioText', [scenarioText.trimEnd(), ...lines].filter(Boolean).join('\n') + '\n')} onIndex={onIndex} onNotice={onNotice} onClose={() => setRecording(false)} />}
                 <StepLint steps={steps} activeLine={activeLine} onReplace={replaceStep} onSource={onSource} revision={revision} />
               </div>
               </div>

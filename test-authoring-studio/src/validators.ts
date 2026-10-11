@@ -92,7 +92,11 @@ export const recordingDictionarySchema = Yup.object({
   page: Yup.string().trim().required('Page name is required.').matches(/^[A-Za-z][A-Za-z0-9]*$/, 'Use letters and digits only, e.g. CheckoutPage.'),
   section: Yup.string().trim().required('Section is required.').max(80),
   file: relativePath('Dictionary file').test('xml', 'Dictionary files must end with .xml.', (v) => !v || /\.xml$/i.test(v)),
-  pageObjectFile: relativePath('Page object file').test('cs', 'Page objects must be .cs files.', (v) => !v || /\.cs$/i.test(v)),
+  // Optional: leave empty to update the dictionary only.
+  pageObjectFile: Yup.string()
+    .trim()
+    .test('cs', 'Page objects must be .cs files.', (v) => !v || /\.cs$/i.test(v))
+    .test('relative', 'Use a path inside the repository, e.g. Pages/CheckoutPage.cs.', (v) => !v || (!/^([a-z]:|[\\/])/i.test(v) && !v.split(/[\\/]/).includes('..'))),
 });
 
 export const generatorSchema = Yup.object({

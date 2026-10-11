@@ -243,8 +243,8 @@ Researched: ISO/IEC/IEEE 29119-4 technique catalogue (classification tree, cause
 ## Recording, C# and Solution Explorer (2026-10-11)
 Reference: Visual Studio Solution Explorer (Microsoft Learn "Use Solution Explorer"): solution/project/dependencies tree, file nesting, Sync with Active Document, pending-changes filter, collapse all, search.
 - [x] G1 Test Generator density: keyword buttons move into the hints column header; editor and hints fill the step with no empty bands
-- [ ] G2 Record steps with Playwright from the Test Generator: recorded actions become Gherkin lines (existing bindings when matched, proposed wording otherwise); missing bindings are highlighted by the step check
-- [ ] G3 Recording updates selectors: choose an existing dictionary XML or a new file (same Page → Section → Field → Selector format); new fields only, previewed as a diff before writing
+- [x] G2 Record steps with Playwright from the Test Generator: recorded actions become Gherkin lines (existing bindings when matched, proposed wording otherwise); missing bindings are highlighted by the step check
+- [x] G3 Recording updates selectors: choose an existing dictionary XML or a new file (same Page → Section → Field → Selector format); new fields only, previewed as a diff before writing
 - [ ] G4 Create a step definition for an unbound step: pick an existing step class (default: the feature's associated one) or a new file; the method is appended, previewed, written, then opened at its line
 - [ ] G5 C# editor: open .cs files, C# syntax highlighting, Roslyn syntax diagnostics plus binding checks (parameters vs. pattern groups, duplicate patterns), save with diff
 - [ ] G6 Feature ↔ C# association: the step files a feature's steps bind to (plus naming convention); nested under the feature in the explorer; F12 goes to a step's definition
