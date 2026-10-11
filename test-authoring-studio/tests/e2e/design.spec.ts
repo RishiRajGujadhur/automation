@@ -6,7 +6,7 @@ async function audit(page: Page, name: string) {
   const r = await new AxeBuilder({ page }).withTags(TAGS).exclude('.docs-preview').analyze();
   expect(r.violations.map((v) => `${v.id}: ${v.help} — ${v.nodes.slice(0, 3).map((n) => n.target.join(' ')).join(', ')}`), `${name} has WCAG violations`).toEqual([]);
 }
-const tools = ['Examples generator', 'Step library', 'Suite optimizer', 'Flow generator', 'Duplicates & smells', 'Results & flakiness', 'Plans & filters', 'Living docs', 'Similarity lab'];
+const tools = ['Examples generator', 'Logic & techniques', 'Step library', 'Suite optimizer', 'Flow generator', 'Impact & risk', 'Duplicates & smells', 'Results & flakiness', 'Plans & filters', 'Living docs', 'Similarity lab'];
 
 test('every Test Design tool renders and passes WCAG 2.2 AA', async ({ page }) => {
   await page.goto('/#/test-design');
@@ -36,7 +36,7 @@ test('turning an algorithm off removes it from the tools, Turn on restores it', 
   await page.getByRole('button', { name: 'Preferences' }).click();
   await page.getByRole('dialog').getByRole('button', { name: 'Algorithms' }).click();
   await page.locator('#algo-fsm-parse').click();
-  await expect(page.getByText(/93 of 94 algorithms on/)).toBeVisible();
+  await expect(page.getByText(/139 of 140 algorithms on/)).toBeVisible();
   await page.keyboard.press('Escape');
   await expect(page.getByText(/State-machine model is turned off/)).toBeVisible();
   await page.getByRole('button', { name: 'Turn on' }).first().click();

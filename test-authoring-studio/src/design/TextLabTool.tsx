@@ -5,10 +5,12 @@ import { algorithmById } from '../algorithms/registry';
 import { metaphone, normalizeStep, porter, simhash, hamming32, minhash, minhashSimilarity, soundex, tokens, levenshtein } from '../algorithms/strings';
 import { inferType } from '../algorithms/steps';
 import { similarityFor, measures } from './similarity';
-import { pct } from './shared';
+import { pct, AlgoGate, Empty, type ToolProps, type Corpus } from './shared';
+import { needlemanWunsch, stepHamming } from '../algorithms/text';
+import { levenshteinRatio } from '../algorithms/strings';
 
 /** Compare two steps with every enabled similarity measure, phonetic code and normalizer. */
-export default function TextLabTool() {
+export default function TextLabTool({ corpus }: ToolProps) {
   const { on } = useAlgorithms();
   const [a, setA] = useLocalState('design:lab:a', 'the user clicks the "Sign in" button');
   const [b, setB] = useLocalState('design:lab:b', 'user presses the "Log in" button');
@@ -45,6 +47,31 @@ export default function TextLabTool() {
           ))}
         </div>
       </section>
+      <AlgoGate ids={['needleman-wunsch']}><Alignment corpus={corpus} /></AlgoGate>
     </div>
+  );
+}
+
+/** N8, N10: align two scenarios step by step. */
+function Alignment({ corpus }: { corpus?: Corpus }) {
+  const { on } = useAlgorithms();
+  const list = (corpus?.features ?? []).flatMap((f) => f.scenarios.map((s) => ({ id: `${f.file}:${s.line}`, label: `${f.name} › ${s.name}`, steps: s.steps.map((x) => `${x.keyword.trim()} ${x.text}`) })));
+  const [a, setA] = useLocalState('design:align:a', '');
+  const [b, setB] = useLocalState('design:align:b', '');
+  const A = list.find((x) => x.id === a) ?? list[0], B = list.find((x) => x.id === b) ?? list[1] ?? list[0];
+  if (!A || !B) return <Empty title="Need two scenarios" />;
+  const res = needlemanWunsch(A.steps, B.steps, (x, y) => levenshteinRatio(x.toLowerCase(), y.toLowerCase()));
+  const ham = stepHamming(A.steps, B.steps);
+  return (
+    <section className="panel" aria-labelledby="lab-align">
+      <div className="design-head"><h2 id="lab-align">Scenario alignment</h2>{on('hamming-steps') && !Number.isNaN(ham) && <span className="badge">{ham} differing positions</span>}</div>
+      <div className="form-grid">
+        <label className="field"><span className="micro-label">SCENARIO A</span><select value={A.id} onChange={(e) => setA(e.target.value)}>{list.map((s) => <option key={s.id} value={s.id}>{s.label}</option>)}</select></label>
+        <label className="field"><span className="micro-label">SCENARIO B</span><select value={B.id} onChange={(e) => setB(e.target.value)}>{list.map((s) => <option key={s.id} value={s.id}>{s.label}</option>)}</select></label>
+      </div>
+      <table className="data-table"><thead><tr><th>A</th><th>B</th><th>Match</th></tr></thead>
+        <tbody>{res.alignment.map((r, i) => <tr key={i}><td>{r.a ?? <span className="meta">—</span>}</td><td>{r.b ?? <span className="meta">—</span>}</td><td>{r.score !== undefined ? <span className={`badge ${r.score > 0.95 ? 'green' : r.score > 0.7 ? 'amber' : 'muted'}`}>{pct(r.score)}</span> : <span className="badge muted">gap</span>}</td></tr>)}</tbody>
+      </table>
+    </section>
   );
 }

@@ -4,6 +4,7 @@ import { useAlgorithms } from '../radix2';
 import { useLocalState } from '../ui';
 import { smellChecks, duplicateScenarios, flesch, fleschLabel, type Finding } from '../algorithms/quality';
 import { algorithmById } from '../algorithms/registry';
+import { gunningFog, rake, typeTokenRatio } from '../algorithms/text';
 import { AlgoGate, Empty, ResultActions, toQFeature, type ToolProps } from './shared';
 
 /** Duplicates, smells and readability across the whole corpus. */
@@ -59,6 +60,27 @@ export default function QualityTool({ corpus, onNotice, onSource }: ToolProps) {
           )}
         </section>
       </AlgoGate>
+      <Wording features={features} onNotice={onNotice} />
     </div>
+  );
+}
+
+/** N1, N2, N5: readability by fog index, vocabulary spread and the key phrases of each feature. */
+function Wording({ features, onNotice }: { features: ReturnType<typeof toQFeature>[]; onNotice: (m: string) => void }) {
+  const { on } = useAlgorithms();
+  const all = features.flatMap((f) => f.scenarios.flatMap((s) => s.steps.map((x) => x.text)));
+  if (!all.length || (!on('gunning-fog') && !on('lexical-diversity') && !on('rake'))) return null;
+  const fog = on('gunning-fog') ? features.map((f) => ({ f, fog: gunningFog(f.scenarios.flatMap((s) => s.steps.map((x) => x.text))) })).sort((a, b) => b.fog - a.fog) : [];
+  const ttr = typeTokenRatio(all);
+  const md = features.map((f) => `- **${f.name}**: ${rake(f.scenarios.flatMap((s) => [s.name, ...s.steps.map((x) => x.text)]), 5).map((k) => k.phrase).join(', ')}`).join('\n');
+  return (
+    <section className="panel" aria-labelledby="q-wording">
+      <div className="design-head"><h2 id="q-wording">Wording</h2>{on('lexical-diversity') && <span className="badge">lexical diversity {ttr.toFixed(2)}</span>}</div>
+      {on('lexical-diversity') && <p className="subtle">{ttr < 0.2 ? 'Very repetitive wording: good for reuse, but check steps say what differs.' : ttr > 0.6 ? 'Many different words: consider a shared vocabulary so steps get reused.' : 'Vocabulary is consistent.'}</p>}
+      <table className="data-table"><thead><tr><th>Feature</th>{on('gunning-fog') && <th>Fog index</th>}{on('rake') && <th>Key phrases</th>}</tr></thead>
+        <tbody>{(fog.length ? fog : features.map((f) => ({ f, fog: 0 }))).map(({ f, fog: g }) => <tr key={f.file}><td>{f.name}</td>{on('gunning-fog') && <td>{g.toFixed(1)}</td>}{on('rake') && <td className="meta">{rake(f.scenarios.flatMap((s) => [s.name, ...s.steps.map((x) => x.text)]), 4).map((k) => k.phrase).join(', ')}</td>}</tr>)}</tbody>
+      </table>
+      <ResultActions text={md} file="feature-keywords.md" onNotice={onNotice} />
+    </section>
   );
 }

@@ -9,6 +9,7 @@ import {
   paramsFromCsv, parseConstraints, quineMcCluskey, randomSample, seedsFromExamples, toCsv, toExamples, type Param, type Row,
 } from '../algorithms/combinatorial';
 import { parseTagExpression, evaluate } from '../algorithms/tags';
+import { annealCoveringArray, missingCombinations, reduceTable } from '../algorithms/logic';
 import { AlgoGate, AlgoPicker, DropZone, ResultActions, usePicked, pct, type ToolProps } from './shared';
 
 type Draft = { params: { name: string; values: string }[]; constraints: string; seeds: string; strength: number; seed: number; count: number; scenario: string; steps: string };
@@ -27,7 +28,7 @@ const sample: Draft = {
   scenario: 'Checkout works across environments',
   steps: 'Given the user opens the shop in <browser> on <os>\nWhen they buy <quantity> items paying by <payment>\nThen the order is confirmed',
 };
-const generators = ['ipog', 'aetg', 'covertable', 'orthogonal', 'each-choice', 'base-choice', 'random-sample', 'cartesian'];
+const generators = ['ipog', 'aetg', 'covertable', 'sa-covering', 'orthogonal', 'each-choice', 'base-choice', 'random-sample', 'cartesian'];
 const EXPLOSION = 2000;
 
 /** F3: combinatorial Examples generator → Scenario Outline. */
@@ -50,6 +51,7 @@ export default function ExamplesTool({ onNotice, onOpenDraft }: ToolProps) {
   const size = cartesianSize(params);
   const t = Math.min(d.strength, params.length || 1);
   const cov = rows && on('tway-coverage') ? coverage(params, rows, t, valid) : undefined;
+  const missing = rows && on('missing-pairs') && cov && cov.ratio < 1 ? missingCombinations(params, rows, t, valid) : undefined;
 
   const generate = () => {
     setError('');
@@ -59,6 +61,7 @@ export default function ExamplesTool({ onNotice, onOpenDraft }: ToolProps) {
       switch (algo) {
         case 'ipog': out = ipog(params, t, valid, seeds); break;
         case 'aetg': out = aetg(params, t, valid, d.seed); break;
+        case 'sa-covering': { out = annealCoveringArray(params, t, undefined, d.seed).filter(valid); if (!out.length) throw new Error('Annealing did not find a covering table; try IPOG for this model.'); if (rules.length && coverage(params, out, t, valid).ratio < 1) out = ipog(params, t, valid, out); break; }
         case 'covertable': {
           const factors = Object.fromEntries(params.map((p) => [p.name, p.values]));
           const made = make(factors, { strength: t, salt: d.seed }) as Record<string, string>[];
@@ -124,10 +127,10 @@ export default function ExamplesTool({ onNotice, onOpenDraft }: ToolProps) {
           </AlgoGate>
           <div className="design-options">
             <AlgoPicker id="examples" label="ALGORITHM" options={generators} />
-            {['ipog', 'aetg', 'covertable'].includes(algo) && (
+            {['ipog', 'aetg', 'covertable', 'sa-covering'].includes(algo) && (
               <label className="field small"><span className="micro-label">STRENGTH (t)</span><input type="number" min={1} max={Math.max(1, params.length)} value={d.strength} onChange={(e) => set({ strength: Math.max(1, Math.min(6, +e.target.value || 2)) })} /></label>
             )}
-            {['aetg', 'random-sample', 'covertable'].includes(algo) && (
+            {['aetg', 'random-sample', 'covertable', 'sa-covering'].includes(algo) && (
               <label className="field small"><span className="micro-label">SEED</span><input type="number" value={d.seed} onChange={(e) => set({ seed: +e.target.value || 0 })} /></label>
             )}
             {algo === 'random-sample' && <label className="field small"><span className="micro-label">ROWS</span><input type="number" min={1} value={d.count} onChange={(e) => set({ count: Math.max(1, +e.target.value || 1) })} /></label>}
@@ -154,8 +157,10 @@ export default function ExamplesTool({ onNotice, onOpenDraft }: ToolProps) {
           {rows ? (
             <>
               <pre className="code-block" tabIndex={0} aria-label="Generated Scenario Outline">{outline}</pre>
+              {missing && missing.missing.length > 0 && <details className="missing-list"><summary>{missing.missing.length} uncovered {t}-way combinations</summary><ul>{missing.missing.slice(0, 60).map((m) => <li key={m}>{m}</li>)}</ul></details>}
               <ResultActions text={outline} file="generated.feature" onNotice={onNotice}>
                 <Button size="small" onClick={() => rows && navigator.clipboard?.writeText(toCsv(params, rows)).then(() => onNotice('CSV copied.'))}>Copy CSV</Button>
+                {on('table-reducer') && <Button size="small" onClick={() => { const r = reduceTable(params, rows, t); setHistory([...history.slice(-9), rows]); setRows(r); onNotice(`Removed ${rows.length - r.length} rows; ${t}-way coverage kept.`); }}>Reduce</Button>}
                 <Button size="small" disabled={!history.length} onClick={() => { setRows(history[history.length - 1]); setHistory(history.slice(0, -1)); }}>Undo</Button>
                 <Button size="small" variant="soft" onClick={() => onOpenDraft(`Feature: Generated\n\n${outline}`, 'Features/Generated.feature')}><FileCode2 size={13} aria-hidden="true" />Open in editor</Button>
               </ResultActions>

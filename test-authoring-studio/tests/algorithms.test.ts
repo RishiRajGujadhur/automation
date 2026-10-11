@@ -276,9 +276,9 @@ describe('quality, tags and docs', () => {
 });
 
 describe('registry', () => {
-  it('has 70–100 unique algorithms with tooltips', () => {
+  it('has 70–150 unique algorithms with tooltips', () => {
     expect(algorithms.length).toBeGreaterThanOrEqual(70);
-    expect(algorithms.length).toBeLessThanOrEqual(100);
+    expect(algorithms.length).toBeLessThanOrEqual(150);
     expect(new Set(algorithms.map((a) => a.id)).size).toBe(algorithms.length);
     expect(algorithms.every((a) => a.tooltip.length > 30)).toBe(true);
   });

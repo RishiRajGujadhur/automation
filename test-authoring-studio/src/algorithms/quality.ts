@@ -1,4 +1,5 @@
 import { fnv1a } from './strings';
+import { isPassive, vagueTerms } from './text';
 
 /* Gherkin quality checks ("scenario smells"). Each check works on a light scenario model. */
 export type QStep = { keyword: string; text: string; line: number };
@@ -27,6 +28,8 @@ export const smellChecks: Record<string, (f: QFeature, opts: { maxSteps: number 
       ...[...head].filter((h) => !used.has(h)).map((h) => ({ check: 'smell-outline', file: f.file, line: s.line, severity: 'info' as const, message: `Examples column "${h}" in "${s.name}" is never used by a step.` })),
     ];
   }),
+  /* N3 */ 'passive-voice': (f) => f.scenarios.flatMap((s) => s.steps.filter((st) => isPassive(st.text)).map((st) => ({ check: 'passive-voice', file: f.file, line: st.line, severity: 'info' as const, message: `Passive voice in "${st.text}". Say who does it: "the user places the order".` }))),
+  /* N4 */ 'vague-words': (f) => f.scenarios.flatMap((s) => s.steps.flatMap((st) => { const v = vagueTerms(st.text); return v.length ? [{ check: 'vague-words', file: f.file, line: st.line, severity: 'info' as const, message: `Vague wording (${v.join(', ')}) in "${st.text}": state the observable result.` }] : []; })),
   /* H8 */ 'smell-dup-names': (f) => {
     const seen = new Map<string, number>();
     return f.scenarios.flatMap((s) => { const k = s.name.trim().toLowerCase(); if (seen.has(k)) return [{ check: 'smell-dup-names', file: f.file, line: s.line, severity: 'warning' as const, message: `Scenario name "${s.name}" is also used on line ${seen.get(k)}.` }]; seen.set(k, s.line); return []; });

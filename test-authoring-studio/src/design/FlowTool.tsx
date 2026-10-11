@@ -4,7 +4,8 @@ import { Button } from '../radix';
 import { Meter, useAlgorithms } from '../radix2';
 import { useLocalState } from '../ui';
 import { chinesePostman, deadStates, dijkstra, edgeCoverage, kahn, nSwitchCoverage, parseFsm, pathsToGherkin, primePaths, randomWalks, simplePaths, stateCoverage, stateCoverageOf, tarjan, transitionCoverage, bfsPath, type Edge } from '../algorithms/graph';
-import { AlgoGate, AlgoPicker, Empty, ResultActions, usePicked, type ToolProps } from './shared';
+import { basisPaths, cyclomatic, floydWarshall, mostProbablePaths, pageRank, sneakPaths, stationaryDistribution, yenKShortest } from '../algorithms/graph2';
+import { AlgoGate, AlgoPicker, Empty, ResultActions, usePicked, pct, type ToolProps } from './shared';
 
 const sample = `# From -> To : action [cost]
 start: Home
@@ -19,7 +20,7 @@ Cart -> Checkout : proceeds to checkout [2]
 Cart -> Product : removes the product
 Checkout -> Login : is asked to sign in
 Checkout -> Confirmation : places the order [3]`;
-const criteria = ['transition-coverage', 'state-coverage', 'n-switch', 'prime-paths', 'chinese-postman', 'simple-paths', 'random-walk'];
+const criteria = ['transition-coverage', 'state-coverage', 'n-switch', 'prime-paths', 'basis-paths', 'markov-usage', 'chinese-postman', 'simple-paths', 'random-walk'];
 
 /** F7: finite-state machine → scenarios. */
 export default function FlowTool({ onNotice, onOpenDraft }: ToolProps) {
@@ -41,6 +42,8 @@ export default function FlowTool({ onNotice, onOpenDraft }: ToolProps) {
       case 'chinese-postman': { if (!on('hierholzer')) return []; const tour = chinesePostman(fsm); return tour ? [tour] : []; }
       case 'simple-paths': return simplePaths(fsm);
       case 'random-walk': return randomWalks(fsm, 6, seed);
+      case 'basis-paths': return basisPaths(fsm);
+      case 'markov-usage': return mostProbablePaths(fsm, 6).map((p) => p.path);
     }
     return [];
   }, [fsm, crit, seed, on]);
@@ -92,8 +95,10 @@ export default function FlowTool({ onNotice, onOpenDraft }: ToolProps) {
             <label className="field"><span className="micro-label">TO</span><select value={to} onChange={(e) => setTo(e.target.value)}>{fsm.states.map((s) => <option key={s}>{s}</option>)}</select></label>
           </div>
           {route ? <p>{[from, ...route.path.map((e) => e.to)].join(' → ')} <span className="meta">({on('dijkstra') ? `cost ${route.cost}` : `${route.cost} steps`})</span></p> : <p className="subtle">No route from {from} to {to}.</p>}
+          {on('yen-k-shortest') && route && <ol className="suite-list" aria-label="Alternative routes">{yenKShortest(fsm, from, to, 4).slice(1).map((r, i) => <li key={i}>{[from, ...r.path.map((e) => e.to)].join(' → ')} <span className="meta">cost {r.cost}</span></li>)}</ol>}
         </AlgoGate>
       </section>
+      <ModelAnalysis fsm={fsm} title={title} onNotice={onNotice} onOpenDraft={onOpenDraft} />
       <AlgoGate ids={['kahn']}><DependencyOrder onNotice={onNotice} /></AlgoGate>
     </div>
   );
@@ -112,6 +117,41 @@ function DependencyOrder({ onNotice }: { onNotice: (m: string) => void }) {
       <p><strong>Order:</strong> {order.join(' → ') || '–'}</p>
       {cycle.length > 0 && <p className="warn-text"><TriangleAlert size={14} aria-hidden="true" />Cycle between {cycle.join(', ')}.</p>}
       <ResultActions text={order.join('\n')} file="dependency-order.txt" onNotice={onNotice} />
+    </section>
+  );
+}
+
+/** K1, K2, K5, K6, J12: numbers about the model, plus negative (sneak path) scenarios. */
+function ModelAnalysis({ fsm, title, onNotice, onOpenDraft }: { fsm: ReturnType<typeof parseFsm>['fsm']; title: string; onNotice: (m: string) => void; onOpenDraft: (s: string, f: string) => void }) {
+  const { on } = useAlgorithms();
+  if (!fsm.edges.length) return null;
+  const sneaks = on('sneak-paths') ? sneakPaths(fsm) : [];
+  const negative = sneaks.length ? `Feature: ${title} — invalid actions\n\n${sneaks.slice(0, 40).map((s) => `  Scenario: "${s.action}" is not possible on ${s.state}\n    Given the user is on the ${fsm.initial} screen\n${s.path.map((e, i) => `    ${i ? 'And' : 'When'} the user ${e.label}`).join('\n')}${s.path.length ? '\n' : ''}    Then the user cannot ${s.action}\n    And the user is still on the ${s.state} screen`).join('\n\n')}\n` : '';
+  const fw = on('floyd-warshall') ? floydWarshall(fsm) : undefined;
+  const ranks = on('pagerank') ? pageRank(fsm).slice(0, 6) : [];
+  const usage = on('markov-usage') ? [...stationaryDistribution(fsm)].sort((a, b) => b[1] - a[1]).slice(0, 6) : [];
+  return (
+    <section className="panel" aria-labelledby="flow-analysis">
+      <div className="design-head"><h2 id="flow-analysis">Model analysis</h2>{on('cyclomatic') && <span className="badge">cyclomatic complexity {cyclomatic(fsm)}</span>}</div>
+      <div className="design-columns">
+        {ranks.length > 0 && <div><span className="micro-label">HUB STATES (PAGERANK)</span><ol className="suite-list">{ranks.map(([s, r]) => <li key={s}>{s} <span className="meta">{pct(r)}</span></li>)}</ol></div>}
+        {usage.length > 0 && <div><span className="micro-label">TIME SPENT PER STATE (USAGE MODEL)</span><ol className="suite-list">{usage.map(([s, r]) => <li key={s}>{s} <span className="meta">{pct(r)}</span></li>)}</ol></div>}
+      </div>
+      {fw && fw.states.length <= 14 && (
+        <div className="table-scroll"><table className="data-table heat" aria-label="Shortest path cost between states">
+          <thead><tr><th>from \ to</th>{fw.states.map((s) => <th key={s} scope="col">{s}</th>)}</tr></thead>
+          <tbody>{fw.states.map((s, i) => <tr key={s}><th scope="row">{s}</th>{fw.distance[i].map((d, j) => <td key={j}>{d === Infinity ? '∞' : d}</td>)}</tr>)}</tbody>
+        </table></div>
+      )}
+      {on('sneak-paths') && (
+        <>
+          <span className="micro-label">SNEAK PATHS · {sneaks.length} INVALID STATE/ACTION PAIRS</span>
+          {negative ? <pre className="code-block" tabIndex={0} aria-label="Negative scenarios">{negative}</pre> : <p className="subtle">Every action is allowed in every state.</p>}
+          <ResultActions text={negative} file="invalid-actions.feature" onNotice={onNotice}>
+            <Button size="small" variant="soft" disabled={!negative} onClick={() => onOpenDraft(negative, `Features/${title.replace(/\W+/g, '') || 'Flow'}InvalidActions.feature`)}><FileCode2 size={13} aria-hidden="true" />Open in editor</Button>
+          </ResultActions>
+        </>
+      )}
     </section>
   );
 }

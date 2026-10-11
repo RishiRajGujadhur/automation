@@ -3,6 +3,7 @@ import { Activity, Trash2 } from 'lucide-react';
 import { Button } from '../radix';
 import { useAlgorithms, useConfirm } from '../radix2';
 import { betaPosterior, entropy, ewma, flakyScore, flipRate, histories, parseCucumberJson, parseJUnit, wilson, type Run } from '../algorithms/results';
+import { coFailures, cusum, madOutliers, mannKendall, mtbf, percentiles, sprt } from '../algorithms/stats';
 import { AlgoGate, DropZone, Empty, ResultActions, pct, type ToolProps } from './shared';
 
 const KEY = 'tas:design:runs';
@@ -11,7 +12,7 @@ function saveRuns(r: Run[]) { try { localStorage.setItem(KEY, JSON.stringify(r.s
 const sampleRuns = (): Run[] => {
   const names = ['Sign in with valid credentials', 'Search returns results', 'Checkout with card', 'Apply coupon', 'Guest checkout'];
   const pattern = ['PPPPPPPP', 'PPFPPFPF', 'PPPPPPPF', 'FFFFFFFF', 'PFPFPPFP'];
-  return Array.from({ length: 8 }, (_, i) => ({ id: `sample-${i}`, at: Date.now() - (8 - i) * 864e5, source: 'sample', results: names.map((n, k) => ({ name: n, feature: 'Sample', outcome: pattern[k][i] === 'P' ? 'passed' : 'failed' })) }));
+  return Array.from({ length: 8 }, (_, i) => ({ id: `sample-${i}`, at: Date.now() - (8 - i) * 864e5, source: 'sample', results: names.map((n, k) => ({ name: n, feature: 'Sample', outcome: pattern[k][i] === 'P' ? 'passed' : 'failed', duration: +(1.2 + k * 0.8 + (k === 2 ? i * 0.6 : (i % 3) * 0.1) + (k === 4 ? 9 : 0)).toFixed(2) })) }));
 };
 
 /** F10: import results over time and rank flaky scenarios. */
@@ -76,6 +77,45 @@ export default function ResultsTool({ onNotice }: ToolProps) {
         )}
         <ResultActions text={rows.length ? csv : ''} file="flakiness.csv" type="text/csv" onNotice={onNotice} />
       </section>
+      <RunStatistics runs={runs} onNotice={onNotice} />
     </div>
+  );
+}
+
+/** M1–M7: change points, rerun decisions, duration trends and outliers, MTBF and co-failures. */
+function RunStatistics({ runs, onNotice }: { runs: Run[]; onNotice: (m: string) => void }) {
+  const { on } = useAlgorithms();
+  const ordered = useMemo(() => runs.slice().sort((a, b) => a.at - b.at), [runs]);
+  const rows = useMemo(() => {
+    const byName = new Map<string, { outcomes: boolean[]; durations: number[] }>();
+    ordered.forEach((r) => r.results.forEach((x) => { if (x.outcome === 'skipped') return; const k = x.name; const e = byName.get(k) ?? byName.set(k, { outcomes: [], durations: [] }).get(k)!; e.outcomes.push(x.outcome === 'failed'); if (x.duration !== undefined) e.durations.push(x.duration); }));
+    return [...byName].map(([name, e]) => ({ name, ...e, cusum: cusum(e.outcomes.map(Number)), sprt: sprt(e.outcomes), mtbf: mtbf(e.outcomes), p: percentiles(e.durations), mk: e.durations.length >= 4 ? mannKendall(e.durations) : undefined, mean: e.durations.length ? e.durations.reduce((a, x) => a + x, 0) / e.durations.length : 0 }));
+  }, [ordered]);
+  const slow = on('mad-outliers') ? madOutliers(rows.filter((r) => r.durations.length), (r) => r.mean) : [];
+  const pairs = on('co-failure') ? coFailures(ordered.map((r) => ({ failed: r.results.filter((x) => x.outcome === 'failed').map((x) => x.name) }))) : [];
+  if (!rows.length) return null;
+  const tsv = ['scenario\tchange at run\tsprt\tmtbf\tp50\tp90\ttrend', ...rows.map((r) => [r.name, r.cusum.changeAt + 1 || '', r.sprt.decision, r.mtbf === Infinity ? '' : r.mtbf.toFixed(1), r.p.p50.toFixed?.(2) ?? '', r.p.p90.toFixed?.(2) ?? '', r.mk?.trend ?? ''].join('\t'))].join('\n');
+  return (
+    <section className="panel" aria-labelledby="res-stats">
+      <div className="design-head"><h2 id="res-stats">Run statistics</h2></div>
+      <div className="table-scroll">
+        <table className="data-table">
+          <thead><tr><th>Scenario</th>{on('cusum') && <th>Started failing</th>}{on('sprt') && <th>Rerun verdict (SPRT)</th>}{on('mtbf') && <th>Runs between failures</th>}{on('percentiles') && <th>p50 / p90 / p95</th>}{on('mann-kendall') && <th>Duration trend</th>}</tr></thead>
+          <tbody>{rows.map((r) => (
+            <tr key={r.name}>
+              <td>{r.name}</td>
+              {on('cusum') && <td>{r.cusum.changeAt >= 0 ? `run ${r.cusum.changeAt + 1}` : '–'}</td>}
+              {on('sprt') && <td><span className={`badge ${r.sprt.decision === 'flaky' ? 'amber' : r.sprt.decision === 'stable' ? 'green' : 'muted'}`}>{r.sprt.decision}</span>{r.sprt.decision === 'continue' && 'rerunsToStable' in r.sprt && <span className="meta"> ~{r.sprt.rerunsToStable} more passes</span>}</td>}
+              {on('mtbf') && <td>{r.mtbf === Infinity ? 'never failed' : r.mtbf.toFixed(1)}</td>}
+              {on('percentiles') && <td>{r.durations.length ? `${r.p.p50.toFixed(2)} / ${r.p.p90.toFixed(2)} / ${r.p.p95.toFixed(2)} s` : '–'}</td>}
+              {on('mann-kendall') && <td>{r.mk ? <span className={`badge ${r.mk.trend === 'increasing' ? 'amber' : r.mk.trend === 'decreasing' ? 'green' : 'muted'}`}>{r.mk.trend}</span> : '–'}</td>}
+            </tr>
+          ))}</tbody>
+        </table>
+      </div>
+      {slow.length > 0 && <p className="warn-text">Unusually slow: {slow.map((s) => `${s.item.name} (${s.item.mean.toFixed(1)}s)`).join(', ')}.</p>}
+      {pairs.length > 0 && <div><span className="micro-label">FAIL TOGETHER (LIKELY ONE ROOT CAUSE)</span><ul className="finding-list">{pairs.slice(0, 12).map((p) => <li key={p.a + p.b}><span>{p.a} ⇄ {p.b}</span><span className="meta">{p.together} runs · Jaccard {p.jaccard.toFixed(2)}</span></li>)}</ul></div>}
+      <ResultActions text={tsv} file="run-statistics.tsv" onNotice={onNotice} />
+    </section>
   );
 }

@@ -1,6 +1,6 @@
 import * as Tabs from '@radix-ui/react-tabs';
 import { lazy, Suspense } from 'react';
-import { Table2, Library, ListChecks, Workflow, ShieldCheck, Activity, Filter, BookOpenText, FlaskConical, type LucideIcon } from 'lucide-react';
+import { Table2, Library, ListChecks, Workflow, ShieldCheck, Activity, Filter, BookOpenText, FlaskConical, Binary, GitPullRequest, type LucideIcon } from 'lucide-react';
 import { useLocalState } from './ui';
 import { useCorpus, type ToolProps } from './design/shared';
 
@@ -13,12 +13,16 @@ const ResultsTool = lazy(() => import('./design/ResultsTool'));
 const PlansTool = lazy(() => import('./design/PlansTool'));
 const DocsTool = lazy(() => import('./design/DocsTool'));
 const TextLabTool = lazy(() => import('./design/TextLabTool'));
+const LogicTool = lazy(() => import('./design/LogicTool'));
+const ImpactTool = lazy(() => import('./design/ImpactTool'));
 
 export const designTools: { id: string; label: string; icon: LucideIcon; description: string; C: React.ComponentType<ToolProps> }[] = [
   { id: 'examples', label: 'Examples generator', icon: Table2, description: 'Pairwise / t-way Examples tables, boundary values and decision tables.', C: ExamplesTool },
+  { id: 'logic', label: 'Logic & techniques', icon: Binary, description: 'MC/DC and condition coverage, cause–effect graphs, classification trees, domain points and tricky values.', C: LogicTool },
   { id: 'library', label: 'Step library', icon: Library, description: 'Reusable steps, parameterization, clusters and rename-everywhere.', C: StepLibraryTool },
   { id: 'suite', label: 'Suite optimizer', icon: ListChecks, description: 'Minimal covering suite and run-order prioritization.', C: SuiteTool },
   { id: 'flow', label: 'Flow generator', icon: Workflow, description: 'Scenarios from a state machine with coverage criteria.', C: FlowTool },
+  { id: 'impact', label: 'Impact & risk', icon: GitPullRequest, description: 'Change-based test selection, traceability, risk, quarantine, time budgets, failure prediction and themes.', C: ImpactTool },
   { id: 'quality', label: 'Duplicates & smells', icon: ShieldCheck, description: 'Scenario smells, duplicate scenarios and readability.', C: QualityTool },
   { id: 'results', label: 'Results & flakiness', icon: Activity, description: 'Import JUnit/Cucumber reports and rank flaky scenarios.', C: ResultsTool },
   { id: 'plans', label: 'Plans & filters', icon: Filter, description: 'Tag expressions, saved filters and test cycles.', C: PlansTool },

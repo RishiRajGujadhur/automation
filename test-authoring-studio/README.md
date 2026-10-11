@@ -175,11 +175,13 @@ The app is checked against the W3C standards it relies on (HTML, CSS, WAI-ARIA) 
 
 ### Test Design (deterministic algorithms)
 
-**Test Design** is an Advanced page (⋯ menu, Ctrl/Cmd+K, Alt+5, `#/test-design`). It runs 94 non-AI algorithms from `src/algorithms/` over the whole feature corpus (`GET /api/design/corpus`). Each tool is a tab, and the last tab you used is remembered.
+**Test Design** is an Advanced page (⋯ menu, Ctrl/Cmd+K, Alt+5, `#/test-design`). It runs 140 non-AI algorithms from `src/algorithms/` over the whole feature corpus (`GET /api/design/corpus`). Each tool is a tab, and the last tab you used is remembered.
 
 | Tool | What it does | Algorithms |
 | --- | --- | --- |
 | **Examples generator** | Parameters (or CSV import) → a Scenario Outline Examples table, with a t-way coverage meter. Constraints (`a = x & b = y`, `if a = x then b != y`), seed rows, weights (`value*3`), `18..65` boundary values, `[0..17|18..64]` classes. Includes a decision table with minimized rules. | IPOG, AETG, covertable, orthogonal arrays, each-choice, base-choice, seeded random, Cartesian, BVA, equivalence partitioning, Quine–McCluskey |
+| **Logic & techniques** | Logic coverage for a business rule (MC/DC, condition, decision, multiple-condition), cause–effect graphs → decision tables, classification trees (minimal or pairwise), domain-testing ON/OFF points, tricky-value catalogue. | MC/DC independence pairs, cause–effect merging, classification tree method, domain testing, error guessing |
+| **Impact & risk** | Changed files (typed or read from git) → impacted scenarios with reasons; traceability matrix from requirement tags; risk = likelihood × impact; quarantine advice; best suite for a time budget and the coverage/time Pareto front; next-run failure prediction; scenario themes. | Test impact analysis, RTM, risk-based testing, quarantine policy, 0/1 knapsack, Pareto front, logistic regression, naive Bayes, k-means++, silhouette, RAKE |
 | **Step library** | Searchable reusable steps with usage counts, "parameterize repeated steps" proposals, similar-step clusters with a threshold slider, **rename everywhere** (Cucumber expression → new wording, diff preview per file, approve to write), expression converters. | BM25, fuzzy, trie, inverted index, BK-tree, frecency, Aho–Corasick, 11 similarity measures, union-find / HAC / DBSCAN, MinHash-LSH, SimHash |
 | **Suite optimizer** | The fewest scenarios that still cover every tag and/or distinct step; run order with APFD. | Greedy / weighted set cover, HGS, exact branch and bound, simulated annealing, genetic, total/additional greedy, adaptive random |
 | **Flow generator** | `From -> To : action [cost]` state machine → Gherkin scenarios, plus dead-state warnings, a route finder and feature dependency order. | Transition, state, 1-switch and prime-path coverage, Chinese postman + Hierholzer, simple paths, random walks, BFS, Dijkstra, Tarjan, Kahn |
@@ -189,9 +191,18 @@ The app is checked against the W3C standards it relies on (HTML, CSS, WAI-ARIA) 
 | **Living docs** | HTML (printable, dark-mode aware) or Markdown spec with the latest imported status. | Status roll-up |
 | **Similarity lab** | Compare two steps with every enabled measure, phonetic code and stemmer. | — |
 
+Batch 2 also extends existing tools:
+- **Examples generator:** simulated-annealing covering arrays, **Reduce** (drops rows while keeping coverage), and a list of uncovered combinations.
+- **Flow generator:** basis paths, Markov usage journeys, Yen's alternative routes, cyclomatic complexity, PageRank hub states, an all-pairs distance matrix and sneak-path negative scenarios.
+- **Results:** CUSUM change points, SPRT rerun verdicts, Mann–Kendall duration trends, MAD slow-test outliers, percentiles, MTBF and co-failure pairs.
+- **Smells:** passive voice, vague wording, Gunning fog, lexical diversity and feature keywords.
+- **Step library:** next-step suggestions and repeated step runs (Background candidates).
+- **Plans:** Apriori tag rules and tag entropy.
+- **Similarity lab:** Needleman–Wunsch scenario alignment.
+
 The **feature editor** uses the same library: steps already written in feature files appear in autocomplete after the bindings, a step that is almost identical to an existing one gets a **Use existing step** quick fix (quoted values are kept), and scenario smells show as info diagnostics.
 
-**Settings → Algorithms** lists every algorithm with a switch and an ⓘ tooltip explaining it. There are also per-category switches, Enable all / Disable all / Reset, and an "N of 94 on" count. Settings search matches what an algorithm does (try "phonetic"). A tool whose algorithm is off says so and offers **Turn on**. The full checklist and research notes are in [PLAN.md](PLAN.md).
+**Settings → Algorithms** lists every algorithm with a switch and an ⓘ tooltip explaining it. There are also per-category switches, Enable all / Disable all / Reset, and an "N of 140 on" count. Settings search matches what an algorithm does (try "phonetic"). A tool whose algorithm is off says so and offers **Turn on**. The full checklist and research notes are in [PLAN.md](PLAN.md).
 
 ### Test Generator wizard
 

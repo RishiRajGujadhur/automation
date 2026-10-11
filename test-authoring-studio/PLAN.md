@@ -172,57 +172,57 @@ Legend: `[x]` done · `[ ]` to do. Each feature group is committed and pushed wh
 Researched: ISO/IEC/IEEE 29119-4 technique catalogue (classification tree, cause–effect graphing, decision tables, MC/DC), covering arrays by simulated annealing (Cohen et al.), test impact analysis (change-based selection), flaky-test quarantine policies, defect prediction (logistic regression, naive Bayes), requirements traceability matrices, requirements-smell detection (vague words, passive voice).
 
 ### J. Logic & specification techniques (12)
-- [ ] J1 `mcdc` MC/DC test set (independence pairs per condition)
-- [ ] J2 `condition-coverage` Condition coverage
-- [ ] J3 `decision-coverage` Decision (branch) coverage
-- [ ] J4 `multiple-condition` Multiple-condition coverage
-- [ ] J5 `cause-effect` Cause–effect graphing → decision table
-- [ ] J6 `classification-tree` Classification tree method
-- [ ] J7 `domain-testing` Domain testing ON/OFF points
-- [ ] J8 `value-catalog` Heuristic test-value catalogue (error guessing)
-- [ ] J9 `sa-covering` Simulated-annealing covering arrays
-- [ ] J10 `table-reducer` Examples table reducer (keep t-way coverage)
-- [ ] J11 `missing-pairs` Uncovered combinations report
-- [ ] J12 `sneak-paths` Invalid transition (sneak path) tests
+- [x] J1 `mcdc` MC/DC test set (independence pairs per condition)
+- [x] J2 `condition-coverage` Condition coverage
+- [x] J3 `decision-coverage` Decision (branch) coverage
+- [x] J4 `multiple-condition` Multiple-condition coverage
+- [x] J5 `cause-effect` Cause–effect graphing → decision table
+- [x] J6 `classification-tree` Classification tree method
+- [x] J7 `domain-testing` Domain testing ON/OFF points
+- [x] J8 `value-catalog` Heuristic test-value catalogue (error guessing)
+- [x] J9 `sa-covering` Simulated-annealing covering arrays
+- [x] J10 `table-reducer` Examples table reducer (keep t-way coverage)
+- [x] J11 `missing-pairs` Uncovered combinations report
+- [x] J12 `sneak-paths` Invalid transition (sneak path) tests
 
 ### K. Model-based testing, more (6)
-- [ ] K1 `floyd-warshall` All-pairs shortest paths
-- [ ] K2 `cyclomatic` Cyclomatic complexity of a flow
-- [ ] K3 `basis-paths` Basis path set
-- [ ] K4 `yen-k-shortest` Yen's k shortest paths
-- [ ] K5 `markov-usage` Markov usage model (most probable paths, stationary distribution)
-- [ ] K6 `pagerank` PageRank of states (hub states)
+- [x] K1 `floyd-warshall` All-pairs shortest paths
+- [x] K2 `cyclomatic` Cyclomatic complexity of a flow
+- [x] K3 `basis-paths` Basis path set
+- [x] K4 `yen-k-shortest` Yen's k shortest paths
+- [x] K5 `markov-usage` Markov usage model (most probable paths, stationary distribution)
+- [x] K6 `pagerank` PageRank of states (hub states)
 
 ### L. Impact, traceability & risk (10)
-- [ ] L1 `test-impact` Change-based test selection (changed C# files → scenarios)
-- [ ] L2 `rtm` Requirements traceability matrix from tags
-- [ ] L3 `risk-score` Risk-based prioritization (likelihood × impact)
-- [ ] L4 `quarantine` Flaky-test quarantine policy
-- [ ] L5 `knapsack` Time-budget selection (0/1 knapsack)
-- [ ] L6 `pareto` Pareto front of suite size vs coverage
-- [ ] L7 `logistic-regression` Failure prediction (logistic regression)
-- [ ] L8 `naive-bayes` Failure prediction (naive Bayes)
-- [ ] L9 `kmeans` k-means scenario themes
-- [ ] L10 `silhouette` Silhouette score (choose k)
+- [x] L1 `test-impact` Change-based test selection (changed C# files → scenarios)
+- [x] L2 `rtm` Requirements traceability matrix from tags
+- [x] L3 `risk-score` Risk-based prioritization (likelihood × impact)
+- [x] L4 `quarantine` Flaky-test quarantine policy
+- [x] L5 `knapsack` Time-budget selection (0/1 knapsack)
+- [x] L6 `pareto` Pareto front of suite size vs coverage
+- [x] L7 `logistic-regression` Failure prediction (logistic regression)
+- [x] L8 `naive-bayes` Failure prediction (naive Bayes)
+- [x] L9 `kmeans` k-means scenario themes
+- [x] L10 `silhouette` Silhouette score (choose k)
 
 ### M. Results statistics (7)
-- [ ] M1 `cusum` CUSUM change-point detection
-- [ ] M2 `sprt` Sequential probability ratio test (rerun decision)
-- [ ] M3 `mann-kendall` Mann–Kendall duration trend
-- [ ] M4 `mad-outliers` Slow-test outliers (median absolute deviation)
-- [ ] M5 `percentiles` Duration percentiles (p50/p90/p95)
-- [ ] M6 `mtbf` Mean runs between failures
-- [ ] M7 `co-failure` Co-failure clusters (shared root cause)
+- [x] M1 `cusum` CUSUM change-point detection
+- [x] M2 `sprt` Sequential probability ratio test (rerun decision)
+- [x] M3 `mann-kendall` Mann–Kendall duration trend
+- [x] M4 `mad-outliers` Slow-test outliers (median absolute deviation)
+- [x] M5 `percentiles` Duration percentiles (p50/p90/p95)
+- [x] M6 `mtbf` Mean runs between failures
+- [x] M7 `co-failure` Co-failure clusters (shared root cause)
 
 ### N. Text & sequences (11)
-- [ ] N1 `gunning-fog` Gunning fog index
-- [ ] N2 `lexical-diversity` Lexical diversity (type–token ratio)
-- [ ] N3 `passive-voice` Passive voice detection
-- [ ] N4 `vague-words` Vague/ambiguous wording (requirements smells)
-- [ ] N5 `rake` RAKE keyword extraction
-- [ ] N6 `next-step` Next-step suggestions (step n-gram Markov model)
-- [ ] N7 `sequence-mining` Frequent step sequences → Background candidates
-- [ ] N8 `needleman-wunsch` Scenario alignment (Needleman–Wunsch)
-- [ ] N9 `apriori` Tag association rules (Apriori: support, confidence, lift)
-- [ ] N10 `hamming-steps` Step-sequence Hamming distance for same-length scenarios
-- [ ] N11 `entropy-tags` Tag entropy (how evenly tags spread across scenarios)
+- [x] N1 `gunning-fog` Gunning fog index
+- [x] N2 `lexical-diversity` Lexical diversity (type–token ratio)
+- [x] N3 `passive-voice` Passive voice detection
+- [x] N4 `vague-words` Vague/ambiguous wording (requirements smells)
+- [x] N5 `rake` RAKE keyword extraction
+- [x] N6 `next-step` Next-step suggestions (step n-gram Markov model)
+- [x] N7 `sequence-mining` Frequent step sequences → Background candidates
+- [x] N8 `needleman-wunsch` Scenario alignment (Needleman–Wunsch)
+- [x] N9 `apriori` Tag association rules (Apriori: support, confidence, lift)
+- [x] N10 `hamming-steps` Step-sequence Hamming distance for same-length scenarios
+- [x] N11 `entropy-tags` Tag entropy (how evenly tags spread across scenarios)

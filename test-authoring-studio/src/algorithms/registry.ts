@@ -1,5 +1,5 @@
 /* Every algorithm the studio uses, with the text shown in Settings → Algorithms. */
-export type AlgorithmCategory = 'Combinatorial design' | 'String similarity' | 'Search & autocomplete' | 'Step library' | 'Model-based testing' | 'Suite optimization' | 'Results & flakiness' | 'Gherkin quality' | 'Tags, plans & docs';
+export type AlgorithmCategory = 'Combinatorial design' | 'String similarity' | 'Search & autocomplete' | 'Step library' | 'Model-based testing' | 'Suite optimization' | 'Results & flakiness' | 'Gherkin quality' | 'Tags, plans & docs' | 'Logic & specification' | 'Impact & risk' | 'Text & sequences';
 export type Algorithm = { id: string; name: string; category: AlgorithmCategory; tooltip: string; usedIn: string; defaultEnabled?: boolean };
 
 const a = (category: AlgorithmCategory, usedIn: string, list: [string, string, string, boolean?][]): Algorithm[] => list.map(([id, name, tooltip, on]) => ({ id, name, category, tooltip, usedIn, defaultEnabled: on ?? true }));
@@ -110,6 +110,63 @@ export const algorithms: Algorithm[] = [
     ['smell-dup-names', 'Duplicate scenario names', 'Flags two scenarios with the same name in one feature.'],
     ['flesch', 'Flesch reading ease', 'Readability score of each scenario (higher is easier). Long words and long steps lower it.'],
     ['duplicate-step-lint', 'Near-duplicate step lint', 'In the feature editor, warns when a step is almost identical to a different existing step, suggesting reuse.'],
+  ]),
+  // ---- Batch 2 ----
+  ...a('Logic & specification', 'Test Design → Logic & techniques', [
+    ['mcdc', 'MC/DC', 'Modified condition/decision coverage (aviation DO-178C): for every condition, two tests that differ only in that condition and change the outcome. Usually needs only n+1 tests.'],
+    ['condition-coverage', 'Condition coverage', 'Every condition is true in some test and false in another. Cheap, but does not guarantee each decision outcome.'],
+    ['decision-coverage', 'Decision coverage', 'Branch coverage: one test where the whole rule is true and one where it is false.'],
+    ['multiple-condition', 'Multiple-condition coverage', 'Every combination of condition values (the full truth table, 2ⁿ rows).'],
+    ['cause-effect', 'Cause–effect graphing', 'Causes are conditions, effects are rules over them. Builds the decision table for all effects at once and merges rows that differ in one cause into "don\'t care".'],
+    ['classification-tree', 'Classification tree method', 'Describe each input aspect (classification) and its classes as an outline; the tool combines classes minimally (each class once) or pairwise.'],
+    ['domain-testing', 'Domain testing (ON/OFF points)', 'For a boundary like "age >= 18": the ON point on the boundary, the OFF point just across it, plus one point inside and one outside.'],
+    ['value-catalog', 'Heuristic value catalogue', 'Error-guessing values per type: empty strings, Unicode, SQL/HTML injection, max/min integers, leap days, malformed emails and URLs.'],
+    ['sa-covering', 'Simulated-annealing covering arrays', 'Cohen et al.: anneal a random table until every t-way combination is covered, shrinking the row count while it still succeeds. Often smaller than greedy methods.'],
+    ['table-reducer', 'Examples table reducer', 'Removes rows from an existing Examples table while keeping its t-way coverage.'],
+    ['missing-pairs', 'Uncovered combinations', 'Lists the value combinations an existing Examples table does not cover yet.'],
+    ['sneak-paths', 'Sneak-path (invalid transition) tests', 'For every reachable state, the actions the model does not allow there. Each should be rejected — negative tests.'],
+  ]),
+  ...a('Model-based testing', 'Test Design → Flow generator', [
+    ['floyd-warshall', 'Floyd–Warshall all-pairs paths', 'Shortest cost between every pair of states, as a distance matrix (∞ = unreachable).'],
+    ['cyclomatic', 'Cyclomatic complexity', 'McCabe: edges − states + 2 × components. The number of independent paths through the flow.'],
+    ['basis-paths', 'Basis path coverage', 'A set of linearly independent start-to-end paths (spanning tree plus one path per extra transition). Size ≈ cyclomatic complexity.'],
+    ['yen-k-shortest', "Yen's k shortest paths", 'The k cheapest distinct routes between two states, not just the single shortest one.'],
+    ['markov-usage', 'Markov usage model', 'Reads [n] on transitions as relative usage. Generates the most probable journeys and the long-run share of time in each state (statistical usage testing).'],
+    ['pagerank', 'PageRank of states', 'Ranks states by how often journeys pass through them: hub screens deserve the most tests.'],
+  ]),
+  ...a('Impact & risk', 'Test Design → Impact & risk', [
+    ['test-impact', 'Test impact analysis', 'Change-based selection: give changed files (or read them from git); scenarios whose .feature changed, or whose steps bind to a changed C# step file, are selected with the reason.'],
+    ['rtm', 'Traceability matrix', 'Requirements (tags like @REQ-12, @JIRA-345) × scenarios, with uncovered requirements and untraced scenarios.'],
+    ['risk-score', 'Risk-based prioritization', 'Risk = likelihood × impact. Likelihood from imported failure history (smoothed), impact from tag weights you set (e.g. @payments=5).'],
+    ['quarantine', 'Quarantine policy', 'Recommends quarantining tests that fail in 1–50 % of recent runs and flip often, and releasing them after a run of passes. Always-failing tests are flagged as regressions.'],
+    ['knapsack', 'Time-budget selection', '0/1 knapsack (dynamic programming): the most valuable scenarios that fit in a time budget, using imported durations or step counts.'],
+    ['pareto', 'Pareto front', 'Suite sizes where nothing smaller covers as much: shows the trade-off between run time and coverage.'],
+    ['logistic-regression', 'Failure prediction (logistic regression)', 'Learns from imported history which scenario features (steps, past failures, flips, tags) predict a failure in the next run.'],
+    ['naive-bayes', 'Failure prediction (naive Bayes)', 'Gaussian naive Bayes on the same features: a second, simpler opinion.'],
+    ['kmeans', 'k-means scenario themes', 'Groups scenarios into k themes by their wording (TF-IDF vectors, cosine distance, k-means++ seeding).'],
+    ['silhouette', 'Silhouette score', 'Measures how well-separated the k-means themes are and suggests the best k.'],
+  ]),
+  ...a('Results & flakiness', 'Test Design → Results & flakiness', [
+    ['cusum', 'CUSUM change point', 'Cumulative-sum control chart: finds the run where a scenario started failing more often than its baseline.'],
+    ['sprt', 'SPRT rerun decision', "Wald's sequential probability ratio test: decides flaky vs. stable as early as possible and estimates how many reruns are still needed."],
+    ['mann-kendall', 'Mann–Kendall trend', 'Non-parametric trend test on durations: is a scenario getting slower over time?'],
+    ['mad-outliers', 'Slow-test outliers (MAD)', 'Robust z-score using the median absolute deviation; flags unusually slow scenarios without being skewed by them.'],
+    ['percentiles', 'Duration percentiles', 'p50, p90 and p95 durations per scenario.'],
+    ['mtbf', 'Mean runs between failures', 'How many runs pass, on average, between two failures.'],
+    ['co-failure', 'Co-failure clusters', 'Scenarios that fail in the same runs (Jaccard ≥ 0.6): likely one shared root cause.'],
+  ]),
+  ...a('Text & sequences', 'Duplicates & smells, Step library, Plans, Similarity lab', [
+    ['gunning-fog', 'Gunning fog index', 'Readability as years of schooling: 0.4 × (words per step + % words with 3+ syllables).'],
+    ['lexical-diversity', 'Lexical diversity', 'Distinct words ÷ all words. Very low means repetitive wording; very high may mean inconsistent vocabulary.'],
+    ['passive-voice', 'Passive voice', 'Flags steps like "the order is placed by the user": active voice makes the actor clear.'],
+    ['vague-words', 'Vague wording', 'Requirements smells (Femmer et al.): "properly", "quickly", "as expected", "etc." cannot be verified.'],
+    ['rake', 'RAKE keywords', 'Rapid Automatic Keyword Extraction: the key phrases of each feature, for summaries and tags.'],
+    ['next-step', 'Next-step suggestions', 'A bigram Markov model of your step sequences: given a step, what usually comes next.'],
+    ['sequence-mining', 'Frequent step sequences', 'Runs of steps that repeat across scenarios; runs at the start of many scenarios are Background candidates.'],
+    ['needleman-wunsch', 'Scenario alignment', 'Needleman–Wunsch global alignment of two scenarios step by step, matching similar steps and showing gaps.'],
+    ['apriori', 'Tag association rules', 'Apriori: rules like "@checkout ⇒ @payments" with support, confidence and lift.'],
+    ['hamming-steps', 'Step Hamming distance', 'For scenarios of equal length: how many step positions differ.'],
+    ['entropy-tags', 'Tag entropy', 'How evenly tags are spread (1 = even, 0 = one tag dominates).'],
   ]),
   ...a('Tags, plans & docs', 'Test Design → Plans & filters, Living docs', [
     ['tag-expression', 'Tag expressions', 'Parses Cucumber tag expressions like "@smoke and not (@slow or @wip)" with the shunting-yard algorithm.'],

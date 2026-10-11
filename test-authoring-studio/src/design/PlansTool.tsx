@@ -4,7 +4,8 @@ import { Button } from '../radix';
 import { Meter, useAlgorithms } from '../radix2';
 import { useLocalState, clearOnEscape } from '../ui';
 import { cooccurrence, matchTags, parseTagExpression, type Expr } from '../algorithms/tags';
-import { AlgoGate, Empty, ResultActions, type Corpus, type ToolProps } from './shared';
+import { associationRules, tagEntropy } from '../algorithms/text';
+import { AlgoGate, Empty, ResultActions, pct, type Corpus, type ToolProps } from './shared';
 
 type SavedFilter = { name: string; expr: string; folder: string };
 type PlanStatus = 'untested' | 'passed' | 'failed' | 'blocked';
@@ -85,6 +86,7 @@ export default function PlansTool({ corpus, onNotice, onSource }: ToolProps) {
         )}
       </section>
       <AlgoGate ids={['tag-cooccurrence']}><Cooccurrence refs={refs} /></AlgoGate>
+      <TagRules refs={refs} onNotice={onNotice} />
     </div>
   );
 }
@@ -103,6 +105,36 @@ function Cooccurrence({ refs }: { refs: ScenarioRef[] }) {
             <tbody>{top.map((r) => <tr key={r.t}><th scope="row">{r.t}</th>{top.map((c) => { const v = matrix[r.i][c.i]; return <td key={c.t} style={r.i === c.i ? undefined : { background: `color-mix(in srgb, var(--accent) ${Math.round((v / max) * 60)}%, transparent)` }} title={`${r.t} with ${c.t}: ${v}`}>{v || ''}</td>; })}</tr>)}</tbody>
           </table>
         </div>
+      )}
+    </section>
+  );
+}
+
+/** N9, N11: "@a ⇒ @b" rules and how evenly tags spread. */
+function TagRules({ refs, onNotice }: { refs: ScenarioRef[]; onNotice: (m: string) => void }) {
+  const { on } = useAlgorithms();
+  const [support, setSupport] = useLocalState('design:apriori:support', 0.1);
+  const [confidence, setConfidence] = useLocalState('design:apriori:conf', 0.8);
+  const rules = useMemo(() => (on('apriori') ? associationRules(refs.map((r) => r.tags), support, confidence).slice(0, 25) : []), [refs, support, confidence, on]);
+  if (!on('apriori') && !on('entropy-tags')) return null;
+  const h = tagEntropy(refs.map((r) => r.tags));
+  return (
+    <section className="panel" aria-labelledby="plans-rules">
+      <div className="design-head"><h2 id="plans-rules">Tag rules</h2>{on('entropy-tags') && <span className="badge">tag entropy {h.toFixed(2)}</span>}</div>
+      {on('entropy-tags') && <p className="subtle">{h < 0.5 ? 'A few tags dominate; filters on them select most of the suite.' : 'Tags are spread fairly evenly.'}</p>}
+      {on('apriori') && (
+        <>
+          <div className="design-options">
+            <label className="field"><span className="micro-label">MIN SUPPORT {pct(support)}</span><input type="range" min={0.02} max={0.6} step={0.02} value={support} onChange={(e) => setSupport(+e.target.value)} aria-label="Minimum support" /></label>
+            <label className="field"><span className="micro-label">MIN CONFIDENCE {pct(confidence)}</span><input type="range" min={0.5} max={1} step={0.05} value={confidence} onChange={(e) => setConfidence(+e.target.value)} aria-label="Minimum confidence" /></label>
+          </div>
+          {!rules.length ? <Empty title="No rules at these thresholds" /> : (
+            <table className="data-table"><thead><tr><th>Rule</th><th>Support</th><th>Confidence</th><th>Lift</th></tr></thead>
+              <tbody>{rules.map((r, i) => <tr key={i}><td>{r.if.join(' + ')} ⇒ {r.then.join(' + ')}</td><td>{pct(r.support)}</td><td>{pct(r.confidence)}</td><td>{r.lift.toFixed(2)}</td></tr>)}</tbody></table>
+          )}
+          <p className="meta">A confidence of 100 % means the right-hand tag is redundant whenever the left-hand tags are present.</p>
+          <ResultActions text={rules.map((r) => `${r.if.join(' + ')} => ${r.then.join(' + ')}\t${r.confidence.toFixed(2)}\t${r.lift.toFixed(2)}`).join('\n')} file="tag-rules.tsv" onNotice={onNotice} />
+        </>
       )}
     </section>
   );

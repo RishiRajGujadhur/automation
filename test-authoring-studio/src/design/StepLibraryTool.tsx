@@ -9,7 +9,8 @@ import { BKTree, InvertedIndex, Trie, fuzzyScore, frecencyOf, highlightRanges, r
 import { normalizeStep, minhash, lshCandidates, simhash, hamming32, tokens } from '../algorithms/strings';
 import { applyEdits, clusterPairs, cucumberToRegex, dbscan, hac, inferTemplates, regexToCucumber, renameStep, resolveKeywords } from '../algorithms/steps';
 import { similarityFor, measures } from './similarity';
-import { AlgoGate, AlgoPicker, Empty, ResultActions, usePicked, type Corpus, type ToolProps } from './shared';
+import { frequentSequences, nextStepModel } from '../algorithms/text';
+import { AlgoGate, AlgoPicker, Empty, ResultActions, usePicked, pct, type Corpus, type ToolProps } from './shared';
 
 export type LibStep = { key: string; keyword: string; text: string; uses: { file: string; line: number; scenario: string }[] };
 /** Distinct steps in the corpus (keyword resolved), with every place they are used. */
@@ -93,6 +94,7 @@ export default function StepLibraryTool({ corpus, onNotice, onSource }: ToolProp
       <AlgoGate ids={['template-inference']}><Templates lib={lib} onNotice={onNotice} /></AlgoGate>
       <Clusters lib={lib} onSource={onSource} />
       <AlgoGate ids={['rename-refactor', 'cucumber-to-regex']}><Rename corpus={corpus} onNotice={onNotice} /></AlgoGate>
+      <Sequences corpus={corpus} onNotice={onNotice} />
       <Converters />
     </div>
   );
@@ -216,6 +218,42 @@ function Converters() {
         ) : <AlgoGate ids={['regex-to-cucumber']} compact>{null}</AlgoGate>}
       </div>
       <ResultActions text={compiled} file="expression.txt" onNotice={() => {}} />
+    </section>
+  );
+}
+
+/** N6, N7: what usually follows a step, and step runs worth turning into a Background. */
+function Sequences({ corpus, onNotice }: { corpus?: Corpus; onNotice: (m: string) => void }) {
+  const { on } = useAlgorithms();
+  const seqs = useMemo(() => (corpus?.features ?? []).flatMap((f) => f.scenarios.map((s) => resolveKeywords(s.steps).map((st) => `${st.resolved} ${st.text}`))), [corpus]);
+  const model = useMemo(() => nextStepModel(seqs), [seqs]);
+  const steps = useMemo(() => [...new Set(seqs.flat())].sort(), [seqs]);
+  const [current, setCurrent] = useLocalState('design:next:current', '<start>');
+  const frequent = useMemo(() => (on('sequence-mining') ? frequentSequences(seqs).slice(0, 15) : []), [seqs, on]);
+  if (!on('next-step') && !on('sequence-mining')) return <AlgoGate ids={['next-step', 'sequence-mining']}>{null}</AlgoGate>;
+  const bg = frequent.filter((f) => f.asPrefix >= 2 && f.steps.every((s) => s.startsWith('Given ')));
+  const bgText = bg[0] ? `  Background:\n${bg[0].steps.map((s) => '    ' + s).join('\n')}\n` : '';
+  return (
+    <section className="panel" aria-labelledby="lib-seq">
+      <div className="design-head"><h2 id="lib-seq">Step sequences</h2></div>
+      {on('next-step') && (
+        <div>
+          <label className="field"><span className="micro-label">AFTER THIS STEP</span>
+            <select value={current} onChange={(e) => setCurrent(e.target.value)}><option value="<start>">(start of a scenario)</option>{steps.map((s) => <option key={s} value={s}>{s}</option>)}</select>
+          </label>
+          <ol className="suite-list">{model(current).map((n) => <li key={n.step}>{n.step} <span className="meta">{pct(n.probability)} · {n.count}×</span></li>)}</ol>
+          {!model(current).length && <p className="subtle">This step ends every scenario it appears in.</p>}
+        </div>
+      )}
+      {on('sequence-mining') && (
+        <div>
+          <span className="micro-label">REPEATED STEP RUNS</span>
+          {!frequent.length ? <Empty title="No repeated runs">No two scenarios share two or more consecutive steps.</Empty> : (
+            <ul className="cluster-list">{frequent.map((f, i) => <li key={i}><span className="micro-label">{f.support} SCENARIOS{f.asPrefix >= 2 ? ` · STARTS ${f.asPrefix}` : ''}</span><ul>{f.steps.map((s, k) => <li key={k}>{s}</li>)}</ul></li>)}</ul>
+          )}
+          {bgText && <><p className="subtle">These Given steps open {bg[0].asPrefix} scenarios: a Background candidate.</p><pre className="code-block">{bgText}</pre><ResultActions text={bgText} file="background.feature" onNotice={onNotice} /></>}
+        </div>
+      )}
     </section>
   );
 }
