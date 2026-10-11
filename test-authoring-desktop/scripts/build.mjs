@@ -5,7 +5,7 @@
 //   4. the Electron main process (ESM) and preload (CommonJS, required for sandboxed preloads) into out/.
 import { build } from 'esbuild';
 import { execSync } from 'node:child_process';
-import { cpSync, existsSync, mkdirSync, rmSync, writeFileSync } from 'node:fs';
+import { cpSync, existsSync, mkdirSync, rmSync, writeFileSync, readdirSync, statSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -52,7 +52,10 @@ cpSync(path.join(studio, 'fixtures'), path.join(app, 'fixtures'), { recursive: t
 const rid = process.platform === 'win32' ? 'win-x64' : process.platform === 'darwin' ? 'osx-arm64' : 'linux-x64';
 const scannerOut = path.join(root, '.cache/scanner', rid);
 const exeName = process.platform === 'win32' ? 'Scanner.exe' : 'Scanner';
-if (!existsSync(path.join(scannerOut, exeName)) || process.argv.includes('--scanner')) {
+// A cached publish is reused only while its sources (.cs / .csproj) are older than it.
+const newestSource = (dir) => readdirSync(dir, { withFileTypes: true }).reduce((t, e) => (e.name === 'bin' || e.name === 'obj' ? t : e.isDirectory() ? Math.max(t, newestSource(path.join(dir, e.name))) : /\.(cs|csproj)$/.test(e.name) ? Math.max(t, statSync(path.join(dir, e.name)).mtimeMs) : t), 0);
+const stale = (exe, src) => !existsSync(exe) || statSync(exe).mtimeMs < newestSource(src);
+if (stale(path.join(scannerOut, exeName), path.join(studio, 'scanner')) || process.argv.includes('--scanner')) {
   step(`Publishing the self-contained scanner (${rid})…`);
   const localSdk = path.resolve(root, '../.tools/dotnet', process.platform === 'win32' ? 'dotnet.exe' : 'dotnet');
   const dotnet = process.env.DOTNET_PATH || (existsSync(localSdk) ? localSdk : 'dotnet');
@@ -66,7 +69,7 @@ if (existsSync(path.join(scannerOut, exeName))) cpSync(scannerOut, path.join(app
 // Self-contained C# language service (IntelliSense, go to definition, rename, organize usings). Cached between builds.
 const langOut = path.join(root, '.cache/langserver', rid);
 const langExe = process.platform === 'win32' ? 'LangServer.exe' : 'LangServer';
-if (!existsSync(path.join(langOut, langExe)) || process.argv.includes('--scanner')) {
+if (stale(path.join(langOut, langExe), path.join(studio, 'langserver')) || process.argv.includes('--scanner')) {
   step(`Publishing the self-contained C# language service (${rid})…`);
   const localSdk = path.resolve(root, '../.tools/dotnet', process.platform === 'win32' ? 'dotnet.exe' : 'dotnet');
   const dotnet = process.env.DOTNET_PATH || (existsSync(localSdk) ? localSdk : 'dotnet');
