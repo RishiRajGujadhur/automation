@@ -25,7 +25,7 @@ Legend: `[x]` done · `[ ]` to do. Every feature is committed and pushed when fi
 - [x] D13 App icon generated from the studio's `public/icon.svg`
 - [x] D14 Packaging with electron-builder (Windows NSIS installer + portable)
 - [x] D15 Automated tests: Playwright `_electron` smoke test (launch, API, navigation, desktop bridge)
-- [ ] D16 README: build, run, package, architecture, limits
+- [x] D16 README: build, run, package, architecture, limits
 
 - [x] D17 Self-contained Roslyn scanner bundled (no .NET runtime needed on the user's machine)
 
