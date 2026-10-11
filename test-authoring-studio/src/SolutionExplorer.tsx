@@ -137,7 +137,9 @@ export default function SolutionExplorer({ features, revision, activeFile, query
   useEffect(() => { if (!browserSolution) api<Solution>('/solution').then(setSolution).catch(() => {}); }, [revision, browserSolution]);
   useEffect(() => { const h = () => setPending(unsavedFiles()); window.addEventListener(UNSAVED_EVENT, h); return () => window.removeEventListener(UNSAVED_EVENT, h); }, []);
 
-  const projectDirs = useMemo(() => (solution?.projects ?? []).map((p) => p.dir), [solution]);
+  // Real projects (a .csproj, also one at the repository root); '.' stands for "no project file".
+  const projectDirs = useMemo(() => (solution?.projects ?? []).filter((p) => p.file !== '.').map((p) => p.dir), [solution]);
+  const inProject = (file: string) => projectDirs.some((d) => d === '' || file.startsWith(`${d}/`));
   // Files: the solution model plus any indexed feature it does not know yet (e.g. just created).
   const files = useMemo(() => {
     const list = [...(solution?.files ?? [])];
@@ -149,7 +151,7 @@ export default function SolutionExplorer({ features, revision, activeFile, query
       !codeBehind.has(x.file) && // nested under its feature instead
       !x.file.endsWith('.csproj') && // the project node stands for it
       // Inside a real project folder every file shows (as in Visual Studio); only build output stays hidden.
-      (showAll || !HIDDEN_LAYERS.has(x.layer) || (x.layer === 'Other' && projectDirs.some((d) => d && x.file.startsWith(`${d}/`)))) &&
+      (showAll || !HIDDEN_LAYERS.has(x.layer) || (x.layer === 'Other' && inProject(x.file))) &&
       (!pendingOnly || pending.includes(x.file)) &&
       terms.every((t) => `${x.file} ${featureName.get(x.file) ?? ''}`.toLowerCase().includes(t)));
   }, [solution, features, query, showAll, pendingOnly, pending, projectDirs]);

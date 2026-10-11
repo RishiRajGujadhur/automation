@@ -61,7 +61,7 @@ Status: ✅ done · 🟡 partial · ⬜ to do. Priority: **P1** next, **P2** aft
 | # | Feature | Status | Pri |
 | --- | --- | --- | --- |
 | T1 | Test Explorer: discover tests per project (features/scenarios, NUnit/xUnit/MSTest), tree by project/namespace/class/trait | ✅ (project → class / feature → test; no trait grouping yet) | P1 |
-| T2 | Run / Debug selected, Run all, Run failed, repeat last run; live pass/fail icons in Explorer and editor gutters | 🟡 (Run All / selected / failed, Debug, icons in Test Explorer; no editor-gutter icons yet) | P1 |
+| T2 | Run / Debug selected, Run all, Run failed, repeat last run; live pass/fail icons in Explorer and editor gutters | ✅ (Test Explorer + editor margin glyphs) | P1 |
 | T3 | Test detail: output, stack trace with links, duration; playlists | 🟡 (details with message, stack links, durations; no playlists) | P2 |
 | T4 | Playwright traces from failed runs | 🟡 | P2 |
 | T5 | Code coverage per run | ⬜ | P3 |
@@ -73,7 +73,7 @@ Status: ✅ done · 🟡 partial · ⬜ to do. Priority: **P1** next, **P2** aft
 | D2 | Conditional, hit-count and log-point breakpoints; enable/disable | ⬜ | P2 |
 | D3 | Exception settings (break on thrown/unhandled), Exception helper | 🟡 | P2 |
 | D4 | Autos, Immediate window, Run to Cursor, Set Next Statement | ⬜ | P2 |
-| D5 | Debug from Test Explorer and from a scenario's gutter | 🟡 (Test Explorer ✅; gutter not yet) | P1 |
+| D5 | Debug from Test Explorer and from a scenario's gutter | ✅ (Shift+click a margin glyph) | P1 |
 
 ## 7. Source control (Git)
 | # | Feature | Status | Pri |
@@ -110,3 +110,4 @@ Status: ✅ done · 🟡 partial · ⬜ to do. Priority: **P1** next, **P2** aft
 
 **Slice 1 (P1) complete:** S1–S5, B1–B2, T1–T2, E3/E8/E9, S10–S11. Next candidates: W1 dockable tool windows, D5 gutter debug/run icons, G3 step usages, V1 Git Changes.
 - 2026-10-11 — **Step usages (G3).** `/api/steps/lenses` maps each binding in a C# file to the feature steps that bind to it; the C# editor shows a CodeLens line above every [Given]/[When]/[Then] ("2 step usages · 2 scenarios") that lists them in the references panel; context menu Find Step Usages.
+- 2026-10-12 — **Run glyphs in the editor margin (T2, D5).** Feature editor: ▶ beside every scenario and the Feature line; C# editor: beside every test method; the glyph shows the last outcome (✓ / ✕ / running), click runs, Shift+click debugs. Fixed: files of a project whose .csproj is at the repository root were hidden in the Explorer when unclassified; test results of a previous repository were kept after opening another.

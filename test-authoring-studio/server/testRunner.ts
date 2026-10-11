@@ -93,6 +93,12 @@ export class TestRunner extends EventEmitter {
     return this.state;
   }
 
+  /** Another repository or solution was opened: results of the previous one no longer apply. */
+  reset() {
+    if (this.running) this.cancel();
+    this.update({ status: 'idle', requested: [], results: [], output: '', summary: undefined, error: undefined });
+  }
+
   cancel() {
     const p = this.proc;
     if (!p) return this.state;

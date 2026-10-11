@@ -9,6 +9,7 @@ import { RowMenu } from '../ui';
 import { csharpLanguage, lineCol, offsetOf, replaceText, type CsHandlers, type CsLocation } from './csharp';
 import { FILES_CHANGED_EVENT } from './events';
 import { stepLenses, setLenses, type StepLens } from './lens';
+import { runGutter, setRunMarks, type RunMark } from './runGutter';
 import { api, type FilePreview } from '../api';
 import { Button } from '../radix';
 import { IconButton } from '../radix2';
@@ -56,7 +57,7 @@ function languageOf(file: string, browser: boolean) {
  * folder): syntax colouring, Roslyn diagnostics for C#, auto save / hot exit, Ctrl+S or the save icon to write it.
  * Inactive tabs stay mounted (hidden) so their undo history and scroll position survive tab switches.
  */
-export default function CodeEditor({ file, reveal, active = true, onNotice, onIndex, onOpen }: { file: string; reveal?: { line: number; column?: number }; onOpen?: (file: string, line: number, column?: number) => void; active?: boolean; onNotice?: (m: string) => void; onIndex?: (i: Index) => void }) {
+export default function CodeEditor({ file, reveal, active = true, onNotice, onIndex, onOpen, runMarks, onRunLine }: { runMarks?: RunMark[]; onRunLine?: (line: number, debug: boolean) => void; file: string; reveal?: { line: number; column?: number }; onOpen?: (file: string, line: number, column?: number) => void; active?: boolean; onNotice?: (m: string) => void; onIndex?: (i: Index) => void }) {
   const theme = useEditorTheme();
   const ref = useRef<ReactCodeMirrorRef>(null);
   const [loaded, setLoaded] = useState<{ file: string; source: string; hash: string }>();
@@ -73,6 +74,9 @@ export default function CodeEditor({ file, reveal, active = true, onNotice, onIn
   // Step usages (CodeLens above [Given]/[When]/[Then]): which feature lines use each binding of this file.
   const lenses = useRef<StepLens[]>([]);
   const showUsages = (l: StepLens) => setRefs({ name: `${l.keyword} ${l.pattern}`, locations: l.usages.map((u) => ({ file: u.file, line: u.line, column: 1, text: `${u.text} — ${u.scenario}` })) });
+  const runRef = useRef(onRunLine);
+  runRef.current = onRunLine;
+  useEffect(() => { let tries = 0; const apply = () => { const v = ref.current?.view; if (v) v.dispatch({ effects: setRunMarks.of(runMarks ?? []) }); else if (tries++ < 30) requestAnimationFrame(apply); }; if (loaded) apply(); }, [runMarks, loaded]);
   const showUsagesRef = useRef(showUsages);
   showUsagesRef.current = showUsages;
   const loadLenses = () => {
@@ -255,7 +259,7 @@ export default function CodeEditor({ file, reveal, active = true, onNotice, onIn
       { key: 'Mod-s', preventDefault: true, run: () => { void saveRef.current(); return true; } },
       ...(isCs && !browser ? [{ key: 'Mod-r Mod-g', preventDefault: true, run: () => { void organizeRef.current(); return true; } }] : []),
     ]),
-    ...(isCs && !browser ? [...csharpLanguage(file, csHandlers), stepLenses((l) => showUsagesRef.current(l))] : []),
+    ...(isCs && !browser ? [...csharpLanguage(file, csHandlers), stepLenses((l) => showUsagesRef.current(l)), runGutter((l, d) => runRef.current?.(l, d))] : []),
     // Stable per file: rebuilding extensions on every keystroke would reset the linter before it reports.
   ], [file, browser]);
 

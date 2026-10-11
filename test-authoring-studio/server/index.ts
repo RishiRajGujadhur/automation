@@ -193,6 +193,7 @@ app.post('/api/solution/open',async(req,res)=>{
   else if(/\.csproj$/i.test(full))next=configSchema.parse({...config,repositoryRoot:path.dirname(full),solution:'',targetProject:path.basename(full)});
   else throw new Error('Choose a solution (.sln, .slnx), a project (.csproj) or a folder.');
   clearTimeout(rescanTimer);
+  tests.reset();
   const scanned=await scan(next);
   config=next;activate(scanned);previews.clear();
   await fs.mkdir(path.dirname(configFile),{recursive:true});
@@ -205,6 +206,7 @@ app.get('/api/project/files',async(req,res)=>{const folder=z.string().default('.
 app.post('/api/workspace', async (req, res) => {
   const next = configSchema.parse(req.body);
   clearTimeout(rescanTimer);
+  if (next.repositoryRoot !== config.repositoryRoot || next.solution !== config.solution) tests.reset();
   const scanned = await scan(next);
   config = next;
   activate(scanned);

@@ -44,7 +44,10 @@ test('Test Explorer: discovers C# tests and scenarios, Run All, failure details 
 
     // Run Failed reruns only the failing test.
     await te.getByRole('button', { name: 'Run Failed Tests' }).click();
-    await expect(summary).toContainText('last run', { timeout: 240_000 });
+    // "last run" is still shown from the first run: wait for the rerun itself (server status) to finish.
+    const status = async () => (await (await request.get('/api/tests/run')).json()).status;
+    await expect.poll(status, { timeout: 30_000, intervals: [200] }).toBe('running');
+    await expect.poll(status, { timeout: 240_000, intervals: [1000] }).toBe('done');
     await expect(tree.locator('.t-label', { hasText: /FailsOnPurpose/ }).getByLabel('Failed')).toBeVisible();
 
     // Run one scenario from its context menu.
@@ -55,6 +58,41 @@ test('Test Explorer: discovers C# tests and scenarios, Run All, failure details 
     // Back to the Explorer.
     await page.getByRole('button', { name: 'Features (Explorer)' }).click();
     await expect(page.getByRole('region', { name: 'Explorer' })).toBeVisible();
+  } finally {
+    await request.post('/api/tests/cancel').catch(() => {});
+    await request.post('/api/workspace', { data: { ...previous, solution: '' } });
+    await fs.rm(root, { recursive: true, force: true, maxRetries: 5 }).catch(() => {});
+  }
+});
+
+test('Run glyphs in the editor margin: run a scenario from the feature editor and a test from the C# editor', async ({ page, request }) => {
+  const previous = (await (await request.get('/api/workspace')).json()).config;
+  const root = await fs.mkdtemp(path.join(os.tmpdir(), 'studio-glyphs-'));
+  await fs.cp(path.resolve(import.meta.dirname, '../../samples/Calculator'), root, { recursive: true, filter: (s) => !/[\/](bin|obj)$/.test(s) });
+  try {
+    expect((await request.post('/api/solution/open', { data: { path: path.join(root, 'Calculator.csproj') } })).ok()).toBe(true);
+    await page.addInitScript(() => { if (!sessionStorage.getItem('seeded')) { localStorage.setItem('tas:prefs', JSON.stringify({ mode: 'advanced' })); sessionStorage.setItem('seeded', '1'); } });
+    await page.goto('/#/features/editor');
+    await expect(page.getByText('Repository indexed')).toBeVisible();
+    await page.getByRole('navigation').getByRole('button', { name: 'Add.feature', exact: true }).first().click();
+    const scenarioGlyph = page.locator('.gherkin-editor .cm-run[aria-label="Run Add two numbers"]');
+    await expect(scenarioGlyph).toBeVisible({ timeout: 60_000 });
+    await expect(page.locator('.gherkin-editor .cm-run[aria-label="Run Feature: Add numbers"]')).toBeVisible();
+    const runStatus = async () => (await (await request.get('/api/tests/run')).json()).status;
+    await scenarioGlyph.click();
+    await expect.poll(runStatus, { timeout: 30_000, intervals: [200] }).toBe('running');
+    await expect.poll(runStatus, { timeout: 240_000, intervals: [1000] }).toBe('done');
+    await expect(scenarioGlyph).toHaveClass(/cm-run-passed/, { timeout: 30_000 });
+
+    await page.getByRole('navigation').getByRole('button', { name: 'CalculatorTests.cs', exact: true }).first().click();
+    const testGlyph = page.locator('.code-editor:not([hidden]) .cm-run[aria-label="Run AddsTwoNumbers"]');
+    await expect(testGlyph).toBeVisible({ timeout: 60_000 });
+    await testGlyph.click();
+    await expect.poll(runStatus, { timeout: 30_000, intervals: [200] }).toBe('running');
+    await expect.poll(runStatus, { timeout: 240_000, intervals: [1000] }).toBe('done');
+    await expect(testGlyph).toHaveClass(/cm-run-passed/, { timeout: 30_000 });
+    // The parameterized test kept its "not run" glyph (only the clicked test ran).
+    await expect(page.locator('.code-editor:not([hidden]) .cm-run[aria-label="Run AddsCases"]')).toHaveClass(/cm-run-none/);
   } finally {
     await request.post('/api/tests/cancel').catch(() => {});
     await request.post('/api/workspace', { data: { ...previous, solution: '' } });

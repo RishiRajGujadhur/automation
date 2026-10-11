@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback, useRef } from 'react';
+import React, { useEffect, useState, useCallback, useRef, useMemo } from 'react';
 import SolutionExplorer from './SolutionExplorer';
 import StudioTour, { type TourDestination } from './StudioTour';
 import { featureDirectory } from './featureTree';
@@ -17,7 +17,8 @@ import BuildPanel from './build/BuildPanel';
 import TestExplorer from './testing/TestExplorer';
 import SearchView from './search/SearchView';
 import GoToAll from './search/GoToAll';
-import { runTests, getTestRun, type DiscoveredTest } from './testing/store';
+import { runTests, getTestRun, discoverTests, useTestRun, outcomeOf, combine, type DiscoveredTest } from './testing/store';
+import type { RunMark } from './editor/runGutter';
 import { useBuild, startBuild, cancelBuild, getBuild } from './build/store';
 import { useTabs, openTab, closeTab, closeAll as closeAllTabs, kindOf, cycleTab, getTabs, reloadTabs, movedPath, deletedPath } from './files/tabs';
 import { useFileSource, setFileSource, fileSource } from './files/provider';
@@ -150,6 +151,7 @@ const moreTabs = [
   { name: 'Project Explorer', icon: FolderTree },
   { name: 'Config', icon: Settings2 },
 ] as const;
+const NO_MARKS: RunMark[] = [];
 const shortcuts: [string, string][] = [
   ['Ctrl/Cmd + K', 'Command palette: go to any page or add a step'],
   ['Alt + 1…4', 'Main pages in navigation order (Basic: Dashboard, Test Generator, Recorder)'],
@@ -346,6 +348,31 @@ export default function App() {
   const [searchKey, setSearchKey] = useState({ n: 0, replace: false });
   const showSearch = (replace = false) => { setTab('Features'); if (view !== 'code' && view !== 'editor') setView('editor'); setSidebarView('search'); setPrefs({ sidebar: true }); setSearchKey((k) => ({ n: k.n + 1, replace })); };
   const showTests = () => { setTab('Features'); if (view !== 'code' && view !== 'editor') setView('editor'); setSidebarView('tests'); setPrefs({ sidebar: true }); };
+  // Run / debug glyphs in the editors: discovered tests (refreshed with the index and after each run) and outcomes.
+  const testRun = useTestRun();
+  const [discovered, setDiscovered] = useState<DiscoveredTest[]>([]);
+  const runFinished = testRun.status === 'done' || testRun.status === 'failed' ? testRun.version : 0;
+  useEffect(() => { if (tab === 'Features' && fileSource().kind === 'server') discoverTests().then((r) => setDiscovered(r.tests), () => {}); }, [index?.revision, runFinished, tab]); // eslint-disable-line react-hooks/exhaustive-deps
+  // Per file, recomputed only when tests, results or the index change (editors re-apply marks on a new array).
+  const marksByFile = useMemo(() => {
+    const map = new Map<string, RunMark[]>();
+    for (const t of discovered) map.set(t.file, [...(map.get(t.file) ?? []), { line: t.line, outcome: outcomeOf(t, testRun), label: t.name }]);
+    for (const [file, marks] of map) {
+      const f = index?.features.find((x) => x.file === file);
+      if (f) marks.push({ line: f.line, outcome: combine(discovered.filter((t) => t.file === file).map((t) => outcomeOf(t, testRun))), label: `Feature: ${f.name}` });
+    }
+    return map;
+  }, [discovered, testRun, index]);
+  const marksFor = (file: string) => marksByFile.get(file) ?? NO_MARKS;
+  /** Click on a glyph: run (or debug) the test on that line; on a Feature line, every scenario of the file. */
+  const runLine = (file: string, line: number, debug: boolean) => {
+    const at = discovered.filter((t) => t.file === file && t.line === line);
+    const all = discovered.filter((t) => t.file === file);
+    const which = at.length ? at : all;
+    if (!which.length) return;
+    if (debug) { if (at.length === 1) debugTest(at[0]); else if (file.endsWith('.feature')) debugFeature(); else debugTest(which[0]); return; }
+    runTests(which).catch((e) => setNotice((e as Error).message));
+  };
   const debugTest = (t: DiscoveredTest) => {
     setDebugOpen(true);
     setTab('Features');
@@ -1648,6 +1675,8 @@ export default function App() {
               )}
               <GherkinEditor
                 file={feature?.file}
+                runMarks={feature ? marksFor(feature.file) : undefined}
+                onRunLine={(line, debug) => feature && runLine(feature.file, line, debug)}
                 onDefinition={(s) => goToDefinition(s.keyword, s.text)}
                 height={vscode ? '100%' : undefined}
                 value={source}
@@ -1684,7 +1713,7 @@ export default function App() {
             </section>
           )}
             {openEditors.tabs.filter((t) => t.kind === 'code').map((t) => (
-              <CodeEditor key={t.file} file={t.file} reveal={codeLines[t.file]} onOpen={editFile} active={t.file === openEditors.active} onNotice={setNotice} onIndex={setIndex} />
+              <CodeEditor key={t.file} file={t.file} reveal={codeLines[t.file]} onOpen={editFile} runMarks={marksFor(t.file)} onRunLine={(line, debug) => runLine(t.file, line, debug)} active={t.file === openEditors.active} onNotice={setNotice} onIndex={setIndex} />
             ))}
             </EditorTabs>
             </div>

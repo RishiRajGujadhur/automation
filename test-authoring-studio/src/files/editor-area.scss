@@ -1037,3 +1037,40 @@
   text-overflow: ellipsis;
   white-space: nowrap;
 }
+
+// Run / debug glyphs
+.cm-run-gutter {
+  width: 16px;
+  .cm-gutterElement {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+}
+.cm-run {
+  cursor: pointer;
+  font-size: 11px;
+  line-height: 1;
+  color: #3fb950;
+  opacity: 0.75;
+  &:hover {
+    opacity: 1;
+    transform: scale(1.2);
+  }
+  &.cm-run-failed {
+    color: var(--red, #f85149);
+    opacity: 1;
+    font-weight: 700;
+  }
+  &.cm-run-passed {
+    opacity: 1;
+    font-weight: 700;
+  }
+  &.cm-run-skipped {
+    color: #d29922;
+  }
+  &.cm-run-running {
+    color: var(--accent, #9270dd);
+    animation: spin 1s linear infinite;
+  }
+}
