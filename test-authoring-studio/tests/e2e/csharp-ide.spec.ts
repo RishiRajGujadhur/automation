@@ -196,3 +196,18 @@ test('Signature help while typing a call, Quick Actions (Ctrl+.) add a using, Fo
   await page.keyboard.press('Shift+Alt+F');
   await expect(editor).toContainText('int x = 1 + 2;', { timeout: 30_000 });
 });
+
+test('Step usages CodeLens above step definitions lists the feature lines and opens them', async ({ page }) => {
+  await open(page);
+  await explorerFile(page, 'SearchSteps.cs').click();
+  const lens = page.locator('.code-editor:not([hidden]) .cm-lens button', { hasText: /^2 step usages/ });
+  await expect(lens.first()).toBeVisible({ timeout: 30_000 });
+  await expect(page.locator('.code-editor:not([hidden]) .cm-lens')).toHaveCount(5);
+  // Lenses in file order: browser started, opens Google, searches for, searches using, results.
+  await page.locator('.code-editor:not([hidden]) .cm-lens button').nth(2).click();
+  const panel = page.getByRole('region', { name: /References to/ });
+  await expect(panel).toContainText('the user searches for');
+  await expect(panel).toContainText('Features/GoogleSearch.feature');
+  await panel.getByRole('button', { name: /Search for Dayforce/ }).click();
+  await expect(page.locator('.editor-tab-label[aria-current="true"]')).toHaveAttribute('title', 'Features/GoogleSearch.feature');
+});

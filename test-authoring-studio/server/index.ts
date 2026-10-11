@@ -293,6 +293,18 @@ app.post('/api/csharp/organize', async (req, res) => {
   await confined(config.repositoryRoot, body.file, false);
   res.json(await lang.request(config.repositoryRoot, { op: 'organize', ...body }, 60_000));
 });
+/** Step usages (CodeLens for step definitions): for each binding in a C# file, the feature lines that use it. */
+app.get('/api/steps/lenses', async (req, res) => {
+  const file = z.string().min(1).max(400).parse(req.query.file);
+  const i = await ensure();
+  const lenses = i.stepDefinitions.filter((b) => b.file === file).map((b) => {
+    const usages: { file: string; line: number; text: string; scenario: string }[] = [];
+    for (const f of i.features) for (const block of [...f.backgrounds.map((x) => ({ ...x, name: `Background${x.name ? `: ${x.name}` : ''}` })), ...f.scenarios])
+      for (const s of block.steps) if (s.candidates.includes(b.id)) usages.push({ file: f.file, line: s.line, text: `${s.keyword} ${s.text}`.trim(), scenario: block.name });
+    return { line: b.line, keyword: b.keyword, pattern: b.pattern, method: b.method, usages };
+  });
+  res.json(lenses);
+});
 // Find in Files (Ctrl+Shift+F) and Replace All; Go to All (Ctrl+T) symbols from the language service.
 const searchOptions = z.object({ query: z.string().min(1).max(500), regex: z.boolean().optional(), matchCase: z.boolean().optional(), wholeWord: z.boolean().optional(), include: z.string().max(500).optional(), exclude: z.string().max(500).optional() });
 app.post('/api/search/text', async (req, res) => {

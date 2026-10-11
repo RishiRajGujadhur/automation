@@ -40,7 +40,7 @@ Status: ✅ done · 🟡 partial · ⬜ to do. Priority: **P1** next, **P2** aft
 | E7 | Remove and Sort Usings | ✅ | — |
 | E8 | Quick Actions and Refactorings (Ctrl+.): add using, generate method, extract method, implement interface, fix code style | ✅ (Roslyn's code fixes for compiler diagnostics + refactorings; no analyzer (IDE*) style fixes yet, no lightbulb icon) | P1 |
 | E9 | Format Document / Selection (Ctrl+K,D) with `.editorconfig` | ✅ (Shift+Alt+F or Ctrl+K, Ctrl+D; keeps line endings) | P1 |
-| E10 | CodeLens: reference counts, test status above methods | ⬜ | P2 |
+| E10 | CodeLens: reference counts, test status above methods | 🟡 (step-usage lens on step definitions) | P2 |
 | E11 | Inlay hints (parameter names, types) | ⬜ | P3 |
 | E12 | Code folding, outlining, sticky scroll, bracket matching, multi-caret, column select | 🟡 (CodeMirror basics) | P2 |
 | E13 | Navigation bar (project / type / member dropdowns) and breadcrumbs | ⬜ | P2 |
@@ -53,7 +53,7 @@ Status: ✅ done · 🟡 partial · ⬜ to do. Priority: **P1** next, **P2** aft
 | --- | --- | --- | --- |
 | G1 | Feature editor: colouring, binding checks, step completion, F12 to step definition | ✅ | — |
 | G2 | Create step definition for unbound steps | ✅ | — |
-| G3 | Find step usages (from a C# binding back to feature lines) | ⬜ | P1 |
+| G3 | Find step usages (from a C# binding back to feature lines) | ✅ (CodeLens above each binding + Find Step Usages) | P1 |
 | G4 | Rename step (update pattern and all feature usages) | ⬜ | P2 |
 | G5 | Table formatting, Scenario Outline examples editing | 🟡 | P2 |
 
@@ -109,3 +109,4 @@ Status: ✅ done · 🟡 partial · ⬜ to do. Priority: **P1** next, **P2** aft
 - 2026-10-11 — **Find in Files and Go to All (S10, S11).** `server/search.ts` (find / replace with case, whole word, regex, globs; skips build output), `/api/search/text|replace`; language service `symbols` (Roslyn pattern search). Search side-bar view (Ctrl+Shift+F, Ctrl+Shift+H) and Go to All dialog (Ctrl+T, Ctrl+P in browsers) with Files / Types / Members / Features filters; Edit menus in both apps. Feature editor full screen moves to Shift+Alt+Enter.
 
 **Slice 1 (P1) complete:** S1–S5, B1–B2, T1–T2, E3/E8/E9, S10–S11. Next candidates: W1 dockable tool windows, D5 gutter debug/run icons, G3 step usages, V1 Git Changes.
+- 2026-10-11 — **Step usages (G3).** `/api/steps/lenses` maps each binding in a C# file to the feature steps that bind to it; the C# editor shows a CodeLens line above every [Given]/[When]/[Then] ("2 step usages · 2 scenarios") that lists them in the references panel; context menu Find Step Usages.

@@ -8,6 +8,7 @@ import { Save, TriangleAlert, RotateCcw, CircleCheck, CloudOff, Loader, GitCompa
 import { RowMenu } from '../ui';
 import { csharpLanguage, lineCol, offsetOf, replaceText, type CsHandlers, type CsLocation } from './csharp';
 import { FILES_CHANGED_EVENT } from './events';
+import { stepLenses, setLenses, type StepLens } from './lens';
 import { api, type FilePreview } from '../api';
 import { Button } from '../radix';
 import { IconButton } from '../radix2';
@@ -68,7 +69,21 @@ export default function CodeEditor({ file, reveal, active = true, onNotice, onIn
   const isCs = file.endsWith('.cs');
   // C# language features (Roslyn): rename box over the symbol, Find All References results.
   const [renameAt, setRenameAt] = useState<{ pos: number; name: string; top: number; left: number }>();
-  const [refs, setRefs] = useState<{ name: string; locations: CsLocation[] }>();
+  const [refs, setRefs] = useState<{ name: string; locations: (CsLocation & { text?: string })[] }>();
+  // Step usages (CodeLens above [Given]/[When]/[Then]): which feature lines use each binding of this file.
+  const lenses = useRef<StepLens[]>([]);
+  const showUsages = (l: StepLens) => setRefs({ name: `${l.keyword} ${l.pattern}`, locations: l.usages.map((u) => ({ file: u.file, line: u.line, column: 1, text: `${u.text} — ${u.scenario}` })) });
+  const showUsagesRef = useRef(showUsages);
+  showUsagesRef.current = showUsages;
+  const loadLenses = () => {
+    if (!file.endsWith('.cs') || isBrowser()) return;
+    api<StepLens[]>(`/steps/lenses?file=${encodeURIComponent(file)}`).then((list) => {
+      lenses.current = list;
+      let tries = 0;
+      const apply = () => { const v = ref.current?.view; if (v) v.dispatch({ effects: setLenses.of(list) }); else if (tries++ < 30) requestAnimationFrame(apply); };
+      apply();
+    }, () => {});
+  };
   const [busyOp, setBusyOp] = useState('');
   // Quick Actions popup (Ctrl+.): the actions Roslyn offers at the cursor, shown under it.
   const [quick, setQuick] = useState<{ items: { id: string; title: string; kind: string }[]; top: number; left: number; index: number }>();
@@ -108,6 +123,9 @@ export default function CodeEditor({ file, reveal, active = true, onNotice, onIn
     return () => cancelAnimationFrame(frame);
   }, [loaded, reveal]);
   useEffect(() => { if (active) requestAnimationFrame(() => ref.current?.view?.requestMeasure()); }, [active]);
+  useEffect(() => { if (loaded) loadLenses(); }, [loaded]); // eslint-disable-line react-hooks/exhaustive-deps
+  // After a save the server re-indexes (about 1.5 s): refresh the lenses then.
+  useEffect(() => { if (auto.state !== 'saved') return; const t = setTimeout(loadLenses, 2500); return () => clearTimeout(t); }, [auto.state]); // eslint-disable-line react-hooks/exhaustive-deps
   // Another editor's rename (or a file operation) changed this file on disk: reload it unless it has unsaved edits.
   useEffect(() => {
     const h = (e: Event) => {
@@ -237,7 +255,7 @@ export default function CodeEditor({ file, reveal, active = true, onNotice, onIn
       { key: 'Mod-s', preventDefault: true, run: () => { void saveRef.current(); return true; } },
       ...(isCs && !browser ? [{ key: 'Mod-r Mod-g', preventDefault: true, run: () => { void organizeRef.current(); return true; } }] : []),
     ]),
-    ...(isCs && !browser ? csharpLanguage(file, csHandlers) : []),
+    ...(isCs && !browser ? [...csharpLanguage(file, csHandlers), stepLenses((l) => showUsagesRef.current(l))] : []),
     // Stable per file: rebuilding extensions on every keystroke would reset the linter before it reports.
   ], [file, browser]);
 
@@ -268,6 +286,12 @@ export default function CodeEditor({ file, reveal, active = true, onNotice, onIn
           ...(isCs && !browser ? [
             { label: 'Go To Definition', icon: Navigation, shortcut: 'F12', onSelect: () => csHandlers.current.definition(ref.current!.view!.state.selection.main.head) },
             { label: 'Find All References', icon: ListTree, shortcut: 'Shift F12', onSelect: () => csHandlers.current.references(ref.current!.view!.state.selection.main.head) },
+            { label: 'Find Step Usages', icon: ListTree, onSelect: () => {
+              const v = ref.current!.view!;
+              const line = v.state.doc.lineAt(v.state.selection.main.head).number;
+              const l = [...lenses.current].sort((a, b) => b.line - a.line).find((x) => x.line <= line);
+              if (l) showUsages(l); else onNotice?.('Put the cursor in a step definition ([Given], [When], [Then]).');
+            } },
             { label: 'Rename…', icon: TextCursorInput, shortcut: 'F2', onSelect: () => csHandlers.current.rename(ref.current!.view!.state.selection.main.head) },
             { label: 'Quick Actions and Refactorings…', icon: Lightbulb, shortcut: 'Ctrl .', onSelect: () => { const r = ref.current!.view!.state.selection.main; void csHandlers.current.actions(r.from, r.to); } },
             'separator' as const,
@@ -346,7 +370,7 @@ export default function CodeEditor({ file, reveal, active = true, onNotice, onIn
           </div>
           <ul>
             {refs.locations.map((l, i) => (
-              <li key={i}><button onClick={() => { if (l.file === file) { const v = ref.current!.view!; const at = offsetOf(v.state.doc, l.line, l.column); v.dispatch({ selection: { anchor: at }, effects: EditorView.scrollIntoView(at, { y: 'center' }) }); v.focus(); } else onOpen?.(l.file, l.line, l.column); }}>{l.file}<span className="meta">({l.line}, {l.column})</span></button></li>
+              <li key={i}><button onClick={() => { if (l.file === file) { const v = ref.current!.view!; const at = offsetOf(v.state.doc, l.line, l.column); v.dispatch({ selection: { anchor: at }, effects: EditorView.scrollIntoView(at, { y: 'center' }) }); v.focus(); } else onOpen?.(l.file, l.line, l.column); }}>{l.text ? <><span className="ref-text">{l.text}</span><span className="meta">{l.file}:{l.line}</span></> : <>{l.file}<span className="meta">({l.line}, {l.column})</span></>}</button></li>
             ))}
           </ul>
         </section>

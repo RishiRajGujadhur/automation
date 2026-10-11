@@ -1004,3 +1004,36 @@
     }
   }
 }
+
+// Step usages CodeLens
+.cm-lens {
+  height: 16px;
+  line-height: 16px;
+  font-family: var(--font-sans, system-ui);
+  font-size: 11px;
+  button {
+    padding: 0;
+    border: 0;
+    background: transparent;
+    color: var(--text-muted);
+    font: inherit;
+    cursor: pointer;
+    &:hover {
+      color: var(--accent-text, #9cdcfe);
+      text-decoration: underline;
+    }
+    &.none {
+      cursor: default;
+      opacity: 0.7;
+      &:hover {
+        color: var(--text-muted);
+        text-decoration: none;
+      }
+    }
+  }
+}
+.references-panel .ref-text {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
