@@ -37,6 +37,9 @@ import { existsSync } from 'node:fs';
 const localDotnet = path.resolve(projectRoot, '../.tools/dotnet/dotnet.exe');
 export const dotnet = process.env.DOTNET_PATH || (existsSync(localDotnet) ? localDotnet : 'dotnet');
 export const scannerDll = path.join(projectRoot, 'scanner/bin/Release/net10.0/Scanner.dll');
+// A self-contained scanner build (the desktop app ships one) runs without an installed .NET runtime.
+const scannerExe = process.env.STUDIO_SCANNER_EXE;
+const scanner = (args: string[] = []): [string, string[]] => (scannerExe ? [scannerExe, args] : [dotnet, [scannerDll, ...args]]);
 export const relative = (root: string, file: string) =>
   path.relative(root, file).replaceAll('\\', '/');
 export async function confined(root: string, file: string, existing = true) {
@@ -188,7 +191,7 @@ export async function matchFeatureBindings(features: Feature[], bindings: Bindin
       }
     }
   const { results, diagnostics } = JSON.parse(
-    await command(dotnet, [scannerDll, '--match'], JSON.stringify({ bindings, steps })),
+    await command(...scanner(['--match']), JSON.stringify({ bindings, steps })),
   );
   results.forEach((result: { candidates: string[]; status: string }, i: number) =>
     Object.assign(occurrences[i], result),
@@ -238,7 +241,7 @@ export async function scan(config: Config): Promise<Index> {
     ),
   ];
   for (const file of sources) await confined(root, file);
-  const raw = JSON.parse(await command(dotnet, [scannerDll], JSON.stringify(sources)));
+  const raw = JSON.parse(await command(...scanner(), JSON.stringify(sources)));
   const index: Index = {
     schemaVersion: 1,
     workspace: path.basename(targetDir),
