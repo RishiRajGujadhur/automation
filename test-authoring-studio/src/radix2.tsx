@@ -10,6 +10,7 @@ import { ChevronDown } from 'lucide-react';
 import type { AppThemeId, EditorThemeId } from './themes';
 import { accentById, type AccentId } from './accents';
 import { isEnabled } from './algorithms/registry';
+import { syncDesktopTheme } from './desktop';
 
 /* ------------------------------------------------------------------ Tooltip + IconButton */
 export function Tip({ content, shortcut, children, side = 'bottom' }: { content: ReactNode; shortcut?: string; children: ReactNode; side?: 'top' | 'bottom' | 'left' | 'right' }) {
@@ -194,6 +195,7 @@ export function PrefsProvider({ children }: { children: ReactNode }) {
     document.querySelector('meta[name="theme-color"]')?.setAttribute('content', getComputedStyle(el).getPropertyValue('--bg').trim() || '#0b0e16');
     el.dataset.focus = String(prefs.focus);
     el.dataset.sidebar = String(prefs.sidebar);
+    syncDesktopTheme(prefs.theme);
   }, [prefs]);
   const setPrefs = useCallback((p: Partial<Prefs>) => set((x) => ({ ...x, ...p })), []);
   return <PrefsContext.Provider value={{ prefs, setPrefs }}>{children}</PrefsContext.Provider>;

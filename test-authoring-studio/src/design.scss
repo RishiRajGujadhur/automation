@@ -442,3 +442,12 @@
     grid-template-columns: minmax(0, 1fr);
   }
 }
+
+// Desktop app (window.desktop) controls.
+.browse-button {
+  align-self: flex-start;
+  margin-top: -10px;
+}
+.desktop-source-actions {
+  margin-bottom: 8px;
+}

@@ -7,6 +7,7 @@ import TestGenerator, { type GeneratorSeed } from './TestGenerator';
 import DictionaryInspector from './DictionaryInspector';
 import ProjectExplorer from './ProjectExplorer';
 import TestDesign, { designTools } from './TestDesign';
+import { desktop, type DesktopMenuCommand } from './desktop';
 import StepCatalogue from './StepCatalogue';
 import SearchPalette from './SearchPalette';
 import RecordingDictionary from './RecordingDictionary';
@@ -89,6 +90,7 @@ import {
   Maximize2,
   PanelLeft,
   FlaskConical,
+  FolderOpen,
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import type { Index, Feature, Binding, Action, Match } from './types';
@@ -395,6 +397,27 @@ export default function App() {
     window.addEventListener('keydown', handler);
     return () => window.removeEventListener('keydown', handler);
   }, []);
+  // Desktop app (window.desktop): native menu commands, taskbar progress and run-finished notifications.
+  const menuRef = useRef<(c: DesktopMenuCommand) => void>(() => {});
+  menuRef.current = (c) => {
+    if (c === 'palette') setPaletteOpen(true);
+    else if (c === 'preferences') setModal('preferences');
+    else if (c === 'shortcuts') setModal('shortcuts');
+    else if (c === 'workspace-settings') setModal('settings');
+    else if (c === 'new-feature') beginFeature();
+    else if (c === 'record') { setTab('Features'); setView('recorder'); setModal('record'); }
+    else if (c === 'tour') setGuideOpen(true);
+    else if (c === 'toggle-mode') setPrefs({ mode: prefs.mode === 'advanced' ? 'basic' : 'advanced' });
+    else if (c === 'toggle-explorer') setPrefs({ sidebar: !prefs.sidebar });
+    else if (c === 'focus-mode') setPrefs({ focus: !prefs.focus });
+  };
+  useEffect(() => desktop?.onMenu((c) => menuRef.current(c)), []);
+  useEffect(() => { desktop?.setProgress(busy || execution.status === 'running' ? 2 : -1); }, [busy, execution.status]);
+  const lastRun = useRef(execution.status);
+  useEffect(() => {
+    if (lastRun.current === 'running' && execution.status !== 'running') desktop?.notify(`Test run ${execution.status}`, runFilter ? `Filter: ${runFilter}` : 'dotnet test finished.');
+    lastRun.current = execution.status;
+  }, [execution.status, runFilter]);
   const current = matches.find((m) => m.action.id === selected);
   const selectedAction = actions.find((a) => a.id === selected);
   const acceptedCount = Object.keys(accepted).length;
@@ -1672,6 +1695,12 @@ export default function App() {
                       Approve and write file
                     </Button>
                   </>
+                )}
+                {modal === 'source' && desktop && (
+                  <div className="button-row desktop-source-actions">
+                    <Button size="small" onClick={() => desktop!.openInEditor(sourceTitle.replace(/:\d+$/, '')).catch((e) => setNotice((e as Error).message))}><ExternalLink size={13} />Open in default editor</Button>
+                    <Button size="small" variant="ghost" onClick={() => desktop!.reveal(sourceTitle.replace(/:\d+$/, '')).catch((e) => setNotice((e as Error).message))}><FolderOpen size={13} />Show in folder</Button>
+                  </div>
                 )}
                 {modal === 'source' && (
                   <CodeMirror

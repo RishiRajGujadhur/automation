@@ -3,6 +3,7 @@ import { Play, RefreshCw, ArrowRight, Plus, Trash2, FolderSearch } from 'lucide-
 import type { ReactNode } from 'react';
 import { workspaceSchema, recordSchema, featureFileSchema, runSchema, parametersSchema, dictionaryEntrySchema, selectorTypes } from './validators';
 import type { Binding } from './types';
+import { desktop } from './desktop';
 import { FormikSelect, Button } from './radix';
 
 /** Label + input + inline error. Errors appear once the field is touched (or after a submit attempt). */
@@ -65,6 +66,11 @@ export function WorkspaceForm({ initial, onSubmit }: { initial: WorkspaceValues;
         <Form className="form-stack" noValidate>
           <p className="subtle">Point the scanner at a C# SpecFlow + Playwright repository. Indexing is read-only.</p>
           <TextField name="repositoryRoot" label="REPOSITORY ROOT" hint="Absolute path to the repository you want to author tests in." />
+          {desktop && (
+            <Button type="button" size="small" className="browse-button" onClick={async () => { const dir = await desktop!.pickFolder('Choose the repository root'); if (dir) setFieldValue('repositoryRoot', dir); }}>
+              <FolderSearch size={13} />Browse…
+            </Button>
+          )}
           <TextField name="targetProject" label="TARGET PROJECT / DIRECTORY" hint={'"." for the root, a folder, or a path to a .csproj.'} />
           <div className="field-label">
             <label htmlFor="f-referenceScope">REFERENCE SCOPE</label>
