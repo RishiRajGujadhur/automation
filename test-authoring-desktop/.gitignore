@@ -1,0 +1,6 @@
+﻿node_modules/
+out/
+app/
+release/
+test-results/
+build/icon.png
