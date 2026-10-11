@@ -410,6 +410,7 @@ export default function App() {
     else if (c === 'toggle-mode') setPrefs({ mode: prefs.mode === 'advanced' ? 'basic' : 'advanced' });
     else if (c === 'toggle-explorer') setPrefs({ sidebar: !prefs.sidebar });
     else if (c === 'focus-mode') setPrefs({ focus: !prefs.focus });
+    else if (c === 'repository-changed' && !busy) api<Index>('/scan', {}).then((i) => { setIndex(i); setNotice('Files changed on disk. Repository index refreshed.'); }).catch(() => {});
   };
   useEffect(() => desktop?.onMenu((c) => menuRef.current(c)), []);
   useEffect(() => { desktop?.setProgress(busy || execution.status === 'running' ? 2 : -1); }, [busy, execution.status]);
