@@ -265,7 +265,7 @@ app.post('/api/file/save', async (req, res) => {
 // C# language service (Roslyn): IntelliSense, quick info, go to definition, references, rename, organize usings.
 const lang = new LanguageService();
 const csPosition = z.object({ file: z.string().max(400).regex(/\.cs$/), source: z.string().max(1_000_000).optional(), line: z.number().int().min(1), column: z.number().int().min(1) });
-for (const op of ['complete', 'hover', 'definition', 'references'] as const) {
+for (const op of ['complete', 'hover', 'definition', 'references', 'signature'] as const) {
   app.post(`/api/csharp/${op}`, async (req, res) => {
     const body = csPosition.parse(req.body);
     await confined(config.repositoryRoot, body.file, false);
@@ -291,6 +291,34 @@ app.post('/api/csharp/organize', async (req, res) => {
   const body = z.object({ file: z.string().max(400).regex(/\.cs$/), source: z.string().max(1_000_000) }).parse(req.body);
   await confined(config.repositoryRoot, body.file, false);
   res.json(await lang.request(config.repositoryRoot, { op: 'organize', ...body }, 60_000));
+});
+/** Format Document / Selection (Roslyn formatter with the project's .editorconfig). */
+app.post('/api/csharp/format', async (req, res) => {
+  const pos = z.object({ line: z.number().int().min(1), column: z.number().int().min(1), endLine: z.number().int().min(1), endColumn: z.number().int().min(1) });
+  const body = z.object({ file: z.string().max(400).regex(/\.cs$/), source: z.string().max(1_000_000), selection: pos.optional() }).parse(req.body);
+  await confined(config.repositoryRoot, body.file, false);
+  res.json(await lang.request(config.repositoryRoot, { op: 'format', ...body }, 60_000));
+});
+/** Quick Actions and Refactorings (Ctrl+.): Roslyn's code fixes for diagnostics at the cursor and refactorings for the selection. */
+app.post('/api/csharp/actions', async (req, res) => {
+  const body = csPosition.extend({ endLine: z.number().int().min(1).optional(), endColumn: z.number().int().min(1).optional() }).parse(req.body);
+  await confined(config.repositoryRoot, body.file, false);
+  res.json(await lang.request(config.repositoryRoot, { op: 'actions', ...body }, 60_000));
+});
+/** Applies a Quick Action: other files it changes are written; the edited file's new text goes back to the editor. */
+app.post('/api/csharp/applyAction', async (req, res) => {
+  const body = z.object({ file: z.string().max(400).regex(/\.cs$/), actionId: z.string().max(40) }).parse(req.body);
+  const r = await lang.request<{ title: string; changes: { file: string; text: string }[] }>(config.repositoryRoot, { op: 'applyAction', ...body }, 60_000);
+  const written: string[] = [];
+  for (const c of r.changes) {
+    if (c.file === body.file) continue;
+    const target = await confined(config.repositoryRoot, c.file, false);
+    await fs.mkdir(path.dirname(target), { recursive: true });
+    await fs.writeFile(target, c.text, 'utf8');
+    written.push(c.file);
+  }
+  if (written.length) rescanSoon(1500);
+  res.json({ title: r.title, written, current: r.changes.find((c) => c.file === body.file)?.text ?? null });
 });
 // Explorer file operations (Rename, Copy/Cut + Paste, Delete), confined to the repository like every other write.
 const afterFileChange = (files: string[]) => { lang.notify(config.repositoryRoot, files); rescanSoon(500); };

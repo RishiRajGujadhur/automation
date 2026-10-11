@@ -33,13 +33,13 @@ Status: ✅ done · 🟡 partial · ⬜ to do. Priority: **P1** next, **P2** aft
 | --- | --- | --- | --- |
 | E1 | Syntax colouring, Roslyn diagnostics as you type | ✅ | — |
 | E2 | IntelliSense completion, quick info on hover | ✅ | — |
-| E3 | Signature help (parameter info while typing `(`) | ⬜ | P1 |
+| E3 | Signature help (parameter info while typing `(`) | ✅ (overloads Alt+↑/↓, Ctrl+Shift+Space) | P1 |
 | E4 | Go To Definition (F12, Ctrl+click), Find All References (Shift+F12) | ✅ | — |
 | E5 | Peek Definition (Alt+F12), Go To Implementation (Ctrl+F12), Go to Base | ⬜ | P2 |
 | E6 | Rename symbol across the solution (F2 / Ctrl+R,R) | ✅ | — |
 | E7 | Remove and Sort Usings | ✅ | — |
-| E8 | Quick Actions and Refactorings (Ctrl+.): add using, generate method, extract method, implement interface, fix code style | ⬜ | P1 |
-| E9 | Format Document / Selection (Ctrl+K,D) with `.editorconfig` | ⬜ | P1 |
+| E8 | Quick Actions and Refactorings (Ctrl+.): add using, generate method, extract method, implement interface, fix code style | ✅ (Roslyn's code fixes for compiler diagnostics + refactorings; no analyzer (IDE*) style fixes yet, no lightbulb icon) | P1 |
+| E9 | Format Document / Selection (Ctrl+K,D) with `.editorconfig` | ✅ (Shift+Alt+F or Ctrl+K, Ctrl+D; keeps line endings) | P1 |
 | E10 | CodeLens: reference counts, test status above methods | ⬜ | P2 |
 | E11 | Inlay hints (parameter names, types) | ⬜ | P3 |
 | E12 | Code folding, outlining, sticky scroll, bracket matching, multi-caret, column select | 🟡 (CodeMirror basics) | P2 |
@@ -105,3 +105,4 @@ Status: ✅ done · 🟡 partial · ⬜ to do. Priority: **P1** next, **P2** aft
 - 2026-10-11 — **Per-project language service (S5).** `langserver` builds a Roslyn solution with one project per `.csproj`: its own packages (and their dependencies), framework assemblies, built output, and `ProjectReference`s; files outside projects go to a Miscellaneous Files project. Go to definition, completion and rename now follow project boundaries (`tests/langserver.test.ts`).
 - 2026-10-11 — **Build (B1, B2).** `server/build.ts` runs `dotnet build|clean` (rebuild = `--no-incremental`) for the open solution / project, streams Output and parses diagnostics into an Error List (`/api/build`, `/api/build/events`); Build menu (web title bar and desktop), Ctrl+Shift+B, Ctrl+Break to cancel, configuration box. Also fixed: go-to-line in a newly opened tab landed on line 1.
 - 2026-10-11 — **Test Explorer (T1, T2; T3 and D5 partial).** Roslyn discovers NUnit/xUnit/MSTest methods per project (`op: tests`); scenarios come from the index (class/method from the generated code-behind). `server/testRunner.ts` runs `dotnet test --logger trx` and parses TRX (outcome, duration, message, stack). Side bar Test Explorer (activity bar, Test menu): Run All, Run selected, Run Failed, Debug, filter, details with stack links. Calculator sample gains NUnit tests.
+- 2026-10-11 — **Signature help, Quick Actions, Format (E3, E8, E9).** Language service: `signature` (overloads + active parameter from the invocation), `actions`/`applyAction` (Roslyn's exported CodeFixProviders and CodeRefactoringProviders, loaded by reflection; multi-file changes written by the server), `format` (Formatter with `.editorconfig` analyzer-config documents, original line endings kept). Editor: parameter-info tooltip, Ctrl+. popup, Shift+Alt+F.

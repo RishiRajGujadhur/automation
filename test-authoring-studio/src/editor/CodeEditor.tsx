@@ -4,7 +4,7 @@ import { StreamLanguage } from '@codemirror/language';
 import { csharp } from '@codemirror/legacy-modes/mode/clike';
 import { forEachDiagnostic, linter, lintGutter, type Diagnostic } from '@codemirror/lint';
 import { keymap, EditorView } from '@codemirror/view';
-import { Save, TriangleAlert, RotateCcw, CircleCheck, CloudOff, Loader, GitCompareArrows, Navigation, ListTree, TextCursorInput, ListOrdered, Scissors, Copy, ClipboardPaste, X } from 'lucide-react';
+import { Save, TriangleAlert, RotateCcw, CircleCheck, CloudOff, Loader, GitCompareArrows, Navigation, ListTree, TextCursorInput, ListOrdered, Scissors, Copy, ClipboardPaste, X, Lightbulb, Wrench, AlignLeft } from 'lucide-react';
 import { RowMenu } from '../ui';
 import { csharpLanguage, lineCol, offsetOf, replaceText, type CsHandlers, type CsLocation } from './csharp';
 import { FILES_CHANGED_EVENT } from './events';
@@ -70,6 +70,8 @@ export default function CodeEditor({ file, reveal, active = true, onNotice, onIn
   const [renameAt, setRenameAt] = useState<{ pos: number; name: string; top: number; left: number }>();
   const [refs, setRefs] = useState<{ name: string; locations: CsLocation[] }>();
   const [busyOp, setBusyOp] = useState('');
+  // Quick Actions popup (Ctrl+.): the actions Roslyn offers at the cursor, shown under it.
+  const [quick, setQuick] = useState<{ items: { id: string; title: string; kind: string }[]; top: number; left: number; index: number }>();
 
   useEffect(() => {
     let live = true;
@@ -121,7 +123,7 @@ export default function CodeEditor({ file, reveal, active = true, onNotice, onIn
   });
 
   const position = (pos: number) => { const v = ref.current!.view!; return { file, source: v.state.doc.toString(), ...lineCol(v.state.doc, pos) }; };
-  const csHandlers = useRef<CsHandlers>({ definition: () => {}, references: () => {}, rename: () => {} });
+  const csHandlers = useRef<CsHandlers>({ definition: () => {}, references: () => {}, rename: () => {}, actions: () => {}, format: () => {} });
   csHandlers.current = {
     definition: async (pos) => {
       try {
@@ -136,6 +138,29 @@ export default function CodeEditor({ file, reveal, active = true, onNotice, onIn
     references: async (pos) => {
       setBusyOp('Finding references…');
       try { setRefs(await api('/csharp/references', position(pos))); } catch (e) { onNotice?.((e as Error).message); } finally { setBusyOp(''); }
+    },
+    actions: async (from, to) => {
+      const v = ref.current?.view;
+      if (!v) return;
+      setBusyOp('Finding quick actions…');
+      try {
+        const end = lineCol(v.state.doc, to);
+        const items = await api<{ id: string; title: string; kind: string }[]>('/csharp/actions', { ...position(from), ...(to > from ? { endLine: end.line, endColumn: end.column } : {}) });
+        if (!items.length) { onNotice?.('No quick actions here.'); return; }
+        const box = v.coordsAtPos(from);
+        const host = v.dom.getBoundingClientRect();
+        setQuick({ items, index: 0, top: (box?.bottom ?? host.top) - host.top + 2, left: (box?.left ?? host.left) - host.left });
+      } catch (e) { onNotice?.((e as Error).message); } finally { setBusyOp(''); }
+    },
+    format: async () => {
+      const v = ref.current?.view;
+      if (!v) return;
+      const r = v.state.selection.main;
+      try {
+        const sel = r.to > r.from ? { selection: { ...lineCol(v.state.doc, r.from), endLine: lineCol(v.state.doc, r.to).line, endColumn: lineCol(v.state.doc, r.to).column } } : {};
+        const out = await api<{ text: string }>('/csharp/format', { file, source: v.state.doc.toString(), ...sel });
+        replaceText(v, out.text);
+      } catch (e) { onNotice?.((e as Error).message); }
     },
     rename: (pos) => {
       const v = ref.current?.view;
@@ -161,6 +186,17 @@ export default function CodeEditor({ file, reveal, active = true, onNotice, onIn
       const edits = r.changes.reduce((n, c) => n + c.edits, 0);
       onNotice?.(`Renamed ${at.name} to ${newName}: ${edits} change${edits === 1 ? '' : 's'} in ${r.changes.length} file${r.changes.length === 1 ? '' : 's'}.`);
     } catch (e) { onNotice?.((e as Error).message); } finally { setBusyOp(''); v.focus(); }
+  };
+  /** Applies the chosen Quick Action: this file gets its new text, other changed files are written by the server. */
+  const applyQuick = async (id: string) => {
+    setQuick(undefined);
+    const v = ref.current?.view;
+    if (!v) return;
+    try {
+      const r = await api<{ title: string; current: string | null; written: string[] }>('/csharp/applyAction', { file, actionId: id });
+      if (r.current !== null) replaceText(v, r.current);
+      if (r.written.length) { window.dispatchEvent(new CustomEvent(FILES_CHANGED_EVENT, { detail: r.written })); onNotice?.(`${r.title}: changed ${r.written.length + (r.current !== null ? 1 : 0)} files.`); }
+    } catch (e) { onNotice?.((e as Error).message); } finally { v.focus(); }
   };
   /** Organize Usings: remove unnecessary usings and sort them (System first), like Visual Studio's Ctrl+R, Ctrl+G. */
   const organize = async () => {
@@ -233,7 +269,9 @@ export default function CodeEditor({ file, reveal, active = true, onNotice, onIn
             { label: 'Go To Definition', icon: Navigation, shortcut: 'F12', onSelect: () => csHandlers.current.definition(ref.current!.view!.state.selection.main.head) },
             { label: 'Find All References', icon: ListTree, shortcut: 'Shift F12', onSelect: () => csHandlers.current.references(ref.current!.view!.state.selection.main.head) },
             { label: 'Rename…', icon: TextCursorInput, shortcut: 'F2', onSelect: () => csHandlers.current.rename(ref.current!.view!.state.selection.main.head) },
+            { label: 'Quick Actions and Refactorings…', icon: Lightbulb, shortcut: 'Ctrl .', onSelect: () => { const r = ref.current!.view!.state.selection.main; void csHandlers.current.actions(r.from, r.to); } },
             'separator' as const,
+            { label: 'Format Document', icon: AlignLeft, shortcut: 'Shift Alt F', onSelect: () => void csHandlers.current.format() },
             { label: 'Remove and Sort Usings', icon: ListOrdered, shortcut: 'Ctrl R, Ctrl G', onSelect: () => void organize() },
             'separator' as const,
           ] : []),
@@ -271,6 +309,30 @@ export default function CodeEditor({ file, reveal, active = true, onNotice, onIn
               onKeyDown={(e) => { e.stopPropagation(); if (e.key === 'Enter') void doRename(e.currentTarget.value.trim()); if (e.key === 'Escape') { setRenameAt(undefined); ref.current?.view?.focus(); } }}
               onBlur={() => setRenameAt(undefined)}
             />
+          )}
+          {quick && (
+            <ul
+              className="cm-quick-actions"
+              role="listbox"
+              aria-label="Quick Actions"
+              tabIndex={-1}
+              style={{ top: quick.top, left: quick.left }}
+              ref={(el) => el?.focus()}
+              onKeyDown={(e) => {
+                e.stopPropagation();
+                if (e.key === 'ArrowDown') { e.preventDefault(); setQuick({ ...quick, index: (quick.index + 1) % quick.items.length }); }
+                else if (e.key === 'ArrowUp') { e.preventDefault(); setQuick({ ...quick, index: (quick.index - 1 + quick.items.length) % quick.items.length }); }
+                else if (e.key === 'Enter') { e.preventDefault(); void applyQuick(quick.items[quick.index].id); }
+                else if (e.key === 'Escape') { setQuick(undefined); ref.current?.view?.focus(); }
+              }}
+              onBlur={(e) => { if (!e.currentTarget.contains(e.relatedTarget as Node)) setQuick(undefined); }}
+            >
+              {quick.items.map((a, i) => (
+                <li key={a.id} role="option" aria-selected={i === quick.index} className={`${i === quick.index ? 'active' : ''} ${a.kind}`} onMouseDown={(e) => { e.preventDefault(); void applyQuick(a.id); }} onMouseEnter={() => setQuick({ ...quick, index: i })}>
+                  {a.kind === 'fix' ? <Lightbulb size={13} aria-hidden="true" /> : <Wrench size={13} aria-hidden="true" />}{a.title}
+                </li>
+              ))}
+            </ul>
           )}
           {busyOp && <span className="cm-busy" role="status"><Loader size={12} className="spin" />{busyOp}</span>}
         </div>

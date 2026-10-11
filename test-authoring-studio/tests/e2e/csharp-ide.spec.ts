@@ -167,3 +167,32 @@ test('Tabs: pin keeps a tab through Close All; closing the last tab closes the e
   await expect(page.locator('.code-editor:not([hidden]), .editor-panel')).toHaveCount(0);
   await expect(page.getByText('Open a file from the Explorer')).toBeVisible();
 });
+
+test('Signature help while typing a call, Quick Actions (Ctrl+.) add a using, Format Document (Shift+Alt+F)', async ({ page }) => {
+  await open(page);
+  await explorerFile(page, 'SearchSteps.cs').click();
+  const file = 'Steps/SearchSteps.cs';
+  const editor = page.getByLabel(`Source of ${file}`);
+  await line(page, file, 'public async Task Results()').click();
+  await page.keyboard.press('End');
+  await page.keyboard.press('Enter');
+  // Signature help opens on "(" with the parameter in bold.
+  await page.keyboard.type('  public async Task Probe() { await page.Search(');
+  const sig = page.locator('.cm-signature');
+  await expect(sig).toContainText('SearchPage.Search(string text)', { timeout: 30_000 });
+  await expect(sig.locator('b')).toHaveText('string text');
+  await page.keyboard.press('Escape');
+  await expect(sig).toHaveCount(0);
+  await page.keyboard.type('"x"); var sb = new StringBuilder();   int   x=1+2; }');
+  // Ctrl+. on StringBuilder offers "using System.Text;".
+  await line(page, file, 'new StringBuilder()').getByText('StringBuilder', { exact: false }).last().click();
+  await page.keyboard.press('Control+.');
+  const actions = page.getByRole('listbox', { name: 'Quick Actions' });
+  await expect(actions.getByRole('option', { name: 'using System.Text;' })).toBeVisible({ timeout: 60_000 });
+  await actions.getByRole('option', { name: 'using System.Text;' }).click();
+  await expect(editor).toContainText('using System.Text;');
+  // Format Document fixes the spacing.
+  await editor.click();
+  await page.keyboard.press('Shift+Alt+F');
+  await expect(editor).toContainText('int x = 1 + 2;', { timeout: 30_000 });
+});

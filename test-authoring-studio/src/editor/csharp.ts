@@ -1,6 +1,6 @@
 import { autocompletion, type Completion, type CompletionContext, type CompletionResult } from '@codemirror/autocomplete';
-import { EditorView, hoverTooltip, keymap } from '@codemirror/view';
-import type { Extension, Text } from '@codemirror/state';
+import { EditorView, hoverTooltip, keymap, showTooltip, ViewPlugin, type Tooltip, type ViewUpdate } from '@codemirror/view';
+import { StateEffect, StateField, type Extension, type Text } from '@codemirror/state';
 import { api } from '../api';
 
 export type CsLocation = { file: string; line: number; column: number; endLine?: number; endColumn?: number };
@@ -12,6 +12,10 @@ export type CsHandlers = {
   references: (pos: number) => void;
   /** F2: inline rename at `pos`. */
   rename: (pos: number) => void;
+  /** Ctrl+.: Quick Actions and Refactorings for the selection. */
+  actions: (from: number, to: number) => void;
+  /** Shift+Alt+F / Ctrl+K, Ctrl+D: Format Document (or the selection). */
+  format: () => void;
 };
 
 /** 1-based line/column for a document offset (the language service's convention). */
@@ -74,6 +78,96 @@ const quickInfo = (file: string) => hoverTooltip(async (view, pos) => {
   };
 }, { hoverTime: 450 });
 
+// ------------------------------------------------------------------ signature help (parameter info)
+type Signatures = { signatures: { label: string; parameters: string[]; documentation?: string | null }[]; activeSignature: number; activeParameter: number };
+const setSignature = StateEffect.define<{ pos: number; data: Signatures } | null>();
+function signatureDom(data: Signatures, pick: { index: number }) {
+  const dom = document.createElement('div');
+  dom.className = 'cm-signature';
+  dom.setAttribute('role', 'tooltip');
+  const render = () => {
+    const sig = data.signatures[pick.index];
+    dom.textContent = '';
+    if (data.signatures.length > 1) {
+      const count = document.createElement('span');
+      count.className = 'cm-signature-count';
+      count.textContent = `${pick.index + 1} of ${data.signatures.length}`;
+      dom.append(count);
+    }
+    const code = document.createElement('code');
+    // Bold the parameter being typed.
+    const open = sig.label.indexOf('(');
+    code.append(sig.label.slice(0, open + 1));
+    sig.parameters.forEach((p, i) => {
+      if (i) code.append(', ');
+      if (i === Math.min(data.activeParameter, sig.parameters.length - 1)) { const b = document.createElement('b'); b.textContent = p; code.append(b); } else code.append(p);
+    });
+    code.append(')');
+    dom.append(code);
+    if (sig.documentation) { const doc = document.createElement('p'); doc.textContent = sig.documentation; dom.append(doc); }
+  };
+  render();
+  return { dom, render };
+}
+const signatureField = StateField.define<{ tooltip: Tooltip | null; data?: Signatures; pick: { index: number } }>({
+  create: () => ({ tooltip: null, pick: { index: 0 } }),
+  update(v, tr) {
+    for (const e of tr.effects) if (e.is(setSignature)) {
+      if (!e.value) return { tooltip: null, pick: { index: 0 } };
+      const { pos, data } = e.value;
+      const pick = { index: data.activeSignature };
+      return { data, pick, tooltip: { pos, above: true, strictSide: false, arrow: false, create: () => { const { dom } = signatureDom(data, pick); return { dom }; } } };
+    }
+    return v.tooltip && tr.docChanged ? { ...v, tooltip: { ...v.tooltip, pos: tr.changes.mapPos(v.tooltip.pos) } } : v;
+  },
+  provide: (f) => showTooltip.from(f, (v) => v.tooltip),
+});
+function signatureHelp(file: string): Extension[] {
+  const plugin = ViewPlugin.fromClass(class {
+    timer = 0;
+    seq = 0;
+    constructor(readonly view: EditorView) {}
+    update(u: ViewUpdate) {
+      if (!u.docChanged && !u.selectionSet) return;
+      const open = !!u.state.field(signatureField).tooltip;
+      let trigger = false;
+      for (const tr of u.transactions) if (tr.isUserEvent('input.type')) tr.changes.iterChanges((_a, _b, _c, _d, text) => { if (/[(,<]/.test(text.toString())) trigger = true; });
+      if (trigger || open) this.schedule();
+    }
+    schedule() {
+      clearTimeout(this.timer);
+      this.timer = window.setTimeout(() => void this.fetch(), 120);
+    }
+    async fetch() {
+      const seq = ++this.seq;
+      const view = this.view;
+      const pos = view.state.selection.main.head;
+      const { line, column } = lineCol(view.state.doc, pos);
+      const data = await api<Signatures | null>('/csharp/signature', { file, source: view.state.doc.toString(), line, column }).catch(() => null);
+      if (seq !== this.seq || !view.dom.isConnected) return;
+      view.dispatch({ effects: setSignature.of(data?.signatures.length ? { pos, data } : null) });
+    }
+    destroy() { clearTimeout(this.timer); }
+  });
+  const close = (v: EditorView) => { if (!v.state.field(signatureField).tooltip) return false; v.dispatch({ effects: setSignature.of(null) }); return true; };
+  const cycle = (step: number) => (v: EditorView) => {
+    const f = v.state.field(signatureField);
+    if (!f.tooltip || !f.data || f.data.signatures.length < 2) return false;
+    v.dispatch({ effects: setSignature.of({ pos: f.tooltip.pos, data: { ...f.data, activeSignature: (f.pick.index + step + f.data.signatures.length) % f.data.signatures.length } }) });
+    return true;
+  };
+  return [
+    signatureField,
+    plugin,
+    keymap.of([
+      { key: 'Escape', run: close },
+      { key: 'Mod-Shift-Space', preventDefault: true, run: (v) => { v.plugin(plugin)?.schedule(); return true; } },
+      { key: 'Alt-ArrowDown', run: cycle(1) },
+      { key: 'Alt-ArrowUp', run: cycle(-1) },
+    ]),
+  ];
+}
+
 export function csharpLanguage(file: string, handlers: { current: CsHandlers }): Extension[] {
   const at = (v: EditorView) => v.state.selection.main.head;
   return [
@@ -83,7 +177,11 @@ export function csharpLanguage(file: string, handlers: { current: CsHandlers }):
       { key: 'F12', preventDefault: true, run: (v) => { handlers.current.definition(at(v)); return true; } },
       { key: 'Shift-F12', preventDefault: true, run: (v) => { handlers.current.references(at(v)); return true; } },
       { key: 'F2', preventDefault: true, run: (v) => { handlers.current.rename(at(v)); return true; } },
+      { key: 'Mod-.', preventDefault: true, run: (v) => { const r = v.state.selection.main; handlers.current.actions(r.from, r.to); return true; } },
+      { key: 'Shift-Alt-f', preventDefault: true, run: () => { handlers.current.format(); return true; } },
+      { key: 'Mod-k Mod-d', preventDefault: true, run: () => { handlers.current.format(); return true; } },
     ]),
+    ...signatureHelp(file),
     // Ctrl+click (Cmd+click) goes to definition, as in Visual Studio and VS Code.
     EditorView.domEventHandlers({
       mousedown: (e, view) => {

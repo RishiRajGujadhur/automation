@@ -3,7 +3,13 @@ using System.Text.Json.Nodes;
 using System.Text.RegularExpressions;
 using System.Xml.Linq;
 using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.CodeActions;
+using Microsoft.CodeAnalysis.CodeFixes;
+using Microsoft.CodeAnalysis.CodeRefactorings;
 using Microsoft.CodeAnalysis.Completion;
+using Microsoft.CodeAnalysis.Formatting;
+using System.Collections.Immutable;
+using System.Reflection;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.FindSymbols;
@@ -65,6 +71,10 @@ sealed class LanguageService
             "references" => await References(doc, Math.Min(Pos(text), text.Length)),
             "rename" => await Rename(doc, Math.Min(Pos(text), text.Length), (string)req["newName"]!),
             "organize" => await Organize(doc),
+            "signature" => await Signature(doc, Math.Min(Pos(text), text.Length)),
+            "format" => await Format(doc, req),
+            "actions" => await Actions(doc, Math.Min(Pos(text), text.Length), req["endLine"] is null ? null : text.Lines[Math.Clamp((int)req["endLine"]! - 1, 0, text.Lines.Count - 1)].Start + (int)req["endColumn"]! - 1),
+            "applyAction" => await ApplyAction((string)req["actionId"]!),
             _ => throw new InvalidOperationException($"Unknown operation {op}."),
         };
     }
@@ -130,6 +140,17 @@ sealed class LanguageService
         foreach (var file in files) solution = solution.AddDocument(DocumentId.CreateNewId(Owner(file) ?? miscId!), Path.GetFileName(file), SourceText.From(File.ReadAllText(file)), filePath: file);
         // Implicit usings of SDK-style projects (dotnet new), so `Task`, `List<>`… resolve as they do in the build.
         foreach (var p in infos) solution = solution.AddDocument(DocumentId.CreateNewId(p.Id), "GlobalUsings.g.cs", SourceText.From(ImplicitUsings));
+        // .editorconfig files (repository root down to each project) drive formatting and code style, as in the build.
+        foreach (var p in infos)
+        {
+            var dir = p.FilePath != null ? Path.GetDirectoryName(p.FilePath)! : root;
+            for (var d = dir; d != null && d.StartsWith(root, StringComparison.OrdinalIgnoreCase); d = Path.GetDirectoryName(d))
+            {
+                var ec = Path.Combine(d, ".editorconfig");
+                if (File.Exists(ec)) solution = solution.AddAnalyzerConfigDocument(DocumentId.CreateNewId(p.Id), ".editorconfig", SourceText.From(File.ReadAllText(ec)), filePath: ec);
+                if (d.Equals(root, StringComparison.OrdinalIgnoreCase)) break;
+            }
+        }
         workspace.TryApplyChanges(solution);
     }
 
@@ -206,6 +227,167 @@ sealed class LanguageService
         else if (id == null) solution = solution.AddDocument(DocumentId.CreateNewId(Owner(path) ?? miscId ?? solution.ProjectIds[0]), Path.GetFileName(path), SourceText.From(File.ReadAllText(path)), filePath: path);
         else solution = solution.WithDocumentText(id, SourceText.From(File.ReadAllText(path)));
         workspace.TryApplyChanges(solution);
+    }
+
+    // ------------------------------------------------------------------ signature help, formatting, quick actions
+    /// <summary>Parameter info while typing a call: the overloads of the method (or constructor) and the active parameter.</summary>
+    async Task<object?> Signature(Document doc, int position)
+    {
+        var root = (await doc.GetSyntaxRootAsync())!;
+        var model = (await doc.GetSemanticModelAsync())!;
+        var token = root.FindToken(Math.Max(0, position - 1));
+        var args = token.Parent?.AncestorsAndSelf().OfType<BaseArgumentListSyntax>().FirstOrDefault(a => a.Span.Start < position && (Close(a).IsMissing || position <= Close(a).SpanStart));
+        if (args == null) return null;
+        var target = args.Parent switch
+        {
+            InvocationExpressionSyntax inv => (SyntaxNode)inv.Expression,
+            BaseObjectCreationExpressionSyntax oc => oc,
+            ConstructorInitializerSyntax ci => ci,
+            ElementAccessExpressionSyntax ea => ea.Expression,
+            _ => null,
+        };
+        if (target == null) return null;
+        var info = model.GetSymbolInfo(target is BaseObjectCreationExpressionSyntax ? args.Parent! : target);
+        var group = args.Parent is InvocationExpressionSyntax ? model.GetMemberGroup(target) : ImmutableArray<ISymbol>.Empty;
+        var methods = group.OfType<IMethodSymbol>().Concat(info.CandidateSymbols.OfType<IMethodSymbol>());
+        if (info.Symbol is IMethodSymbol chosen) methods = methods.Prepend(chosen);
+        if (args.Parent is BaseObjectCreationExpressionSyntax && model.GetTypeInfo(args.Parent).Type is INamedTypeSymbol type) methods = methods.Concat(type.InstanceConstructors);
+        var list = methods.Distinct<IMethodSymbol>(SymbolEqualityComparer.Default).Where(m => m.DeclaredAccessibility != Accessibility.Private || SymbolEqualityComparer.Default.Equals(m.ContainingType, model.GetEnclosingSymbol(position)?.ContainingType)).Take(20).ToList();
+        if (list.Count == 0) return null;
+        var active = args.Arguments.TakeWhile(a => a.FullSpan.End < position || (a.FullSpan.End == position && args.Arguments.GetSeparators().Any(s => s.SpanStart == position - 1))).Count();
+        active = Math.Min(active, Math.Max(0, args.Arguments.SeparatorCount));
+        var fmt = SymbolDisplayFormat.MinimallyQualifiedFormat;
+        var signatures = list.Select(m => new
+        {
+            label = m.MethodKind == MethodKind.Constructor ? $"{m.ContainingType.Name}({string.Join(", ", m.Parameters.Select(p => p.ToDisplayString(fmt)))})" : $"{m.ReturnType.ToDisplayString(fmt)} {m.ContainingType.Name}.{m.Name}({string.Join(", ", m.Parameters.Select(p => p.ToDisplayString(fmt)))})",
+            parameters = m.Parameters.Select(p => p.ToDisplayString(fmt)).ToList(),
+            documentation = Summary(m),
+        }).ToList();
+        // The best overload: one that has enough parameters for the argument being typed.
+        var best = list.FindIndex(m => m.Parameters.Length > active || m.Parameters.LastOrDefault()?.IsParams == true);
+        return new { signatures, activeSignature = Math.Max(0, best), activeParameter = active };
+    }
+    /// <summary>Keeps a file's own line endings: Roslyn's formatter and fixes otherwise insert the platform's.</summary>
+    static string MatchEol(string original, string result)
+    {
+        var crlf = original.Contains("\r\n");
+        var lf = original.Replace("\r\n", "").Contains('\n');
+        if (crlf && !lf) return Regex.Replace(result, "(?<!\r)\n", "\r\n");
+        if (!crlf) return result.Replace("\r\n", "\n");
+        return result;
+    }
+    static SyntaxToken Close(BaseArgumentListSyntax a) => a is ArgumentListSyntax l ? l.CloseParenToken : ((BracketedArgumentListSyntax)a).CloseBracketToken;
+    static string? Summary(ISymbol s)
+    {
+        var xml = s.GetDocumentationCommentXml();
+        if (string.IsNullOrWhiteSpace(xml)) return null;
+        try { return XDocument.Parse(xml).Descendants("summary").FirstOrDefault()?.Value.Trim(); } catch { return null; }
+    }
+
+    /// <summary>Format Document (or a selection) with the project's .editorconfig.</summary>
+    async Task<object> Format(Document doc, JsonObject req)
+    {
+        var text = await doc.GetTextAsync();
+        Document formatted;
+        if (req["selection"] is JsonObject sel)
+        {
+            int Off(int line, int col) => text.Lines[Math.Clamp(line - 1, 0, text.Lines.Count - 1)].Start + col - 1;
+            var from = Off((int)sel["line"]!, (int)sel["column"]!);
+            var to = Off((int)sel["endLine"]!, (int)sel["endColumn"]!);
+            formatted = await Formatter.FormatAsync(doc, TextSpan.FromBounds(Math.Min(from, to), Math.Max(from, to)));
+        }
+        else formatted = await Formatter.FormatAsync(doc);
+        return new { text = MatchEol(text.ToString(), (await formatted.GetTextAsync()).ToString()) };
+    }
+
+    // Roslyn's own code fix and refactoring providers (the ones Visual Studio loads), found by their export attributes.
+    static List<CodeFixProvider>? fixers;
+    static List<CodeRefactoringProvider>? refactorings;
+    static IEnumerable<Type> Exported(Type attribute) =>
+        AppDomain.CurrentDomain.GetAssemblies().Where(a => a.GetName().Name is "Microsoft.CodeAnalysis.CSharp.Features" or "Microsoft.CodeAnalysis.Features" or "Microsoft.CodeAnalysis.CSharp.Workspaces")
+            .SelectMany(a => { try { return a.GetTypes(); } catch (ReflectionTypeLoadException e) { return e.Types.OfType<Type>(); } })
+            .Where(t => !t.IsAbstract && t.GetCustomAttributes(attribute, false).Length > 0);
+    static T? Create<T>(Type t) where T : class
+    {
+        try
+        {
+            var ctor = t.GetConstructors(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance).OrderBy(c => c.GetParameters().Length).FirstOrDefault();
+            if (ctor == null || ctor.GetParameters().Length > 0) return null;
+            return ctor.Invoke([]) as T;
+        }
+        catch { return null; }
+    }
+    static void LoadProviders()
+    {
+        if (fixers != null) return;
+        // Make sure the feature assemblies are loaded before scanning.
+        _ = typeof(CompletionService).Assembly;
+        _ = Type.GetType("Microsoft.CodeAnalysis.CSharp.Completion.Providers.KeywordCompletionProvider, Microsoft.CodeAnalysis.CSharp.Features");
+        fixers = Exported(typeof(ExportCodeFixProviderAttribute)).Where(t => t.GetCustomAttributes(typeof(ExportCodeFixProviderAttribute), false).Cast<ExportCodeFixProviderAttribute>().Any(a => a.Languages.Contains(LanguageNames.CSharp))).Select(Create<CodeFixProvider>).OfType<CodeFixProvider>().ToList();
+        refactorings = Exported(typeof(ExportCodeRefactoringProviderAttribute)).Where(t => t.GetCustomAttributes(typeof(ExportCodeRefactoringProviderAttribute), false).Cast<ExportCodeRefactoringProviderAttribute>().Any(a => a.Languages.Contains(LanguageNames.CSharp))).Select(Create<CodeRefactoringProvider>).OfType<CodeRefactoringProvider>().ToList();
+    }
+    readonly Dictionary<string, CodeAction> actions = [];
+
+    static IEnumerable<CodeAction> Flatten(CodeAction a)
+    {
+        var nested = (ImmutableArray<CodeAction>?)typeof(CodeAction).GetProperty("NestedActions", BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance)?.GetValue(a);
+        return nested is { IsDefaultOrEmpty: false } n ? n.SelectMany(Flatten) : [a];
+    }
+
+    /// <summary>Quick Actions and Refactorings (Ctrl+.): fixes for diagnostics at the cursor, then refactorings for the selection.</summary>
+    async Task<object> Actions(Document doc, int position, int? end)
+    {
+        LoadProviders();
+        actions.Clear();
+        var span = TextSpan.FromBounds(Math.Min(position, end ?? position), Math.Max(position, end ?? position));
+        var model = (await doc.GetSemanticModelAsync())!;
+        var line = (await doc.GetTextAsync()).Lines.GetLineFromPosition(position).Span;
+        var diagnostics = model.GetDiagnostics().Where(d => d.Location.IsInSource && (d.Location.SourceSpan.IntersectsWith(span) || d.Location.SourceSpan.IntersectsWith(line)) && d.Severity != DiagnosticSeverity.Hidden || (d.Id == "CS8019" && d.Location.SourceSpan.IntersectsWith(line))).ToList();
+        var found = new List<(CodeAction Action, string Kind)>();
+        using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(8));
+        foreach (var d in diagnostics)
+            foreach (var f in fixers!.Where(f => f.FixableDiagnosticIds.Contains(d.Id)))
+            {
+                try { await f.RegisterCodeFixesAsync(new CodeFixContext(doc, d, (a, _) => found.Add((a, "fix")), cts.Token)); } catch { }
+            }
+        foreach (var r in refactorings!)
+        {
+            try { await r.ComputeRefactoringsAsync(new CodeRefactoringContext(doc, span, a => found.Add((a, "refactor")), cts.Token)); } catch { }
+        }
+        var list = new List<object>();
+        foreach (var (action, kind) in found)
+            foreach (var a in Flatten(action))
+            {
+                if (list.Count >= 60 || string.IsNullOrWhiteSpace(a.Title)) continue;
+                var id = $"a{actions.Count}";
+                actions[id] = a;
+                list.Add(new { id, title = a.Title, kind });
+            }
+        // Same titles from several providers: keep the first.
+        return list.GroupBy(x => ((dynamic)x).title as string).Select(g => g.First()).ToList();
+    }
+
+    async Task<object> ApplyAction(string id)
+    {
+        if (!actions.TryGetValue(id, out var action)) throw new InvalidOperationException("That action is no longer available. Press Ctrl+. again.");
+        var solution = workspace!.CurrentSolution;
+        var ops = await action.GetOperationsAsync(CancellationToken.None);
+        var apply = ops.OfType<ApplyChangesOperation>().FirstOrDefault() ?? throw new InvalidOperationException("This action has no changes to apply here.");
+        var changed = apply.ChangedSolution;
+        var changes = new List<object>();
+        foreach (var p in changed.GetChanges(solution).GetProjectChanges())
+        {
+            foreach (var docId in p.GetChangedDocuments().Concat(p.GetAddedDocuments()))
+            {
+                var d = changed.GetDocument(docId);
+                if (d?.FilePath == null || d.FilePath.EndsWith("GlobalUsings.g.cs")) continue;
+                var before = solution.GetDocument(docId) is { } old ? (await old.GetTextAsync()).ToString() : "\n";
+                changes.Add(new { file = Rel(d.FilePath), text = MatchEol(before, (await d.GetTextAsync()).ToString()) });
+            }
+        }
+        workspace.TryApplyChanges(changed);
+        actions.Clear();
+        return new { title = action.Title, changes };
     }
 
     // ------------------------------------------------------------------ test discovery
