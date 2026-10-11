@@ -1,5 +1,5 @@
 import { useLayoutEffect, useRef, useState } from 'react';
-import { LayoutDashboard, Wand2, Files, Circle, Braces, FlaskConical, BookOpen, Blocks, ScanLine, FolderTree, Settings2, SlidersHorizontal, MoreHorizontal, Menu, type LucideIcon } from 'lucide-react';
+import { LayoutDashboard, Wand2, Files, Circle, Braces, FlaskConical, BookOpen, Blocks, ScanLine, FolderTree, Settings2, SlidersHorizontal, MoreHorizontal, Menu, TestTubeDiagonal, type LucideIcon } from 'lucide-react';
 import { Tip } from './radix2';
 import { Dropdown } from './radix';
 
@@ -8,6 +8,7 @@ export type ActivityItem = { id: string; label: string; icon: LucideIcon; shortc
 export const activityItems: ActivityItem[] = [
   { id: 'Dashboard', label: 'Dashboard', icon: LayoutDashboard, shortcut: 'Alt+1' },
   { id: 'Features', label: 'Features (Explorer)', icon: Files, shortcut: 'Ctrl+B', advanced: true },
+  { id: 'Testing', label: 'Test Explorer', icon: TestTubeDiagonal, advanced: true },
   { id: 'Test Generator', label: 'Test Generator', icon: Wand2, shortcut: 'Alt+2' },
   { id: 'Recorder', label: 'Playwright Recorder', icon: Circle },
   { id: 'Dictionary Inspector', label: 'Dictionary Inspector', icon: Braces, advanced: true },

@@ -186,6 +186,14 @@ export function buildMenu() {
       ],
     },
     {
+      label: '&Test',
+      submenu: [
+        { label: 'Run All Tests', click: () => send('run-all-tests') },
+        { type: 'separator' },
+        { label: 'Test Explorer', click: () => send('test-explorer') },
+      ],
+    },
+    {
       // Visual Studio's Debug menu. The page handles the keys itself (the editor needs F9 at the cursor), so the
       // accelerators are shown but not registered here.
       label: '&Debug',

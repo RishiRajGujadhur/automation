@@ -234,3 +234,18 @@ export async function owningProject(root: string, file: string) {
     dir = path.dirname(dir);
   }
 }
+
+/** The generated test class of a feature and each scenario's test method (from the SpecFlow/Reqnroll code-behind). */
+export async function featureTests(root: string, featureFile: string, scenarios: string[]) {
+  const behind = await fs.readFile(path.resolve(root, `${featureFile}.cs`), 'utf8').catch(() => '');
+  const ns = /^\s*namespace\s+([\w.]+)/m.exec(behind)?.[1];
+  const cls = /public\s+(?:partial\s+)?class\s+(\w+)/.exec(behind)?.[1];
+  const className = cls ? (ns ? `${ns}.${cls}` : cls) : undefined;
+  const methods: Record<string, string> = {};
+  for (const name of scenarios) {
+    const at = behind.indexOf(`"${name.replaceAll('"', '\\"')}"`);
+    const method = at >= 0 ? /public\s+(?:virtual\s+)?(?:async\s+)?[\w.<>]+\s+(\w+)\s*\(/.exec(behind.slice(at))?.[1] : undefined;
+    methods[name] = method ?? pascal(name);
+  }
+  return { className, methods, generated: !!cls };
+}

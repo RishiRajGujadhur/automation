@@ -60,9 +60,9 @@ Status: ✅ done · 🟡 partial · ⬜ to do. Priority: **P1** next, **P2** aft
 ## 5. Testing
 | # | Feature | Status | Pri |
 | --- | --- | --- | --- |
-| T1 | Test Explorer: discover tests per project (features/scenarios, NUnit/xUnit/MSTest), tree by project/namespace/class/trait | ⬜ | P1 |
-| T2 | Run / Debug selected, Run all, Run failed, repeat last run; live pass/fail icons in Explorer and editor gutters | 🟡 (run dialog) | P1 |
-| T3 | Test detail: output, stack trace with links, duration; playlists | ⬜ | P2 |
+| T1 | Test Explorer: discover tests per project (features/scenarios, NUnit/xUnit/MSTest), tree by project/namespace/class/trait | ✅ (project → class / feature → test; no trait grouping yet) | P1 |
+| T2 | Run / Debug selected, Run all, Run failed, repeat last run; live pass/fail icons in Explorer and editor gutters | 🟡 (Run All / selected / failed, Debug, icons in Test Explorer; no editor-gutter icons yet) | P1 |
+| T3 | Test detail: output, stack trace with links, duration; playlists | 🟡 (details with message, stack links, durations; no playlists) | P2 |
 | T4 | Playwright traces from failed runs | 🟡 | P2 |
 | T5 | Code coverage per run | ⬜ | P3 |
 
@@ -73,7 +73,7 @@ Status: ✅ done · 🟡 partial · ⬜ to do. Priority: **P1** next, **P2** aft
 | D2 | Conditional, hit-count and log-point breakpoints; enable/disable | ⬜ | P2 |
 | D3 | Exception settings (break on thrown/unhandled), Exception helper | 🟡 | P2 |
 | D4 | Autos, Immediate window, Run to Cursor, Set Next Statement | ⬜ | P2 |
-| D5 | Debug from Test Explorer and from a scenario's gutter | 🟡 | P1 |
+| D5 | Debug from Test Explorer and from a scenario's gutter | 🟡 (Test Explorer ✅; gutter not yet) | P1 |
 
 ## 7. Source control (Git)
 | # | Feature | Status | Pri |
@@ -104,3 +104,4 @@ Status: ✅ done · 🟡 partial · ⬜ to do. Priority: **P1** next, **P2** aft
 - 2026-10-11 — **Open and scan a solution (S1, S2, S4; S3 partial).** `server/solution.ts` + `src/solutionFormat.ts` parse `.sln`/`.slnx`; `/api/solution/open`, `/api/solution/find`; workspace config gains `solution`; Explorer renders solution folders, multiple projects with their own Dependencies (frameworks, packages with versions, project references) and files. Desktop: File ▸ Open Project/Solution… (Ctrl+Shift+O; Open Folder moves to Ctrl+Shift+Alt+O), `.sln` on the command line. Also fixed: a delayed rescan could overwrite the index after switching workspaces.
 - 2026-10-11 — **Per-project language service (S5).** `langserver` builds a Roslyn solution with one project per `.csproj`: its own packages (and their dependencies), framework assemblies, built output, and `ProjectReference`s; files outside projects go to a Miscellaneous Files project. Go to definition, completion and rename now follow project boundaries (`tests/langserver.test.ts`).
 - 2026-10-11 — **Build (B1, B2).** `server/build.ts` runs `dotnet build|clean` (rebuild = `--no-incremental`) for the open solution / project, streams Output and parses diagnostics into an Error List (`/api/build`, `/api/build/events`); Build menu (web title bar and desktop), Ctrl+Shift+B, Ctrl+Break to cancel, configuration box. Also fixed: go-to-line in a newly opened tab landed on line 1.
+- 2026-10-11 — **Test Explorer (T1, T2; T3 and D5 partial).** Roslyn discovers NUnit/xUnit/MSTest methods per project (`op: tests`); scenarios come from the index (class/method from the generated code-behind). `server/testRunner.ts` runs `dotnet test --logger trx` and parses TRX (outcome, duration, message, stack). Side bar Test Explorer (activity bar, Test menu): Run All, Run selected, Run Failed, Debug, filter, details with stack links. Calculator sample gains NUnit tests.

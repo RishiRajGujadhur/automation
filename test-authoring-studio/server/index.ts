@@ -23,7 +23,8 @@ import { insertMethod, newStepFile } from './stepScaffold.js';
 import { validate } from './validation.js';
 import { projectModel } from './projectModel.js';
 import { command, dotnet } from './core.js';
-import { Debugger, owningProject } from './debugger.js';
+import { Debugger, owningProject, featureTests } from './debugger.js';
+import { TestRunner } from './testRunner.js';
 import { readSolution, projectInfo, findSolutions } from './solution.js';
 import { Builder } from './build.js';
 import { LanguageService } from './langService.js';
@@ -605,6 +606,50 @@ app.post('/api/build', async (req, res) => {
   res.json(builder.start({ root: config.repositoryRoot, target: await buildTarget(project), action, configuration: configuration.split('|')[0].trim() }));
 });
 app.post('/api/build/cancel', (_req, res) => res.json(builder.cancel()));
+// Test Explorer: C# test methods (Roslyn) and feature scenarios, run with `dotnet test` (results from TRX).
+type DiscoveredTest = { id: string; kind: 'test' | 'scenario'; project: string; projectFile?: string; className: string; method: string; name: string; file: string; line: number; filter: string; feature?: string; cases?: number };
+app.get('/api/tests', async (_req, res) => {
+  const root = config.repositoryRoot;
+  const i = await ensure();
+  const tests: DiscoveredTest[] = [];
+  let warning: string | undefined;
+  try {
+    const found = await lang.request<{ project: string; projectFile?: string; className: string; method: string; file: string; line: number; framework: string; cases: number }[]>(root, { op: 'tests' }, 120_000);
+    for (const t of found) tests.push({ id: `cs:${t.className}.${t.method}`, kind: 'test', project: t.project, projectFile: t.projectFile, className: t.className, method: t.method, name: t.method, file: t.file, line: t.line, cases: t.cases,
+      filter: t.cases ? `FullyQualifiedName~${t.className}.${t.method}(` : `FullyQualifiedName=${t.className}.${t.method}` });
+  } catch (e) { warning = `C# tests were not discovered: ${(e as Error).message}`; }
+  for (const f of i.features) {
+    const proj = await owningProject(root, f.file);
+    const project = proj ? path.posix.basename(proj).replace(/\.csproj$/i, '') : path.basename(root);
+    const names = f.scenarios.map((s) => s.name);
+    const gen = await featureTests(root, f.file, names);
+    const className = gen.className ?? `${f.name.replace(/[^\w\s]/g, ' ').split(/\s+/).filter(Boolean).map((w) => w[0].toUpperCase() + w.slice(1)).join('')}Feature`;
+    for (const sc of f.scenarios) {
+      const method = gen.methods[sc.name];
+      tests.push({ id: `sc:${f.file}#${sc.name}`, kind: 'scenario', project, projectFile: proj, className, method, name: sc.name, file: f.file, line: sc.line, feature: f.name,
+        filter: gen.className ? `FullyQualifiedName~${className}.${method}` : `FullyQualifiedName~${className}` });
+    }
+  }
+  res.json({ tests, warning, generated: tests.some((t) => t.kind === 'scenario') });
+});
+const tests = new TestRunner();
+app.get('/api/tests/run', (_req, res) => res.json(tests.state));
+app.get('/api/tests/events', (req, res) => {
+  res.writeHead(200, { 'Content-Type': 'text/event-stream', 'Cache-Control': 'no-cache', Connection: 'keep-alive' });
+  const send = (s: unknown) => res.write(`data: ${JSON.stringify(s)}\n\n`);
+  send(tests.state);
+  tests.on('state', send);
+  const ping = setInterval(() => res.write('event: ping\ndata: 1\n\n'), 10_000);
+  req.on('close', () => { clearInterval(ping); tests.off('state', send); });
+});
+app.post('/api/tests/run', async (req, res) => {
+  const { filters, ids, configuration } = z.object({ filters: z.array(z.string().max(600)).max(2000).default([]), ids: z.array(z.string().max(600)).max(2000).default([]), configuration: z.string().regex(/^[\w .|-]{1,60}$/).default('Debug') }).parse(req.body);
+  // One filter per test, or-ed; a very long filter (huge selections) runs everything instead.
+  const joined = [...new Set(filters)].join('|');
+  const filter = filters.length && joined.length < 8000 ? joined : undefined;
+  res.json(await tests.run({ root: config.repositoryRoot, target: await buildTarget(), filter, requested: filters.length ? ids : ['all'], configuration: configuration.split('|')[0].trim() }));
+});
+app.post('/api/tests/cancel', (_req, res) => res.json(tests.cancel()));
 app.use(express.static(path.join(projectRoot, 'dist')));
 app.use(
   (error: Error, _req: express.Request, res: express.Response, _next: express.NextFunction) => {

@@ -53,6 +53,7 @@ sealed class LanguageService
         }
         if (workspace == null) throw new InvalidOperationException("Not initialised.");
         if (op == "update") { foreach (var f in req["files"]!.AsArray()) Refresh((string)f!); return true; }
+        if (op == "tests") return await DiscoverTests();
         var doc = Document((string)req["file"]!, (string?)req["source"]);
         int Pos(SourceText t) => t.Lines[Math.Clamp((int)req["line"]! - 1, 0, t.Lines.Count - 1)].Start + (int)req["column"]! - 1;
         var text = await doc.GetTextAsync();
@@ -205,6 +206,38 @@ sealed class LanguageService
         else if (id == null) solution = solution.AddDocument(DocumentId.CreateNewId(Owner(path) ?? miscId ?? solution.ProjectIds[0]), Path.GetFileName(path), SourceText.From(File.ReadAllText(path)), filePath: path);
         else solution = solution.WithDocumentText(id, SourceText.From(File.ReadAllText(path)));
         workspace.TryApplyChanges(solution);
+    }
+
+    // ------------------------------------------------------------------ test discovery
+    static readonly HashSet<string> TestAttributes = new(StringComparer.Ordinal) { "Test", "TestCase", "TestCaseSource", "Theory", "Fact", "TestMethod", "DataTestMethod", "SkippableFact", "SkippableTheory" };
+    static string Framework(string attr) => attr is "Fact" or "Theory" or "SkippableFact" or "SkippableTheory" ? "xUnit" : attr is "TestMethod" or "DataTestMethod" ? "MSTest" : "NUnit";
+
+    /// <summary>Test methods by attribute (NUnit, xUnit, MSTest), per project, from syntax only (no build needed). SpecFlow's generated *.feature.cs are left to the feature view.</summary>
+    async Task<object> DiscoverTests()
+    {
+        var solution = workspace!.CurrentSolution;
+        var result = new List<object>();
+        foreach (var project in solution.Projects)
+        {
+            foreach (var doc in project.Documents)
+            {
+                if (doc.FilePath == null || doc.FilePath.EndsWith(".feature.cs", StringComparison.OrdinalIgnoreCase) || doc.FilePath.EndsWith("GlobalUsings.g.cs")) continue;
+                var root = await doc.GetSyntaxRootAsync();
+                if (root == null) continue;
+                foreach (var m in root.DescendantNodes().OfType<MethodDeclarationSyntax>())
+                {
+                    var attrs = m.AttributeLists.SelectMany(l => l.Attributes).Select(a => a.Name.ToString().Split('.').Last()).Select(n => n.EndsWith("Attribute") ? n[..^9] : n).ToList();
+                    var attr = attrs.FirstOrDefault(TestAttributes.Contains);
+                    if (attr == null || m.Parent is not ClassDeclarationSyntax cls) continue;
+                    var ns = cls.Ancestors().OfType<BaseNamespaceDeclarationSyntax>().Select(n => n.Name.ToString()).Reverse().ToList();
+                    var classes = cls.AncestorsAndSelf().OfType<ClassDeclarationSyntax>().Select(c => c.Identifier.Text).Reverse();
+                    var className = string.Join(".", ns.Concat([string.Join("+", classes)]));
+                    var line = m.Identifier.GetLocation().GetLineSpan().StartLinePosition.Line + 1;
+                    result.Add(new { project = project.Name, projectFile = project.FilePath == null ? null : Rel(project.FilePath), className, method = m.Identifier.Text, file = Rel(doc.FilePath), line, framework = Framework(attr), cases = attrs.Count(a => a == "TestCase" || a == "InlineData" || a == "DataRow") });
+                }
+            }
+        }
+        return result;
     }
 
     // ------------------------------------------------------------------ features

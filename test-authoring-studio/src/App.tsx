@@ -14,6 +14,8 @@ import { readDraft, sha256, useAutoSave, unsavedFiles, editedThisSession } from 
 import EditorTabs, { EditorActions } from './files/EditorTabs';
 import OpenSolution from './OpenSolution';
 import BuildPanel from './build/BuildPanel';
+import TestExplorer from './testing/TestExplorer';
+import { runTests, getTestRun, type DiscoveredTest } from './testing/store';
 import { useBuild, startBuild, cancelBuild, getBuild } from './build/store';
 import { useTabs, openTab, closeTab, closeAll as closeAllTabs, kindOf, cycleTab, getTabs, reloadTabs, movedPath, deletedPath } from './files/tabs';
 import { useFileSource, setFileSource, fileSource } from './files/provider';
@@ -123,7 +125,7 @@ import './debug/debug.scss';
 import './files/editor-area.scss';
 import DebugPanel from './debug/DebugPanel';
 import { useDebug, startDebugging, debugControl, isLive, getSnapshot, clearBreakpoints } from './debug/store';
-import { Bug, GitCompareArrows, Database, Settings, Layers, Hammer } from 'lucide-react';
+import { Bug, GitCompareArrows, Database, Settings, Layers, Hammer, TestTubeDiagonal } from 'lucide-react';
 
 const demo: Action[] = [
   { id: 'd1', action: 'goto', url: 'https://www.google.com/' },
@@ -333,6 +335,15 @@ export default function App() {
   const build = useBuild();
   const [buildOpen, setBuildOpen] = useLocalState('buildOpen', false);
   const showBuild = buildOpen || build.status === 'running';
+  // Side bar view: the Explorer or the Test Explorer (activity bar, Test menu).
+  const [sidebarView, setSidebarView] = useLocalState<'explorer' | 'tests'>('sidebarView', 'explorer');
+  const showTests = () => { setTab('Features'); if (view !== 'code' && view !== 'editor') setView('editor'); setSidebarView('tests'); setPrefs({ sidebar: true }); };
+  const debugTest = (t: DiscoveredTest) => {
+    setDebugOpen(true);
+    setTab('Features');
+    if (view !== 'code' && view !== 'editor') setView('editor');
+    startDebugging({ project: t.projectFile, filter: t.filter }).catch((e) => setNotice((e as Error).message));
+  };
   const runBuild = (action: 'build' | 'rebuild' | 'clean') => {
     setTab('Features');
     if (view !== 'code' && view !== 'editor') setView('editor');
@@ -651,6 +662,8 @@ export default function App() {
     if (c === 'open-solution') { setModal('solution'); return; }
     if (c === 'build' || c === 'rebuild' || c === 'clean') { runBuild(c); return; }
     if (c === 'cancel-build') { void cancelBuild(); return; }
+    if (c === 'test-explorer') { showTests(); return; }
+    if (c === 'run-all-tests') { showTests(); runTests('all').catch((e) => setNotice((e as Error).message)); return; }
     if (c === 'build-windows') { setTab('Features'); if (view !== 'code' && view !== 'editor') setView('editor'); setBuildOpen(true); return; }
     if (c === 'save') { if (featureTabActive) saveFeature(); else saveAll(); return; }
     if (c === 'save-all') { saveAll(); return; }
@@ -917,6 +930,17 @@ export default function App() {
             ]}
           />
         )}
+        {!desktop && (
+          <Dropdown
+            label="Test"
+            className="menubar"
+            trigger={<button className="menubar-item" aria-label="Test menu">Test</button>}
+            entries={[
+              { label: 'Run All Tests', icon: Play, disabled: getTestRun().status === 'running', onSelect: () => { showTests(); runTests('all').catch((e) => setNotice((e as Error).message)); } },
+              { label: 'Test Explorer', icon: TestTubeDiagonal, onSelect: showTests },
+            ]}
+          />
+        )}
         <nav className="workspace-breadcrumb page-heading" aria-label="Breadcrumb">
           <span className="header-divider" aria-hidden="true" />
           <ol>
@@ -1037,10 +1061,10 @@ export default function App() {
       <div className="app-body">
         {vscode && (
           <ActivityBar
-            active={tab === 'Features' && view === 'recorder' ? 'Recorder' : tab}
+            active={tab === 'Features' && view === 'recorder' ? 'Recorder' : tab === 'Features' && sidebarView === 'tests' ? 'Testing' : tab}
             basic={basic}
             sidebarOpen={prefs.sidebar}
-            onSelect={(id) => withTransition(() => { if (id === 'Recorder') { setTab('Features'); setView('recorder'); } else { setTab(id); if (id === 'Features' && view === 'recorder') setView('editor'); if (id === 'Features') setPrefs({ sidebar: true }); } setCatalogQuery(''); })}
+            onSelect={(id) => withTransition(() => { if (id === 'Testing') { showTests(); return; } if (id === 'Features') setSidebarView('explorer'); if (id === 'Recorder') { setTab('Features'); setView('recorder'); } else { setTab(id); if (id === 'Features' && view === 'recorder') setView('editor'); if (id === 'Features') setPrefs({ sidebar: true }); } setCatalogQuery(''); })}
             onToggleSidebar={() => setPrefs({ sidebar: !prefs.sidebar })}
             onPreferences={() => setModal('preferences')}
             onWorkspace={() => setModal('settings')}
@@ -1055,7 +1079,9 @@ export default function App() {
           />
         )}
         <aside id="feature-sidebar" className={`sidebar ${mobileExplorer ? 'mobile-open' : ''}`} style={{ width: sidebarWidth }}>
-          <SolutionExplorer
+          {tab === 'Features' && sidebarView === 'tests' ? (
+            <TestExplorer revision={revision} onOpen={(file, line) => editFile(file, line)} onDebug={debugTest} onNotice={setNotice} />
+          ) : <SolutionExplorer
             key={index?.workspace + ':' + config?.repositoryRoot}
             features={fileSrc.kind === 'browser' ? [] : (index?.features ?? [])}
             browserSolution={fileSrc.kind === 'browser' ? browserSol : undefined}
@@ -1074,7 +1100,7 @@ export default function App() {
               setTab('Features');
               setMobileExplorer(false);
             }}
-          />
+          />}
           <div className="sidebar-bottom">
             <div className="index-status">
               <div className="index-icon">
