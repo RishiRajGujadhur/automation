@@ -89,14 +89,21 @@ export default function CodeEditor({ file, reveal, active = true, onNotice, onIn
   const auto = useAutoSave({ file, value, loaded });
 
   // Jump to the requested line once the document is in place.
+  // A newly opened tab gets its text a moment after the editor exists, so wait (a few frames) for it.
   useEffect(() => {
-    const view = ref.current?.view;
-    if (!view || !loaded || !reveal) return;
-    const l = view.state.doc.line(Math.max(1, Math.min(reveal.line, view.state.doc.lines)));
-    // A column (go to definition) puts the cursor on the symbol; a line alone selects the line.
-    const at = reveal.column ? Math.min(l.to, l.from + reveal.column - 1) : undefined;
-    view.dispatch({ selection: at !== undefined ? { anchor: at } : { anchor: l.from, head: l.to }, effects: EditorView.scrollIntoView(l.from, { y: 'center' }) });
-    view.focus();
+    if (!loaded || !reveal) return;
+    let tries = 0, frame = 0;
+    const apply = () => {
+      const view = ref.current?.view;
+      if (!view || (view.state.doc.length === 0 && loaded.source.length > 0)) { if (tries++ < 30) frame = requestAnimationFrame(apply); return; }
+      const l = view.state.doc.line(Math.max(1, Math.min(reveal.line, view.state.doc.lines)));
+      // A column (go to definition) puts the cursor on the symbol; a line alone selects the line.
+      const at = reveal.column ? Math.min(l.to, l.from + reveal.column - 1) : undefined;
+      view.dispatch({ selection: at !== undefined ? { anchor: at } : { anchor: l.from, head: l.to }, effects: EditorView.scrollIntoView(l.from, { y: 'center' }) });
+      view.focus();
+    };
+    apply();
+    return () => cancelAnimationFrame(frame);
   }, [loaded, reveal]);
   useEffect(() => { if (active) requestAnimationFrame(() => ref.current?.view?.requestMeasure()); }, [active]);
   // Another editor's rename (or a file operation) changed this file on disk: reload it unless it has unsaved edits.

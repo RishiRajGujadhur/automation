@@ -483,3 +483,87 @@
 .se-solution-folder svg:nth-child(2) {
   color: #d7ba7d;
 }
+
+// Build windows (Error List, Output)
+.build-panel {
+  .build-config {
+    height: 24px;
+    margin-right: 4px;
+    border: 1px solid var(--border);
+    border-radius: 3px;
+    background: var(--surface);
+    color: var(--text);
+    font-size: 12px;
+  }
+  .debug-status.failed {
+    color: var(--red, #f85149);
+  }
+  .error-list-tools {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 3px 8px;
+    border-bottom: 1px solid var(--border);
+    .chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      height: 22px;
+      padding: 0 8px;
+      border: 1px solid var(--border);
+      border-radius: 3px;
+      background: transparent;
+      color: var(--text-muted);
+      font-size: 12px;
+      &.on {
+        background: var(--accent-soft, #9270dd22);
+        color: var(--text);
+      }
+    }
+  }
+  .error-search {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    margin-left: auto;
+    input {
+      width: 220px;
+      height: 22px;
+      border: 1px solid var(--border);
+      border-radius: 3px;
+      background: var(--surface);
+      color: var(--text);
+      font-size: 12px;
+      padding: 0 6px;
+    }
+  }
+  .error-grid .dbg-row {
+    grid-template-columns: 24px 80px minmax(0, 1fr) 140px 180px 60px;
+    font-family: inherit;
+  }
+  .error-row.navigable {
+    cursor: pointer;
+  }
+  .error-row:focus-visible,
+  .error-row:hover {
+    background: color-mix(in srgb, var(--text) 6%, transparent);
+  }
+  .error-message {
+    white-space: normal !important;
+  }
+}
+.sev-error {
+  color: var(--red, #f85149);
+}
+.sev-warning {
+  color: #d29922;
+}
+:root:not([data-layout='vscode']) .build-panel {
+  position: static;
+}
+// Narrow windows: the title-bar menus give way (the command palette, Ctrl+K, stays).
+@media (max-width: 760px) {
+  .menubar-item {
+    display: none;
+  }
+}

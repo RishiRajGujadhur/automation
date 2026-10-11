@@ -47,7 +47,7 @@ test('exposes the desktop bridge, and no Node globals', async () => {
 
 test('native menu has the expected menus and navigates by deep link', async () => {
   const labels = await appProcess.evaluate(({ Menu }) => Menu.getApplicationMenu()!.items.map((i) => i.label.replace('&', '')));
-  expect(labels).toEqual(expect.arrayContaining(['File', 'Edit', 'View', 'Go', 'Window', 'Help']));
+  expect(labels).toEqual(expect.arrayContaining(['File', 'Edit', 'View', 'Build', 'Debug', 'Go', 'Window', 'Help']));
   await appProcess.evaluate(({ Menu }) => {
     const go = Menu.getApplicationMenu()!.items.find((i) => i.label.includes('Go'))!;
     go.submenu!.items.find((i) => i.label === 'Test Design')!.click();

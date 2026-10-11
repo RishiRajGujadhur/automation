@@ -13,6 +13,8 @@ import CodeEditor from './editor/CodeEditor';
 import { readDraft, sha256, useAutoSave, unsavedFiles, editedThisSession } from './editor/autosave';
 import EditorTabs, { EditorActions } from './files/EditorTabs';
 import OpenSolution from './OpenSolution';
+import BuildPanel from './build/BuildPanel';
+import { useBuild, startBuild, cancelBuild, getBuild } from './build/store';
 import { useTabs, openTab, closeTab, closeAll as closeAllTabs, kindOf, cycleTab, getTabs, reloadTabs, movedPath, deletedPath } from './files/tabs';
 import { useFileSource, setFileSource, fileSource } from './files/provider';
 import { fsaSupported, pickFolder, restoreFolder, closeFolder as closeBrowserFolder, lastFolderName } from './files/fsa';
@@ -121,7 +123,7 @@ import './debug/debug.scss';
 import './files/editor-area.scss';
 import DebugPanel from './debug/DebugPanel';
 import { useDebug, startDebugging, debugControl, isLive, getSnapshot, clearBreakpoints } from './debug/store';
-import { Bug, GitCompareArrows, Database, Settings, Layers } from 'lucide-react';
+import { Bug, GitCompareArrows, Database, Settings, Layers, Hammer } from 'lucide-react';
 
 const demo: Action[] = [
   { id: 'd1', action: 'goto', url: 'https://www.google.com/' },
@@ -286,6 +288,8 @@ export default function App() {
   editorKeys.current = (e) => {
     if (!(e.ctrlKey || e.metaKey)) return;
     if (!desktop && e.shiftKey && !e.altKey && e.key.toLowerCase() === 'o') { e.preventDefault(); setModal('solution'); return; }
+    if (e.shiftKey && !e.altKey && e.key.toLowerCase() === 'b') { e.preventDefault(); if (getBuild().status !== 'running') runBuild('build'); return; }
+    if (e.key === 'Pause' || e.key === 'Cancel') { if (getBuild().status === 'running') { e.preventDefault(); void cancelBuild(); } return; }
     const active = getTabs().active;
     if (e.key === 'F4' || (desktop && e.key.toLowerCase() === 'w' && !e.shiftKey)) { if (active) { e.preventDefault(); void closeEditor(active); } }
     else if (e.key === 'PageDown' || e.key === 'PageUp') { e.preventDefault(); cycleTab(e.key === 'PageDown' ? 1 : -1); }
@@ -325,6 +329,18 @@ export default function App() {
   const [debugOpen, setDebugOpen] = useLocalState('debugOpen', false);
   const debugLive = isLive(debug.state.status);
   const showDebug = debugOpen || debugLive;
+  // Build ▸ Build / Rebuild / Clean: the Error List and Output dock under the editor like the debug windows.
+  const build = useBuild();
+  const [buildOpen, setBuildOpen] = useLocalState('buildOpen', false);
+  const showBuild = buildOpen || build.status === 'running';
+  const runBuild = (action: 'build' | 'rebuild' | 'clean') => {
+    setTab('Features');
+    if (view !== 'code' && view !== 'editor') setView('editor');
+    setBuildOpen(true);
+    let configuration = 'Debug';
+    try { configuration = JSON.parse(localStorage.getItem('tas:buildConfiguration') ?? '"Debug"'); } catch { /* default */ }
+    startBuild(action, configuration).catch((e) => setNotice((e as Error).message));
+  };
   const debugFeature = (scenario?: string) => {
     if (!feature) { setNotice('Open a saved feature file to debug it.'); return; }
     setDebugOpen(true);
@@ -633,6 +649,9 @@ export default function App() {
     }
     if (c === 'open-folder') { void openFolder(); return; }
     if (c === 'open-solution') { setModal('solution'); return; }
+    if (c === 'build' || c === 'rebuild' || c === 'clean') { runBuild(c); return; }
+    if (c === 'cancel-build') { void cancelBuild(); return; }
+    if (c === 'build-windows') { setTab('Features'); if (view !== 'code' && view !== 'editor') setView('editor'); setBuildOpen(true); return; }
     if (c === 'save') { if (featureTabActive) saveFeature(); else saveAll(); return; }
     if (c === 'save-all') { saveAll(); return; }
     if (c === 'close-editor') { const a = getTabs().active; if (a) void closeEditor(a); return; }
@@ -879,6 +898,22 @@ export default function App() {
               ...(fileSrc.kind === 'browser' ? [{ label: 'Close Folder', onSelect: () => void closeFolder() }] : []),
               'separator' as const,
               { label: 'Preferences…', icon: Settings, shortcut: 'Ctrl ,', onSelect: () => setModal('preferences') },
+            ]}
+          />
+        )}
+        {!desktop && (
+          <Dropdown
+            label="Build"
+            className="menubar"
+            trigger={<button className="menubar-item" aria-label="Build menu">Build</button>}
+            entries={[
+              { label: 'Build Solution', icon: Hammer, shortcut: 'Ctrl Shift B', disabled: build.status === 'running', onSelect: () => runBuild('build') },
+              { label: 'Rebuild Solution', disabled: build.status === 'running', onSelect: () => runBuild('rebuild') },
+              { label: 'Clean Solution', disabled: build.status === 'running', onSelect: () => runBuild('clean') },
+              'separator' as const,
+              { label: 'Cancel', shortcut: 'Ctrl Break', disabled: build.status !== 'running', onSelect: () => void cancelBuild() },
+              'separator' as const,
+              { label: showBuild ? 'Hide Error List and Output' : 'Error List and Output', onSelect: () => setBuildOpen(!buildOpen) },
             ]}
           />
         )}
@@ -1601,6 +1636,9 @@ export default function App() {
             ))}
             </EditorTabs>
             </div>
+          )}
+          {tab === 'Features' && (view === 'code' || view === 'editor') && showBuild && (
+            <BuildPanel onOpen={(file, line, column) => editFile(file, line, column)} onNotice={setNotice} onClose={() => setBuildOpen(false)} />
           )}
           {tab === 'Features' && (view === 'code' || view === 'editor') && showDebug && (
             <DebugPanel onOpen={openAt} onNotice={setNotice} onClose={() => { setDebugOpen(false); if (debugLive) setNotice('The session keeps running. Stop it with Shift+F5.'); }} />

@@ -25,6 +25,7 @@ import { projectModel } from './projectModel.js';
 import { command, dotnet } from './core.js';
 import { Debugger, owningProject } from './debugger.js';
 import { readSolution, projectInfo, findSolutions } from './solution.js';
+import { Builder } from './build.js';
 import { LanguageService } from './langService.js';
 import type { Index } from '../src/types.js';
 import { readSettings, writeSettings, settingsSchema, tracesDir } from './settings.js';
@@ -575,6 +576,35 @@ app.post('/api/debug/evaluate', async (req, res) => {
   for (const e of expressions) results.push(await debug.evaluate(e, frameId));
   res.json(results);
 });
+// Build ▸ Build / Rebuild / Clean Solution (Ctrl+Shift+B): Output and Error List stream from /api/build/events.
+const builder = new Builder();
+app.get('/api/build', (_req, res) => res.json(builder.state));
+app.get('/api/build/events', (req, res) => {
+  res.writeHead(200, { 'Content-Type': 'text/event-stream', 'Cache-Control': 'no-cache', Connection: 'keep-alive' });
+  const send = (s: unknown) => res.write(`data: ${JSON.stringify(s)}\n\n`);
+  send(builder.state);
+  builder.on('state', send);
+  const ping = setInterval(() => res.write('event: ping\ndata: 1\n\n'), 10_000);
+  req.on('close', () => { clearInterval(ping); builder.off('state', send); });
+});
+/** What "Build Solution" builds: the open solution, else the configured project, else the only solution/project at the root. */
+async function buildTarget(project?: string) {
+  const root = config.repositoryRoot;
+  if (project) { await confined(root, project); return project; }
+  if (config.solution) return config.solution;
+  if (config.targetProject.endsWith('.csproj')) return config.targetProject;
+  const top = await fs.readdir(root).catch(() => [] as string[]);
+  const sln = top.filter((f) => /\.slnx?$/i.test(f));
+  if (sln.length === 1) return sln[0];
+  const proj = top.filter((f) => f.endsWith('.csproj'));
+  if (proj.length === 1) return proj[0];
+  throw new Error(sln.length + proj.length > 1 ? 'Several solutions or projects are at the top of this folder. Open one with File ▸ Open Project/Solution.' : 'No solution or project file to build. Open one with File ▸ Open Project/Solution.');
+}
+app.post('/api/build', async (req, res) => {
+  const { action, project, configuration } = z.object({ action: z.enum(['build', 'rebuild', 'clean']).default('build'), project: z.string().max(400).optional(), configuration: z.string().regex(/^[\w .|-]{1,60}$/).default('Debug') }).parse(req.body);
+  res.json(builder.start({ root: config.repositoryRoot, target: await buildTarget(project), action, configuration: configuration.split('|')[0].trim() }));
+});
+app.post('/api/build/cancel', (_req, res) => res.json(builder.cancel()));
 app.use(express.static(path.join(projectRoot, 'dist')));
 app.use(
   (error: Error, _req: express.Request, res: express.Response, _next: express.NextFunction) => {

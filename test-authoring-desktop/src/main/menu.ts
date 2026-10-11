@@ -173,6 +173,19 @@ export function buildMenu() {
       ],
     },
     {
+      label: '&Build',
+      submenu: [
+        // Handled by the page (it owns the build state), so the keys are shown but not registered here.
+        { label: 'Build Solution', accelerator: 'CmdOrCtrl+Shift+B', registerAccelerator: false, click: () => send('build') },
+        { label: 'Rebuild Solution', click: () => send('rebuild') },
+        { label: 'Clean Solution', click: () => send('clean') },
+        { type: 'separator' },
+        { label: 'Cancel', accelerator: 'CmdOrCtrl+Pause', registerAccelerator: false, click: () => send('cancel-build') },
+        { type: 'separator' },
+        { label: 'Error List and Output', click: () => send('build-windows') },
+      ],
+    },
+    {
       // Visual Studio's Debug menu. The page handles the keys itself (the editor needs F9 at the cursor), so the
       // accelerators are shown but not registered here.
       label: '&Debug',
