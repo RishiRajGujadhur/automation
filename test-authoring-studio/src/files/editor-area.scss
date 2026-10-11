@@ -438,3 +438,48 @@
     }
   }
 }
+
+// File ▸ Open Project/Solution
+.open-solution {
+  display: grid;
+  gap: 14px;
+  .solution-path-row {
+    display: flex;
+    gap: 8px;
+    input {
+      flex: 1;
+      font-family: var(--font-mono, monospace);
+    }
+  }
+  .solution-list {
+    list-style: none;
+    margin: 4px 0 0;
+    padding: 0;
+  }
+  .solution-choice {
+    display: grid;
+    grid-template-columns: 18px 1fr;
+    column-gap: 8px;
+    width: 100%;
+    padding: 6px 8px;
+    border: 0;
+    border-radius: 4px;
+    background: transparent;
+    color: var(--text);
+    text-align: left;
+    small {
+      grid-column: 2;
+      color: var(--text-muted);
+      font-size: 11px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    &:hover:not(:disabled) {
+      background: color-mix(in srgb, var(--text) 8%, transparent);
+    }
+  }
+}
+.se-solution-folder svg:nth-child(2) {
+  color: #d7ba7d;
+}

@@ -12,6 +12,7 @@ import CreateStepDialog from './CreateStepDialog';
 import CodeEditor from './editor/CodeEditor';
 import { readDraft, sha256, useAutoSave, unsavedFiles, editedThisSession } from './editor/autosave';
 import EditorTabs, { EditorActions } from './files/EditorTabs';
+import OpenSolution from './OpenSolution';
 import { useTabs, openTab, closeTab, closeAll as closeAllTabs, kindOf, cycleTab, getTabs, reloadTabs, movedPath, deletedPath } from './files/tabs';
 import { useFileSource, setFileSource, fileSource } from './files/provider';
 import { fsaSupported, pickFolder, restoreFolder, closeFolder as closeBrowserFolder, lastFolderName } from './files/fsa';
@@ -120,7 +121,7 @@ import './debug/debug.scss';
 import './files/editor-area.scss';
 import DebugPanel from './debug/DebugPanel';
 import { useDebug, startDebugging, debugControl, isLive, getSnapshot, clearBreakpoints } from './debug/store';
-import { Bug, GitCompareArrows, Database, Settings } from 'lucide-react';
+import { Bug, GitCompareArrows, Database, Settings, Layers } from 'lucide-react';
 
 const demo: Action[] = [
   { id: 'd1', action: 'goto', url: 'https://www.google.com/' },
@@ -284,6 +285,7 @@ export default function App() {
   const editorKeys = useRef<(e: KeyboardEvent) => void>(() => {});
   editorKeys.current = (e) => {
     if (!(e.ctrlKey || e.metaKey)) return;
+    if (!desktop && e.shiftKey && !e.altKey && e.key.toLowerCase() === 'o') { e.preventDefault(); setModal('solution'); return; }
     const active = getTabs().active;
     if (e.key === 'F4' || (desktop && e.key.toLowerCase() === 'w' && !e.shiftKey)) { if (active) { e.preventDefault(); void closeEditor(active); } }
     else if (e.key === 'PageDown' || e.key === 'PageUp') { e.preventDefault(); cycleTab(e.key === 'PageDown' ? 1 : -1); }
@@ -630,6 +632,7 @@ export default function App() {
       return;
     }
     if (c === 'open-folder') { void openFolder(); return; }
+    if (c === 'open-solution') { setModal('solution'); return; }
     if (c === 'save') { if (featureTabActive) saveFeature(); else saveAll(); return; }
     if (c === 'save-all') { saveAll(); return; }
     if (c === 'close-editor') { const a = getTabs().active; if (a) void closeEditor(a); return; }
@@ -863,6 +866,7 @@ export default function App() {
             entries={[
               { label: 'New Feature', icon: Plus, onSelect: () => beginFeature() },
               'separator' as const,
+              { label: 'Open Project/Solution…', icon: Layers, shortcut: 'Ctrl Shift O', onSelect: () => setModal('solution') },
               { label: 'Open Folder…', icon: FolderOpen, onSelect: () => void openFolder() },
               ...(fileSrc.kind !== 'browser' && browserFolderName ? [{ label: `Reopen ${browserFolderName} (from disk)`, icon: Folder, onSelect: () => void reopenBrowserFolder() }] : []),
               { label: 'Index Folder with Studio Server…', icon: Database, onSelect: () => setModal('settings') },
@@ -1874,6 +1878,7 @@ export default function App() {
                   {
                     {
                       settings: 'Workspace settings',
+                      solution: 'Open Project/Solution',
                       record: 'Record a browser workflow',
                       new: 'Create a feature',
                       parameters: 'Configure step parameters',
@@ -1894,6 +1899,20 @@ export default function App() {
                 </Dialog.Close>
               </div>
               <div className={modal === 'preferences' ? 'settings-body' : 'modal-body'}>
+                {modal === 'solution' && (
+                  <OpenSolution root={config?.repositoryRoot} onOpened={async (r) => {
+                    await leaveBrowserFolder();
+                    setFileSource({ kind: 'server', root: r.config.repositoryRoot });
+                    reloadTabs();
+                    setIndex(r.index);
+                    setConfig(r.config as typeof config);
+                    setActiveFolder(undefined);
+                    setQuery('');
+                    setModal(undefined);
+                    setTab('Features');
+                    setView('editor');
+                  }} />
+                )}
                 {modal === 'settings' && config && (
                   <WorkspaceForm
                     initial={config}

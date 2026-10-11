@@ -1,5 +1,6 @@
 import type { Solution } from '../SolutionExplorer';
 import { listFiles, readText } from './fsa';
+import { parseSln, parseSlnx } from '../solutionFormat';
 
 /** Explorer layer of a file, matching the server's project model closely enough for icons and filters. */
 function layer(file: string) {
@@ -34,8 +35,17 @@ export async function browserSolution(name: string): Promise<Solution> {
   const all = new Set(files);
   const nesting: Solution['nesting'] = {};
   for (const f of files) if (f.endsWith('.feature') && all.has(`${f}.cs`)) nesting[f] = [{ file: `${f}.cs`, kind: 'code-behind' }];
+  // A solution file at the top of the folder (or one level down) gives solution folders and the project list.
+  const slnFile = files.filter((f) => /\.slnx?$/i.test(f) && f.split('/').length <= 2).sort((a, b) => a.split('/').length - b.split('/').length)[0];
+  const sln = slnFile ? await readText(slnFile).then((t) => (slnFile.toLowerCase().endsWith('.slnx') ? parseSlnx(t) : parseSln(t)), () => undefined) : undefined;
+  const slnDir = slnFile?.includes('/') ? slnFile.slice(0, slnFile.lastIndexOf('/')) : '';
+  const rebase = (p: string) => (slnDir ? `${slnDir}/${p}` : p).split('/').reduce<string[]>((a, s) => (s === '..' ? a.slice(0, -1) : s === '.' ? a : [...a, s]), []).join('/');
+  type N = NonNullable<Solution['tree']>[number];
+  const fix = (ns: N[]): N[] => ns.map((n) => (n.kind === 'folder' ? { ...n, children: fix(n.children) } : { ...n, file: rebase(n.file) }));
   return {
-    name,
+    name: slnFile ? slnFile.split('/').pop()!.replace(/\.slnx?$/i, '') : name,
+    solutionFile: slnFile ?? null,
+    tree: sln ? fix(sln.tree) : undefined,
     projects: projects.length ? projects : [{ file: '.', name, dir: '' }],
     packages: [...packages].sort(),
     frameworks: [...frameworks],

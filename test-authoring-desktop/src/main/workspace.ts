@@ -25,12 +25,18 @@ export async function currentConfig(): Promise<Config> {
   }
 }
 
-/** Points the studio at a repository folder (keeps the other scan settings) and reloads the UI. */
+export const isSolutionFile = (p: string) => /\.(slnx?|csproj)$/i.test(p);
+/**
+ * Points the studio at a repository folder, or at a solution / project file (.sln, .slnx, .csproj: its folder is
+ * scanned and the Explorer shows the solution), keeping the other scan settings, and reloads the UI.
+ */
 export async function openRepository(folder: string, opts: { reload?: boolean } = {}) {
-  const dir = path.resolve(folder);
-  if (!fs.existsSync(dir) || !fs.statSync(dir).isDirectory()) throw new Error(`Not a folder: ${dir}`);
+  const target = path.resolve(folder);
+  const solution = isSolutionFile(target) && fs.existsSync(target) && fs.statSync(target).isFile() ? target : undefined;
+  const dir = solution ? path.dirname(target) : target;
+  if (!fs.existsSync(dir) || !fs.statSync(dir).isDirectory()) throw new Error(`Not a folder or solution: ${target}`);
   // R6: a folder with no feature or C# files is probably the wrong one.
-  if (!looksLikeTestRepo(dir) && ctx.win) {
+  if (!solution && !looksLikeTestRepo(dir) && ctx.win) {
     const r = await dialog.showMessageBox(ctx.win, { type: 'warning', buttons: ['Open anyway', 'Cancel'], defaultId: 1, cancelId: 1, message: 'No .feature or .cs files found', detail: `${dir}\n\nThe studio looks for SpecFlow feature files and C# step bindings. Open this folder anyway?` });
     if (r.response !== 0) throw new Error('Cancelled.');
   }
@@ -38,15 +44,16 @@ export async function openRepository(folder: string, opts: { reload?: boolean } 
   const config = await currentConfig();
   ctx.win?.setProgressBar(2);
   try {
-    await apiCall(ctx.origin, '/workspace', { ...config, repositoryRoot: dir, targetProject: '.' });
+    if (solution) await apiCall(ctx.origin, '/solution/open', { path: solution });
+    else await apiCall(ctx.origin, '/workspace', { ...config, repositoryRoot: dir, targetProject: '.', solution: '' });
   } finally {
     ctx.win?.setProgressBar(-1);
   }
   ctx.repository = dir;
   if (previous && previous.toLowerCase() !== dir.toLowerCase()) write({ lastClosed: previous }); // R4
   watchRepository(dir);
-  addRecent(dir);
-  app.addRecentDocument(dir); // Windows jump list / macOS Dock menu
+  addRecent(solution ?? dir);
+  app.addRecentDocument(solution ?? dir); // Windows jump list / macOS Dock menu
   updateTitle();
   updateTray();
   if (opts.reload !== false && ctx.win) {
@@ -65,6 +72,13 @@ export function looksLikeTestRepo(dir: string, depth = 0): boolean {
   return entries.some((e) => e.isDirectory() && !/^(\.|bin$|obj$|node_modules$)/.test(e.name) && looksLikeTestRepo(path.join(dir, e.name), depth + 1));
 }
 
+/** File ▸ Open ▸ Project/Solution… (Ctrl+Shift+O, as in Visual Studio). */
+export async function pickAndOpenSolution() {
+  if (!ctx.win) return;
+  const r = await dialog.showOpenDialog(ctx.win, { title: 'Open Project/Solution', properties: ['openFile'], defaultPath: ctx.repository, filters: [{ name: 'Solutions and projects', extensions: ['sln', 'slnx', 'csproj'] }, { name: 'All files', extensions: ['*'] }] });
+  if (r.canceled || !r.filePaths[0]) return;
+  try { await openRepository(r.filePaths[0]); } catch (e) { dialog.showErrorBox('Could not open the solution', (e as Error).message); }
+}
 export async function pickAndOpenRepository() {
   if (!ctx.win) return;
   const r = await dialog.showOpenDialog(ctx.win, { title: 'Open repository', properties: ['openDirectory'], defaultPath: ctx.repository });

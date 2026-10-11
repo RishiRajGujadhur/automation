@@ -39,7 +39,7 @@ app.on('second-instance', (_e, argv) => {
 });
 app.on('open-url', (e, url) => { e.preventDefault(); handleLink(url); }); // macOS deep links
 /** A directory given as a command-line argument (also how the Windows jump list reopens repositories). */
-const folderArg = (argv: string[]) => argv.find((a) => !a.startsWith('-') && a !== '.' && !a.includes('://') && path.resolve(a) !== path.resolve(app.getAppPath()) && fs.existsSync(a) && fs.statSync(a).isDirectory());
+const folderArg = (argv: string[]) => argv.find((a) => !a.startsWith('-') && a !== '.' && !a.includes('://') && path.resolve(a) !== path.resolve(app.getAppPath()) && fs.existsSync(a) && (fs.statSync(a).isDirectory() || /\.(slnx?|csproj)$/i.test(a)));
 
 const failOpen = (e: unknown) => dialog.showErrorBox('Could not open the repository', (e as Error).message);
 function handleLink(raw: string) {

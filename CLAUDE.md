@@ -34,6 +34,7 @@ Repo: `github.com/RishiRajGujadhur/automation` (branch `main`). Two apps that mu
 - `core.ts` — config schema, Gherkin parsing, index assembly, `confined()` path guard (always use it for repo paths), `dotnet`/`scanner` resolution.
 - `debugger.ts` / `dap.ts` — Visual Studio–style debugging: builds the owning `.csproj`, runs `dotnet test` with `VSTEST_HOST_DEBUG=1`, attaches **netcoredbg** over DAP. SpecFlow code-behind `#line` directives make `.feature` lines real breakpoints.
 - `langService.ts` — long-running Roslyn language server process (JSON lines). Dev runs a shadow copy of the DLL from `%TEMP%/tas-langserver` so rebuilds don't hit locked files.
+- `solution.ts` (+ pure parsers in `src/solutionFormat.ts`, shared with browser folders) — `.sln`/`.slnx` parsing, per-project dependencies, `findSolutions`; config field `solution` (repo-relative, '' = folder mode). Use `rescanSoon()` for delayed re-indexing (drops results if the workspace changed).
 - Others: `dictionaries.ts` (XML selector dictionaries), `projectModel.ts`, `proposals.ts`, `validation.ts`, `stepSearch.ts` + `search-worker.mjs`, `settings.ts`, `cli.ts`.
 
 ### .NET helpers
@@ -69,6 +70,6 @@ npm run dist && npm run test:packaged
 ## Testing notes and gotchas
 - Playwright default storageState: `{mode:'advanced', layout:'classic', algorithmPreset:'everything', autoSave:'off'}`; VS Code-layout specs use a clean state. Use `exact: true` for file-name buttons (tab and explorer share names).
 - Specs that switch the workspace must restore it in `finally`; a timed-out one leaves the dev server on a temp folder and cascades failures — reset with `POST /api/workspace {repositoryRoot: ".../fixtures", targetProject: "."}`.
-- `debugger.spec.ts` is flaky right after `csharp-ide.spec.ts` (passes alone) — open item.
+- Feature tracking for Visual Studio parity lives in `VS2026-PARITY.md` (update its status and progress log with each feature).
 - Shell: Windows; prefer Write/Edit or a Python script file over inline heredocs with backslashes/quotes.
 - Vite ignores `fixtures/` and `test-results/` (auto save writes there).

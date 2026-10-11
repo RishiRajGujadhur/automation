@@ -1,6 +1,6 @@
 /** Contract between the preload script and the studio web app (`window.desktop`). */
 export type MenuCommand =
-  | 'palette' | 'preferences' | 'shortcuts' | 'workspace-settings' | 'new-feature' | 'record' | 'tour' | 'toggle-mode' | 'toggle-explorer' | 'focus-mode' | 'repository-changed' | 'set-pref' | 'diagnostics' | 'run-tests' | 'continue-draft' | 'design-tool' | 'debug' | 'open-folder' | 'save' | 'save-all' | 'close-editor' | 'close-all-editors';
+  | 'palette' | 'preferences' | 'shortcuts' | 'workspace-settings' | 'new-feature' | 'record' | 'tour' | 'toggle-mode' | 'toggle-explorer' | 'focus-mode' | 'repository-changed' | 'set-pref' | 'diagnostics' | 'run-tests' | 'continue-draft' | 'design-tool' | 'debug' | 'open-folder' | 'open-solution' | 'save' | 'save-all' | 'close-editor' | 'close-all-editors';
 
 export type DesktopBridge = {
   platform: NodeJS.Platform;

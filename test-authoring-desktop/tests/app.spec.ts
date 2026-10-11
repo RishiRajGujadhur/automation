@@ -161,12 +161,27 @@ test('C# IntelliSense and go to definition run on the bundled language service',
   const fixtures = path.resolve(import.meta.dirname, '../../test-authoring-studio/fixtures');
   await page.evaluate((root) => fetch('/api/workspace', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ repositoryRoot: root, targetProject: '.' }) }), fixtures);
   const call = (url: string, body: unknown) => page.evaluate(({ url, body }) => fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) }).then((r) => r.json()), { url, body });
-  const source = 'namespace Demo;
-class Probe { void M(SearchPage page) { page. } }
-';
+  const source = 'namespace Demo;\nclass Probe { void M(SearchPage page) { page. } }\n';
   const r = await call('/api/csharp/complete', { file: 'Steps/Probe.cs', source, line: 2, column: 46 });
   expect(r.items.map((i: { label: string }) => i.label)).toEqual(expect.arrayContaining(['Search', 'Results', 'Open']));
   const d = await call('/api/csharp/definition', { file: 'Steps/Probe.cs', source, line: 2, column: 25 });
   expect(d.locations[0].file).toBe('Steps/SearchSteps.cs');
 });
 
+
+test('a .slnx passed on the command line (double-click, jump list) opens as the solution', async () => {
+  const repo = fs.mkdtempSync(path.join(os.tmpdir(), 'tas-sln-'));
+  fs.mkdirSync(path.join(repo, 'tests/Specs'), { recursive: true });
+  fs.writeFileSync(path.join(repo, 'Shop.slnx'), '<Solution><Folder Name="/Tests/"><Project Path="tests/Specs/Specs.csproj" /></Folder></Solution>');
+  fs.writeFileSync(path.join(repo, 'tests/Specs/Specs.csproj'), '<Project Sdk="Microsoft.NET.Sdk"><PropertyGroup><TargetFramework>net8.0</TargetFramework></PropertyGroup></Project>');
+  fs.writeFileSync(path.join(repo, 'tests/Specs/A.feature'), 'Feature: A\n  Scenario: S\n    Given x\n');
+  const second = spawn(electronPath, [...(process.env.TAS_EXE ? [] : ['.']), `--user-data-dir=${userData}`, path.join(repo, 'Shop.slnx')], { cwd: path.resolve(import.meta.dirname, '..'), stdio: 'ignore' });
+  await new Promise((r) => second.on('exit', r));
+  await expect.poll(() => appProcess.evaluate(({ BrowserWindow }) => BrowserWindow.getAllWindows()[0].getTitle()), { timeout: 30_000 }).toContain(path.basename(repo));
+  await page.waitForURL(/127\.0\.0\.1/);
+  const s = await page.evaluate(() => fetch('/api/solution').then((r) => r.json()));
+  expect(s.solutionFile).toBe('Shop.slnx');
+  expect(s.projects.map((p: { name: string }) => p.name)).toEqual(['Specs']);
+  const file = await appProcess.evaluate(({ Menu }) => Menu.getApplicationMenu()!.items.find((i) => i.label.includes('File'))!.submenu!.items.map((i) => i.label));
+  expect(file).toContain('Open Project/Solution…');
+});

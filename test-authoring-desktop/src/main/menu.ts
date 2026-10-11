@@ -3,7 +3,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { ctx } from './context';
 import { IPC, type MenuCommand } from '../shared/bridge';
-import { openRepository, pickAndOpenRepository, recentRepositories } from './workspace';
+import { openRepository, pickAndOpenRepository, pickAndOpenSolution, recentRepositories } from './workspace';
 import { apiCall } from './server';
 import { dataRoot, logFile, resourcesRoot } from './paths';
 import { isPinned, read, removeRecent, togglePin, write, type Editor, type Shape } from './store';
@@ -68,7 +68,8 @@ export function buildMenu() {
     {
       label: '&File',
       submenu: [
-        { label: 'Open Folder…', accelerator: 'CmdOrCtrl+Shift+O', click: () => pickAndOpenRepository().then(buildMenu) },
+        { label: 'Open Project/Solution…', accelerator: 'CmdOrCtrl+Shift+O', click: () => pickAndOpenSolution().then(buildMenu) },
+        { label: 'Open Folder…', accelerator: 'CmdOrCtrl+Shift+Alt+O', click: () => pickAndOpenRepository().then(buildMenu) },
         { label: 'Open Recent', submenu: recentMenu() },
         { label: 'Reopen Last Closed Repository', accelerator: 'CmdOrCtrl+Shift+T', enabled: !!s.lastClosed && fs.existsSync(s.lastClosed), click: () => { if (s.lastClosed) openAndRebuild(s.lastClosed); } },
         { label: 'Open Sample Repository', click: () => openAndRebuild(path.join(resourcesRoot(), 'fixtures')) },

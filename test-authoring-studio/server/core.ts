@@ -21,6 +21,8 @@ import type { Index, Step, Binding, Action, Match, Feature } from '../src/types.
 export const configSchema = z.object({
   repositoryRoot: z.string().min(1),
   targetProject: z.string().default('.'),
+  /** Solution file (.sln / .slnx) relative to repositoryRoot; '' = folder (every .csproj is a project). */
+  solution: z.string().default(''),
   featurePatterns: z.array(z.string()).default(['**/*.feature']),
   sourcePatterns: z.array(z.string()).default(['**/*.cs']),
   selectorPatterns: z.array(z.string()).default(['**/*.xml']),

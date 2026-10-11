@@ -24,6 +24,7 @@ import { validate } from './validation.js';
 import { projectModel } from './projectModel.js';
 import { command, dotnet } from './core.js';
 import { Debugger, owningProject } from './debugger.js';
+import { readSolution, projectInfo, findSolutions } from './solution.js';
 import { LanguageService } from './langService.js';
 import type { Index } from '../src/types.js';
 import { readSettings, writeSettings, settingsSchema, tracesDir } from './settings.js';
@@ -164,14 +165,43 @@ app.get('/api/solution',async(_req,res)=>{
     if(all.has(f.file+'.cs'))kids.unshift({file:f.file+'.cs',kind:'code-behind'});
     if(kids.length)nesting[f.file]=kids;
   }
-  const projects=(model.projects.length?model.projects:['.']).map(p=>({file:p,name:path.posix.basename(p).replace(/.csproj$/i,'')||model.root,dir:path.posix.dirname(p)==='.'?'':path.posix.dirname(p)}));
-  res.json({name:model.root,projects,packages:model.packages,frameworks:model.frameworks,files:model.files,nesting,truncated:model.truncated});
+  // A solution (.sln/.slnx) gives the real tree: solution folders → projects. Without one, every .csproj is a project
+  // (a single solution file at the top of the folder is picked up automatically, as Visual Studio's Open Folder does).
+  let solutionFile=config.solution;
+  if(!solutionFile){const found=(await findSolutions(config.repositoryRoot,config.ignoredDirectories,1));if(found.length===1)solutionFile=found[0];}
+  const parsed=solutionFile?await readSolution(config.repositoryRoot,solutionFile).catch(()=>undefined):undefined;
+  const files=parsed?model.files:model.files;
+  const projectFiles=parsed?parsed.projects.map(p=>p.file):(model.projects.length?model.projects:[]);
+  const projects=await Promise.all(projectFiles.map(async(file)=>({file,name:path.posix.basename(file).replace(/\.\w+proj$/i,''),dir:path.posix.dirname(file)==='.'?'':path.posix.dirname(file),...await projectInfo(config.repositoryRoot,file)})));
+  if(!projects.length)projects.push({file:'.',name:model.root,dir:'',packages:model.packages,frameworks:model.frameworks,references:[],missing:false});
+  const tree=parsed?.tree??projects.map(p=>({kind:'project' as const,name:p.name,file:p.file}));
+  res.json({name:solutionFile?path.posix.basename(solutionFile).replace(/\.slnx?$/i,''):model.root,solutionFile:solutionFile||null,configurations:parsed?.configurations??['Debug','Release'],tree,projects,packages:model.packages,frameworks:model.frameworks,files,nesting,truncated:model.truncated});
+});
+// File ▸ Open ▸ Project/Solution: a .sln/.slnx/.csproj (or a folder) on disk becomes the workspace.
+app.get('/api/solution/find',async(_req,res)=>{res.json(await findSolutions(config.repositoryRoot,config.ignoredDirectories));});
+app.post('/api/solution/open',async(req,res)=>{
+  const {path:target}=z.object({path:z.string().min(1).max(1000)}).parse(req.body);
+  const full=path.resolve(target);
+  const stat=await fs.stat(full).catch(()=>undefined);
+  if(!stat)throw new Error(`${target} was not found.`);
+  let next:typeof config;
+  if(stat.isDirectory())next=configSchema.parse({...config,repositoryRoot:full,solution:'',targetProject:'.'});
+  else if(/\.slnx?$/i.test(full))next=configSchema.parse({...config,repositoryRoot:path.dirname(full),solution:path.basename(full),targetProject:'.'});
+  else if(/\.csproj$/i.test(full))next=configSchema.parse({...config,repositoryRoot:path.dirname(full),solution:'',targetProject:path.basename(full)});
+  else throw new Error('Choose a solution (.sln, .slnx), a project (.csproj) or a folder.');
+  clearTimeout(rescanTimer);
+  const scanned=await scan(next);
+  config=next;activate(scanned);previews.clear();
+  await fs.mkdir(path.dirname(configFile),{recursive:true});
+  await fs.writeFile(configFile,JSON.stringify(config,null,2));
+  res.json({config,index:publicIndex(index!)});
 });
 app.get('/api/health',(_req,res)=>res.json({ok:true,scannedAt:index?.scannedAt??null}));
 app.get('/api/project/model',async(_req,res)=>{res.json(await projectModel(config,await ensure()));});
 app.get('/api/project/files',async(req,res)=>{const folder=z.string().default('.').parse(req.query.folder);const dir=await confined(config.repositoryRoot,folder);const entries=await fs.readdir(dir,{withFileTypes:true});const {offset,limit}=paging.parse(req.query);const filtered=entries.filter(e=>!e.isSymbolicLink()&&!e.name.startsWith('.')&&!config.ignoredDirectories.includes(e.name)).sort((a,b)=>Number(b.isDirectory())-Number(a.isDirectory())||a.name.localeCompare(b.name));res.json({folder,items:filtered.slice(offset,offset+limit).map(e=>({name:e.name,file:path.relative(config.repositoryRoot,path.join(dir,e.name)).replaceAll('\\','/'),directory:e.isDirectory()})),total:filtered.length,hasNext:offset+limit<filtered.length});});
 app.post('/api/workspace', async (req, res) => {
   const next = configSchema.parse(req.body);
+  clearTimeout(rescanTimer);
   const scanned = await scan(next);
   config = next;
   activate(scanned);
@@ -206,6 +236,17 @@ app.post('/api/file/preview', async (req, res) => {
 });
 // Direct save (auto save). Refuses when the file changed on disk since the editor loaded it (baseHash).
 let rescanTimer: NodeJS.Timeout | undefined;
+/**
+ * Re-index shortly after writes. The scan is for the workspace of the moment it starts: if the workspace changes
+ * while it runs (another folder or solution was opened), its result is dropped instead of replacing the new index.
+ */
+function rescanSoon(delay: number) {
+  clearTimeout(rescanTimer);
+  rescanTimer = setTimeout(() => {
+    const target = config;
+    scan(target).then((i) => { if (config === target) activate(i); }).catch((e) => console.error('Rescan failed:', (e as Error).message));
+  }, delay);
+}
 app.post('/api/file/save', async (req, res) => {
   const { file, source, baseHash } = z.object({ file: z.string().max(400).regex(editable), source: z.string().max(1_000_000), baseHash: z.string().max(80) }).parse(req.body);
   if (file.endsWith('.feature')) parseFeature(source, file, []);
@@ -215,8 +256,7 @@ app.post('/api/file/save', async (req, res) => {
   await fs.mkdir(path.dirname(target), { recursive: true });
   await fs.writeFile(target, source, 'utf8');
   // Re-index shortly after the last save so bindings and features stay current without rescanning on every keystroke.
-  clearTimeout(rescanTimer);
-  rescanTimer = setTimeout(() => { scan(config).then(activate).catch((e) => console.error('Rescan after save failed:', (e as Error).message)); }, 1500);
+  rescanSoon(1500);
   lang.notify(config.repositoryRoot, [file]);
   res.json({ ok: true, hash: hash(source) });
 });
@@ -242,7 +282,7 @@ app.post('/api/csharp/rename', async (req, res) => {
     await fs.writeFile(target, c.text, 'utf8');
     written.push(c.file);
   }
-  if (written.length) { clearTimeout(rescanTimer); rescanTimer = setTimeout(() => { scan(config).then(activate).catch(() => {}); }, 1500); }
+  if (written.length) rescanSoon(1500);
   res.json({ ...r, written, current: r.changes.find((c) => c.file === body.file)?.text ?? null });
 });
 app.post('/api/csharp/organize', async (req, res) => {
@@ -251,7 +291,7 @@ app.post('/api/csharp/organize', async (req, res) => {
   res.json(await lang.request(config.repositoryRoot, { op: 'organize', ...body }, 60_000));
 });
 // Explorer file operations (Rename, Copy/Cut + Paste, Delete), confined to the repository like every other write.
-const afterFileChange = (files: string[]) => { lang.notify(config.repositoryRoot, files); clearTimeout(rescanTimer); rescanTimer = setTimeout(() => { scan(config).then(activate).catch(() => {}); }, 500); };
+const afterFileChange = (files: string[]) => { lang.notify(config.repositoryRoot, files); rescanSoon(500); };
 const exists = (p: string) => fs.access(p).then(() => true, () => false);
 app.post('/api/file/rename', async (req, res) => {
   const { from, to } = z.object({ from: z.string().min(1).max(400), to: z.string().min(1).max(400) }).parse(req.body);

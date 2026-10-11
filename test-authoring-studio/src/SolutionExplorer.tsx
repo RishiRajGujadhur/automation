@@ -10,9 +10,14 @@ import { normalizeFeaturePath, parentFolders } from './featureTree';
 import { UNSAVED_EVENT, unsavedFiles } from './editor/autosave';
 import type { Feature } from './types';
 
+export type SolutionNode = { kind: 'folder'; name: string; children: SolutionNode[] } | { kind: 'project'; name: string; file: string };
+export type SolutionProject = { file: string; name: string; dir: string; packages?: string[]; frameworks?: string[]; references?: string[]; missing?: boolean };
 export type Solution = {
   name: string;
-  projects: { file: string; name: string; dir: string }[];
+  solutionFile?: string | null;
+  configurations?: string[];
+  tree?: SolutionNode[];
+  projects: SolutionProject[];
   packages: string[];
   frameworks: string[];
   files: { file: string; layer: string }[];
@@ -45,13 +50,14 @@ let clipboard: { mode: 'copy' | 'cut'; path: string } | null = null;
 const HIDDEN_LAYERS = new Set(['Output', 'Other']);
 const icon = (file: string) => (file.endsWith('.feature') ? FileText : file.endsWith('.xml') ? Braces : file.endsWith('.csproj') || file.endsWith('.json') || file.endsWith('.config') ? FileCog : FileCode2);
 
-function buildTree(files: { file: string; layer: string }[]): Node[] {
+/** Folder tree of a project's files, shown relative to the project folder (`prefix`), as in Visual Studio. */
+function buildTree(files: { file: string; layer: string }[], prefix = ''): Node[] {
   const roots: Node[] = [];
   for (const { file, layer } of files) {
-    const parts = file.split('/');
+    const parts = (prefix ? file.slice(prefix.length + 1) : file).split('/');
     let children = roots;
     parts.forEach((name, i) => {
-      const p = parts.slice(0, i + 1).join('/');
+      const p = (prefix ? `${prefix}/` : '') + parts.slice(0, i + 1).join('/');
       if (i === parts.length - 1) { children.push({ kind: 'file', name, path: p, layer }); return; }
       let folder = children.find((n): n is Extract<Node, { kind: 'folder' }> => n.kind === 'folder' && n.path === p);
       if (!folder) { folder = { kind: 'folder', name, path: p, children: [], count: 0 }; children.push(folder); }
@@ -122,7 +128,7 @@ export default function SolutionExplorer({ features, revision, activeFile, query
   };
   const [serverSolution, setSolution] = useState<Solution>();
   const solution = browserSolution ?? serverSolution;
-  const [collapsed, setCollapsed] = useState<Set<string>>(() => new Set(['@deps']));
+  const [collapsed, setCollapsed] = useState<Set<string>>(() => new Set());
   const [openNests, setOpenNests] = useState<Set<string>>(new Set());
   const [showAll, setShowAll] = useState(false);
   const [pendingOnly, setPendingOnly] = useState(false);
@@ -131,6 +137,7 @@ export default function SolutionExplorer({ features, revision, activeFile, query
   useEffect(() => { if (!browserSolution) api<Solution>('/solution').then(setSolution).catch(() => {}); }, [revision, browserSolution]);
   useEffect(() => { const h = () => setPending(unsavedFiles()); window.addEventListener(UNSAVED_EVENT, h); return () => window.removeEventListener(UNSAVED_EVENT, h); }, []);
 
+  const projectDirs = useMemo(() => (solution?.projects ?? []).map((p) => p.dir), [solution]);
   // Files: the solution model plus any indexed feature it does not know yet (e.g. just created).
   const files = useMemo(() => {
     const list = [...(solution?.files ?? [])];
@@ -141,20 +148,31 @@ export default function SolutionExplorer({ features, revision, activeFile, query
     return list.filter((x) =>
       !codeBehind.has(x.file) && // nested under its feature instead
       !x.file.endsWith('.csproj') && // the project node stands for it
-      (showAll || !HIDDEN_LAYERS.has(x.layer)) &&
+      // Inside a real project folder every file shows (as in Visual Studio); only build output stays hidden.
+      (showAll || !HIDDEN_LAYERS.has(x.layer) || (x.layer === 'Other' && projectDirs.some((d) => d && x.file.startsWith(`${d}/`)))) &&
       (!pendingOnly || pending.includes(x.file)) &&
       terms.every((t) => `${x.file} ${featureName.get(x.file) ?? ''}`.toLowerCase().includes(t)));
-  }, [solution, features, query, showAll, pendingOnly, pending]);
+  }, [solution, features, query, showAll, pendingOnly, pending, projectDirs]);
   const searching = !!query.trim() || pendingOnly;
-  const nodes = useMemo(() => buildTree(files), [files]);
+  // Files per project (deepest project folder wins); files outside every project are "Miscellaneous Files".
+  const projects = useMemo(() => solution?.projects ?? [], [solution]);
+  const byProject = useMemo(() => {
+    const dirs = projects.map((p) => p.dir);
+    const owner = (f: string) => { let best: string | undefined; for (const d of dirs) if ((d === '' || f.startsWith(`${d}/`)) && (best === undefined || d.length > best.length)) best = d; return best; };
+    const groups = new Map<string | undefined, { file: string; layer: string }[]>();
+    for (const f of files) { const d = owner(f.file); groups.set(d, [...(groups.get(d) ?? []), f]); }
+    return new Map([...groups].map(([d, list]) => [d, buildTree(list, d ?? '')]));
+  }, [files, projects]);
+  const nodes = useMemo(() => [...byProject.values()].flat(), [byProject]);
+  const [openDeps, setOpenDeps] = useState<Set<string>>(new Set());
   const featureByPath = useMemo(() => new Map(features.map((f) => [normalizeFeaturePath(f.file), f])), [features]);
   const toggle = (p: string, open?: boolean) => setCollapsed((prev) => { const next = new Set(prev); if (open ?? next.has(p)) next.delete(p); else next.add(p); return next; });
-  const allFolders = () => { const s = new Set<string>(['@deps']); const walk = (ns: Node[]) => ns.forEach((n) => { if (n.kind === 'folder') { s.add(n.path); walk(n.children); } }); walk(nodes); return s; };
+  const allFolders = () => { const s = new Set<string>(); const walk = (ns: Node[]) => ns.forEach((n) => { if (n.kind === 'folder') { s.add(n.path); walk(n.children); } }); walk(nodes); return s; };
   const collapseAll = () => setCollapsed(allFolders());
   const sync = () => {
     if (!activeFile) return;
     const f = normalizeFeaturePath(activeFile);
-    setCollapsed((prev) => { const next = new Set(prev); parentFolders(f).forEach((p) => next.delete(p)); next.delete('@project'); return next; });
+    setCollapsed((prev) => { const next = new Set(prev); parentFolders(f).forEach((p) => next.delete(p)); for (const k of [...next]) if (k.startsWith('@')) next.delete(k); return next; });
     requestAnimationFrame(() => tree.current?.querySelector<HTMLElement>(`[data-path="${CSS.escape(f)}"]`)?.scrollIntoView({ block: 'center' }));
   };
   // Opening a file reveals it (like Visual Studio's "Track Active Item").
@@ -245,9 +263,62 @@ export default function SolutionExplorer({ features, revision, activeFile, query
       })}
     </>
   );
-  const project = solution?.projects[0];
-  const projectOpen = !collapsed.has('@project');
-  const depsOpen = !collapsed.has('@deps');
+  /** One project: name, Dependencies (frameworks, packages, project references; collapsed by default) and its files. */
+  const projectRow = (p: SolutionProject, depth: number) => {
+    const key = `@project:${p.file}`;
+    const open = searching || !collapsed.has(key);
+    const deps = openDeps.has(p.file) && !searching;
+    const refs = p.references ?? [];
+    const count = (p.packages?.length ?? 0) + refs.length + (p.frameworks?.length ?? 0);
+    const pad = 4 + depth * 12;
+    return (
+      <li key={key}>
+        <div className="explorer-folder-row">
+          <button className="explorer-folder se-project" style={{ paddingLeft: pad }} aria-label={`${open ? 'Collapse' : 'Expand'} project ${p.name}`} aria-expanded={open} onClick={() => toggle(key)} title={p.missing ? `${p.file} (not found)` : p.file}>
+            {open ? <ChevronDown size={12} /> : <ChevronRight size={12} />}<Boxes size={14} /><span>{p.name}</span>{p.missing && <small>(unavailable)</small>}
+          </button>
+        </div>
+        {open && (
+          <ul className="folder-children">
+            {!searching && (
+              <li>
+                <div className="explorer-folder-row">
+                  <button className="explorer-folder" style={{ paddingLeft: pad + 12 }} aria-label={`${deps ? 'Collapse' : 'Expand'} Dependencies`} aria-expanded={deps} onClick={() => setOpenDeps((prev) => { const n = new Set(prev); if (n.has(p.file)) n.delete(p.file); else n.add(p.file); return n; })}>
+                    {deps ? <ChevronDown size={12} /> : <ChevronRight size={12} />}<Package size={14} /><span>Dependencies</span><small>{count}</small>
+                  </button>
+                </div>
+                {deps && (
+                  <ul className="folder-children se-deps">
+                    {(p.frameworks ?? []).map((f) => <li key={`f:${f}`}><div className="se-row se-leaf" style={{ paddingLeft: pad + 36 }} title="Framework"><Layers size={13} /><span>{f}</span></div></li>)}
+                    {(p.packages ?? []).map((x) => <li key={`p:${x}`}><div className="se-row se-leaf" style={{ paddingLeft: pad + 36 }} title="NuGet package"><Package size={13} /><span>{x}</span></div></li>)}
+                    {refs.map((r) => <li key={`r:${r}`}><div className="se-row se-leaf" style={{ paddingLeft: pad + 36 }} title={`Project reference: ${r}`}><Boxes size={13} /><span>{r.split('/').pop()!.replace(/\.\w+proj$/i, '')}</span></div></li>)}
+                  </ul>
+                )}
+              </li>
+            )}
+            {items(byProject.get(p.dir) ?? [], depth + 1)}
+          </ul>
+        )}
+      </li>
+    );
+  };
+  /** Solution folders (virtual, from the .sln/.slnx) and projects, in the solution's own order. */
+  const solutionNodes = (ns: SolutionNode[], depth: number, trail = ''): ReactNode => ns.map((n) => {
+    if (n.kind === 'project') { const p = projects.find((x) => x.file === n.file); return p ? projectRow(p, depth) : null; }
+    const key = `@sf:${trail}/${n.name}`;
+    const open = searching || !collapsed.has(key);
+    return (
+      <li key={key}>
+        <div className="explorer-folder-row">
+          <button className="explorer-folder se-solution-folder" style={{ paddingLeft: 4 + depth * 12 }} aria-label={`${open ? 'Collapse' : 'Expand'} solution folder ${n.name}`} aria-expanded={open} onClick={() => toggle(key)}>
+            {open ? <ChevronDown size={12} /> : <ChevronRight size={12} />}{open ? <FolderOpen size={14} /> : <Folder size={14} />}<span>{n.name}</span>
+          </button>
+        </div>
+        {open && <ul className="folder-children">{solutionNodes(n.children, depth + 1, `${trail}/${n.name}`)}</ul>}
+      </li>
+    );
+  });
+  const misc = byProject.get(undefined) ?? [];
   const tool = (label: string, Icon: typeof Plus, onClick: () => void, pressed?: boolean, extra: Record<string, string> = {}) => (
     // Native titles (not Radix tooltips): a tooltip that opens on focus would cover the guided tour's buttons.
     <button className={`icon-button ${pressed ? 'pressed' : ''}`} aria-label={label} title={label} aria-pressed={pressed} onClick={onClick} {...extra}><Icon size={14} /></button>
@@ -276,39 +347,20 @@ export default function SolutionExplorer({ features, revision, activeFile, query
       <nav className="folder-tree se-tree" ref={tree} aria-label="Solution">
         <ul className="folder-children">
           <li>
-            <div className="se-row se-solution"><Layers size={14} aria-hidden="true" /><span>Solution '{solution?.name ?? '…'}' ({solution?.projects.length ?? 0} project{solution?.projects.length === 1 ? '' : 's'})</span></div>
-            {project && (
-              <ul className="folder-children">
+            <div className="se-row se-solution"><Layers size={14} aria-hidden="true" /><span title={solution?.solutionFile ?? undefined}>Solution '{solution?.name ?? '…'}' ({projects.length} project{projects.length === 1 ? '' : 's'})</span></div>
+            <ul className="folder-children">
+              {solutionNodes(solution?.tree ?? projects.map((p) => ({ kind: 'project' as const, name: p.name, file: p.file })), 0)}
+              {misc.length > 0 && (
                 <li>
                   <div className="explorer-folder-row">
-                    <button className="explorer-folder se-project" aria-label={`${projectOpen ? 'Collapse' : 'Expand'} project ${project.name}`} aria-expanded={projectOpen} onClick={() => toggle('@project')} title={project.file}>
-                      {projectOpen ? <ChevronDown size={12} /> : <ChevronRight size={12} />}<Boxes size={14} /><span>{project.name}</span>
+                    <button className="explorer-folder se-solution-folder" aria-label={`${!collapsed.has('@misc') || searching ? 'Collapse' : 'Expand'} Miscellaneous Files`} aria-expanded={!collapsed.has('@misc') || searching} onClick={() => toggle('@misc')} title="Files that belong to no project in the solution">
+                      {!collapsed.has('@misc') || searching ? <ChevronDown size={12} /> : <ChevronRight size={12} />}<Folder size={14} /><span>Miscellaneous Files</span><small>{misc.length}</small>
                     </button>
                   </div>
-                  {projectOpen && (
-                    <ul className="folder-children">
-                      {!searching && (
-                        <li>
-                          <div className="explorer-folder-row">
-                            <button className="explorer-folder" style={{ paddingLeft: 16 }} aria-label={`${depsOpen ? 'Collapse' : 'Expand'} Dependencies`} aria-expanded={depsOpen} onClick={() => toggle('@deps')}>
-                              {depsOpen ? <ChevronDown size={12} /> : <ChevronRight size={12} />}<Package size={14} /><span>Dependencies</span><small>{solution?.packages.length ?? 0}</small>
-                            </button>
-                          </div>
-                          {depsOpen && (
-                            <ul className="folder-children se-deps">
-                              {solution?.frameworks.map((f) => <li key={f}><div className="se-row se-leaf" style={{ paddingLeft: 40 }}><Boxes size={13} /><span>{f}</span></div></li>)}
-                              {solution?.packages.map((p) => <li key={p}><div className="se-row se-leaf" style={{ paddingLeft: 40 }}><Package size={13} /><span>{p}</span></div></li>)}
-                            </ul>
-                          )}
-                        </li>
-                      )}
-                      {items(nodes, 1)}
-                    </ul>
-                  )}
+                  {(!collapsed.has('@misc') || searching) && render(misc, 1)}
                 </li>
-              </ul>
-            )}
-            {!project && render(nodes, 0)}
+              )}
+            </ul>
           </li>
         </ul>
       </nav>
