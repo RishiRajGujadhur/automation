@@ -431,3 +431,83 @@
     flex: 1 3 420px;
   }
 }
+
+/* ------------------------------------------------------------------ Test Generator, edge to edge (VS Code layout)
+   The page is one view: context bar, stepper, step body and actions stacked with 1px borders, no margins. */
+:root[data-layout='vscode'] {
+  .main-content:has(> .context-bar) {
+    padding: 0;
+  }
+  .context-bar {
+    margin: 0;
+    padding: 4px 10px;
+    border-width: 0 0 1px;
+    border-radius: 0;
+    font-size: 12px;
+  }
+  .main-content > .error-banner {
+    margin: 0;
+    border-radius: 0;
+  }
+  .generator-layout {
+    margin: 0;
+    gap: 0;
+  }
+  .generator-main {
+    gap: 0;
+    min-width: 0;
+  }
+  .wizard {
+    gap: 0;
+  }
+  .stepper {
+    gap: 0;
+    padding: 0;
+    border-bottom: 1px solid var(--border);
+    .stepper-step {
+      border-radius: 0;
+      border-width: 0 1px 0 0;
+      padding: 6px 10px;
+      min-height: 0;
+    }
+  }
+  .wizard-meter {
+    margin: 0;
+    .meter {
+      height: 2px;
+      border-radius: 0;
+    }
+  }
+  .wizard-panel {
+    border-width: 0;
+    border-radius: 0;
+    margin: 0;
+  }
+  .wizard-panel .wizard-body {
+    padding: 8px 10px;
+  }
+  .scenario-text-step {
+    gap: 4px;
+    .label-row {
+      justify-content: flex-end;
+      min-height: 0;
+    }
+  }
+  .scenario-editor .cm-editor {
+    border-radius: 0;
+  }
+  .generator-actions {
+    margin: 0;
+    padding: 6px 10px;
+    border-top: 1px solid var(--border);
+    border-radius: 0;
+  }
+  .generator-sidebar {
+    border-radius: 0;
+    border-width: 0 0 0 1px;
+    margin: 0;
+  }
+  .inline-error {
+    margin: 4px 10px;
+  }
+}

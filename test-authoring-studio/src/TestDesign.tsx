@@ -48,7 +48,7 @@ export default function TestDesign({ revision, ...props }: Omit<ToolProps, 'corp
       </Tabs.List>
       {designTools.map((t) => (
         <Tabs.Content key={t.id} value={t.id} className="design-panel">
-          <p className="design-intro">{t.description}</p>
+          <p className="design-intro sr-only">{t.description}</p>
           {error && <p className="field-error" role="alert">Could not load features: {error}</p>}
           <Suspense fallback={<p className="subtle">Loading…</p>}>{current === t.id && <t.C corpus={corpus} {...props} />}</Suspense>
         </Tabs.Content>

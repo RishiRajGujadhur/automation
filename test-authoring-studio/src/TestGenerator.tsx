@@ -20,7 +20,7 @@ const scenarioExt = scenarioExtensions('Scenario text');
 import { DictionaryEntryForm } from './forms';
 import { generatorSchema, validateSync } from './validators';
 import { Select, Button } from './radix';
-import { IconButton, Meter, Separator, useConfirm, haptic } from './radix2';
+import { IconButton, Meter, Separator, useConfirm, haptic, usePrefs } from './radix2';
 import { markDone } from './progress';
 import { xmlExtensions } from './editor/xml';
 import Card from './Card';
@@ -85,7 +85,10 @@ export default function TestGenerator({ revision, seed, onSource, onExport, onIn
   const [fieldHits, setFieldHits] = useState<DictionaryEntry[]>([]);
   const [dictFiles, setDictFiles] = useState<string[]>([]);
   const [dictFile, setDictFile] = useState(seed?.file ?? '');
-  const [sidebar, setSidebar] = useLocalState('generator:sidebar', true);
+  // Project model panel: hidden by default, Settings → General → Show project model.
+  const { prefs: genPrefs, setPrefs: setGenPrefs } = usePrefs();
+  const sidebar = genPrefs.showProjectModel;
+  const setSidebar = (v: boolean) => setGenPrefs({ showProjectModel: v });
   const { model } = useProjectModel(revision);
   const confirm = useConfirm();
   const [activeLine, setActiveLine] = useState(0);
@@ -240,10 +243,10 @@ export default function TestGenerator({ revision, seed, onSource, onExport, onIn
         </Tabs.List>
         <div className="wizard-meter">
           <Meter value={wizard.filter((w) => stepIssues[w.id].length === 0).length} max={wizard.length} label="Wizard completion" tone="purple" />
-          <span className="subtle">Step {at} of {lastStep} · {current.title}</span>
+          <span className="sr-only">Step {at} of {lastStep} · {current.title}</span>
         </div>
         {error && <p role="alert" className="inline-error">{error}</p>}
-        <Tabs.Content value="gen-0" className="panel wizard-panel"><h2 className="wizard-title"><span className="step-number">0</span>Feature & scenario</h2><div className="wizard-body">
+        <Tabs.Content value="gen-0" className="panel wizard-panel"><h2 className="wizard-title sr-only"><span className="step-number">0</span>Feature & scenario</h2><div className="wizard-body">
           <div className="form-grid" onBlur={(e) => { const l = (e.target as HTMLElement).getAttribute('aria-label'); const map: Record<string, string> = { 'Feature area': 'area', 'Scenario name': 'scenarioName' }; if (l && map[l]) touch(map[l]); }}>
             <label className="field-label">FEATURE AREA / MODULE<input aria-label="Feature area" list="feature-folders" value={area} onChange={(e) => set('area', e.target.value)} />{err('area')}</label>
             <datalist id="feature-folders">{folders.map((f) => <option key={f} value={f} />)}</datalist>
@@ -258,9 +261,9 @@ export default function TestGenerator({ revision, seed, onSource, onExport, onIn
             <label className="field-label span-2">SCENARIO NAME<input aria-label="Scenario name" value={scenarioName} onChange={(e) => set('scenarioName', e.target.value)} />{err('scenarioName')}</label>
           </div>
         </div></Tabs.Content>
-        <Tabs.Content value="gen-1" className="panel wizard-panel scenario-text-panel"><h2 className="wizard-title"><span className="step-number">1</span>Scenario steps</h2><div className="wizard-body">
+        <Tabs.Content value="gen-1" className="panel wizard-panel scenario-text-panel"><h2 className="wizard-title sr-only"><span className="step-number">1</span>Scenario steps</h2><div className="wizard-body">
           <div className="field-label scenario-text-step">
-              <span className="label-row">SCENARIO TEXT
+              <span className="label-row"><span className="sr-only">Scenario text</span>
                 <span className="keyword-buttons" role="group" aria-label="Insert keyword">
                   {['Given', 'When', 'Then', 'And'].map((k) => <Button key={k} variant="ghost" size="tiny" onClick={() => insertKeyword(k)}>+ {k}</Button>)}
                   <Button variant="ghost" size="tiny" aria-label="Copy scenario as Gherkin" onClick={async () => onNotice?.((await copyText(`Scenario: ${scenarioName}\n${steps.map((x) => `  ${x.keyword} ${x.text}`).join('\n')}`)) ? 'Scenario copied.' : 'Clipboard unavailable.')}><Copy size={12} />Copy</Button>
@@ -285,7 +288,7 @@ export default function TestGenerator({ revision, seed, onSource, onExport, onIn
               {err('scenarioText')}
             </div>
         </div></Tabs.Content>
-        <Tabs.Content value="gen-2" className="panel wizard-panel"><h2 className="wizard-title"><span className="step-number">2</span>Page object & locator mapping</h2><div className="wizard-body">
+        <Tabs.Content value="gen-2" className="panel wizard-panel"><h2 className="wizard-title sr-only"><span className="step-number">2</span>Page object & locator mapping</h2><div className="wizard-body">
           <label className="search-box">
             <Search size={15} />
             <input aria-label="Find dictionary field" placeholder="Find an existing dictionary field…" value={fieldQuery} onChange={(e) => setFieldQuery(e.target.value)} onKeyDown={(e) => { if (e.key === 'Escape') setFieldQuery(''); if (e.key === 'Enter' && fieldHits[0]) { const h = fieldHits[0]; setDraft((d) => ({ ...d, page: h.page, section: h.section, field: h.field, fieldType: h.fieldType })); setFieldQuery(''); } }} />
@@ -311,7 +314,7 @@ export default function TestGenerator({ revision, seed, onSource, onExport, onIn
             {action === 'fill' && <label className="field-label span-3">TEST DATA VALUE<input aria-label="Test data" value={value} onChange={(e) => set('value', e.target.value)} />{err('value')}</label>}
           </div>
         </div></Tabs.Content>
-        <Tabs.Content value="gen-3" className="panel wizard-panel"><h2 className="wizard-title"><span className="step-number">3</span>Selector resolution & dictionary match</h2><div className="wizard-body">
+        <Tabs.Content value="gen-3" className="panel wizard-panel"><h2 className="wizard-title sr-only"><span className="step-number">3</span>Selector resolution & dictionary match</h2><div className="wizard-body">
           {plan?.entry ? (
             <div className="split-2">
               <div>
@@ -353,7 +356,7 @@ export default function TestGenerator({ revision, seed, onSource, onExport, onIn
             </div>
           </details>
         </div></Tabs.Content>
-        <Tabs.Content value="gen-4" className="panel wizard-panel"><h2 className="wizard-title"><span className="step-number">4</span>Validation &amp; quality gate</h2><div className="wizard-body">
+        <Tabs.Content value="gen-4" className="panel wizard-panel"><h2 className="wizard-title sr-only"><span className="step-number">4</span>Validation &amp; quality gate</h2><div className="wizard-body">
           {checks && (
             <div className="gate-score">
               <Meter value={passed} max={checks.length} label="Quality gate" />

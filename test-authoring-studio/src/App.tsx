@@ -945,7 +945,6 @@ export default function App() {
                       <h2>Recorded actions</h2>
                       <Badge>{actions.length}</Badge>
                     </div>
-                    <span className="micro-label">NORMALIZED IR</span>
                   </div>
                   <div
                     className="action-list"
@@ -1054,7 +1053,6 @@ export default function App() {
                         <Icon icon={GitBranch} />
                         <h2>Repository action matcher</h2>
                       </div>
-                      <Badge tone="purple">DETERMINISTIC</Badge>
                     </div>
                     <div className="matcher-content">
                       {selectedAction && (
@@ -1577,17 +1575,13 @@ export default function App() {
           {busy ? 'Working…' : 'Ready'}
           <span className="muted-separator">│</span>
           <GitBranch size={12} />
-          Repository source is authoritative
+          {index?.workspace ?? 'No repository'}
           {execution.status === 'running' && (<><Separator vertical /><span className="status-run">Running tests</span><Meter value={60} label="Test run" tone="purple" /></>)}
         </span>
         <button onClick={() => setModal('diagnostics')}>
           <TriangleAlert size={12} />
           {index?.diagnostics.length ?? 0} diagnostics
         </button>
-        <span className="footer-right">
-          <ShieldCheck size={12} />
-          Local only<span className="muted-separator">│</span>SpecFlow + Playwright
-        </span>
       </footer>
       <Toast.Provider swipeDirection={typeof window !== 'undefined' && matchMedia('(max-width: 640px)').matches ? 'down' : 'right'} duration={6000}>
         <Toast.Root

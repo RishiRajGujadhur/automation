@@ -111,10 +111,10 @@ export default function Dashboard({ index, revision, onNavigate, recent = [], on
             )}
           </div>
         </Card>
-        <Card id="dash-project-classification" title="Project classification" badge={<><span className="badge">Rules §11</span></>}>
+        <Card id="dash-project-classification" title="Project classification">
           <div className="wizard-body"><Indicators model={model} /></div>
         </Card>
-        <Card id="dash-layers" title="Layers" badge={<><span className="badge">Rules §1–2</span></>}>
+        <Card id="dash-layers" title="Layers">
           <div className="wizard-body">
             <ul className="layer-list">{model && Object.entries(model.layers).sort((a, b) => b[1] - a[1]).map(([l, n]) => <li key={l}><span>{l}</span><strong>{n}</strong></li>)}</ul>
           </div>

@@ -157,8 +157,8 @@ export function Segmented<T extends string>({ value, onValueChange, options, lab
 }
 
 /* ------------------------------------------------------------------ Preferences */
-export type Prefs = { density: 'comfortable' | 'compact'; textSize: 'small' | 'medium' | 'large'; motion: 'system' | 'reduce'; contrast: 'normal' | 'high'; theme: AppThemeId; editorTheme: EditorThemeId; accent: AccentId; mode: 'basic' | 'advanced'; haptics: boolean; sidebar: boolean; focus: boolean; showStats: boolean; algorithms: Record<string, boolean>; algorithmPreset: string; layout: 'vscode' | 'classic' };
-export const defaultPrefs: Prefs = { density: 'comfortable', textSize: 'medium', motion: 'system', contrast: 'normal', theme: 'studio', editorTheme: 'auto', accent: 'violet', mode: 'basic', haptics: true, sidebar: true, focus: false, showStats: true, algorithms: {}, algorithmPreset: 'essentials', layout: 'vscode' };
+export type Prefs = { density: 'comfortable' | 'compact'; textSize: 'small' | 'medium' | 'large'; motion: 'system' | 'reduce'; contrast: 'normal' | 'high'; theme: AppThemeId; editorTheme: EditorThemeId; accent: AccentId; mode: 'basic' | 'advanced'; haptics: boolean; sidebar: boolean; focus: boolean; showStats: boolean; algorithms: Record<string, boolean>; algorithmPreset: string; layout: 'vscode' | 'classic'; showProjectModel: boolean };
+export const defaultPrefs: Prefs = { density: 'comfortable', textSize: 'medium', motion: 'system', contrast: 'normal', theme: 'studio', editorTheme: 'auto', accent: 'violet', mode: 'basic', haptics: true, sidebar: true, focus: false, showStats: true, algorithms: {}, algorithmPreset: 'essentials', layout: 'vscode', showProjectModel: false };
 const PrefsContext = createContext<{ prefs: Prefs; setPrefs: (p: Partial<Prefs>) => void }>({ prefs: defaultPrefs, setPrefs: () => {} });
 export const usePrefs = () => useContext(PrefsContext);
 /** Whether an algorithm from src/algorithms/registry.ts is switched on (Settings → Algorithms). */

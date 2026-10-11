@@ -95,3 +95,13 @@ test('Classic layout is still available from Appearance', async ({ page }) => {
   await expect(page.locator('html')).toHaveAttribute('data-layout', 'classic');
   await expect(page.locator('.main-nav')).toBeVisible();
 });
+
+test('Test Generator: project model hidden by default, shown from Settings → General; no redundant step titles', async ({ page }) => {
+  await advanced(page, '/#/test-generator');
+  await expect(page.locator('#gen-project-model')).toHaveCount(0);
+  await expect(page.locator('.wizard-title').first()).toHaveClass(/sr-only/);
+  await page.getByRole('button', { name: 'Preferences' }).click();
+  await page.locator('#pref-project-model').click();
+  await page.keyboard.press('Escape');
+  await expect(page.locator('#gen-project-model')).toBeVisible();
+});

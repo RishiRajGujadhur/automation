@@ -1300,10 +1300,13 @@ textarea[aria-invalid='true'] {
 }
 // Editor height = window − (title bar, context bar, stepper, step title, actions bar).
 .wizard {
-  --scenario-editor-height: max(260px, calc(100dvh - 495px));
+  --scenario-editor-height: max(260px, calc(100dvh - 420px));
 }
 :root[data-layout='vscode'] .wizard {
-  --scenario-editor-height: max(260px, calc(100dvh - 420px));
+  --scenario-editor-height: max(260px, calc(100dvh - 270px));
+}
+.wizard-title.sr-only {
+  padding: 0 !important;
 }
 .scenario-text-panel .wizard-title {
   padding-top: 8px;
