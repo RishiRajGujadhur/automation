@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState, type ReactNode } from 'react';
-import { ChevronDown, ChevronRight, Play, PlayCircle, Bug, RefreshCw, Square, CircleCheck, CircleX, CircleSlash, Circle, Loader, Search, X, FileText, FlaskConical, Boxes, RotateCcw, Navigation, ListPlus, ListMinus, Trash2 } from 'lucide-react';
+import { ChevronDown, ChevronRight, Play, PlayCircle, Bug, RefreshCw, Square, CircleCheck, CircleX, CircleSlash, Circle, Loader, Search, X, FileText, FlaskConical, Boxes, RotateCcw, Navigation, ListPlus, ListMinus, Trash2, ShieldCheck } from 'lucide-react';
 import { RowMenu, useLocalState } from '../ui';
 import { useTestRun, discoverTests, runTests, cancelTests, resultsOf, outcomeOf, combine, type DiscoveredTest, type Outcome } from './store';
 
@@ -139,6 +139,7 @@ export default function TestExplorer({ revision, onOpen, onDebug, onNotice }: { 
           <button className="icon-button" aria-label="Run All Tests" title="Run All Tests" disabled={running || !tests.length} onClick={() => void start(playlist && playlists[playlist] ? visible : 'all')}><PlayCircle size={14} /></button>
           <button className="icon-button" aria-label="Run selected tests" title="Run" disabled={running || !selectedTests.length} onClick={() => void start(selectedTests)}><Play size={14} /></button>
           <button className="icon-button" aria-label="Debug selected test" title="Debug" disabled={running || selectedTests.length !== 1} onClick={() => selectedTests[0] && onDebug(selectedTests[0])}><Bug size={14} /></button>
+          <button className="icon-button" aria-label="Run All Tests with Coverage" title="Analyze Code Coverage for All Tests" disabled={running || !tests.length} onClick={() => void runTests('all', configuration, true).catch((e) => onNotice((e as Error).message))}><ShieldCheck size={14} /></button>
           <button className="icon-button" aria-label="Run Failed Tests" title="Run Failed Tests" disabled={running || !failed.length} onClick={() => void start(failed)}><RotateCcw size={14} /></button>
           {running ? <button className="icon-button" aria-label="Cancel test run" title="Cancel" onClick={() => void cancelTests()}><Square size={13} /></button>
             : <button className="icon-button" aria-label="Refresh tests" title="Refresh (rediscover)" onClick={refresh}><RefreshCw size={14} className={loading ? 'spin' : ''} /></button>}
@@ -173,6 +174,11 @@ export default function TestExplorer({ revision, onOpen, onDebug, onNotice }: { 
         <span title="Not run"><Circle size={12} className="t-none" />{counts.none}</span>
         <small>{tests.length} test{tests.length === 1 ? '' : 's'}{run.summary && run.status !== 'running' ? ` · last run ${ms(run.summary.durationMs)}` : ''}</small>
       </div>
+      {run.coverage && (
+        <div className="t-coverage" role="note" aria-label="Code coverage">
+          <ShieldCheck size={12} /> Line coverage {(run.coverage.lineRate * 100).toFixed(1)}% · {Object.keys(run.coverage.files).length} files
+        </div>
+      )}
       {warning && <p className="field-error" role="alert">{warning}</p>}
       {run.error && <p className="field-error" role="alert">{run.error}</p>}
       <nav className="t-tree" aria-label="Tests">

@@ -11,7 +11,9 @@ export type TestRunState = {
   output: string;
   summary?: { passed: number; failed: number; skipped: number; durationMs: number };
   error?: string;
+  coverage?: Coverage;
 };
+export type Coverage = { lineRate: number; files: Record<string, { covered: number[]; uncovered: number[] }> };
 
 /** Test run state streamed from /api/tests/events (Test Explorer reads it). */
 let state: TestRunState = { status: 'idle', version: 0, requested: [], results: [], output: '' };
@@ -53,6 +55,6 @@ export function combine(outcomes: Outcome[]): Outcome {
 }
 
 export const discoverTests = () => api<{ tests: DiscoveredTest[]; warning?: string }>('/tests');
-export const runTests = (tests: DiscoveredTest[] | 'all', configuration = 'Debug') =>
-  api<TestRunState>('/tests/run', tests === 'all' ? { configuration } : { ids: tests.map((t) => t.id), filters: tests.map((t) => t.filter), configuration });
+export const runTests = (tests: DiscoveredTest[] | 'all', configuration = 'Debug', coverage = false) =>
+  api<TestRunState>('/tests/run', tests === 'all' ? { configuration, coverage } : { ids: tests.map((t) => t.id), filters: tests.map((t) => t.filter), configuration, coverage });
 export const cancelTests = () => api<TestRunState>('/tests/cancel', {});

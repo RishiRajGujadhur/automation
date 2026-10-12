@@ -14,6 +14,8 @@ import { runGutter, setRunMarks, type RunMark } from './runGutter';
 import { changeGutter } from './changeGutter';
 import { useChangeBars } from './useChangeBars';
 import { blameGutter, setBlame, type BlameLine } from './blame';
+import { coverageGutter, setCoverage } from './coverage';
+import { useTestRun } from '../testing/store';
 import { createTwoFilesPatch } from 'diff';
 import { diff as diffMode } from '@codemirror/legacy-modes/mode/diff';
 import { vsKeys, commentTokenFor } from './vsKeys';
@@ -154,6 +156,9 @@ export default function CodeEditor({ file, reveal, active = true, onNotice, onIn
   }, [file]);
   const auto = useAutoSave({ file, value, loaded });
   useChangeBars(ref, file, !!loaded);
+  // Coverage bars from the last test run with coverage (Test Explorer ▸ Analyze Code Coverage).
+  const fileCoverage = useTestRun().coverage?.files[file] ?? null;
+  useEffect(() => { let tries = 0; const apply = () => { const v = ref.current?.view; if (v) v.dispatch({ effects: setCoverage.of(fileCoverage) }); else if (tries++ < 30) requestAnimationFrame(apply); }; if (loaded) apply(); }, [fileCoverage, loaded]);
   /** Compare with Unmodified (Git): the editor text against the committed version, as a unified diff. */
   const [headDiff, setHeadDiff] = useState<string>();
   const compareWithHead = async () => {
@@ -355,6 +360,7 @@ export default function CodeEditor({ file, reveal, active = true, onNotice, onIn
     cursorTracker(file, () => eolRef.current),
     caretTracker,
     blameGutter(),
+    coverageGutter(),
     ...(commentTokenFor(file) === '//' ? [braceFolding(), stickyScroll(braceRange)] : []),
     ...(commentTokenFor(file) ? [vsKeys(commentTokenFor(file))] : []),
     keymap.of([

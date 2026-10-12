@@ -115,3 +115,30 @@ test('Run glyphs in the editor margin: run a scenario from the feature editor an
     await fs.rm(root, { recursive: true, force: true, maxRetries: 5 }).catch(() => {});
   }
 });
+
+
+test('Analyze Code Coverage: line coverage summary and coverage bars in the editor', async ({ page, request }) => {
+  test.setTimeout(300_000);
+  const previous = (await (await request.get('/api/workspace')).json()).config;
+  const root = await fs.mkdtemp(path.join(os.tmpdir(), 'studio-cov-'));
+  await fs.cp(path.resolve(import.meta.dirname, '../../samples/Calculator'), root, { recursive: true, filter: (s) => !/[\\/](bin|obj)$/.test(s) });
+  try {
+    expect((await request.post('/api/solution/open', { data: { path: path.join(root, 'Calculator.csproj') } })).ok()).toBe(true);
+    await page.addInitScript(() => { if (!sessionStorage.getItem('seeded')) { localStorage.setItem('tas:prefs', JSON.stringify({ mode: 'advanced' })); sessionStorage.setItem('seeded', '1'); } });
+    await page.goto('/#/features/editor');
+    await expect(page.getByText('Repository indexed')).toBeVisible();
+    await page.getByRole('button', { name: 'Test Explorer' }).click();
+    const te = page.getByRole('region', { name: 'Test Explorer' });
+    await expect(te.getByRole('navigation', { name: 'Tests' }).locator('.t-label').first()).toBeVisible({ timeout: 60_000 });
+    await te.getByRole('button', { name: 'Run All Tests with Coverage' }).click();
+    await expect(te.getByRole('note', { name: 'Code coverage' })).toContainText(/Line coverage \d+(\.\d)?%/, { timeout: 240_000 });
+    // The step definitions file shows covered lines.
+    await page.getByRole('button', { name: 'Features (Explorer)' }).click();
+    await page.getByRole('navigation').getByRole('button', { name: 'CalculatorSteps.cs', exact: true }).first().click();
+    await expect(page.locator('.code-editor:not([hidden]) .cm-cov-hit').first()).toBeVisible({ timeout: 30_000 });
+  } finally {
+    await request.post('/api/tests/cancel').catch(() => {});
+    await request.post('/api/workspace', { data: { ...previous, solution: '' } });
+    await fs.rm(root, { recursive: true, force: true, maxRetries: 5 }).catch(() => {});
+  }
+});

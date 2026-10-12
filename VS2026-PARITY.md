@@ -64,7 +64,7 @@ Status: ✅ done · 🟡 partial · ⬜ to do. Priority: **P1** next, **P2** aft
 | T2 | Run / Debug selected, Run all, Run failed, repeat last run; live pass/fail icons in Explorer and editor gutters | ✅ (Test Explorer + editor margin glyphs) | P1 |
 | T3 | Test detail: output, stack trace with links, duration; playlists | ✅ (details with message, stack links, standard output, durations; playlists) | P2 |
 | T4 | Playwright traces from failed runs | 🟡 | P2 |
-| T5 | Code coverage per run | ⬜ | P3 |
+| T5 | Code coverage per run | ✅ (Analyze Code Coverage for All Tests: line coverage % in Test Explorer, green / red coverage bars in the code editor) | P3 |
 
 ## 6. Debugging
 | # | Feature | Status | Pri |
@@ -141,3 +141,4 @@ Status: ✅ done · 🟡 partial · ⬜ to do. Priority: **P1** next, **P2** aft
 - 2026-10-12 — **Gherkin table editing (G5).** `gherkinTables.ts`: typing `|` at the end of a row re-aligns the table (the row being typed keeps its own cells), Tab / Shift+Tab select the next / previous cell (wrapping to the next row), escaped pipes stay in their cell.
 - 2026-10-12 — **Edit Project File (S9).** Explorer project context menu opens the `.csproj`; `msbuildSchema.ts` feeds `@codemirror/lang-xml` completion (Project/PropertyGroup/ItemGroup, common properties with descriptions, PackageReference/ProjectReference attributes, Sdk values).
 - 2026-10-12 — **Add / remove projects (S8 partial).** Solution row context menu ▸ Add New Project… (`dotnet new <template> --no-restore` + `dotnet sln add`) and Add Existing Project…; project ▸ Remove from Solution (`dotnet sln remove`, files kept, asks first).
+- 2026-10-12 — **Code coverage (T5).** Test Explorer ▸ Run All Tests with Coverage runs `dotnet test --collect "Code Coverage;Format=cobertura"` (Microsoft.CodeCoverage ships with Microsoft.NET.Test.Sdk, no extra package); `parseCobertura` merges per-project reports into covered / uncovered lines per repository file; summary line in Test Explorer and coverage bars in the editor gutter.

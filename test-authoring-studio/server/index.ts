@@ -935,11 +935,11 @@ app.get('/api/tests/events', (req, res) => {
 });
 app.post('/api/tests/run', async (req, res) => {
   await afterRestore();
-  const { filters, ids, configuration } = z.object({ filters: z.array(z.string().max(600)).max(2000).default([]), ids: z.array(z.string().max(600)).max(2000).default([]), configuration: z.string().regex(/^[\w .|-]{1,60}$/).default('Debug') }).parse(req.body);
+  const { filters, ids, configuration, coverage } = z.object({ filters: z.array(z.string().max(600)).max(2000).default([]), ids: z.array(z.string().max(600)).max(2000).default([]), configuration: z.string().regex(/^[\w .|-]{1,60}$/).default('Debug'), coverage: z.boolean().optional() }).parse(req.body);
   // One filter per test, or-ed; a very long filter (huge selections) runs everything instead.
   const joined = [...new Set(filters)].join('|');
   const filter = filters.length && joined.length < 8000 ? joined : undefined;
-  res.json(await tests.run({ root: config.repositoryRoot, target: await buildTarget(), filter, requested: filters.length ? ids : ['all'], configuration: configuration.split('|')[0].trim() }));
+  res.json(await tests.run({ root: config.repositoryRoot, target: await buildTarget(), filter, requested: filters.length ? ids : ['all'], configuration: configuration.split('|')[0].trim(), coverage }));
 });
 app.post('/api/tests/cancel', (_req, res) => res.json(tests.cancel()));
 app.use(express.static(path.join(projectRoot, 'dist')));

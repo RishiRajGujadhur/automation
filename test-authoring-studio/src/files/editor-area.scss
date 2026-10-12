@@ -1839,3 +1839,24 @@
     gap: 6px;
   }
 }
+
+// Code coverage bars and summary
+.cm-coverage-gutter .cm-cov {
+  display: block;
+  width: 3px;
+  height: 100%;
+  &.cm-cov-hit {
+    background: #2e9d57;
+  }
+  &.cm-cov-miss {
+    background: #d9534f;
+  }
+}
+.test-explorer .t-coverage {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  padding: 0 10px 4px;
+  color: var(--text-muted);
+  font-size: 11px;
+}
