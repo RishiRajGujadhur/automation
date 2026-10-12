@@ -195,6 +195,7 @@ export default function TestExplorer({ revision, onOpen, onDebug, onNotice }: { 
                 const file = m && tests.find((t) => m[1].replaceAll('\\', '/').endsWith(t.file))?.file;
                 return <span key={j}>{file ? <button className="t-link" onClick={() => onOpen(file, Number(m![2]))}>{line.trim()}</button> : line}{'\n'}</span>;
               })}</pre>}
+              {r.output && <details className="t-output"><summary>Standard output</summary><pre aria-label="Test output">{r.output}</pre></details>}
             </div>
           ))}
         </section>

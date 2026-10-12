@@ -62,7 +62,7 @@ Status: ✅ done · 🟡 partial · ⬜ to do. Priority: **P1** next, **P2** aft
 | --- | --- | --- | --- |
 | T1 | Test Explorer: discover tests per project (features/scenarios, NUnit/xUnit/MSTest), tree by project/namespace/class/trait | ✅ (project → class / feature → test; no trait grouping yet) | P1 |
 | T2 | Run / Debug selected, Run all, Run failed, repeat last run; live pass/fail icons in Explorer and editor gutters | ✅ (Test Explorer + editor margin glyphs) | P1 |
-| T3 | Test detail: output, stack trace with links, duration; playlists | 🟡 (details with message, stack links, durations; playlists) | P2 |
+| T3 | Test detail: output, stack trace with links, duration; playlists | ✅ (details with message, stack links, standard output, durations; playlists) | P2 |
 | T4 | Playwright traces from failed runs | 🟡 | P2 |
 | T5 | Code coverage per run | ⬜ | P3 |
 
