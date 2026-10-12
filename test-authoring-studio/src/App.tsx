@@ -1191,6 +1191,8 @@ export default function App() {
             browserSolution={fileSrc.kind === 'browser' ? browserSol : undefined}
             onFileOp={fileOp}
             onManagePackages={openNuget}
+            onNotice={setNotice}
+            onConfirm={confirm}
             revision={revision}
             activeFile={openEditors.active ?? feature?.file}
             onOpenFile={(file, line) => { editFile(file, line); setMobileExplorer(false); }}

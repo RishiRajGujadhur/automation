@@ -55,6 +55,29 @@ test('File ▸ Open Project/Solution… opens an .slnx: solution folders, projec
     expect(sent[0]).toMatchObject({ action: 'build' });
     expect((sent[0] as { project?: string }).project).toBeUndefined();
     expect(sent[1]).toMatchObject({ action: 'build', project: 'src/Shop.Pages/Shop.Pages.csproj' });
+    await page.unroute('**/api/build');
+
+    // Add ▸ New Project (dotnet new + sln add), Add ▸ Existing Project, Remove from Solution.
+    await se.locator('.se-solution').click({ button: 'right' });
+    await page.getByRole('menuitem', { name: 'Add New Project…' }).click();
+    const form = se.getByRole('form', { name: 'Add New Project' });
+    await form.getByLabel('Project template').selectOption('classlib');
+    await form.getByLabel('Project name').fill('Shop.Api');
+    await form.getByLabel('Project folder').fill('src');
+    await form.getByRole('button', { name: 'Add', exact: true }).click();
+    await expect(se.getByText("Solution 'Shop' (3 projects)")).toBeVisible({ timeout: 60_000 });
+    expect(await fs.readFile(path.join(root, 'Shop.slnx'), 'utf8')).toContain('Shop.Api.csproj');
+    await write('lib/Shop.Data/Shop.Data.csproj', '<Project Sdk="Microsoft.NET.Sdk"><PropertyGroup><TargetFramework>net8.0</TargetFramework></PropertyGroup></Project>');
+    await se.locator('.se-solution').click({ button: 'right' });
+    await page.getByRole('menuitem', { name: 'Add Existing Project…' }).click();
+    await se.getByLabel('Project file path').fill('lib/Shop.Data/Shop.Data.csproj');
+    await se.getByRole('button', { name: 'Add', exact: true }).click();
+    await expect(se.getByText("Solution 'Shop' (4 projects)")).toBeVisible({ timeout: 60_000 });
+    await se.getByRole('button', { name: 'Collapse project Shop.Data' }).click({ button: 'right' });
+    await page.getByRole('menuitem', { name: 'Remove from Solution' }).click();
+    await page.getByRole('button', { name: 'Remove', exact: true }).click();
+    await expect(se.getByText("Solution 'Shop' (3 projects)")).toBeVisible({ timeout: 60_000 });
+    expect(await fs.readFile(path.join(root, 'Shop.slnx'), 'utf8')).not.toContain('Shop.Data');
     // The feature is indexed and opens.
     await se.getByRole('button', { name: 'Cart.feature', exact: true }).click();
     await expect(page.locator('.gherkin-editor .cm-content')).toContainText('Feature: Cart');

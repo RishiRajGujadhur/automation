@@ -44,6 +44,8 @@ type Props = {
   onFileOp?: (op: FileOp) => Promise<void>;
   /** Project / Dependencies context menu: Manage NuGet Packages… */
   onManagePackages?: (project: string) => void;
+  onNotice?: (message: string) => void;
+  onConfirm?: (o: { title: string; description: string; confirm: string; danger?: boolean }) => Promise<boolean>;
 };
 export type FileOp = { kind: 'rename' | 'copy' | 'delete'; from: string; to?: string; folder?: boolean };
 /** Explorer clipboard (Copy / Cut, then Paste on a folder or beside a file), kept while the app is open. */
@@ -77,7 +79,7 @@ function buildTree(files: { file: string; layer: string }[], prefix = ''): Node[
  * with file nesting (a feature shows the step files its steps bind to, and its generated code-behind),
  * Sync with Active Document, a pending-changes filter, Collapse All, Show All Files and search (Ctrl+;).
  */
-export default function SolutionExplorer({ features, revision, activeFile, query, activeFolder, onQuery, onSelect, onOpenFile, onFolder, onNew, onSource, browserSolution, onFileOp: fileOpProp, onManagePackages }: Props) {
+export default function SolutionExplorer({ features, revision, activeFile, query, activeFolder, onQuery, onSelect, onOpenFile, onFolder, onNew, onSource, browserSolution, onFileOp: fileOpProp, onManagePackages, onNotice, onConfirm }: Props) {
   // After a rename, copy or delete the tree reloads itself too (not only when the index revision changes).
   const loads = useRef(0);
   const loadSolution = () => { const n = ++loads.current; api<Solution>('/solution').then((s) => { if (n === loads.current) setSolution(s); }).catch(() => {}); };
@@ -133,6 +135,30 @@ export default function SolutionExplorer({ features, revision, activeFile, query
     else if (mod && e.key.toLowerCase() === 'v') { e.preventDefault(); void paste(folder ? path : dirOf(path)); }
   };
   const [serverSolution, setSolution] = useState<Solution>();
+  // Add ▸ New Project / Existing Project; Remove from Solution (files stay on disk).
+  const [adding, setAdding] = useState<{ kind: 'new'; template: string; name: string; folder: string } | { kind: 'existing'; path: string } | null>(null);
+  const [addBusy, setAddBusy] = useState(false);
+  const afterProjects = (message: string) => { loadSolution(); onNotice?.(message); };
+  const addProject = async () => {
+    if (!adding) return;
+    setAddBusy(true);
+    try {
+      const r = adding.kind === 'new'
+        ? await api<{ project: string }>('/solution/projects/new', { template: adding.template, name: adding.name, folder: adding.folder })
+        : await api<{ project: string }>('/solution/projects/add', { path: adding.path });
+      setAdding(null);
+      afterProjects(`Added ${r.project} to the solution.`);
+    } catch (e) {
+      onNotice?.((e as Error).message);
+    } finally {
+      setAddBusy(false);
+    }
+  };
+  const removeProject = async (file: string, name: string) => {
+    if (onConfirm && !(await onConfirm({ title: `Remove ${name}?`, description: `${name} will be removed from the solution. Its files stay on disk.`, confirm: 'Remove', danger: true }))) return;
+    try { await api('/solution/projects/remove', { project: file, approved: true }); afterProjects(`Removed ${name} from the solution.`); }
+    catch (e) { onNotice?.((e as Error).message); }
+  };
   const solution = browserSolution ?? serverSolution;
   const [collapsed, setCollapsed] = useState<Set<string>>(() => new Set());
   const [openNests, setOpenNests] = useState<Set<string>>(new Set());
@@ -286,6 +312,7 @@ export default function SolutionExplorer({ features, revision, activeFile, query
           ...(p.file.endsWith('.csproj') && !browserSolution ? [{ label: 'Edit Project File', icon: FileCog, onSelect: () => onOpenFile(p.file) }] : []),
           ...(onManagePackages && p.file.endsWith('.csproj') ? [{ label: 'Manage NuGet Packages…', icon: Package, onSelect: () => onManagePackages(p.file) }] : []),
           { label: 'Copy project path', icon: Copy, onSelect: () => copyText(p.file) },
+          ...(solution?.solutionFile && !browserSolution && p.file.endsWith('.csproj') ? ['separator' as const, { label: 'Remove from Solution', icon: Trash2, onSelect: () => void removeProject(p.file, p.name) }] : []),
         ]}>
         <div className="explorer-folder-row" data-menu-row>
           <button className="explorer-folder se-project" style={{ paddingLeft: pad }} aria-label={`${open ? 'Collapse' : 'Expand'} project ${p.name}`} aria-expanded={open} onClick={() => toggle(key)} title={p.missing ? `${p.file} (not found)` : p.file}>
@@ -362,7 +389,35 @@ export default function SolutionExplorer({ features, revision, activeFile, query
       <nav className="folder-tree se-tree" ref={tree} aria-label="Solution">
         <ul className="folder-children">
           <li>
-            <div className="se-row se-solution"><Layers size={14} aria-hidden="true" /><span title={solution?.solutionFile ?? undefined}>Solution '{solution?.name ?? '…'}' ({projects.length} project{projects.length === 1 ? '' : 's'})</span></div>
+            <RowMenu label="Solution" items={solution?.solutionFile && !browserSolution ? [
+              { label: 'Add New Project…', icon: Plus, onSelect: () => setAdding({ kind: 'new', template: 'nunit', name: '', folder: '' }) },
+              { label: 'Add Existing Project…', icon: Boxes, onSelect: () => setAdding({ kind: 'existing', path: '' }) },
+            ] : []}>
+            <div className="se-row se-solution" data-menu-row><Layers size={14} aria-hidden="true" /><span title={solution?.solutionFile ?? undefined}>Solution '{solution?.name ?? '…'}' ({projects.length} project{projects.length === 1 ? '' : 's'})</span></div>
+            </RowMenu>
+            {adding && (
+              <form className="se-add-project" aria-label={adding.kind === 'new' ? 'Add New Project' : 'Add Existing Project'} onSubmit={(e) => { e.preventDefault(); void addProject(); }}>
+                {adding.kind === 'new' ? (
+                  <>
+                    <select aria-label="Project template" value={adding.template} onChange={(e) => setAdding({ ...adding, template: e.target.value })}>
+                      <option value="nunit">NUnit Test Project</option>
+                      <option value="xunit">xUnit Test Project</option>
+                      <option value="mstest">MSTest Test Project</option>
+                      <option value="classlib">Class Library</option>
+                      <option value="console">Console App</option>
+                    </select>
+                    <input aria-label="Project name" placeholder="Project name" autoFocus value={adding.name} onChange={(e) => setAdding({ ...adding, name: e.target.value })} />
+                    <input aria-label="Project folder" placeholder="Folder (optional), e.g. tests" value={adding.folder} onChange={(e) => setAdding({ ...adding, folder: e.target.value })} />
+                  </>
+                ) : (
+                  <input aria-label="Project file path" placeholder="Path of a .csproj" autoFocus value={adding.path} onChange={(e) => setAdding({ ...adding, path: e.target.value })} />
+                )}
+                <div className="se-add-actions">
+                  <button className="button primary" type="submit" disabled={addBusy}>{addBusy ? 'Adding…' : 'Add'}</button>
+                  <button className="button" type="button" onClick={() => setAdding(null)}>Cancel</button>
+                </div>
+              </form>
+            )}
             <ul className="folder-children">
               {solutionNodes(solution?.tree ?? projects.map((p) => ({ kind: 'project' as const, name: p.name, file: p.file })), 0)}
               {misc.length > 0 && (

@@ -1818,3 +1818,24 @@
     font-size: 12px;
   }
 }
+
+// Explorer ▸ Add New / Existing Project
+.se-add-project {
+  display: grid;
+  gap: 6px;
+  margin: 4px 8px 8px 20px;
+  select,
+  input {
+    height: 26px;
+    padding: 0 6px;
+    border: 1px solid var(--border);
+    border-radius: 3px;
+    background: var(--surface);
+    color: var(--text);
+    font-size: 12px;
+  }
+  .se-add-actions {
+    display: flex;
+    gap: 6px;
+  }
+}

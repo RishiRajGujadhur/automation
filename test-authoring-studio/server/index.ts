@@ -161,6 +161,45 @@ app.post('/api/steps/scaffold',async(req,res)=>{
 });
 // Solution Explorer model: projects (.csproj) with their files and package dependencies, plus file nesting
 // (each feature → the step files its steps bind to, and SpecFlow's generated .feature.cs code-behind).
+// Add ▸ New Project / Existing Project, Remove (dotnet sln add / remove; dotnet new for new projects).
+const runDotnet = (args: string[], cwd: string) => new Promise<string>((resolve, reject) => {
+  const p = spawn(dotnet, args, { cwd, windowsHide: true, env: { ...process.env, DOTNET_CLI_UI_LANGUAGE: 'en', DOTNET_NOLOGO: '1' } });
+  let out = '';
+  p.stdout?.on('data', (d) => { out += d; });
+  p.stderr?.on('data', (d) => { out += d; });
+  p.on('error', reject);
+  p.on('exit', (code) => (code === 0 ? resolve(out) : reject(new Error(out.trim().split('\n').slice(-3).join(' ') || `dotnet ${args[0]} failed.`))));
+});
+const needSolution = () => { if (!config.solution) throw new Error('Open a solution (.sln / .slnx) to add or remove projects.'); return config.solution; };
+const PROJECT_TEMPLATES = ['classlib', 'nunit', 'xunit', 'mstest', 'console'] as const;
+app.post('/api/solution/projects/new', async (req, res) => {
+  const { template, name, folder } = z.object({ template: z.enum(PROJECT_TEMPLATES), name: z.string().trim().regex(/^[A-Za-z_][\w.]{0,80}$/, 'Use letters, digits, dots and underscores.'), folder: z.string().max(300).default('') }).parse(req.body);
+  const sln = needSolution();
+  const dir = path.posix.join(folder.replaceAll('\\', '/').replace(/^\/+|\/+$/g, '') || '.', name);
+  const target = await confined(config.repositoryRoot, dir, false);
+  if (await fs.stat(target).then(() => true, () => false)) throw new Error(`${dir} already exists.`);
+  await runDotnet(['new', template, '-n', name, '-o', target, '--no-restore'], config.repositoryRoot);
+  const csproj = path.posix.join(dir, `${name}.csproj`);
+  await runDotnet(['sln', sln, 'add', csproj], config.repositoryRoot);
+  rescanSoon(200);
+  res.json({ project: csproj });
+});
+app.post('/api/solution/projects/add', async (req, res) => {
+  const { path: given } = z.object({ path: z.string().trim().min(1).max(1000) }).parse(req.body);
+  const sln = needSolution();
+  const full = path.resolve(config.repositoryRoot, given);
+  if (!/\.csproj$/i.test(full) || !(await fs.stat(full).then((s) => s.isFile(), () => false))) throw new Error(`${given} is not a .csproj file.`);
+  await runDotnet(['sln', sln, 'add', full], config.repositoryRoot);
+  rescanSoon(200);
+  res.json({ project: path.relative(config.repositoryRoot, full).replaceAll('\\', '/') });
+});
+app.post('/api/solution/projects/remove', async (req, res) => {
+  const { project } = z.object({ project: z.string().max(400), approved: z.literal(true) }).parse(req.body);
+  const sln = needSolution();
+  await runDotnet(['sln', sln, 'remove', project], config.repositoryRoot);
+  rescanSoon(200);
+  res.json({ ok: true });
+});
 app.get('/api/solution',async(_req,res)=>{
   const i=await ensure();const model=await projectModel(config,i);
   const byId=new Map(i.stepDefinitions.map(b=>[b.id,b]));
