@@ -104,12 +104,20 @@ test('Git branches: New Branch, publish with Push, switch back, Fetch', async ({
     await view.getByRole('button', { name: /^Push/ }).click();
     await expect(page.getByText('Pushed.').first()).toBeVisible();
     expect(run(remote, 'branch', '--list', 'feature/login').trim()).toContain('feature/login');
+    await fs.writeFile(path.join(root, 'login.txt'), 'login');
+    run(root, 'add', 'login.txt');
+    run(root, 'commit', '-q', '-m', 'Login work');
     // Switch back to main from the branch list.
     await view.getByRole('button', { name: 'Branch feature/login' }).click();
     await page.getByRole('menuitem', { name: 'main', exact: true }).click();
     await expect(view.getByRole('button', { name: 'Branch main' })).toBeVisible();
     await view.getByRole('button', { name: 'Fetch' }).click();
     await expect(page.getByText('Fetched.').first()).toBeVisible();
+    // Merge the branch into main.
+    await view.getByRole('button', { name: 'Branch main' }).click();
+    await page.getByRole('menuitem', { name: 'Merge feature/login into main' }).click();
+    await expect(page.getByText('Merged feature/login into main.').first()).toBeVisible();
+    expect(run(root, 'log', '-1', '--format=%s').trim()).toBe('Login work');
   } finally {
     await request.post('/api/workspace', { data: previous });
     await fs.rm(base, { recursive: true, force: true, maxRetries: 5 }).catch(() => {});

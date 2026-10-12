@@ -1,5 +1,5 @@
 import { useEffect, useState, type ReactNode } from 'react';
-import { GitBranch, Plus, Minus, Undo2, RefreshCw, ChevronDown, ChevronRight, ArrowUp, ArrowDown, Check, History, CloudDownload, GitBranchPlus, Cloud } from 'lucide-react';
+import { GitBranch, Plus, Minus, Undo2, RefreshCw, ChevronDown, ChevronRight, ArrowUp, ArrowDown, Check, History, CloudDownload, GitBranchPlus, Cloud, GitMerge } from 'lucide-react';
 import { Dropdown } from '../radix';
 import { api } from '../api';
 import { useConfirm } from '../radix2';
@@ -62,6 +62,12 @@ export default function GitView({ onOpen, onNotice, onChanged }: { onOpen: (file
     onNotice(create ? `Created and switched to ${name}.` : `Switched to ${name}.`);
     void loadBranches();
   });
+  const mergeFrom = (name: string) => act(async () => {
+    await api('/git/merge', { name });
+    window.dispatchEvent(new Event(GIT_CHANGED_EVENT));
+    onChanged();
+    onNotice(`Merged ${name} into ${st?.branch ?? 'the current branch'}.`);
+  });
   const syncAction = (action: 'fetch' | 'pull' | 'push') => act(async () => {
     await api('/git/sync', { action });
     if (action === 'pull') { window.dispatchEvent(new Event(GIT_CHANGED_EVENT)); onChanged(); }
@@ -123,6 +129,7 @@ export default function GitView({ onOpen, onNotice, onChanged }: { onOpen: (file
               'separator' as const,
               ...branches.local.map((b) => ({ label: `${b.current ? '✓ ' : ''}${b.name}`, icon: GitBranch, disabled: b.current, onSelect: () => void switchTo(b.name) })),
               ...(branches.remote.length ? ['separator' as const, ...branches.remote.map((r) => ({ label: r, icon: Cloud, onSelect: () => void switchTo(r) }))] : []),
+              ...(branches.local.some((b) => !b.current) ? ['separator' as const, ...branches.local.filter((b) => !b.current).map((b) => ({ label: `Merge ${b.name} into ${st.branch}`, icon: GitMerge, onSelect: () => void mergeFrom(b.name) }))] : []),
             ]}
           />
           <span className="git-sync">

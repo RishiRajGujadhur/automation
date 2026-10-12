@@ -79,7 +79,7 @@ Status: ✅ done · 🟡 partial · ⬜ to do. Priority: **P1** next, **P2** aft
 | # | Feature | Status | Pri |
 | --- | --- | --- | --- |
 | V1 | Git Changes: status, stage, commit, amend, discard; gutter change markers | ✅ | P1 |
-| V2 | Branches (create, switch, merge), pull/push/fetch, sync | 🟡 (create, switch incl. remote branches, fetch / pull --ff-only / push with publish; no merge yet) | P2 |
+| V2 | Branches (create, switch, merge), pull/push/fetch, sync | 🟡 (create, switch incl. remote branches, fetch / pull --ff-only / push with publish, merge into current branch (conflicts abort and are reported)) | P2 |
 | V3 | History, blame, compare with previous | 🟡 (recent history list) | P2 |
 
 ## 8. Environment
@@ -127,3 +127,4 @@ Status: ✅ done · 🟡 partial · ⬜ to do. Priority: **P1** next, **P2** aft
 - 2026-10-12 — **Unified bottom panel (W1 partial).** Build (Error List, Output) and Debug windows share one docked panel with BUILD / DEBUG tabs instead of stacking; a build switches to Build, a debug session to Debug; the choice is remembered. Closing one leaves the other.
 - 2026-10-12 — **Inlay hints (E11).** Language service `inlayHints`: parameter names before literal/null/default arguments, inferred types after `var` and on untyped lambda parameters; editor shows them as muted chips, refreshed 0.7 s after typing (stale answers dropped).
 - 2026-10-12 — **CodeLens test status (E10 done).** Test methods' lens shows the last run's outcome (✓ Passed / ✕ Failed / ○ Skipped / ▶ Not run / ◌ Running) before the reference count, live from the test run stream.
+- 2026-10-12 — **Merge (V2).** Branch menu lists "Merge <branch> into <current>"; `/api/git/merge` runs `git merge --no-edit`; a conflicting merge is aborted and the conflicting files are named.

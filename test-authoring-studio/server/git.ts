@@ -130,6 +130,21 @@ export async function createBranch(root: string, name: string, checkoutIt = true
   await git(top, ['check-ref-format', '--branch', name]).catch(() => { throw new Error(`'${name}' is not a valid branch name.`); });
   await git(top, checkoutIt ? ['switch', '-c', name] : ['branch', name]);
 }
+/**
+ * Merge a branch into the current one (Visual Studio's "Merge into current branch"). A merge with conflicts is aborted
+ * and reported with the conflicting files, so the working tree is never left half merged.
+ */
+export async function merge(root: string, name: string) {
+  const { top } = await locate(root);
+  try {
+    return await git(top, ['merge', '--no-edit', name]);
+  } catch (e) {
+    const conflicts = (await git(top, ['diff', '--name-only', '--diff-filter=U']).catch(() => '')).split(/\r?\n/).filter(Boolean);
+    if (!conflicts.length) throw e;
+    await git(top, ['merge', '--abort']).catch(() => {});
+    throw new Error(`Merging ${name} has conflicts in ${conflicts.join(', ')}. The merge was cancelled; resolve them from the command line.`);
+  }
+}
 /** Fetch / Pull / Push for the current branch (Push sets the upstream the first time, like Visual Studio). */
 export async function sync(root: string, action: 'fetch' | 'pull' | 'push') {
   const { top } = await locate(root);
