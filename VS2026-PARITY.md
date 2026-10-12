@@ -85,7 +85,7 @@ Status: ✅ done · 🟡 partial · ⬜ to do. Priority: **P1** next, **P2** aft
 ## 8. Environment
 | # | Feature | Status | Pri |
 | --- | --- | --- | --- |
-| W1 | Dockable tool windows (Explorer, Error List, Output, Test Explorer, Debug) with bottom panel tabs | 🟡 | P1 |
+| W1 | Dockable tool windows (Explorer, Error List, Output, Test Explorer, Debug) with bottom panel tabs | 🟡 (one bottom panel: Build / Debug tabs; floating/redocking pending) | P1 |
 | W2 | Command palette / Feature Search (Ctrl+Q), customizable keyboard shortcuts | 🟡 | P2 |
 | W3 | Themes, accents, density | ✅ | — |
 | W4 | Auto save, hot exit, file conflict detection | ✅ | — |
@@ -124,3 +124,4 @@ Status: ✅ done · 🟡 partial · ⬜ to do. Priority: **P1** next, **P2** aft
 - 2026-10-12 — **Rename Step (G4).** `server/stepRename.ts` (top-level capture groups / Cucumber parameters, values carried into the new wording, verbatim / regular C# string rewriting) and `/api/steps/rename` (preview, apply); C# editor: Rename Step… on a step definition with a live before → after preview of the attribute and every bound feature line.
 - 2026-10-12 — **Manage NuGet Packages (B3).** `server/nuget.ts` (installed from the .csproj, versions and search from nuget.org, `dotnet add|remove package`); dialog with Browse / Installed / Updates, version picker, Install / Update / Uninstall (confirmed); opened from the Explorer's project context menu or Build ▸ Manage NuGet Packages…; the language service restarts afterwards to pick up the new references.
 - 2026-10-12 — **CodeLens reference counts (E10 partial).** Language service `referenceCounts` (SymbolFinder per declared type, method, constructor, property, event); `/api/csharp/referenceCounts`; editor shows "N references" above each declaration (above its attributes) and clicking opens Find All References. Step-usage lens keeps priority on step definitions.
+- 2026-10-12 — **Unified bottom panel (W1 partial).** Build (Error List, Output) and Debug windows share one docked panel with BUILD / DEBUG tabs instead of stacking; a build switches to Build, a debug session to Debug; the choice is remembered. Closing one leaves the other.

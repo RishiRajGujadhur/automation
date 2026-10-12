@@ -105,3 +105,19 @@ test('Test Generator: project model hidden by default, shown from Settings → G
   await page.keyboard.press('Escape');
   await expect(page.locator('.generator-sidebar')).toBeVisible();
 });
+
+test('Build and Debug windows share one bottom panel with tabs', async ({ page }) => {
+  await page.addInitScript(() => { if (!sessionStorage.getItem('seeded')) { localStorage.setItem('tas:prefs', JSON.stringify({ mode: 'advanced' })); localStorage.setItem('tas:buildOpen', 'true'); localStorage.setItem('tas:debugOpen', 'true'); localStorage.setItem('tas:dockTab', '"build"'); sessionStorage.setItem('seeded', '1'); } });
+  await page.goto('/#/features/editor');
+  const tabs = page.getByRole('tablist', { name: 'Panel' });
+  await expect(tabs.getByRole('tab', { name: 'Build' })).toHaveAttribute('aria-selected', 'true');
+  await expect(page.getByRole('region', { name: 'Build' })).toBeVisible();
+  await expect(page.getByRole('region', { name: 'Debugger' })).toHaveCount(0);
+  await tabs.getByRole('tab', { name: 'Debug' }).click();
+  await expect(page.getByRole('region', { name: 'Debugger' })).toBeVisible();
+  await expect(page.getByRole('region', { name: 'Build' })).toHaveCount(0);
+  // Closing one window leaves the other without the tab strip.
+  await page.getByRole('region', { name: 'Debugger' }).getByRole('button', { name: /close/i }).first().click();
+  await expect(tabs).toHaveCount(0);
+  await expect(page.getByRole('region', { name: 'Build' })).toBeVisible();
+});

@@ -1584,3 +1584,27 @@
     gap: 8px;
   }
 }
+
+// Shared bottom panel: Build / Debug tabs when both windows are open
+.dock-tabs {
+  display: flex;
+  flex: none;
+  gap: 2px;
+  padding: 0 8px;
+  border-top: 1px solid var(--border);
+  background: var(--surface);
+  button {
+    padding: 3px 10px;
+    border: 0;
+    border-bottom: 2px solid transparent;
+    background: transparent;
+    color: var(--text-muted);
+    font-size: 11px;
+    text-transform: uppercase;
+    cursor: pointer;
+    &[aria-selected='true'] {
+      border-bottom-color: var(--accent, #9270dd);
+      color: var(--text);
+    }
+  }
+}

@@ -348,6 +348,13 @@ export default function App() {
   const build = useBuild();
   const [buildOpen, setBuildOpen] = useLocalState('buildOpen', false);
   const showBuild = buildOpen || build.status === 'running';
+  // One docked bottom panel (as in Visual Studio / VS Code): Build and Debug windows share it as tabs.
+  const [dockTab, setDockTab] = useLocalState<'build' | 'debug'>('dockTab', 'build');
+  useEffect(() => { if (build.status === 'running') setDockTab('build'); }, [build.status]); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => { if (debugLive) setDockTab('debug'); }, [debugLive]); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => { if (debugOpen) setDockTab('debug'); }, [debugOpen]); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => { if (buildOpen) setDockTab('build'); }, [buildOpen]); // eslint-disable-line react-hooks/exhaustive-deps
+  const dockShows = showBuild && showDebug ? dockTab : showBuild ? 'build' : showDebug ? 'debug' : null;
   // Side bar view: the Explorer or the Test Explorer (activity bar, Test menu).
   // Manage NuGet Packages (project from the Explorer, else the first project).
   const [nugetProject, setNugetProject] = useState<string>();
@@ -1738,10 +1745,16 @@ export default function App() {
             </EditorTabs>
             </div>
           )}
-          {tab === 'Features' && (view === 'code' || view === 'editor') && showBuild && (
+          {tab === 'Features' && (view === 'code' || view === 'editor') && showBuild && showDebug && (
+            <div className="dock-tabs" role="tablist" aria-label="Panel">
+              <button role="tab" aria-selected={dockShows === 'build'} onClick={() => setDockTab('build')}>Build</button>
+              <button role="tab" aria-selected={dockShows === 'debug'} onClick={() => setDockTab('debug')}>Debug</button>
+            </div>
+          )}
+          {tab === 'Features' && (view === 'code' || view === 'editor') && dockShows === 'build' && (
             <BuildPanel onOpen={(file, line, column) => editFile(file, line, column)} onNotice={setNotice} onClose={() => setBuildOpen(false)} />
           )}
-          {tab === 'Features' && (view === 'code' || view === 'editor') && showDebug && (
+          {tab === 'Features' && (view === 'code' || view === 'editor') && dockShows === 'debug' && (
             <DebugPanel editingRequest={bpSettings?.split('#')[0] ?? null} editingNonce={bpSettings} onOpen={openAt} onNotice={setNotice} onClose={() => { setDebugOpen(false); if (debugLive) setNotice('The session keeps running. Stop it with Shift+F5.'); }} />
           )}
           {tab === 'Features' && view === 'builder' && (
