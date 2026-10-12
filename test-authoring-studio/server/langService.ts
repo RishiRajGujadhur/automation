@@ -1,4 +1,6 @@
 import { spawn, type ChildProcess } from 'node:child_process';
+import fs from 'node:fs/promises';
+import { extraRootsOf } from './core.js';
 import { existsSync, statSync, cpSync } from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
@@ -53,7 +55,8 @@ export class LanguageService {
       pending.clear();
       if (this.proc === proc) { this.proc = undefined; this.ready = undefined; }
     });
-    this.ready = this.send({ op: 'init', root }, 120_000);
+    // Solution projects outside the folder are part of the workspace (see core.updateExtraRoots).
+    this.ready = fs.realpath(root).catch(() => root).then((real) => this.send({ op: 'init', root, extra: extraRootsOf(real) }, 120_000));
   }
   private send<T>(body: Record<string, unknown>, timeout = 30_000): Promise<T> {
     const id = ++this.seq;

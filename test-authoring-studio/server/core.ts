@@ -16,6 +16,7 @@ import { Parser, AstBuilder, GherkinClassicTokenMatcher } from '@cucumber/gherki
 import { IdGenerator } from '@cucumber/messages';
 import { XMLParser } from 'fast-xml-parser';
 import { parseDictionary } from './dictionaries.js';
+import { parseSln, parseSlnx } from '../src/solutionFormat.js';
 import { z } from 'zod';
 import type { Index, Step, Binding, Action, Match, Feature } from '../src/types.js';
 export const configSchema = z.object({
@@ -44,16 +45,44 @@ const scannerExe = process.env.STUDIO_SCANNER_EXE;
 export const scanner = (args: string[] = []): [string, string[]] => (scannerExe ? [scannerExe, args] : [dotnet, [scannerDll, ...args]]);
 export const relative = (root: string, file: string) =>
   path.relative(root, file).replaceAll('\\', '/');
+/**
+ * Folders of solution projects that live outside the opened folder (e.g. ../Shared/Shared.csproj), per opened folder
+ * (real path). Only these exact project folders are added to the file boundary; nothing else outside it.
+ */
+const extraRoots = new Map<string, string[]>();
+export const extraRootsOf = (base: string) => extraRoots.get(base) ?? [];
+const inside = (p: string, dir: string) => p === dir || p.startsWith(dir + path.sep);
+/** Recomputes the outside-project folders for a workspace from its solution file. */
+export async function updateExtraRoots(config: { repositoryRoot: string; solution?: string }) {
+  const base = await fs.realpath(config.repositoryRoot);
+  const dirs: string[] = [];
+  if (config.solution) {
+    const text = await fs.readFile(path.join(base, config.solution), 'utf8').catch(() => '');
+    const parsed = config.solution.toLowerCase().endsWith('.slnx') ? parseSlnx(text) : parseSln(text);
+    const slnDir = path.dirname(path.join(base, config.solution));
+    for (const p of parsed.projects) {
+      const full = path.resolve(slnDir, p.file.replaceAll('\\', path.sep).replaceAll('/', path.sep));
+      if (inside(full, base)) continue;
+      const real = await fs.realpath(path.dirname(full)).catch(() => undefined);
+      // A project folder that contains the opened folder (or a drive root) would open everything: refused.
+      if (real && !inside(base, real) && path.parse(real).root !== real) dirs.push(real);
+    }
+  }
+  extraRoots.set(base, [...new Set(dirs)]);
+  return extraRoots.get(base)!;
+}
+
 export async function confined(root: string, file: string, existing = true) {
   const base = await fs.realpath(root);
   const target = path.resolve(base, file);
-  if (target !== base && !target.startsWith(base + path.sep))
+  const allowed = [base, ...extraRootsOf(base)];
+  if (!allowed.some((d) => inside(target, d)))
     throw new Error('Path is outside the repository.');
   let probe = target;
   while (true) {
     try {
       const real = await fs.realpath(probe);
-      if (real !== base && !real.startsWith(base + path.sep))
+      if (!allowed.some((d) => inside(real, d)))
         throw new Error('Linked paths outside the repository are not allowed.');
       break;
     } catch (e) {
@@ -206,7 +235,9 @@ export async function scan(config: Config): Promise<Index> {
   const stat = await fs.stat(target);
   const targetDir = stat.isFile() ? path.dirname(target) : target;
   const ignore = config.ignoredDirectories.map((d) => `**/${d}/**`);
-  const dirs = [targetDir];
+  // Solution projects outside the opened folder are scanned too (their folders join the file boundary).
+  const outside = await updateExtraRoots(config);
+  const dirs = [targetDir, ...outside];
   if (config.referenceScope === 'DirectReferences') {
     const projects = stat.isFile()
       ? [target]
@@ -223,13 +254,13 @@ export async function scan(config: Config): Promise<Index> {
     }
   }
   async function files(patterns: string[]) {
-    const found = await fg(patterns, {
-      cwd: targetDir,
+    const found = (await Promise.all([targetDir, ...outside].map((cwd) => fg(patterns, {
+      cwd,
       absolute: true,
       ignore,
       followSymbolicLinks: false,
-    });
-    return Promise.all(found.map((f) => confined(root, f)));
+    })))).flat();
+    return Promise.all([...new Set(found)].map((f) => confined(root, f)));
   }
   const sources = [
     ...new Set(

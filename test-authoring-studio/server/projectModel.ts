@@ -1,4 +1,5 @@
 import fs from 'node:fs/promises';
+import { extraRootsOf } from './core.js';
 import path from 'node:path';
 import type { Config } from './core.js';
 import type { Index } from '../src/types.js';
@@ -43,6 +44,8 @@ export async function projectModel(config: Config, index: Index) {
     }
   };
   await walk(root);
+  // Solution projects outside the opened folder (their folders are inside the file boundary).
+  for (const dir of extraRootsOf(await fs.realpath(root).catch(() => root))) await walk(dir);
   const csproj = files.filter((f) => f.file.endsWith('.csproj'));
   const packages = new Set<string>();
   const frameworks = new Set<string>();

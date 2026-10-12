@@ -101,6 +101,8 @@ test('A solution project outside the opened folder is listed and labelled', asyn
   await fs.writeFile(path.join(base, 'sol/Shop.slnx'), '<Solution>\n  <Project Path="App/App.csproj" />\n  <Project Path="../shared/Shared.csproj" />\n</Solution>\n');
   await fs.writeFile(path.join(base, 'sol/App/App.csproj'), '<Project Sdk="Microsoft.NET.Sdk"><PropertyGroup><TargetFramework>net8.0</TargetFramework></PropertyGroup></Project>');
   await fs.writeFile(path.join(base, 'shared/Shared.csproj'), '<Project Sdk="Microsoft.NET.Sdk"><PropertyGroup><TargetFramework>net8.0</TargetFramework></PropertyGroup></Project>');
+  await fs.writeFile(path.join(base, 'shared/Helpers.cs'), 'namespace Shared;\npublic static class Helpers { }\n');
+  await fs.writeFile(path.join(base, 'secret.txt'), 'not part of the solution');
   try {
     expect((await request.post('/api/solution/open', { data: { path: path.join(base, 'sol/Shop.slnx') } })).ok()).toBe(true);
     await page.addInitScript(() => { if (!sessionStorage.getItem('seeded')) { localStorage.setItem('tas:prefs', JSON.stringify({ mode: 'advanced' })); sessionStorage.setItem('seeded', '1'); } });
@@ -109,6 +111,13 @@ test('A solution project outside the opened folder is listed and labelled', asyn
     await expect(se.getByText("Solution 'Shop' (2 projects)")).toBeVisible();
     await expect(se.getByRole('button', { name: 'Collapse project Shared' })).toContainText('(outside the folder)');
     await expect(se.getByRole('button', { name: 'Collapse project App' })).not.toContainText('(outside the folder)');
+    // Its files are listed, open and save; other paths outside the folder stay refused.
+    await se.getByRole('button', { name: 'Helpers.cs', exact: true }).click();
+    await expect(page.getByLabel('Source of ../shared/Helpers.cs')).toContainText('public static class Helpers');
+    const src = await (await request.get('/api/source?file=' + encodeURIComponent('../shared/Helpers.cs'))).json();
+    expect((await request.post('/api/file/save', { data: { file: '../shared/Helpers.cs', source: src.source + '// edited\n', baseHash: src.hash } })).ok()).toBe(true);
+    expect(await fs.readFile(path.join(base, 'shared/Helpers.cs'), 'utf8')).toContain('// edited');
+    expect((await request.get('/api/source?file=' + encodeURIComponent('../secret.txt'))).ok()).toBe(false);
   } finally {
     await request.post('/api/workspace', { data: { ...previous, solution: '' } });
     await fs.rm(base, { recursive: true, force: true, maxRetries: 5 }).catch(() => {});

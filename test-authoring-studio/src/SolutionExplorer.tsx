@@ -318,7 +318,7 @@ export default function SolutionExplorer({ features, revision, activeFile, query
         ]}>
         <div className="explorer-folder-row" data-menu-row>
           <button className="explorer-folder se-project" style={{ paddingLeft: pad }} aria-label={`${open ? 'Collapse' : 'Expand'} project ${p.name}`} aria-expanded={open} onClick={() => toggle(key)} title={p.missing ? `${p.file} (not found)` : p.file}>
-            {open ? <ChevronDown size={12} /> : <ChevronRight size={12} />}<Boxes size={14} /><span>{p.name}</span>{p.missing ? <small>(unavailable)</small> : p.external && <small title="This project is outside the opened folder: it builds and runs with the solution, but its files are not indexed or editable here. Open its parent folder to work on it.">(outside the folder)</small>}
+            {open ? <ChevronDown size={12} /> : <ChevronRight size={12} />}<Boxes size={14} /><span>{p.name}</span>{p.missing ? <small>(unavailable)</small> : p.external && <small title="This project is outside the opened folder; it is part of the solution, so its files are indexed and editable here.">(outside the folder)</small>}
           </button>
         </div>
         </RowMenu>

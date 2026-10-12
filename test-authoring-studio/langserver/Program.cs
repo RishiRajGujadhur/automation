@@ -47,13 +47,15 @@ sealed class LanguageService
     List<(string Dir, ProjectId Id)> owners = [];
     ProjectId? miscId;
     string root = "";
+    // Folders of solution projects outside the opened folder (they are indexed with it).
+    List<string> extraRoots = new();
 
     public async Task<object?> Handle(JsonObject req)
     {
         var op = (string)req["op"]!;
         if (op == "init")
         {
-            Init((string)req["root"]!);
+            Init((string)req["root"]!, req["extra"]?.AsArray().Select(x => (string)x!).ToList() ?? new List<string>());
             var sol = workspace!.CurrentSolution;
             return new { files = sol.Projects.Sum(p => p.DocumentIds.Count), projects = sol.Projects.Select(p => new { name = p.Name, documents = p.DocumentIds.Count, references = p.ProjectReferences.Select(r => sol.GetProject(r.ProjectId)?.Name) }).ToList() };
         }
@@ -97,13 +99,14 @@ sealed class LanguageService
     /// dependencies), the .NET framework assemblies, and project references to the other projects it references.
     /// Files outside every project go to a "Miscellaneous Files" project that sees all of them.
     /// </summary>
-    void Init(string folder)
+    void Init(string folder, List<string> extra)
     {
         root = Path.GetFullPath(folder);
+        extraRoots = extra.Select(Path.GetFullPath).Where(Directory.Exists).ToList();
         workspace = new AdhocWorkspace(MefHostServices.Create(MefHostServices.DefaultAssemblies));
         var framework = FrameworkReferences();
         var cache = Environment.GetEnvironmentVariable("NUGET_PACKAGES") ?? Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), ".nuget", "packages");
-        var csprojs = Directory.EnumerateFiles(root, "*.csproj", SearchOption.AllDirectories).Where(p => !IsIgnored(p)).Take(200).Select(Path.GetFullPath).ToList();
+        var csprojs = new[] { root }.Concat(extraRoots).SelectMany(r => Directory.EnumerateFiles(r, "*.csproj", SearchOption.AllDirectories)).Where(p => !IsIgnored(p)).Take(200).Select(Path.GetFullPath).Distinct(StringComparer.OrdinalIgnoreCase).ToList();
         var ids = csprojs.ToDictionary(p => p, p => ProjectId.CreateNewId(Path.GetFileNameWithoutExtension(p)), StringComparer.OrdinalIgnoreCase);
         var infos = new List<ProjectInfo>();
         var allPackages = new Dictionary<string, MetadataReference>(StringComparer.OrdinalIgnoreCase);
@@ -163,7 +166,7 @@ sealed class LanguageService
     ProjectId? Owner(string path) => owners.FirstOrDefault(o => path.StartsWith(o.Dir + Path.DirectorySeparatorChar, StringComparison.OrdinalIgnoreCase)).Id;
 
     IEnumerable<string> SourceFiles() =>
-        Directory.EnumerateFiles(root, "*.cs", SearchOption.AllDirectories).Where(f => !IsIgnored(f)).Select(Path.GetFullPath).Take(20000);
+        new[] { root }.Concat(extraRoots).SelectMany(r => Directory.EnumerateFiles(r, "*.cs", SearchOption.AllDirectories)).Where(f => !IsIgnored(f)).Select(Path.GetFullPath).Distinct(StringComparer.OrdinalIgnoreCase).Take(20000);
 
     static MetadataReference? Load(string path) { try { return MetadataReference.CreateFromFile(path); } catch { return null; } }
 

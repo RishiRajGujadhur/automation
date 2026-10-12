@@ -239,7 +239,7 @@ app.post('/api/solution/open',async(req,res)=>{
   clearTimeout(rescanTimer);
   tests.reset();
   const scanned=await scan(next);
-  config=next;activate(scanned);previews.clear();
+  config=next;activate(scanned);previews.clear();lang.stop();
   await fs.mkdir(path.dirname(configFile),{recursive:true});
   await fs.writeFile(configFile,JSON.stringify(config,null,2));
   restoreOnOpen(next);

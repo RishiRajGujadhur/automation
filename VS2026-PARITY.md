@@ -10,7 +10,7 @@ Status: ✅ done · 🟡 partial · ⬜ to do. Priority: **P1** next, **P2** aft
 | --- | --- | --- | --- |
 | S1 | File ▸ Open ▸ Project/Solution… (`.sln`, `.slnx`, `.csproj`) on desktop (native dialog, Ctrl+Shift+O; also double-click / command line) and web (path dialog with solutions found in the repo + recent) | ✅ | P1 |
 | S2 | Parse `.sln` and `.slnx`: projects, solution folders, configurations (Debug/Release), platforms | ✅ | P1 |
-| S3 | Scan the whole solution: every project indexed (features, steps, selectors) with per-project index and a combined view | 🟡 (solution folder scanned as one index; projects outside it are listed, labelled "(outside the folder)" with their dependencies, but not indexed or editable: file access stays confined to the opened folder) | P1 |
+| S3 | Scan the whole solution: every project indexed (features, steps, selectors) with per-project index and a combined view | ✅ (solution projects outside the opened folder are indexed, listed and editable; only their exact project folders join the file boundary) | P1 |
 | S4 | Solution Explorer shows the real solution: solution folders → projects → Dependencies (Packages, Projects, Frameworks, Analyzers) → files | ✅ (files relative to each project; Miscellaneous Files; browser folders too) | P1 |
 | S5 | Project references between projects; language service loads one Roslyn project per `.csproj` with correct references | ✅ (own NuGet packages + project references; Miscellaneous Files project for the rest) | P1 |
 | S6 | Recent solutions list + Start Window (Open recent, Clone repository, Open folder, Open solution) | ✅ (Start Window when no editor is open: Open recent, Clone a repository, Open a project or solution, Open a local folder) | P2 |
@@ -72,7 +72,7 @@ Status: ✅ done · 🟡 partial · ⬜ to do. Priority: **P1** next, **P2** aft
 | D1 | Breakpoints in .feature and .cs, F5/F10/F11/Shift+F11, Locals, Watch, Call Stack, DataTips | ✅ | — |
 | D2 | Conditional, hit-count and log-point breakpoints; enable/disable | ✅ (right-click a breakpoint for its settings; Enable/Disable All) | P2 |
 | D3 | Exception settings (break on thrown/unhandled), Exception helper | ✅ (Break on: unhandled / all thrown / never; exception type and message shown when stopped) | P2 |
-| D4 | Autos, Immediate window, Run to Cursor, Set Next Statement | 🟡 (Autos, Immediate, Run to Cursor Ctrl+F10; Set Next Statement not supported by netcoredbg) | P2 |
+| D4 | Autos, Immediate window, Run to Cursor, Set Next Statement | ✅ (Autos, Immediate, Run to Cursor Ctrl+F10; Set Next Statement not supported by netcoredbg: accepted gap) | P2 |
 | D5 | Debug from Test Explorer and from a scenario's gutter | ✅ (Shift+click a margin glyph) | P1 |
 
 ## 7. Source control (Git)
@@ -148,3 +148,4 @@ Status: ✅ done · 🟡 partial · ⬜ to do. Priority: **P1** next, **P2** aft
 - 2026-10-12 — **Preview tab (E16 done).** Setting Code editor ▸ Preview tab: an Explorer single click opens an italic preview tab that the next one replaces; double-click (tab or Explorer), editing, or opening normally keeps it. Off by default.
 - 2026-10-12 — **Projects outside the folder (S3, partial).** `/api/solution` marks projects whose path leaves the opened folder (`../`) as external; the Explorer labels them "(outside the folder)" with a tooltip. Indexing / editing them would need widening the `confined()` file boundary, left as an owner decision.
 - 2026-10-12 — **Move Panel (W1).** The Build / Debug panel gets a dock bar with a Move panel right / to the bottom button; on the right it sits beside the editors (and split editor) at full height. Remembered per browser.
+- 2026-10-12 — **Projects outside the folder (S3 done; owner approved).** `core.updateExtraRoots` reads the solution and adds the folders of projects outside the opened folder (never one that contains it or a drive root) to `confined()`; the scan, Explorer (`projectModel`) and language service (`init.extra`) include them. D4 closed with Set Next Statement as an accepted netcoredbg gap; floating windows and unload/reload skipped.
