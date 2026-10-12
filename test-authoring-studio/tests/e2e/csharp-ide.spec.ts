@@ -325,3 +325,25 @@ test('Rename Step: new wording for a step definition re-words every bound featur
   expect(await disk(file)).toContain('[When(@"the customer looks up ""(.*)""")]');
   await expect(page.getByLabel(`Source of ${file}`)).toContainText('the customer looks up');
 });
+
+test('Editing keys: Ctrl+K Ctrl+C / Ctrl+K Ctrl+U, Ctrl+Shift+D duplicate, Ctrl+Shift+L delete line, Ctrl+G go to line', async ({ page }) => {
+  await open(page);
+  await explorerFile(page, 'SearchSteps.cs').click();
+  const file = 'Steps/SearchSteps.cs';
+  const src = page.getByLabel(`Source of ${file}`);
+  await line(page, file, 'using Microsoft.Playwright;').click();
+  await page.keyboard.press('Control+K');
+  await page.keyboard.press('Control+C');
+  await expect(line(page, file, '// using Microsoft.Playwright;')).toBeVisible();
+  await page.keyboard.press('Control+K');
+  await page.keyboard.press('Control+U');
+  await expect(src.locator('.cm-line', { hasText: '// using' })).toHaveCount(0);
+  await page.keyboard.press('Control+Shift+D');
+  await expect(src.locator('.cm-line', { hasText: 'using Microsoft.Playwright;' })).toHaveCount(2);
+  await page.keyboard.press('Control+Shift+L');
+  await expect(src.locator('.cm-line', { hasText: 'using Microsoft.Playwright;' })).toHaveCount(1);
+  await page.keyboard.press('Control+G');
+  await page.keyboard.type('3');
+  await page.keyboard.press('Enter');
+  await expect(page.locator('.code-editor:not([hidden]) .cm-activeLine')).toContainText('namespace Demo;');
+});

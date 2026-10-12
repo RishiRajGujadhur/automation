@@ -45,7 +45,7 @@ Status: ✅ done · 🟡 partial · ⬜ to do. Priority: **P1** next, **P2** aft
 | E12 | Code folding, outlining, sticky scroll, bracket matching, multi-caret, column select | 🟡 (CodeMirror basics) | P2 |
 | E13 | Navigation bar (project / type / member dropdowns) and breadcrumbs | ✅ | P2 |
 | E14 | Snippets (prop, ctor, for, test method, step definition) | ✅ (shortcut + Tab, or from IntelliSense; Tab between fields) | P2 |
-| E15 | Comment/uncomment, duplicate line, move line, go to line (Ctrl+G) | 🟡 | P2 |
+| E15 | Comment/uncomment, duplicate line, move line, go to line (Ctrl+G) | ✅ (Ctrl+K Ctrl+C/U, Ctrl+Shift+D duplicate, Ctrl+Shift+L delete line, Alt+↑/↓ move, Ctrl+G go to line) | P2 |
 | E16 | Split editor, tab groups, preview tab, pinned tabs, colour-coded tabs | 🟡 (pinned + colours) | P2 |
 
 ## 4. Gherkin / BDD (Reqnroll/SpecFlow extension parity)
@@ -129,3 +129,4 @@ Status: ✅ done · 🟡 partial · ⬜ to do. Priority: **P1** next, **P2** aft
 - 2026-10-12 — **CodeLens test status (E10 done).** Test methods' lens shows the last run's outcome (✓ Passed / ✕ Failed / ○ Skipped / ▶ Not run / ◌ Running) before the reference count, live from the test run stream.
 - 2026-10-12 — **Merge (V2).** Branch menu lists "Merge <branch> into <current>"; `/api/git/merge` runs `git merge --no-edit`; a conflicting merge is aborted and the conflicting files are named.
 - 2026-10-12 — **Annotate / Git Blame (V3 partial).** `/api/git/blame` (porcelain); code editor context menu ▸ Annotate (Git Blame) toggles a column with commit, author and date once per block (summary on hover; local edits shown as not committed; hidden on the next edit).
+- 2026-10-12 — **Line editing keys (E15).** `src/editor/vsKeys.ts` in the code and Gherkin editors: comment/uncomment selection with the file's token (`//`, `#`), duplicate line/selection, delete lines, go to line; move line is CodeMirror's Alt+↑/↓.
