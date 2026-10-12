@@ -4,7 +4,7 @@ import { ChevronLeft, ChevronRight, ChevronDown, X, Copy, XCircle, Pin, PinOff }
 import { RowMenu, copyText } from '../ui';
 import { Dropdown } from '../radix';
 import { UNSAVED_EVENT, unsavedFiles } from '../editor/autosave';
-import { useTabs, activateTab, closeOthers, closeToRight, closeAll, setPinned, type EditorTab } from './tabs';
+import { useTabs, activateTab, closeOthers, closeToRight, closeAll, setPinned, keepTab, type EditorTab } from './tabs';
 import { fileType } from './fileTypes';
 
 const base = (f: string) => f.split('/').pop()!;
@@ -28,6 +28,8 @@ export default function EditorTabs({ onClose, onSplit, children }: { onClose: (f
   const [slot, setSlot] = useState<HTMLElement | null>(null);
   const [dirty, setDirty] = useState<string[]>(unsavedFiles);
   useEffect(() => { const h = () => setDirty(unsavedFiles()); window.addEventListener(UNSAVED_EVENT, h); return () => window.removeEventListener(UNSAVED_EVENT, h); }, []);
+  // Editing a preview tab keeps it.
+  useEffect(() => { for (const f of dirty) keepTab(f); }, [dirty]);
 
   const measure = () => { const s = strip.current; if (s) setOverflow({ left: s.scrollLeft > 1, right: s.scrollLeft + s.clientWidth < s.scrollWidth - 1 }); };
   useLayoutEffect(() => {
@@ -75,7 +77,7 @@ export default function EditorTabs({ onClose, onSplit, children }: { onClose: (f
                 { label: 'Copy Relative Path', icon: Copy, onSelect: () => copyText(t.file) },
                 ...(onSplit && !t.file.endsWith('.feature') ? ['separator' as const, { label: 'Split Right', onSelect: () => onSplit(t.file) }] : []),
               ]}>
-                <div className={`editor-tab ${selected ? 'active' : ''} ${unsaved ? 'unsaved' : ''} ${t.pinned ? 'pinned' : ''}`} data-menu-row style={{ '--file-color': color } as React.CSSProperties}>
+                <div className={`editor-tab ${selected ? 'active' : ''} ${unsaved ? 'unsaved' : ''} ${t.pinned ? 'pinned' : ''} ${t.preview ? 'preview' : ''}`} onDoubleClick={() => keepTab(t.file)} data-menu-row style={{ '--file-color': color } as React.CSSProperties}>
                   <button aria-current={selected ? 'true' : undefined} title={t.file} className="editor-tab-label" onClick={() => activateTab(t.file)} onAuxClick={(e) => { if (e.button === 1) { e.preventDefault(); onClose(t.file); } }}>
                     <Icon size={14} aria-hidden="true" />
                     <span>{base(t.file)}</span>

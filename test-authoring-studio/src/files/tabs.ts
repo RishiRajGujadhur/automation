@@ -6,7 +6,7 @@ import { fileSource, isBrowser } from './provider';
  * indexed repository open in the feature editor (bindings, F12, debugging); every other file, and every file
  * of a browser folder, opens in the code editor. Kept per folder in this browser.
  */
-export type EditorTab = { file: string; kind: 'feature' | 'code'; pinned?: boolean };
+export type EditorTab = { file: string; kind: 'feature' | 'code'; pinned?: boolean; preview?: boolean };
 type State = { tabs: EditorTab[]; active?: string };
 const key = () => { const s = fileSource(); return s.kind === 'browser' ? `tas:editorTabs:browser:${s.name}` : `tas:editorTabs${s.root ? `:${s.root}` : ''}`; };
 const read = (): State => { try { return JSON.parse(localStorage.getItem(key()) ?? '') as State; } catch { return { tabs: [] }; } };
@@ -24,10 +24,20 @@ export const getTabs = () => state;
 export const useTabs = () => useSyncExternalStore((l) => { listeners.add(l); return () => listeners.delete(l); }, getTabs);
 
 export const kindOf = (file: string): EditorTab['kind'] => (file.endsWith('.feature') && !isBrowser() ? 'feature' : 'code');
-export function openTab(file: string, kind = kindOf(file)) {
-  const tabs = state.tabs.some((t) => t.file === file) ? state.tabs : [...state.tabs, { file, kind }];
+/**
+ * Opens (or activates) a tab. A preview tab (Explorer single click, when enabled) replaces the previous preview tab
+ * in place; it becomes a normal tab when edited, double-clicked or opened again normally.
+ */
+export function openTab(file: string, kind = kindOf(file), preview = false) {
+  const existing = state.tabs.find((t) => t.file === file);
+  if (existing) { set({ tabs: !preview && existing.preview ? state.tabs.map((t) => (t.file === file ? { ...t, preview: false } : t)) : state.tabs, active: file }); return; }
+  const tab: EditorTab = preview ? { file, kind, preview: true } : { file, kind };
+  const i = preview ? state.tabs.findIndex((t) => t.preview) : -1;
+  const tabs = i >= 0 ? state.tabs.map((t, j) => (j === i ? tab : t)) : [...state.tabs, tab];
   set({ tabs, active: file });
 }
+/** The preview tab stays open (no longer replaced by the next preview). */
+export function keepTab(file: string) { if (state.tabs.some((t) => t.file === file && t.preview)) set({ ...state, tabs: state.tabs.map((t) => (t.file === file ? { ...t, preview: false } : t)) }); }
 export function activateTab(file: string) { if (state.tabs.some((t) => t.file === file)) set({ ...state, active: file }); }
 /** Closes a tab; the neighbour to its right (else left) becomes active, as in VS Code. */
 export function closeTab(file: string) {

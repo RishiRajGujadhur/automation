@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
+import { keepTab } from './files/tabs';
 import {
   ChevronDown, ChevronRight, Folder, FolderOpen, FileCode2, FileText, FileCog, Braces, Plus, Search, X, Copy, ChevronsDownUp, ChevronsUpDown,
   Eye, Package, Boxes, Link2, LocateFixed, PencilLine, Files, Layers, SquareStack, Scissors, ClipboardPaste, Trash2, TextCursorInput,
@@ -34,7 +35,7 @@ type Props = {
   activeFolder: string;
   onQuery: (q: string) => void;
   onSelect: (feature: Feature) => void;
-  onOpenFile: (file: string, line?: number) => void;
+  onOpenFile: (file: string, line?: number, preview?: boolean) => void;
   onFolder: (folder: string) => void;
   onNew: (folder?: string) => void;
   onSource?: (file: string, line: number) => void;
@@ -216,7 +217,7 @@ export default function SolutionExplorer({ features, revision, activeFile, query
   const open = (file: string) => {
     const feature = featureByPath.get(file);
     if (feature) onSelect(feature);
-    else onOpenFile(file);
+    else onOpenFile(file, undefined, true);
   };
   const isActive = (p: string) => !!activeFile && normalizeFeaturePath(activeFile) === p;
   const fileRow = (path: string, name: string, depth: number, extra?: { linked?: boolean; note?: string }) => {
@@ -246,6 +247,7 @@ export default function SolutionExplorer({ features, revision, activeFile, query
               title={extra?.note ? `${path} · ${extra.note}` : path}
               aria-current={isActive(path) && !extra?.linked ? 'page' : undefined}
               onClick={() => open(path)}
+              onDoubleClick={() => keepTab(path)}
             >
               <Icon size={14} aria-hidden="true" style={{ color: extra?.linked ? undefined : fileType(path).color }} />
               <span>{name}</span>

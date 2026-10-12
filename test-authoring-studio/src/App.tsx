@@ -259,10 +259,10 @@ export default function App() {
       else setNotice(r?.status === 'Ambiguous' ? 'More than one binding matches this step.' : 'No step definition yet. Use “Create step definition” to add one.');
     } catch (e) { setNotice((e as Error).message); }
   };
-  const editFile = (file: string, line?: number, column?: number) => {
+  const editFile = (file: string, line?: number, column?: number, preview = false) => {
     const kind = kindOf(file);
     if (line) setCodeLines((l) => ({ ...l, [file]: { line, column } }));
-    openTab(file, kind);
+    openTab(file, kind, preview);
     setTab('Features');
     setView(kind === 'code' ? 'code' : 'editor');
     setModal(undefined);
@@ -1214,7 +1214,7 @@ export default function App() {
             onConfirm={confirm}
             revision={revision}
             activeFile={openEditors.active ?? feature?.file}
-            onOpenFile={(file, line) => { editFile(file, line); setMobileExplorer(false); }}
+            onOpenFile={(file, line, preview) => { editFile(file, line, undefined, !!preview && prefs.previewTabs); setMobileExplorer(false); }}
             query={query}
             activeFolder={activeFolder ?? featureDirectory(feature?.file)}
             onQuery={setQuery}

@@ -174,3 +174,20 @@ test('Keyboard Shortcuts: assign a custom shortcut to a command and use it; remo
   await page.getByRole('button', { name: 'Remove Ctrl+Alt+G from View ▸ Git Changes' }).click();
   await expect(custom.locator('kbd', { hasText: 'Ctrl+Alt+G' })).toHaveCount(0);
 });
+
+test('Preview tab (when enabled): single click replaces the italic preview tab; double click keeps it', async ({ page }) => {
+  await page.addInitScript(() => { if (!sessionStorage.getItem('seeded')) { localStorage.setItem('tas:prefs', JSON.stringify({ mode: 'advanced', previewTabs: true })); sessionStorage.setItem('seeded', '1'); } });
+  await page.goto('/#/features/editor');
+  const nav = page.getByRole('navigation');
+  const tab = (name: string) => page.locator('.editor-tab', { hasText: name });
+  await nav.getByRole('button', { name: 'SearchSteps.cs', exact: true }).first().click();
+  await expect(tab('SearchSteps.cs')).toHaveClass(/preview/);
+  await nav.getByRole('button', { name: 'AuthSteps.cs', exact: true }).first().click();
+  await expect(tab('AuthSteps.cs')).toHaveClass(/preview/);
+  await expect(tab('SearchSteps.cs')).toHaveCount(0);
+  await nav.getByRole('button', { name: 'AuthSteps.cs', exact: true }).first().dblclick();
+  await expect(tab('AuthSteps.cs')).not.toHaveClass(/preview/);
+  await nav.getByRole('button', { name: 'SearchSteps.cs', exact: true }).first().click();
+  await expect(tab('AuthSteps.cs')).toHaveCount(1);
+  await expect(tab('SearchSteps.cs')).toHaveClass(/preview/);
+});

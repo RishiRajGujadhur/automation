@@ -46,7 +46,7 @@ Status: ✅ done · 🟡 partial · ⬜ to do. Priority: **P1** next, **P2** aft
 | E13 | Navigation bar (project / type / member dropdowns) and breadcrumbs | ✅ | P2 |
 | E14 | Snippets (prop, ctor, for, test method, step definition) | ✅ (shortcut + Tab, or from IntelliSense; Tab between fields) | P2 |
 | E15 | Comment/uncomment, duplicate line, move line, go to line (Ctrl+G) | ✅ (Ctrl+K Ctrl+C/U, Ctrl+Shift+D duplicate, Ctrl+Shift+L delete line, Alt+↑/↓ move, Ctrl+G go to line) | P2 |
-| E16 | Split editor, tab groups, preview tab, pinned tabs, colour-coded tabs | 🟡 (pinned + colours, Split Right: a second editor beside the tab group) | P2 |
+| E16 | Split editor, tab groups, preview tab, pinned tabs, colour-coded tabs | ✅ (pinned + colours, Split Right, preview tab (Settings ▸ Code editor ▸ Preview tab)) | P2 |
 
 ## 4. Gherkin / BDD (Reqnroll/SpecFlow extension parity)
 | # | Feature | Status | Pri |
@@ -145,3 +145,4 @@ Status: ✅ done · 🟡 partial · ⬜ to do. Priority: **P1** next, **P2** aft
 - 2026-10-12 — **Custom keyboard shortcuts (W2).** `src/keybindings.tsx`: Keyboard Shortcuts dialog lists the menu commands (build, test, Git, search, NuGet, files, windows); Assign records a chord, chips remove it; a capture-phase handler runs assigned chords before built-in keys. Stored per browser.
 - 2026-10-12 — **Build on save (B4 done).** Build windows ▸ Build on save: editors announce saves (`FILE_SAVED_EVENT`); saving a .cs / .csproj / .props / .targets file starts a build 0.8 s later (one per burst of saves). V2 marked done (merge landed earlier).
 - 2026-10-12 — **Playwright traces from test runs (T4).** After a run, `collectTraces` finds new trace zips under bin/ or TestResults/, copies them to the traces folder and attaches them to the test named in the file; Test details link to the download (`/api/traces/<name>`). Also fixed: the coverage button's name clashed with Run All Tests (now "Analyze Code Coverage for All Tests").
+- 2026-10-12 — **Preview tab (E16 done).** Setting Code editor ▸ Preview tab: an Explorer single click opens an italic preview tab that the next one replaces; double-click (tab or Explorer), editing, or opening normally keeps it. Off by default.
