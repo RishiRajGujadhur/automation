@@ -202,14 +202,24 @@ test('Step usages CodeLens above step definitions lists the feature lines and op
   await explorerFile(page, 'SearchSteps.cs').click();
   const lens = page.locator('.code-editor:not([hidden]) .cm-lens button', { hasText: /^2 step usages/ });
   await expect(lens.first()).toBeVisible({ timeout: 30_000 });
-  await expect(page.locator('.code-editor:not([hidden]) .cm-lens')).toHaveCount(5);
+  const stepLenses = page.locator('.code-editor:not([hidden]) .cm-lens button', { hasText: /step usage/ });
+  await expect(stepLenses).toHaveCount(5);
   // Lenses in file order: browser started, opens Google, searches for, searches using, results.
-  await page.locator('.code-editor:not([hidden]) .cm-lens button').nth(2).click();
+  await stepLenses.nth(2).click();
   const panel = page.getByRole('region', { name: /References to/ });
   await expect(panel).toContainText('the user searches for');
   await expect(panel).toContainText('Features/GoogleSearch.feature');
   await panel.getByRole('button', { name: /Search for Dayforce/ }).click();
   await expect(page.locator('.editor-tab-label[aria-current="true"]')).toHaveAttribute('title', 'Features/GoogleSearch.feature');
+});
+
+test('Reference-count CodeLens above types and members opens Find All References', async ({ page }) => {
+  await open(page);
+  await explorerFile(page, 'SearchSteps.cs').click();
+  const lens = page.locator('.code-editor:not([hidden]) .cm-lens button', { hasText: /^3 references$/ });
+  await expect(lens.first()).toBeVisible({ timeout: 60_000 });
+  await lens.first().click();
+  await expect(page.getByRole('region', { name: /References to/ })).toBeVisible({ timeout: 30_000 });
 });
 
 test('Peek Definition (Alt+F12), Go To Implementation (Ctrl+F12) and Go To Base', async ({ page }) => {

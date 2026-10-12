@@ -75,6 +75,7 @@ sealed class LanguageService
             "rename" => await Rename(doc, Math.Min(Pos(text), text.Length), (string)req["newName"]!),
             "organize" => await Organize(doc),
             "outline" => await Outline(doc),
+            "referenceCounts" => await ReferenceCounts(doc),
             "signature" => await Signature(doc, Math.Min(Pos(text), text.Length)),
             "format" => await Format(doc, req),
             "actions" => await Actions(doc, Math.Min(Pos(text), text.Length), req["endLine"] is null ? null : text.Lines[Math.Clamp((int)req["endLine"]! - 1, 0, text.Lines.Count - 1)].Start + (int)req["endColumn"]! - 1),
@@ -509,6 +510,35 @@ sealed class LanguageService
         var refs = await SymbolFinder.FindReferencesAsync(symbol, doc.Project.Solution);
         var locations = refs.SelectMany(r => r.Locations.Select(l => l.Location).Concat(r.Definition.Locations)).Where(InRepo).Distinct().Select(Location).ToList();
         return new { name = symbol.ToDisplayString(), locations };
+    }
+
+    /// <summary>
+    /// CodeLens reference counts: for every type and member declared in the document, how many references the
+    /// solution has (Visual Studio's "3 references"). The lens sits on the declaration's first line (above attributes).
+    /// </summary>
+    async Task<object> ReferenceCounts(Document doc)
+    {
+        var root = (await doc.GetSyntaxRootAsync())!;
+        var model = (await doc.GetSemanticModelAsync())!;
+        var text = await doc.GetTextAsync();
+        var solution = doc.Project.Solution;
+        using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(20));
+        var decls = root.DescendantNodes().Where(n => n is BaseTypeDeclarationSyntax or MethodDeclarationSyntax or ConstructorDeclarationSyntax or PropertyDeclarationSyntax or EventDeclarationSyntax).Take(300).ToList();
+        var result = new List<object>();
+        foreach (var d in decls)
+        {
+            if (cts.IsCancellationRequested) break;
+            var symbol = model.GetDeclaredSymbol(d);
+            if (symbol == null) continue;
+            var refs = await SymbolFinder.FindReferencesAsync(symbol, solution, cts.Token);
+            var count = refs.Where(r => SymbolEqualityComparer.Default.Equals(r.Definition, symbol) || r.Definition.Kind == symbol.Kind).Sum(r => r.Locations.Count(l => !l.IsImplicit));
+            // The declaration's first line: attributes included (the lens goes above them, as in Visual Studio).
+            var line = text.Lines.GetLinePosition(d.SpanStart).Line + 1;
+            var id = d switch { BaseTypeDeclarationSyntax t => t.Identifier, MethodDeclarationSyntax m => m.Identifier, ConstructorDeclarationSyntax c => c.Identifier, PropertyDeclarationSyntax p => p.Identifier, EventDeclarationSyntax e => e.Identifier, _ => default };
+            var at = text.Lines.GetLinePosition(id.SpanStart);
+            result.Add(new { line, symbolLine = at.Line + 1, symbolColumn = at.Character + 1, name = symbol.Name, count });
+        }
+        return result;
     }
 
     /// <summary>Navigation bar: the document's project, its types and their members, with line ranges (syntax only).</summary>

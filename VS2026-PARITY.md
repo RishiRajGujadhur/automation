@@ -40,7 +40,7 @@ Status: ✅ done · 🟡 partial · ⬜ to do. Priority: **P1** next, **P2** aft
 | E7 | Remove and Sort Usings | ✅ | — |
 | E8 | Quick Actions and Refactorings (Ctrl+.): add using, generate method, extract method, implement interface, fix code style | ✅ (Roslyn's code fixes for compiler diagnostics + refactorings; no analyzer (IDE*) style fixes yet, no lightbulb icon) | P1 |
 | E9 | Format Document / Selection (Ctrl+K,D) with `.editorconfig` | ✅ (Shift+Alt+F or Ctrl+K, Ctrl+D; keeps line endings) | P1 |
-| E10 | CodeLens: reference counts, test status above methods | 🟡 (step-usage lens on step definitions) | P2 |
+| E10 | CodeLens: reference counts, test status above methods | 🟡 (reference counts on types/members + step-usage lens; test status pending) | P2 |
 | E11 | Inlay hints (parameter names, types) | ⬜ | P3 |
 | E12 | Code folding, outlining, sticky scroll, bracket matching, multi-caret, column select | 🟡 (CodeMirror basics) | P2 |
 | E13 | Navigation bar (project / type / member dropdowns) and breadcrumbs | ✅ | P2 |
@@ -123,3 +123,4 @@ Status: ✅ done · 🟡 partial · ⬜ to do. Priority: **P1** next, **P2** aft
 - 2026-10-12 — **Navigation bar (E13).** Language service `outline` (types and members with ranges, from syntax); a 22px breadcrumb above the C# editor shows project › type › member at the cursor, and the type / member parts list the file's types and the type's members to jump to.
 - 2026-10-12 — **Rename Step (G4).** `server/stepRename.ts` (top-level capture groups / Cucumber parameters, values carried into the new wording, verbatim / regular C# string rewriting) and `/api/steps/rename` (preview, apply); C# editor: Rename Step… on a step definition with a live before → after preview of the attribute and every bound feature line.
 - 2026-10-12 — **Manage NuGet Packages (B3).** `server/nuget.ts` (installed from the .csproj, versions and search from nuget.org, `dotnet add|remove package`); dialog with Browse / Installed / Updates, version picker, Install / Update / Uninstall (confirmed); opened from the Explorer's project context menu or Build ▸ Manage NuGet Packages…; the language service restarts afterwards to pick up the new references.
+- 2026-10-12 — **CodeLens reference counts (E10 partial).** Language service `referenceCounts` (SymbolFinder per declared type, method, constructor, property, event); `/api/csharp/referenceCounts`; editor shows "N references" above each declaration (above its attributes) and clicking opens Find All References. Step-usage lens keeps priority on step definitions.

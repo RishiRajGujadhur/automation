@@ -9,7 +9,7 @@ import { Save, TriangleAlert, RotateCcw, CircleCheck, CloudOff, Loader, GitCompa
 import { RowMenu } from '../ui';
 import { csharpLanguage, lineCol, offsetOf, replaceText, type CsHandlers, type CsLocation } from './csharp';
 import { FILES_CHANGED_EVENT } from './events';
-import { stepLenses, setLenses, type StepLens } from './lens';
+import { stepLenses, setLenses, setRefLenses, type StepLens, type RefLens } from './lens';
 import { runGutter, setRunMarks, type RunMark } from './runGutter';
 import { changeGutter } from './changeGutter';
 import { useChangeBars } from './useChangeBars';
@@ -100,7 +100,15 @@ export default function CodeEditor({ file, reveal, active = true, onNotice, onIn
       const apply = () => { const v = ref.current?.view; if (v) v.dispatch({ effects: setLenses.of(list) }); else if (tries++ < 30) requestAnimationFrame(apply); };
       apply();
     }, () => {});
+    api<RefLens[]>('/csharp/referenceCounts', { file }).then((list) => {
+      let tries = 0;
+      const apply = () => { const v = ref.current?.view; if (v) v.dispatch({ effects: setRefLenses.of(list) }); else if (tries++ < 30) requestAnimationFrame(apply); };
+      apply();
+    }, () => {});
   };
+  const openRefLens = (l: RefLens) => { const v = ref.current?.view; if (!v || l.symbolLine > v.state.doc.lines) return; csHandlers.current.references(v.state.doc.line(l.symbolLine).from + l.symbolColumn - 1); };
+  const openRefLensRef = useRef(openRefLens);
+  openRefLensRef.current = openRefLens;
   const [busyOp, setBusyOp] = useState('');
   // Peek Definition (Alt+F12): the definition's code in a window under the cursor.
   const [peek, setPeek] = useState<{ file: string; line: number; column: number; source: string; name: string; top: number }>();
@@ -314,7 +322,7 @@ export default function CodeEditor({ file, reveal, active = true, onNotice, onIn
       { key: 'Mod-s', preventDefault: true, run: () => { void saveRef.current(); return true; } },
       ...(isCs && !browser ? [{ key: 'Mod-r Mod-g', preventDefault: true, run: () => { void organizeRef.current(); return true; } }] : []),
     ]),
-    ...(isCs && !browser ? [...csharpLanguage(file, csHandlers), stepLenses((l) => showUsagesRef.current(l)), runGutter((l, d) => runRef.current?.(l, d))] : []),
+    ...(isCs && !browser ? [...csharpLanguage(file, csHandlers), stepLenses((l) => showUsagesRef.current(l), (l) => openRefLensRef.current(l)), runGutter((l, d) => runRef.current?.(l, d))] : []),
     // Stable per file: rebuilding extensions on every keystroke would reset the linter before it reports.
   ], [file, browser]);
 
