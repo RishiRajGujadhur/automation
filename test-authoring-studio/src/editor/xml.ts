@@ -2,6 +2,8 @@ import { xml as xmlLanguage } from '@codemirror/lang-xml';
 import { linter, lintGutter, type Diagnostic } from '@codemirror/lint';
 import type { Text } from '@codemirror/state';
 import type { Extension } from '@codemirror/state';
+import { msbuildElements } from './msbuildSchema';
+import { autocompletion } from '@codemirror/autocomplete';
 
 const SELECTOR_TYPES = /^(testid|text|css|xpath|ariarole\.(textbox|combobox|button|link|checkbox|radio|option|tab|menuitem|heading))$/i;
 
@@ -82,6 +84,7 @@ export const xmlLinter = (dictionary = true) =>
     return syntax.length || !dictionary ? syntax : dictionaryDiagnostics(src, view.state.doc);
   }, { delay: 250 });
 
-export function xmlExtensions(dictionary = true): Extension[] {
-  return [xmlLanguage(), xmlLinter(dictionary), lintGutter()];
+export function xmlExtensions(dictionary = true, msbuild = false): Extension[] {
+  // Project files get element / attribute IntelliSense from a small MSBuild schema.
+  return [...(msbuild ? [xmlLanguage({ elements: msbuildElements }), autocompletion({ activateOnTyping: true })] : [xmlLanguage()]), xmlLinter(dictionary), lintGutter()];
 }

@@ -16,7 +16,7 @@ Status: ✅ done · 🟡 partial · ⬜ to do. Priority: **P1** next, **P2** aft
 | S6 | Recent solutions list + Start Window (Open recent, Clone repository, Open folder, Open solution) | ✅ (Start Window when no editor is open: Open recent, Clone a repository, Open a project or solution, Open a local folder) | P2 |
 | S7 | Startup project / test project selection; active configuration dropdown in the toolbar | 🟡 (configuration box and build project box (Entire solution / one project) in the build windows; Build menu uses them) | P2 |
 | S8 | Add ▸ New Project / Existing Project, Remove project, Unload/Reload project | ⬜ | P3 |
-| S9 | Edit project file (`.csproj`) with XML IntelliSense for common properties | 🟡 (XML editor) | P3 |
+| S9 | Edit project file (`.csproj`) with XML IntelliSense for common properties | ✅ (project ▸ Edit Project File; MSBuild element / attribute completion for .csproj, .props, .targets) | P3 |
 | S10 | Solution-wide search (Ctrl+Shift+F, Find in Files) with replace | ✅ (match case, whole word, regex, include/exclude globs, Replace All / per file) | P1 |
 | S11 | Go to All (Ctrl+T): files, types, members, features, steps | ✅ (Ctrl+T desktop / Ctrl+P web; CamelHumps via Roslyn; steps still in the Ctrl+K palette) | P1 |
 
@@ -139,3 +139,4 @@ Status: ✅ done · 🟡 partial · ⬜ to do. Priority: **P1** next, **P2** aft
 - 2026-10-12 — **Restore on open (B3 done).** Opening a solution/project whose projects lack `obj/project.assets.json` runs `dotnet restore` in the background (`/api/restore` reports it); the language service restarts afterwards to load the packages; builds, test runs and debug sessions wait for it.
 - 2026-10-12 — **Split editor (E16 partial).** Tab context menu ▸ Split Right opens the file in a second editor beside the tab group (close button; remembered). Also fixed: auto save could send two saves with the same base hash while typing and report a false "changed outside the studio" conflict; saves are now serialized.
 - 2026-10-12 — **Gherkin table editing (G5).** `gherkinTables.ts`: typing `|` at the end of a row re-aligns the table (the row being typed keeps its own cells), Tab / Shift+Tab select the next / previous cell (wrapping to the next row), escaped pipes stay in their cell.
+- 2026-10-12 — **Edit Project File (S9).** Explorer project context menu opens the `.csproj`; `msbuildSchema.ts` feeds `@codemirror/lang-xml` completion (Project/PropertyGroup/ItemGroup, common properties with descriptions, PackageReference/ProjectReference attributes, Sdk values).

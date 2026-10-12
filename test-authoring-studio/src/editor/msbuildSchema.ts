@@ -1,0 +1,56 @@
+import type { ElementSpec } from '@codemirror/lang-xml';
+
+const PROPERTIES: [string, string][] = [
+  ['TargetFramework', 'Target framework moniker, e.g. net10.0'],
+  ['TargetFrameworks', 'Several target frameworks separated by ;'],
+  ['OutputType', 'Exe, Library or WinExe'],
+  ['Nullable', 'enable | disable | warnings | annotations'],
+  ['ImplicitUsings', 'enable | disable'],
+  ['LangVersion', 'C# language version, e.g. latest'],
+  ['RootNamespace', 'Default namespace for new files'],
+  ['AssemblyName', 'Name of the built assembly'],
+  ['IsPackable', 'Whether dotnet pack produces a package'],
+  ['IsTestProject', 'Marks a test project'],
+  ['TreatWarningsAsErrors', 'Fail the build on warnings'],
+  ['WarningsAsErrors', 'Warnings treated as errors'],
+  ['NoWarn', 'Warnings to suppress, e.g. CS1591'],
+  ['GenerateDocumentationFile', 'Emit XML documentation'],
+  ['Version', 'Package / assembly version'],
+  ['Authors', 'Package authors'],
+  ['Description', 'Package description'],
+  ['PackageId', 'NuGet package id'],
+  ['InvariantGlobalization', 'Use invariant culture'],
+  ['UserSecretsId', 'User secrets id'],
+  ['EnableDefaultCompileItems', 'Include **/*.cs automatically'],
+  ['CopyLocalLockFileAssemblies', 'Copy package assemblies to the output'],
+  ['ReqnrollFeatureFiles', 'Feature files Reqnroll generates code for'],
+  ['SpecFlowFeatureFiles', 'Feature files SpecFlow generates code for'],
+];
+
+const item = (name: string, attributes: string[], doc: string, children?: string[]): ElementSpec => ({ name, attributes: attributes.map((a) => ({ name: a })), completion: { detail: doc }, ...(children ? { children } : {}) });
+
+/** MSBuild project-file schema for XML IntelliSense in .csproj / .props / .targets (common elements only). */
+export const msbuildElements: ElementSpec[] = [
+  { name: 'Project', top: true, attributes: [{ name: 'Sdk', values: ['Microsoft.NET.Sdk', 'Microsoft.NET.Sdk.Web', 'Microsoft.NET.Sdk.Worker', 'Microsoft.NET.Sdk.Razor'] }, { name: 'ToolsVersion' }, { name: 'DefaultTargets' }], children: ['PropertyGroup', 'ItemGroup', 'Import', 'Target', 'Choose', 'Sdk'] },
+  { name: 'PropertyGroup', attributes: [{ name: 'Condition' }, { name: 'Label' }], children: PROPERTIES.map(([p]) => p) },
+  ...PROPERTIES.map(([name, detail]) => ({ name, completion: { detail }, attributes: [{ name: 'Condition' }] })),
+  { name: 'ItemGroup', attributes: [{ name: 'Condition' }, { name: 'Label' }], children: ['PackageReference', 'ProjectReference', 'Reference', 'Compile', 'None', 'Content', 'EmbeddedResource', 'Using', 'InternalsVisibleTo', 'Folder', 'ReqnrollFeatureFiles', 'SpecFlowFeatureFiles'] },
+  { ...item('PackageReference', ['Include', 'Version', 'PrivateAssets', 'IncludeAssets', 'ExcludeAssets', 'Update', 'Condition'], 'NuGet package dependency'), children: ['PrivateAssets', 'IncludeAssets', 'Version'] },
+  item('ProjectReference', ['Include', 'Condition', 'PrivateAssets'], 'Reference to another project'),
+  item('Reference', ['Include', 'Condition'], 'Assembly reference', ['HintPath', 'Private']),
+  item('Compile', ['Include', 'Remove', 'Update', 'Link'], 'C# source items'),
+  item('None', ['Include', 'Remove', 'Update', 'CopyToOutputDirectory', 'Link'], 'Files with no build action', ['CopyToOutputDirectory']),
+  item('Content', ['Include', 'Remove', 'Update', 'CopyToOutputDirectory', 'Link'], 'Content files', ['CopyToOutputDirectory']),
+  item('EmbeddedResource', ['Include', 'Remove', 'Update', 'LogicalName'], 'Embedded resources'),
+  item('Using', ['Include', 'Static', 'Alias'], 'Global using'),
+  item('InternalsVisibleTo', ['Include'], 'Friend assembly'),
+  item('Folder', ['Include'], 'Empty folder kept in the project'),
+  { name: 'CopyToOutputDirectory', completion: { detail: 'Never | Always | PreserveNewest' } },
+  item('Import', ['Project', 'Condition', 'Sdk'], 'Imports another project file'),
+  item('Target', ['Name', 'BeforeTargets', 'AfterTargets', 'DependsOnTargets', 'Condition'], 'Build target', ['Exec', 'Message', 'Copy', 'PropertyGroup', 'ItemGroup']),
+  item('Exec', ['Command', 'WorkingDirectory', 'Condition'], 'Runs a command'),
+  item('Message', ['Text', 'Importance'], 'Writes a build message'),
+  item('Copy', ['SourceFiles', 'DestinationFolder', 'SkipUnchangedFiles'], 'Copies files'),
+  item('HintPath', [], 'Path of the referenced assembly'),
+  item('Private', [], 'Copy the reference locally'),
+];

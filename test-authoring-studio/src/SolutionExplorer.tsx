@@ -283,6 +283,7 @@ export default function SolutionExplorer({ features, revision, activeFile, query
     return (
       <li key={key}>
         <RowMenu label={`Project ${p.name}`} items={[
+          ...(p.file.endsWith('.csproj') && !browserSolution ? [{ label: 'Edit Project File', icon: FileCog, onSelect: () => onOpenFile(p.file) }] : []),
           ...(onManagePackages && p.file.endsWith('.csproj') ? [{ label: 'Manage NuGet Packages…', icon: Package, onSelect: () => onManagePackages(p.file) }] : []),
           { label: 'Copy project path', icon: Copy, onSelect: () => copyText(p.file) },
         ]}>

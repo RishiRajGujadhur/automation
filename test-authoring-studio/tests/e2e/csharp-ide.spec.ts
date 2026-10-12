@@ -367,3 +367,15 @@ test('Outlining: fold a C# block from the margin; sticky scroll pins the class a
   await expect(src.locator('.cm-line', { hasText: 'var x5 = 5;' })).toHaveCount(0);
   await expect(src.locator('.cm-foldPlaceholder')).toBeVisible();
 });
+
+test('Edit Project File: .csproj opens with MSBuild IntelliSense', async ({ page }) => {
+  await open(page);
+  await page.getByRole('navigation').getByRole('button', { name: /^Collapse project / }).first().click({ button: 'right' });
+  await page.getByRole('menuitem', { name: 'Edit Project File' }).click();
+  await expect(page.locator('.editor-tab-label[aria-current="true"]')).toHaveAttribute('title', 'Fixtures.csproj');
+  const src = page.getByLabel('Source of Fixtures.csproj');
+  await src.locator('.cm-line', { hasText: '<PropertyGroup>' }).first().click();
+  await page.keyboard.press('End');
+  await page.keyboard.type('\n<Nulla');
+  await expect(page.getByRole('listbox').getByRole('option', { name: /Nullable/ })).toBeVisible();
+});
