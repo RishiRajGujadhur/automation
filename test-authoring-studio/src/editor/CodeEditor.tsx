@@ -14,6 +14,8 @@ import { runGutter, setRunMarks, type RunMark } from './runGutter';
 import { changeGutter } from './changeGutter';
 import { useChangeBars } from './useChangeBars';
 import { blameGutter, setBlame, type BlameLine } from './blame';
+import { createTwoFilesPatch } from 'diff';
+import { diff as diffMode } from '@codemirror/legacy-modes/mode/diff';
 import { vsKeys, commentTokenFor } from './vsKeys';
 import { braceFolding, braceRange } from './folding';
 import { stickyScroll } from './stickyScroll';
@@ -39,6 +41,7 @@ import type { Index } from '../types';
 // state added at runtime (snippet fields, appended extensions) on every React render.
 const CODE_SETUP = { autocompletion: false };
 const PEEK_SETUP = { autocompletion: false, foldGutter: false };
+const DIFF_EXTENSIONS = [StreamLanguage.define(diffMode)];
 type CsDiagnostic = { line: number; column: number; endLine: number; endColumn: number; severity: 'error' | 'warning'; id: string; message: string };
 
 /** Roslyn diagnostics (syntax + step-binding checks) from the scanner, as CodeMirror lint. */
@@ -151,6 +154,20 @@ export default function CodeEditor({ file, reveal, active = true, onNotice, onIn
   }, [file]);
   const auto = useAutoSave({ file, value, loaded });
   useChangeBars(ref, file, !!loaded);
+  /** Compare with Unmodified (Git): the editor text against the committed version, as a unified diff. */
+  const [headDiff, setHeadDiff] = useState<string>();
+  const compareWithHead = async () => {
+    const v = ref.current?.view;
+    if (!v) return;
+    try {
+      const r = await api<{ repo: boolean; text: string | null }>(`/git/head?file=${encodeURIComponent(file)}`);
+      if (!r.repo) { onNotice?.('This folder is not a Git repository.'); return; }
+      const now = v.state.doc.toString();
+      const base = (r.text ?? '').replace(/\r\n/g, '\n');
+      if (base === now) { onNotice?.('No changes from the committed version.'); return; }
+      setHeadDiff(createTwoFilesPatch(`${file} (HEAD)`, file, base, now, '', '', { context: 3 }).split('\n').slice(2).join('\n'));
+    } catch (e) { onNotice?.((e as Error).message); }
+  };
   /** Annotate: toggles the blame column (hidden again on the next edit). */
   const annotate = async () => {
     const v = ref.current?.view;
@@ -402,7 +419,7 @@ export default function CodeEditor({ file, reveal, active = true, onNotice, onIn
             { label: 'Remove and Sort Usings', icon: ListOrdered, shortcut: 'Ctrl R, Ctrl G', onSelect: () => void organize() },
             'separator' as const,
           ] : []),
-          ...(!browser ? [{ label: 'Annotate (Git Blame)', icon: History, onSelect: () => void annotate() }, 'separator' as const] : []),
+          ...(!browser ? [{ label: 'Compare with Unmodified', icon: GitCompareArrows, onSelect: () => void compareWithHead() }, { label: 'Annotate (Git Blame)', icon: History, onSelect: () => void annotate() }, 'separator' as const] : []),
           { label: 'Cut', icon: Scissors, shortcut: 'Ctrl X', onSelect: () => clip('cut') },
           { label: 'Copy', icon: Copy, shortcut: 'Ctrl C', onSelect: () => clip('copy') },
           { label: 'Paste', icon: ClipboardPaste, shortcut: 'Ctrl V', onSelect: () => clip('paste') },
@@ -490,6 +507,15 @@ export default function CodeEditor({ file, reveal, active = true, onNotice, onIn
           onClose={() => { setRenameStep(undefined); ref.current?.view?.focus(); }}
           onDone={(written, index) => { setRenameStep(undefined); window.dispatchEvent(new CustomEvent(FILES_CHANGED_EVENT, { detail: written })); onIndex?.(index); setTimeout(loadLenses, 300); }}
         />
+      )}
+      {headDiff !== undefined && (
+        <section className="references-panel compare-panel" aria-label={`Changes in ${file}`}>
+          <div className="references-head">
+            <strong>Compare with Unmodified</strong> <span className="meta">{file}</span>
+            <IconButton label="Close compare" onClick={() => setHeadDiff(undefined)}><X size={13} /></IconButton>
+          </div>
+          <CodeMirror value={headDiff} theme={theme} editable={false} basicSetup={PEEK_SETUP} extensions={DIFF_EXTENSIONS} height="240px" />
+        </section>
       )}
       {refs && (
         <section className="references-panel" aria-label={`References to ${refs.name}`}>

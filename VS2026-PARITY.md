@@ -80,7 +80,7 @@ Status: ✅ done · 🟡 partial · ⬜ to do. Priority: **P1** next, **P2** aft
 | --- | --- | --- | --- |
 | V1 | Git Changes: status, stage, commit, amend, discard; gutter change markers | ✅ | P1 |
 | V2 | Branches (create, switch, merge), pull/push/fetch, sync | 🟡 (create, switch incl. remote branches, fetch / pull --ff-only / push with publish, merge into current branch (conflicts abort and are reported)) | P2 |
-| V3 | History, blame, compare with previous | 🟡 (recent history list, Annotate / blame column in the code editor; compare pending) | P2 |
+| V3 | History, blame, compare with previous | ✅ (recent history list, Annotate / blame column, Compare with Unmodified) | P2 |
 
 ## 8. Environment
 | # | Feature | Status | Pri |
@@ -134,3 +134,4 @@ Status: ✅ done · 🟡 partial · ⬜ to do. Priority: **P1** next, **P2** aft
 - 2026-10-12 — **Fix: Explorer lagged after rename/copy/delete.** The tree reloaded only after a full re-index (several seconds with the language service busy); it now reloads from disk right away, the re-index lands later, and late or out-of-order index answers (client and delayed server rescans) no longer replace a newer one.
 - 2026-10-12 — **Start Window (S6).** `src/StartWindow.tsx` replaces the empty editor area: recent solutions/projects/folders, Clone a repository (`/api/git/clone`: https/ssh/git@/file or a local path, into `<path>/<repo name>`, then opened), Open a project or solution, Open a local folder.
 - 2026-10-12 — **Test playlists (T3).** Test Explorer context menu ▸ Add to New Playlist… / Add to Playlist <name> / Remove from Playlist; a Playlist box filters the tree (Run All runs the playlist); delete playlist. Stored per browser.
+- 2026-10-12 — **Compare with Unmodified (V3 done).** Code editor context menu: unified diff of the buffer against HEAD (`diff` package), in a closable panel under the editor.

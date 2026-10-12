@@ -39,6 +39,15 @@ test('Git Changes: see changes, stage, unstage, discard, commit; history', async
     await changes.getByRole('button', { name: /^SearchSteps.cs/ }).click();
     const bars = page.locator('.code-editor:not([hidden]) .cm-change-added');
     await expect(bars).toHaveCount(1);
+    // Compare with Unmodified: a diff against HEAD with the added line.
+    await expect(page.getByLabel('Source of Steps/SearchSteps.cs').locator('.cm-line').first()).toBeVisible();
+    await page.getByLabel('Source of Steps/SearchSteps.cs').click({ button: 'right' });
+    await page.getByRole('menuitem', { name: 'Compare with Unmodified' }).click();
+    const diff = page.getByRole('region', { name: 'Changes in Steps/SearchSteps.cs' });
+    await expect(diff).toContainText('@@');
+    await expect(diff.locator('.cm-line', { hasText: /^\+/ }).first()).toBeVisible();
+    await diff.getByRole('button', { name: 'Close compare' }).click();
+    await expect(diff).toHaveCount(0);
     // Discard the mistake (asks first).
     await view.getByRole('button', { name: 'Discard changes to Steps/AuthSteps.cs' }).click();
     await page.getByRole('button', { name: 'Discard', exact: true }).click();
