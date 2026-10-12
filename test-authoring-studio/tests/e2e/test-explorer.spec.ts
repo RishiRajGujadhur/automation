@@ -91,6 +91,8 @@ test('Run glyphs in the editor margin: run a scenario from the feature editor an
     await expect.poll(runStatus, { timeout: 30_000, intervals: [200] }).toBe('running');
     await expect.poll(runStatus, { timeout: 240_000, intervals: [1000] }).toBe('done');
     await expect(testGlyph).toHaveClass(/cm-run-passed/, { timeout: 30_000 });
+    // CodeLens above the method: the outcome next to the reference count.
+    await expect(page.locator('.code-editor:not([hidden]) .cm-lens-test.passed').first()).toHaveText('✓ Passed', { timeout: 30_000 });
     // The parameterized test kept its "not run" glyph (only the clicked test ran).
     await expect(page.locator('.code-editor:not([hidden]) .cm-run[aria-label="Run AddsCases"]')).toHaveClass(/cm-run-none/);
   } finally {

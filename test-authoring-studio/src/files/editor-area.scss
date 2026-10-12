@@ -1618,3 +1618,9 @@
   color: var(--text-muted);
   font-size: 0.85em;
 }
+
+.cm-lens-test {
+  color: var(--text-muted);
+  &.passed { color: #2e9d57; }
+  &.failed { color: #d9534f; }
+}

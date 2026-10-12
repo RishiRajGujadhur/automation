@@ -40,7 +40,7 @@ Status: ✅ done · 🟡 partial · ⬜ to do. Priority: **P1** next, **P2** aft
 | E7 | Remove and Sort Usings | ✅ | — |
 | E8 | Quick Actions and Refactorings (Ctrl+.): add using, generate method, extract method, implement interface, fix code style | ✅ (Roslyn's code fixes for compiler diagnostics + refactorings; no analyzer (IDE*) style fixes yet, no lightbulb icon) | P1 |
 | E9 | Format Document / Selection (Ctrl+K,D) with `.editorconfig` | ✅ (Shift+Alt+F or Ctrl+K, Ctrl+D; keeps line endings) | P1 |
-| E10 | CodeLens: reference counts, test status above methods | 🟡 (reference counts on types/members + step-usage lens; test status pending) | P2 |
+| E10 | CodeLens: reference counts, test status above methods | ✅ (reference counts, test outcome on test methods, step-usage lens) | P2 |
 | E11 | Inlay hints (parameter names, types) | ✅ (parameter names, var/lambda types; on/off setting pending) | P3 |
 | E12 | Code folding, outlining, sticky scroll, bracket matching, multi-caret, column select | 🟡 (CodeMirror basics) | P2 |
 | E13 | Navigation bar (project / type / member dropdowns) and breadcrumbs | ✅ | P2 |
@@ -126,3 +126,4 @@ Status: ✅ done · 🟡 partial · ⬜ to do. Priority: **P1** next, **P2** aft
 - 2026-10-12 — **CodeLens reference counts (E10 partial).** Language service `referenceCounts` (SymbolFinder per declared type, method, constructor, property, event); `/api/csharp/referenceCounts`; editor shows "N references" above each declaration (above its attributes) and clicking opens Find All References. Step-usage lens keeps priority on step definitions.
 - 2026-10-12 — **Unified bottom panel (W1 partial).** Build (Error List, Output) and Debug windows share one docked panel with BUILD / DEBUG tabs instead of stacking; a build switches to Build, a debug session to Debug; the choice is remembered. Closing one leaves the other.
 - 2026-10-12 — **Inlay hints (E11).** Language service `inlayHints`: parameter names before literal/null/default arguments, inferred types after `var` and on untyped lambda parameters; editor shows them as muted chips, refreshed 0.7 s after typing (stale answers dropped).
+- 2026-10-12 — **CodeLens test status (E10 done).** Test methods' lens shows the last run's outcome (✓ Passed / ✕ Failed / ○ Skipped / ▶ Not run / ◌ Running) before the reference count, live from the test run stream.

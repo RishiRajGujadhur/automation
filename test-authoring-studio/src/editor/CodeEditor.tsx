@@ -100,12 +100,20 @@ export default function CodeEditor({ file, reveal, active = true, onNotice, onIn
       const apply = () => { const v = ref.current?.view; if (v) v.dispatch({ effects: setLenses.of(list) }); else if (tries++ < 30) requestAnimationFrame(apply); };
       apply();
     }, () => {});
-    api<RefLens[]>('/csharp/referenceCounts', { file }).then((list) => {
-      let tries = 0;
-      const apply = () => { const v = ref.current?.view; if (v) v.dispatch({ effects: setRefLenses.of(list) }); else if (tries++ < 30) requestAnimationFrame(apply); };
-      apply();
-    }, () => {});
+    api<RefLens[]>('/csharp/referenceCounts', { file }).then((list) => { refLenses.current = list; applyRefLenses(); }, () => {});
   };
+  const refLenses = useRef<RefLens[]>([]);
+  const marksRef = useRef(runMarks);
+  marksRef.current = runMarks;
+  /** Reference lenses with the test outcome of methods that have a run glyph. */
+  const applyRefLenses = () => {
+    const marks = marksRef.current ?? [];
+    const list = refLenses.current.map((l) => { const m = marks.find((x) => x.line >= l.line && x.line <= l.symbolLine); return m ? { ...l, test: m.outcome } : l; });
+    let tries = 0;
+    const apply = () => { const v = ref.current?.view; if (v) v.dispatch({ effects: setRefLenses.of(list) }); else if (tries++ < 30) requestAnimationFrame(apply); };
+    apply();
+  };
+  useEffect(() => { if (refLenses.current.length) applyRefLenses(); }, [runMarks]); // eslint-disable-line react-hooks/exhaustive-deps
   const openRefLens = (l: RefLens) => { const v = ref.current?.view; if (!v || l.symbolLine > v.state.doc.lines) return; csHandlers.current.references(v.state.doc.line(l.symbolLine).from + l.symbolColumn - 1); };
   const openRefLensRef = useRef(openRefLens);
   openRefLensRef.current = openRefLens;

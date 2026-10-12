@@ -4,12 +4,12 @@ import { Decoration, EditorView, WidgetType, type DecorationSet } from '@codemir
 export type StepLens = { line: number; keyword: string; pattern: string; method: string; usages: { file: string; line: number; text: string; scenario: string }[] };
 export const setLenses = StateEffect.define<StepLens[]>();
 /** Reference counts (Visual Studio's "3 references") for each type and member declared in the file. */
-export type RefLens = { line: number; symbolLine: number; symbolColumn: number; name: string; count: number };
+export type RefLens = { line: number; symbolLine: number; symbolColumn: number; name: string; count: number; test?: 'passed' | 'failed' | 'skipped' | 'none' | 'running' };
 export const setRefLenses = StateEffect.define<RefLens[]>();
 
 class RefLensWidget extends WidgetType {
   constructor(readonly lens: RefLens, readonly open: (l: RefLens) => void, readonly indent: number) { super(); }
-  eq(o: RefLensWidget) { return o.lens.count === this.lens.count && o.lens.name === this.lens.name && o.indent === this.indent; }
+  eq(o: RefLensWidget) { return o.lens.test === this.lens.test && o.lens.count === this.lens.count && o.lens.name === this.lens.name && o.indent === this.indent; }
   toDOM() {
     const row = document.createElement('div');
     row.className = 'cm-lens';
@@ -20,6 +20,14 @@ class RefLensWidget extends WidgetType {
     a.className = n ? '' : 'none';
     a.title = n ? `Find All References to ${this.lens.name}` : `Nothing references ${this.lens.name}`;
     a.onmousedown = (e) => { e.preventDefault(); if (n) this.open(this.lens); };
+    // Test methods: the last run's outcome first, as Visual Studio's test CodeLens.
+    const t = this.lens.test;
+    if (t) {
+      const s = document.createElement('span');
+      s.className = `cm-lens-test ${t}`;
+      s.textContent = { passed: '✓ Passed', failed: '✕ Failed', skipped: '○ Skipped', none: '▶ Not run', running: '◌ Running' }[t];
+      row.append(s, document.createTextNode(' | '));
+    }
     row.append(a);
     return row;
   }
