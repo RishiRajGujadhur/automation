@@ -43,6 +43,18 @@ test('File ▸ Open Project/Solution… opens an .slnx: solution folders, projec
     // A file outside every project.
     await expect(se.getByRole('button', { name: 'Collapse Miscellaneous Files' })).toBeVisible();
     await expect(se.getByRole('button', { name: 'settings.json', exact: true })).toBeVisible();
+    // Build project box: the whole solution or one project; the build request carries the choice.
+    const sent: unknown[] = [];
+    await page.route('**/api/build', async (route) => { if (route.request().method() === 'POST') { sent.push(route.request().postDataJSON()); await route.fulfill({ json: { status: 'idle', output: '', diagnostics: [] } }); } else await route.continue(); });
+    await page.getByRole('button', { name: 'Build menu' }).click();
+    await page.getByRole('menuitem', { name: /^Build Solution/ }).click();
+    const build = page.getByRole('region', { name: 'Build' });
+    await build.getByLabel('Build project').selectOption({ label: 'Shop.Pages' });
+    await build.getByRole('button', { name: 'Build Solution', exact: true }).click();
+    await expect.poll(() => sent.length).toBe(2);
+    expect(sent[0]).toMatchObject({ action: 'build' });
+    expect((sent[0] as { project?: string }).project).toBeUndefined();
+    expect(sent[1]).toMatchObject({ action: 'build', project: 'src/Shop.Pages/Shop.Pages.csproj' });
     // The feature is indexed and opens.
     await se.getByRole('button', { name: 'Cart.feature', exact: true }).click();
     await expect(page.locator('.gherkin-editor .cm-content')).toContainText('Feature: Cart');

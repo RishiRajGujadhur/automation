@@ -14,7 +14,7 @@ Status: ✅ done · 🟡 partial · ⬜ to do. Priority: **P1** next, **P2** aft
 | S4 | Solution Explorer shows the real solution: solution folders → projects → Dependencies (Packages, Projects, Frameworks, Analyzers) → files | ✅ (files relative to each project; Miscellaneous Files; browser folders too) | P1 |
 | S5 | Project references between projects; language service loads one Roslyn project per `.csproj` with correct references | ✅ (own NuGet packages + project references; Miscellaneous Files project for the rest) | P1 |
 | S6 | Recent solutions list + Start Window (Open recent, Clone repository, Open folder, Open solution) | ✅ (Start Window when no editor is open: Open recent, Clone a repository, Open a project or solution, Open a local folder) | P2 |
-| S7 | Startup project / test project selection; active configuration dropdown in the toolbar | 🟡 (configuration box in the build windows) | P2 |
+| S7 | Startup project / test project selection; active configuration dropdown in the toolbar | 🟡 (configuration box and build project box (Entire solution / one project) in the build windows; Build menu uses them) | P2 |
 | S8 | Add ▸ New Project / Existing Project, Remove project, Unload/Reload project | ⬜ | P3 |
 | S9 | Edit project file (`.csproj`) with XML IntelliSense for common properties | 🟡 (XML editor) | P3 |
 | S10 | Solution-wide search (Ctrl+Shift+F, Find in Files) with replace | ✅ (match case, whole word, regex, include/exclude globs, Replace All / per file) | P1 |
@@ -135,3 +135,4 @@ Status: ✅ done · 🟡 partial · ⬜ to do. Priority: **P1** next, **P2** aft
 - 2026-10-12 — **Start Window (S6).** `src/StartWindow.tsx` replaces the empty editor area: recent solutions/projects/folders, Clone a repository (`/api/git/clone`: https/ssh/git@/file or a local path, into `<path>/<repo name>`, then opened), Open a project or solution, Open a local folder.
 - 2026-10-12 — **Test playlists (T3).** Test Explorer context menu ▸ Add to New Playlist… / Add to Playlist <name> / Remove from Playlist; a Playlist box filters the tree (Run All runs the playlist); delete playlist. Stored per browser.
 - 2026-10-12 — **Compare with Unmodified (V3 done).** Code editor context menu: unified diff of the buffer against HEAD (`diff` package), in a closable panel under the editor.
+- 2026-10-12 — **Build project selection (S7 partial).** Build windows get a project box beside the configuration (shown for multi-project solutions); Build / Rebuild / Clean (toolbar and Build menu) target it; a remembered project missing from the current workspace falls back to the solution.

@@ -20,7 +20,11 @@ export default function BuildPanel({ onOpen, onNotice, onClose }: { onOpen: (fil
   const output = useRef<HTMLPreElement>(null);
   // The solution's configurations (Debug, Release, …) for the configuration box.
   const [configurations, setConfigurations] = useState<string[]>([]);
-  useEffect(() => { api<{ configurations?: string[] }>('/solution').then((r) => setConfigurations(r.configurations ?? []), () => {}); }, []);
+  // Startup / build project: the whole solution, or one project of it.
+  const [projects, setProjects] = useState<{ name: string; file: string }[]>([]);
+  const [project, setProject] = useLocalState('buildProject', '');
+  useEffect(() => { api<{ configurations?: string[]; projects?: { name: string; file: string; missing?: boolean }[] }>('/solution').then((r) => { setConfigurations(r.configurations ?? []); setProjects((r.projects ?? []).filter((p) => /\.csproj$/i.test(p.file) && !p.missing)); }, () => {}); }, []);
+  const target = projects.some((p) => p.file === project) ? project : '';
   const configs = useMemo(() => [...new Set(configurations.map((c) => c.split('|')[0].trim()).concat(['Debug', 'Release']))], [configurations]);
   const errors = b.diagnostics.filter((d) => d.severity === 'error').length;
   const warnings = b.diagnostics.length - errors;
@@ -29,7 +33,7 @@ export default function BuildPanel({ onOpen, onNotice, onClose }: { onOpen: (fil
   useEffect(() => { const el = output.current; if (el && el.scrollHeight - el.scrollTop - el.clientHeight < 60) el.scrollTop = el.scrollHeight; }, [b.output]);
   // A failed build brings the Error List forward.
   useEffect(() => { if (b.status === 'failed' && errors) setTab('errors'); }, [b.status]); // eslint-disable-line react-hooks/exhaustive-deps
-  const run = (action: 'build' | 'rebuild' | 'clean') => { setTab(action === 'clean' ? 'output' : tab); startBuild(action, configuration).catch((e) => onNotice((e as Error).message)); };
+  const run = (action: 'build' | 'rebuild' | 'clean') => { setTab(action === 'clean' ? 'output' : tab); startBuild(action, configuration, target || undefined).catch((e) => onNotice((e as Error).message)); };
   const go = (i: number) => { const d = rows[i]; if (d?.file && d.line) onOpen(d.file, d.line, d.column); };
   const running = b.status === 'running';
 
@@ -45,6 +49,12 @@ export default function BuildPanel({ onOpen, onNotice, onClose }: { onOpen: (fil
         <select className="build-config" aria-label="Solution configuration" value={configuration} onChange={(e) => setConfiguration(e.target.value)} disabled={running}>
           {configs.map((c) => <option key={c}>{c}</option>)}
         </select>
+        {projects.length > 1 && (
+          <select className="build-config" aria-label="Build project" value={target} onChange={(e) => setProject(e.target.value)} disabled={running}>
+            <option value="">Entire solution</option>
+            {projects.map((p) => <option key={p.file} value={p.file}>{p.name}</option>)}
+          </select>
+        )}
         <IconButton label="Build Solution" shortcut="Ctrl Shift B" disabled={running} onClick={() => run('build')}><Hammer size={14} /></IconButton>
         <IconButton label="Rebuild Solution" disabled={running} onClick={() => run('rebuild')}><RotateCw size={14} /></IconButton>
         <IconButton label="Clean Solution" disabled={running} onClick={() => run('clean')}><Eraser size={14} /></IconButton>

@@ -423,7 +423,9 @@ export default function App() {
     setBuildOpen(true);
     let configuration = 'Debug';
     try { configuration = JSON.parse(localStorage.getItem('tas:buildConfiguration') ?? '"Debug"'); } catch { /* default */ }
-    startBuild(action, configuration).catch((e) => setNotice((e as Error).message));
+    let project = '';
+    try { project = JSON.parse(localStorage.getItem('tas:buildProject') ?? '""'); } catch { /* whole solution */ }
+    startBuild(action, configuration, project || undefined).catch((e) => setNotice((e as Error).message));
   };
   const debugFeature = (scenario?: string) => {
     if (!feature) { setNotice('Open a saved feature file to debug it.'); return; }

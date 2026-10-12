@@ -808,7 +808,8 @@ app.get('/api/build/events', (req, res) => {
 /** What "Build Solution" builds: the open solution, else the configured project, else the only solution/project at the root. */
 async function buildTarget(project?: string) {
   const root = config.repositoryRoot;
-  if (project) { await confined(root, project); return project; }
+  // A remembered project from another workspace falls back to the solution.
+  if (project && await confined(root, project).then(() => true, () => false)) return project;
   if (config.solution) return config.solution;
   if (config.targetProject.endsWith('.csproj')) return config.targetProject;
   const top = await fs.readdir(root).catch(() => [] as string[]);
