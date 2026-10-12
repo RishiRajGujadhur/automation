@@ -55,7 +55,7 @@ Status: ✅ done · 🟡 partial · ⬜ to do. Priority: **P1** next, **P2** aft
 | G2 | Create step definition for unbound steps | ✅ | — |
 | G3 | Find step usages (from a C# binding back to feature lines) | ✅ (CodeLens above each binding + Find Step Usages) | P1 |
 | G4 | Rename step (update pattern and all feature usages) | ✅ (regex and Cucumber expressions; parameter values carried over; preview before apply) | P2 |
-| G5 | Table formatting, Scenario Outline examples editing | 🟡 | P2 |
+| G5 | Table formatting, Scenario Outline examples editing | ✅ (Format Document aligns tables; tables align as `|` closes a cell; Tab / Shift+Tab move between cells; escaped `\|` kept) | P2 |
 
 ## 5. Testing
 | # | Feature | Status | Pri |
@@ -138,3 +138,4 @@ Status: ✅ done · 🟡 partial · ⬜ to do. Priority: **P1** next, **P2** aft
 - 2026-10-12 — **Build project selection (S7 partial).** Build windows get a project box beside the configuration (shown for multi-project solutions); Build / Rebuild / Clean (toolbar and Build menu) target it; a remembered project missing from the current workspace falls back to the solution.
 - 2026-10-12 — **Restore on open (B3 done).** Opening a solution/project whose projects lack `obj/project.assets.json` runs `dotnet restore` in the background (`/api/restore` reports it); the language service restarts afterwards to load the packages; builds, test runs and debug sessions wait for it.
 - 2026-10-12 — **Split editor (E16 partial).** Tab context menu ▸ Split Right opens the file in a second editor beside the tab group (close button; remembered). Also fixed: auto save could send two saves with the same base hash while typing and report a false "changed outside the studio" conflict; saves are now serialized.
+- 2026-10-12 — **Gherkin table editing (G5).** `gherkinTables.ts`: typing `|` at the end of a row re-aligns the table (the row being typed keeps its own cells), Tab / Shift+Tab select the next / previous cell (wrapping to the next row), escaped pipes stay in their cell.

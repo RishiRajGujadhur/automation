@@ -138,3 +138,23 @@ test('Split Right: a second editor beside the tab group; close it', async ({ pag
   await split.getByRole('button', { name: 'Close split editor' }).click();
   await expect(split).toHaveCount(0);
 });
+
+test('Gherkin tables align as | is typed; Tab moves between cells', async ({ page }) => {
+  await page.addInitScript(() => { if (!sessionStorage.getItem('seeded')) { localStorage.setItem('tas:prefs', JSON.stringify({ mode: 'advanced', autoSave: 'off' })); sessionStorage.setItem('seeded', '1'); } });
+  await page.goto('/#/features/editor');
+  const editor = page.getByLabel('Gherkin source');
+  await expect(editor).toContainText('Feature:');
+  await editor.click();
+  await page.keyboard.press('Control+End');
+  await page.keyboard.type('\n\n| name | age |\n| Bartholomew | 3 |');
+  const rows = editor.locator('.cm-line', { hasText: /^\s*\|/ });
+  await expect(rows.nth(-2)).toHaveText(/\| name\s{8}\| age \|$/);
+  await expect(rows.nth(-1)).toHaveText(/\| Bartholomew \| 3\s{3}\|$/);
+  // Tab from the first cell of the last row selects the next cell's text.
+  await rows.nth(-1).click({ position: { x: 30, y: 5 } });
+  await page.keyboard.press('Home');
+  await page.keyboard.press('Tab');
+  await page.keyboard.press('Tab');
+  await page.keyboard.type('42');
+  await expect(rows.nth(-1)).toHaveText(/\| Bartholomew \| 42\s+\|$/);
+});
