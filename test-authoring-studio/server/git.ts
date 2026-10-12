@@ -124,6 +124,17 @@ export async function blame(root: string, file: string) {
   }
   return lines;
 }
+/** Clone a repository into a new folder under `parent` (named after the repository); returns that folder. */
+export async function clone(url: string, parent: string) {
+  if (!/^(https?:\/\/|git@|ssh:\/\/|file:\/\/)/i.test(url) && !path.isAbsolute(url)) throw new Error('Enter an https://, ssh:// or git@ repository address.');
+  const name = url.replace(/[\\/]+$/, '').split(/[\\/:]/).pop()!.replace(/\.git$/i, '');
+  if (!name) throw new Error('The repository address has no name.');
+  const target = path.join(path.resolve(parent), name);
+  if (await fs.stat(target).then(() => true, () => false)) throw new Error(`${target} already exists.`);
+  await fs.mkdir(path.resolve(parent), { recursive: true });
+  await git(path.resolve(parent), ['clone', '--', url, target]);
+  return target;
+}
 /** Local and remote branches (remote ones without a local counterpart), current first. */
 export async function branches(root: string) {
   const { top } = await locate(root);

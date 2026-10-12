@@ -13,6 +13,7 @@ import CodeEditor from './editor/CodeEditor';
 import { readDraft, sha256, useAutoSave, unsavedFiles, editedThisSession } from './editor/autosave';
 import EditorTabs, { EditorActions } from './files/EditorTabs';
 import OpenSolution from './OpenSolution';
+import StartWindow from './StartWindow';
 import NugetManager from './NugetManager';
 import BuildPanel from './build/BuildPanel';
 import TestExplorer from './testing/TestExplorer';
@@ -278,6 +279,19 @@ export default function App() {
     if (announce) { setTab('Features'); setView('editor'); setNotice(`Opened ${name} from your disk. Files open and save in place. For step bindings and debugging, use File ▸ Index Folder with Studio Server….`); }
   };
   const leaveBrowserFolder = async () => { if (fileSource().kind !== 'browser') return; await closeBrowserFolder(); setBrowserSol(undefined); };
+  /** A solution, project or folder was opened (Open Project/Solution, Start Window). */
+  const solutionOpened = async (r: { config: { repositoryRoot: string; solution?: string }; index: Index }) => {
+    await leaveBrowserFolder();
+    setFileSource({ kind: 'server', root: r.config.repositoryRoot });
+    reloadTabs();
+    setIndex(r.index);
+    setConfig(r.config as typeof config);
+    setActiveFolder(undefined);
+    setQuery('');
+    setModal(undefined);
+    setTab('Features');
+    setView('editor');
+  };
   const openFolder = async () => {
     if (desktop?.pickFolder) {
       const folder = await desktop.pickFolder('Open Folder');
@@ -1658,10 +1672,7 @@ export default function App() {
             <div className="editor-area">
             <EditorTabs onClose={closeEditor}>
             {!openEditors.tabs.length && (
-              <div className="editor-empty" role="note">
-                <FileCode2 size={40} aria-hidden="true" />
-                <p>Open a file from the Explorer, or File ▸ Open Folder….</p>
-              </div>
+              <StartWindow onOpenSolution={() => setModal('solution')} onOpenFolder={() => void openFolder()} onOpened={solutionOpened} onNotice={setNotice} />
             )}
             {featureTabActive && (
             <section className="panel editor-panel">
@@ -2070,18 +2081,7 @@ export default function App() {
                   <GoToAll features={index?.features ?? []} onOpen={(file, line, column) => editFile(file, line, column)} onClose={() => setModal(undefined)} />
                 )}
                 {modal === 'solution' && (
-                  <OpenSolution root={config?.repositoryRoot} onOpened={async (r) => {
-                    await leaveBrowserFolder();
-                    setFileSource({ kind: 'server', root: r.config.repositoryRoot });
-                    reloadTabs();
-                    setIndex(r.index);
-                    setConfig(r.config as typeof config);
-                    setActiveFolder(undefined);
-                    setQuery('');
-                    setModal(undefined);
-                    setTab('Features');
-                    setView('editor');
-                  }} />
+                  <OpenSolution root={config?.repositoryRoot} onOpened={solutionOpened} />
                 )}
                 {modal === 'settings' && config && (
                   <WorkspaceForm

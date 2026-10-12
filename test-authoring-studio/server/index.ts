@@ -30,7 +30,7 @@ import { Builder } from './build.js';
 import { findInFiles, replaceInFiles } from './search.js';
 import { values, render, parameterCount, replaceAttributePattern } from './stepRename.js';
 import { installed as nugetInstalled, updates as nugetUpdates, search as nugetSearch, versions as nugetVersions, install as nugetInstall, uninstall as nugetUninstall } from './nuget.js';
-import { status as gitStatus, stage as gitStage, unstage as gitUnstage, discard as gitDiscard, commit as gitCommit, headInfo, log as gitLog, branches as gitBranches, checkout as gitCheckout, createBranch as gitCreateBranch, sync as gitSync, merge as gitMerge, blame as gitBlame } from './git.js';
+import { status as gitStatus, stage as gitStage, unstage as gitUnstage, discard as gitDiscard, commit as gitCommit, headInfo, log as gitLog, branches as gitBranches, checkout as gitCheckout, createBranch as gitCreateBranch, sync as gitSync, merge as gitMerge, blame as gitBlame, clone as gitClone } from './git.js';
 import { LanguageService } from './langService.js';
 import type { Index } from '../src/types.js';
 import { readSettings, writeSettings, settingsSchema, tracesDir } from './settings.js';
@@ -352,6 +352,11 @@ app.post('/api/git/merge', async (req, res) => {
   const output = await gitMerge(config.repositoryRoot, name);
   rescanSoon(300);
   res.json({ output, status: await gitStatus(config.repositoryRoot) });
+});
+app.post('/api/git/clone', async (req, res) => {
+  const { url, folder } = z.object({ url: z.string().trim().min(1).max(1000), folder: z.string().trim().min(1).max(1000) }).parse(req.body);
+  if (!path.isAbsolute(folder)) throw new Error('Enter a full path for the folder, e.g. C:\\src.');
+  res.json({ path: await gitClone(url, folder) });
 });
 app.post('/api/git/sync', async (req, res) => {
   const { action } = z.object({ action: z.enum(['fetch', 'pull', 'push']) }).parse(req.body);

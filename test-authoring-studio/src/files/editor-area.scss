@@ -1663,3 +1663,110 @@
     }
   }
 }
+
+// Start Window
+.start-window {
+  display: grid;
+  grid-template-columns: minmax(0, 1.2fr) minmax(260px, 1fr);
+  gap: 32px;
+  align-content: start;
+  width: min(960px, 100%);
+  margin: 0 auto;
+  padding: 32px 24px;
+  overflow: auto;
+  h2 {
+    margin: 0 0 12px;
+    font-size: 15px;
+    font-weight: 600;
+  }
+  ul {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+  .start-recent button {
+    display: grid;
+    grid-template-columns: 20px 1fr;
+    gap: 0 8px;
+    width: 100%;
+    padding: 6px 8px;
+    border: 0;
+    border-radius: 3px;
+    background: transparent;
+    color: var(--text);
+    text-align: left;
+    cursor: pointer;
+    &:hover {
+      background: var(--accent-soft, #9270dd22);
+    }
+    svg {
+      grid-row: span 2;
+      margin-top: 2px;
+    }
+    small {
+      overflow: hidden;
+      color: var(--text-muted);
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+  }
+  .start-none {
+    display: flex;
+    gap: 6px;
+    align-items: center;
+    color: var(--text-muted);
+    font-size: 13px;
+  }
+  .start-actions {
+    display: grid;
+    gap: 8px;
+    align-content: start;
+  }
+  .start-action {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    padding: 12px;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    background: var(--surface);
+    color: var(--text);
+    text-align: left;
+    cursor: pointer;
+    &:hover {
+      border-color: var(--accent, #9270dd);
+    }
+    span {
+      display: grid;
+      gap: 2px;
+    }
+    small {
+      color: var(--text-muted);
+      font-size: 12px;
+    }
+  }
+  .start-clone {
+    display: grid;
+    gap: 8px;
+    padding: 4px 12px 12px;
+    label {
+      display: grid;
+      gap: 4px;
+      font-size: 12px;
+    }
+    input {
+      height: 28px;
+      padding: 0 8px;
+      border: 1px solid var(--border);
+      border-radius: 3px;
+      background: var(--surface);
+      color: var(--text);
+    }
+  }
+}
+@media (max-width: 700px) {
+  .start-window {
+    grid-template-columns: 1fr;
+    padding: 16px;
+  }
+}

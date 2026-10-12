@@ -129,3 +129,36 @@ test('Git branches: New Branch, publish with Push, switch back, Fetch', async ({
     await fs.rm(base, { recursive: true, force: true, maxRetries: 5 }).catch(() => {});
   }
 });
+
+
+test('Start Window: clone a repository, it opens and appears under Open recent', async ({ page, request }) => {
+  const previous = (await (await request.get('/api/workspace')).json()).config;
+  const base = await fs.mkdtemp(path.join(os.tmpdir(), 'studio-clone-'));
+  const source = path.join(base, 'shop');
+  const run = (cwd: string, ...args: string[]) => execFileSync('git', args, { cwd, encoding: 'utf8' });
+  await fs.cp(path.resolve(import.meta.dirname, '../../fixtures'), source, { recursive: true });
+  run(source, 'init', '-q', '-b', 'main');
+  run(source, 'config', 'user.email', 'test@example.com');
+  run(source, 'config', 'user.name', 'Test');
+  run(source, 'add', '-A');
+  run(source, 'commit', '-q', '-m', 'Initial');
+  try {
+    await page.addInitScript(() => { if (!sessionStorage.getItem('seeded')) { localStorage.setItem('tas:prefs', JSON.stringify({ mode: 'advanced' })); sessionStorage.setItem('seeded', '1'); } });
+    await page.goto('/#/features/editor');
+    // With every editor closed the Start Window shows.
+    await page.getByRole('button', { name: 'Close GoogleSearch.feature' }).click();
+    const start = page.getByRole('region', { name: 'Start Window' });
+    await start.getByRole('button', { name: /Clone a repository/ }).click();
+    await start.getByLabel('Repository location').fill(source);
+    await start.getByLabel('Path').fill(path.join(base, 'clones'));
+    await start.getByRole('button', { name: 'Clone', exact: true }).click();
+    await expect(page.getByText(/Cloned into .*shop/).first()).toBeVisible({ timeout: 60_000 });
+    const cloned = path.join(base, 'clones', 'shop');
+    await expect.poll(async () => (await (await request.get('/api/workspace')).json()).config.repositoryRoot).toBe(cloned);
+    expect(run(cloned, 'log', '-1', '--format=%s').trim()).toBe('Initial');
+    await expect(start.getByRole('list', { name: 'Recent' })).toContainText('shop');
+  } finally {
+    await request.post('/api/workspace', { data: { ...previous, solution: '' } });
+    await fs.rm(base, { recursive: true, force: true, maxRetries: 5 }).catch(() => {});
+  }
+});

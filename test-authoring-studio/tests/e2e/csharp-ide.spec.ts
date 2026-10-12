@@ -165,7 +165,7 @@ test('Tabs: pin keeps a tab through Close All; closing the last tab closes the e
   await strip.getByRole('button', { name: /^Close ShippingDetails.xml/ }).click();
   await expect(strip.locator('.editor-tab')).toHaveCount(0);
   await expect(page.locator('.code-editor:not([hidden]), .editor-panel')).toHaveCount(0);
-  await expect(page.getByText('Open a file from the Explorer')).toBeVisible();
+  await expect(page.getByRole('region', { name: 'Start Window' })).toBeVisible();
 });
 
 test('Signature help while typing a call, Quick Actions (Ctrl+.) add a using, Format Document (Shift+Alt+F)', async ({ page }) => {

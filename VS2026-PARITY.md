@@ -13,7 +13,7 @@ Status: ✅ done · 🟡 partial · ⬜ to do. Priority: **P1** next, **P2** aft
 | S3 | Scan the whole solution: every project indexed (features, steps, selectors) with per-project index and a combined view | 🟡 (solution folder scanned as one index; projects outside it not yet) | P1 |
 | S4 | Solution Explorer shows the real solution: solution folders → projects → Dependencies (Packages, Projects, Frameworks, Analyzers) → files | ✅ (files relative to each project; Miscellaneous Files; browser folders too) | P1 |
 | S5 | Project references between projects; language service loads one Roslyn project per `.csproj` with correct references | ✅ (own NuGet packages + project references; Miscellaneous Files project for the rest) | P1 |
-| S6 | Recent solutions list + Start Window (Open recent, Clone repository, Open folder, Open solution) | 🟡 (recent solutions and folders; no Start Window yet) | P2 |
+| S6 | Recent solutions list + Start Window (Open recent, Clone repository, Open folder, Open solution) | ✅ (Start Window when no editor is open: Open recent, Clone a repository, Open a project or solution, Open a local folder) | P2 |
 | S7 | Startup project / test project selection; active configuration dropdown in the toolbar | 🟡 (configuration box in the build windows) | P2 |
 | S8 | Add ▸ New Project / Existing Project, Remove project, Unload/Reload project | ⬜ | P3 |
 | S9 | Edit project file (`.csproj`) with XML IntelliSense for common properties | 🟡 (XML editor) | P3 |
@@ -132,3 +132,4 @@ Status: ✅ done · 🟡 partial · ⬜ to do. Priority: **P1** next, **P2** aft
 - 2026-10-12 — **Line editing keys (E15).** `src/editor/vsKeys.ts` in the code and Gherkin editors: comment/uncomment selection with the file's token (`//`, `#`), duplicate line/selection, delete lines, go to line; move line is CodeMirror's Alt+↑/↓.
 - 2026-10-12 — **Outlining and sticky scroll (E12).** `folding.ts`: fold service for C# blocks (end-of-line or Allman `{`, `#region`) and Gherkin indentation; `stickyScroll.ts` pins the enclosing namespace/class/method (Feature/Scenario) lines at the top of the editor, click to jump.
 - 2026-10-12 — **Fix: Explorer lagged after rename/copy/delete.** The tree reloaded only after a full re-index (several seconds with the language service busy); it now reloads from disk right away, the re-index lands later, and late or out-of-order index answers (client and delayed server rescans) no longer replace a newer one.
+- 2026-10-12 — **Start Window (S6).** `src/StartWindow.tsx` replaces the empty editor area: recent solutions/projects/folders, Clone a repository (`/api/git/clone`: https/ssh/git@/file or a local path, into `<path>/<repo name>`, then opened), Open a project or solution, Open a local folder.
