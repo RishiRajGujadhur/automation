@@ -55,6 +55,20 @@ test('Test Explorer: discovers C# tests and scenarios, Run All, failure details 
     await page.getByRole('menuitem', { name: 'Run', exact: true }).click();
     await expect(tree.locator('.t-label', { hasText: /Add two numbers/ }).getByLabel('Passed')).toBeVisible({ timeout: 240_000 });
 
+    // Playlist: add one test to a new playlist; the tree then shows only it; back to all tests; delete it.
+    await tree.locator('.t-label', { hasText: /FailsOnPurpose/ }).click({ button: 'right' });
+    await page.getByRole('menuitem', { name: 'Add to New Playlist…' }).click();
+    await te.getByLabel('Playlist name').fill('Smoke');
+    await te.getByLabel('Playlist name').press('Enter');
+    await expect(te.getByLabel('Playlist', { exact: true })).toHaveValue('Smoke');
+    await expect(tree.locator('.t-label', { hasText: /FailsOnPurpose/ })).toBeVisible();
+    await expect(tree.locator('.t-label', { hasText: /Add two numbers/ })).toHaveCount(0);
+    await te.getByLabel('Playlist', { exact: true }).selectOption('');
+    await expect(tree.locator('.t-label', { hasText: /Add two numbers/ })).toBeVisible();
+    await te.getByLabel('Playlist', { exact: true }).selectOption('Smoke');
+    await te.getByRole('button', { name: 'Delete playlist Smoke' }).click();
+    await expect(tree.locator('.t-label', { hasText: /Add two numbers/ })).toBeVisible();
+
     // Back to the Explorer.
     await page.getByRole('button', { name: 'Features (Explorer)' }).click();
     await expect(page.getByRole('region', { name: 'Explorer' })).toBeVisible();

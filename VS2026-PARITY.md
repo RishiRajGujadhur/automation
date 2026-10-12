@@ -26,7 +26,7 @@ Status: ✅ done · 🟡 partial · ⬜ to do. Priority: **P1** next, **P2** aft
 | B1 | Build / Rebuild / Clean Solution and per project (Ctrl+Shift+B) | ✅ (solution; per-project via API, no project context menu yet) | P1 |
 | B2 | Output window (Build pane) and Error List (errors, warnings, messages; click to go to line; filter by project) | ✅ (filters, search, double-click to line; no messages level yet) | P1 |
 | B3 | NuGet: restore on open, Manage NuGet Packages (browse, installed, updates), package versions | 🟡 (Manage NuGet Packages: browse / installed / updates, versions, install / update / uninstall; restore happens on build and install, not on open) | P2 |
-| B4 | Build on save / before run and debug | ⬜ | P2 |
+| B4 | Build on save / before run and debug | 🟡 (runs and debug sessions build first: `dotnet test` and the debugger build the owning project; no build on save) | P2 |
 
 ## 3. Editor (C#)
 | # | Feature | Status | Pri |
@@ -62,7 +62,7 @@ Status: ✅ done · 🟡 partial · ⬜ to do. Priority: **P1** next, **P2** aft
 | --- | --- | --- | --- |
 | T1 | Test Explorer: discover tests per project (features/scenarios, NUnit/xUnit/MSTest), tree by project/namespace/class/trait | ✅ (project → class / feature → test; no trait grouping yet) | P1 |
 | T2 | Run / Debug selected, Run all, Run failed, repeat last run; live pass/fail icons in Explorer and editor gutters | ✅ (Test Explorer + editor margin glyphs) | P1 |
-| T3 | Test detail: output, stack trace with links, duration; playlists | 🟡 (details with message, stack links, durations; no playlists) | P2 |
+| T3 | Test detail: output, stack trace with links, duration; playlists | 🟡 (details with message, stack links, durations; playlists) | P2 |
 | T4 | Playwright traces from failed runs | 🟡 | P2 |
 | T5 | Code coverage per run | ⬜ | P3 |
 
@@ -133,3 +133,4 @@ Status: ✅ done · 🟡 partial · ⬜ to do. Priority: **P1** next, **P2** aft
 - 2026-10-12 — **Outlining and sticky scroll (E12).** `folding.ts`: fold service for C# blocks (end-of-line or Allman `{`, `#region`) and Gherkin indentation; `stickyScroll.ts` pins the enclosing namespace/class/method (Feature/Scenario) lines at the top of the editor, click to jump.
 - 2026-10-12 — **Fix: Explorer lagged after rename/copy/delete.** The tree reloaded only after a full re-index (several seconds with the language service busy); it now reloads from disk right away, the re-index lands later, and late or out-of-order index answers (client and delayed server rescans) no longer replace a newer one.
 - 2026-10-12 — **Start Window (S6).** `src/StartWindow.tsx` replaces the empty editor area: recent solutions/projects/folders, Clone a repository (`/api/git/clone`: https/ssh/git@/file or a local path, into `<path>/<repo name>`, then opened), Open a project or solution, Open a local folder.
+- 2026-10-12 — **Test playlists (T3).** Test Explorer context menu ▸ Add to New Playlist… / Add to Playlist <name> / Remove from Playlist; a Playlist box filters the tree (Run All runs the playlist); delete playlist. Stored per browser.

@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState, type ReactNode } from 'react';
-import { ChevronDown, ChevronRight, Play, PlayCircle, Bug, RefreshCw, Square, CircleCheck, CircleX, CircleSlash, Circle, Loader, Search, X, FileText, FlaskConical, Boxes, RotateCcw, Navigation } from 'lucide-react';
+import { ChevronDown, ChevronRight, Play, PlayCircle, Bug, RefreshCw, Square, CircleCheck, CircleX, CircleSlash, Circle, Loader, Search, X, FileText, FlaskConical, Boxes, RotateCcw, Navigation, ListPlus, ListMinus, Trash2 } from 'lucide-react';
 import { RowMenu, useLocalState } from '../ui';
 import { useTestRun, discoverTests, runTests, cancelTests, resultsOf, outcomeOf, combine, type DiscoveredTest, type Outcome } from './store';
 
@@ -27,6 +27,13 @@ export default function TestExplorer({ revision, onOpen, onDebug, onNotice }: { 
   const [collapsed, setCollapsed] = useState<Set<string>>(new Set());
   const [query, setQuery] = useState('');
   const [configuration] = useLocalState('buildConfiguration', 'Debug');
+  // Playlists (Visual Studio): named sets of tests to show and run together.
+  const [playlists, setPlaylists] = useLocalState<Record<string, string[]>>('testPlaylists', {});
+  const [playlist, setPlaylist] = useLocalState('testPlaylist', '');
+  const [naming, setNaming] = useState<string[] | null>(null);
+  const addTo = (name: string, ids: string[]) => setPlaylists({ ...playlists, [name]: [...new Set([...(playlists[name] ?? []), ...ids])] });
+  const removeFrom = (name: string, ids: string[]) => setPlaylists({ ...playlists, [name]: (playlists[name] ?? []).filter((id) => !ids.includes(id)) });
+  const deletePlaylist = (name: string) => { const next = { ...playlists }; delete next[name]; setPlaylists(next); setPlaylist(''); };
 
   const refresh = () => {
     setLoading(true);
@@ -39,8 +46,10 @@ export default function TestExplorer({ revision, onOpen, onDebug, onNotice }: { 
 
   const visible = useMemo(() => {
     const q = query.trim().toLowerCase();
-    return q ? tests.filter((t) => `${t.project} ${t.className} ${t.name} ${t.feature ?? ''}`.toLowerCase().includes(q)) : tests;
-  }, [tests, query]);
+    const inList = playlist && playlists[playlist] ? new Set(playlists[playlist]) : null;
+    const pool = inList ? tests.filter((t) => inList.has(t.id)) : tests;
+    return q ? pool.filter((t) => `${t.project} ${t.className} ${t.name} ${t.feature ?? ''}`.toLowerCase().includes(q)) : pool;
+  }, [tests, query, playlist, playlists]);
   const groups = useMemo(() => {
     const projects = new Map<string, Group>();
     for (const t of visible) {
@@ -73,6 +82,10 @@ export default function TestExplorer({ revision, onOpen, onDebug, onNotice }: { 
     { label: 'Run', icon: Play, disabled: running, onSelect: () => void start(ts) },
     { label: 'Debug', icon: Bug, disabled: running || ts.length !== 1, onSelect: () => onDebug(ts[0]) },
     ...(go ? ['separator' as const, { label: 'Go To Test', icon: Navigation, onSelect: () => onOpen(go.file, go.line) }] : []),
+    'separator' as const,
+    { label: 'Add to New Playlist…', icon: ListPlus, onSelect: () => setNaming(ts.map((t) => t.id)) },
+    ...Object.keys(playlists).filter((n) => n !== playlist).map((n) => ({ label: `Add to Playlist ${n}`, icon: ListPlus, onSelect: () => addTo(n, ts.map((t) => t.id)) })),
+    ...(playlist && playlists[playlist] ? [{ label: `Remove from Playlist ${playlist}`, icon: ListMinus, onSelect: () => removeFrom(playlist, ts.map((t) => t.id)) }] : []),
   ];
   const toggle = (k: string) => setCollapsed((prev) => { const n = new Set(prev); if (n.has(k)) n.delete(k); else n.add(k); return n; });
   const groupRow = (g: Group, depth: number): ReactNode => {
@@ -123,7 +136,7 @@ export default function TestExplorer({ revision, onOpen, onDebug, onNotice }: { 
       <div className="sidebar-heading">
         <span>TEST EXPLORER</span>
         <div className="se-tools">
-          <button className="icon-button" aria-label="Run All Tests" title="Run All Tests" disabled={running || !tests.length} onClick={() => void start('all')}><PlayCircle size={14} /></button>
+          <button className="icon-button" aria-label="Run All Tests" title="Run All Tests" disabled={running || !tests.length} onClick={() => void start(playlist && playlists[playlist] ? visible : 'all')}><PlayCircle size={14} /></button>
           <button className="icon-button" aria-label="Run selected tests" title="Run" disabled={running || !selectedTests.length} onClick={() => void start(selectedTests)}><Play size={14} /></button>
           <button className="icon-button" aria-label="Debug selected test" title="Debug" disabled={running || selectedTests.length !== 1} onClick={() => selectedTests[0] && onDebug(selectedTests[0])}><Bug size={14} /></button>
           <button className="icon-button" aria-label="Run Failed Tests" title="Run Failed Tests" disabled={running || !failed.length} onClick={() => void start(failed)}><RotateCcw size={14} /></button>
@@ -131,6 +144,23 @@ export default function TestExplorer({ revision, onOpen, onDebug, onNotice }: { 
             : <button className="icon-button" aria-label="Refresh tests" title="Refresh (rediscover)" onClick={refresh}><RefreshCw size={14} className={loading ? 'spin' : ''} /></button>}
         </div>
       </div>
+      {(Object.keys(playlists).length > 0 || naming) && (
+        <div className="t-playlist">
+          {naming ? (
+            <form onSubmit={(e) => { e.preventDefault(); const name = new FormData(e.currentTarget).get('name')?.toString().trim(); if (name) { addTo(name, naming); setPlaylist(name); } setNaming(null); }}>
+              <input name="name" autoFocus aria-label="Playlist name" placeholder="Playlist name" onKeyDown={(e) => { if (e.key === 'Escape') setNaming(null); }} />
+            </form>
+          ) : (
+            <>
+              <select aria-label="Playlist" value={playlist && playlists[playlist] ? playlist : ''} onChange={(e) => setPlaylist(e.target.value)}>
+                <option value="">All tests</option>
+                {Object.keys(playlists).map((n) => <option key={n} value={n}>{n} ({playlists[n].length})</option>)}
+              </select>
+              {playlist && playlists[playlist] && <button className="icon-button" aria-label={`Delete playlist ${playlist}`} title="Delete playlist" onClick={() => deletePlaylist(playlist)}><Trash2 size={13} /></button>}
+            </>
+          )}
+        </div>
+      )}
       <label className="search-box">
         <Search size={14} />
         <input aria-label="Search Test Explorer" placeholder="Search Test Explorer" value={query} onChange={(e) => setQuery(e.target.value)} />
