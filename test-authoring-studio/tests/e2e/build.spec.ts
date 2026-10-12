@@ -15,6 +15,9 @@ test('Build ▸ Build Solution: Error List with the compiler error, double-click
   await fs.writeFile(steps, good.replace('result = calculator.Add();', 'result = calculator.Add() + missingName;'));
   try {
     expect((await request.post('/api/solution/open', { data: { path: path.join(root, 'Calculator.csproj') } })).ok()).toBe(true);
+    // Restore on open: the copied project has no obj/ yet, so packages restore in the background.
+    await expect.poll(async () => (await (await request.get('/api/restore')).json()).status, { timeout: 180_000, intervals: [500] }).toBe('done');
+    expect(await fs.stat(path.join(root, 'obj/project.assets.json')).then(() => true, () => false)).toBe(true);
     await page.addInitScript(() => { if (!sessionStorage.getItem('seeded')) { localStorage.setItem('tas:prefs', JSON.stringify({ mode: 'advanced' })); sessionStorage.setItem('seeded', '1'); } });
     await page.goto('/#/features/editor');
     await expect(page.getByText('Repository indexed')).toBeVisible();

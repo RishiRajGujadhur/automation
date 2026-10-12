@@ -1,3 +1,4 @@
+import { spawn } from 'node:child_process';
 import express from 'express';
 import fs from 'node:fs/promises';
 import path from 'node:path';
@@ -202,8 +203,35 @@ app.post('/api/solution/open',async(req,res)=>{
   config=next;activate(scanned);previews.clear();
   await fs.mkdir(path.dirname(configFile),{recursive:true});
   await fs.writeFile(configFile,JSON.stringify(config,null,2));
+  restoreOnOpen(next);
   res.json({config,index:publicIndex(index!)});
 });
+/**
+ * NuGet restore on open (Visual Studio restores when a solution loads): when a project has no obj/project.assets.json
+ * yet, `dotnet restore` runs in the background; the language service restarts afterwards to load the packages.
+ */
+export const restoreState: { status: 'idle' | 'running' | 'done' | 'failed'; target?: string; output?: string } = { status: 'idle' };
+let restoring: Promise<void> = Promise.resolve();
+/** Builds, test runs and debug sessions wait for a restore in progress (both would write obj/). */
+const afterRestore = () => restoring;
+async function restoreOnOpen(target: typeof config) {
+  const what = target.solution || (target.targetProject.endsWith('.csproj') ? target.targetProject : '');
+  if (!what || process.env.STUDIO_NO_RESTORE) return;
+  const projects = what.endsWith('.csproj') ? [what] : (await readSolution(target.repositoryRoot, what).then((s) => s.projects.map((p) => p.file).filter((f) => /\.csproj$/i.test(f)), () => [] as string[]));
+  const missing = await Promise.all(projects.map((p) => fs.stat(path.join(target.repositoryRoot, path.dirname(p), 'obj', 'project.assets.json')).then(() => false, () => true)));
+  if (!missing.some(Boolean)) return;
+  Object.assign(restoreState, { status: 'running', target: what, output: '' });
+  const proc = spawn(dotnet, ['restore', what, '-nologo', '-v:q'], { cwd: target.repositoryRoot, windowsHide: true, env: { ...process.env, DOTNET_CLI_UI_LANGUAGE: 'en' } });
+  restoring = new Promise<void>((done) => { proc.on('exit', () => done()); proc.on('error', () => done()); });
+  proc.stdout?.on('data', (d) => { restoreState.output += d; });
+  proc.stderr?.on('data', (d) => { restoreState.output += d; });
+  proc.on('error', (e) => { Object.assign(restoreState, { status: 'failed', output: `${restoreState.output}${e.message}` }); });
+  proc.on('exit', (code) => {
+    restoreState.status = code === 0 ? 'done' : 'failed';
+    if (code === 0 && config.repositoryRoot === target.repositoryRoot) lang.stop();
+  });
+}
+app.get('/api/restore', (_req, res) => res.json(restoreState));
 app.get('/api/health',(_req,res)=>res.json({ok:true,scannedAt:index?.scannedAt??null}));
 app.get('/api/project/model',async(_req,res)=>{res.json(await projectModel(config,await ensure()));});
 app.get('/api/project/files',async(req,res)=>{const folder=z.string().default('.').parse(req.query.folder);const dir=await confined(config.repositoryRoot,folder);const entries=await fs.readdir(dir,{withFileTypes:true});const {offset,limit}=paging.parse(req.query);const filtered=entries.filter(e=>!e.isSymbolicLink()&&!e.name.startsWith('.')&&!config.ignoredDirectories.includes(e.name)).sort((a,b)=>Number(b.isDirectory())-Number(a.isDirectory())||a.name.localeCompare(b.name));res.json({folder,items:filtered.slice(offset,offset+limit).map(e=>({name:e.name,file:path.relative(config.repositoryRoot,path.join(dir,e.name)).replaceAll('\\','/'),directory:e.isDirectory()})),total:filtered.length,hasNext:offset+limit<filtered.length});});
@@ -750,6 +778,7 @@ app.post('/api/debug/breakpoints', async (req, res) => {
   res.json(await debug.setBreakpoints(config.repositoryRoot, file.replaceAll('\\', '/'), breakpoints ?? (lines ?? []).map((line) => ({ line }))));
 });
 app.post('/api/debug/start', async (req, res) => {
+  await afterRestore();
   const body = z.object({ file: repoFile.optional(), scenario: z.string().max(500).optional(), project: repoFile.optional(), filter: z.string().max(500).optional() }).parse(req.body);
   const root = config.repositoryRoot;
   if (body.file && !body.file.endsWith('.feature')) throw new Error('Choose a .feature file to debug.');
@@ -820,6 +849,7 @@ async function buildTarget(project?: string) {
   throw new Error(sln.length + proj.length > 1 ? 'Several solutions or projects are at the top of this folder. Open one with File ▸ Open Project/Solution.' : 'No solution or project file to build. Open one with File ▸ Open Project/Solution.');
 }
 app.post('/api/build', async (req, res) => {
+  await afterRestore();
   const { action, project, configuration } = z.object({ action: z.enum(['build', 'rebuild', 'clean']).default('build'), project: z.string().max(400).optional(), configuration: z.string().regex(/^[\w .|-]{1,60}$/).default('Debug') }).parse(req.body);
   res.json(builder.start({ root: config.repositoryRoot, target: await buildTarget(project), action, configuration: configuration.split('|')[0].trim() }));
 });
@@ -865,6 +895,7 @@ app.get('/api/tests/events', (req, res) => {
   req.on('close', () => { clearInterval(ping); tests.off('state', send); });
 });
 app.post('/api/tests/run', async (req, res) => {
+  await afterRestore();
   const { filters, ids, configuration } = z.object({ filters: z.array(z.string().max(600)).max(2000).default([]), ids: z.array(z.string().max(600)).max(2000).default([]), configuration: z.string().regex(/^[\w .|-]{1,60}$/).default('Debug') }).parse(req.body);
   // One filter per test, or-ed; a very long filter (huge selections) runs everything instead.
   const joined = [...new Set(filters)].join('|');

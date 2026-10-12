@@ -25,7 +25,7 @@ Status: ✅ done · 🟡 partial · ⬜ to do. Priority: **P1** next, **P2** aft
 | --- | --- | --- | --- |
 | B1 | Build / Rebuild / Clean Solution and per project (Ctrl+Shift+B) | ✅ (solution; per-project via API, no project context menu yet) | P1 |
 | B2 | Output window (Build pane) and Error List (errors, warnings, messages; click to go to line; filter by project) | ✅ (filters, search, double-click to line; no messages level yet) | P1 |
-| B3 | NuGet: restore on open, Manage NuGet Packages (browse, installed, updates), package versions | 🟡 (Manage NuGet Packages: browse / installed / updates, versions, install / update / uninstall; restore happens on build and install, not on open) | P2 |
+| B3 | NuGet: restore on open, Manage NuGet Packages (browse, installed, updates), package versions | ✅ (Manage NuGet Packages: browse / installed / updates, versions, install / update / uninstall; restore on open when packages are missing) | P2 |
 | B4 | Build on save / before run and debug | 🟡 (runs and debug sessions build first: `dotnet test` and the debugger build the owning project; no build on save) | P2 |
 
 ## 3. Editor (C#)
@@ -136,3 +136,4 @@ Status: ✅ done · 🟡 partial · ⬜ to do. Priority: **P1** next, **P2** aft
 - 2026-10-12 — **Test playlists (T3).** Test Explorer context menu ▸ Add to New Playlist… / Add to Playlist <name> / Remove from Playlist; a Playlist box filters the tree (Run All runs the playlist); delete playlist. Stored per browser.
 - 2026-10-12 — **Compare with Unmodified (V3 done).** Code editor context menu: unified diff of the buffer against HEAD (`diff` package), in a closable panel under the editor.
 - 2026-10-12 — **Build project selection (S7 partial).** Build windows get a project box beside the configuration (shown for multi-project solutions); Build / Rebuild / Clean (toolbar and Build menu) target it; a remembered project missing from the current workspace falls back to the solution.
+- 2026-10-12 — **Restore on open (B3 done).** Opening a solution/project whose projects lack `obj/project.assets.json` runs `dotnet restore` in the background (`/api/restore` reports it); the language service restarts afterwards to load the packages; builds, test runs and debug sessions wait for it.
