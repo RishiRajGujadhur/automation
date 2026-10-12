@@ -191,3 +191,20 @@ test('Preview tab (when enabled): single click replaces the italic preview tab; 
   await expect(tab('AuthSteps.cs')).toHaveCount(1);
   await expect(tab('SearchSteps.cs')).toHaveClass(/preview/);
 });
+
+test('Move panel: the Build / Debug panel docks on the right of the editors and back', async ({ page }) => {
+  await page.addInitScript(() => { if (!sessionStorage.getItem('seeded')) { localStorage.setItem('tas:prefs', JSON.stringify({ mode: 'advanced' })); localStorage.setItem('tas:buildOpen', 'true'); sessionStorage.setItem('seeded', '1'); } });
+  await page.goto('/#/features/editor');
+  const build = page.getByRole('region', { name: 'Build' });
+  await expect(build).toBeVisible();
+  const editor = page.locator('.editor-split > .editor-area').first();
+  let b = (await build.boundingBox())!, e = (await editor.boundingBox())!;
+  expect(b.y).toBeGreaterThanOrEqual(e.y + e.height - 2); // below
+  await page.getByRole('button', { name: 'Move panel right' }).click();
+  b = (await build.boundingBox())!; e = (await editor.boundingBox())!;
+  expect(b.x).toBeGreaterThanOrEqual(e.x + e.width - 2); // beside
+  expect(b.height).toBeGreaterThan(300);
+  await page.getByRole('button', { name: 'Move panel to the bottom' }).click();
+  b = (await build.boundingBox())!; e = (await editor.boundingBox())!;
+  expect(b.y).toBeGreaterThanOrEqual(e.y + e.height - 2);
+});

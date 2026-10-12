@@ -85,7 +85,7 @@ Status: ✅ done · 🟡 partial · ⬜ to do. Priority: **P1** next, **P2** aft
 ## 8. Environment
 | # | Feature | Status | Pri |
 | --- | --- | --- | --- |
-| W1 | Dockable tool windows (Explorer, Error List, Output, Test Explorer, Debug) with bottom panel tabs | 🟡 (one bottom panel: Build / Debug tabs; floating/redocking pending) | P1 |
+| W1 | Dockable tool windows (Explorer, Error List, Output, Test Explorer, Debug) with bottom panel tabs | 🟡 (one panel with Build / Debug tabs, docked at the bottom or on the right (Move Panel, remembered); side bar views for Explorer / Test Explorer / Git / Search; no floating windows) | P1 |
 | W2 | Command palette / Feature Search (Ctrl+Q), customizable keyboard shortcuts | ✅ (command palette; Keyboard Shortcuts dialog ▸ Custom shortcuts: assign a key chord to any menu command, remove, reset) | P2 |
 | W3 | Themes, accents, density | ✅ | — |
 | W4 | Auto save, hot exit, file conflict detection | ✅ | — |
@@ -147,3 +147,4 @@ Status: ✅ done · 🟡 partial · ⬜ to do. Priority: **P1** next, **P2** aft
 - 2026-10-12 — **Playwright traces from test runs (T4).** After a run, `collectTraces` finds new trace zips under bin/ or TestResults/, copies them to the traces folder and attaches them to the test named in the file; Test details link to the download (`/api/traces/<name>`). Also fixed: the coverage button's name clashed with Run All Tests (now "Analyze Code Coverage for All Tests").
 - 2026-10-12 — **Preview tab (E16 done).** Setting Code editor ▸ Preview tab: an Explorer single click opens an italic preview tab that the next one replaces; double-click (tab or Explorer), editing, or opening normally keeps it. Off by default.
 - 2026-10-12 — **Projects outside the folder (S3, partial).** `/api/solution` marks projects whose path leaves the opened folder (`../`) as external; the Explorer labels them "(outside the folder)" with a tooltip. Indexing / editing them would need widening the `confined()` file boundary, left as an owner decision.
+- 2026-10-12 — **Move Panel (W1).** The Build / Debug panel gets a dock bar with a Move panel right / to the bottom button; on the right it sits beside the editors (and split editor) at full height. Remembered per browser.

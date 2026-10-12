@@ -242,7 +242,7 @@
   .editor-area > .editor-panel {
     min-height: 0;
   }
-  .main-content > .debug-panel {
+  .main-content > .dock > .debug-panel {
     flex: none;
     position: static;
     box-shadow: none;
@@ -1901,4 +1901,44 @@
 
 .editor-tab.preview .editor-tab-label span {
   font-style: italic;
+}
+
+// Panel dock (Build / Debug windows): below the editors, or on the right (Move Panel)
+.dock {
+  display: flex;
+  flex: none;
+  flex-direction: column;
+  min-width: 0;
+}
+.dock-bottom {
+  position: sticky;
+  bottom: 0;
+  z-index: 6;
+}
+.dock-right {
+  width: min(460px, 40%);
+  min-height: 0;
+  border-left: 1px solid var(--border);
+  background: var(--surface-2);
+  > .debug-panel {
+    flex: 1;
+    height: auto;
+    min-height: 0;
+    border-top: 0;
+  }
+}
+.dock-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-top: 1px solid var(--border);
+  background: var(--surface);
+  .dock-tabs {
+    border-top: 0;
+  }
+  .dock-move {
+    margin-left: auto;
+    width: 24px;
+    height: 22px;
+  }
 }

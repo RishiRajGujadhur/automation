@@ -117,6 +117,8 @@ import {
   PanelLeft,
   FlaskConical,
   FolderOpen,
+  PanelRight,
+  PanelBottom,
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import type { Index, Feature, Binding, Action, Match } from './types';
@@ -937,6 +939,25 @@ export default function App() {
         { label: prefs.sidebar ? 'Hide explorer' : 'Show explorer', icon: PanelLeft, run: () => setPrefs({ sidebar: !prefs.sidebar }), shortcut: 'Ctrl B' },
       ],
   };
+  // Bottom panel (Build / Debug windows): docked below the editors or on the right (Move Panel).
+  const [dockSide, setDockSide] = useLocalState<'bottom' | 'right'>('dockSide', 'bottom');
+  const inEditor = tab === 'Features' && (view === 'code' || view === 'editor');
+  const dock = inEditor && dockShows ? (
+    <div className={`dock dock-${dockSide}`}>
+      <div className="dock-bar">
+        {showBuild && showDebug && (
+          <div className="dock-tabs" role="tablist" aria-label="Panel">
+            <button role="tab" aria-selected={dockShows === 'build'} onClick={() => setDockTab('build')}>Build</button>
+            <button role="tab" aria-selected={dockShows === 'debug'} onClick={() => setDockTab('debug')}>Debug</button>
+          </div>
+        )}
+        <button className="icon-button dock-move" aria-label={dockSide === 'bottom' ? 'Move panel right' : 'Move panel to the bottom'} title={dockSide === 'bottom' ? 'Move panel right' : 'Move panel to the bottom'} onClick={() => setDockSide(dockSide === 'bottom' ? 'right' : 'bottom')}>{dockSide === 'bottom' ? <PanelRight size={13} /> : <PanelBottom size={13} />}</button>
+      </div>
+      {dockShows === 'build' && <BuildPanel onOpen={(file, line, column) => editFile(file, line, column)} onNotice={setNotice} onClose={() => setBuildOpen(false)} />}
+      {dockShows === 'debug' && <DebugPanel editingRequest={bpSettings?.split('#')[0] ?? null} editingNonce={bpSettings} onOpen={openAt} onNotice={setNotice} onClose={() => { setDebugOpen(false); if (debugLive) setNotice('The session keeps running. Stop it with Shift+F5.'); }} />}
+    </div>
+  ) : null;
+
   return (
     <AppMenu {...menuProps}>
     <div className="studio-shell">
@@ -1797,20 +1818,10 @@ export default function App() {
                 <CodeEditor key={`split:${splitFile}`} file={splitFile} onOpen={editFile} active onNotice={setNotice} onIndex={setIndex} />
               </section>
             )}
+            {dockSide === 'right' && dock}
             </div>
           )}
-          {tab === 'Features' && (view === 'code' || view === 'editor') && showBuild && showDebug && (
-            <div className="dock-tabs" role="tablist" aria-label="Panel">
-              <button role="tab" aria-selected={dockShows === 'build'} onClick={() => setDockTab('build')}>Build</button>
-              <button role="tab" aria-selected={dockShows === 'debug'} onClick={() => setDockTab('debug')}>Debug</button>
-            </div>
-          )}
-          {tab === 'Features' && (view === 'code' || view === 'editor') && dockShows === 'build' && (
-            <BuildPanel onOpen={(file, line, column) => editFile(file, line, column)} onNotice={setNotice} onClose={() => setBuildOpen(false)} />
-          )}
-          {tab === 'Features' && (view === 'code' || view === 'editor') && dockShows === 'debug' && (
-            <DebugPanel editingRequest={bpSettings?.split('#')[0] ?? null} editingNonce={bpSettings} onOpen={openAt} onNotice={setNotice} onClose={() => { setDebugOpen(false); if (debugLive) setNotice('The session keeps running. Stop it with Shift+F5.'); }} />
-          )}
+          {dockSide === 'bottom' && dock}
           {tab === 'Features' && view === 'builder' && (
             <div className="builder-grid">
               <section className="panel builder-panel">
