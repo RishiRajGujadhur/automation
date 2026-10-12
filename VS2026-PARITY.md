@@ -55,7 +55,7 @@ Status: ✅ done · 🟡 partial · ⬜ to do. Priority: **P1** next, **P2** aft
 | G2 | Create step definition for unbound steps | ✅ | — |
 | G3 | Find step usages (from a C# binding back to feature lines) | ✅ (CodeLens above each binding + Find Step Usages) | P1 |
 | G4 | Rename step (update pattern and all feature usages) | ✅ (regex and Cucumber expressions; parameter values carried over; preview before apply) | P2 |
-| G5 | Table formatting, Scenario Outline examples editing | ✅ (Format Document aligns tables; tables align as `|` closes a cell; Tab / Shift+Tab move between cells; escaped `\|` kept) | P2 |
+| G5 | Table formatting, Scenario Outline examples editing | ✅ (Format Document aligns tables; tables align when a typed pipe closes a cell; Tab / Shift+Tab move between cells; escaped pipes kept) | P2 |
 
 ## 5. Testing
 | # | Feature | Status | Pri |
