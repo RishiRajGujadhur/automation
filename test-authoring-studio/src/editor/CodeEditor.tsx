@@ -5,7 +5,7 @@ import { StreamLanguage } from '@codemirror/language';
 import { csharp } from '@codemirror/legacy-modes/mode/clike';
 import { forEachDiagnostic, linter, lintGutter, type Diagnostic } from '@codemirror/lint';
 import { keymap, EditorView } from '@codemirror/view';
-import { Save, TriangleAlert, RotateCcw, CircleCheck, CloudOff, Loader, GitCompareArrows, Navigation, ListTree, TextCursorInput, ListOrdered, Scissors, Copy, ClipboardPaste, X, Lightbulb, Wrench, AlignLeft, Eye } from 'lucide-react';
+import { History, Save, TriangleAlert, RotateCcw, CircleCheck, CloudOff, Loader, GitCompareArrows, Navigation, ListTree, TextCursorInput, ListOrdered, Scissors, Copy, ClipboardPaste, X, Lightbulb, Wrench, AlignLeft, Eye } from 'lucide-react';
 import { RowMenu } from '../ui';
 import { csharpLanguage, lineCol, offsetOf, replaceText, type CsHandlers, type CsLocation } from './csharp';
 import { FILES_CHANGED_EVENT } from './events';
@@ -13,6 +13,7 @@ import { stepLenses, setLenses, setRefLenses, type StepLens, type RefLens } from
 import { runGutter, setRunMarks, type RunMark } from './runGutter';
 import { changeGutter } from './changeGutter';
 import { useChangeBars } from './useChangeBars';
+import { blameGutter, setBlame, type BlameLine } from './blame';
 import { cursorTracker } from './cursor';
 import NavBar from './NavBar';
 import RenameStep from './RenameStep';
@@ -147,6 +148,13 @@ export default function CodeEditor({ file, reveal, active = true, onNotice, onIn
   }, [file]);
   const auto = useAutoSave({ file, value, loaded });
   useChangeBars(ref, file, !!loaded);
+  /** Annotate: toggles the blame column (hidden again on the next edit). */
+  const annotate = async () => {
+    const v = ref.current?.view;
+    if (!v) return;
+    if (v.dom.querySelector('.cm-blame')) { v.dispatch({ effects: setBlame.of(null) }); return; }
+    try { v.dispatch({ effects: setBlame.of(await api<BlameLine[]>(`/git/blame?file=${encodeURIComponent(file)}`)) }); } catch (e) { onNotice?.((e as Error).message); }
+  };
 
   // Jump to the requested line once the document is in place.
   // A newly opened tab gets its text a moment after the editor exists, so wait (a few frames) for it.
@@ -326,6 +334,7 @@ export default function CodeEditor({ file, reveal, active = true, onNotice, onIn
     labelled(`Source of ${file}`, false),
     cursorTracker(file, () => eolRef.current),
     caretTracker,
+    blameGutter(),
     keymap.of([
       { key: 'Mod-s', preventDefault: true, run: () => { void saveRef.current(); return true; } },
       ...(isCs && !browser ? [{ key: 'Mod-r Mod-g', preventDefault: true, run: () => { void organizeRef.current(); return true; } }] : []),
@@ -388,6 +397,7 @@ export default function CodeEditor({ file, reveal, active = true, onNotice, onIn
             { label: 'Remove and Sort Usings', icon: ListOrdered, shortcut: 'Ctrl R, Ctrl G', onSelect: () => void organize() },
             'separator' as const,
           ] : []),
+          ...(!browser ? [{ label: 'Annotate (Git Blame)', icon: History, onSelect: () => void annotate() }, 'separator' as const] : []),
           { label: 'Cut', icon: Scissors, shortcut: 'Ctrl X', onSelect: () => clip('cut') },
           { label: 'Copy', icon: Copy, shortcut: 'Ctrl C', onSelect: () => clip('copy') },
           { label: 'Paste', icon: ClipboardPaste, shortcut: 'Ctrl V', onSelect: () => clip('paste') },

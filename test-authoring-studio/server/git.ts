@@ -105,6 +105,25 @@ export async function log(root: string, max = 30) {
   } catch { return []; }
 }
 
+/** Annotate: the commit that last changed each line of a file (working-tree text; local edits show as zeros). */
+export async function blame(root: string, file: string) {
+  const { top, prefix } = await locate(root);
+  const out = await git(top, ['blame', '--porcelain', '--', toRepo(prefix, file)]);
+  const info = new Map<string, { author: string; time: number; summary: string }>();
+  const lines: { hash: string; author: string; when: string; summary: string }[] = [];
+  let cur = '';
+  for (const l of out.split(/\r?\n/)) {
+    const head = /^([0-9a-f]{40}) \d+ \d+/.exec(l);
+    if (head) { cur = head[1]; if (!info.has(cur)) info.set(cur, { author: '', time: 0, summary: '' }); continue; }
+    const i = info.get(cur);
+    if (!i) continue;
+    if (l.startsWith('author ')) i.author = l.slice(7);
+    else if (l.startsWith('author-time ')) i.time = Number(l.slice(12));
+    else if (l.startsWith('summary ')) i.summary = l.slice(8);
+    else if (l.startsWith('\t')) lines.push({ hash: cur, author: i.author, when: new Date(i.time * 1000).toISOString().slice(0, 10), summary: i.summary });
+  }
+  return lines;
+}
 /** Local and remote branches (remote ones without a local counterpart), current first. */
 export async function branches(root: string) {
   const { top } = await locate(root);

@@ -1624,3 +1624,19 @@
   &.passed { color: #2e9d57; }
   &.failed { color: #d9534f; }
 }
+
+// Annotate (Git blame) column
+.cm-blame-gutter {
+  min-width: 0;
+  .cm-blame {
+    display: block;
+    width: 26ch;
+    padding: 0 8px 0 4px;
+    overflow: hidden;
+    color: var(--text-muted);
+    font-family: var(--font-sans, system-ui);
+    font-size: 11px;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+}
