@@ -14,6 +14,7 @@ import { readDraft, sha256, useAutoSave, unsavedFiles, editedThisSession } from 
 import EditorTabs, { EditorActions } from './files/EditorTabs';
 import OpenSolution from './OpenSolution';
 import StartWindow from './StartWindow';
+import { useKeybindings, KeybindingEditor } from './keybindings';
 import NugetManager from './NugetManager';
 import BuildPanel from './build/BuildPanel';
 import TestExplorer from './testing/TestExplorer';
@@ -716,6 +717,8 @@ export default function App() {
   }, []);
   // Desktop app (window.desktop): native menu commands, taskbar progress and run-finished notifications.
   const menuRef = useRef<(c: DesktopMenuCommand, arg?: unknown) => void>(() => {});
+  // User-assigned shortcuts (Keyboard Shortcuts ▸ Custom shortcuts) run menu commands.
+  useKeybindings((c) => menuRef.current(c));
   menuRef.current = (c, arg) => {
     // Preference changes from the native View menu (and first-run OS defaults). Only known keys pass.
     if (c === 'set-pref' && arg && typeof arg === 'object') {
@@ -2308,6 +2311,7 @@ export default function App() {
                     ))}
                   </dl>
                 )}
+                {modal === 'shortcuts' && <KeybindingEditor />}
                 {modal === 'dictionary' && (
                   <RecordingDictionary
                     actions={actions.filter((a) => !matches.find((m) => m.action.id === a.id)?.candidates.length)}

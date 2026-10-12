@@ -86,7 +86,7 @@ Status: ✅ done · 🟡 partial · ⬜ to do. Priority: **P1** next, **P2** aft
 | # | Feature | Status | Pri |
 | --- | --- | --- | --- |
 | W1 | Dockable tool windows (Explorer, Error List, Output, Test Explorer, Debug) with bottom panel tabs | 🟡 (one bottom panel: Build / Debug tabs; floating/redocking pending) | P1 |
-| W2 | Command palette / Feature Search (Ctrl+Q), customizable keyboard shortcuts | 🟡 | P2 |
+| W2 | Command palette / Feature Search (Ctrl+Q), customizable keyboard shortcuts | ✅ (command palette; Keyboard Shortcuts dialog ▸ Custom shortcuts: assign a key chord to any menu command, remove, reset) | P2 |
 | W3 | Themes, accents, density | ✅ | — |
 | W4 | Auto save, hot exit, file conflict detection | ✅ | — |
 | W5 | Open Folder (desktop native, web File System Access) | ✅ | — |
@@ -142,3 +142,4 @@ Status: ✅ done · 🟡 partial · ⬜ to do. Priority: **P1** next, **P2** aft
 - 2026-10-12 — **Edit Project File (S9).** Explorer project context menu opens the `.csproj`; `msbuildSchema.ts` feeds `@codemirror/lang-xml` completion (Project/PropertyGroup/ItemGroup, common properties with descriptions, PackageReference/ProjectReference attributes, Sdk values).
 - 2026-10-12 — **Add / remove projects (S8 partial).** Solution row context menu ▸ Add New Project… (`dotnet new <template> --no-restore` + `dotnet sln add`) and Add Existing Project…; project ▸ Remove from Solution (`dotnet sln remove`, files kept, asks first).
 - 2026-10-12 — **Code coverage (T5).** Test Explorer ▸ Run All Tests with Coverage runs `dotnet test --collect "Code Coverage;Format=cobertura"` (Microsoft.CodeCoverage ships with Microsoft.NET.Test.Sdk, no extra package); `parseCobertura` merges per-project reports into covered / uncovered lines per repository file; summary line in Test Explorer and coverage bars in the editor gutter.
+- 2026-10-12 — **Custom keyboard shortcuts (W2).** `src/keybindings.tsx`: Keyboard Shortcuts dialog lists the menu commands (build, test, Git, search, NuGet, files, windows); Assign records a chord, chips remove it; a capture-phase handler runs assigned chords before built-in keys. Stored per browser.

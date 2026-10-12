@@ -158,3 +158,19 @@ test('Gherkin tables align as | is typed; Tab moves between cells', async ({ pag
   await page.keyboard.type('42');
   await expect(rows.nth(-1)).toHaveText(/\| Bartholomew \| 42\s+\|$/);
 });
+
+test('Keyboard Shortcuts: assign a custom shortcut to a command and use it; remove it', async ({ page }) => {
+  await page.addInitScript(() => { if (!sessionStorage.getItem('seeded')) { localStorage.setItem('tas:prefs', JSON.stringify({ mode: 'advanced' })); sessionStorage.setItem('seeded', '1'); } });
+  await page.goto('/#/features/editor');
+  await page.keyboard.press('Shift+?');
+  const custom = page.getByRole('region', { name: 'Custom shortcuts' });
+  await custom.getByRole('button', { name: 'Assign shortcut to View ▸ Git Changes' }).click();
+  await custom.getByLabel('Press the shortcut for View ▸ Git Changes').press('Control+Alt+G');
+  await expect(custom.locator('kbd', { hasText: 'Ctrl+Alt+G' })).toBeVisible();
+  await page.keyboard.press('Escape');
+  await page.keyboard.press('Control+Alt+G');
+  await expect(page.getByRole('region', { name: 'Git Changes' })).toBeVisible();
+  await page.keyboard.press('Shift+?');
+  await page.getByRole('button', { name: 'Remove Ctrl+Alt+G from View ▸ Git Changes' }).click();
+  await expect(custom.locator('kbd', { hasText: 'Ctrl+Alt+G' })).toHaveCount(0);
+});
