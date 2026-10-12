@@ -46,7 +46,7 @@ Status: ✅ done · 🟡 partial · ⬜ to do. Priority: **P1** next, **P2** aft
 | E13 | Navigation bar (project / type / member dropdowns) and breadcrumbs | ✅ | P2 |
 | E14 | Snippets (prop, ctor, for, test method, step definition) | ✅ (shortcut + Tab, or from IntelliSense; Tab between fields) | P2 |
 | E15 | Comment/uncomment, duplicate line, move line, go to line (Ctrl+G) | ✅ (Ctrl+K Ctrl+C/U, Ctrl+Shift+D duplicate, Ctrl+Shift+L delete line, Alt+↑/↓ move, Ctrl+G go to line) | P2 |
-| E16 | Split editor, tab groups, preview tab, pinned tabs, colour-coded tabs | 🟡 (pinned + colours) | P2 |
+| E16 | Split editor, tab groups, preview tab, pinned tabs, colour-coded tabs | 🟡 (pinned + colours, Split Right: a second editor beside the tab group) | P2 |
 
 ## 4. Gherkin / BDD (Reqnroll/SpecFlow extension parity)
 | # | Feature | Status | Pri |
@@ -137,3 +137,4 @@ Status: ✅ done · 🟡 partial · ⬜ to do. Priority: **P1** next, **P2** aft
 - 2026-10-12 — **Compare with Unmodified (V3 done).** Code editor context menu: unified diff of the buffer against HEAD (`diff` package), in a closable panel under the editor.
 - 2026-10-12 — **Build project selection (S7 partial).** Build windows get a project box beside the configuration (shown for multi-project solutions); Build / Rebuild / Clean (toolbar and Build menu) target it; a remembered project missing from the current workspace falls back to the solution.
 - 2026-10-12 — **Restore on open (B3 done).** Opening a solution/project whose projects lack `obj/project.assets.json` runs `dotnet restore` in the background (`/api/restore` reports it); the language service restarts afterwards to load the packages; builds, test runs and debug sessions wait for it.
+- 2026-10-12 — **Split editor (E16 partial).** Tab context menu ▸ Split Right opens the file in a second editor beside the tab group (close button; remembered). Also fixed: auto save could send two saves with the same base hash while typing and report a false "changed outside the studio" conflict; saves are now serialized.

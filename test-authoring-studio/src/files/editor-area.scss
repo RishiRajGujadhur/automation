@@ -225,7 +225,7 @@
 
 // VS Code layout: no margins; the editor area takes the whole column and the debug windows dock below it.
 :root[data-layout='vscode'] {
-  .main-content:has(> .editor-area) {
+  .main-content:has(> .editor-split) {
     display: flex;
     flex-direction: column;
     padding: 0;
@@ -1790,5 +1790,31 @@
   form {
     display: flex;
     flex: 1;
+  }
+}
+
+// Split editor: the tab group and a second editor side by side
+.editor-split {
+  display: flex;
+  flex: 1;
+  min-width: 0;
+  min-height: 0;
+  > .editor-area {
+    flex: 1 1 0;
+    min-width: 0;
+  }
+  > .split-pane {
+    display: flex;
+    flex-direction: column;
+    border-left: 1px solid var(--border);
+  }
+  .split-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 30px;
+    padding: 0 6px 0 10px;
+    border-bottom: 1px solid var(--border);
+    font-size: 12px;
   }
 }

@@ -45,7 +45,21 @@ export function useAutoSave({ file, value, loaded }: { file?: string; value: str
     if (value !== base.current.source) setState((s) => (s === 'conflict' ? s : 'dirty'));
   }, [file, value]);
 
+  // Saves run one at a time: a save started while another is in flight waits for it and uses its new hash
+  // (otherwise both send the old hash and the second is refused as a conflict).
+  const inFlight = useRef<Promise<unknown>>(Promise.resolve());
   const save = useCallback(async () => {
+    const previous = inFlight.current;
+    let release!: () => void;
+    inFlight.current = new Promise<void>((r) => { release = r; });
+    try {
+      await previous;
+      return await saveNow();
+    } finally {
+      release();
+    }
+  }, [file, value]); // eslint-disable-line react-hooks/exhaustive-deps
+  const saveNow = async () => {
     if (!file || !base.current || base.current.file !== file || value === base.current.source) return true;
     setState('saving');
     try {
@@ -62,7 +76,7 @@ export function useAutoSave({ file, value, loaded }: { file?: string; value: str
       setError(m);
       return false;
     }
-  }, [file, value]);
+  };
 
   // After delay
   useEffect(() => {

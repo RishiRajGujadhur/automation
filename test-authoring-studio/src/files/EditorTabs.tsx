@@ -21,7 +21,7 @@ export function EditorActions({ children, active = true }: { children: ReactNode
  * (Close, Close Others, Close to the Right, Close All, Copy Path). When the tabs do not fit, ‹ › arrows reveal
  * the hidden ones and ⌄ lists every open editor.
  */
-export default function EditorTabs({ onClose, children }: { onClose: (file: string) => void; children?: ReactNode }) {
+export default function EditorTabs({ onClose, onSplit, children }: { onClose: (file: string) => void; onSplit?: (file: string) => void; children?: ReactNode }) {
   const { tabs, active } = useTabs();
   const strip = useRef<HTMLDivElement>(null);
   const [overflow, setOverflow] = useState({ left: false, right: false });
@@ -73,6 +73,7 @@ export default function EditorTabs({ onClose, children }: { onClose: (file: stri
                 { label: 'Close All', icon: XCircle, onSelect: () => closeAll() },
                 'separator',
                 { label: 'Copy Relative Path', icon: Copy, onSelect: () => copyText(t.file) },
+                ...(onSplit && !t.file.endsWith('.feature') ? ['separator' as const, { label: 'Split Right', onSelect: () => onSplit(t.file) }] : []),
               ]}>
                 <div className={`editor-tab ${selected ? 'active' : ''} ${unsaved ? 'unsaved' : ''} ${t.pinned ? 'pinned' : ''}`} data-menu-row style={{ '--file-color': color } as React.CSSProperties}>
                   <button aria-current={selected ? 'true' : undefined} title={t.file} className="editor-tab-label" onClick={() => activateTab(t.file)} onAuxClick={(e) => { if (e.button === 1) { e.preventDefault(); onClose(t.file); } }}>

@@ -121,3 +121,20 @@ test('Build and Debug windows share one bottom panel with tabs', async ({ page }
   await expect(tabs).toHaveCount(0);
   await expect(page.getByRole('region', { name: 'Build' })).toBeVisible();
 });
+
+test('Split Right: a second editor beside the tab group; close it', async ({ page }) => {
+  await page.addInitScript(() => { if (!sessionStorage.getItem('seeded')) { localStorage.setItem('tas:prefs', JSON.stringify({ mode: 'advanced' })); sessionStorage.setItem('seeded', '1'); } });
+  await page.goto('/#/features/editor');
+  await page.getByRole('navigation').getByRole('button', { name: 'SearchSteps.cs', exact: true }).first().click();
+  await page.getByRole('button', { name: 'SearchSteps.cs', exact: true }).first().waitFor();
+  await page.locator('.editor-tab', { hasText: 'SearchSteps.cs' }).click({ button: 'right' });
+  await page.getByRole('menuitem', { name: 'Split Right' }).click();
+  const split = page.getByRole('region', { name: 'Split editor Steps/SearchSteps.cs' });
+  await expect(split.getByLabel('Source of Steps/SearchSteps.cs')).toBeVisible();
+  // Both editors are visible side by side.
+  const main = await page.locator('.editor-split > .editor-area').first().boundingBox();
+  const right = await split.boundingBox();
+  expect(right!.x).toBeGreaterThan(main!.x + main!.width - 2);
+  await split.getByRole('button', { name: 'Close split editor' }).click();
+  await expect(split).toHaveCount(0);
+});

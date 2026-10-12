@@ -369,6 +369,8 @@ export default function App() {
   const build = useBuild();
   const [buildOpen, setBuildOpen] = useLocalState('buildOpen', false);
   const showBuild = buildOpen || build.status === 'running';
+  // Split editor (Window ▸ Split / tab ▸ Split Right): a second editor beside the tab group.
+  const [splitFile, setSplitFile] = useLocalState<string | null>('splitFile', null);
   // One docked bottom panel (as in Visual Studio / VS Code): Build and Debug windows share it as tabs.
   const [dockTab, setDockTab] = useLocalState<'build' | 'debug'>('dockTab', 'build');
   useEffect(() => { if (build.status === 'running') setDockTab('build'); }, [build.status]); // eslint-disable-line react-hooks/exhaustive-deps
@@ -1671,8 +1673,9 @@ export default function App() {
             </>
           )}
           {tab === 'Features' && (view === 'code' || view === 'editor') && (
+            <div className={splitFile ? 'editor-split' : 'editor-split single'}>
             <div className="editor-area">
-            <EditorTabs onClose={closeEditor}>
+            <EditorTabs onClose={closeEditor} onSplit={fileSrc.kind === 'browser' ? undefined : (f) => setSplitFile(f)}>
             {!openEditors.tabs.length && (
               <StartWindow onOpenSolution={() => setModal('solution')} onOpenFolder={() => void openFolder()} onOpened={solutionOpened} onNotice={setNotice} />
             )}
@@ -1763,6 +1766,16 @@ export default function App() {
               <CodeEditor key={t.file} file={t.file} reveal={codeLines[t.file]} onOpen={editFile} runMarks={marksFor(t.file)} onRunLine={(line, debug) => runLine(t.file, line, debug)} active={t.file === openEditors.active} onNotice={setNotice} onIndex={setIndex} />
             ))}
             </EditorTabs>
+            </div>
+            {splitFile && (
+              <section className="editor-area split-pane" aria-label={`Split editor ${splitFile}`}>
+                <div className="split-head">
+                  <span title={splitFile}>{splitFile.split('/').pop()}</span>
+                  <button className="icon-button" aria-label="Close split editor" title="Close split editor" onClick={() => setSplitFile(null)}><X size={13} /></button>
+                </div>
+                <CodeEditor key={`split:${splitFile}`} file={splitFile} onOpen={editFile} active onNotice={setNotice} onIndex={setIndex} />
+              </section>
+            )}
             </div>
           )}
           {tab === 'Features' && (view === 'code' || view === 'editor') && showBuild && showDebug && (
