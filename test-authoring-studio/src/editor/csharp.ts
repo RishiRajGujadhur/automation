@@ -3,6 +3,7 @@ import { EditorView, hoverTooltip, keymap, showTooltip, ViewPlugin, type Tooltip
 import { StateEffect, StateField, type Extension, type Text } from '@codemirror/state';
 import { api } from '../api';
 import { snippetOptions, snippetTab } from './snippets';
+import { inlayHints } from './inlayHints';
 
 export type CsLocation = { file: string; line: number; column: number; endLine?: number; endColumn?: number };
 type Item = { label: string; insert: string; filter: string; sort: string; kind: string; detail?: string; preselect?: boolean };
@@ -193,6 +194,7 @@ export function csharpLanguage(file: string, handlers: { current: CsHandlers }):
     ]),
     ...signatureHelp(file),
     snippetTab(),
+    inlayHints(file, () => localStorage.getItem('tas:inlayHints') !== 'false'),
     // Ctrl+click (Cmd+click) goes to definition, as in Visual Studio and VS Code.
     EditorView.domEventHandlers({
       mousedown: (e, view) => {

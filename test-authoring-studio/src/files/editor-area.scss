@@ -1608,3 +1608,13 @@
     }
   }
 }
+
+// Inlay hints (parameter names, inferred types)
+.cm-inlay {
+  margin: 0 2px;
+  padding: 0 3px;
+  border-radius: 3px;
+  background: color-mix(in srgb, var(--text-muted) 14%, transparent);
+  color: var(--text-muted);
+  font-size: 0.85em;
+}

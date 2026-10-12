@@ -76,6 +76,7 @@ sealed class LanguageService
             "organize" => await Organize(doc),
             "outline" => await Outline(doc),
             "referenceCounts" => await ReferenceCounts(doc),
+            "inlayHints" => await InlayHints(doc),
             "signature" => await Signature(doc, Math.Min(Pos(text), text.Length)),
             "format" => await Format(doc, req),
             "actions" => await Actions(doc, Math.Min(Pos(text), text.Length), req["endLine"] is null ? null : text.Lines[Math.Clamp((int)req["endLine"]! - 1, 0, text.Lines.Count - 1)].Start + (int)req["endColumn"]! - 1),
@@ -516,6 +517,43 @@ sealed class LanguageService
     /// CodeLens reference counts: for every type and member declared in the document, how many references the
     /// solution has (Visual Studio's "3 references"). The lens sits on the declaration's first line (above attributes).
     /// </summary>
+    async Task<object> InlayHints(Document doc)
+    {
+        // Inlay hints (Visual Studio's Alt+F1): parameter names before literal / null arguments, and the inferred type
+        // after `var` and in lambda parameters without a type.
+        var root = (await doc.GetSyntaxRootAsync())!;
+        var model = (await doc.GetSemanticModelAsync())!;
+        var text = await doc.GetTextAsync();
+        var hints = new List<object>();
+        void Add(int pos, string label, string kind) { var p = text.Lines.GetLinePosition(pos); hints.Add(new { line = p.Line + 1, column = p.Character + 1, label, kind }); }
+        foreach (var node in root.DescendantNodes())
+        {
+            if (hints.Count > 2000) break;
+            if (node is ArgumentSyntax { NameColon: null } arg && arg.Parent is BaseArgumentListSyntax
+                && arg.Expression is LiteralExpressionSyntax or PrefixUnaryExpressionSyntax { Operand: LiteralExpressionSyntax } or DefaultExpressionSyntax)
+            {
+                if (DetermineParameter(model, arg) is { } prm && prm.Name.Length > 1) Add(arg.SpanStart, prm.Name + ":", "parameter");
+            }
+            else if (node is VariableDeclarationSyntax { Type.IsVar: true } v && v.Variables.Count == 1)
+            {
+                var t = model.GetTypeInfo(v.Type).Type;
+                if (t != null && t.TypeKind != TypeKind.Error && !t.IsAnonymousType) Add(v.Variables[0].Identifier.Span.End, ": " + t.ToDisplayString(SymbolDisplayFormat.MinimallyQualifiedFormat), "type");
+            }
+            else if (node is ParameterSyntax { Type: null } lp && lp.Parent is ParameterListSyntax or SimpleLambdaExpressionSyntax && model.GetDeclaredSymbol(lp) is IParameterSymbol ps && ps.Type.TypeKind != TypeKind.Error)
+                Add(lp.Identifier.SpanStart, ps.Type.ToDisplayString(SymbolDisplayFormat.MinimallyQualifiedFormat) + " ", "type");
+        }
+        return hints;
+    }
+
+    static IParameterSymbol? DetermineParameter(SemanticModel model, ArgumentSyntax arg)
+    {
+        if (arg.Parent is not BaseArgumentListSyntax list || list.Parent is null) return null;
+        if (model.GetSymbolInfo(list.Parent).Symbol is not IMethodSymbol m) return null;
+        var i = list.Arguments.IndexOf(arg);
+        if (i < 0 || i >= m.Parameters.Length) return m.Parameters.LastOrDefault() is { IsParams: true } last ? last : null;
+        return m.Parameters[i];
+    }
+
     async Task<object> ReferenceCounts(Document doc)
     {
         var root = (await doc.GetSyntaxRootAsync())!;

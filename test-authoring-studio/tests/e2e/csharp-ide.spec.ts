@@ -222,6 +222,14 @@ test('Reference-count CodeLens above types and members opens Find All References
   await expect(page.getByRole('region', { name: /References to/ })).toBeVisible({ timeout: 30_000 });
 });
 
+test('Inlay hints show parameter names before literal arguments', async ({ page }) => {
+  await open(page);
+  await explorerFile(page, 'SearchSteps.cs').click();
+  const hints = page.locator('.code-editor:not([hidden]) .cm-inlay-parameter');
+  await expect(hints.filter({ hasText: 'testId:' })).toBeVisible({ timeout: 60_000 });
+  await expect(hints.filter({ hasText: 'url:' })).toBeVisible();
+});
+
 test('Peek Definition (Alt+F12), Go To Implementation (Ctrl+F12) and Go To Base', async ({ page }) => {
   await fs.writeFile(path.join(temp, 'Steps/Pages.cs'), 'namespace Demo;\npublic interface IAppPage\n{\n    void Open();\n}\npublic class LoginPage : IAppPage\n{\n    public void Open() { }\n}\npublic class CartPage : IAppPage\n{\n    public void Open() { }\n}\n');
   await open(page);
