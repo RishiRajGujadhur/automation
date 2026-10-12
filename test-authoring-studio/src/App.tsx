@@ -13,6 +13,7 @@ import CodeEditor from './editor/CodeEditor';
 import { readDraft, sha256, useAutoSave, unsavedFiles, editedThisSession } from './editor/autosave';
 import EditorTabs, { EditorActions } from './files/EditorTabs';
 import OpenSolution from './OpenSolution';
+import NugetManager from './NugetManager';
 import BuildPanel from './build/BuildPanel';
 import TestExplorer from './testing/TestExplorer';
 import SearchView from './search/SearchView';
@@ -348,6 +349,9 @@ export default function App() {
   const [buildOpen, setBuildOpen] = useLocalState('buildOpen', false);
   const showBuild = buildOpen || build.status === 'running';
   // Side bar view: the Explorer or the Test Explorer (activity bar, Test menu).
+  // Manage NuGet Packages (project from the Explorer, else the first project).
+  const [nugetProject, setNugetProject] = useState<string>();
+  const openNuget = (project?: string) => { setNugetProject(project); setModal('nuget'); };
   const [sidebarView, setSidebarView] = useLocalState<'explorer' | 'tests' | 'search' | 'git'>('sidebarView', 'explorer');
   const showGit = () => { setTab('Features'); if (view !== 'code' && view !== 'editor') setView('editor'); setSidebarView('git'); setPrefs({ sidebar: true }); };
   // Find in Files (Ctrl+Shift+F) / Replace in Files (Ctrl+Shift+H): the Search view; the key re-focuses it.
@@ -709,6 +713,7 @@ export default function App() {
     if (c === 'replace-in-files') { showSearch(true); return; }
     if (c === 'go-to-all') { setModal('goto'); return; }
     if (c === 'git-changes') { showGit(); return; }
+    if (c === 'nuget') { openNuget(); return; }
     if (c === 'run-all-tests') { showTests(); runTests('all').catch((e) => setNotice((e as Error).message)); return; }
     if (c === 'build-windows') { setTab('Features'); if (view !== 'code' && view !== 'editor') setView('editor'); setBuildOpen(true); return; }
     if (c === 'save') { if (featureTabActive) saveFeature(); else saveAll(); return; }
@@ -985,6 +990,8 @@ export default function App() {
               { label: 'Rebuild Solution', disabled: build.status === 'running', onSelect: () => runBuild('rebuild') },
               { label: 'Clean Solution', disabled: build.status === 'running', onSelect: () => runBuild('clean') },
               'separator' as const,
+              { label: 'Manage NuGet Packages…', onSelect: () => openNuget() },
+              'separator' as const,
               { label: 'Cancel', shortcut: 'Ctrl Break', disabled: build.status !== 'running', onSelect: () => void cancelBuild() },
               'separator' as const,
               { label: showBuild ? 'Hide Error List and Output' : 'Error List and Output', onSelect: () => setBuildOpen(!buildOpen) },
@@ -1151,6 +1158,7 @@ export default function App() {
             features={fileSrc.kind === 'browser' ? [] : (index?.features ?? [])}
             browserSolution={fileSrc.kind === 'browser' ? browserSol : undefined}
             onFileOp={fileOp}
+            onManagePackages={openNuget}
             revision={revision}
             activeFile={openEditors.active ?? feature?.file}
             onOpenFile={(file, line) => { editFile(file, line); setMobileExplorer(false); }}
@@ -2014,6 +2022,7 @@ export default function App() {
                       settings: 'Workspace settings',
                       solution: 'Open Project/Solution',
                       goto: 'Go to All',
+                      nuget: 'Manage NuGet Packages',
                       record: 'Record a browser workflow',
                       new: 'Create a feature',
                       parameters: 'Configure step parameters',
@@ -2034,6 +2043,9 @@ export default function App() {
                 </Dialog.Close>
               </div>
               <div className={modal === 'preferences' ? 'settings-body' : 'modal-body'}>
+                {modal === 'nuget' && (
+                  <NugetManager initialProject={nugetProject} onNotice={setNotice} onChanged={() => { api('/scan', {}).then(setIndex, () => {}); }} />
+                )}
                 {modal === 'goto' && (
                   <GoToAll features={index?.features ?? []} onOpen={(file, line, column) => editFile(file, line, column)} onClose={() => setModal(undefined)} />
                 )}

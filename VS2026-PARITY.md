@@ -25,7 +25,7 @@ Status: ✅ done · 🟡 partial · ⬜ to do. Priority: **P1** next, **P2** aft
 | --- | --- | --- | --- |
 | B1 | Build / Rebuild / Clean Solution and per project (Ctrl+Shift+B) | ✅ (solution; per-project via API, no project context menu yet) | P1 |
 | B2 | Output window (Build pane) and Error List (errors, warnings, messages; click to go to line; filter by project) | ✅ (filters, search, double-click to line; no messages level yet) | P1 |
-| B3 | NuGet: restore on open, Manage NuGet Packages (browse, installed, updates), package versions | ⬜ | P2 |
+| B3 | NuGet: restore on open, Manage NuGet Packages (browse, installed, updates), package versions | 🟡 (Manage NuGet Packages: browse / installed / updates, versions, install / update / uninstall; restore happens on build and install, not on open) | P2 |
 | B4 | Build on save / before run and debug | ⬜ | P2 |
 
 ## 3. Editor (C#)
@@ -122,3 +122,4 @@ Status: ✅ done · 🟡 partial · ⬜ to do. Priority: **P1** next, **P2** aft
 - 2026-10-12 — **Code snippets (E14).** prop, propfull, ctor (class name filled in), for, foreach, if, else, while, try, tryf, using, switch, cw, class, interface, test, testa, fact, given / when / then step definitions; shortcut + Tab or from IntelliSense. Fixed: the editors (and the Test Generator's) passed new `basicSetup` / `onUpdate` objects each render, so @uiw/react-codemirror reconfigured them on every keystroke (dropping snippet fields).
 - 2026-10-12 — **Navigation bar (E13).** Language service `outline` (types and members with ranges, from syntax); a 22px breadcrumb above the C# editor shows project › type › member at the cursor, and the type / member parts list the file's types and the type's members to jump to.
 - 2026-10-12 — **Rename Step (G4).** `server/stepRename.ts` (top-level capture groups / Cucumber parameters, values carried into the new wording, verbatim / regular C# string rewriting) and `/api/steps/rename` (preview, apply); C# editor: Rename Step… on a step definition with a live before → after preview of the attribute and every bound feature line.
+- 2026-10-12 — **Manage NuGet Packages (B3).** `server/nuget.ts` (installed from the .csproj, versions and search from nuget.org, `dotnet add|remove package`); dialog with Browse / Installed / Updates, version picker, Install / Update / Uninstall (confirmed); opened from the Explorer's project context menu or Build ▸ Manage NuGet Packages…; the language service restarts afterwards to pick up the new references.

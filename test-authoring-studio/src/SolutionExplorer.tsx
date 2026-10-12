@@ -42,6 +42,8 @@ type Props = {
   browserSolution?: Solution;
   /** Explorer file operations (Rename, Paste of a Copy/Cut, Delete); the App applies them and refreshes. */
   onFileOp?: (op: FileOp) => Promise<void>;
+  /** Project / Dependencies context menu: Manage NuGet Packages… */
+  onManagePackages?: (project: string) => void;
 };
 export type FileOp = { kind: 'rename' | 'copy' | 'delete'; from: string; to?: string; folder?: boolean };
 /** Explorer clipboard (Copy / Cut, then Paste on a folder or beside a file), kept while the app is open. */
@@ -75,7 +77,7 @@ function buildTree(files: { file: string; layer: string }[], prefix = ''): Node[
  * with file nesting (a feature shows the step files its steps bind to, and its generated code-behind),
  * Sync with Active Document, a pending-changes filter, Collapse All, Show All Files and search (Ctrl+;).
  */
-export default function SolutionExplorer({ features, revision, activeFile, query, activeFolder, onQuery, onSelect, onOpenFile, onFolder, onNew, onSource, browserSolution, onFileOp }: Props) {
+export default function SolutionExplorer({ features, revision, activeFile, query, activeFolder, onQuery, onSelect, onOpenFile, onFolder, onNew, onSource, browserSolution, onFileOp, onManagePackages }: Props) {
   const [renaming, setRenaming] = useState<string | null>(null);
   const [clip, setClip] = useState(clipboard);
   const setClipboard = (c: typeof clipboard) => { clipboard = c; setClip(c); };
@@ -275,11 +277,16 @@ export default function SolutionExplorer({ features, revision, activeFile, query
     const pad = 4 + depth * 12;
     return (
       <li key={key}>
-        <div className="explorer-folder-row">
+        <RowMenu label={`Project ${p.name}`} items={[
+          ...(onManagePackages && p.file.endsWith('.csproj') ? [{ label: 'Manage NuGet Packages…', icon: Package, onSelect: () => onManagePackages(p.file) }] : []),
+          { label: 'Copy project path', icon: Copy, onSelect: () => copyText(p.file) },
+        ]}>
+        <div className="explorer-folder-row" data-menu-row>
           <button className="explorer-folder se-project" style={{ paddingLeft: pad }} aria-label={`${open ? 'Collapse' : 'Expand'} project ${p.name}`} aria-expanded={open} onClick={() => toggle(key)} title={p.missing ? `${p.file} (not found)` : p.file}>
             {open ? <ChevronDown size={12} /> : <ChevronRight size={12} />}<Boxes size={14} /><span>{p.name}</span>{p.missing && <small>(unavailable)</small>}
           </button>
         </div>
+        </RowMenu>
         {open && (
           <ul className="folder-children">
             {!searching && (

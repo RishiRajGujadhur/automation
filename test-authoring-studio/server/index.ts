@@ -29,6 +29,7 @@ import { readSolution, projectInfo, findSolutions } from './solution.js';
 import { Builder } from './build.js';
 import { findInFiles, replaceInFiles } from './search.js';
 import { values, render, parameterCount, replaceAttributePattern } from './stepRename.js';
+import { installed as nugetInstalled, updates as nugetUpdates, search as nugetSearch, versions as nugetVersions, install as nugetInstall, uninstall as nugetUninstall } from './nuget.js';
 import { status as gitStatus, stage as gitStage, unstage as gitUnstage, discard as gitDiscard, commit as gitCommit, headInfo, log as gitLog, branches as gitBranches, checkout as gitCheckout, createBranch as gitCreateBranch, sync as gitSync } from './git.js';
 import { LanguageService } from './langService.js';
 import type { Index } from '../src/types.js';
@@ -378,6 +379,32 @@ app.post('/api/steps/rename', async (req, res) => {
   lang.notify(config.repositoryRoot, [...written]);
   activate(await scan(config));
   res.json({ written: [...written], steps: steps.length, index: publicIndex(index!) });
+});
+// Manage NuGet Packages: installed / updates / browse (nuget.org) per project; install, update, uninstall.
+const nugetProject = async (project: string) => { if (!project.endsWith('.csproj')) throw new Error('Choose a project (.csproj).'); await confined(config.repositoryRoot, project); return project; };
+app.get('/api/nuget/installed', async (req, res) => res.json(await nugetInstalled(config.repositoryRoot, await nugetProject(z.string().parse(req.query.project)))));
+app.get('/api/nuget/updates', async (req, res) => res.json(await nugetUpdates(config.repositoryRoot, await nugetProject(z.string().parse(req.query.project)))));
+app.get('/api/nuget/search', async (req, res) => {
+  const { q, prerelease } = z.object({ q: z.string().max(200).default(''), prerelease: z.enum(['true', 'false']).default('false') }).parse(req.query);
+  res.json(await nugetSearch(q, prerelease === 'true'));
+});
+app.get('/api/nuget/versions', async (req, res) => {
+  const { id, prerelease } = z.object({ id: z.string().min(1).max(100), prerelease: z.enum(['true', 'false']).default('false') }).parse(req.query);
+  res.json(await nugetVersions(id, prerelease === 'true'));
+});
+app.post('/api/nuget/install', async (req, res) => {
+  const { project, id, version } = z.object({ project: z.string().max(400), id: z.string().max(100), version: z.string().max(64).optional() }).parse(req.body);
+  const output = await nugetInstall(config.repositoryRoot, await nugetProject(project), id, version);
+  lang.stop();
+  rescanSoon(300);
+  res.json({ output, installed: await nugetInstalled(config.repositoryRoot, project) });
+});
+app.post('/api/nuget/uninstall', async (req, res) => {
+  const { project, id } = z.object({ project: z.string().max(400), id: z.string().max(100), approved: z.literal(true) }).parse(req.body);
+  const output = await nugetUninstall(config.repositoryRoot, await nugetProject(project), id);
+  lang.stop();
+  rescanSoon(300);
+  res.json({ output, installed: await nugetInstalled(config.repositoryRoot, project) });
 });
 /** Step usages (CodeLens for step definitions): for each binding in a C# file, the feature lines that use it. */
 app.get('/api/steps/lenses', async (req, res) => {

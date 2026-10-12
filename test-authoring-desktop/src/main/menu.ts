@@ -190,6 +190,8 @@ export function buildMenu() {
         { label: 'Rebuild Solution', click: () => send('rebuild') },
         { label: 'Clean Solution', click: () => send('clean') },
         { type: 'separator' },
+        { label: 'Manage NuGet Packages…', click: () => send('nuget') },
+        { type: 'separator' },
         { label: 'Cancel', accelerator: 'CmdOrCtrl+Pause', registerAccelerator: false, click: () => send('cancel-build') },
         { type: 'separator' },
         { label: 'Error List and Output', click: () => send('build-windows') },
