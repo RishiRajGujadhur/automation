@@ -23,6 +23,7 @@ export default function BuildPanel({ onOpen, onNotice, onClose }: { onOpen: (fil
   // Startup / build project: the whole solution, or one project of it.
   const [projects, setProjects] = useState<{ name: string; file: string }[]>([]);
   const [project, setProject] = useLocalState('buildProject', '');
+  const [buildOnSave, setBuildOnSave] = useLocalState('buildOnSave', false);
   useEffect(() => { api<{ configurations?: string[]; projects?: { name: string; file: string; missing?: boolean }[] }>('/solution').then((r) => { setConfigurations(r.configurations ?? []); setProjects((r.projects ?? []).filter((p) => /\.csproj$/i.test(p.file) && !p.missing)); }, () => {}); }, []);
   const target = projects.some((p) => p.file === project) ? project : '';
   const configs = useMemo(() => [...new Set(configurations.map((c) => c.split('|')[0].trim()).concat(['Debug', 'Release']))], [configurations]);
@@ -49,6 +50,7 @@ export default function BuildPanel({ onOpen, onNotice, onClose }: { onOpen: (fil
         <select className="build-config" aria-label="Solution configuration" value={configuration} onChange={(e) => setConfiguration(e.target.value)} disabled={running}>
           {configs.map((c) => <option key={c}>{c}</option>)}
         </select>
+        <label className="build-on-save" title="Build after saving a C# or project file"><input type="checkbox" checked={buildOnSave} onChange={(e) => setBuildOnSave(e.target.checked)} /> Build on save</label>
         {projects.length > 1 && (
           <select className="build-config" aria-label="Build project" value={target} onChange={(e) => setProject(e.target.value)} disabled={running}>
             <option value="">Entire solution</option>

@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { FILE_SAVED_EVENT } from './events';
 import { saveFile } from '../files/provider';
 import { usePrefs } from '../radix2';
 
@@ -65,6 +66,7 @@ export function useAutoSave({ file, value, loaded }: { file?: string; value: str
     try {
       const r = await saveFile(file, value, base.current.hash);
       base.current = { file, source: value, hash: r.hash };
+      window.dispatchEvent(new CustomEvent(FILE_SAVED_EVENT, { detail: file }));
       writeDraft(file, null);
       window.dispatchEvent(new Event(UNSAVED_EVENT));
       setState('saved');

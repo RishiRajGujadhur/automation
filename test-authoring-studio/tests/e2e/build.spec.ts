@@ -39,9 +39,14 @@ test('Build ▸ Build Solution: Error List with the compiler error, double-click
     await panel.getByRole('tab', { name: 'Output' }).click();
     await expect(panel.getByLabel('Build output')).toContainText('Build failed: 1 error(s)');
 
-    // Fix on disk and rebuild with Ctrl+Shift+B.
-    await fs.writeFile(steps, good);
-    await page.keyboard.press('Control+Shift+B');
+    // Build on save: fix the line in the editor and save (Ctrl+S); the build starts by itself.
+    await panel.getByLabel('Build on save').check();
+    await page.locator('.code-editor:not([hidden]) .cm-activeLine').click();
+    await page.keyboard.press('End');
+    await page.keyboard.press('ArrowLeft');
+    for (let i = 0; i < ' + missingName'.length; i++) await page.keyboard.press('Backspace');
+    await page.keyboard.press('Control+S');
+    await expect.poll(async () => fs.readFile(steps, 'utf8')).toBe(good);
     await expect(panel.getByRole('status')).toHaveText(/Build succeeded/, { timeout: 240_000 });
     await panel.getByRole('tab', { name: /Error List/ }).click();
     await expect(panel.getByText('No errors or warnings.')).toBeVisible();

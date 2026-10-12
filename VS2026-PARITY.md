@@ -26,7 +26,7 @@ Status: ✅ done · 🟡 partial · ⬜ to do. Priority: **P1** next, **P2** aft
 | B1 | Build / Rebuild / Clean Solution and per project (Ctrl+Shift+B) | ✅ (solution; per-project via API, no project context menu yet) | P1 |
 | B2 | Output window (Build pane) and Error List (errors, warnings, messages; click to go to line; filter by project) | ✅ (filters, search, double-click to line; no messages level yet) | P1 |
 | B3 | NuGet: restore on open, Manage NuGet Packages (browse, installed, updates), package versions | ✅ (Manage NuGet Packages: browse / installed / updates, versions, install / update / uninstall; restore on open when packages are missing) | P2 |
-| B4 | Build on save / before run and debug | 🟡 (runs and debug sessions build first: `dotnet test` and the debugger build the owning project; no build on save) | P2 |
+| B4 | Build on save / before run and debug | ✅ (Build on save option in the build windows; runs and debug sessions build first) | P2 |
 
 ## 3. Editor (C#)
 | # | Feature | Status | Pri |
@@ -79,7 +79,7 @@ Status: ✅ done · 🟡 partial · ⬜ to do. Priority: **P1** next, **P2** aft
 | # | Feature | Status | Pri |
 | --- | --- | --- | --- |
 | V1 | Git Changes: status, stage, commit, amend, discard; gutter change markers | ✅ | P1 |
-| V2 | Branches (create, switch, merge), pull/push/fetch, sync | 🟡 (create, switch incl. remote branches, fetch / pull --ff-only / push with publish, merge into current branch (conflicts abort and are reported)) | P2 |
+| V2 | Branches (create, switch, merge), pull/push/fetch, sync | ✅ (create, switch incl. remote branches, fetch / pull --ff-only / push with publish, merge into current branch (conflicts abort and are reported)) | P2 |
 | V3 | History, blame, compare with previous | ✅ (recent history list, Annotate / blame column, Compare with Unmodified) | P2 |
 
 ## 8. Environment
@@ -143,3 +143,4 @@ Status: ✅ done · 🟡 partial · ⬜ to do. Priority: **P1** next, **P2** aft
 - 2026-10-12 — **Add / remove projects (S8 partial).** Solution row context menu ▸ Add New Project… (`dotnet new <template> --no-restore` + `dotnet sln add`) and Add Existing Project…; project ▸ Remove from Solution (`dotnet sln remove`, files kept, asks first).
 - 2026-10-12 — **Code coverage (T5).** Test Explorer ▸ Run All Tests with Coverage runs `dotnet test --collect "Code Coverage;Format=cobertura"` (Microsoft.CodeCoverage ships with Microsoft.NET.Test.Sdk, no extra package); `parseCobertura` merges per-project reports into covered / uncovered lines per repository file; summary line in Test Explorer and coverage bars in the editor gutter.
 - 2026-10-12 — **Custom keyboard shortcuts (W2).** `src/keybindings.tsx`: Keyboard Shortcuts dialog lists the menu commands (build, test, Git, search, NuGet, files, windows); Assign records a chord, chips remove it; a capture-phase handler runs assigned chords before built-in keys. Stored per browser.
+- 2026-10-12 — **Build on save (B4 done).** Build windows ▸ Build on save: editors announce saves (`FILE_SAVED_EVENT`); saving a .cs / .csproj / .props / .targets file starts a build 0.8 s later (one per burst of saves). V2 marked done (merge landed earlier).

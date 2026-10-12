@@ -31,7 +31,7 @@ import { fsaSupported, pickFolder, restoreFolder, closeFolder as closeBrowserFol
 import { browserSolution } from './files/browserSolution';
 import type { Solution, FileOp } from './SolutionExplorer';
 import { renamePath, copyPath, deletePath } from './files/provider';
-import { SAVE_ALL_EVENT } from './editor/events';
+import { SAVE_ALL_EVENT, FILE_SAVED_EVENT } from './editor/events';
 import { snapshot } from './algorithms/registry';
 import { desktop, type DesktopMenuCommand } from './desktop';
 import StepCatalogue from './StepCatalogue';
@@ -370,6 +370,20 @@ export default function App() {
   const build = useBuild();
   const [buildOpen, setBuildOpen] = useLocalState('buildOpen', false);
   const showBuild = buildOpen || build.status === 'running';
+  // Build on save (option in the build windows): a saved C# / project file starts a build shortly after.
+  useEffect(() => {
+    let t = 0;
+    const h = (e: Event) => {
+      const file = (e as CustomEvent<string>).detail;
+      let on = false;
+      try { on = JSON.parse(localStorage.getItem('tas:buildOnSave') ?? 'false'); } catch { /* off */ }
+      if (!on || !/\.(cs|csproj|props|targets)$/i.test(file)) return;
+      clearTimeout(t);
+      t = window.setTimeout(() => { if (getBuild().status !== 'running') runBuildRef.current('build'); }, 800);
+    };
+    window.addEventListener(FILE_SAVED_EVENT, h);
+    return () => { clearTimeout(t); window.removeEventListener(FILE_SAVED_EVENT, h); };
+  }, []);
   // Split editor (Window ▸ Split / tab ▸ Split Right): a second editor beside the tab group.
   const [splitFile, setSplitFile] = useLocalState<string | null>('splitFile', null);
   // One docked bottom panel (as in Visual Studio / VS Code): Build and Debug windows share it as tabs.
@@ -420,6 +434,7 @@ export default function App() {
     if (view !== 'code' && view !== 'editor') setView('editor');
     startDebugging({ project: t.projectFile, filter: t.filter }).catch((e) => setNotice((e as Error).message));
   };
+  const runBuildRef = useRef<(a: 'build' | 'rebuild' | 'clean') => void>(() => {});
   const runBuild = (action: 'build' | 'rebuild' | 'clean') => {
     setTab('Features');
     if (view !== 'code' && view !== 'editor') setView('editor');
@@ -430,6 +445,7 @@ export default function App() {
     try { project = JSON.parse(localStorage.getItem('tas:buildProject') ?? '""'); } catch { /* whole solution */ }
     startBuild(action, configuration, project || undefined).catch((e) => setNotice((e as Error).message));
   };
+  runBuildRef.current = runBuild;
   const debugFeature = (scenario?: string) => {
     if (!feature) { setNotice('Open a saved feature file to debug it.'); return; }
     setDebugOpen(true);

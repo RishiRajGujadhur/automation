@@ -12,3 +12,5 @@ export const FILES_CHANGED_EVENT = 'tas:files-changed';
 export const UNSAVED_REFRESH = 'tas:unsaved-changed';
 /** HEAD or the index changed (commit, discard): change bars re-read the committed text. */
 export const GIT_CHANGED_EVENT = 'tas:git-changed';
+/** A file was written to disk by an editor (detail: repository-relative path). */
+export const FILE_SAVED_EVENT = 'tas:file-saved';
