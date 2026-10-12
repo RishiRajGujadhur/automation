@@ -152,7 +152,8 @@ test('debugs a feature with the bundled netcoredbg: .feature breakpoint, step in
     expect(s.reason).toBe('Tests passed');
   } finally {
     await call('/api/debug/control', { action: 'stop' }).catch(() => {});
-    fs.rmSync(repo, { recursive: true, force: true, maxRetries: 5 });
+    // The stopped test host can hold files for a moment: retry, and never fail the test over a temp folder.
+    try { fs.rmSync(repo, { recursive: true, force: true, maxRetries: 10, retryDelay: 300 }); } catch { /* left for the OS to clean */ }
   }
 });
 
