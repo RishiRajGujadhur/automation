@@ -77,7 +77,11 @@ function buildTree(files: { file: string; layer: string }[], prefix = ''): Node[
  * with file nesting (a feature shows the step files its steps bind to, and its generated code-behind),
  * Sync with Active Document, a pending-changes filter, Collapse All, Show All Files and search (Ctrl+;).
  */
-export default function SolutionExplorer({ features, revision, activeFile, query, activeFolder, onQuery, onSelect, onOpenFile, onFolder, onNew, onSource, browserSolution, onFileOp, onManagePackages }: Props) {
+export default function SolutionExplorer({ features, revision, activeFile, query, activeFolder, onQuery, onSelect, onOpenFile, onFolder, onNew, onSource, browserSolution, onFileOp: fileOpProp, onManagePackages }: Props) {
+  // After a rename, copy or delete the tree reloads itself too (not only when the index revision changes).
+  const loads = useRef(0);
+  const loadSolution = () => { const n = ++loads.current; api<Solution>('/solution').then((s) => { if (n === loads.current) setSolution(s); }).catch(() => {}); };
+  const onFileOp = fileOpProp && (async (op: FileOp) => { await fileOpProp(op); if (!browserSolution) loadSolution(); });
   const [renaming, setRenaming] = useState<string | null>(null);
   const [clip, setClip] = useState(clipboard);
   const setClipboard = (c: typeof clipboard) => { clipboard = c; setClip(c); };
@@ -136,7 +140,8 @@ export default function SolutionExplorer({ features, revision, activeFile, query
   const [pendingOnly, setPendingOnly] = useState(false);
   const [pending, setPending] = useState<string[]>(unsavedFiles);
   const tree = useRef<HTMLElement>(null);
-  useEffect(() => { if (!browserSolution) api<Solution>('/solution').then(setSolution).catch(() => {}); }, [revision, browserSolution]);
+  // Only the latest request wins: an answer for an older revision can arrive after a newer one.
+  useEffect(() => { if (!browserSolution) loadSolution(); }, [revision, browserSolution]); // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(() => { const h = () => setPending(unsavedFiles()); window.addEventListener(UNSAVED_EVENT, h); return () => window.removeEventListener(UNSAVED_EVENT, h); }, []);
 
   // Real projects (a .csproj, also one at the repository root); '.' stands for "no project file".

@@ -347,3 +347,23 @@ test('Editing keys: Ctrl+K Ctrl+C / Ctrl+K Ctrl+U, Ctrl+Shift+D duplicate, Ctrl+
   await page.keyboard.press('Enter');
   await expect(page.locator('.code-editor:not([hidden]) .cm-activeLine')).toContainText('namespace Demo;');
 });
+
+test('Outlining: fold a C# block from the margin; sticky scroll pins the class and method lines', async ({ page }) => {
+  const body = Array.from({ length: 120 }, (_, i) => `        var x${i} = ${i};`).join('\n');
+  await fs.writeFile(path.join(temp, 'Steps/Long.cs'), `namespace Demo;\npublic class LongClass\n{\n    public void LongMethod()\n    {\n${body}\n    }\n}\n`);
+  await open(page);
+  await explorerFile(page, 'Long.cs').click();
+  const src = page.getByLabel('Source of Steps/Long.cs');
+  await expect(src.locator('.cm-line', { hasText: 'var x0 = 0;' })).toBeVisible();
+  // Sticky scroll: scroll into the method body.
+  await page.locator('.code-editor:not([hidden]) .cm-scroller').evaluate((el) => { el.scrollTop = 1200; });
+  const sticky = page.locator('.code-editor:not([hidden]) .cm-sticky-line');
+  await expect(sticky.filter({ hasText: 'public class LongClass' })).toBeVisible();
+  await expect(sticky.filter({ hasText: 'public void LongMethod()' })).toBeVisible();
+  await sticky.filter({ hasText: 'public void LongMethod()' }).click();
+  await expect(page.locator('.code-editor:not([hidden]) .cm-activeLine')).toContainText('public void LongMethod()');
+  // Fold the method (Allman brace on the next line) from the fold margin.
+  await page.locator('.code-editor:not([hidden]) .cm-foldGutter .cm-gutterElement span[title="Fold line"]').nth(1).click();
+  await expect(src.locator('.cm-line', { hasText: 'var x5 = 5;' })).toHaveCount(0);
+  await expect(src.locator('.cm-foldPlaceholder')).toBeVisible();
+});

@@ -195,7 +195,13 @@ function Badge({ children, tone = 'muted' }: { children: React.ReactNode; tone?:
 }
 export default function App() {
   const editorTheme = useEditorTheme();
-  const [index, setIndex] = useState<Index>();
+  const [index, setIndexRaw] = useState<Index>();
+  // Index answers can arrive out of order (a slow scan finishing after a newer one): keep the most recently activated.
+  const setIndex = useCallback((next: Index | undefined | ((p: Index | undefined) => Index | undefined)) => setIndexRaw((prev) => {
+    const value = typeof next === 'function' ? next(prev) : next;
+    if (value && prev?.scannedAt && value.scannedAt && value.scannedAt < prev.scannedAt) return prev;
+    return value;
+  }), []);
   const [config, setConfig] = useState<any>();
   const { prefs: startPrefs } = usePrefs();
   const [tab, setTab] = useLocalState('tab', startPrefs.mode === 'advanced' ? 'Features' : 'Dashboard');
@@ -326,7 +332,8 @@ export default function App() {
         if (!op.folder) editFile(created);
       }
       if (fileSource().kind === 'browser') setBrowserSol(await browserSolution((fileSource() as { name: string }).name));
-      else setIndex(await api('/scan', {}));
+      // The Explorer reloads its tree right away; the re-index (a few seconds) lands when it is done.
+      else api<Index>('/scan', {}).then(setIndex, (e) => setNotice((e as Error).message));
     } catch (e) {
       setNotice((e as Error).message);
     }

@@ -15,6 +15,8 @@ import { changeGutter } from './changeGutter';
 import { useChangeBars } from './useChangeBars';
 import { blameGutter, setBlame, type BlameLine } from './blame';
 import { vsKeys, commentTokenFor } from './vsKeys';
+import { braceFolding, braceRange } from './folding';
+import { stickyScroll } from './stickyScroll';
 import { cursorTracker } from './cursor';
 import NavBar from './NavBar';
 import RenameStep from './RenameStep';
@@ -336,6 +338,7 @@ export default function CodeEditor({ file, reveal, active = true, onNotice, onIn
     cursorTracker(file, () => eolRef.current),
     caretTracker,
     blameGutter(),
+    ...(commentTokenFor(file) === '//' ? [braceFolding(), stickyScroll(braceRange)] : []),
     ...(commentTokenFor(file) ? [vsKeys(commentTokenFor(file))] : []),
     keymap.of([
       { key: 'Mod-s', preventDefault: true, run: () => { void saveRef.current(); return true; } },

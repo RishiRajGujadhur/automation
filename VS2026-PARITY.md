@@ -42,7 +42,7 @@ Status: ✅ done · 🟡 partial · ⬜ to do. Priority: **P1** next, **P2** aft
 | E9 | Format Document / Selection (Ctrl+K,D) with `.editorconfig` | ✅ (Shift+Alt+F or Ctrl+K, Ctrl+D; keeps line endings) | P1 |
 | E10 | CodeLens: reference counts, test status above methods | ✅ (reference counts, test outcome on test methods, step-usage lens) | P2 |
 | E11 | Inlay hints (parameter names, types) | ✅ (parameter names, var/lambda types; on/off setting pending) | P3 |
-| E12 | Code folding, outlining, sticky scroll, bracket matching, multi-caret, column select | 🟡 (CodeMirror basics) | P2 |
+| E12 | Code folding, outlining, sticky scroll, bracket matching, multi-caret, column select | ✅ (brace / Allman / #region folding for C#, indentation folding for Gherkin, sticky scroll, bracket matching, multi-caret, column select) | P2 |
 | E13 | Navigation bar (project / type / member dropdowns) and breadcrumbs | ✅ | P2 |
 | E14 | Snippets (prop, ctor, for, test method, step definition) | ✅ (shortcut + Tab, or from IntelliSense; Tab between fields) | P2 |
 | E15 | Comment/uncomment, duplicate line, move line, go to line (Ctrl+G) | ✅ (Ctrl+K Ctrl+C/U, Ctrl+Shift+D duplicate, Ctrl+Shift+L delete line, Alt+↑/↓ move, Ctrl+G go to line) | P2 |
@@ -130,3 +130,5 @@ Status: ✅ done · 🟡 partial · ⬜ to do. Priority: **P1** next, **P2** aft
 - 2026-10-12 — **Merge (V2).** Branch menu lists "Merge <branch> into <current>"; `/api/git/merge` runs `git merge --no-edit`; a conflicting merge is aborted and the conflicting files are named.
 - 2026-10-12 — **Annotate / Git Blame (V3 partial).** `/api/git/blame` (porcelain); code editor context menu ▸ Annotate (Git Blame) toggles a column with commit, author and date once per block (summary on hover; local edits shown as not committed; hidden on the next edit).
 - 2026-10-12 — **Line editing keys (E15).** `src/editor/vsKeys.ts` in the code and Gherkin editors: comment/uncomment selection with the file's token (`//`, `#`), duplicate line/selection, delete lines, go to line; move line is CodeMirror's Alt+↑/↓.
+- 2026-10-12 — **Outlining and sticky scroll (E12).** `folding.ts`: fold service for C# blocks (end-of-line or Allman `{`, `#region`) and Gherkin indentation; `stickyScroll.ts` pins the enclosing namespace/class/method (Feature/Scenario) lines at the top of the editor, click to jump.
+- 2026-10-12 — **Fix: Explorer lagged after rename/copy/delete.** The tree reloaded only after a full re-index (several seconds with the language service busy); it now reloads from disk right away, the re-index lands later, and late or out-of-order index answers (client and delayed server rescans) no longer replace a newer one.

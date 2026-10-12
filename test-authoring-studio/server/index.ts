@@ -71,7 +71,8 @@ const previews = new Map<string, { file: string; source: string; hash: string; r
 const hash = (s: string) => createHash('sha256').update(s).digest('hex');
 let search:WorkspaceSearch|undefined;
 let pendingScan:Promise<Index>|undefined;
-function activate(next:Index){search?.close();index=next;index.revision=randomUUID();index.scannedAt=new Date().toISOString();search=new WorkspaceSearch({steps:next.stepDefinitions,selectors:next.selectors,dictionaries:next.dictionaryEntries??[],backgrounds:next.features.flatMap(f=>f.backgrounds.map(b=>({...b,file:f.file})))});return next;}
+let activations = 0;
+function activate(next:Index){activations++;search?.close();index=next;index.revision=randomUUID();index.scannedAt=new Date().toISOString();search=new WorkspaceSearch({steps:next.stepDefinitions,selectors:next.selectors,dictionaries:next.dictionaryEntries??[],backgrounds:next.features.flatMap(f=>f.backgrounds.map(b=>({...b,file:f.file})))});return next;}
 const ensure = async ():Promise<Index> => {if(index)return index;if(!pendingScan)pendingScan=scan(config).then(activate).finally(()=>{pendingScan=undefined;});return pendingScan;};
 function publicIndex(i:Index):Index{return {...i,stats:{steps:i.stepDefinitions.length,selectors:i.selectors.length,features:i.features.length,scenarios:i.features.reduce((n,f)=>n+f.scenarios.length,0),backgrounds:i.features.reduce((n,f)=>n+f.backgrounds.length,0),dictionaries:i.dictionaryEntries?.length??0,methods:i.methods.length},features:i.features.map(f=>({...f,source:'',scenarios:[],backgrounds:[]})),stepDefinitions:[],selectors:[],methods:[],callEdges:[],dictionaryEntries:[]};}
 const paging=z.object({q:z.string().max(200).default(''),offset:z.coerce.number().int().min(0).max(10000000).default(0),limit:z.coerce.number().int().min(1).max(50).default(25),keyword:z.enum(['','Given','When','Then']).default('')});
@@ -252,7 +253,9 @@ function rescanSoon(delay: number) {
   clearTimeout(rescanTimer);
   rescanTimer = setTimeout(() => {
     const target = config;
-    scan(target).then((i) => { if (config === target) activate(i); }).catch((e) => console.error('Rescan failed:', (e as Error).message));
+    const before = activations;
+    // Dropped when the workspace changed or a newer index was activated while this scan ran.
+    scan(target).then((i) => { if (config === target && activations === before) activate(i); }).catch((e) => console.error('Rescan failed:', (e as Error).message));
   }, delay);
 }
 app.post('/api/file/save', async (req, res) => {

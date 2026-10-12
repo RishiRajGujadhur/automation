@@ -1640,3 +1640,26 @@
     white-space: nowrap;
   }
 }
+
+// Sticky scroll
+.cm-editor .cm-sticky {
+  position: absolute;
+  z-index: 5;
+  top: 0;
+  right: 0;
+  border-bottom: 1px solid var(--border);
+  background: var(--surface);
+  box-shadow: 0 2px 4px #0002;
+  font-family: var(--font-mono, monospace);
+  white-space: pre;
+  pointer-events: auto;
+  .cm-sticky-line {
+    overflow: hidden;
+    padding: 0 6px 0 6px;
+    text-overflow: ellipsis;
+    cursor: pointer;
+    &:hover {
+      background: var(--accent-soft, #9270dd22);
+    }
+  }
+}
