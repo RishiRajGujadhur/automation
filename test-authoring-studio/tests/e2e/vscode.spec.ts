@@ -162,6 +162,7 @@ test('Gherkin tables align as | is typed; Tab moves between cells', async ({ pag
 test('Keyboard Shortcuts: assign a custom shortcut to a command and use it; remove it', async ({ page }) => {
   await page.addInitScript(() => { if (!sessionStorage.getItem('seeded')) { localStorage.setItem('tas:prefs', JSON.stringify({ mode: 'advanced' })); sessionStorage.setItem('seeded', '1'); } });
   await page.goto('/#/features/editor');
+  await expect(page.getByLabel('Gherkin source')).toBeVisible();
   await page.keyboard.press('Shift+?');
   const custom = page.getByRole('region', { name: 'Custom shortcuts' });
   await custom.getByRole('button', { name: 'Assign shortcut to View ▸ Git Changes' }).click();

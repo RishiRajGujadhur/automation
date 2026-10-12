@@ -221,14 +221,26 @@ export async function matchFeatureBindings(features: Feature[], bindings: Bindin
         steps.push({ keyword, text: step.text, tags, feature: feature.name, scenario: section.name });
       }
     }
-  const { results, diagnostics } = JSON.parse(
-    await command(...scanner(['--match']), JSON.stringify({ bindings, steps })),
-  );
-  results.forEach((result: { candidates: string[]; status: string }, i: number) =>
-    Object.assign(occurrences[i], result),
-  );
-  return diagnostics as string[];
+  // Each step's match depends only on the bindings and the step itself: unchanged steps reuse the last answer and
+  // the matcher (a .NET process) runs only for new or edited steps, or not at all.
+  const bindingsKey = JSON.stringify(bindings);
+  if (matchCache.key !== bindingsKey) matchCache = { key: bindingsKey, steps: new Map(), diagnostics: [] };
+  const keys = steps.map((st) => JSON.stringify([st.keyword, st.text, st.tags]));
+  const todo = [...new Set(keys.filter((k) => !matchCache.steps.has(k)))];
+  if (todo.length) {
+    const first = new Map(keys.map((k, i) => [k, i] as const));
+    const { results, diagnostics } = JSON.parse(
+      await command(...scanner(['--match']), JSON.stringify({ bindings, steps: todo.map((k) => steps[first.get(k)!]) })),
+    );
+    results.forEach((result: { candidates: string[]; status: string }, i: number) => matchCache.steps.set(todo[i], result));
+    matchCache.diagnostics = [...new Set([...matchCache.diagnostics, ...(diagnostics as string[])])];
+    if (matchCache.steps.size > 50_000) matchCache.steps.clear();
+  }
+  keys.forEach((k, i) => Object.assign(occurrences[i], structuredClone(matchCache.steps.get(k))));
+  return matchCache.diagnostics;
 }
+let matchCache: { key: string; steps: Map<string, { candidates: string[]; status: string }>; diagnostics: string[] } = { key: '', steps: new Map(), diagnostics: [] };
+const scannerCache = new Map<string, { stamp: string; raw: any }>();
 export async function scan(config: Config): Promise<Index> {
   const root = await fs.realpath(config.repositoryRoot);
   const target = await confined(root, config.targetProject);
@@ -274,7 +286,14 @@ export async function scan(config: Config): Promise<Index> {
     ),
   ];
   for (const file of sources) await confined(root, file);
-  const raw = JSON.parse(await command(...scanner(), JSON.stringify(sources)));
+  // The Roslyn scanner (a separate .NET process, ~1 s) only reruns when a C# source changed: saving a feature or
+  // dictionary reuses the last result (keyed by every source's path, size and modification time).
+  const stamp = (await Promise.all(sources.map(async (f) => { const st = await fs.stat(f).catch(() => undefined); return `${f}|${st?.size}|${st?.mtimeMs}`; }))).sort().join('\n');
+  let raw = scannerCache.get(root)?.stamp === stamp ? scannerCache.get(root)!.raw : undefined;
+  if (!raw) {
+    raw = JSON.parse(await command(...scanner(), JSON.stringify(sources)));
+    scannerCache.set(root, { stamp, raw });
+  }
   const index: Index = {
     schemaVersion: 1,
     workspace: path.basename(targetDir),
