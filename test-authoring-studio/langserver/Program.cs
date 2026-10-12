@@ -20,6 +20,7 @@ using Microsoft.CodeAnalysis.Text;
 
 // C# language service: one JSON request per stdin line, one JSON response per stdout line.
 // Requests: {id, op, file, source?, line?, column?, ...}. Positions are 1-based lines and columns.
+LanguageService.Prewarm();
 var service = new LanguageService();
 var json = new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase };
 string? line;
@@ -46,6 +47,10 @@ sealed class LanguageService
     /// <summary>Roslyn project per .csproj (folder, id), deepest folder first; plus a project for files outside them.</summary>
     List<(string Dir, ProjectId Id)> owners = [];
     ProjectId? miscId;
+    // Roslyn's MEF composition (~1 s) does not depend on the folder: it starts when the process starts, in parallel
+    // with whatever comes first, and is shared by every Init.
+    static readonly Lazy<Task<MefHostServices>> Host = new(() => Task.Run(() => MefHostServices.Create(MefHostServices.DefaultAssemblies)));
+    public static void Prewarm() => _ = Host.Value;
     string root = "";
     // Folders of solution projects outside the opened folder (they are indexed with it).
     List<string> extraRoots = new();
@@ -57,6 +62,8 @@ sealed class LanguageService
         {
             Init((string)req["root"]!, req["extra"]?.AsArray().Select(x => (string)x!).ToList() ?? new List<string>());
             var sol = workspace!.CurrentSolution;
+            // Compile every project in the background so the first IntelliSense / hover / lens request is fast.
+            _ = Task.Run(async () => { foreach (var p in sol.Projects) { try { var c = await p.GetCompilationAsync(); c?.GetDiagnostics(); } catch { } } });
             return new { files = sol.Projects.Sum(p => p.DocumentIds.Count), projects = sol.Projects.Select(p => new { name = p.Name, documents = p.DocumentIds.Count, references = p.ProjectReferences.Select(r => sol.GetProject(r.ProjectId)?.Name) }).ToList() };
         }
         if (workspace == null) throw new InvalidOperationException("Not initialised.");
@@ -103,7 +110,7 @@ sealed class LanguageService
     {
         root = Path.GetFullPath(folder);
         extraRoots = extra.Select(Path.GetFullPath).Where(Directory.Exists).ToList();
-        workspace = new AdhocWorkspace(MefHostServices.Create(MefHostServices.DefaultAssemblies));
+        workspace = new AdhocWorkspace(Host.Value.Result);
         var framework = FrameworkReferences();
         var cache = Environment.GetEnvironmentVariable("NUGET_PACKAGES") ?? Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), ".nuget", "packages");
         var csprojs = new[] { root }.Concat(extraRoots).SelectMany(r => Directory.EnumerateFiles(r, "*.csproj", SearchOption.AllDirectories)).Where(p => !IsIgnored(p)).Take(200).Select(Path.GetFullPath).Distinct(StringComparer.OrdinalIgnoreCase).ToList();

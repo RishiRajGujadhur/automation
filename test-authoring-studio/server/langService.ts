@@ -74,5 +74,7 @@ export class LanguageService {
   }
   /** Files changed on disk (saved, renamed, deleted): re-read them if the service is running for this repository. */
   notify(root: string, files: string[]) { if (this.proc && this.root === root && files.length) void this.ready?.then(() => this.send({ op: 'update', files })).catch(() => {}); }
+  /** Starts the service for a repository ahead of the first request (opening a workspace), so editors find it ready. */
+  warm(root: string) { try { if (langServerAvailable() && (!this.proc || this.root !== root)) { this.start(root); this.ready?.catch(() => {}); } } catch { /* not built */ } }
   stop() { this.proc?.kill(); this.proc = undefined; this.ready = undefined; }
 }

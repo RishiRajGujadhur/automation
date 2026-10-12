@@ -49,6 +49,11 @@ export class Debugger extends EventEmitter {
   state: DebugState = { status: 'idle', version: 0, frames: [], output: '', breakpoints: {} };
   private dap?: DapClient;
   private test?: ChildProcess;
+  /** The debugger went away: the session ends now, or when `dotnet test` exits (with its result) if it still runs. */
+  private detached() {
+    if (this.test && this.test.exitCode === null) this.update({ status: 'running', frames: [], threadId: undefined });
+    else this.update({ status: 'ended', frames: [], threadId: undefined });
+  }
   private root = '';
   private generation = 0;
   /** Hits per breakpoint (file:line) in the current session, for hit conditions. */
@@ -145,7 +150,8 @@ export class Debugger extends EventEmitter {
     const dap = new DapClient(netcoredbg);
     this.dap = dap;
     dap.on('event', (event: string, body: any) => { if (generation === this.generation) void this.onEvent(event, body); });
-    dap.on('exit', () => { if (generation === this.generation && this.active) this.update({ status: 'ended', frames: [], threadId: undefined }); });
+    // The debugger can go before `dotnet test` reports: wait for its exit (Tests passed / failed) in that case.
+    dap.on('exit', () => { if (generation === this.generation && this.active) this.detached(); });
     await dap.request('initialize', { clientID: 'tas', adapterID: 'coreclr', linesStartAt1: true, columnsStartAt1: true, pathFormat: 'path' });
     await dap.request('attach', { processId: pid, justMyCode: true });
     for (const file of Object.keys(this.state.breakpoints)) await this.send(file);
@@ -168,7 +174,7 @@ export class Debugger extends EventEmitter {
       const frames = await this.frames(threadId);
       this.update({ status: 'paused', reason: body.reason, threadId, frames, exception });
     } else if (event === 'continued') this.update({ status: 'running', frames: [], reason: undefined, exception: undefined });
-    else if (event === 'terminated' || event === 'exited') { if (this.active) this.update({ status: 'ended', frames: [], threadId: undefined }); }
+    else if (event === 'terminated' || event === 'exited') { if (this.active) this.detached(); }
   }
 
   /**

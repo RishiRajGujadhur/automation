@@ -60,7 +60,7 @@ if (stale(path.join(scannerOut, exeName), path.join(studio, 'scanner')) || proce
   const localSdk = path.resolve(root, '../.tools/dotnet', process.platform === 'win32' ? 'dotnet.exe' : 'dotnet');
   const dotnet = process.env.DOTNET_PATH || (existsSync(localSdk) ? localSdk : 'dotnet');
   try {
-    execSync(`"${dotnet}" publish "${path.join(studio, 'scanner/Scanner.csproj')}" -c Release -r ${rid} --self-contained true -p:PublishSingleFile=false -o "${scannerOut}"`, { stdio: 'inherit' });
+    execSync(`"${dotnet}" publish "${path.join(studio, 'scanner/Scanner.csproj')}" -c Release -r ${rid} --self-contained true -p:PublishSingleFile=false -p:PublishReadyToRun=true -o "${scannerOut}"`, { stdio: 'inherit' });
   } catch {
     console.warn('  Scanner publish failed (needs the .NET 10 SDK); C# indexing will need an installed .NET runtime.');
   }
@@ -74,7 +74,7 @@ if (stale(path.join(langOut, langExe), path.join(studio, 'langserver')) || proce
   const localSdk = path.resolve(root, '../.tools/dotnet', process.platform === 'win32' ? 'dotnet.exe' : 'dotnet');
   const dotnet = process.env.DOTNET_PATH || (existsSync(localSdk) ? localSdk : 'dotnet');
   try {
-    execSync(`"${dotnet}" publish "${path.join(studio, 'langserver/LangServer.csproj')}" -c Release -r ${rid} --self-contained true -o "${langOut}"`, { stdio: 'inherit' });
+    execSync(`"${dotnet}" publish "${path.join(studio, 'langserver/LangServer.csproj')}" -c Release -r ${rid} --self-contained true -p:PublishReadyToRun=true -o "${langOut}"`, { stdio: 'inherit' });
   } catch {
     console.warn('  Language service publish failed (needs the .NET 10 SDK); C# IntelliSense will be unavailable.');
   }
