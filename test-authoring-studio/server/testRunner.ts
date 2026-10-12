@@ -6,7 +6,7 @@ import path from 'node:path';
 import { dotnet } from './core.js';
 
 export type TestOutcome = 'passed' | 'failed' | 'skipped';
-export type TestResult = { name: string; className: string; method: string; outcome: TestOutcome; durationMs: number; message?: string; stackTrace?: string; output?: string };
+export type TestResult = { name: string; className: string; method: string; outcome: TestOutcome; durationMs: number; message?: string; stackTrace?: string; output?: string; traces?: string[] };
 export type TestRunState = {
   status: 'idle' | 'running' | 'done' | 'failed' | 'cancelled';
   version: number;
@@ -93,10 +93,41 @@ async function findFiles(dir: string, suffix: string): Promise<string[]> {
   return out;
 }
 
+/**
+ * Playwright traces written during a run (tests that call `Tracing.StopAsync(new() { Path = ... })`): .zip files under
+ * bin/ or TestResults/ newer than the run start. They are copied into the studio's traces folder and attached to the
+ * test whose method name the file name contains (e.g. "AddsToCart.zip", "AddsToCart-2026….zip").
+ */
+export async function collectTraces(root: string, since: number, results: TestResult[], into: string) {
+  const zips: string[] = [];
+  const walk = async (dir: string, depth: number, inside: boolean) => {
+    if (depth > 7 || zips.length > 200) return;
+    for (const e of await fs.readdir(dir, { withFileTypes: true }).catch(() => [])) {
+      if (e.name.startsWith('.') || e.name === 'node_modules' || e.name === 'obj') continue;
+      const p = path.join(dir, e.name);
+      if (e.isDirectory()) await walk(p, depth + 1, inside || e.name === 'bin' || e.name === 'TestResults');
+      else if (inside && e.name.toLowerCase().endsWith('.zip') && (await fs.stat(p)).mtimeMs >= since - 1000) zips.push(p);
+    }
+  };
+  await walk(root, 0, false);
+  if (!zips.length) return;
+  await fs.mkdir(into, { recursive: true });
+  for (const zip of zips) {
+    const base = path.basename(zip, '.zip');
+    const r = results.find((x) => base.toLowerCase().includes(x.method.toLowerCase())) ?? results.find((x) => base.toLowerCase().includes(x.name.replace(/\W+/g, '').toLowerCase()));
+    if (!r) continue;
+    const name = `${base.replace(/[^\w.-]+/g, '_')}-${Date.now().toString(36)}.zip`;
+    await fs.copyFile(zip, path.join(into, name)).catch(() => {});
+    r.traces = [...(r.traces ?? []), name];
+  }
+}
+
 /** Runs tests with `dotnet test` (one run at a time), collecting results from TRX files. */
 export class TestRunner extends EventEmitter {
   state: TestRunState = { status: 'idle', version: 0, requested: [], results: [], output: '' };
   private proc?: ChildProcess;
+  /** Where Playwright traces from runs are kept (the studio's traces folder). */
+  tracesDir?: string;
   private update(patch: Partial<TestRunState>) {
     this.state = { ...this.state, ...patch, version: this.state.version + 1 };
     this.emit('state', this.state);
@@ -136,6 +167,7 @@ export class TestRunner extends EventEmitter {
       }
       await fs.rm(results, { recursive: true, force: true }).catch(() => {});
       if (this.state.status === 'cancelled') return;
+      if (this.tracesDir) await collectTraces(root, started, fresh, this.tracesDir).catch(() => {});
       // Results from earlier runs stay (like Visual Studio's Test Explorer); this run replaces what it re-ran.
       const key = (r: TestResult) => `${r.className}.${r.name}`;
       const ran = new Set(fresh.map(key));

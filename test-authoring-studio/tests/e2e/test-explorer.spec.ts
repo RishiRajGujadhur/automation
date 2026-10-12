@@ -130,7 +130,7 @@ test('Analyze Code Coverage: line coverage summary and coverage bars in the edit
     await page.getByRole('button', { name: 'Test Explorer' }).click();
     const te = page.getByRole('region', { name: 'Test Explorer' });
     await expect(te.getByRole('navigation', { name: 'Tests' }).locator('.t-label').first()).toBeVisible({ timeout: 60_000 });
-    await te.getByRole('button', { name: 'Run All Tests with Coverage' }).click();
+    await te.getByRole('button', { name: 'Analyze Code Coverage for All Tests' }).click();
     await expect(te.getByRole('note', { name: 'Code coverage' })).toContainText(/Line coverage \d+(\.\d)?%/, { timeout: 240_000 });
     // The step definitions file shows covered lines.
     await page.getByRole('button', { name: 'Features (Explorer)' }).click();

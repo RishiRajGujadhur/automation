@@ -2,7 +2,7 @@ import { useSyncExternalStore } from 'react';
 import { api } from '../api';
 
 export type DiscoveredTest = { id: string; kind: 'test' | 'scenario'; project: string; projectFile?: string; className: string; method: string; name: string; file: string; line: number; filter: string; feature?: string; cases?: number };
-export type TestResult = { name: string; className: string; method: string; outcome: 'passed' | 'failed' | 'skipped'; durationMs: number; message?: string; stackTrace?: string; output?: string };
+export type TestResult = { name: string; className: string; method: string; outcome: 'passed' | 'failed' | 'skipped'; durationMs: number; message?: string; stackTrace?: string; output?: string; traces?: string[] };
 export type TestRunState = {
   status: 'idle' | 'running' | 'done' | 'failed' | 'cancelled';
   version: number;

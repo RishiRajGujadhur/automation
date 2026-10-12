@@ -924,6 +924,7 @@ app.get('/api/tests', async (_req, res) => {
   res.json({ tests, warning, generated: tests.some((t) => t.kind === 'scenario') });
 });
 const tests = new TestRunner();
+tests.tracesDir = tracesDir;
 app.get('/api/tests/run', (_req, res) => res.json(tests.state));
 app.get('/api/tests/events', (req, res) => {
   res.writeHead(200, { 'Content-Type': 'text/event-stream', 'Cache-Control': 'no-cache', Connection: 'keep-alive' });

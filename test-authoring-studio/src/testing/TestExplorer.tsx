@@ -139,7 +139,7 @@ export default function TestExplorer({ revision, onOpen, onDebug, onNotice }: { 
           <button className="icon-button" aria-label="Run All Tests" title="Run All Tests" disabled={running || !tests.length} onClick={() => void start(playlist && playlists[playlist] ? visible : 'all')}><PlayCircle size={14} /></button>
           <button className="icon-button" aria-label="Run selected tests" title="Run" disabled={running || !selectedTests.length} onClick={() => void start(selectedTests)}><Play size={14} /></button>
           <button className="icon-button" aria-label="Debug selected test" title="Debug" disabled={running || selectedTests.length !== 1} onClick={() => selectedTests[0] && onDebug(selectedTests[0])}><Bug size={14} /></button>
-          <button className="icon-button" aria-label="Run All Tests with Coverage" title="Analyze Code Coverage for All Tests" disabled={running || !tests.length} onClick={() => void runTests('all', configuration, true).catch((e) => onNotice((e as Error).message))}><ShieldCheck size={14} /></button>
+          <button className="icon-button" aria-label="Analyze Code Coverage for All Tests" title="Analyze Code Coverage for All Tests" disabled={running || !tests.length} onClick={() => void runTests('all', configuration, true).catch((e) => onNotice((e as Error).message))}><ShieldCheck size={14} /></button>
           <button className="icon-button" aria-label="Run Failed Tests" title="Run Failed Tests" disabled={running || !failed.length} onClick={() => void start(failed)}><RotateCcw size={14} /></button>
           {running ? <button className="icon-button" aria-label="Cancel test run" title="Cancel" onClick={() => void cancelTests()}><Square size={13} /></button>
             : <button className="icon-button" aria-label="Refresh tests" title="Refresh (rediscover)" onClick={refresh}><RefreshCw size={14} className={loading ? 'spin' : ''} /></button>}
@@ -201,6 +201,7 @@ export default function TestExplorer({ revision, onOpen, onDebug, onNotice }: { 
                 const file = m && tests.find((t) => m[1].replaceAll('\\', '/').endsWith(t.file))?.file;
                 return <span key={j}>{file ? <button className="t-link" onClick={() => onOpen(file, Number(m![2]))}>{line.trim()}</button> : line}{'\n'}</span>;
               })}</pre>}
+              {r.traces?.map((t) => <a key={t} className="t-link t-trace" href={`/api/traces/${encodeURIComponent(t)}`} download title="Playwright trace: open it with npx playwright show-trace, or drop it on trace.playwright.dev">Playwright trace: {t}</a>)}
               {r.output && <details className="t-output"><summary>Standard output</summary><pre aria-label="Test output">{r.output}</pre></details>}
             </div>
           ))}

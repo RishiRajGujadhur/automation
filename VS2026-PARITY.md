@@ -63,7 +63,7 @@ Status: ✅ done · 🟡 partial · ⬜ to do. Priority: **P1** next, **P2** aft
 | T1 | Test Explorer: discover tests per project (features/scenarios, NUnit/xUnit/MSTest), tree by project/namespace/class/trait | ✅ (project → class / feature → test; no trait grouping yet) | P1 |
 | T2 | Run / Debug selected, Run all, Run failed, repeat last run; live pass/fail icons in Explorer and editor gutters | ✅ (Test Explorer + editor margin glyphs) | P1 |
 | T3 | Test detail: output, stack trace with links, duration; playlists | ✅ (details with message, stack links, standard output, durations; playlists) | P2 |
-| T4 | Playwright traces from failed runs | 🟡 | P2 |
+| T4 | Playwright traces from failed runs | ✅ (recorder traces; trace .zip files a run writes under bin/ or TestResults/ are kept and linked from the test's details) | P2 |
 | T5 | Code coverage per run | ✅ (Analyze Code Coverage for All Tests: line coverage % in Test Explorer, green / red coverage bars in the code editor) | P3 |
 
 ## 6. Debugging
@@ -144,3 +144,4 @@ Status: ✅ done · 🟡 partial · ⬜ to do. Priority: **P1** next, **P2** aft
 - 2026-10-12 — **Code coverage (T5).** Test Explorer ▸ Run All Tests with Coverage runs `dotnet test --collect "Code Coverage;Format=cobertura"` (Microsoft.CodeCoverage ships with Microsoft.NET.Test.Sdk, no extra package); `parseCobertura` merges per-project reports into covered / uncovered lines per repository file; summary line in Test Explorer and coverage bars in the editor gutter.
 - 2026-10-12 — **Custom keyboard shortcuts (W2).** `src/keybindings.tsx`: Keyboard Shortcuts dialog lists the menu commands (build, test, Git, search, NuGet, files, windows); Assign records a chord, chips remove it; a capture-phase handler runs assigned chords before built-in keys. Stored per browser.
 - 2026-10-12 — **Build on save (B4 done).** Build windows ▸ Build on save: editors announce saves (`FILE_SAVED_EVENT`); saving a .cs / .csproj / .props / .targets file starts a build 0.8 s later (one per burst of saves). V2 marked done (merge landed earlier).
+- 2026-10-12 — **Playwright traces from test runs (T4).** After a run, `collectTraces` finds new trace zips under bin/ or TestResults/, copies them to the traces folder and attaches them to the test named in the file; Test details link to the download (`/api/traces/<name>`). Also fixed: the coverage button's name clashed with Run All Tests (now "Analyze Code Coverage for All Tests").
