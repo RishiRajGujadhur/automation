@@ -12,7 +12,7 @@ import { UNSAVED_EVENT, unsavedFiles } from './editor/autosave';
 import type { Feature } from './types';
 
 export type SolutionNode = { kind: 'folder'; name: string; children: SolutionNode[] } | { kind: 'project'; name: string; file: string };
-export type SolutionProject = { file: string; name: string; dir: string; packages?: string[]; frameworks?: string[]; references?: string[]; missing?: boolean };
+export type SolutionProject = { file: string; name: string; dir: string; packages?: string[]; frameworks?: string[]; references?: string[]; missing?: boolean; external?: boolean };
 export type Solution = {
   name: string;
   solutionFile?: string | null;
@@ -318,7 +318,7 @@ export default function SolutionExplorer({ features, revision, activeFile, query
         ]}>
         <div className="explorer-folder-row" data-menu-row>
           <button className="explorer-folder se-project" style={{ paddingLeft: pad }} aria-label={`${open ? 'Collapse' : 'Expand'} project ${p.name}`} aria-expanded={open} onClick={() => toggle(key)} title={p.missing ? `${p.file} (not found)` : p.file}>
-            {open ? <ChevronDown size={12} /> : <ChevronRight size={12} />}<Boxes size={14} /><span>{p.name}</span>{p.missing && <small>(unavailable)</small>}
+            {open ? <ChevronDown size={12} /> : <ChevronRight size={12} />}<Boxes size={14} /><span>{p.name}</span>{p.missing ? <small>(unavailable)</small> : p.external && <small title="This project is outside the opened folder: it builds and runs with the solution, but its files are not indexed or editable here. Open its parent folder to work on it.">(outside the folder)</small>}
           </button>
         </div>
         </RowMenu>

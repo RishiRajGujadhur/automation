@@ -92,3 +92,25 @@ test('File ▸ Open Project/Solution… opens an .slnx: solution folders, projec
     await fs.rm(root, { recursive: true, force: true, maxRetries: 5 }).catch(() => {});
   }
 });
+
+test('A solution project outside the opened folder is listed and labelled', async ({ page, request }) => {
+  const previous = (await (await request.get('/api/workspace')).json()).config;
+  const base = await fs.mkdtemp(path.join(os.tmpdir(), 'studio-ext-'));
+  await fs.mkdir(path.join(base, 'sol/App'), { recursive: true });
+  await fs.mkdir(path.join(base, 'shared'), { recursive: true });
+  await fs.writeFile(path.join(base, 'sol/Shop.slnx'), '<Solution>\n  <Project Path="App/App.csproj" />\n  <Project Path="../shared/Shared.csproj" />\n</Solution>\n');
+  await fs.writeFile(path.join(base, 'sol/App/App.csproj'), '<Project Sdk="Microsoft.NET.Sdk"><PropertyGroup><TargetFramework>net8.0</TargetFramework></PropertyGroup></Project>');
+  await fs.writeFile(path.join(base, 'shared/Shared.csproj'), '<Project Sdk="Microsoft.NET.Sdk"><PropertyGroup><TargetFramework>net8.0</TargetFramework></PropertyGroup></Project>');
+  try {
+    expect((await request.post('/api/solution/open', { data: { path: path.join(base, 'sol/Shop.slnx') } })).ok()).toBe(true);
+    await page.addInitScript(() => { if (!sessionStorage.getItem('seeded')) { localStorage.setItem('tas:prefs', JSON.stringify({ mode: 'advanced' })); sessionStorage.setItem('seeded', '1'); } });
+    await page.goto('/#/features/editor');
+    const se = page.getByRole('region', { name: 'Explorer' });
+    await expect(se.getByText("Solution 'Shop' (2 projects)")).toBeVisible();
+    await expect(se.getByRole('button', { name: 'Collapse project Shared' })).toContainText('(outside the folder)');
+    await expect(se.getByRole('button', { name: 'Collapse project App' })).not.toContainText('(outside the folder)');
+  } finally {
+    await request.post('/api/workspace', { data: { ...previous, solution: '' } });
+    await fs.rm(base, { recursive: true, force: true, maxRetries: 5 }).catch(() => {});
+  }
+});

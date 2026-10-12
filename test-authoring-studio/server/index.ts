@@ -219,8 +219,8 @@ app.get('/api/solution',async(_req,res)=>{
   const parsed=solutionFile?await readSolution(config.repositoryRoot,solutionFile).catch(()=>undefined):undefined;
   const files=parsed?model.files:model.files;
   const projectFiles=parsed?parsed.projects.map(p=>p.file):(model.projects.length?model.projects:[]);
-  const projects=await Promise.all(projectFiles.map(async(file)=>({file,name:path.posix.basename(file).replace(/\.\w+proj$/i,''),dir:path.posix.dirname(file)==='.'?'':path.posix.dirname(file),...await projectInfo(config.repositoryRoot,file)})));
-  if(!projects.length)projects.push({file:'.',name:model.root,dir:'',packages:model.packages,frameworks:model.frameworks,references:[],missing:false});
+  const projects=await Promise.all(projectFiles.map(async(file)=>({file,name:path.posix.basename(file).replace(/\.\w+proj$/i,''),dir:path.posix.dirname(file)==='.'?'':path.posix.dirname(file),...await projectInfo(config.repositoryRoot,file),external:file.startsWith('../')})));
+  if(!projects.length)projects.push({file:'.',name:model.root,dir:'',packages:model.packages,frameworks:model.frameworks,references:[],missing:false,external:false});
   const tree=parsed?.tree??projects.map(p=>({kind:'project' as const,name:p.name,file:p.file}));
   res.json({name:solutionFile?path.posix.basename(solutionFile).replace(/\.slnx?$/i,''):model.root,solutionFile:solutionFile||null,configurations:parsed?.configurations??['Debug','Release'],tree,projects,packages:model.packages,frameworks:model.frameworks,files,nesting,truncated:model.truncated});
 });
