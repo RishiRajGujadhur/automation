@@ -76,3 +76,21 @@ describe('TypeScript matcher mirrors the scanner', () => {
     expect(ok('size {2}', 'size  ', 'Regex')).toBe(true);
   });
 });
+
+describe('resolveStep (feature editor checks)', () => {
+  it('applies scope precedence and returns parameter spans of the single match', async () => {
+    const { resolveStep } = await import('../server/core');
+    const base = { parameters: [], className: '', method: '', file: '', line: 1, usages: 0, examples: [] };
+    const bindings = [
+      { ...base, id: 'global', keyword: 'When', pattern: 'I search for {string} in {int} shops' },
+      { ...base, id: 'web', keyword: 'When', pattern: 'I search for {string} in {int} shops', scopes: [{ tag: 'web', feature: '', scenario: '' }] },
+    ] as never[];
+    const text = 'I search for "pens" in 3 shops';
+    const plain = resolveStep(bindings, { keyword: 'When', text });
+    expect(plain.status).toBe('Matched');
+    expect((plain.bindings[0] as { id: string }).id).toBe('global');
+    expect(plain.params.map(([a, b]) => text.slice(a, b))).toEqual(['pens', '3']);
+    const web = resolveStep(bindings, { keyword: 'When', text, tags: ['@web'] });
+    expect((web.bindings[0] as { id: string }).id).toBe('web');
+  });
+});

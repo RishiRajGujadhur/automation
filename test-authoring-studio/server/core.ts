@@ -143,6 +143,39 @@ export function bindingMatches(binding: Binding, text: string) {
     return false;
   }
 }
+/** How specific a binding's [Scope] is for a step (mirrors scanner ScopeRank): -1 out of scope, 0 unscoped. */
+export function scopeRank(b: Binding, ctx: { tags?: string[]; feature?: string; scenario?: string }) {
+  if (!b.scopes?.length) return 0;
+  const tags = new Set((ctx.tags ?? []).map((t) => t.replace(/^@/, '')));
+  let best = -1;
+  for (const s of b.scopes) {
+    const ok = (!s.tag || tags.has(s.tag.replace(/^@/, ''))) && (!s.feature || s.feature === ctx.feature) && (!s.scenario || s.scenario === ctx.scenario);
+    if (ok) best = Math.max(best, [s.tag, s.feature, s.scenario].filter(Boolean).length);
+  }
+  return best;
+}
+/**
+ * Resolve one step like Reqnroll: keyword (or [StepDefinition]), pattern, scope precedence. For a single match also
+ * returns where its parameters are in the step text (for parameter highlighting).
+ */
+export function resolveStep(bindings: Binding[], step: { keyword: string; text: string; tags?: string[]; feature?: string; scenario?: string }) {
+  const hits: { b: Binding; rank: number }[] = [];
+  for (const b of bindings) {
+    if (!keywordMatches(b, step.keyword)) continue;
+    const rank = scopeRank(b, step);
+    if (rank >= 0 && bindingMatches(b, step.text)) hits.push({ b, rank });
+  }
+  const top = Math.max(0, ...hits.map((h) => h.rank));
+  const best = hits.filter((h) => h.rank === top).map((h) => h.b);
+  let params: [number, number][] = [];
+  if (best.length === 1) {
+    try {
+      const m = new RegExp(`^(?:${expressionToRegex(best[0].pattern, best[0].expression ? best[0].expression === 'Cucumber' : undefined)})$`, 'd').exec(step.text) as (RegExpExecArray & { indices?: ([number, number] | undefined)[] }) | null;
+      params = (m?.indices ?? []).slice(1).filter((x): x is [number, number] => !!x && x[1] > x[0]);
+    } catch { /* pattern not valid in JavaScript */ }
+  }
+  return { status: best.length === 1 ? 'Matched' : best.length ? 'Ambiguous' : 'Unmatched', bindings: best, params };
+}
 export function classify(steps: Step[], bindings: Binding[]) {
   let keyword = 'Given';
   return steps.map((s) => {

@@ -2082,3 +2082,14 @@
     gap: 8px;
   }
 }
+
+// Step binding highlighting (like the Reqnroll extension): unbound purple, bound default, parameters accented.
+.cm-editor .cm-step-unbound,
+.cm-editor .cm-step-unbound span {
+  color: #b48ead;
+}
+.cm-editor .cm-step-param,
+.cm-editor .cm-step-param span {
+  color: #e5866e;
+  font-weight: 600;
+}

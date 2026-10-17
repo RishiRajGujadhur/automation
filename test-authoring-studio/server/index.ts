@@ -17,6 +17,7 @@ import {
   matchActions,
   matchFeatureBindings,
   bindingMatches,
+  resolveStep,
 } from './core.js';
 import { Recorder } from './recorder.js';
 import { proposeCode, proposeDictionaryPageObject } from './proposals.js';
@@ -110,9 +111,9 @@ app.post('/api/generator/plan',async(req,res)=>{
 });
 // Per-line binding status for the generator's live step lint.
 app.post('/api/steps/match',async(req,res)=>{
- const {steps}=z.object({steps:z.array(z.object({keyword:z.enum(['Given','When','Then']),text:z.string().max(2000)})).max(100)}).parse(req.body);
+ const {steps}=z.object({steps:z.array(z.object({keyword:z.enum(['Given','When','Then']),text:z.string().max(2000),tags:z.array(z.string().max(200)).max(50).optional(),feature:z.string().max(500).optional(),scenario:z.string().max(500).optional()})).max(300)}).parse(req.body);
  const i=await ensure();
- res.json(steps.map(s=>{const hits=i.stepDefinitions.filter(b=>b.keyword===s.keyword&&bindingMatches(b,s.text));return {status:hits.length===1?'Matched':hits.length?'Ambiguous':'Unmatched',binding:hits[0]?{pattern:hits[0].pattern,file:hits[0].file,line:hits[0].line}:null};}));
+ res.json(steps.map(s=>{const r=resolveStep(i.stepDefinitions,s);const b=r.bindings[0];return {status:r.status,params:r.params,binding:b?{pattern:b.pattern,file:b.file,line:b.line}:null};}));
 });
 app.get('/api/dictionary/tree',async(_req,res)=>{
  const i=await ensure();const tree=new Map<string,{page:string;section:string;fields:Set<string>}>();

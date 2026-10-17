@@ -2,8 +2,8 @@ import { Parser, AstBuilder, GherkinClassicTokenMatcher } from '@cucumber/gherki
 import { IdGenerator } from '@cucumber/messages';
 import { linter, type Diagnostic } from '@codemirror/lint';
 import { autocompletion, snippetCompletion, type CompletionContext, type CompletionResult, type Completion } from '@codemirror/autocomplete';
-import { hoverTooltip, keymap, EditorView } from '@codemirror/view';
-import { EditorState, type Extension } from '@codemirror/state';
+import { hoverTooltip, keymap, EditorView, Decoration, type DecorationSet } from '@codemirror/view';
+import { EditorState, StateEffect, StateField, type Extension } from '@codemirror/state';
 import { StreamLanguage } from '@codemirror/language';
 import { gherkin } from '@codemirror/legacy-modes/mode/gherkin';
 import type { Binding } from '../types';
@@ -22,18 +22,27 @@ const api = async <T>(url: string, body?: unknown): Promise<T> => {
 
 /** Step lines with their resolved primary keyword (And/But inherit), skipping doc strings. */
 export function stepLines(doc: string) {
-  const out: { line: number; from: number; keyword: string; resolved: string; text: string; textFrom: number }[] = [];
+  const out: { line: number; from: number; keyword: string; resolved: string; text: string; textFrom: number; tags: string[]; feature: string; scenario: string }[] = [];
   let last = 'Given', offset = 0, inDoc = false, outline = false;
+  // Context for scoped bindings: feature / scenario names and the tags that apply (feature + scenario tags).
+  let pending: string[] = [], featureTags: string[] = [], scenarioTags: string[] = [], feature = '', scenario = '';
   for (const [i, raw] of doc.split('\n').entries()) {
     const t = raw.trim();
     if (t.startsWith('"""') || t.startsWith('```')) inDoc = !inDoc;
     else if (!inDoc) {
+      if (t.startsWith('@')) pending.push(...(t.match(/@[^\s@]+/g) ?? []));
+      const header = /^(Feature|Scenario Outline|Scenario Template|Scenario|Example|Background|Rule):\s*(.*)$/.exec(t);
+      if (header) {
+        if (header[1] === 'Feature') { feature = header[2].trim(); featureTags = pending; }
+        else if (header[1] !== 'Rule') { scenario = header[1] === 'Background' ? '' : header[2].trim(); scenarioTags = header[1] === 'Background' ? [] : pending; }
+        pending = [];
+      }
       if (/^(Scenario|Background|Example|Rule|Feature)\b/.test(t)) { last = 'Given'; outline = /^Scenario (Outline|Template)/.test(t); }
       const m = STEP.exec(raw);
       if (m) {
         const resolved = ['Given', 'When', 'Then'].includes(m[2]) ? m[2] : last;
         last = resolved;
-        if (!(outline && /<[^>]+>/.test(m[4]))) out.push({ line: i + 1, from: offset, keyword: m[2], resolved, text: m[4].trimEnd(), textFrom: offset + m[1].length + m[2].length + m[3].length });
+        if (!(outline && /<[^>]+>/.test(m[4]))) out.push({ line: i + 1, from: offset, keyword: m[2], resolved, text: m[4].trimEnd(), textFrom: offset + m[1].length + m[2].length + m[3].length, tags: [...featureTags, ...scenarioTags], feature, scenario });
       }
     }
     offset += raw.length + 1;
@@ -61,13 +70,37 @@ export const gherkinSyntaxLinter = linter(
   { delay: 300 },
 );
 
+const setStepMarks = StateEffect.define<DecorationSet>();
+const UNBOUND = Decoration.mark({ class: 'cm-step-unbound' });
+const BOUND = Decoration.mark({ class: 'cm-step-bound' });
+const PARAM = Decoration.mark({ class: 'cm-step-param' });
+/** Bound / unbound / parameter marks from the last binding check (kept in place while typing). */
+export const stepMarks = StateField.define<DecorationSet>({
+  create: () => Decoration.none,
+  update(v, tr) { for (const e of tr.effects) if (e.is(setStepMarks)) return e.value; return v.map(tr.changes); },
+  provide: (f) => EditorView.decorations.from(f),
+});
+
 /** 2. Steps with no binding, or ambiguous bindings, flagged against the repository index. */
 export const bindingLinter = linter(
   async (view) => {
-    const lines = stepLines(view.state.doc.toString()).slice(0, 100);
-    if (!lines.length) return [];
+    const doc = view.state.doc;
+    const lines = stepLines(doc.toString()).slice(0, 300);
+    if (!lines.length) { queueMicrotask(() => view.dispatch({ effects: setStepMarks.of(Decoration.none) })); return []; }
     try {
-      const res = await api<{ status: string; binding: { pattern: string; file: string; line: number } | null }[]>('/steps/match', { steps: lines.map((l) => ({ keyword: l.resolved, text: l.text })) });
+      const res = await api<{ status: string; params: [number, number][]; binding: { pattern: string; file: string; line: number } | null }[]>('/steps/match', { steps: lines.map((l) => ({ keyword: l.resolved, text: l.text, tags: l.tags, feature: l.feature, scenario: l.scenario })) });
+      // Highlighting like Reqnroll's extension: unbound steps, bound steps, and the parameters of bound steps.
+      if (view.state.doc === doc) {
+        const marks = lines.flatMap((l, i) => {
+          const r = res[i];
+          if (!r || !l.text) return [];
+          const to = l.textFrom + l.text.length;
+          if (r.status === 'Unmatched') return [UNBOUND.range(l.textFrom, to)];
+          if (r.status !== 'Matched') return [];
+          return [BOUND.range(l.textFrom, to), ...(r.params ?? []).map(([a, b]) => PARAM.range(l.textFrom + a, l.textFrom + Math.min(b, l.text.length)))];
+        });
+        queueMicrotask(() => { if (view.state.doc === doc) view.dispatch({ effects: setStepMarks.of(Decoration.set(marks, true)) }); });
+      }
       return lines.flatMap((l, i): Diagnostic[] => {
         const r = res[i];
         if (!r || r.status === 'Matched') return [];
@@ -336,6 +369,7 @@ export function gherkinExtensions(opts: { onSave?: () => void; onValidate?: () =
     EditorState.languageData.of(() => [{ commentTokens: { line: '#' } }]),
     gherkinSyntaxLinter,
     bindingLinter,
+    stepMarks,
     duplicateStepLinter,
     smellLinter,
     autocompletion({ override: [gherkinCompletions], activateOnTyping: true, maxRenderedOptions: 12, icons: true }),
@@ -356,6 +390,7 @@ export function scenarioExtensions(label: string): Extension[] {
     StreamLanguage.define(gherkin),
     EditorState.languageData.of(() => [{ commentTokens: { line: '#' } }]),
     bindingLinter,
+    stepMarks,
     duplicateStepLinter,
     autocompletion({ override: [gherkinCompletions], activateOnTyping: true, maxRenderedOptions: 10 }),
     stepHover,

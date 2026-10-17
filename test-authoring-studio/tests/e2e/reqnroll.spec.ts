@@ -115,3 +115,13 @@ test('Find Unused Step Definitions lists bindings no feature uses and opens them
   await list.getByRole('button', { name: /nobody calls this anymore/ }).click();
   await expect(page.locator('.editor-tab-label[aria-current="true"]')).toHaveAttribute('title', 'Steps/Unused.cs');
 });
+
+test('Highlighting like the Reqnroll extension: unbound steps, bound steps and their parameters', async ({ page }) => {
+  await openFeature(page, 'Login.feature');
+  const src = page.getByLabel('Gherkin source');
+  await expect(src.locator('.cm-step-param', { hasText: 'test-user' })).toBeVisible({ timeout: 15_000 });
+  await expect(src.locator('.cm-step-bound').first()).toBeVisible();
+  await expect(src.locator('.cm-step-unbound')).toHaveCount(0);
+  await page.getByRole('navigation').getByRole('button', { name: 'Cart.feature', exact: true }).first().click();
+  await expect(src.locator('.cm-step-unbound', { hasText: 'a cart with 2 items' })).toBeVisible({ timeout: 15_000 });
+});
