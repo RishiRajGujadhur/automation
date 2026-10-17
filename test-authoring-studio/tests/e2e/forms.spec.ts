@@ -9,7 +9,7 @@ test('studio context menu and Formik validation guard every form', async ({ page
   // Right-click empty page space → studio menu with secondary pages.
   await page.locator('.page-heading').click({ button: 'right' });
   await expect(page.getByRole('menu', { name: 'Studio menu' })).toBeVisible();
-  await page.getByRole('menuitem', { name: 'Selectors' }).click();
+  await page.getByRole('menuitem', { name: 'Selectors', exact: true }).click();
   await expect(page.getByRole('heading', { name: 'Selectors', level: 1 })).toBeVisible();
 
   // Record dialog: invalid URL blocks launch with a clear message.
