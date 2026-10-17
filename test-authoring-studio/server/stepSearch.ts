@@ -1,7 +1,7 @@
 import { Worker } from 'node:worker_threads';
 import type { Binding, DictionaryEntry, Selector } from '../src/types.js';
 type Background = { name: string; file: string; line: number; steps: { keyword: string; text: string }[] };
-type Collection<T> = { items: T[]; facet: (item: T) => string; text: (item: T) => string };
+type Collection<T> = { items: T[]; facet: (item: T) => string | string[]; text: (item: T) => string };
 /** One worker thread hosting FlexSearch indexes for every searchable collection of a scan. */
 export class WorkspaceSearch {
   private worker = new Worker(new URL('./search-worker.mjs', import.meta.url));
@@ -23,7 +23,7 @@ export class WorkspaceSearch {
       this.pending.clear();
     });
     this.ready = Promise.all([
-      this.add('steps', { items: sets.steps, facet: (b) => b.keyword, text: (b) => [b.pattern, b.className, b.method, b.file, ...b.parameters.map((p) => p.name), ...b.examples].join(' ') }),
+      this.add('steps', { items: sets.steps, facet: (b) => (b.keyword === 'StepDefinition' ? ['Given', 'When', 'Then'] : b.keyword), text: (b) => [b.pattern, b.className, b.method, b.file, ...b.parameters.map((p) => p.name), ...b.examples].join(' ') }),
       this.add('selectors', { items: sets.selectors, facet: (s) => s.type, text: (s) => [s.owner, s.member, s.type, s.value, s.file].join(' ') }),
       this.add('dictionaries', { items: sets.dictionaries, facet: () => '', text: (e) => [e.page, e.section, e.field, e.fieldType, e.file, ...e.selectors.map((s) => s.value)].join(' ') }),
       this.add('backgrounds', { items: sets.backgrounds, facet: () => '', text: (b) => [b.name, b.file, ...b.steps.map((s) => s.text)].join(' ') }),

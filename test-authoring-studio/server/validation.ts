@@ -1,7 +1,7 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import type { Config } from './core.js';
-import { bindingMatches, relative } from './core.js';
+import { bindingMatches, keywordMatches, relative } from './core.js';
 import { findEntry, selectorRank, normalizeXRef } from './dictionaries.js';
 import type { Index, DictionaryEntry } from '../src/types.js';
 
@@ -72,7 +72,7 @@ export async function validate(input: ValidationInput, index: Index, config: Con
     let first: { file: string; line: number } | undefined;
     for (const s of input.steps) {
       if (['Given', 'When', 'Then'].includes(s.keyword)) keyword = s.keyword;
-      const hit = index.stepDefinitions.filter((b) => b.keyword === keyword && bindingMatches(b, s.text));
+      const hit = index.stepDefinitions.filter((b) => keywordMatches(b, keyword) && bindingMatches(b, s.text));
       if (!hit.length) missing.push(`${keyword} ${s.text}`);
       else if (hit.length > 1) missing.push(`${keyword} ${s.text} (ambiguous: ${hit.length} bindings)`);
       else first ??= hit[0];

@@ -12,7 +12,7 @@ parentPort.on('message', ({id,kind,collection='steps',documents,query='',facet='
    const facets=new Map();
    const bucket=key=>{if(!facets.has(key))facets.set(key,{index:new Index({tokenize:'forward',cache:100,resolution:9}),order:[]});return facets.get(key);};
    bucket('');
-   for(const doc of documents) for(const key of new Set(['',doc.facet??''])) { const b=bucket(key);b.index.add(doc.id,normalize(doc.text));b.order.push(doc.id); }
+   for(const doc of documents) for(const key of new Set(['',...[doc.facet??''].flat()])) { const b=bucket(key);b.index.add(doc.id,normalize(doc.text));b.order.push(doc.id); }
    collections.set(collection,facets);
    parentPort.postMessage({id,result:true});return;
   }

@@ -4,31 +4,53 @@ using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using System.Text.RegularExpressions;
 // Cucumber expressions (SpecFlow 4 / Reqnroll) are converted to regex; classic regex patterns pass through.
-static bool IsCucumber(string p) => !p.StartsWith("^") && !p.EndsWith("$") && Regex.IsMatch(p, @"\{[A-Za-z]*\}");
-static string ToRegex(string p)
+// Detection follows Reqnroll: ^…$ → regex; {placeholders} → Cucumber; regex syntax (.*, \d, [..], quantifiers) → regex;
+// anything else (plain text, optional "(s)", alternatives "a/b") → Cucumber. ExpressionType on the attribute wins.
+static bool IsCucumber(string p)
 {
-    if (!IsCucumber(p)) return p;
-    var parts = Regex.Split(p, @"(\{[A-Za-z]*\}|\([^()]*\))");
-    return string.Concat(parts.Select(x => x switch
-    {
-        "{int}" => @"(-?\d+)",
-        "{float}" or "{double}" or "{decimal}" => @"(-?\d*\.?\d+)",
-        "{word}" => @"([^\s]+)",
-        "{string}" => "(?:\"([^\"]*)\"|'([^']*)')",
-        _ when Regex.IsMatch(x, @"^\{[A-Za-z]*\}$") => "(.*)",
-        _ when x.StartsWith("(") && x.EndsWith(")") => "(?:" + Regex.Escape(x[1..^1]) + ")?",
-        _ => Regex.Escape(x),
-    }));
+    if (p.StartsWith("^") || p.EndsWith("$")) return false;
+    if (Regex.IsMatch(p, @"\{[A-Za-z_][\w.]*\}|\{\}")) return true;
+    if (Regex.IsMatch(p, @"\\[dDwWsSbB.()\[\]{}|*+?^$/]|\(\.\*\)|\(\.\+\)|[\[\]]|\([^()]*[*+?|][^()]*\)|[*+?]\)|\(\?")) return false;
+    return true;
 }
-static bool InScope(JsonElement binding, JsonElement step)
+static string ToRegex(string p, bool cucumber)
 {
-    if (!binding.TryGetProperty("scopes", out var scopes) || scopes.GetArrayLength() == 0) return true;
+    if (!cucumber) return p;
+    var sb = new System.Text.StringBuilder();
+    // Tokens: escaped char, {param}, (optional), word/word alternatives, other text.
+    foreach (Match t in Regex.Matches(p, @"\\.|\{[^{}]*\}|\([^()]*\)|[^\s/{}()\\]+(?:/[^\s/{}()\\]+)+|[\s\S]"))
+    {
+        var x = t.Value;
+        sb.Append(x switch
+        {
+            _ when x.Length == 2 && x[0] == '\\' => Regex.Escape(x[1].ToString()),
+            "{int}" or "{long}" or "{byte}" or "{short}" or "{sbyte}" or "{biginteger}" => @"(-?\d+)",
+            "{float}" or "{double}" or "{decimal}" => @"(-?\d*[.,]?\d+(?:[eE][-+]?\d+)?)",
+            "{word}" => @"([^\s]+)",
+            "{string}" => "(?:\"([^\"]*)\"|'([^']*)')",
+            _ when x.StartsWith("{") => "(.*)",
+            _ when x.StartsWith("(") => "(?:" + Regex.Escape(x[1..^1]) + ")?",
+            _ when x.Contains('/') => "(?:" + string.Join("|", x.Split('/').Select(Regex.Escape)) + ")",
+            _ => Regex.Escape(x),
+        });
+    }
+    return sb.ToString();
+}
+// How specific a binding's scope is for this step (Reqnroll: scoped beats unscoped; more restrictions win). -1 = out of scope.
+static int ScopeRank(JsonElement binding, JsonElement step)
+{
+    if (!binding.TryGetProperty("scopes", out var scopes) || scopes.GetArrayLength() == 0) return 0;
     var tags = step.TryGetProperty("tags", out var t) ? t.EnumerateArray().Select(x => x.GetString()!.TrimStart('@')).ToHashSet() : new HashSet<string>();
     string Prop(JsonElement e, string n) => e.TryGetProperty(n, out var v) && v.ValueKind == JsonValueKind.String ? v.GetString()! : "";
-    return scopes.EnumerateArray().Any(s =>
-        (Prop(s, "tag") == "" || tags.Contains(Prop(s, "tag").TrimStart('@'))) &&
-        (Prop(s, "feature") == "" || Prop(s, "feature") == Prop(step, "feature")) &&
-        (Prop(s, "scenario") == "" || Prop(s, "scenario") == Prop(step, "scenario")));
+    var best = -1;
+    foreach (var s in scopes.EnumerateArray())
+    {
+        var ok = (Prop(s, "tag") == "" || tags.Contains(Prop(s, "tag").TrimStart('@'))) &&
+            (Prop(s, "feature") == "" || Prop(s, "feature") == Prop(step, "feature")) &&
+            (Prop(s, "scenario") == "" || Prop(s, "scenario") == Prop(step, "scenario"));
+        if (ok) best = Math.Max(best, new[] { "tag", "feature", "scenario" }.Count(n => Prop(s, n) != ""));
+    }
+    return best;
 }
 if (args.Contains("--match"))
 {
@@ -37,21 +59,28 @@ if (args.Contains("--match"))
     var results = new List<object>(); var diagnostics = new HashSet<string>();
     foreach (var step in document.RootElement.GetProperty("steps").EnumerateArray())
     {
-        var candidates = new List<string>();
+        var matched = new List<(string Id, int Rank)>();
         foreach (var binding in definitions)
         {
-            if (binding.GetProperty("keyword").GetString() != step.GetProperty("keyword").GetString()) continue;
-            if (!InScope(binding, step)) continue;
+            var kw = binding.GetProperty("keyword").GetString();
+            if (kw != "StepDefinition" && kw != step.GetProperty("keyword").GetString()) continue;
+            var rank = ScopeRank(binding, step);
+            if (rank < 0) continue;
             try
             {
-                var pattern = ToRegex(binding.GetProperty("pattern").GetString()!);
+                var raw = binding.GetProperty("pattern").GetString()!;
+                var cucumber = binding.TryGetProperty("expression", out var ex) ? ex.GetString() == "Cucumber" : IsCucumber(raw);
+                var pattern = ToRegex(raw, cucumber);
                 // Keep leading .NET inline option groups at the beginning of the expression.
                 var options = Regex.Match(pattern, @"^\(\?[imsnx-]+\)");
                 var expression = options.Value + "\\A(?:" + pattern[options.Length..] + ")\\z";
-                if (Regex.IsMatch(step.GetProperty("text").GetString()!, expression, RegexOptions.CultureInvariant, TimeSpan.FromMilliseconds(100))) candidates.Add(binding.GetProperty("id").GetString()!);
+                if (Regex.IsMatch(step.GetProperty("text").GetString()!, expression, RegexOptions.CultureInvariant, TimeSpan.FromMilliseconds(100))) matched.Add((binding.GetProperty("id").GetString()!, rank));
             }
             catch (Exception e) when (e is ArgumentException || e is RegexMatchTimeoutException) { diagnostics.Add(binding.GetProperty("id").GetString() + ": " + e.GetType().Name); }
         }
+        // Scoped bindings win over unscoped ones; among scoped, the most specific scope wins (ties stay ambiguous).
+        var top = matched.Count == 0 ? 0 : matched.Max(m => m.Rank);
+        var candidates = matched.Where(m => m.Rank == top).Select(m => m.Id).Distinct().ToList();
         results.Add(new { candidates, status = candidates.Count == 1 ? "Matched" : candidates.Count > 1 ? "Ambiguous" : "Unmatched" });
     }
     Console.Write(JsonSerializer.Serialize(new { results, diagnostics })); return;
@@ -86,12 +115,13 @@ if (args.Contains("--diagnostics"))
                 Add(attribute.GetLocation(), "warning", "TAS002", $"Duplicate [{name}] pattern; the same pattern is bound on line {firstLine}. SpecFlow reports this step as ambiguous.");
             else seen[key] = attribute.GetLocation().GetLineSpan().StartLinePosition.Line + 1;
             int groups;
-            try { groups = new Regex(ToRegex(pattern)).GetGroupNumbers().Length - 1; }
+            var cuke = IsCucumber(pattern);
+            try { groups = new Regex(ToRegex(pattern, cuke)).GetGroupNumbers().Length - 1; }
             catch (ArgumentException e) { Add(literal.GetLocation(), "error", "TAS003", "Invalid step pattern: " + e.Message); continue; }
-            if (IsCucumber(pattern)) groups = Regex.Matches(pattern, @"\{[A-Za-z]*\}").Count; // {string} expands to two alternatives
+            if (cuke) groups = Regex.Matches(pattern, @"(?<!\\)\{[^{}]*\}").Count; // {string} expands to two alternatives
             var parameters = method.ParameterList.Parameters;
             // A trailing Table or DocString argument is allowed on top of the pattern's captures.
-            var extra = parameters.Count > 0 && parameters.Last().Type?.ToString() is "Table" or "string" && parameters.Count == groups + 1 ? 1 : 0;
+            var extra = parameters.Count > 0 && parameters.Last().Type?.ToString() is "Table" or "DataTable" or "string" && parameters.Count == groups + 1 ? 1 : 0;
             if (parameters.Count - extra != groups)
                 Add(method.ParameterList.GetLocation(), "error", "TAS001", $"The pattern has {groups} placeholder{(groups == 1 ? "" : "s")} but the method takes {parameters.Count} parameter{(parameters.Count == 1 ? "" : "s")}.");
         }
@@ -121,11 +151,14 @@ foreach (var tree in trees)
         foreach (var a in m.AttributeLists.SelectMany(x => x.Attributes))
         {
             var keyword = a.Name.ToString().Split('.').Last().Replace("Attribute", "");
-            if (!new[] { "Given", "When", "Then" }.Contains(keyword)) continue;
+            if (!new[] { "Given", "When", "Then", "StepDefinition" }.Contains(keyword)) continue;
             var expr = a.ArgumentList?.Arguments.FirstOrDefault()?.Expression;
             var value = expr is null ? default : model.GetConstantValue(expr);
             if (!value.HasValue || value.Value is not string pattern) continue;
-            bindings.Add(new { id = id + ":" + Line(a) + ":" + keyword, keyword, pattern, expression = IsCucumber(pattern) ? "Cucumber" : "Regex", scopes = Scopes(m.AttributeLists).Concat(Scopes((m.Parent as ClassDeclarationSyntax)?.AttributeLists ?? default)).ToArray(), className = owner, method = id, parameters = m.ParameterList.Parameters.Select(p => new { name = p.Identifier.Text, type = p.Type?.ToString() ?? "unknown" }), file = tree.FilePath, line = Line(a) });
+            // ExpressionType = ExpressionType.CucumberExpression / RegularExpression overrides detection.
+            var et = a.ArgumentList?.Arguments.FirstOrDefault(x => x.NameEquals?.Name.Identifier.Text == "ExpressionType")?.Expression.ToString() ?? "";
+            var cucumberExpr = et.EndsWith("CucumberExpression") ? true : et.EndsWith("RegularExpression") ? false : IsCucumber(pattern);
+            bindings.Add(new { id = id + ":" + Line(a) + ":" + keyword, keyword, pattern, expression = cucumberExpr ? "Cucumber" : "Regex", scopes = Scopes(m.AttributeLists).Concat(Scopes((m.Parent as ClassDeclarationSyntax)?.AttributeLists ?? default)).ToArray(), className = owner, method = id, parameters = m.ParameterList.Parameters.Select(p => new { name = p.Identifier.Text, type = p.Type?.ToString() ?? "unknown" }), file = tree.FilePath, line = Line(a) });
         }
         foreach (var inv in m.DescendantNodes().OfType<InvocationExpressionSyntax>())
         {

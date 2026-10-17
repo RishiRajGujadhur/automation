@@ -111,33 +111,34 @@ export function command(
   });
 }
 const escapeRegex = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-export const isCucumberExpression = (p: string) =>
-  !p.startsWith('^') && !p.endsWith('$') && /\{[A-Za-z]*\}/.test(p);
-/** Mirrors scanner ToRegex: Cucumber expressions become regex, classic patterns pass through. */
-export function expressionToRegex(p: string) {
-  if (!isCucumberExpression(p)) return p;
-  return p
-    .split(/(\{[A-Za-z]*\}|\([^()]*\))/)
-    .map((x) =>
-      x === '{int}'
-        ? '(-?\\d+)'
-        : ['{float}', '{double}', '{decimal}'].includes(x)
-          ? '(-?\\d*\\.?\\d+)'
-          : x === '{word}'
-            ? '([^\\s]+)'
-            : x === '{string}'
-              ? `(?:"([^"]*)"|'([^']*)')`
-              : /^\{[A-Za-z]*\}$/.test(x)
-                ? '(.*)'
-                : x.startsWith('(') && x.endsWith(')')
-                  ? `(?:${escapeRegex(x.slice(1, -1))})?`
-                  : escapeRegex(x),
-    )
-    .join('');
+/** Reqnroll's detection (mirrors scanner IsCucumber): ^…$ → regex; {placeholders} → Cucumber; regex syntax → regex; else Cucumber. */
+export function isCucumberExpression(p: string) {
+  if (p.startsWith('^') || p.endsWith('$')) return false;
+  if (/\{[A-Za-z_][\w.]*\}|\{\}/.test(p)) return true;
+  if (/\\[dDwWsSbB.()[\]{}|*+?^$/]|\(\.\*\)|\(\.\+\)|[\[\]]|\([^()]*[*+?|][^()]*\)|[*+?]\)|\(\?/.test(p)) return false;
+  return true;
 }
+/** Mirrors scanner ToRegex: Cucumber expressions (parameters, optional text, alternatives, escapes) become regex. */
+export function expressionToRegex(p: string, cucumber = isCucumberExpression(p)) {
+  if (!cucumber) return p;
+  const tokens = p.match(/\\.|\{[^{}]*\}|\([^()]*\)|[^\s/{}()\\]+(?:\/[^\s/{}()\\]+)+|[\s\S]/g) ?? [];
+  return tokens.map((x) => {
+    if (x.length === 2 && x[0] === '\\') return escapeRegex(x[1]);
+    if (['{int}', '{long}', '{byte}', '{short}', '{sbyte}', '{biginteger}'].includes(x)) return '(-?\\d+)';
+    if (['{float}', '{double}', '{decimal}'].includes(x)) return '(-?\\d*[.,]?\\d+(?:[eE][-+]?\\d+)?)';
+    if (x === '{word}') return '([^\\s]+)';
+    if (x === '{string}') return `(?:"([^"]*)"|'([^']*)')`;
+    if (x.startsWith('{')) return '(.*)';
+    if (x.startsWith('(')) return `(?:${escapeRegex(x.slice(1, -1))})?`;
+    if (x.includes('/')) return `(?:${x.split('/').map(escapeRegex).join('|')})`;
+    return escapeRegex(x);
+  }).join('');
+}
+/** [StepDefinition] binds steps of any keyword. */
+export const keywordMatches = (binding: Binding, keyword: string) => binding.keyword === keyword || binding.keyword === 'StepDefinition';
 export function bindingMatches(binding: Binding, text: string) {
   try {
-    return new RegExp(`^(?:${expressionToRegex(binding.pattern)})$`).test(text);
+    return new RegExp(`^(?:${expressionToRegex(binding.pattern, binding.expression ? binding.expression === 'Cucumber' : undefined)})$`).test(text);
   } catch {
     return false;
   }
@@ -146,7 +147,7 @@ export function classify(steps: Step[], bindings: Binding[]) {
   let keyword = 'Given';
   return steps.map((s) => {
     if (['Given', 'When', 'Then'].includes(s.keyword.trim())) keyword = s.keyword.trim();
-    const candidates = bindings.filter((b) => b.keyword === keyword && bindingMatches(b, s.text));
+    const candidates = bindings.filter((b) => keywordMatches(b, keyword) && bindingMatches(b, s.text));
     return {
       ...s,
       candidates: candidates.map((b) => b.id),
