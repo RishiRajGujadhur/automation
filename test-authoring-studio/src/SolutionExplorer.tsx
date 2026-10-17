@@ -386,7 +386,7 @@ export default function SolutionExplorer({ features, revision, activeFile, query
         {query && <button className="icon-button" aria-label="Clear search" onClick={() => onQuery('')}><X size={13} /></button>}
       </label>
       <div className="explorer-summary" role="status">
-        {pendingOnly ? `${files.length} file${files.length === 1 ? '' : 's'} with unsaved changes` : query.trim() ? `${files.length} matching files` : `${features.length} feature files · ${files.length} files`}
+        {pendingOnly ? `${files.length} file${files.length === 1 ? '' : 's'} with unsaved changes` : query.trim() ? `${files.length} matching file${files.length === 1 ? '' : 's'}` : `${features.length} feature file${features.length === 1 ? '' : 's'} · ${files.length} file${files.length === 1 ? '' : 's'}`}
       </div>
       <nav className="folder-tree se-tree" ref={tree} aria-label="Solution">
         <ul className="folder-children">

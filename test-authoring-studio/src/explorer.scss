@@ -224,6 +224,11 @@
     overflow: hidden;
     text-overflow: ellipsis;
   }
+  .se-solution > span {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
   .se-leaf {
     color: var(--text-muted);
     font-size: 12px;

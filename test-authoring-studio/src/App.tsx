@@ -2070,7 +2070,7 @@ export default function App() {
           <StatusBarItems repository={config?.repositoryRoot} onGit={showGit} onErrors={() => { setTab('Features'); if (view !== 'code' && view !== 'editor') setView('editor'); setBuildOpen(true); try { localStorage.setItem('tas:buildTab', '"errors"'); } catch { /* storage blocked */ } }} />
           <button onClick={() => setModal('diagnostics')}>
             <TriangleAlert size={12} />
-            {index?.diagnostics.length ?? 0} diagnostics
+            {index?.diagnostics.length ?? 0} diagnostic{(index?.diagnostics.length ?? 0) === 1 ? '' : 's'}
           </button>
         </span>
       </footer>
