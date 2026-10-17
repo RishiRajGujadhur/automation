@@ -139,3 +139,14 @@ test('Format Document follows the Gherkin settings in .editorconfig (Reqnroll)',
   expect(await line(4)).toBe('      |  name  |  price  |');
   expect(await line(5)).toBe('      |  Pen   |   1.50  |'); // numbers right-aligned (Reqnroll default)
 });
+
+test('Scenario Outline: a placeholder missing from Examples is an error in the editor', async ({ page }) => {
+  await openFeature(page, 'Cart.feature');
+  const src = page.getByLabel('Gherkin source');
+  await expect(src.locator('.cm-lintRange-error')).toHaveCount(0);
+  await src.locator('.cm-line', { hasText: 'Given a customer of type <type>' }).click();
+  await page.keyboard.press('End');
+  await page.keyboard.press('Enter');
+  await page.keyboard.type('And the discount is <rate>');
+  await expect(src.locator('.cm-lintRange-error', { hasText: '<rate>' })).toBeVisible({ timeout: 10_000 });
+});

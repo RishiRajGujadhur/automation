@@ -51,6 +51,52 @@ export function stepLines(doc: string) {
   return out;
 }
 
+type Loc = { line: number; column?: number };
+type OutlineStep = { location: Loc; text: string; dataTable?: { rows: { cells: { value: string; location: Loc }[] }[] }; docString?: { content: string; location: Loc } };
+type OutlineExamples = { location: Loc; keyword: string; tableHeader?: { cells: { value: string; location: Loc }[] } };
+/**
+ * Scenario Outline checks (Reqnroll): a <placeholder> in a step, table or doc string that no Examples table defines
+ * (error), an Examples column no step uses (warning), and an outline without Examples (warning).
+ */
+export function outlineProblems(src: string): { line: number; column: number; length: number; severity: 'error' | 'warning'; message: string }[] {
+  let doc: { feature?: { children: { scenario?: { keyword: string; name: string; location: Loc; steps: OutlineStep[]; examples: OutlineExamples[] }; rule?: { children: { scenario?: unknown }[] } }[] } };
+  try { doc = new Parser(new AstBuilder(IdGenerator.incrementing()), new GherkinClassicTokenMatcher()).parse(src) as never; } catch { return []; }
+  const scenarios = (doc.feature?.children ?? []).flatMap((c) => [c.scenario, ...((c.rule?.children ?? []).map((r) => r.scenario))]).filter(Boolean) as { keyword: string; name: string; location: Loc; steps: OutlineStep[]; examples: OutlineExamples[] }[];
+  const out: ReturnType<typeof outlineProblems> = [];
+  const lines = src.split('\n');
+  const find = (line: number, text: string) => { const i = (lines[line - 1] ?? '').indexOf(text); return i >= 0 ? i + 1 : 1; };
+  for (const sc of scenarios) {
+    const outline = /Outline|Template/.test(sc.keyword) || sc.examples.length > 0;
+    if (!outline) continue;
+    if (!sc.examples.length) { out.push({ line: sc.location.line, column: sc.location.column ?? 1, length: sc.keyword.length, severity: 'warning', message: `${sc.keyword} "${sc.name}" has no Examples: it never runs.` }); continue; }
+    const columns = new Set(sc.examples.flatMap((e) => (e.tableHeader?.cells ?? []).map((c) => c.value)));
+    const used = new Set<string>();
+    const check = (text: string, line: number) => {
+      for (const m of text.matchAll(/<([^<>\n]+)>/g)) {
+        used.add(m[1]);
+        if (!columns.has(m[1])) out.push({ line, column: find(line, m[0]), length: m[0].length, severity: 'error', message: `<${m[1]}> is not a column of the Examples (${[...columns].map((c) => `<${c}>`).join(', ') || 'none'}).` });
+      }
+    };
+    for (const st of sc.steps) {
+      check(st.text, st.location.line);
+      for (const row of st.dataTable?.rows ?? []) for (const c of row.cells) check(c.value, c.location.line);
+      if (st.docString) st.docString.content.split('\n').forEach((t, k) => check(t, st.docString!.location.line + 1 + k));
+    }
+    for (const e of sc.examples) for (const c of e.tableHeader?.cells ?? []) {
+      if (!used.has(c.value)) out.push({ line: c.location.line, column: find(c.location.line, c.value), length: c.value.length, severity: 'warning', message: `Examples column "${c.value}" is not used by any step of "${sc.name}".` });
+    }
+  }
+  return out;
+}
+export const outlineLinter = linter(
+  (view) => outlineProblems(view.state.doc.toString()).map((p) => {
+    const line = view.state.doc.line(Math.min(p.line, view.state.doc.lines));
+    const from = Math.min(line.to, line.from + p.column - 1);
+    return { from, to: Math.min(line.to, from + p.length), severity: p.severity, source: 'Scenario Outline', message: p.message } as Diagnostic;
+  }),
+  { delay: 400 },
+);
+
 /** 1. Real-time syntax errors from the official Cucumber Gherkin parser. */
 export const gherkinSyntaxLinter = linter(
   (view) => {
@@ -374,6 +420,7 @@ export function gherkinExtensions(opts: { onSave?: () => void; onValidate?: () =
     StreamLanguage.define(gherkin),
     EditorState.languageData.of(() => [{ commentTokens: { line: '#' } }]),
     gherkinSyntaxLinter,
+    outlineLinter,
     bindingLinter,
     stepMarks,
     duplicateStepLinter,
