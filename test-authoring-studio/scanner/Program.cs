@@ -131,6 +131,7 @@ if (args.Contains("--diagnostics"))
 var input = JsonSerializer.Deserialize<string[]>(Console.In.ReadToEnd())!;
 var trees = input.Select(f => CSharpSyntaxTree.ParseText(File.ReadAllText(f), path: f)).ToArray();
 var compilation = CSharpCompilation.Create("StaticIndex", trees, new[] { MetadataReference.CreateFromFile(typeof(object).Assembly.Location) });
+var hooks = new List<object>();
 var bindings = new List<object>(); var selectors = new List<object>(); var methods = new List<object>(); var edges = new List<object>();
 foreach (var tree in trees)
 {
@@ -160,6 +161,29 @@ foreach (var tree in trees)
             var cucumberExpr = et.EndsWith("CucumberExpression") ? true : et.EndsWith("RegularExpression") ? false : IsCucumber(pattern);
             bindings.Add(new { id = id + ":" + Line(a) + ":" + keyword, keyword, pattern, expression = cucumberExpr ? "Cucumber" : "Regex", scopes = Scopes(m.AttributeLists).Concat(Scopes((m.Parent as ClassDeclarationSyntax)?.AttributeLists ?? default)).ToArray(), className = owner, method = id, parameters = m.ParameterList.Parameters.Select(p => new { name = p.Identifier.Text, type = p.Type?.ToString() ?? "unknown" }), file = tree.FilePath, line = Line(a) });
         }
+        // Hooks (Reqnroll / SpecFlow): kind, Order, tag filter (positional strings or `tags:`), and [Scope] on method or class.
+        foreach (var a in m.AttributeLists.SelectMany(x => x.Attributes))
+        {
+            var name = a.Name.ToString().Split('.').Last().Replace("Attribute", "");
+            var kind = name switch { "Before" => "BeforeScenario", "After" => "AfterScenario", _ => name };
+            if (kind is not ("BeforeTestRun" or "AfterTestRun" or "BeforeFeature" or "AfterFeature" or "BeforeScenario" or "AfterScenario" or "BeforeScenarioBlock" or "AfterScenarioBlock" or "BeforeStep" or "AfterStep")) continue;
+            var hookArgs = a.ArgumentList?.Arguments ?? default;
+            int? order = null; var tags = new List<string>();
+            foreach (var arg in hookArgs)
+            {
+                var n = arg.NameEquals?.Name.Identifier.Text ?? arg.NameColon?.Name.Identifier.Text;
+                if (n == "Order") { var v = model.GetConstantValue(arg.Expression); if (v.HasValue && v.Value is int o) order = o; continue; }
+                IEnumerable<ExpressionSyntax> items = arg.Expression switch
+                {
+                    ImplicitArrayCreationExpressionSyntax ia => ia.Initializer.Expressions,
+                    ArrayCreationExpressionSyntax ac when ac.Initializer != null => ac.Initializer.Expressions,
+                    CollectionExpressionSyntax ce => ce.Elements.OfType<ExpressionElementSyntax>().Select(e => e.Expression),
+                    _ => new[] { arg.Expression },
+                };
+                foreach (var it in items) { var v = model.GetConstantValue(it); if (v.HasValue && v.Value is string t && t.Length > 0) tags.Add(t.TrimStart('@')); }
+            }
+            hooks.Add(new { kind, order = order ?? 10000, tags, scopes = Scopes(m.AttributeLists).Concat(Scopes((m.Parent as ClassDeclarationSyntax)?.AttributeLists ?? default)).ToArray(), className = owner, method = m.Identifier.Text, file = tree.FilePath, line = Line(m) });
+        }
         foreach (var inv in m.DescendantNodes().OfType<InvocationExpressionSyntax>())
         {
             var resolved = model.GetSymbolInfo(inv).Symbol as IMethodSymbol;
@@ -186,4 +210,4 @@ foreach (var tree in trees)
         selectors.Add(new { id = selectorId, owner = inv.Ancestors().OfType<ClassDeclarationSyntax>().FirstOrDefault()?.Identifier.Text ?? "", member = member is MethodDeclarationSyntax mm ? mm.Identifier.Text : (member as PropertyDeclarationSyntax)?.Identifier.Text ?? "", type = name, value = inv.ToString(), resolution = (constant.HasValue || role) && !dynamicOption ? "Static" : "Unresolved", file = tree.FilePath, line = Line(inv) });
     }
 }
-Console.Write(JsonSerializer.Serialize(new { stepDefinitions = bindings, selectors, methods, callEdges = edges }));
+Console.Write(JsonSerializer.Serialize(new { stepDefinitions = bindings, hooks, selectors, methods, callEdges = edges }));

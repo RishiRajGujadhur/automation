@@ -132,7 +132,7 @@ import {
   PanelBottom,
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
-import type { Index, Feature, Binding, Action, Match } from './types';
+import type { Index, Feature, Binding, Action, Match, Hook } from './types';
 import './tailwind.css';
 import './styles.scss';
 import './explorer.scss';
@@ -305,6 +305,11 @@ export default function App() {
     setModal(undefined);
     setTab('Features');
     setView('editor');
+  };
+  // Go To Hooks (Reqnroll): the hooks that run for the scenario at the cursor, in execution order.
+  const [hooks, setHooks] = useState<{ feature: string | null; scenario: string | null; tags: string[]; hooks: Hook[] }>();
+  const showHooks = async (file: string, line: number) => {
+    try { setHooks(await api(`/hooks?file=${encodeURIComponent(file)}&line=${line}`)); setModal('hooks'); } catch (e) { setNotice((e as Error).message); }
   };
   const openFolder = async () => {
     if (desktop?.pickFolder) {
@@ -1786,6 +1791,7 @@ export default function App() {
                 </div>
               )}
               <GherkinEditor
+                  onHooks={(line) => { if (feature) void showHooks(feature.file, line); }}
                 file={feature?.file}
                 runMarks={feature ? marksFor(feature.file) : undefined}
                 onRunLine={(line, debug) => feature && runLine(feature.file, line, debug)}
@@ -2122,6 +2128,7 @@ export default function App() {
                       goto: 'Go to All',
                       nuget: 'Manage NuGet Packages',
                       'save-recording': 'Save recording',
+                      hooks: 'Go To Hooks',
                       record: 'Record a browser workflow',
                       new: 'Create a feature',
                       parameters: 'Configure step parameters',
@@ -2360,6 +2367,24 @@ export default function App() {
                   </dl>
                 )}
                 {modal === 'shortcuts' && <KeybindingEditor />}
+                {modal === 'hooks' && hooks && (
+                  <div className="hooks-list">
+                    <p className="subtle">{hooks.scenario ? <>Scenario <strong>{hooks.scenario}</strong></> : <>Feature <strong>{hooks.feature}</strong></>}{hooks.tags.length ? <> · tags {hooks.tags.map((t) => `@${t}`).join(' ')}</> : null}</p>
+                    {hooks.hooks.length ? (
+                      <ul aria-label="Hooks">
+                        {hooks.hooks.map((h) => (
+                          <li key={`${h.file}:${h.line}:${h.kind}`}>
+                            <button onClick={() => { setModal(undefined); editFile(h.file, h.line); }}>
+                              <span className="hook-kind">{h.kind}</span>
+                              <span>{h.className}.{h.method}</span>
+                              <small>{h.order !== 10000 ? `Order ${h.order} · ` : ''}{h.tags.length ? `${h.tags.map((t) => `@${t}`).join(' ')} · ` : ''}{h.file}:{h.line}</small>
+                            </button>
+                          </li>
+                        ))}
+                      </ul>
+                    ) : <p className="subtle">No hooks run for this scenario.</p>}
+                  </div>
+                )}
                 {modal === 'save-recording' && (
                   <SaveRecording
                     actions={actions}

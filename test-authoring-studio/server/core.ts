@@ -311,6 +311,7 @@ export async function scan(config: Config): Promise<Index> {
       file: relative(root, s.file),
     })),
     methods: raw.methods.map((m: any) => ({ ...m, file: relative(root, m.file) })),
+    hooks: (raw.hooks ?? []).map((h: any) => ({ ...h, file: relative(root, h.file) })),
     callEdges: raw.callEdges.map((e: any) => ({
       ...e,
       to: e.to.startsWith(root) ? relative(root, e.to) : e.to,

@@ -657,6 +657,25 @@ app.post('/api/recording/dictionary-proposal',async(req,res)=>{
  * Save recording: one preview for the feature file (new, or the scenario appended to an existing one) and the
  * dictionary entries for the same actions. Nothing is written until each preview is approved (/api/generation/apply).
  */
+// Go To Hooks (Reqnroll): the hooks that run for the scenario at a feature line, in execution order.
+const HOOK_ORDER=['BeforeTestRun','BeforeFeature','BeforeScenario','BeforeScenarioBlock','BeforeStep','AfterStep','AfterScenarioBlock','AfterScenario','AfterFeature','AfterTestRun'];
+app.get('/api/hooks',async(req,res)=>{
+ const {file,line}=z.object({file:z.string().max(400),line:z.coerce.number().int().min(1)}).parse(req.query);
+ const i=await ensure();
+ const feature=i.features.find(f=>f.file===file||f.file===file.replace(/^\.\//,''));
+ const scenario=feature?[...feature.scenarios].filter(s=>s.line<=line).sort((a,b)=>b.line-a.line)[0]:undefined;
+ const exampleTags=((scenario?.examples??[]) as {tags?:{name:string}[]}[]).flatMap(e=>(e.tags??[]).map(t=>t.name));
+ const tags=new Set([...(feature?.tags??[]),...(scenario?.tags??[]),...exampleTags].map(t=>t.replace(/^@/,'')));
+ const inScope=(h:NonNullable<typeof i.hooks>[number])=>!h.scopes.length||h.scopes.some(s=>(!s.tag||tags.has(s.tag.replace(/^@/,'')))&&(!s.feature||s.feature===feature?.name)&&(!s.scenario||s.scenario===scenario?.name));
+ const applies=(h:NonNullable<typeof i.hooks>[number])=>{
+  if(h.kind.endsWith('TestRun'))return true;
+  if(!scenario&&!h.kind.endsWith('Feature'))return false;
+  // Tag filters are OR-ed: at least one of the hook's tags must be on the feature / scenario / examples.
+  return (!h.tags.length||h.tags.some(t=>tags.has(t.replace(/^@/,''))))&&inScope(h);
+ };
+ const hooks=(i.hooks??[]).filter(applies).sort((a,b)=>HOOK_ORDER.indexOf(a.kind)-HOOK_ORDER.indexOf(b.kind)||a.order-b.order||a.file.localeCompare(b.file)||a.line-b.line);
+ res.json({feature:feature?.name??null,scenario:scenario?.name??null,tags:[...tags],hooks});
+});
 app.post('/api/recording/save-preview',async(req,res)=>{
  const b=z.object({
   actions:z.array(actionSchema).min(1).max(500),

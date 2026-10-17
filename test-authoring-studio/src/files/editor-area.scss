@@ -2004,3 +2004,39 @@
     }
   }
 }
+
+// Go To Hooks
+.hooks-list {
+  min-width: min(620px, 90vw);
+  ul {
+    margin: 8px 0 0;
+    padding: 0;
+    list-style: none;
+  }
+  button {
+    display: grid;
+    grid-template-columns: 150px 1fr;
+    gap: 0 10px;
+    width: 100%;
+    padding: 6px 8px;
+    border: 0;
+    border-radius: 3px;
+    background: transparent;
+    color: var(--text);
+    text-align: left;
+    cursor: pointer;
+    &:hover {
+      background: var(--accent-soft, #9270dd22);
+    }
+    small {
+      grid-column: 2;
+      color: var(--text-muted);
+    }
+  }
+  .hook-kind {
+    grid-row: span 2;
+    color: var(--accent, #9270dd);
+    font-family: var(--font-mono, monospace);
+    font-size: 12px;
+  }
+}

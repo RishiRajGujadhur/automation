@@ -18,6 +18,8 @@ export type Step = Source & {
   candidates: string[];
   argument?: unknown;
 };
+/** A Reqnroll / SpecFlow hook (BeforeScenario…), with its tag filter, Order and [Scope]s. */
+export type Hook = Source & { kind: string; order: number; tags: string[]; scopes: { tag: string; feature: string; scenario: string }[]; className: string; method: string };
 export type Feature = Source & {
   name: string;
   source: string;
@@ -34,6 +36,7 @@ export type Selector = Source & {
   resolution: string;
 };
 export type Index = {
+  hooks?: Hook[];
   stats?: { steps:number;selectors:number;features:number;scenarios:number;backgrounds:number;dictionaries:number;methods:number };
   revision?:string;
   scannedAt?:string;
