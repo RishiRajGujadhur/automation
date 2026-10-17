@@ -20,6 +20,7 @@ import {
   resolveStep,
 } from './core.js';
 import { Recorder } from './recorder.js';
+import { Spy } from './spy.js';
 import { proposeCode, proposeDictionaryPageObject } from './proposals.js';
 import { insertMethod, newStepFile } from './stepScaffold.js';
 import { validate } from './validation.js';
@@ -650,6 +651,16 @@ app.post('/api/scenario/validate', async (req, res) => {
   const diagnostics = await matchFeatureBindings([feature], i.stepDefinitions);
   res.json({ ...feature, diagnostics });
 });
+// Spy (GUI object recognition, like Ranorex Spy): track / select elements on a live page, tree, properties, verified selectors.
+const spy = new Spy();
+app.get('/api/spy', (_req, res) => res.json(spy.state()));
+app.post('/api/spy/start', async (req, res) => { await spy.start(z.string().url().parse(req.body.url)); res.json(spy.state()); });
+app.post('/api/spy/stop', async (_req, res) => { await spy.stop(); res.json(spy.state()); });
+app.post('/api/spy/track', async (req, res) => { await spy.track(z.boolean().parse(req.body.on)); res.json(spy.state()); });
+app.get('/api/spy/tree', async (_req, res) => res.json(await spy.tree()));
+app.post('/api/spy/select', async (req, res) => res.json(await spy.select(z.number().int().min(1).parse(req.body.id))));
+app.post('/api/spy/verify', async (req, res) => { const { type, value } = z.object({ type: z.string().max(60), value: z.string().min(1).max(2000) }).parse(req.body); res.json(await spy.verify(type, value)); });
+app.post('/api/spy/screenshot', async (req, res) => res.json({ png: await spy.screenshot(z.number().int().min(1).parse(req.body.id)) }));
 app.get('/api/recording', (_req, res) =>
   res.json({ status: recorder.status, actions: recorder.actions, ...(recorder.cdpPort ? { cdpPort: recorder.cdpPort } : {}) }),
 );
