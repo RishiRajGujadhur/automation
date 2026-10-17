@@ -27,7 +27,7 @@ test('Git Changes: see changes, stage, unstage, discard, commit; history', async
     await page.addInitScript(() => { if (!sessionStorage.getItem('seeded')) { localStorage.setItem('tas:prefs', JSON.stringify({ mode: 'advanced' })); sessionStorage.setItem('seeded', '1'); } });
     await page.goto('/#/features/editor');
     await expect(page.getByText('Repository indexed')).toBeVisible();
-    await page.getByRole('button', { name: 'Git Changes' }).click();
+    await page.getByRole('button', { name: 'Git Changes', exact: true }).click();
     const view = page.getByRole('region', { name: 'Git Changes' });
     await expect(view.getByText('main', { exact: true })).toBeVisible();
     const changes = view.getByRole('region', { name: 'Changes' });
@@ -107,7 +107,7 @@ test('Git branches: New Branch, publish with Push, switch back, Fetch', async ({
     await page.addInitScript(() => { if (!sessionStorage.getItem('seeded')) { localStorage.setItem('tas:prefs', JSON.stringify({ mode: 'advanced' })); sessionStorage.setItem('seeded', '1'); } });
     await page.goto('/#/features/editor');
     await expect(page.getByText('Repository indexed')).toBeVisible();
-    await page.getByRole('button', { name: 'Git Changes' }).click();
+    await page.getByRole('button', { name: 'Git Changes', exact: true }).click();
     const view = page.getByRole('region', { name: 'Git Changes' });
     await view.getByRole('button', { name: 'Branch main' }).click();
     await page.getByRole('menuitem', { name: 'New Branch…' }).click();
