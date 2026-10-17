@@ -19,6 +19,7 @@ export const BINDABLE: { id: DesktopMenuCommand; label: string }[] = [
   { id: 'nuget', label: 'Project ▸ Manage NuGet Packages' },
   { id: 'spy', label: 'Tools ▸ Spy' },
   { id: 'output', label: 'View ▸ Output' },
+  { id: 'todo', label: 'View ▸ TODO' },
   { id: 'open-folder', label: 'File ▸ Open Folder' },
   { id: 'open-solution', label: 'File ▸ Open Project/Solution' },
   { id: 'new-feature', label: 'File ▸ New Feature' },

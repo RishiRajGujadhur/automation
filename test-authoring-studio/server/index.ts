@@ -20,6 +20,7 @@ import {
   bindingMatches,
   resolveStep,
   ignoredDirsFor,
+  extraRootsOf,
 } from './core.js';
 import { Recorder } from './recorder.js';
 import { Spy } from './spy.js';
@@ -273,6 +274,27 @@ app.get('/api/solution',async(_req,res)=>{
 });
 // File ▸ Open ▸ Project/Solution: a .sln/.slnx/.csproj (or a folder) on disk becomes the workspace.
 // Open Project/Solution ▸ browse (web: the browser cannot show native paths): folders and solution / project files.
+// TODO window (Rider): TODO / FIXME / HACK / BUG comments in the solution's sources, features and config.
+app.get('/api/todos', async (_req, res) => {
+  const ignored = new Set(ignoredDirsFor(config));
+  const roots = [config.repositoryRoot, ...extraRootsOf(await fs.realpath(config.repositoryRoot).catch(() => config.repositoryRoot))];
+  const out: { file: string; line: number; column: number; kind: string; text: string }[] = [];
+  const re = /(?:\/\/+|#|<!--|\/\*|^\s*\*)\s*\b(TODO|FIXME|HACK|BUG)\b[:\s-]*(.*?)(?:-->|\*\/)?\s*$/i;
+  const walk = async (dir: string, depth: number) => {
+    if (depth > 20 || out.length >= 2000) return;
+    for (const e of await fs.readdir(dir, { withFileTypes: true }).catch(() => [])) {
+      if (e.name.startsWith('.') || ignored.has(e.name)) continue;
+      const full = path.join(dir, e.name);
+      if (e.isDirectory()) { await walk(full, depth + 1); continue; }
+      if (!/\.(cs|feature|xml|json|config|md|props|targets|csproj|ts|js)$/i.test(e.name)) continue;
+      const text = await fs.readFile(full, 'utf8').catch(() => '');
+      if (text.length > 2_000_000 || !/TODO|FIXME|HACK|BUG/i.test(text)) continue;
+      text.split(/\r?\n/).forEach((l, i) => { const m = re.exec(l); if (m && out.length < 2000) out.push({ file: path.relative(config.repositoryRoot, full).replaceAll('\\', '/'), line: i + 1, column: (m.index ?? 0) + 1, kind: m[1].toUpperCase(), text: m[2].trim() }); });
+    }
+  };
+  for (const r of roots) await walk(r, 0);
+  res.json(out);
+});
 // Output window ▸ Language service.
 app.get('/api/output/language', (_req, res) => res.json({ lines: lang.log }));
 app.get('/api/fs/browse', async (req, res) => {

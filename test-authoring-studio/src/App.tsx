@@ -31,6 +31,7 @@ import SaveRecording from './SaveRecording';
 import DefineSteps from './DefineSteps';
 import SpyView from './SpyView';
 import OutputPanel, { type OutputSource } from './OutputPanel';
+import TodoPanel from './TodoPanel';
 import { studioLog } from './outputLog';
 import RecentPopup from './RecentPopup';
 import LocalHistory from './LocalHistory';
@@ -431,16 +432,21 @@ export default function App() {
   // Split editor (Window ▸ Split / tab ▸ Split Right): a second editor beside the tab group.
   const [splitFile, setSplitFile] = useLocalState<string | null>('splitFile', null);
   // One docked bottom panel (as in Visual Studio / VS Code): Build and Debug windows share it as tabs.
-  const [dockTab, setDockTab] = useLocalState<'build' | 'debug' | 'output'>('dockTab', 'build');
+  const [dockTab, setDockTab] = useLocalState<'build' | 'debug' | 'output' | 'todo'>('dockTab', 'build');
+  // TODO window (Rider, Alt+6): another tab of the bottom panel.
+  const [todoOpen, setTodoOpen] = useLocalState('todoOpen', false);
   // Output window (View ▸ Output, Ctrl+Alt+O): a third tab of the bottom panel.
   const [outputOpen, setOutputOpen] = useLocalState('outputOpen', false);
   const [outputSource, setOutputSource] = useLocalState<OutputSource>('outputSource', 'build');
+  const openTodoRef = useRef(() => {});
+  const openTodo = () => { setTodoOpen(true); setDockTab('todo'); if (tab !== 'Features' || (view !== 'code' && view !== 'editor')) { setTab('Features'); setView('editor'); } };
+  openTodoRef.current = openTodo;
   const openOutput = (source?: OutputSource) => { setOutputOpen(true); setDockTab('output'); if (source) setOutputSource(source); if (tab !== 'Features' || (view !== 'code' && view !== 'editor')) { setTab('Features'); setView('editor'); } };
   useEffect(() => { if (build.status === 'running') setDockTab('build'); }, [build.status]); // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(() => { if (debugLive) setDockTab('debug'); }, [debugLive]); // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(() => { if (debugOpen) setDockTab('debug'); }, [debugOpen]); // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(() => { if (buildOpen) setDockTab('build'); }, [buildOpen]); // eslint-disable-line react-hooks/exhaustive-deps
-  const dockOpen = [...(showBuild ? ['build' as const] : []), ...(showDebug ? ['debug' as const] : []), ...(outputOpen ? ['output' as const] : [])];
+  const dockOpen = [...(showBuild ? ['build' as const] : []), ...(showDebug ? ['debug' as const] : []), ...(outputOpen ? ['output' as const] : []), ...(todoOpen ? ['todo' as const] : [])];
   const dockShows = dockOpen.includes(dockTab) ? dockTab : dockOpen[0] ?? null;
   // Side bar view: the Explorer or the Test Explorer (activity bar, Test menu).
   // Manage NuGet Packages (project from the Explorer, else the first project).
@@ -511,6 +517,12 @@ export default function App() {
   const bookmarkList = useBookmarks();
   // Ctrl+K Ctrl+W: the Bookmarks window (Visual Studio).
   const chordK = useRef(0);
+  // Alt+6: TODO window (Rider's tool window number).
+  useEffect(() => {
+    const h = (e: KeyboardEvent) => { if (e.altKey && !e.ctrlKey && !e.metaKey && !e.shiftKey && e.key === '6') { e.preventDefault(); openTodoRef.current(); } };
+    window.addEventListener('keydown', h);
+    return () => window.removeEventListener('keydown', h);
+  }, []);
   // Search Everywhere (Rider): press Shift twice.
   useEffect(() => {
     let last = 0, other = false;
@@ -844,6 +856,7 @@ export default function App() {
     if (c === 'nuget') { openNuget(); return; }
     if (c === 'unused-steps') { void showUnused(); return; }
     if (c === 'output') { openOutput(); return; }
+    if (c === 'todo') { openTodo(); return; }
     if (c === 'spy') { setTab('Features'); setView('spy'); return; }
     if (c === 'run-all-tests') { showTests(); runTests('all').catch((e) => setNotice((e as Error).message)); return; }
     if (c === 'build-windows') { setTab('Features'); if (view !== 'code' && view !== 'editor') setView('editor'); setBuildOpen(true); return; }
@@ -1008,6 +1021,7 @@ export default function App() {
         { label: 'Command palette', icon: CommandIcon, run: () => setPaletteOpen(true), shortcut: 'Ctrl K' },
         { label: 'Start a recording', icon: Circle, run: () => { setTab('Features'); setView('recorder'); setModal('record'); } },
         { label: 'View: Output', icon: ScrollText, run: () => openOutput() },
+        { label: 'View: TODO', icon: ScrollText, run: () => openTodo() },
         { label: 'View: Bookmarks', icon: ScrollText, run: () => setModal('bookmarks') },
         { label: 'Spy: find elements and selectors on a page', icon: ScanSearch, run: () => { setTab('Features'); setView('spy'); } },
         { label: 'New feature', icon: Plus, run: () => beginFeature() },
@@ -1028,12 +1042,13 @@ export default function App() {
       <div className="dock-bar">
         {dockOpen.length > 1 && (
           <div className="dock-tabs" role="tablist" aria-label="Panel">
-            {dockOpen.map((d) => <button key={d} role="tab" aria-selected={dockShows === d} onClick={() => setDockTab(d)}>{d === 'build' ? 'Build' : d === 'debug' ? 'Debug' : 'Output'}</button>)}
+            {dockOpen.map((d) => <button key={d} role="tab" aria-selected={dockShows === d} onClick={() => setDockTab(d)}>{d === 'build' ? 'Build' : d === 'debug' ? 'Debug' : d === 'todo' ? 'TODO' : 'Output'}</button>)}
           </div>
         )}
         <button className="icon-button dock-move" aria-label={dockSide === 'bottom' ? 'Move panel right' : 'Move panel to the bottom'} title={dockSide === 'bottom' ? 'Move panel right' : 'Move panel to the bottom'} onClick={() => setDockSide(dockSide === 'bottom' ? 'right' : 'bottom')}>{dockSide === 'bottom' ? <PanelRight size={13} /> : <PanelBottom size={13} />}</button>
       </div>
       {dockShows === 'build' && <BuildPanel onOpen={(file, line, column) => editFile(file, line, column)} onNotice={setNotice} onClose={() => setBuildOpen(false)} />}
+      {dockShows === 'todo' && <TodoPanel onOpen={(file, line, column) => navigateTo({ file, line, column })} onClose={() => setTodoOpen(false)} />}
       {dockShows === 'output' && <OutputPanel source={outputSource} onSource={setOutputSource} onNotice={setNotice} onClose={() => setOutputOpen(false)} />}
       {dockShows === 'debug' && <DebugPanel editingRequest={bpSettings?.split('#')[0] ?? null} editingNonce={bpSettings} onOpen={openAt} onNotice={setNotice} onClose={() => { setDebugOpen(false); if (debugLive) setNotice('The session keeps running. Stop it with Shift+F5.'); }} />}
     </div>
@@ -1149,6 +1164,7 @@ export default function App() {
               'separator' as const,
               { label: showBuild ? 'Hide Error List and Output' : 'Error List and Output', onSelect: () => setBuildOpen(!buildOpen) },
               { label: 'Output', shortcut: 'Ctrl Alt O', onSelect: () => openOutput() },
+              { label: 'TODO', shortcut: 'Alt 6', onSelect: () => openTodo() },
             ]}
           />
         )}

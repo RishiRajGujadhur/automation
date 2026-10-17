@@ -196,6 +196,7 @@ export function buildMenu() {
         { type: 'separator' },
         { label: 'Error List and Output', click: () => send('build-windows') },
         { label: 'Output', accelerator: 'CmdOrCtrl+Alt+O', registerAccelerator: false, click: () => send('output') },
+        { label: 'TODO', accelerator: 'Alt+6', registerAccelerator: false, click: () => send('todo') },
       ],
     },
     {

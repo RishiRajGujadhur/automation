@@ -150,3 +150,20 @@ test('Scenario Outline: a placeholder missing from Examples is an error in the e
   await page.keyboard.type('And the discount is <rate>');
   await expect(src.locator('.cm-lintRange-error', { hasText: '<rate>' })).toBeVisible({ timeout: 10_000 });
 });
+
+test('TODO window (Alt+6): TODO / FIXME comments across the solution, click to open', async ({ page }) => {
+  await fs.writeFile(path.join(root, 'Steps/Todo.cs'), ['namespace Demo;', 'public class Coupons', '{', '    // TODO: wire the coupon field', '    public void Apply() { }', '}', ''].join('\n'));
+  await fs.writeFile(path.join(root, 'Features/Todo.feature'), ['Feature: Coupons', '  # FIXME the discount is wrong', '  Scenario: Apply', '    Given the browser is started', ''].join('\n'));
+  await openFeature(page, 'Login.feature');
+  await page.keyboard.press('Alt+6');
+  const todo = page.getByRole('region', { name: 'TODO' });
+  const list = todo.getByRole('list', { name: 'TODO items' });
+  await expect(list).toContainText('wire the coupon field');
+  await expect(list).toContainText('the discount is wrong');
+  // Filter by kind.
+  await todo.getByLabel('FIXME').uncheck();
+  await expect(list).not.toContainText('the discount is wrong');
+  await list.getByRole('button', { name: /wire the coupon field/ }).click();
+  await expect(page.locator('.editor-tab-label[aria-current="true"]')).toHaveAttribute('title', 'Steps/Todo.cs');
+  await expect(page.locator('.code-editor:not([hidden]) .cm-activeLine')).toContainText('TODO: wire the coupon field');
+});
