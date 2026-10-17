@@ -29,3 +29,30 @@ describe('step scaffolding', () => {
     expect(r.source.split('\n')[r.line - 1]).toContain('[Then(');
   });
 });
+
+describe('Define Steps (Reqnroll)', () => {
+  it('outline placeholders become named parameters; tables and doc strings a trailing argument', async () => {
+    const { stepPattern, bindingMethod } = await import('../server/stepScaffold');
+    expect(stepPattern('the user has <item count> items in "<cart>"', 'cucumber')).toEqual({ pattern: 'the user has {} items in {string}', params: [{ name: 'itemCount', type: 'string' }, { name: 'cart', type: 'string' }] });
+    expect(stepPattern("I search for 'books'", 'regex').pattern).toBe("^I search for '(.*)'$");
+    expect(bindingMethod('Given', 'these users', 'cucumber', '', [], 'table', true).code).toContain('public void TheseUsers(DataTable table)');
+    expect(bindingMethod('Given', 'these users', 'cucumber', '', [], 'table', false).code).toContain('(Table table)');
+    expect(bindingMethod('When', 'the body is', 'regex', '', [], 'docString').code).toContain('(string docString)');
+  });
+  it('defines several steps once each, in a new class or appended to an existing one', async () => {
+    const { defineSteps } = await import('../server/stepScaffold');
+    const steps = [
+      { keyword: 'Given', text: 'a cart with 2 items' },
+      { keyword: 'Given', text: 'a cart with 5 items' }, // same pattern: defined once
+      { keyword: 'When', text: 'the user checks out' },
+    ];
+    const created = defineSteps(steps, 'cucumber', { className: 'CartSteps', reqnroll: true, sample: 'using Reqnroll;\nnamespace Shop.Steps;\n' });
+    expect(created.count).toBe(2);
+    expect(created.source).toMatch(/^using Reqnroll;\n\nnamespace Shop\.Steps;\n\n\[Binding\]\npublic class CartSteps\n\{\n    \[Given\("a cart with \{int\} items"\)\]/);
+    expect(created.source).toContain('[When("the user checks out")]');
+    const appended = defineSteps([{ keyword: 'Then', text: 'the order is placed' }], 'regex', { className: 'X', reqnroll: false, existing: created.source });
+    expect(appended.source).toContain('[Given("a cart with {int} items")]');
+    expect(appended.source).toContain('[Then("^the order is placed$")]');
+    expect(appended.source.trimEnd().endsWith('}')).toBe(true);
+  });
+});

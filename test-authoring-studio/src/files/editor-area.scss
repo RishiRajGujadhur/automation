@@ -2040,3 +2040,45 @@
     font-size: 12px;
   }
 }
+
+// Define Steps
+.define-steps {
+  display: grid;
+  gap: 10px;
+  min-width: min(720px, 90vw);
+  ul {
+    max-height: 240px;
+    margin: 0;
+    padding: 0;
+    overflow: auto;
+    list-style: none;
+  }
+  li label {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    padding: 3px 0;
+    font-size: 12px;
+  }
+  small {
+    color: var(--text-muted);
+  }
+  .field {
+    display: grid;
+    gap: 4px;
+    font-size: 11px;
+    color: var(--text-muted);
+    input {
+      height: 30px;
+      padding: 0 8px;
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      background: var(--surface);
+      color: var(--text);
+    }
+  }
+  .define-actions {
+    display: flex;
+    gap: 8px;
+  }
+}

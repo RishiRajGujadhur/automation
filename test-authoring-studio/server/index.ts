@@ -37,6 +37,7 @@ import type { Index } from '../src/types.js';
 import { readSettings, writeSettings, settingsSchema, tracesDir } from './settings.js';
 import { WorkspaceSearch } from './stepSearch.js';
 import { scenarioSteps, scenarioText, featureWithScenario } from './recordingFeature.js';
+import { defineSteps, argumentKind, type StepArgument } from './stepScaffold.js';
 import { recordedStepsSource } from './recordedSteps.js';
 import { mergeDictionary, proposeField, findEntry, parseDictionary, selectorRank, fieldName, type FieldProposal } from './dictionaries.js';
 const studio = readSettings();
@@ -142,6 +143,39 @@ app.get('/api/feature/links',async(req,res)=>{
 app.get('/api/steps/files',async(_req,res)=>{const i=await ensure();res.json([...new Set(i.stepDefinitions.map(b=>b.file))].sort());});
 // Create a step definition for an unbound step: appended to an existing [Binding] class or a new file in the
 // repository's style (regex vs. Cucumber expressions by majority). Previewed; written only on approval.
+// Define Steps (Reqnroll): the unbound steps of a feature, and skeleton methods for them (new class or appended).
+async function unboundSteps(file:string){
+ const i=await ensure();
+ const feature=i.features.find(f=>f.file===file);
+ if(!feature)throw new Error(`${file} is not an indexed feature file.`);
+ const out:{keyword:string;text:string;line:number;arg?:StepArgument}[]=[];
+ for(const block of [...feature.backgrounds,...feature.scenarios]){
+  let kw='Given';
+  for(const st of block.steps){
+   const k=st.keyword.trim();if(['Given','When','Then'].includes(k))kw=k;
+   if(st.status==='Unmatched')out.push({keyword:kw,text:st.text,line:st.line,arg:argumentKind(st.argument)});
+  }
+ }
+ return {feature,steps:out};
+}
+app.get('/api/steps/unbound',async(req,res)=>{const file=z.string().max(400).parse(req.query.file);const r=await unboundSteps(file);res.json({feature:r.feature.name,steps:r.steps,files:[...new Set((await ensure()).stepDefinitions.map(b=>b.file))].sort()});});
+app.post('/api/steps/define',async(req,res)=>{
+ const b=z.object({feature:z.string().max(400),lines:z.array(z.number().int()).max(500).optional(),file:z.string().max(400).regex(/\.cs$/i,'Step definition files end with .cs.'),className:z.string().regex(/^[A-Za-z_]\w{0,100}$/,'Use a C# class name.')}).parse(req.body);
+ const i=await ensure();
+ const {steps}=await unboundSteps(b.feature);
+ const chosen=b.lines?steps.filter(s=>b.lines!.includes(s.line)):steps;
+ const cucumber=i.stepDefinitions.filter(x=>x.expression==='Cucumber').length;
+ const style=cucumber>i.stepDefinitions.length/2?'cucumber':'regex';
+ const target=await confined(config.repositoryRoot,b.file,false);
+ const before=await fs.readFile(target,'utf8').catch((e)=>{if(e.code==='ENOENT')return '';throw e;});
+ const sampleFile=i.stepDefinitions[0]?.file;
+ const sample=sampleFile?await fs.readFile(path.join(config.repositoryRoot,sampleFile),'utf8').catch(()=>undefined):undefined;
+ let reqnroll=/using\s+Reqnroll\s*;/.test(sample??'');
+ for(const c of (await projectModel(config,i)).files.filter(f=>f.file.endsWith('.csproj')).slice(0,20))if(/Include="Reqnroll/i.test(await fs.readFile(path.join(config.repositoryRoot,c.file),'utf8').catch(()=>'')))reqnroll=true;
+ const r=defineSteps(chosen,style,{className:b.className,existing:before||undefined,sample,reqnroll});
+ const id=randomUUID();previews.set(id,{file:b.file,source:r.source,hash:hash(before),root:config.repositoryRoot});
+ res.json({id,file:b.file,created:!before,changed:true,count:r.count,methods:r.methods,style,diff:createPatch(b.file,before,r.source,'repository','proposed')});
+});
 app.post('/api/steps/scaffold',async(req,res)=>{
   const {keyword,text,file}=z.object({keyword:z.enum(['Given','When','Then']),text:z.string().min(1).max(500),file:z.string().max(400).regex(/.cs$/i)}).parse(req.body);
   const i=await ensure();

@@ -28,6 +28,7 @@ import EditorTabs, { EditorActions } from './files/EditorTabs';
 import OpenSolution from './OpenSolution';
 import StartWindow from './StartWindow';
 import SaveRecording from './SaveRecording';
+import DefineSteps from './DefineSteps';
 import { useKeybindings, KeybindingEditor } from './keybindings';
 import BuildPanel from './build/BuildPanel';
 import TestExplorer from './testing/TestExplorer';
@@ -1792,6 +1793,7 @@ export default function App() {
               )}
               <GherkinEditor
                   onHooks={(line) => { if (feature) void showHooks(feature.file, line); }}
+                  onDefineSteps={feature ? () => setModal('define-steps') : undefined}
                 file={feature?.file}
                 runMarks={feature ? marksFor(feature.file) : undefined}
                 onRunLine={(line, debug) => feature && runLine(feature.file, line, debug)}
@@ -2129,6 +2131,7 @@ export default function App() {
                       nuget: 'Manage NuGet Packages',
                       'save-recording': 'Save recording',
                       hooks: 'Go To Hooks',
+                      'define-steps': 'Define Steps',
                       record: 'Record a browser workflow',
                       new: 'Create a feature',
                       parameters: 'Configure step parameters',
@@ -2367,6 +2370,13 @@ export default function App() {
                   </dl>
                 )}
                 {modal === 'shortcuts' && <KeybindingEditor />}
+                {modal === 'define-steps' && feature && (
+                  <DefineSteps
+                    feature={feature.file}
+                    onNotice={setNotice}
+                    onApplied={(next, file) => { setIndex(next); setModal(undefined); editFile(file); setNotice(`Step definitions written to ${file}. Implement the TODOs; the steps are bound now.`); }}
+                  />
+                )}
                 {modal === 'hooks' && hooks && (
                   <div className="hooks-list">
                     <p className="subtle">{hooks.scenario ? <>Scenario <strong>{hooks.scenario}</strong></> : <>Feature <strong>{hooks.feature}</strong></>}{hooks.tags.length ? <> · tags {hooks.tags.map((t) => `@${t}`).join(' ')}</> : null}</p>
