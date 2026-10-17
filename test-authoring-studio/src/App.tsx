@@ -29,6 +29,7 @@ import OpenSolution from './OpenSolution';
 import StartWindow from './StartWindow';
 import SaveRecording from './SaveRecording';
 import DefineSteps from './DefineSteps';
+import SpyView from './SpyView';
 import { useKeybindings, KeybindingEditor } from './keybindings';
 import BuildPanel from './build/BuildPanel';
 import TestExplorer from './testing/TestExplorer';
@@ -131,6 +132,7 @@ import {
   FolderOpen,
   PanelRight,
   PanelBottom,
+  ScanSearch,
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import type { Index, Feature, Binding, Action, Match, Hook } from './types';
@@ -529,6 +531,7 @@ export default function App() {
         { id: 'editor', icon: Code2, label: 'Editor' },
         { id: 'builder', icon: Blocks, label: 'Builder' },
         { id: 'recorder', icon: Circle, label: 'Recorder' },
+        { id: 'spy', icon: ScanSearch, label: 'Spy' },
       ].map((v) => (
         <ToggleGroup.Item key={v.id} value={v.id} className="segmented-item" aria-label={v.label}>
           <v.icon size={14} aria-hidden="true" />
@@ -556,7 +559,7 @@ export default function App() {
       const [, t, v] = hash.split('/');
       const all = [...tabs, ...moreTabs].map((x) => x.name);
       const match = all.find((x) => slug(x) === t);
-      if (match) { setTab(match); if (v && ['editor', 'builder', 'recorder', 'code'].includes(v)) setView(v); }
+      if (match) { setTab(match); if (v && ['editor', 'builder', 'recorder', 'spy', 'code'].includes(v)) setView(v); }
     };
     // Use the hash captured at first render: StrictMode re-runs effects after the sync effect below has rewritten it.
     fromHash(initialHash.current);
@@ -607,11 +610,13 @@ export default function App() {
   const dirty = feature ? featureAuto.dirty : !!source && source !== '';
   const pageDescription =
     tab === 'Features'
-      ? view === 'recorder'
+      ? view === 'spy'
+        ? 'Find any element on a page, see its properties and pick a verified selector for your dictionary.'
+        : view === 'recorder'
         ? 'Turn browser interactions into reusable, repository-aware tests.'
         : 'Assemble tests from the capabilities your project already contains.'
       : (headings[tab] ?? 'Discover existing automation, with evidence from your repository.');
-  const pageTitle = tab === 'Features' ? (view === 'recorder' ? 'Playwright recorder' : view === 'builder' ? 'Scenario builder' : (feature?.name ?? 'Feature editor')) : tab;
+  const pageTitle = tab === 'Features' ? (view === 'spy' ? 'Spy' : view === 'recorder' ? 'Playwright recorder' : view === 'builder' ? 'Scenario builder' : (feature?.name ?? 'Feature editor')) : tab;
   useEffect(() => {
     document.title = `${dirty ? '● ' : ''}${pageTitle} · TestAuthoring Studio`;
   }, [pageTitle, dirty]);
@@ -1329,6 +1334,7 @@ export default function App() {
               </button>
             </div>
           )}
+          {tab === 'Features' && view === 'spy' && <SpyView onIndex={setIndex} onNotice={setNotice} />}
           {tab === 'Features' && view === 'recorder' && (
             <>
               <div className="recording-toolbar">

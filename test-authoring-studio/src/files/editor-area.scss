@@ -2093,3 +2093,250 @@
   color: #e5866e;
   font-weight: 600;
 }
+
+// Spy (GUI object recognition)
+.spy-view {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-height: 0;
+  gap: 8px;
+  padding: 8px;
+}
+.spy-bar {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  input {
+    flex: 0 1 420px;
+    height: 30px;
+    padding: 0 8px;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    background: var(--surface);
+    color: var(--text);
+  }
+  .spy-url {
+    overflow: hidden;
+    color: var(--text-muted);
+    font-size: 12px;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+}
+.spy-grid {
+  display: grid;
+  flex: 1;
+  grid-template-columns: minmax(220px, 1fr) minmax(240px, 1fr) minmax(300px, 1.2fr);
+  gap: 8px;
+  min-height: 420px;
+}
+.spy-pane {
+  min-width: 0;
+  min-height: 0;
+  padding: 8px;
+  overflow: auto;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--surface);
+}
+.spy-tree,
+.spy-tree ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.spy-node {
+  display: flex;
+  align-items: center;
+  &.selected {
+    background: var(--accent-soft, #9270dd33);
+  }
+}
+.spy-node-label {
+  display: flex;
+  gap: 6px;
+  align-items: baseline;
+  min-width: 0;
+  padding: 2px 4px;
+  border: 0;
+  background: transparent;
+  color: var(--text);
+  font-size: 12px;
+  text-align: left;
+  white-space: nowrap;
+  cursor: pointer;
+  .spy-role {
+    color: var(--accent, #9270dd);
+    font-family: var(--font-mono, monospace);
+  }
+  .spy-name {
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  small {
+    color: var(--text-muted);
+  }
+}
+.spy-path {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px;
+  margin-bottom: 6px;
+  button {
+    padding: 0 4px;
+    border: 0;
+    background: transparent;
+    color: var(--text-muted);
+    font-size: 11px;
+    cursor: pointer;
+    &::after {
+      content: ' ›';
+    }
+    &[aria-current='true'] {
+      color: var(--text);
+      font-weight: 600;
+      &::after {
+        content: '';
+      }
+    }
+  }
+}
+.spy-props {
+  display: grid;
+  gap: 2px;
+  margin: 0;
+  font-size: 12px;
+  > div {
+    display: grid;
+    grid-template-columns: 110px 1fr;
+    gap: 8px;
+  }
+  dt {
+    color: var(--text-muted);
+  }
+  dd {
+    margin: 0;
+    overflow: hidden;
+    font-family: var(--font-mono, monospace);
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+}
+.spy-attrs {
+  margin: 8px 0;
+  font-size: 12px;
+}
+.spy-shot {
+  display: block;
+  max-width: 100%;
+  margin-top: 6px;
+  border: 1px solid var(--border);
+}
+.spy-candidates {
+  margin: 0 0 8px;
+  padding: 0;
+  list-style: none;
+  li {
+    display: flex;
+    gap: 4px;
+    align-items: center;
+    padding: 2px 0;
+    font-size: 12px;
+    label {
+      display: flex;
+      flex: 1;
+      gap: 6px;
+      align-items: center;
+      min-width: 0;
+    }
+  }
+  .spy-type {
+    flex: none;
+    color: var(--accent, #9270dd);
+  }
+  .spy-value {
+    overflow: hidden;
+    font-family: var(--font-mono, monospace);
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+}
+.spy-status {
+  flex: none;
+  padding: 0 6px;
+  border-radius: 8px;
+  font-size: 11px;
+  &.unique {
+    background: #2e9d5733;
+    color: #2e9d57;
+  }
+  &.multiple {
+    background: #d9a21b33;
+    color: #b8860b;
+  }
+  &.none,
+  &.error {
+    background: #d9534f33;
+    color: #d9534f;
+  }
+}
+.spy-editor {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  align-items: center;
+  margin-bottom: 8px;
+  select,
+  input {
+    height: 26px;
+    border: 1px solid var(--border);
+    border-radius: 3px;
+    background: var(--surface);
+    color: var(--text);
+    font-size: 12px;
+  }
+  select {
+    flex: none;
+    width: 150px;
+    padding: 0 4px;
+  }
+  input {
+    flex: 1;
+    min-width: 120px;
+    padding: 0 6px;
+  }
+}
+.spy-dict {
+  display: grid;
+  gap: 6px;
+  padding: 8px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  legend {
+    display: inline-flex;
+    gap: 4px;
+    align-items: center;
+    font-size: 12px;
+    font-weight: 600;
+  }
+  .field {
+    display: grid;
+    gap: 2px;
+    font-size: 10px;
+    color: var(--text-muted);
+    input {
+      height: 26px;
+      padding: 0 6px;
+      border: 1px solid var(--border);
+      border-radius: 3px;
+      background: var(--surface);
+      color: var(--text);
+    }
+  }
+}
+@media (max-width: 1100px) {
+  .spy-grid {
+    grid-template-columns: 1fr;
+  }
+}
