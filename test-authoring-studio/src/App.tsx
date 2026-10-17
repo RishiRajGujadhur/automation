@@ -30,6 +30,8 @@ import StartWindow from './StartWindow';
 import SaveRecording from './SaveRecording';
 import DefineSteps from './DefineSteps';
 import SpyView from './SpyView';
+import OutputPanel, { type OutputSource } from './OutputPanel';
+import { studioLog } from './outputLog';
 import { useKeybindings, KeybindingEditor } from './keybindings';
 import BuildPanel from './build/BuildPanel';
 import TestExplorer from './testing/TestExplorer';
@@ -133,6 +135,7 @@ import {
   PanelRight,
   PanelBottom,
   ScanSearch,
+  ScrollText,
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import type { Index, Feature, Binding, Action, Match, Hook } from './types';
@@ -231,6 +234,8 @@ export default function App() {
   const [modal, setModal] = useState<string>();
   const [error, setError] = useState('');
   const [notice, setNotice] = useState('');
+  // Every notice also goes to Output ▸ Studio.
+  useEffect(() => { studioLog(notice); }, [notice]);
   const [busy, setBusy] = useState(false);
   const [actions, setActions] = useState<Action[]>(demo);
   const [selected, setSelected] = useState('d2');
@@ -347,6 +352,7 @@ export default function App() {
     if (e.shiftKey && !e.altKey && e.key.toLowerCase() === 'f') { e.preventDefault(); showSearch(false); return; }
     if (e.shiftKey && !e.altKey && e.key.toLowerCase() === 'h') { e.preventDefault(); showSearch(true); return; }
     if (!e.shiftKey && !e.altKey && (e.key.toLowerCase() === 't' || e.key.toLowerCase() === 'p')) { e.preventDefault(); setModal('goto'); return; }
+    if (e.altKey && !e.shiftKey && e.key.toLowerCase() === 'o') { e.preventDefault(); openOutput(); return; }
     if (e.shiftKey && !e.altKey && e.key.toLowerCase() === 'b') { e.preventDefault(); if (getBuild().status !== 'running') runBuild('build'); return; }
     if (e.key === 'Pause' || e.key === 'Cancel') { if (getBuild().status === 'running') { e.preventDefault(); void cancelBuild(); } return; }
     const active = getTabs().active;
@@ -413,12 +419,17 @@ export default function App() {
   // Split editor (Window ▸ Split / tab ▸ Split Right): a second editor beside the tab group.
   const [splitFile, setSplitFile] = useLocalState<string | null>('splitFile', null);
   // One docked bottom panel (as in Visual Studio / VS Code): Build and Debug windows share it as tabs.
-  const [dockTab, setDockTab] = useLocalState<'build' | 'debug'>('dockTab', 'build');
+  const [dockTab, setDockTab] = useLocalState<'build' | 'debug' | 'output'>('dockTab', 'build');
+  // Output window (View ▸ Output, Ctrl+Alt+O): a third tab of the bottom panel.
+  const [outputOpen, setOutputOpen] = useLocalState('outputOpen', false);
+  const [outputSource, setOutputSource] = useLocalState<OutputSource>('outputSource', 'build');
+  const openOutput = (source?: OutputSource) => { setOutputOpen(true); setDockTab('output'); if (source) setOutputSource(source); if (tab !== 'Features' || (view !== 'code' && view !== 'editor')) { setTab('Features'); setView('editor'); } };
   useEffect(() => { if (build.status === 'running') setDockTab('build'); }, [build.status]); // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(() => { if (debugLive) setDockTab('debug'); }, [debugLive]); // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(() => { if (debugOpen) setDockTab('debug'); }, [debugOpen]); // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(() => { if (buildOpen) setDockTab('build'); }, [buildOpen]); // eslint-disable-line react-hooks/exhaustive-deps
-  const dockShows = showBuild && showDebug ? dockTab : showBuild ? 'build' : showDebug ? 'debug' : null;
+  const dockOpen = [...(showBuild ? ['build' as const] : []), ...(showDebug ? ['debug' as const] : []), ...(outputOpen ? ['output' as const] : [])];
+  const dockShows = dockOpen.includes(dockTab) ? dockTab : dockOpen[0] ?? null;
   // Side bar view: the Explorer or the Test Explorer (activity bar, Test menu).
   // Manage NuGet Packages (project from the Explorer, else the first project).
   const [nugetProject, setNugetProject] = useState<string>();
@@ -795,6 +806,7 @@ export default function App() {
     if (c === 'git-changes') { showGit(); return; }
     if (c === 'nuget') { openNuget(); return; }
     if (c === 'unused-steps') { void showUnused(); return; }
+    if (c === 'output') { openOutput(); return; }
     if (c === 'spy') { setTab('Features'); setView('spy'); return; }
     if (c === 'run-all-tests') { showTests(); runTests('all').catch((e) => setNotice((e as Error).message)); return; }
     if (c === 'build-windows') { setTab('Features'); if (view !== 'code' && view !== 'editor') setView('editor'); setBuildOpen(true); return; }
@@ -958,6 +970,7 @@ export default function App() {
         { label: basic ? 'Switch to Advanced mode' : 'Switch to Basic mode', icon: SlidersHorizontal, run: () => setMode(basic ? 'advanced' : 'basic'), shortcut: 'Ctrl Shift A' },
         { label: 'Command palette', icon: CommandIcon, run: () => setPaletteOpen(true), shortcut: 'Ctrl K' },
         { label: 'Start a recording', icon: Circle, run: () => { setTab('Features'); setView('recorder'); setModal('record'); } },
+        { label: 'View: Output', icon: ScrollText, run: () => openOutput() },
         { label: 'Spy: find elements and selectors on a page', icon: ScanSearch, run: () => { setTab('Features'); setView('spy'); } },
         { label: 'New feature', icon: Plus, run: () => beginFeature() },
         { label: 'Rescan repository', icon: RefreshCw, disabled: busy, run: () => work(async () => { setIndex(await api('/scan', {})); setNotice('Repository index refreshed.'); }) },
@@ -975,15 +988,15 @@ export default function App() {
   const dock = inEditor && dockShows ? (
     <div className={`dock dock-${dockSide}`}>
       <div className="dock-bar">
-        {showBuild && showDebug && (
+        {dockOpen.length > 1 && (
           <div className="dock-tabs" role="tablist" aria-label="Panel">
-            <button role="tab" aria-selected={dockShows === 'build'} onClick={() => setDockTab('build')}>Build</button>
-            <button role="tab" aria-selected={dockShows === 'debug'} onClick={() => setDockTab('debug')}>Debug</button>
+            {dockOpen.map((d) => <button key={d} role="tab" aria-selected={dockShows === d} onClick={() => setDockTab(d)}>{d === 'build' ? 'Build' : d === 'debug' ? 'Debug' : 'Output'}</button>)}
           </div>
         )}
         <button className="icon-button dock-move" aria-label={dockSide === 'bottom' ? 'Move panel right' : 'Move panel to the bottom'} title={dockSide === 'bottom' ? 'Move panel right' : 'Move panel to the bottom'} onClick={() => setDockSide(dockSide === 'bottom' ? 'right' : 'bottom')}>{dockSide === 'bottom' ? <PanelRight size={13} /> : <PanelBottom size={13} />}</button>
       </div>
       {dockShows === 'build' && <BuildPanel onOpen={(file, line, column) => editFile(file, line, column)} onNotice={setNotice} onClose={() => setBuildOpen(false)} />}
+      {dockShows === 'output' && <OutputPanel source={outputSource} onSource={setOutputSource} onNotice={setNotice} onClose={() => setOutputOpen(false)} />}
       {dockShows === 'debug' && <DebugPanel editingRequest={bpSettings?.split('#')[0] ?? null} editingNonce={bpSettings} onOpen={openAt} onNotice={setNotice} onClose={() => { setDebugOpen(false); if (debugLive) setNotice('The session keeps running. Stop it with Shift+F5.'); }} />}
     </div>
   ) : null;
@@ -1097,6 +1110,7 @@ export default function App() {
               { label: 'Cancel', shortcut: 'Ctrl Break', disabled: build.status !== 'running', onSelect: () => void cancelBuild() },
               'separator' as const,
               { label: showBuild ? 'Hide Error List and Output' : 'Error List and Output', onSelect: () => setBuildOpen(!buildOpen) },
+              { label: 'Output', shortcut: 'Ctrl Alt O', onSelect: () => openOutput() },
             ]}
           />
         )}

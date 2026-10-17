@@ -272,6 +272,8 @@ app.get('/api/solution',async(_req,res)=>{
 });
 // File ▸ Open ▸ Project/Solution: a .sln/.slnx/.csproj (or a folder) on disk becomes the workspace.
 // Open Project/Solution ▸ browse (web: the browser cannot show native paths): folders and solution / project files.
+// Output window ▸ Language service.
+app.get('/api/output/language', (_req, res) => res.json({ lines: lang.log }));
 app.get('/api/fs/browse', async (req, res) => {
   const asked = z.string().max(1000).optional().parse(req.query.dir);
   const dir = path.resolve(asked || path.dirname(config.repositoryRoot));

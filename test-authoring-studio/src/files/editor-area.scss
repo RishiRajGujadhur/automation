@@ -2420,3 +2420,35 @@
     }
   }
 }
+
+// Output window
+.output-panel {
+  .output-source {
+    display: inline-flex;
+    gap: 6px;
+    align-items: center;
+    font-size: 12px;
+    select {
+      height: 24px;
+      border: 1px solid var(--border);
+      border-radius: 3px;
+      background: var(--surface);
+      color: var(--text);
+      font-size: 12px;
+    }
+  }
+  .debug-spacer {
+    flex: 1;
+  }
+  .output-text {
+    flex: 1;
+    min-height: 0;
+    margin: 0;
+    overflow: auto;
+    white-space: pre;
+    &.wrap {
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+  }
+}

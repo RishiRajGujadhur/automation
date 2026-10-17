@@ -31,6 +31,9 @@ export class LanguageService {
   private seq = 0;
   private pending = new Map<number, { resolve: (v: any) => void; reject: (e: Error) => void }>();
   private ready?: Promise<unknown>;
+  /** Output ▸ Language service: start / stop, init result, stderr (last ~200 lines). */
+  log: string[] = [];
+  private write(line: string) { this.log.push(`[${new Date().toLocaleTimeString()}] ${line}`); if (this.log.length > 300) this.log.splice(0, this.log.length - 200); }
 
   private start(root: string) {
     this.stop();
@@ -41,6 +44,8 @@ export class LanguageService {
     const proc = spawn(exe, args, { stdio: ['pipe', 'pipe', 'pipe'], windowsHide: true });
     this.proc = proc;
     this.root = root;
+    const started = Date.now();
+    this.write(`Starting the C# language service for ${root}`);
     createInterface({ input: proc.stdout! }).on('line', (line) => {
       let msg: { id: number; result?: unknown; error?: string };
       try { msg = JSON.parse(line); } catch { return; }
@@ -49,14 +54,18 @@ export class LanguageService {
       pending.delete(msg.id);
       if (msg.error) p.reject(new Error(msg.error)); else p.resolve(msg.result);
     });
-    proc.stderr!.on('data', () => {});
-    proc.on('exit', () => {
+    proc.stderr!.on('data', (d: Buffer) => { for (const l of d.toString().split(/\r?\n/)) if (l.trim()) this.write(l); });
+    proc.on('exit', (code) => {
+      if (this.proc === proc) this.write(`The language service stopped (exit code ${code ?? 'none'}).`);
       for (const p of pending.values()) p.reject(new Error('The C# language service stopped.'));
       pending.clear();
       if (this.proc === proc) { this.proc = undefined; this.ready = undefined; }
     });
     // Solution projects outside the folder are part of the workspace (see core.updateExtraRoots).
-    this.ready = fs.realpath(root).catch(() => root).then((real) => this.send({ op: 'init', root, extra: extraRootsOf(real) }, 120_000));
+    this.ready = fs.realpath(root).catch(() => root).then((real) => this.send<{ files: number; projects: { name: string; documents: number }[] }>({ op: 'init', root, extra: extraRootsOf(real) }, 120_000)).then(
+      (r) => { this.write(`Ready in ${((Date.now() - started) / 1000).toFixed(1)} s: ${r.projects.length} project(s), ${r.files} document(s) — ${r.projects.map((p) => `${p.name} (${p.documents})`).join(', ')}`); return r; },
+      (e) => { this.write(`Init failed: ${(e as Error).message}`); throw e; },
+    );
   }
   private send<T>(body: Record<string, unknown>, timeout = 30_000): Promise<T> {
     const id = ++this.seq;

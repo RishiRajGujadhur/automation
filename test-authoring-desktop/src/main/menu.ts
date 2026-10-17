@@ -195,6 +195,7 @@ export function buildMenu() {
         { label: 'Cancel', accelerator: 'CmdOrCtrl+Pause', registerAccelerator: false, click: () => send('cancel-build') },
         { type: 'separator' },
         { label: 'Error List and Output', click: () => send('build-windows') },
+        { label: 'Output', accelerator: 'CmdOrCtrl+Alt+O', registerAccelerator: false, click: () => send('output') },
       ],
     },
     {

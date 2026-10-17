@@ -209,3 +209,32 @@ test('Move panel: the Build / Debug panel docks on the right of the editors and 
   b = (await build.boundingBox())!; e = (await editor.boundingBox())!;
   expect(b.y).toBeGreaterThanOrEqual(e.y + e.height - 2);
 });
+
+test('Output window: Show output from Build / Tests / Debug / C# language service / Studio, clear, tabs with Build', async ({ page }) => {
+  await page.addInitScript(() => { if (!sessionStorage.getItem('seeded')) { localStorage.setItem('tas:prefs', JSON.stringify({ mode: 'advanced' })); sessionStorage.setItem('seeded', '1'); } });
+  await page.goto('/#/features/editor');
+  await expect(page.getByLabel('Gherkin source')).toBeVisible();
+  await page.getByRole('button', { name: 'Build menu' }).click();
+  await page.getByRole('menuitem', { name: /^Output/ }).click();
+  const out = page.getByRole('region', { name: 'Output' });
+  await expect(out).toBeVisible();
+  const source = out.getByLabel('Show output from');
+  // Studio: the studio's own messages (a notice is logged).
+  await source.selectOption('studio');
+  await out.getByRole('button', { name: 'Copy output' }).click();
+  await expect(out.getByLabel('Output from Studio')).toContainText(/Output copied\.|Clipboard unavailable\./);
+  await out.getByRole('button', { name: 'Clear all' }).click();
+  await expect(out.getByLabel('Output from Studio')).toHaveText('No output yet.');
+  // C# language service: started for the workspace.
+  await source.selectOption('language');
+  await expect(out.getByLabel('Output from C# language service')).toContainText('Starting the C# language service', { timeout: 30_000 });
+  await expect(out.getByLabel('Output from C# language service')).toContainText(/Ready in [\d.]+ s/, { timeout: 60_000 });
+  // With the build windows open too, the bottom panel has Build / Output tabs.
+  await page.keyboard.press('Control+Shift+B');
+  const tabs = page.getByRole('tablist', { name: 'Panel' });
+  await expect(tabs.getByRole('tab', { name: 'Build' })).toHaveAttribute('aria-selected', 'true');
+  await tabs.getByRole('tab', { name: 'Output' }).click();
+  await source.selectOption('build');
+  await expect(out.getByLabel('Output from Build')).toContainText('Build started');
+  await page.request.post('/api/build/cancel').catch(() => {});
+});
