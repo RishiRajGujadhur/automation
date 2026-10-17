@@ -32,6 +32,8 @@ import DefineSteps from './DefineSteps';
 import SpyView from './SpyView';
 import OutputPanel, { type OutputSource } from './OutputPanel';
 import { studioLog } from './outputLog';
+import RecentPopup from './RecentPopup';
+import { visitFile, back as navBack, forward as navForward, reveal } from './navHistory';
 import { useKeybindings, KeybindingEditor } from './keybindings';
 import BuildPanel from './build/BuildPanel';
 import TestExplorer from './testing/TestExplorer';
@@ -348,6 +350,11 @@ export default function App() {
   const editorKeys = useRef<(e: KeyboardEvent) => void>(() => {});
   editorKeys.current = (e) => {
     if (!(e.ctrlKey || e.metaKey)) return;
+    // Navigate Back / Forward (Rider: Ctrl+Alt+← / →; Visual Studio: Ctrl+- / Ctrl+Shift+-).
+    if ((e.altKey && e.key === 'ArrowLeft') || (!e.altKey && !e.shiftKey && e.key === '-')) { e.preventDefault(); const l = navBack(); if (l) navigateTo(l); return; }
+    if ((e.altKey && e.key === 'ArrowRight') || (!e.altKey && (e.key === '_' || (e.shiftKey && e.key === '-')))) { e.preventDefault(); const l = navForward(); if (l) navigateTo(l); return; }
+    // Recent Files (Ctrl+E) / Recent Locations (Ctrl+Shift+E), as in Rider.
+    if (!e.altKey && e.key.toLowerCase() === 'e') { e.preventDefault(); setRecentMode(e.shiftKey ? 'locations' : 'files'); setModal('recent'); return; }
     if (!desktop && e.shiftKey && !e.altKey && e.key.toLowerCase() === 'o') { e.preventDefault(); setModal('solution'); return; }
     if (e.shiftKey && !e.altKey && e.key.toLowerCase() === 'f') { e.preventDefault(); showSearch(false); return; }
     if (e.shiftKey && !e.altKey && e.key.toLowerCase() === 'h') { e.preventDefault(); showSearch(true); return; }
@@ -488,6 +495,28 @@ export default function App() {
     setDebugOpen(true);
     startDebugging({ file: feature.file, scenario }).catch((e) => setNotice((e as Error).message));
   };
+  useEffect(() => { if (openEditors.active) visitFile(openEditors.active); }, [openEditors.active]);
+  // Back / Forward / Recent Locations (Rider): open the file, then put the cursor on the line once its editor is there.
+  const navigateTo = (loc: { file: string; line?: number; column?: number }) => {
+    if (loc.file.endsWith('.feature') && fileSrc.kind !== 'browser') { setTab('Features'); setView('editor'); if (feature?.file !== loc.file) void loadFeature(loc.file); else openTab(loc.file, 'feature'); }
+    else editFile(loc.file, loc.line, loc.column);
+    if (loc.line) for (const ms of [60, 400, 1200]) setTimeout(() => reveal(loc.file, loc.line!, loc.column ?? 1), ms);
+  };
+  const [recentMode, setRecentMode] = useState<'files' | 'locations'>('files');
+  // Search Everywhere (Rider): press Shift twice.
+  useEffect(() => {
+    let last = 0, other = false;
+    const down = (e: KeyboardEvent) => { if (e.key !== 'Shift') other = true; };
+    const up = (e: KeyboardEvent) => {
+      if (e.key !== 'Shift') return;
+      const now = Date.now();
+      if (!other && now - last < 400) { last = 0; setModal('goto'); } else last = now;
+      other = false;
+    };
+    window.addEventListener('keydown', down, true);
+    window.addEventListener('keyup', up, true);
+    return () => { window.removeEventListener('keydown', down, true); window.removeEventListener('keyup', up, true); };
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
   // Open the file the debugger stopped in (a .feature step or C#), at the stopped line.
   const openAt = (file: string, line: number) => {
     if (file.endsWith('.feature')) {
@@ -2160,6 +2189,7 @@ export default function App() {
                       nuget: 'Manage NuGet Packages',
                       'save-recording': 'Save recording',
                       hooks: 'Go To Hooks',
+                      recent: 'Recent',
                       'unused-steps': 'Unused step definitions',
                       'define-steps': 'Define Steps',
                       record: 'Record a browser workflow',
@@ -2185,8 +2215,9 @@ export default function App() {
                 {modal === 'nuget' && (
                   <NugetManager initialProject={nugetProject} onNotice={setNotice} onChanged={() => { api('/scan', {}).then(setIndex, () => {}); }} />
                 )}
+                {modal === 'recent' && <RecentPopup mode={recentMode} onMode={setRecentMode} onOpen={(loc) => { setModal(undefined); navigateTo(loc); }} />}
                 {modal === 'goto' && (
-                  <GoToAll features={index?.features ?? []} onOpen={(file, line, column) => editFile(file, line, column)} onClose={() => setModal(undefined)} />
+                  <GoToAll features={index?.features ?? []} actions={menuProps.commands.map((c) => ({ label: c.label, run: c.run, shortcut: c.shortcut, disabled: c.disabled }))} onOpen={(file, line, column) => navigateTo({ file, line, column })} onClose={() => setModal(undefined)} />
                 )}
                 {modal === 'solution' && (
                   <OpenSolution root={config?.repositoryRoot} onOpened={solutionOpened} />

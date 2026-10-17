@@ -238,3 +238,40 @@ test('Output window: Show output from Build / Tests / Debug / C# language servic
   await expect(out.getByLabel('Output from Build')).toContainText('Build started');
   await page.request.post('/api/build/cancel').catch(() => {});
 });
+
+test('Rider navigation: Back / Forward, Recent Files and Locations (Ctrl+E), Search Everywhere (Shift Shift)', async ({ page }) => {
+  await page.addInitScript(() => { if (!sessionStorage.getItem('seeded')) { localStorage.setItem('tas:prefs', JSON.stringify({ mode: 'advanced', autoSave: 'off' })); sessionStorage.setItem('seeded', '1'); } });
+  await page.goto('/#/features/editor');
+  await expect(page.getByLabel('Gherkin source')).toBeVisible();
+  const nav = page.getByRole('navigation');
+  const active = page.locator('.editor-tab-label[aria-current="true"]');
+  await nav.getByRole('button', { name: 'SearchSteps.cs', exact: true }).first().click();
+  await page.getByLabel('Source of Steps/SearchSteps.cs').locator('.cm-line', { hasText: 'public async Task Results' }).first().click();
+  await nav.getByRole('button', { name: 'AuthSteps.cs', exact: true }).first().click();
+  await page.getByLabel('Source of Steps/AuthSteps.cs').locator('.cm-line').first().click();
+  await expect(active).toHaveAttribute('title', 'Steps/AuthSteps.cs');
+  // Back returns to the line in SearchSteps.cs; Forward goes to AuthSteps.cs again.
+  await page.keyboard.press('Control+Alt+ArrowLeft');
+  await expect(active).toHaveAttribute('title', 'Steps/SearchSteps.cs');
+  await expect(page.locator('.code-editor:not([hidden]) .cm-activeLine')).toContainText('public async Task Results');
+  await page.keyboard.press('Control+Alt+ArrowRight');
+  await expect(active).toHaveAttribute('title', 'Steps/AuthSteps.cs');
+  // Recent Files (Ctrl+E) and Recent Locations (Ctrl+Shift+E, with the code line).
+  await page.keyboard.press('Control+E');
+  const files = page.getByRole('listbox', { name: 'Recent files' });
+  await expect(files.getByRole('option').first()).toContainText('AuthSteps.cs');
+  await expect(files).toContainText('SearchSteps.cs');
+  await page.keyboard.press('Escape');
+  await page.keyboard.press('Control+Shift+E');
+  await expect(page.getByRole('listbox', { name: 'Recent locations' })).toContainText('public async Task Results');
+  await page.keyboard.press('Escape');
+  // Search Everywhere: Shift twice; recent files with an empty query; actions by name.
+  await page.keyboard.press('Shift');
+  await page.keyboard.press('Shift');
+  const results = page.getByRole('listbox', { name: 'Results' });
+  await expect(results.getByRole('option').first()).toContainText('AuthSteps.cs');
+  await page.getByRole('textbox', { name: 'Go to All' }).fill('view output');
+  await expect(results.getByRole('option').first()).toContainText('View: Output');
+  await page.keyboard.press('Enter');
+  await expect(page.getByRole('region', { name: 'Output' })).toBeVisible();
+});

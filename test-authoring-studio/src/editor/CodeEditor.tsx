@@ -21,7 +21,7 @@ import { diff as diffMode } from '@codemirror/legacy-modes/mode/diff';
 import { vsKeys, commentTokenFor } from './vsKeys';
 import { braceFolding, braceRange } from './folding';
 import { stickyScroll } from './stickyScroll';
-import { cursorTracker } from './cursor';
+import { revealOn, cursorTracker } from './cursor';
 import NavBar from './NavBar';
 import RenameStep from './RenameStep';
 import { api, type FilePreview } from '../api';
@@ -358,6 +358,7 @@ export default function CodeEditor({ file, reveal, active = true, onNotice, onIn
     ...(browser ? [] : [changeGutter()]),
     labelled(`Source of ${file}`, false),
     cursorTracker(file, () => eolRef.current),
+    revealOn(file),
     caretTracker,
     blameGutter(),
     coverageGutter(),

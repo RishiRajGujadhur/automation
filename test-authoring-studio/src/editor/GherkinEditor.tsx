@@ -21,7 +21,7 @@ import { breakpoints } from './breakpoints';
 import { runGutter, setRunMarks, type RunMark } from './runGutter';
 import { changeGutter } from './changeGutter';
 import { useChangeBars } from './useChangeBars';
-import { cursorTracker } from './cursor';
+import { cursorTracker, revealOn } from './cursor';
 
 // Constant: a new object each render would make @uiw/react-codemirror reconfigure the editor (dropping snippet fields).
 const GHERKIN_SETUP = { autocompletion: false, lintKeymap: true };
@@ -63,7 +63,7 @@ export default function GherkinEditor({ file, onSave, runMarks, onRunLine, value
   eolRef.current = value.includes('\r\n') ? 'CRLF' : 'LF';
   const handlers = useRef<{ onRunLine?: (line: number, debug: boolean) => void; onPreview: () => void; onSave?: () => void; onValidate: () => void; onDefinition?: (s: { keyword: string; text: string; line: number }) => void }>({ onRunLine, onPreview, onSave, onValidate, onDefinition });
   handlers.current = { onRunLine, onPreview, onSave, onValidate, onDefinition };
-  const extensions = useMemo(() => [...gherkinExtensions({ onSave: () => (handlers.current.onSave ?? handlers.current.onPreview)(), onValidate: () => handlers.current.onValidate(), onDefinition: (s) => handlers.current.onDefinition?.(s) }), lintGutter(), vsKeys('#'), gherkinTables(), indentFolding(), stickyScroll(indentRange), labelled('Gherkin source'), featureFile.of(file ?? ''), cursorTracker(file ?? 'untitled.feature', () => eolRef.current), ...(file ? [breakpoints(file), runGutter((l, d) => handlers.current.onRunLine?.(l, d)), changeGutter()] : [])], [file]);
+  const extensions = useMemo(() => [...gherkinExtensions({ onSave: () => (handlers.current.onSave ?? handlers.current.onPreview)(), onValidate: () => handlers.current.onValidate(), onDefinition: (s) => handlers.current.onDefinition?.(s) }), lintGutter(), vsKeys('#'), gherkinTables(), indentFolding(), stickyScroll(indentRange), labelled('Gherkin source'), featureFile.of(file ?? ''), cursorTracker(file ?? 'untitled.feature', () => eolRef.current), revealOn(file ?? 'untitled.feature'), ...(file ? [breakpoints(file), runGutter((l, d) => handlers.current.onRunLine?.(l, d)), changeGutter()] : [])], [file]);
   useChangeBars(ref, file, true);
   // Reqnroll formatting settings from .editorconfig for this file (Format Document uses them).
   useEffect(() => {
