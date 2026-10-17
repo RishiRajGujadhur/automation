@@ -1,1 +1,4 @@
 .tools/
+# Caches from tools run at the repository root (each app has its own node_modules).
+node_modules/
+test-results/
