@@ -201,6 +201,7 @@ export function buildMenu() {
       label: '&Test',
       submenu: [
         { label: 'Run All Tests', click: () => send('run-all-tests') },
+        { label: 'Find Unused Step Definitions', click: () => send('unused-steps') },
         { type: 'separator' },
         { label: 'Test Explorer', click: () => send('test-explorer') },
       ],

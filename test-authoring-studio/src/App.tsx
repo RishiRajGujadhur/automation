@@ -307,6 +307,9 @@ export default function App() {
     setTab('Features');
     setView('editor');
   };
+  // Find unused step definitions (Reqnroll): bindings no feature step uses.
+  const [unused, setUnused] = useState<{ id: string; keyword: string; pattern: string; className: string; method: string; file: string; line: number }[]>();
+  const showUnused = async () => { try { setUnused(await api('/steps/unused')); setModal('unused-steps'); } catch (e) { setNotice((e as Error).message); } };
   // Go To Hooks (Reqnroll): the hooks that run for the scenario at the cursor, in execution order.
   const [hooks, setHooks] = useState<{ feature: string | null; scenario: string | null; tags: string[]; hooks: Hook[] }>();
   const showHooks = async (file: string, line: number) => {
@@ -784,6 +787,7 @@ export default function App() {
     if (c === 'go-to-all') { setModal('goto'); return; }
     if (c === 'git-changes') { showGit(); return; }
     if (c === 'nuget') { openNuget(); return; }
+    if (c === 'unused-steps') { void showUnused(); return; }
     if (c === 'run-all-tests') { showTests(); runTests('all').catch((e) => setNotice((e as Error).message)); return; }
     if (c === 'build-windows') { setTab('Features'); if (view !== 'code' && view !== 'editor') setView('editor'); setBuildOpen(true); return; }
     if (c === 'save') { if (featureTabActive) saveFeature(); else saveAll(); return; }
@@ -1093,6 +1097,7 @@ export default function App() {
             className="menubar"
             trigger={<button className="menubar-item" aria-label="Test menu">Test</button>}
             entries={[
+              { label: 'Find Unused Step Definitions', icon: Search, onSelect: () => void showUnused() },
               { label: 'Run All Tests', icon: Play, disabled: getTestRun().status === 'running', onSelect: () => { showTests(); runTests('all').catch((e) => setNotice((e as Error).message)); } },
               { label: 'Test Explorer', icon: TestTubeDiagonal, onSelect: showTests },
             ]}
@@ -2131,6 +2136,7 @@ export default function App() {
                       nuget: 'Manage NuGet Packages',
                       'save-recording': 'Save recording',
                       hooks: 'Go To Hooks',
+                      'unused-steps': 'Unused step definitions',
                       'define-steps': 'Define Steps',
                       record: 'Record a browser workflow',
                       new: 'Create a feature',
@@ -2376,6 +2382,24 @@ export default function App() {
                     onNotice={setNotice}
                     onApplied={(next, file) => { setIndex(next); setModal(undefined); editFile(file); setNotice(`Step definitions written to ${file}. Implement the TODOs; the steps are bound now.`); }}
                   />
+                )}
+                {modal === 'unused-steps' && unused && (
+                  <div className="hooks-list">
+                    <p className="subtle">{unused.length ? `${unused.length} step definition${unused.length === 1 ? '' : 's'} not used by any feature file.` : 'Every step definition is used by at least one feature file.'}</p>
+                    {unused.length > 0 && (
+                      <ul aria-label="Unused step definitions">
+                        {unused.map((u) => (
+                          <li key={u.id}>
+                            <button onClick={() => { setModal(undefined); editFile(u.file, u.line); }}>
+                              <span className="hook-kind">{u.keyword}</span>
+                              <span>{u.pattern}</span>
+                              <small>{u.className}.{u.method} · {u.file}:{u.line}</small>
+                            </button>
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+                  </div>
                 )}
                 {modal === 'hooks' && hooks && (
                   <div className="hooks-list">

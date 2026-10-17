@@ -158,6 +158,8 @@ async function unboundSteps(file:string){
  }
  return {feature,steps:out};
 }
+// Find unused step definitions (Reqnroll): bindings no feature step resolves to.
+app.get('/api/steps/unused',async(_req,res)=>{const i=await ensure();res.json(i.stepDefinitions.filter(b=>b.usages===0).map(b=>({id:b.id,keyword:b.keyword,pattern:b.pattern,className:b.className,method:b.method.split('(')[0].split('.').pop(),file:b.file,line:b.line})).sort((a,b)=>a.file.localeCompare(b.file)||a.line-b.line));});
 app.get('/api/steps/unbound',async(req,res)=>{const file=z.string().max(400).parse(req.query.file);const r=await unboundSteps(file);res.json({feature:r.feature.name,steps:r.steps,files:[...new Set((await ensure()).stepDefinitions.map(b=>b.file))].sort()});});
 app.post('/api/steps/define',async(req,res)=>{
  const b=z.object({feature:z.string().max(400),lines:z.array(z.number().int()).max(500).optional(),file:z.string().max(400).regex(/\.cs$/i,'Step definition files end with .cs.'),className:z.string().regex(/^[A-Za-z_]\w{0,100}$/,'Use a C# class name.')}).parse(req.body);

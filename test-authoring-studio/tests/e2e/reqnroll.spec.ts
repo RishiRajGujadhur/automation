@@ -26,6 +26,7 @@ public class MoreHooks
     [Before, Scope(Tag = "slow")] public void OnlySlow() { }
 }
 `);
+  await fs.writeFile(path.join(root, 'Steps/Unused.cs'), ['using TechTalk.SpecFlow;', 'namespace Demo;', '[Binding]', 'public class Leftovers', '{', '    [Given("nobody calls this anymore")]', '    public void Old() { }', '}', ''].join('\n'));
   await fs.writeFile(path.join(root, 'Features/Cart.feature'), [
     'Feature: Shopping cart',
     '  Scenario: Add items',
@@ -102,4 +103,15 @@ test('Define Steps: skeletons for every unbound step of a feature, then the step
   expect(cs).toContain('[Given("a customer of type {}")]');
   // Indexed: no unbound steps left.
   await expect.poll(async () => (await (await request.get('/api/steps/unbound?file=Features/Cart.feature')).json()).steps.length, { timeout: 30_000 }).toBe(0);
+});
+
+test('Find Unused Step Definitions lists bindings no feature uses and opens them', async ({ page }) => {
+  await openFeature(page, 'Login.feature');
+  await page.getByRole('button', { name: 'Test menu' }).click();
+  await page.getByRole('menuitem', { name: 'Find Unused Step Definitions' }).click();
+  const list = page.getByRole('list', { name: 'Unused step definitions' });
+  await expect(list).toContainText('nobody calls this anymore');
+  await expect(list).not.toContainText('the login page is open');
+  await list.getByRole('button', { name: /nobody calls this anymore/ }).click();
+  await expect(page.locator('.editor-tab-label[aria-current="true"]')).toHaveAttribute('title', 'Steps/Unused.cs');
 });
