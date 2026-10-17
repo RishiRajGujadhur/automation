@@ -3,7 +3,7 @@
  * (../test-authoring-desktop exposes `window.desktop` from its preload script). In a browser every
  * helper here is a no-op, so call sites never need to branch on more than `desktop`.
  */
-export type DesktopMenuCommand = 'palette' | 'preferences' | 'shortcuts' | 'workspace-settings' | 'new-feature' | 'record' | 'tour' | 'toggle-mode' | 'toggle-explorer' | 'focus-mode' | 'repository-changed' | 'set-pref' | 'diagnostics' | 'run-tests' | 'continue-draft' | 'design-tool' | 'debug' | 'open-folder' | 'open-solution' | 'build' | 'rebuild' | 'clean' | 'cancel-build' | 'build-windows' | 'test-explorer' | 'find-in-files' | 'replace-in-files' | 'go-to-all' | 'git-changes' | 'nuget' | 'unused-steps' | 'run-all-tests' | 'save' | 'save-all' | 'close-editor' | 'close-all-editors';
+export type DesktopMenuCommand = 'palette' | 'preferences' | 'shortcuts' | 'workspace-settings' | 'new-feature' | 'record' | 'tour' | 'toggle-mode' | 'toggle-explorer' | 'focus-mode' | 'repository-changed' | 'set-pref' | 'diagnostics' | 'run-tests' | 'continue-draft' | 'design-tool' | 'debug' | 'open-folder' | 'open-solution' | 'build' | 'rebuild' | 'clean' | 'cancel-build' | 'build-windows' | 'test-explorer' | 'find-in-files' | 'replace-in-files' | 'go-to-all' | 'git-changes' | 'nuget' | 'unused-steps' | 'spy' | 'run-all-tests' | 'save' | 'save-all' | 'close-editor' | 'close-all-editors';
 type DesktopBridge = {
   platform: string;
   versions: Record<string, string>;

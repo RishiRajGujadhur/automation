@@ -3,6 +3,8 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { createRequire } from 'node:module';
+import { createServer } from 'node:http';
+import { chromium } from '@playwright/test';
 
 /**
  * README screenshots of the desktop app (not part of the normal run):
@@ -38,8 +40,8 @@ test.beforeAll(async () => {
   repo = path.join(fs.mkdtempSync(path.join(os.tmpdir(), 'tas-shots-repo-')), 'Calculator');
   fs.cpSync(path.resolve(import.meta.dirname, '../../test-authoring-studio/samples/Calculator'), repo, { recursive: true, filter: (s) => !/[\\/](bin|obj)$/.test(s) });
   app = process.env.TAS_EXE
-    ? await electron.launch({ executablePath: electronPath, args: [`--user-data-dir=${userData}`], env: { ...process.env, TAS_TEST: '1' } })
-    : await electron.launch({ args: ['.', `--user-data-dir=${userData}`], cwd: path.resolve(import.meta.dirname, '..'), env: { ...process.env, TAS_TEST: '1' } });
+    ? await electron.launch({ executablePath: electronPath, args: [`--user-data-dir=${userData}`], env: { ...process.env, TAS_TEST: '1', STUDIO_RECORDER_CDP: '1' } })
+    : await electron.launch({ args: ['.', `--user-data-dir=${userData}`], cwd: path.resolve(import.meta.dirname, '..'), env: { ...process.env, TAS_TEST: '1', STUDIO_RECORDER_CDP: '1' } });
   page = await app.firstWindow();
   await page.waitForURL(/127\.0\.0\.1:\d+\/#\//, { timeout: 30_000 });
   await app.evaluate(({ BrowserWindow }) => { const w = BrowserWindow.getAllWindows()[0]; w.unmaximize(); w.setContentSize(1440, 900); w.center(); });
@@ -92,7 +94,30 @@ test('README screenshots', async () => {
   await page.waitForTimeout(800);
   await shot('recorder');
 
-  // 6. Start Window (every editor closed).
+  // 6. Spy: a sign-in page, its submit button picked in the Spy browser (headless with CDP for the capture).
+  const site = createServer((_q, r) => { r.setHeader('Content-Type', 'text/html'); r.end('<!doctype html><title>Shop</title><main style="font:16px system-ui;padding:24px"><h1>Sign in</h1><form><p><label>Email <input data-testid="email" name="email"></label></p><p><label>Password <input type="password" id="password"></label></p><button type="submit" id="sign-in">Sign in</button> <a href="/forgot">Forgot password?</a></form></main>'); });
+  await new Promise<void>((ok) => site.listen(0, '127.0.0.1', ok));
+  const siteUrl = `http://127.0.0.1:${(site.address() as { port: number }).port}/signin`;
+  try {
+    await page.goto(page.url().replace(/#.*$/, '#/features/spy'));
+    const spy = page.getByRole('region', { name: 'Spy' });
+    await spy.getByLabel('Page URL').fill(siteUrl);
+    await spy.getByRole('button', { name: 'Start Spy' }).click();
+    await expect(spy.getByRole('region', { name: 'Element browser' })).toContainText('Sign in', { timeout: 30_000 });
+    const cdp = (await call('/spy')).cdpPort;
+    const b = await chromium.connectOverCDP(`http://127.0.0.1:${cdp}`);
+    const find = () => b.contexts().flatMap((c) => c.pages()).find((p) => p.url().startsWith(siteUrl));
+    await expect.poll(() => !!find(), { timeout: 15_000 }).toBe(true);
+    await find()!.locator('#sign-in').click();
+    await expect(spy.getByRole('region', { name: 'Element properties' })).toContainText('#sign-in', { timeout: 15_000 });
+    await shot('spy');
+    await b.close().catch(() => {});
+    await call('/spy/stop', {});
+  } finally {
+    site.close();
+  }
+
+  // 7. Start Window (every editor closed).
   await page.goto(page.url().replace(/#.*$/, '#/features/editor'));
   while (await page.locator('.editor-tab').count()) await page.locator('.editor-tab button[aria-label^="Close "]').first().click();
   await expect(page.getByRole('region', { name: 'Start Window' })).toBeVisible();

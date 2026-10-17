@@ -203,6 +203,8 @@ export function buildMenu() {
         { label: 'Run All Tests', click: () => send('run-all-tests') },
         { label: 'Find Unused Step Definitions', click: () => send('unused-steps') },
         { type: 'separator' },
+        { label: 'Spy (find elements and selectors)…', click: () => send('spy') },
+        { type: 'separator' },
         { label: 'Test Explorer', click: () => send('test-explorer') },
       ],
     },

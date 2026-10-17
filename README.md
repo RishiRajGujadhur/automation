@@ -35,6 +35,12 @@ and dictionary entries.
 
 ![Recorder](docs/screenshots/recorder.png)
 
+**Spy (GUI object recognition, after Ranorex Spy).** Track an element on any page, browse the element tree, read its
+properties, and pick a selector that is verified against the live page (unique / n matches) before it goes into an
+XML dictionary. Snapshots keep a page to explore offline.
+
+![Spy](docs/screenshots/spy.png)
+
 **Start Window.** Open recent, clone a repository, open a project, solution or folder.
 
 ![Start Window](docs/screenshots/start-window.png)
@@ -53,6 +59,8 @@ and dictionary entries.
 - **Reqnroll / SpecFlow:** step matching with Reqnroll's rules (Cucumber expressions, `[Scope]` precedence,
   `[StepDefinition]`), Go To Hooks, Define Steps, Find Unused Step Definitions, bound/unbound step highlighting,
   Scenario Outline checks, and Gherkin formatting from `.editorconfig`. See [REQNROLL.md](REQNROLL.md).
+- **Spy:** element tracking, element browser, properties, verified selectors, add to dictionary, snapshots. See
+  [SPY.md](SPY.md).
 
 Visual Studio feature parity is tracked in [VS2026-PARITY.md](VS2026-PARITY.md); current work is tracked in
 [QOL-PROGRESS.md](QOL-PROGRESS.md).

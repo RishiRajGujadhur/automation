@@ -793,6 +793,7 @@ export default function App() {
     if (c === 'git-changes') { showGit(); return; }
     if (c === 'nuget') { openNuget(); return; }
     if (c === 'unused-steps') { void showUnused(); return; }
+    if (c === 'spy') { setTab('Features'); setView('spy'); return; }
     if (c === 'run-all-tests') { showTests(); runTests('all').catch((e) => setNotice((e as Error).message)); return; }
     if (c === 'build-windows') { setTab('Features'); if (view !== 'code' && view !== 'editor') setView('editor'); setBuildOpen(true); return; }
     if (c === 'save') { if (featureTabActive) saveFeature(); else saveAll(); return; }
@@ -955,6 +956,7 @@ export default function App() {
         { label: basic ? 'Switch to Advanced mode' : 'Switch to Basic mode', icon: SlidersHorizontal, run: () => setMode(basic ? 'advanced' : 'basic'), shortcut: 'Ctrl Shift A' },
         { label: 'Command palette', icon: CommandIcon, run: () => setPaletteOpen(true), shortcut: 'Ctrl K' },
         { label: 'Start a recording', icon: Circle, run: () => { setTab('Features'); setView('recorder'); setModal('record'); } },
+        { label: 'Spy: find elements and selectors on a page', icon: ScanSearch, run: () => { setTab('Features'); setView('spy'); } },
         { label: 'New feature', icon: Plus, run: () => beginFeature() },
         { label: 'Rescan repository', icon: RefreshCw, disabled: busy, run: () => work(async () => { setIndex(await api('/scan', {})); setNotice('Repository index refreshed.'); }) },
         { label: 'Workspace settings', icon: Settings2, run: () => setModal('settings') },
