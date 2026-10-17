@@ -2361,3 +2361,62 @@
   background: var(--accent-soft, #9270dd22);
   font-size: 12px;
 }
+
+// Open Project/Solution ▸ Browse
+.solution-browser {
+  display: grid;
+  gap: 4px;
+  margin: 8px 0;
+  .browser-bar {
+    display: flex;
+    gap: 6px;
+    align-items: center;
+    select {
+      height: 26px;
+      border: 1px solid var(--border);
+      border-radius: 3px;
+      background: var(--surface);
+      color: var(--text);
+    }
+  }
+  .browser-path {
+    display: inline-flex;
+    gap: 4px;
+    align-items: center;
+    overflow: hidden;
+    color: var(--text-muted);
+    font-size: 12px;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .browser-list {
+    max-height: 260px;
+    margin: 0;
+    padding: 4px;
+    overflow: auto;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    list-style: none;
+    button {
+      display: flex;
+      gap: 6px;
+      align-items: center;
+      width: 100%;
+      padding: 3px 6px;
+      border: 0;
+      border-radius: 3px;
+      background: transparent;
+      color: var(--text);
+      font-size: 13px;
+      text-align: left;
+      cursor: pointer;
+      &:hover {
+        background: var(--accent-soft, #9270dd22);
+      }
+      &.solution,
+      &.project {
+        font-weight: 600;
+      }
+    }
+  }
+}

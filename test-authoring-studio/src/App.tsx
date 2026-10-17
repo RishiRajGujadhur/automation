@@ -296,6 +296,8 @@ export default function App() {
     if (announce) { setTab('Features'); setView('editor'); setNotice(`Opened ${name} from your disk. Files open and save in place. For step bindings and debugging, use File ▸ Index Folder with Studio Server….`); }
   };
   const leaveBrowserFolder = async () => { if (fileSource().kind !== 'browser') return; await closeBrowserFolder(); setBrowserSol(undefined); };
+  /** Open Project/Solution: the native file dialog on desktop (it opens the solution itself), the browse dialog on the web. */
+  const openSolutionDialog = () => { if (desktop?.openSolution) void desktop.openSolution(); else setModal('solution'); };
   /** A solution, project or folder was opened (Open Project/Solution, Start Window). */
   const solutionOpened = async (r: { config: { repositoryRoot: string; solution?: string }; index: Index }) => {
     await leaveBrowserFolder();
@@ -783,7 +785,7 @@ export default function App() {
       return;
     }
     if (c === 'open-folder') { void openFolder(); return; }
-    if (c === 'open-solution') { setModal('solution'); return; }
+    if (c === 'open-solution') { openSolutionDialog(); return; }
     if (c === 'build' || c === 'rebuild' || c === 'clean') { runBuild(c); return; }
     if (c === 'cancel-build') { void cancelBuild(); return; }
     if (c === 'test-explorer') { showTests(); return; }
@@ -1049,7 +1051,7 @@ export default function App() {
             entries={[
               { label: 'New Feature', icon: Plus, onSelect: () => beginFeature() },
               'separator' as const,
-              { label: 'Open Project/Solution…', icon: Layers, shortcut: 'Ctrl Shift O', onSelect: () => setModal('solution') },
+              { label: 'Open Project/Solution…', icon: Layers, shortcut: 'Ctrl Shift O', onSelect: () => openSolutionDialog() },
               { label: 'Open Folder…', icon: FolderOpen, onSelect: () => void openFolder() },
               ...(fileSrc.kind !== 'browser' && browserFolderName ? [{ label: `Reopen ${browserFolderName} (from disk)`, icon: Folder, onSelect: () => void reopenBrowserFolder() }] : []),
               { label: 'Index Folder with Studio Server…', icon: Database, onSelect: () => setModal('settings') },
@@ -1758,7 +1760,7 @@ export default function App() {
             <div className="editor-area">
             <EditorTabs onClose={closeEditor} onSplit={fileSrc.kind === 'browser' ? undefined : (f) => setSplitFile(f)}>
             {!openEditors.tabs.length && (
-              <StartWindow onOpenSolution={() => setModal('solution')} onOpenFolder={() => void openFolder()} onOpened={solutionOpened} onNotice={setNotice} />
+              <StartWindow onOpenSolution={() => openSolutionDialog()} onOpenFolder={() => void openFolder()} onOpened={solutionOpened} onNotice={setNotice} />
             )}
             {featureTabActive && (
             <section className="panel editor-panel">

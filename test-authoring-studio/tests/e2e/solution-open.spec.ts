@@ -123,3 +123,33 @@ test('A solution project outside the opened folder is listed and labelled', asyn
     await fs.rm(base, { recursive: true, force: true, maxRetries: 5 }).catch(() => {});
   }
 });
+
+test('Open Project/Solution: browse folders and double-click a solution (web)', async ({ page, request }) => {
+  const previous = (await (await request.get('/api/workspace')).json()).config;
+  const base = await fs.mkdtemp(path.join(os.tmpdir(), 'studio-browse-'));
+  await fs.mkdir(path.join(base, 'Shop', 'src'), { recursive: true });
+  await fs.writeFile(path.join(base, 'Shop', 'Shop.sln'), 'Microsoft Visual Studio Solution File, Format Version 12.00\nProject("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Shop", "src\Shop.csproj", "{1}"\nEndProject\n');
+  await fs.writeFile(path.join(base, 'Shop', 'src', 'Shop.csproj'), '<Project Sdk="Microsoft.NET.Sdk"></Project>');
+  await fs.writeFile(path.join(base, 'Shop', 'notes.txt'), 'not listed');
+  try {
+    // Start browsing next to a workspace inside base.
+    expect((await request.post('/api/workspace', { data: { repositoryRoot: path.join(base, 'Shop', 'src'), targetProject: '.' } })).ok()).toBe(true);
+    await page.addInitScript(() => { if (!sessionStorage.getItem('seeded')) { localStorage.setItem('tas:prefs', JSON.stringify({ mode: 'advanced' })); sessionStorage.setItem('seeded', '1'); } });
+    await page.goto('/#/features/editor');
+    await page.getByRole('button', { name: 'File menu' }).click();
+    await page.getByRole('menuitem', { name: /Open Project\/Solution/ }).click();
+    const dialog = page.getByRole('dialog', { name: 'Open Project/Solution' });
+    const list = dialog.getByRole('list', { name: 'Folders and solutions' });
+    await expect(list).toContainText('src'); // the folder above the workspace
+    await dialog.getByRole('button', { name: 'Up one folder' }).click();
+    await list.getByRole('button', { name: 'Folder Shop' }).click();
+    await expect(list.getByRole('button', { name: 'Solution Shop.sln' })).toBeVisible();
+    await expect(list).not.toContainText('notes.txt'); // only folders, solutions and projects
+    await list.getByRole('button', { name: 'Solution Shop.sln' }).dblclick();
+    await expect(dialog).toHaveCount(0);
+    expect((await (await request.get('/api/workspace')).json()).config.solution).toBe('Shop.sln');
+  } finally {
+    await request.post('/api/workspace', { data: { ...previous, solution: '' } });
+    await fs.rm(base, { recursive: true, force: true, maxRetries: 5 }).catch(() => {});
+  }
+});

@@ -7,6 +7,8 @@ export type DesktopBridge = {
   versions: { app: string; electron: string; chrome: string; node: string };
   /** Native folder picker; resolves to an absolute path or null when cancelled. */
   pickFolder(title?: string): Promise<string | null>;
+  /** File ▸ Open Project/Solution: the native file dialog (.sln / .slnx / .csproj), then opens it. */
+  openSolution?(): Promise<void>;
   /** Opens a repository file (relative to the current repository root) in the OS default app. */
   openInEditor(file: string, line?: number): Promise<string>;
   /** Copies the absolute path of a repository file. */
@@ -25,6 +27,7 @@ export type DesktopBridge = {
 
 export const IPC = {
   pickFolder: 'desktop:pick-folder',
+  openSolution: 'desktop:open-solution',
   openInEditor: 'desktop:open-in-editor',
   reveal: 'desktop:reveal',
   openExternal: 'desktop:open-external',

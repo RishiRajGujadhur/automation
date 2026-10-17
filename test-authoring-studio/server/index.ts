@@ -271,6 +271,22 @@ app.get('/api/solution',async(_req,res)=>{
   res.json({name:solutionFile?path.posix.basename(solutionFile).replace(/\.slnx?$/i,''):model.root,solutionFile:solutionFile||null,configurations:parsed?.configurations??['Debug','Release'],tree,projects,packages:model.packages,frameworks:model.frameworks,files,nesting,truncated:model.truncated});
 });
 // File ▸ Open ▸ Project/Solution: a .sln/.slnx/.csproj (or a folder) on disk becomes the workspace.
+// Open Project/Solution ▸ browse (web: the browser cannot show native paths): folders and solution / project files.
+app.get('/api/fs/browse', async (req, res) => {
+  const asked = z.string().max(1000).optional().parse(req.query.dir);
+  const dir = path.resolve(asked || path.dirname(config.repositoryRoot));
+  const entries = await fs.readdir(dir, { withFileTypes: true }).catch((e) => { throw new Error(`Cannot open ${dir}: ${(e as Error).message}`); });
+  const kind = (n: string) => (/\.slnx?$/i.test(n) ? 'solution' : /\.csproj$/i.test(n) ? 'project' : undefined);
+  const items = entries
+    .filter((e) => (e.isDirectory() && !e.name.startsWith('.') && !['bin', 'obj', 'node_modules', '$RECYCLE.BIN', 'System Volume Information'].includes(e.name)) || (e.isFile() && kind(e.name)))
+    .map((e) => ({ name: e.name, path: path.join(dir, e.name), kind: e.isDirectory() ? 'folder' : kind(e.name)! }))
+    .sort((a, b) => Number(b.kind === 'folder') - Number(a.kind === 'folder') || a.name.localeCompare(b.name, undefined, { sensitivity: 'base' }))
+    .slice(0, 2000);
+  // Windows drives (C:\, D:\ …) for the drive list.
+  const drives = process.platform === 'win32' ? (await Promise.all('CDEFGHIJKLMNOPQRSTUVWXYZ'.split('').map(async (l) => ((await fs.stat(`${l}:\\`).then(() => true, () => false)) ? `${l}:\\` : null)))).filter(Boolean) : ['/'];
+  const parent = path.dirname(dir);
+  res.json({ dir, parent: parent === dir ? null : parent, drives, items });
+});
 app.get('/api/solution/find',async(_req,res)=>{res.json(await findSolutions(config.repositoryRoot,ignoredDirsFor(config)));});
 app.post('/api/solution/open',async(req,res)=>{
   const {path:target}=z.object({path:z.string().min(1).max(1000)}).parse(req.body);

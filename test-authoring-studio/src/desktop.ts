@@ -8,6 +8,7 @@ type DesktopBridge = {
   platform: string;
   versions: Record<string, string>;
   pickFolder(title?: string): Promise<string | null>;
+  openSolution?(): Promise<void>;
   openInEditor(file: string, line?: number): Promise<string>;
   copyPath(file: string): Promise<string>;
   reveal(file: string): Promise<void>;

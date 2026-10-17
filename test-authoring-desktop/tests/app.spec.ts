@@ -41,8 +41,8 @@ test('starts the bundled API and loads the studio', async () => {
 });
 
 test('exposes the desktop bridge, and no Node globals', async () => {
-  const info = await page.evaluate(() => ({ bridge: typeof (window as any).desktop?.pickFolder, platform: (window as any).desktop?.platform, require: typeof (window as any).require, process: typeof (window as any).process }));
-  expect(info).toEqual({ bridge: 'function', platform: process.platform, require: 'undefined', process: 'undefined' });
+  const info = await page.evaluate(() => ({ bridge: typeof (window as any).desktop?.pickFolder, openSolution: typeof (window as any).desktop?.openSolution, platform: (window as any).desktop?.platform, require: typeof (window as any).require, process: typeof (window as any).process }));
+  expect(info).toEqual({ bridge: 'function', openSolution: 'function', platform: process.platform, require: 'undefined', process: 'undefined' });
 });
 
 test('native menu has the expected menus and navigates by deep link', async () => {

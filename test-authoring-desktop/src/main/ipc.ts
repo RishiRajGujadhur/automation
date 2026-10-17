@@ -2,7 +2,7 @@ import { BrowserWindow, clipboard, dialog, ipcMain, nativeTheme, shell, type Ipc
 import { ctx } from './context';
 import { IPC } from '../shared/bridge';
 import fs from 'node:fs';
-import { openRepository, repositoryFile } from './workspace';
+import { openRepository, repositoryFile, pickAndOpenSolution } from './workspace';
 import { buildMenu } from './menu';
 import { notify } from './notify';
 import { openInPreferredEditor } from './tools';
@@ -24,6 +24,7 @@ export function registerIpc() {
     const r = await (win ? dialog.showOpenDialog(win, { title: String(title ?? 'Choose a folder'), properties: ['openDirectory'], defaultPath: ctx.repository }) : dialog.showOpenDialog({ properties: ['openDirectory'] }));
     return r.canceled ? null : r.filePaths[0] ?? null;
   }));
+  ipcMain.handle(IPC.openSolution, guard(async () => { await pickAndOpenSolution(); buildMenu(); }));
   ipcMain.handle(IPC.openInEditor, guard(async (_e, file: string, line?: number) => openInPreferredEditor(await repositoryFile(String(file)), Number(line) || undefined)));
   ipcMain.handle(IPC.copyPath, guard(async (_e, file: string) => { const abs = await repositoryFile(String(file)); clipboard.writeText(abs); return abs; }));
   ipcMain.handle(IPC.reveal, guard(async (_e, file: string) => { shell.showItemInFolder(await repositoryFile(String(file))); }));

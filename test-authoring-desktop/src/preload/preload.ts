@@ -5,6 +5,7 @@ const bridge: DesktopBridge = {
   platform: process.platform,
   versions: { app: process.env.npm_package_version ?? '', electron: process.versions.electron, chrome: process.versions.chrome, node: process.versions.node },
   pickFolder: (title) => ipcRenderer.invoke(IPC.pickFolder, title),
+  openSolution: () => ipcRenderer.invoke(IPC.openSolution),
   openInEditor: (file, line) => ipcRenderer.invoke(IPC.openInEditor, file, line),
   copyPath: (file) => ipcRenderer.invoke(IPC.copyPath, file),
   reveal: (file) => ipcRenderer.invoke(IPC.reveal, file),
