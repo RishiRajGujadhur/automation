@@ -82,9 +82,9 @@ test('W9 + W6: zoom presets apply and are announced', async () => {
 
 test('W3: Always on Top', async () => {
   await menu('View', 'Always on Top');
-  expect(await appProcess.evaluate(({ BrowserWindow }) => BrowserWindow.getAllWindows()[0].isAlwaysOnTop())).toBe(true);
+  await expect.poll(() => appProcess.evaluate(({ BrowserWindow }) => BrowserWindow.getAllWindows()[0].isAlwaysOnTop())).toBe(true);
   await menu('View', 'Always on Top');
-  expect(await appProcess.evaluate(({ BrowserWindow }) => BrowserWindow.getAllWindows()[0].isAlwaysOnTop())).toBe(false);
+  await expect.poll(() => appProcess.evaluate(({ BrowserWindow }) => BrowserWindow.getAllWindows()[0].isAlwaysOnTop())).toBe(false);
 });
 
 test('K4, C4, C5: Go and Help menus drive the studio', async () => {
