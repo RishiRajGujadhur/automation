@@ -40,6 +40,7 @@ import { WorkspaceSearch } from './stepSearch.js';
 import { scenarioSteps, scenarioText, featureWithScenario } from './recordingFeature.js';
 import { defineSteps, argumentKind, type StepArgument } from './stepScaffold.js';
 import { recordedStepsSource } from './recordedSteps.js';
+import { editorConfigFor } from './editorconfig.js';
 import { mergeDictionary, proposeField, findEntry, parseDictionary, selectorRank, fieldName, type FieldProposal } from './dictionaries.js';
 const studio = readSettings();
 const allowedHosts = [studio.apiPort, studio.webPort].flatMap((p) => [`127.0.0.1:${p}`, `localhost:${p}`]);
@@ -160,6 +161,8 @@ async function unboundSteps(file:string){
  return {feature,steps:out};
 }
 // Find unused step definitions (Reqnroll): bindings no feature step resolves to.
+// Gherkin formatting settings (.editorconfig, as Reqnroll reads them) for a feature file.
+app.get('/api/editorconfig',async(req,res)=>{const file=z.string().min(1).max(400).parse(req.query.file);await confined(config.repositoryRoot,file,false);res.json(await editorConfigFor(config.repositoryRoot,file));});
 app.get('/api/steps/unused',async(_req,res)=>{const i=await ensure();res.json(i.stepDefinitions.filter(b=>b.usages===0).map(b=>({id:b.id,keyword:b.keyword,pattern:b.pattern,className:b.className,method:b.method.split('(')[0].split('.').pop(),file:b.file,line:b.line})).sort((a,b)=>a.file.localeCompare(b.file)||a.line-b.line));});
 app.get('/api/steps/unbound',async(req,res)=>{const file=z.string().max(400).parse(req.query.file);const r=await unboundSteps(file);res.json({feature:r.feature.name,steps:r.steps,files:[...new Set((await ensure()).stepDefinitions.map(b=>b.file))].sort()});});
 app.post('/api/steps/define',async(req,res)=>{

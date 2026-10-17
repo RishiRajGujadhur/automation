@@ -125,3 +125,17 @@ test('Highlighting like the Reqnroll extension: unbound steps, bound steps and t
   await page.getByRole('navigation').getByRole('button', { name: 'Cart.feature', exact: true }).first().click();
   await expect(src.locator('.cm-step-unbound', { hasText: 'a cart with 2 items' })).toBeVisible({ timeout: 15_000 });
 });
+
+test('Format Document follows the Gherkin settings in .editorconfig (Reqnroll)', async ({ page }) => {
+  await fs.writeFile(path.join(root, '.editorconfig'), ['root = true', '[*.feature]', 'indent_size = 2', 'gherkin_indent_feature_children = true', 'gherkin_table_cell_padding_size = 2', ''].join('\n'));
+  await openFeature(page, 'Cart.feature');
+  const src = page.getByLabel('Gherkin source');
+  await src.click();
+  await page.keyboard.press('Shift+Alt+F');
+  // Exact text (toHaveText would collapse the spaces being checked).
+  const line = (n: number) => src.locator('.cm-line').nth(n).evaluate((e) => e.textContent);
+  await expect.poll(() => line(1)).toBe('  Scenario: Add items');
+  expect(await line(2)).toBe('    Given a cart with 2 items');
+  expect(await line(4)).toBe('      |  name  |  price  |');
+  expect(await line(5)).toBe('      |  Pen   |   1.50  |'); // numbers right-aligned (Reqnroll default)
+});

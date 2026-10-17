@@ -8,6 +8,7 @@ import { StreamLanguage } from '@codemirror/language';
 import { gherkin } from '@codemirror/legacy-modes/mode/gherkin';
 import type { Binding } from '../types';
 import { requestCreateStep } from './events';
+import { featureFile, formatSettings, formatGherkinWith } from './gherkinFormat';
 import { Trie } from '../algorithms/search';
 import { levenshteinRatio, dice } from '../algorithms/strings';
 import { smellChecks, type QScenario } from '../algorithms/quality';
@@ -325,6 +326,11 @@ const stepHover = hoverTooltip(async (view, pos) => {
 });
 
 /** 9. Formatter: canonical indentation and aligned table columns. */
+/** Format Document: Reqnroll's .editorconfig settings when the file has them, else the studio's layout. */
+export function formatFeature(src: string, file?: string) {
+  const o = file ? formatSettings.get(file) : undefined;
+  return o ? formatGherkinWith(src, o) : formatGherkin(src);
+}
 export function formatGherkin(src: string) {
   const lines = src.replace(/\r\n/g, '\n').split('\n');
   const out: string[] = [];
@@ -379,7 +385,7 @@ export function gherkinExtensions(opts: { onSave?: () => void; onValidate?: () =
       { key: 'Mod-Enter', preventDefault: true, run: () => { opts.onValidate?.(); return true; } },
       // F12: go to the C# step definition of the step under the cursor (like VS Code / Visual Studio).
       { key: 'F12', preventDefault: true, run: (v: EditorView) => { const n = v.state.doc.lineAt(v.state.selection.main.head).number; const s = stepLines(v.state.doc.toString()).find((x) => x.line === n); if (s) opts.onDefinition?.({ keyword: s.resolved, text: s.text, line: n }); return true; } },
-      { key: 'Shift-Alt-f', preventDefault: true, run: (v: EditorView) => { const next = formatGherkin(v.state.doc.toString()); v.dispatch({ changes: { from: 0, to: v.state.doc.length, insert: next } }); return true; } },
+      { key: 'Shift-Alt-f', preventDefault: true, run: (v: EditorView) => { const next = formatFeature(v.state.doc.toString(), v.state.facet(featureFile)); v.dispatch({ changes: { from: 0, to: v.state.doc.length, insert: next } }); return true; } },
     ]),
   ];
 }

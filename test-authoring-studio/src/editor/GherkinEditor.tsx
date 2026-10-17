@@ -1,4 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { api } from '../api';
+import { isBrowser } from '../files/provider';
+import { featureFile, formatSettings, formatFromEditorConfig } from './gherkinFormat';
 import { vsKeys } from './vsKeys';
 import { gherkinTables } from './gherkinTables';
 import { indentFolding, indentRange } from './folding';
@@ -11,7 +14,7 @@ import { lintGutter, forEachDiagnostic, nextDiagnostic, openLintPanel } from '@c
 import { startCompletion } from '@codemirror/autocomplete';
 import { toggleComment, selectAll } from '@codemirror/commands';
 import { Play, Save, Check, Wand2, Copy, Scissors, ClipboardPaste, MessageSquareCode, TextSelect, CircleAlert, ListChecks, Sparkles, Maximize2, Minimize2, Anchor, Code2 } from 'lucide-react';
-import { gherkinExtensions, formatGherkin } from './gherkin';
+import { gherkinExtensions, formatFeature } from './gherkin';
 import { RowMenu } from '../ui';
 import { labelled } from './a11y';
 import { breakpoints } from './breakpoints';
@@ -60,8 +63,13 @@ export default function GherkinEditor({ file, onSave, runMarks, onRunLine, value
   eolRef.current = value.includes('\r\n') ? 'CRLF' : 'LF';
   const handlers = useRef<{ onRunLine?: (line: number, debug: boolean) => void; onPreview: () => void; onSave?: () => void; onValidate: () => void; onDefinition?: (s: { keyword: string; text: string; line: number }) => void }>({ onRunLine, onPreview, onSave, onValidate, onDefinition });
   handlers.current = { onRunLine, onPreview, onSave, onValidate, onDefinition };
-  const extensions = useMemo(() => [...gherkinExtensions({ onSave: () => (handlers.current.onSave ?? handlers.current.onPreview)(), onValidate: () => handlers.current.onValidate(), onDefinition: (s) => handlers.current.onDefinition?.(s) }), lintGutter(), vsKeys('#'), gherkinTables(), indentFolding(), stickyScroll(indentRange), labelled('Gherkin source'), cursorTracker(file ?? 'untitled.feature', () => eolRef.current), ...(file ? [breakpoints(file), runGutter((l, d) => handlers.current.onRunLine?.(l, d)), changeGutter()] : [])], [file]);
+  const extensions = useMemo(() => [...gherkinExtensions({ onSave: () => (handlers.current.onSave ?? handlers.current.onPreview)(), onValidate: () => handlers.current.onValidate(), onDefinition: (s) => handlers.current.onDefinition?.(s) }), lintGutter(), vsKeys('#'), gherkinTables(), indentFolding(), stickyScroll(indentRange), labelled('Gherkin source'), featureFile.of(file ?? ''), cursorTracker(file ?? 'untitled.feature', () => eolRef.current), ...(file ? [breakpoints(file), runGutter((l, d) => handlers.current.onRunLine?.(l, d)), changeGutter()] : [])], [file]);
   useChangeBars(ref, file, true);
+  // Reqnroll formatting settings from .editorconfig for this file (Format Document uses them).
+  useEffect(() => {
+    if (!file || isBrowser()) return;
+    api<Record<string, string>>(`/editorconfig?file=${encodeURIComponent(file)}`).then((p) => formatSettings.set(file, formatFromEditorConfig(p) ?? null), () => {});
+  }, [file]);
   // Run / debug glyphs beside scenarios (outcome of the last run).
   useEffect(() => { let tries = 0; const apply = () => { const v = ref.current?.view; if (v) v.dispatch({ effects: setRunMarks.of(runMarks ?? []) }); else if (tries++ < 30) requestAnimationFrame(apply); }; apply(); }, [runMarks, file]);
   const view = () => ref.current?.view;
@@ -92,7 +100,7 @@ export default function GherkinEditor({ file, onSave, runMarks, onRunLine, value
           ...(onHooks ? [{ label: 'Go To Hooks', icon: Anchor, onSelect: withView((v) => onHooks(v.state.doc.lineAt(v.state.selection.main.head).number)) }] : []),
           'separator',
           { label: 'Suggest steps', icon: Sparkles, shortcut: 'Ctrl Space', onSelect: withView((v) => startCompletion(v)) },
-          { label: 'Format document', icon: Wand2, shortcut: 'Shift Alt F', onSelect: withView((v) => v.dispatch({ changes: { from: 0, to: v.state.doc.length, insert: formatGherkin(v.state.doc.toString()) } })) },
+          { label: 'Format document', icon: Wand2, shortcut: 'Shift Alt F', onSelect: withView((v) => v.dispatch({ changes: { from: 0, to: v.state.doc.length, insert: formatFeature(v.state.doc.toString(), file) } })) },
           { label: 'Toggle comment', icon: MessageSquareCode, shortcut: 'Ctrl /', onSelect: withView((v) => toggleComment(v)) },
           { label: 'Go to next problem', icon: CircleAlert, shortcut: 'F8', disabled: !problems.errors && !problems.warnings, onSelect: withView((v) => nextDiagnostic(v)) },
           { label: 'Show all problems', icon: ListChecks, shortcut: 'Ctrl Shift M', disabled: !problems.errors && !problems.warnings, onSelect: withView((v) => openLintPanel(v)) },
