@@ -50,6 +50,9 @@ and dictionary entries.
 - **Testing and debugging:** Test Explorer, run glyphs in the margin, netcoredbg debugging (conditional
   breakpoints, tracepoints, exception settings), code coverage, Playwright traces.
 - **Git:** changes, stage, commit, branches, merge, fetch, pull and push.
+- **Reqnroll / SpecFlow:** step matching with Reqnroll's rules (Cucumber expressions, `[Scope]` precedence,
+  `[StepDefinition]`), Go To Hooks, Define Steps, Find Unused Step Definitions, bound/unbound step highlighting,
+  Scenario Outline checks, and Gherkin formatting from `.editorconfig`. See [REQNROLL.md](REQNROLL.md).
 
 Visual Studio feature parity is tracked in [VS2026-PARITY.md](VS2026-PARITY.md); current work is tracked in
 [QOL-PROGRESS.md](QOL-PROGRESS.md).
