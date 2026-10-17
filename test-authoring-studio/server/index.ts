@@ -1,4 +1,5 @@
 import { spawn } from 'node:child_process';
+import { existsSync } from 'node:fs';
 import express from 'express';
 import fs from 'node:fs/promises';
 import path from 'node:path';
@@ -43,6 +44,7 @@ import { scenarioSteps, scenarioText, featureWithScenario } from './recordingFea
 import { defineSteps, argumentKind, type StepArgument } from './stepScaffold.js';
 import { recordedStepsSource } from './recordedSteps.js';
 import { editorConfigFor } from './editorconfig.js';
+import { findVisualStudio, classicProjects, msbuildArgs, classicOutput, CLASSIC_HELP } from './msbuild.js';
 import { mergeDictionary, proposeField, findEntry, parseDictionary, selectorRank, fieldName, type FieldProposal } from './dictionaries.js';
 const studio = readSettings();
 const allowedHosts = [studio.apiPort, studio.webPort].flatMap((p) => [`127.0.0.1:${p}`, `localhost:${p}`]);
@@ -961,6 +963,8 @@ app.post('/api/debug/start', async (req, res) => {
   if (body.file && !body.file.endsWith('.feature')) throw new Error('Choose a .feature file to debug.');
   const project = body.project ?? (body.file ? await owningProject(root, body.file) : undefined) ?? (config.targetProject.endsWith('.csproj') ? config.targetProject : undefined);
   if (!project?.endsWith('.csproj')) throw new Error('No test project (.csproj) was found for this feature. Set the target project in Workspace settings.');
+  // netcoredbg debugs .NET (Core) only: a classic .NET Framework project needs Visual Studio's debugger.
+  if ((await projectInfo(root, project)).legacy) throw new Error(`${project} is a classic .NET Framework project. The studio's debugger (netcoredbg) debugs .NET 6+ projects only; debug this one in Visual Studio, or migrate it to an SDK-style project targeting .NET 8 or later.`);
   await confined(root, project);
   const label = body.file ? (body.scenario ? `${body.scenario} — ${body.file}` : body.file) : project;
   void debug.start({ root, project, filter: body.filter, label, featureFile: body.file, scenario: body.scenario });
@@ -1028,7 +1032,12 @@ async function buildTarget(project?: string) {
 app.post('/api/build', async (req, res) => {
   await afterRestore();
   const { action, project, configuration } = z.object({ action: z.enum(['build', 'rebuild', 'clean']).default('build'), project: z.string().max(400).optional(), configuration: z.string().regex(/^[\w .|-]{1,60}$/).default('Debug') }).parse(req.body);
-  res.json(builder.start({ root: config.repositoryRoot, target: await buildTarget(project), action, configuration: configuration.split('|')[0].trim() }));
+  const target = await buildTarget(project);
+  const cfg = configuration.split('|')[0].trim();
+  // Classic .NET Framework projects build with Visual Studio's MSBuild when it is installed (as in Visual Studio).
+  const classic = await classicProjects(config.repositoryRoot, target);
+  const vs = classic.length ? await findVisualStudio() : undefined;
+  res.json(builder.start({ root: config.repositoryRoot, target, action, configuration: cfg, ...(vs ? { tool: { exe: vs.msbuild, args: msbuildArgs(target, action, cfg) } } : classic.length ? { help: CLASSIC_HELP } : {}) }));
 });
 app.post('/api/build/cancel', (_req, res) => res.json(builder.cancel()));
 // Test Explorer: C# test methods (Roslyn) and feature scenarios, run with `dotnet test` (results from TRX).
@@ -1078,7 +1087,18 @@ app.post('/api/tests/run', async (req, res) => {
   // One filter per test, or-ed; a very long filter (huge selections) runs everything instead.
   const joined = [...new Set(filters)].join('|');
   const filter = filters.length && joined.length < 8000 ? joined : undefined;
-  res.json(await tests.run({ root: config.repositoryRoot, target: await buildTarget(), filter, requested: filters.length ? ids : ['all'], configuration: configuration.split('|')[0].trim(), coverage }));
+  const target = await buildTarget();
+  const cfg = configuration.split('|')[0].trim();
+  // Classic .NET Framework projects: Visual Studio's MSBuild + vstest.console (Test Explorer's way), or an explanation.
+  const classic = await classicProjects(config.repositoryRoot, target);
+  let classicRun;
+  if (classic.length) {
+    const vs = await findVisualStudio();
+    if (!vs?.vstest) throw new Error(`${CLASSIC_HELP}\nRunning their tests also needs Visual Studio's vstest.console.exe.`);
+    const packagesDir = path.join(config.repositoryRoot, path.dirname(classic[0]), 'packages');
+    classicRun = { msbuild: vs.msbuild, buildArgs: msbuildArgs(target, 'build', cfg), vstest: vs.vstest, dll: await classicOutput(config.repositoryRoot, classic[0], cfg), ...(existsSync(packagesDir) ? { adapters: packagesDir } : {}) };
+  }
+  res.json(await tests.run({ root: config.repositoryRoot, target, filter, requested: filters.length ? ids : ['all'], configuration: cfg, coverage, classic: classicRun }));
 });
 app.post('/api/tests/cancel', (_req, res) => res.json(tests.cancel()));
 app.use(express.static(path.join(projectRoot, 'dist')));

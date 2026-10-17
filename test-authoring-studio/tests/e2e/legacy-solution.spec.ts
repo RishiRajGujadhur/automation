@@ -80,6 +80,23 @@ test('a classic .NET Framework solution opens like in Visual Studio', async ({ p
     await expect(se.getByRole('button', { name: 'Unlisted.cs', exact: true })).toBeVisible();
     // The step binds: the feature is indexed against the project's step definitions.
     expect(ws.index.stats.steps).toBe(1);
+
+    // Without Visual Studio's MSBuild (as on this machine), build / test / debug explain what a classic project needs.
+    const vs = await (await request.get('/api/build')).json();
+    if (!process.env.STUDIO_MSBUILD && !vs.output?.includes('MSBuild.exe')) {
+      const run = await request.post('/api/tests/run', { data: {} });
+      expect(run.ok()).toBe(false);
+      expect((await run.json()).error).toContain('classic .NET Framework projects');
+      const dbg = await request.post('/api/debug/start', { data: { file: 'Feature/shoppingCart.feature' } });
+      expect((await dbg.json()).error).toContain('debugs .NET 6+ projects only');
+      await page.getByRole('button', { name: 'Build menu' }).click();
+      await page.getByRole('menuitem', { name: /^Build Solution/ }).click();
+      const panel = page.getByRole('region', { name: 'Build' });
+      await expect(panel.getByRole('status')).toHaveText(/Build (failed|succeeded)/, { timeout: 180_000 });
+      if ((await panel.getByRole('status').textContent())?.includes('failed')) {
+        await expect(panel.getByRole('grid', { name: 'Error List' })).toContainText('Install Visual Studio 2026 or the Build Tools');
+      }
+    }
   } finally {
     await request.post('/api/workspace', { data: { ...previous, solution: '' } });
     await fs.rm(root, { recursive: true, force: true, maxRetries: 5 }).catch(() => {});

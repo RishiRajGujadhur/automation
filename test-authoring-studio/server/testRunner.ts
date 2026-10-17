@@ -134,13 +134,35 @@ export class TestRunner extends EventEmitter {
   }
   get running() { return this.state.status === 'running'; }
 
-  async run({ root, target, filter, requested, configuration, coverage }: { root: string; target: string; filter?: string; requested: string[]; configuration: string; coverage?: boolean }) {
+  /**
+   * `classic`: a .NET Framework project, built with Visual Studio's MSBuild and run with vstest.console (test adapters
+   * from the local packages/ folder), as Visual Studio's Test Explorer does.
+   */
+  async run({ root, target, filter, requested, configuration, coverage, classic }: { root: string; target: string; filter?: string; requested: string[]; configuration: string; coverage?: boolean; classic?: { msbuild: string; buildArgs: string[]; vstest: string; dll: string; adapters?: string } }) {
     if (this.running) throw new Error('Tests are already running. Cancel the run first.');
     const results = await fs.mkdtemp(path.join(os.tmpdir(), 'tas-trx-'));
-    const args = ['test', target, '-c', configuration, '--nologo', '--logger', 'trx', '--results-directory', results, ...(filter ? ['--filter', filter] : []), ...(coverage ? ['--collect', 'Code Coverage;Format=cobertura'] : [])];
+    const exe = classic ? classic.vstest : dotnet;
+    const args = classic
+      ? [classic.dll, '/logger:trx', `/ResultsDirectory:${results}`, ...(classic.adapters ? [`/TestAdapterPath:${classic.adapters}`] : []), ...(filter ? [`/TestCaseFilter:${filter}`] : []), ...(coverage ? ['/Collect:Code Coverage;Format=cobertura'] : [])]
+      : ['test', target, '-c', configuration, '--nologo', '--logger', 'trx', '--results-directory', results, ...(filter ? ['--filter', filter] : []), ...(coverage ? ['--collect', 'Code Coverage;Format=cobertura'] : [])];
     const started = Date.now();
-    this.update({ status: 'running', requested, output: `> dotnet ${args.map((a) => (/\s|\|/.test(a) ? `"${a}"` : a)).join(' ')}\n`, error: undefined, summary: undefined });
-    const proc = spawn(dotnet, args, { cwd: root, windowsHide: true, env: { ...process.env, DOTNET_CLI_UI_LANGUAGE: 'en', MSBUILDTERMINALLOGGER: 'off' } });
+    const quote = (a: string) => (/\s|\|/.test(a) ? `"${a}"` : a);
+    this.update({ status: 'running', requested, output: classic ? `> "${classic.msbuild}" ${classic.buildArgs.map(quote).join(' ')}\n` : `> dotnet ${args.map(quote).join(' ')}\n`, error: undefined, summary: undefined });
+    if (classic) {
+      // Build first (MSBuild), then run the built assembly with vstest.console.
+      const built = await new Promise<number | null>((resolve) => {
+        const b = spawn(classic.msbuild, classic.buildArgs, { cwd: root, windowsHide: true });
+        this.proc = b;
+        const r = (d: Buffer) => this.update({ output: (this.state.output + d.toString()).slice(-200_000) });
+        b.stdout!.on('data', r); b.stderr!.on('data', r);
+        b.on('error', (e) => { this.update({ output: `${this.state.output}${e.message}\n` }); resolve(-1); });
+        b.on('close', resolve);
+      });
+      if (this.state.status === 'cancelled') return this.state;
+      if (built !== 0) { this.proc = undefined; this.update({ status: 'failed', error: 'The build failed: see the output.' }); return this.state; }
+      this.update({ output: `${this.state.output}\n> "${exe}" ${args.map(quote).join(' ')}\n` });
+    }
+    const proc = spawn(exe, args, { cwd: root, windowsHide: true, env: { ...process.env, DOTNET_CLI_UI_LANGUAGE: 'en', MSBUILDTERMINALLOGGER: 'off' } });
     this.proc = proc;
     const read = (d: Buffer) => this.update({ output: (this.state.output + d.toString()).slice(-200_000) });
     proc.stdout!.on('data', read);

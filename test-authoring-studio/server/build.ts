@@ -58,14 +58,16 @@ export class Builder extends EventEmitter {
   }
   get running() { return this.state.status === 'running'; }
 
-  start({ root, target, action, configuration }: { root: string; target: string; action: BuildAction; configuration: string }) {
+  /** `tool` replaces `dotnet` (Visual Studio's MSBuild for classic projects); `help` is appended when the build fails. */
+  start({ root, target, action, configuration, tool, help }: { root: string; target: string; action: BuildAction; configuration: string; tool?: { exe: string; args: string[] }; help?: string }) {
     if (this.running) throw new Error('A build is already running. Cancel it first.');
-    const args = action === 'clean'
+    const exe = tool?.exe ?? dotnet;
+    const args = tool?.args ?? (action === 'clean'
       ? ['clean', target, '-c', configuration, '-nologo', '-v:q']
-      : ['build', target, '-c', configuration, '-nologo', '-v:q', '-clp:NoSummary', ...(action === 'rebuild' ? ['--no-incremental'] : [])];
+      : ['build', target, '-c', configuration, '-nologo', '-v:q', '-clp:NoSummary', ...(action === 'rebuild' ? ['--no-incremental'] : [])]);
     const startedAt = Date.now();
-    this.update({ status: 'running', action, target, configuration, output: `${action === 'clean' ? 'Clean' : action === 'rebuild' ? 'Rebuild' : 'Build'} started: ${target} (${configuration})\n> dotnet ${args.join(' ')}\n`, diagnostics: [], startedAt, durationMs: undefined });
-    const proc = spawn(dotnet, args, { cwd: root, windowsHide: true, env: { ...process.env, DOTNET_CLI_UI_LANGUAGE: 'en', MSBUILDTERMINALLOGGER: 'off' } });
+    this.update({ status: 'running', action, target, configuration, output: `${action === 'clean' ? 'Clean' : action === 'rebuild' ? 'Rebuild' : 'Build'} started: ${target} (${configuration})\n> ${tool ? `"${exe}"` : 'dotnet'} ${args.map((a) => (/\s/.test(a) ? `"${a}"` : a)).join(' ')}\n`, diagnostics: [], startedAt, durationMs: undefined });
+    const proc = spawn(exe, args, { cwd: root, windowsHide: true, env: { ...process.env, DOTNET_CLI_UI_LANGUAGE: 'en', MSBUILDTERMINALLOGGER: 'off' } });
     this.proc = proc;
     let pending = '';
     const read = (d: Buffer) => {
@@ -91,7 +93,7 @@ export class Builder extends EventEmitter {
       if (this.state.status === 'cancelled') return;
       const ok = code === 0;
       const word = action === 'clean' ? 'Clean' : action === 'rebuild' ? 'Rebuild' : 'Build';
-      this.update({ status: ok ? 'succeeded' : 'failed', diagnostics, durationMs, output: `${this.state.output}\n========== ${word} ${ok ? 'succeeded' : 'failed'}: ${errors} error(s), ${warnings} warning(s) · ${(durationMs / 1000).toFixed(1)} s ==========\n` });
+      this.update({ status: ok ? 'succeeded' : 'failed', diagnostics: !ok && help ? [{ severity: 'error', code: 'TAS100', message: help.split('\n').join(' ') }, ...diagnostics] : diagnostics, durationMs, output: `${this.state.output}\n========== ${word} ${ok ? 'succeeded' : 'failed'}: ${errors} error(s), ${warnings} warning(s) · ${(durationMs / 1000).toFixed(1)} s ==========\n${!ok && help ? `\n${help}\n` : ''}` });
     });
     return this.state;
   }
