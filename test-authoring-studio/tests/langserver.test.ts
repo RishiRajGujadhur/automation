@@ -39,3 +39,29 @@ describe.skipIf(!built)('C# language service: one Roslyn project per .csproj', (
     expect(r.changes.map((c) => c.file).sort()).toEqual(['src/Pages/CartPage.cs', 'tests/Specs/CartSteps.cs']);
   }, 120_000);
 });
+
+// Classic .NET Framework project: assembly references with a HintPath into a local packages/ folder.
+const specflowDll = path.join(os.homedir(), '.nuget/packages/specflow/3.9.74/lib/net461/TechTalk.SpecFlow.dll');
+describe.skipIf(!built || !existsSync(specflowDll))('C# language service: classic (.NET Framework) projects', () => {
+  let root: string;
+  const lang = new LanguageService();
+  beforeAll(async () => {
+    root = await fs.mkdtemp(path.join(os.tmpdir(), 'tas-lang-legacy-'));
+    await fs.mkdir(path.join(root, 'packages/SpecFlow.3.9.74/lib/net461'), { recursive: true });
+    await fs.copyFile(specflowDll, path.join(root, 'packages/SpecFlow.3.9.74/lib/net461/TechTalk.SpecFlow.dll'));
+    await fs.writeFile(path.join(root, 'Legacy.csproj'), String.raw`<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup><TargetFrameworkVersion>v4.7.2</TargetFrameworkVersion></PropertyGroup>
+  <ItemGroup>
+    <Reference Include="TechTalk.SpecFlow, Version=3.9.0.0"><HintPath>packages\SpecFlow.3.9.74\lib\net461\TechTalk.SpecFlow.dll</HintPath></Reference>
+  </ItemGroup>
+</Project>
+`);
+    await fs.writeFile(path.join(root, 'Steps.cs'), 'using TechTalk.SpecFlow;\nnamespace Legacy\n{\n    public class Steps { public Steps(ScenarioContext context) { } }\n}\n');
+  }, 60_000);
+  afterAll(async () => { lang.stop(); await fs.rm(root, { recursive: true, force: true }); });
+  it('resolves types from HintPath assemblies', async () => {
+    const r = await lang.request<{ sections: { text: string }[] }>(root, { op: 'hover', file: 'Steps.cs', line: 4, column: 40 }, 120_000);
+    expect(r.sections[0].text).toBe('class TechTalk.SpecFlow.ScenarioContext');
+  }, 120_000);
+});

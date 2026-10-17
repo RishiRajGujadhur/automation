@@ -131,6 +131,14 @@ sealed class LanguageService
                 foreach (var dll in PackageAssemblies(cache, package, version, new HashSet<string>(StringComparer.OrdinalIgnoreCase)))
                     if (!refs.ContainsKey(Path.GetFileName(dll)) && Load(dll) is { } r) { refs[Path.GetFileName(dll)] = r; allPackages.TryAdd(Path.GetFileName(dll), r); }
             }
+            // Classic projects: assembly references with a HintPath (packages.config packages under packages/, local DLLs).
+            foreach (var r in xml?.Descendants().Where(e => e.Name.LocalName == "Reference") ?? [])
+            {
+                var hint = r.Elements().FirstOrDefault(e => e.Name.LocalName == "HintPath")?.Value.Trim();
+                if (string.IsNullOrEmpty(hint)) continue;
+                var dll = Path.GetFullPath(Path.Combine(dir, hint.Replace('\\', Path.DirectorySeparatorChar)));
+                if (File.Exists(dll) && !refs.ContainsKey(Path.GetFileName(dll)) && Load(dll) is { } hr) { refs[Path.GetFileName(dll)] = hr; allPackages.TryAdd(Path.GetFileName(dll), hr); }
+            }
             // Built output of the project itself (dependencies of dependencies), when the repository has been built.
             foreach (var dll in Directory.EnumerateFiles(dir, "*.dll", SearchOption.AllDirectories).Where(f => f.Contains($"{Path.DirectorySeparatorChar}bin{Path.DirectorySeparatorChar}")).Take(300))
                 if (!refs.ContainsKey(Path.GetFileName(dll)) && !ids.Keys.Any(k => Path.GetFileNameWithoutExtension(k).Equals(Path.GetFileNameWithoutExtension(dll), StringComparison.OrdinalIgnoreCase)) && Load(dll) is { } r) refs[Path.GetFileName(dll)] = r;
@@ -140,8 +148,11 @@ sealed class LanguageService
                 .Where(ids.ContainsKey).Where(p => !p.Equals(proj, StringComparison.OrdinalIgnoreCase)).Distinct(StringComparer.OrdinalIgnoreCase)
                 .Select(p => new ProjectReference(ids[p])).ToList();
             var name = Path.GetFileNameWithoutExtension(proj);
+            // .NET Framework projects (TargetFrameworkVersion v4.x) compile against that framework's reference assemblies.
+            var tfv = xml?.Descendants().FirstOrDefault(e => e.Name.LocalName == "TargetFrameworkVersion")?.Value.Trim();
+            var projectFramework = (tfv != null ? NetFrameworkReferences(tfv) : null) ?? framework;
             infos.Add(ProjectInfo.Create(ids[proj], VersionStamp.Create(), name, name, LanguageNames.CSharp, filePath: proj,
-                compilationOptions: Options, parseOptions: Parse, metadataReferences: framework.Concat(refs.Values), projectReferences: projectRefs));
+                compilationOptions: Options, parseOptions: Parse, metadataReferences: projectFramework.Concat(refs.Values), projectReferences: projectRefs));
         }
         owners = csprojs.Select(p => (Path.GetDirectoryName(p)!, ids[p])).OrderByDescending(o => o.Item1.Length).ToList();
         var files = SourceFiles().ToList();
@@ -182,6 +193,31 @@ sealed class LanguageService
         ((string?)AppContext.GetData("TRUSTED_PLATFORM_ASSEMBLIES") ?? "").Split(Path.PathSeparator, StringSplitOptions.RemoveEmptyEntries)
             .Where(p => !Path.GetFileName(p).StartsWith("Microsoft.CodeAnalysis", StringComparison.OrdinalIgnoreCase))
             .Select(Load).OfType<MetadataReference>().ToList();
+
+    static readonly Dictionary<string, List<MetadataReference>?> netFxCache = new(StringComparer.OrdinalIgnoreCase);
+    /// <summary>
+    /// .NET Framework reference assemblies (Developer Pack / Visual Studio): the requested version, else the nearest
+    /// installed v4.x. Null when none is installed (the runtime's assemblies are used instead).
+    /// </summary>
+    static List<MetadataReference>? NetFrameworkReferences(string version)
+    {
+        if (netFxCache.TryGetValue(version, out var cached)) return cached;
+        var baseDir = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFilesX86), "Reference Assemblies", "Microsoft", "Framework", ".NETFramework");
+        string? dir = null;
+        if (Directory.Exists(baseDir))
+        {
+            var wanted = Path.Combine(baseDir, version.StartsWith("v") ? version : "v" + version);
+            dir = Directory.Exists(wanted) && File.Exists(Path.Combine(wanted, "mscorlib.dll")) ? wanted
+                : Directory.GetDirectories(baseDir, "v4*").Where(d => File.Exists(Path.Combine(d, "mscorlib.dll"))).OrderByDescending(d => d, StringComparer.OrdinalIgnoreCase).FirstOrDefault();
+        }
+        List<MetadataReference>? list = null;
+        if (dir != null)
+        {
+            var files = Directory.EnumerateFiles(dir, "*.dll").Concat(Directory.Exists(Path.Combine(dir, "Facades")) ? Directory.EnumerateFiles(Path.Combine(dir, "Facades"), "*.dll") : []);
+            list = files.Select(Load).OfType<MetadataReference>().ToList();
+        }
+        return netFxCache[version] = list;
+    }
 
     /// <summary>A package's assemblies and, through its .nuspec dependencies, those of the packages it depends on.</summary>
     static IEnumerable<string> PackageAssemblies(string cache, string name, string? version, HashSet<string> visited)
