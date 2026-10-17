@@ -37,6 +37,7 @@ import type { Index } from '../src/types.js';
 import { readSettings, writeSettings, settingsSchema, tracesDir } from './settings.js';
 import { WorkspaceSearch } from './stepSearch.js';
 import { scenarioSteps, scenarioText, featureWithScenario } from './recordingFeature.js';
+import { recordedStepsSource } from './recordedSteps.js';
 import { mergeDictionary, proposeField, findEntry, parseDictionary, selectorRank, fieldName, type FieldProposal } from './dictionaries.js';
 const studio = readSettings();
 const allowedHosts = [studio.apiPort, studio.webPort].flatMap((p) => [`127.0.0.1:${p}`, `localhost:${p}`]);
@@ -664,6 +665,7 @@ app.post('/api/recording/save-preview',async(req,res)=>{
   featureName:z.string().trim().min(1).max(200),
   scenario:z.string().trim().min(1).max(200),
   dictionary:z.object({page:z.string().trim().min(1).max(200),section:z.string().trim().min(1).max(200),file:z.string().trim().min(5).max(400)}).optional(),
+  stepDefinitions:z.boolean().default(false),
  }).parse(req.body);
  const steps=scenarioSteps(b.actions,b.accepted);
  if(!steps.length)throw new Error('The recording has no steps to save.');
@@ -674,7 +676,30 @@ app.post('/api/recording/save-preview',async(req,res)=>{
  const id=randomUUID();previews.set(id,{file:b.featureFile,source,hash:hash(before),root:config.repositoryRoot});
  const feature={id,file:b.featureFile,created:!before,changed:true,diff:createPatch(b.featureFile,before,source,'repository','proposed')};
  const dictionary=b.dictionary?await recordingDictionary(b.actions,b.dictionary.page,b.dictionary.section,b.dictionary.file):null;
- res.json({feature,steps,drafted:steps.filter(s=>s.drafted).length,dictionary});
+ // Drafted steps the repository cannot bind yet: offer RecordedSteps.cs (generic, dictionary-driven) once.
+ const i=await ensure();
+ const draftFeature=parseFeature(`Feature: x\n\n${scenarioText('x',steps.filter(s=>s.drafted))}`,'draft.feature',[]);
+ await matchFeatureBindings([draftFeature],i.stepDefinitions);
+ const unbound=draftFeature.scenarios.flatMap(sc=>sc.steps).filter(st=>!st.candidates.length).length;
+ let stepFile=null;
+ if(unbound&&b.stepDefinitions){
+  const counts=new Map<string,number>();for(const d of i.stepDefinitions){const dir=path.posix.dirname(d.file);counts.set(dir,(counts.get(dir)??0)+1);}
+  const dir=[...counts].sort((x,y)=>y[1]-x[1])[0]?.[0]??'Steps';
+  const file=path.posix.join(dir==='.'?'':dir,'RecordedSteps.cs');
+  const target2=await confined(config.repositoryRoot,file,false);
+  if(!(await fs.access(target2).then(()=>true,()=>false))){
+   const sample=i.stepDefinitions.find(d=>path.posix.dirname(d.file)===dir);
+   const sampleText=sample?await fs.readFile(path.join(config.repositoryRoot,sample.file),'utf8').catch(()=>''):'';
+   const ns=/^\s*namespace\s+([\w.]+)/m.exec(sampleText)?.[1]??(path.basename(config.repositoryRoot).replace(/\W/g,'')||'Tests');
+   const csprojs=(await projectModel(config,i)).files.filter(f=>f.file.endsWith('.csproj'));
+   let reqnroll=/using\s+Reqnroll\s*;/.test(sampleText);
+   for(const c of csprojs.slice(0,20))if(/Include="Reqnroll/i.test(await fs.readFile(path.join(config.repositoryRoot,c.file),'utf8').catch(()=>'')))reqnroll=true;
+   const source=recordedStepsSource({namespace:ns,reqnroll});
+   const id2=randomUUID();previews.set(id2,{file,source,hash:hash(''),root:config.repositoryRoot});
+   stepFile={id:id2,file,created:true,changed:true,diff:createPatch(file,'',source,'repository','proposed')};
+  }
+ }
+ res.json({feature,steps,drafted:steps.filter(s=>s.drafted).length,unbound,dictionary,stepFile});
 });
 /** Recording → dictionary entries (and optionally a dictionary-backed page object), previewed, never written here. */
 async function recordingDictionary(actions:z.infer<typeof actionSchema>[],page:string,section:string,file:string,pageObjectFile?:string){

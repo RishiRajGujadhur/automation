@@ -15,6 +15,8 @@ type Result = {
   feature: Preview;
   steps: { keyword: string; text: string; drafted: boolean }[];
   drafted: number;
+  unbound: number;
+  stepFile: Preview | null;
   dictionary: { dictionary: Preview | null; skipped: string[]; reused: number; proposals: unknown[] } | null;
 };
 const DIFF = [StreamLanguage.define(diffMode)];
@@ -40,6 +42,7 @@ export default function SaveRecording({ actions, accepted, features, onSaved }: 
   const [existing, setExisting] = useState(features[0]?.file ?? '');
   const [scenario, setScenario] = useState('Recorded workflow');
   const [withDictionary, setWithDictionary] = useState(true);
+  const [withSteps, setWithSteps] = useState(true);
   const [page, setPage] = useState(`${pascal(site || 'Recorded')}Page`);
   const [section, setSection] = useState('Main');
   const [dictMode, setDictMode] = useState<'new' | 'existing'>('new');
@@ -50,7 +53,7 @@ export default function SaveRecording({ actions, accepted, features, onSaved }: 
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
   // Any change to the inputs invalidates the previewed diffs.
-  useEffect(() => setResult(undefined), [target, featureName, newFile, existing, scenario, withDictionary, page, section, dictFile]);
+  useEffect(() => setResult(undefined), [target, featureName, newFile, existing, scenario, withDictionary, withSteps, page, section, dictFile]);
   const featureFile = target === 'new' ? newFile.trim() : existing;
 
   const preview = async () => {
@@ -59,6 +62,7 @@ export default function SaveRecording({ actions, accepted, features, onSaved }: 
       setResult(await api<Result>('/recording/save-preview', {
         actions, accepted, featureFile, featureName: featureName.trim() || 'Recorded workflow', scenario: scenario.trim() || 'Recorded workflow',
         ...(withDictionary ? { dictionary: { page: page.trim(), section: section.trim(), file: dictFile.trim() } } : {}),
+        stepDefinitions: withSteps,
       }));
     } catch (e) { setError((e as Error).message); } finally { setBusy(false); }
   };
@@ -69,6 +73,7 @@ export default function SaveRecording({ actions, accepted, features, onSaved }: 
       // Dictionary first: the feature then indexes against the new fields.
       let index: Index | undefined;
       if (result.dictionary?.dictionary?.changed) index = (await api<{ index: Index }>('/generation/apply', { id: result.dictionary.dictionary.id, approved: true })).index;
+      if (result.stepFile) index = (await api<{ index: Index }>('/generation/apply', { id: result.stepFile.id, approved: true })).index ?? index;
       index = (await api<{ index: Index }>('/generation/apply', { id: result.feature.id, approved: true })).index ?? index;
       onSaved(result.feature.file, index!);
     } catch (e) { setError((e as Error).message); setResult(undefined); } finally { setBusy(false); }
@@ -105,6 +110,7 @@ export default function SaveRecording({ actions, accepted, features, onSaved }: 
           </>
         )}
       </fieldset>
+      <label className="check"><input type="checkbox" checked={withSteps} onChange={(e) => setWithSteps(e.target.checked)} /> Create step definitions for steps that have none (one RecordedSteps.cs: Playwright + the dictionary)</label>
       {error && <p className="field-error" role="alert">{error}</p>}
       {!result ? (
         <Button variant="primary" disabled={busy || !featureFile || !actions.length} onClick={() => void preview()}>{busy ? 'Preparing…' : 'Preview changes'}</Button>
@@ -120,7 +126,8 @@ export default function SaveRecording({ actions, accepted, features, onSaved }: 
                 </li>
               ))}
             </ol>
-            {result.drafted > 0 && <div className="info-box"><TriangleAlert size={14} /> {result.drafted} drafted step{result.drafted === 1 ? '' : 's'} need a step definition: after saving, use Create Step on the underlined lines.</div>}
+            {result.unbound > 0 && !result.stepFile && <div className="info-box"><TriangleAlert size={14} /> {result.unbound} step{result.unbound === 1 ? '' : 's'} without a step definition: after saving, use Create Step on the underlined lines{withSteps ? ' (RecordedSteps.cs already exists)' : ''}.</div>}
+            {result.drafted > 0 && result.unbound === 0 && <div className="info-box">Every drafted step already has a step definition.</div>}
           </section>
           <h4 className="detail-heading">{result.feature.created ? 'New' : 'Updated'} · {result.feature.file}</h4>
           <CodeMirror value={result.feature.diff} theme={theme} editable={false} extensions={[...DIFF, labelled(`Diff for ${result.feature.file}`, true)]} height="180px" />
@@ -133,7 +140,13 @@ export default function SaveRecording({ actions, accepted, features, onSaved }: 
                 : <p className="subtle">Every recorded element is already in the dictionary.</p>}
             </>
           )}
-          <Button variant="primary" disabled={busy} onClick={() => void save()}><Save size={15} /> {busy ? 'Saving…' : result.dictionary?.dictionary?.changed ? 'Save feature and dictionary' : 'Save feature'}</Button>
+          {result.stepFile && (
+            <>
+              <h4 className="detail-heading">New · {result.stepFile.file} (binds the {result.unbound} drafted step{result.unbound === 1 ? '' : 's'})</h4>
+              <CodeMirror value={result.stepFile.diff} theme={theme} editable={false} extensions={[...DIFF, labelled(`Diff for ${result.stepFile.file}`, true)]} height="180px" />
+            </>
+          )}
+          <Button variant="primary" disabled={busy} onClick={() => void save()}><Save size={15} /> {busy ? 'Saving…' : `Save ${[result.feature.file.split('/').pop(), result.dictionary?.dictionary?.changed && result.dictionary.dictionary.file.split('/').pop(), result.stepFile?.file.split('/').pop()].filter(Boolean).join(', ')}`}</Button>
         </>
       )}
     </div>

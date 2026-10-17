@@ -66,7 +66,9 @@ test('Record a sign-in, then Save recording writes the feature file and the dict
     await expect(steps).toContainText('the user enters "<secret>" into the "Password" field');
     await expect(steps).toContainText('the user clicks "SignIn"');
     await expect(dialog.getByLabel('Diff for Dictionaries/SignInPage.xml')).toContainText('email');
-    await dialog.getByRole('button', { name: 'Save feature and dictionary' }).click();
+    // Drafted steps have no binding in the fixtures: one generic RecordedSteps.cs is proposed beside the other steps.
+    await expect(dialog.getByLabel('Diff for Steps/RecordedSteps.cs')).toContainText('class RecordedSteps');
+    await dialog.getByRole('button', { name: 'Save SignIn.feature, SignInPage.xml, RecordedSteps.cs' }).click();
     await expect(dialog).toHaveCount(0);
 
     // Both files are on disk, the password never is, and the feature is open in the editor.
@@ -81,6 +83,12 @@ test('Record a sign-in, then Save recording writes the feature file and the dict
     expect(xml).toMatch(/<Field XRefCode="signin" Type="Button">/);
     expect(xml).not.toContain('hunter2');
     await expect(page.getByLabel('Gherkin source')).toContainText('Scenario: Sign in with email');
+    const stepsCs = await fs.readFile(path.join(root, 'Steps/RecordedSteps.cs'), 'utf8');
+    expect(stepsCs).toContain('using TechTalk.SpecFlow;');
+    expect(stepsCs).toContain('namespace Demo;');
+    // The new bindings are indexed: previewing the same recording again finds every drafted step bound.
+    const { actions } = await (await request.get('/api/recording')).json();
+    await expect.poll(async () => (await (await request.post('/api/recording/save-preview', { data: { actions, featureFile: 'Features/Shop/Again.feature', featureName: 'x', scenario: 'x', stepDefinitions: true } })).json()).unbound, { timeout: 30_000 }).toBe(0);
   } finally {
     await browser?.close().catch(() => {});
     await request.post('/api/recording/stop').catch(() => {});
