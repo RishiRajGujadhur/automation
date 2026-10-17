@@ -18,6 +18,7 @@ import {
   matchFeatureBindings,
   bindingMatches,
   resolveStep,
+  ignoredDirsFor,
 } from './core.js';
 import { Recorder } from './recorder.js';
 import { Spy } from './spy.js';
@@ -258,17 +259,17 @@ app.get('/api/solution',async(_req,res)=>{
   // A solution (.sln/.slnx) gives the real tree: solution folders → projects. Without one, every .csproj is a project
   // (a single solution file at the top of the folder is picked up automatically, as Visual Studio's Open Folder does).
   let solutionFile=config.solution;
-  if(!solutionFile){const found=(await findSolutions(config.repositoryRoot,config.ignoredDirectories,1));if(found.length===1)solutionFile=found[0];}
+  if(!solutionFile){const found=(await findSolutions(config.repositoryRoot,ignoredDirsFor(config),1));if(found.length===1)solutionFile=found[0];}
   const parsed=solutionFile?await readSolution(config.repositoryRoot,solutionFile).catch(()=>undefined):undefined;
   const files=parsed?model.files:model.files;
   const projectFiles=parsed?parsed.projects.map(p=>p.file):(model.projects.length?model.projects:[]);
   const projects=await Promise.all(projectFiles.map(async(file)=>({file,name:path.posix.basename(file).replace(/\.\w+proj$/i,''),dir:path.posix.dirname(file)==='.'?'':path.posix.dirname(file),...await projectInfo(config.repositoryRoot,file),external:file.startsWith('../')})));
-  if(!projects.length)projects.push({file:'.',name:model.root,dir:'',packages:model.packages,frameworks:model.frameworks,references:[],missing:false,external:false});
+  if(!projects.length)projects.push({file:'.',name:model.root,dir:'',packages:model.packages,frameworks:model.frameworks,references:[],missing:false,external:false,legacy:false,assemblies:[],items:undefined});
   const tree=parsed?.tree??projects.map(p=>({kind:'project' as const,name:p.name,file:p.file}));
   res.json({name:solutionFile?path.posix.basename(solutionFile).replace(/\.slnx?$/i,''):model.root,solutionFile:solutionFile||null,configurations:parsed?.configurations??['Debug','Release'],tree,projects,packages:model.packages,frameworks:model.frameworks,files,nesting,truncated:model.truncated});
 });
 // File ▸ Open ▸ Project/Solution: a .sln/.slnx/.csproj (or a folder) on disk becomes the workspace.
-app.get('/api/solution/find',async(_req,res)=>{res.json(await findSolutions(config.repositoryRoot,config.ignoredDirectories));});
+app.get('/api/solution/find',async(_req,res)=>{res.json(await findSolutions(config.repositoryRoot,ignoredDirsFor(config)));});
 app.post('/api/solution/open',async(req,res)=>{
   const {path:target}=z.object({path:z.string().min(1).max(1000)}).parse(req.body);
   const full=path.resolve(target);
@@ -316,7 +317,7 @@ async function restoreOnOpen(target: typeof config) {
 app.get('/api/restore', (_req, res) => res.json(restoreState));
 app.get('/api/health',(_req,res)=>res.json({ok:true,scannedAt:index?.scannedAt??null}));
 app.get('/api/project/model',async(_req,res)=>{res.json(await projectModel(config,await ensure()));});
-app.get('/api/project/files',async(req,res)=>{const folder=z.string().default('.').parse(req.query.folder);const dir=await confined(config.repositoryRoot,folder);const entries=await fs.readdir(dir,{withFileTypes:true});const {offset,limit}=paging.parse(req.query);const filtered=entries.filter(e=>!e.isSymbolicLink()&&!e.name.startsWith('.')&&!config.ignoredDirectories.includes(e.name)).sort((a,b)=>Number(b.isDirectory())-Number(a.isDirectory())||a.name.localeCompare(b.name));res.json({folder,items:filtered.slice(offset,offset+limit).map(e=>({name:e.name,file:path.relative(config.repositoryRoot,path.join(dir,e.name)).replaceAll('\\','/'),directory:e.isDirectory()})),total:filtered.length,hasNext:offset+limit<filtered.length});});
+app.get('/api/project/files',async(req,res)=>{const folder=z.string().default('.').parse(req.query.folder);const dir=await confined(config.repositoryRoot,folder);const entries=await fs.readdir(dir,{withFileTypes:true});const {offset,limit}=paging.parse(req.query);const filtered=entries.filter(e=>!e.isSymbolicLink()&&!e.name.startsWith('.')&&!ignoredDirsFor(config).includes(e.name)).sort((a,b)=>Number(b.isDirectory())-Number(a.isDirectory())||a.name.localeCompare(b.name));res.json({folder,items:filtered.slice(offset,offset+limit).map(e=>({name:e.name,file:path.relative(config.repositoryRoot,path.join(dir,e.name)).replaceAll('\\','/'),directory:e.isDirectory()})),total:filtered.length,hasNext:offset+limit<filtered.length});});
 app.post('/api/workspace', async (req, res) => {
   const next = configSchema.parse(req.body);
   clearTimeout(rescanTimer);
@@ -562,11 +563,11 @@ const searchOptions = z.object({ query: z.string().min(1).max(500), regex: z.boo
 app.post('/api/search/text', async (req, res) => {
   const options = searchOptions.parse(req.body);
   if (options.regex) { try { new RegExp(options.query); } catch (e) { throw new Error(`Invalid regular expression: ${(e as Error).message}`); } }
-  res.json(await findInFiles(config.repositoryRoot, config.ignoredDirectories, options));
+  res.json(await findInFiles(config.repositoryRoot, ignoredDirsFor(config), options));
 });
 app.post('/api/search/replace', async (req, res) => {
   const { replacement, files, approved: _approved, ...options } = searchOptions.extend({ replacement: z.string().max(5000), files: z.array(z.string().max(400)).max(5000).optional(), approved: z.literal(true) }).parse(req.body);
-  const changed = await replaceInFiles(config.repositoryRoot, config.ignoredDirectories, options, replacement, files);
+  const changed = await replaceInFiles(config.repositoryRoot, ignoredDirsFor(config), options, replacement, files);
   if (changed.length) { lang.notify(config.repositoryRoot, changed.map((c) => c.file)); rescanSoon(500); }
   res.json({ changed });
 });

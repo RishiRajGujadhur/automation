@@ -12,7 +12,7 @@ import { UNSAVED_EVENT, unsavedFiles } from './editor/autosave';
 import type { Feature } from './types';
 
 export type SolutionNode = { kind: 'folder'; name: string; children: SolutionNode[] } | { kind: 'project'; name: string; file: string };
-export type SolutionProject = { file: string; name: string; dir: string; packages?: string[]; frameworks?: string[]; references?: string[]; missing?: boolean; external?: boolean };
+export type SolutionProject = { file: string; name: string; dir: string; packages?: string[]; frameworks?: string[]; references?: string[]; missing?: boolean; external?: boolean; legacy?: boolean; assemblies?: { name: string; hintPath?: string }[]; items?: string[] };
 export type Solution = {
   name: string;
   solutionFile?: string | null;
@@ -173,6 +173,14 @@ export default function SolutionExplorer({ features, revision, activeFile, query
 
   // Real projects (a .csproj, also one at the repository root); '.' stands for "no project file".
   const projectDirs = useMemo(() => (solution?.projects ?? []).filter((p) => p.file !== '.').map((p) => p.dir), [solution]);
+  // Files listed by classic projects (others in their folders show only with Show All Files).
+  const listed = useMemo(() => (solution?.projects ?? []).filter((p) => p.legacy && p.items).map((p) => ({ dir: p.dir, items: new Set(p.items!.map((i) => i.toLowerCase())) })), [solution]);
+  const listedByProject = (file: string) => {
+    let owner: { dir: string; items: Set<string> } | undefined;
+    for (const p of listed) if ((p.dir === '' || file.startsWith(`${p.dir}/`)) && (!owner || p.dir.length > owner.dir.length)) owner = p;
+    const deeper = projectDirs.some((d) => d.length > (owner?.dir.length ?? -1) && file.startsWith(`${d}/`));
+    return !owner || deeper || owner.items.has(file.toLowerCase());
+  };
   const inProject = (file: string) => projectDirs.some((d) => d === '' || file.startsWith(`${d}/`));
   // Files: the solution model plus any indexed feature it does not know yet (e.g. just created).
   const files = useMemo(() => {
@@ -186,9 +194,11 @@ export default function SolutionExplorer({ features, revision, activeFile, query
       !x.file.endsWith('.csproj') && // the project node stands for it
       // Inside a real project folder every file shows (as in Visual Studio); only build output stays hidden.
       (showAll || !HIDDEN_LAYERS.has(x.layer) || (x.layer === 'Other' && inProject(x.file))) &&
+      // Classic (.NET Framework) projects list their files: only those show, like Visual Studio (Show All Files: all).
+      (showAll || listedByProject(x.file)) &&
       (!pendingOnly || pending.includes(x.file)) &&
       terms.every((t) => `${x.file} ${featureName.get(x.file) ?? ''}`.toLowerCase().includes(t)));
-  }, [solution, features, query, showAll, pendingOnly, pending, projectDirs]);
+  }, [solution, features, query, showAll, pendingOnly, pending, projectDirs, listed]); // eslint-disable-line react-hooks/exhaustive-deps
   const searching = !!query.trim() || pendingOnly;
   // Files per project (deepest project folder wins); files outside every project are "Miscellaneous Files".
   const projects = useMemo(() => solution?.projects ?? [], [solution]);
@@ -306,7 +316,7 @@ export default function SolutionExplorer({ features, revision, activeFile, query
     const open = searching || !collapsed.has(key);
     const deps = openDeps.has(p.file) && !searching;
     const refs = p.references ?? [];
-    const count = (p.packages?.length ?? 0) + refs.length + (p.frameworks?.length ?? 0);
+    const count = (p.packages?.length ?? 0) + refs.length + (p.frameworks?.length ?? 0) + (p.assemblies?.length ?? 0);
     const pad = 4 + depth * 12;
     return (
       <li key={key}>
@@ -327,14 +337,15 @@ export default function SolutionExplorer({ features, revision, activeFile, query
             {!searching && (
               <li>
                 <div className="explorer-folder-row">
-                  <button className="explorer-folder" style={{ paddingLeft: pad + 12 }} aria-label={`${deps ? 'Collapse' : 'Expand'} Dependencies`} aria-expanded={deps} onClick={() => setOpenDeps((prev) => { const n = new Set(prev); if (n.has(p.file)) n.delete(p.file); else n.add(p.file); return n; })}>
-                    {deps ? <ChevronDown size={12} /> : <ChevronRight size={12} />}<Package size={14} /><span>Dependencies</span><small>{count}</small>
+                  <button className="explorer-folder" style={{ paddingLeft: pad + 12 }} aria-label={`${deps ? 'Collapse' : 'Expand'} ${p.legacy ? 'References' : 'Dependencies'}`} aria-expanded={deps} onClick={() => setOpenDeps((prev) => { const n = new Set(prev); if (n.has(p.file)) n.delete(p.file); else n.add(p.file); return n; })}>
+                    {deps ? <ChevronDown size={12} /> : <ChevronRight size={12} />}<Package size={14} /><span>{p.legacy ? 'References' : 'Dependencies'}</span><small>{count}</small>
                   </button>
                 </div>
                 {deps && (
                   <ul className="folder-children se-deps">
                     {(p.frameworks ?? []).map((f) => <li key={`f:${f}`}><div className="se-row se-leaf" style={{ paddingLeft: pad + 36 }} title="Framework"><Layers size={13} /><span>{f}</span></div></li>)}
                     {(p.packages ?? []).map((x) => <li key={`p:${x}`}><div className="se-row se-leaf" style={{ paddingLeft: pad + 36 }} title="NuGet package"><Package size={13} /><span>{x}</span></div></li>)}
+                    {(p.assemblies ?? []).map((a) => <li key={`a:${a.name}`}><div className="se-row se-leaf" style={{ paddingLeft: pad + 36 }} title={a.hintPath ? `Assembly: ${a.hintPath}` : 'Framework assembly'}><FileCog size={13} /><span>{a.name}</span></div></li>)}
                     {refs.map((r) => <li key={`r:${r}`}><div className="se-row se-leaf" style={{ paddingLeft: pad + 36 }} title={`Project reference: ${r}`}><Boxes size={13} /><span>{r.split('/').pop()!.replace(/\.\w+proj$/i, '')}</span></div></li>)}
                   </ul>
                 )}

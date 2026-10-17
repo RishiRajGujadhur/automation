@@ -1,7 +1,7 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import type { Config } from './core.js';
-import { bindingMatches, keywordMatches, relative } from './core.js';
+import { bindingMatches, keywordMatches, relative, ignoredDirsFor } from './core.js';
 import { findEntry, selectorRank, normalizeXRef } from './dictionaries.js';
 import type { Index, DictionaryEntry } from '../src/types.js';
 
@@ -103,7 +103,7 @@ export async function validate(input: ValidationInput, index: Index, config: Con
     });
   } else checks.push({ id: 'dictionary', label: 'Dictionary existence', status: 'skip', detail: 'Section and field not supplied.' });
   // 5. Lifecycle: hooks own browser creation; steps never launch browsers.
-  const sources = await walk(root, config.ignoredDirectories, (n) => n.endsWith('.cs'));
+  const sources = await walk(root, ignoredDirsFor(config), (n) => n.endsWith('.cs'));
   const hooks: string[] = [], leaks: string[] = [];
   const stepFiles = new Set(index.stepDefinitions.map((b) => b.file));
   for (const f of sources.slice(0, 2000)) {
@@ -121,7 +121,7 @@ export async function validate(input: ValidationInput, index: Index, config: Con
   // 6. Build output
   const dictFile = input.dictionaryFile ?? entry?.file;
   if (dictFile) {
-    const out = await outputInclusion(root, dictFile, config.ignoredDirectories);
+    const out = await outputInclusion(root, dictFile, ignoredDirsFor(config));
     checks.push({ id: 'output', label: 'Output directory check', status: out.status, detail: out.detail, file: out.project ? relative(root, out.project) : undefined });
   } else checks.push({ id: 'output', label: 'Output directory check', status: 'skip', detail: 'No dictionary file selected.' });
   // 7. Conventions

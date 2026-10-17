@@ -1,5 +1,5 @@
 import fs from 'node:fs/promises';
-import { extraRootsOf } from './core.js';
+import { extraRootsOf, ignoredDirsFor } from './core.js';
 import path from 'node:path';
 import type { Config } from './core.js';
 import type { Index } from '../src/types.js';
@@ -31,10 +31,11 @@ const tracked = /\.(feature|cs|xml|csproj|sln|props|targets|json|config|runsetti
 export async function projectModel(config: Config, index: Index) {
   const root = config.repositoryRoot;
   const files: { file: string; layer: Layer }[] = [];
+  const ignored = ignoredDirsFor(config);
   const walk = async (dir: string) => {
     for (const e of await fs.readdir(dir, { withFileTypes: true }).catch(() => [])) {
       if (files.length >= 4000) return;
-      if (e.isSymbolicLink() || e.name.startsWith('.') || config.ignoredDirectories.includes(e.name)) continue;
+      if (e.isSymbolicLink() || e.name.startsWith('.') || ignored.includes(e.name)) continue;
       const full = path.join(dir, e.name);
       if (e.isDirectory()) await walk(full);
       else if (tracked.test(e.name)) {

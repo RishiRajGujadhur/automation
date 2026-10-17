@@ -33,10 +33,22 @@ export const configSchema = z.object({
     .default(['bin', 'obj', '.git', '.vs', 'node_modules', 'TestResults', 'playwright-report']),
 });
 export type Config = z.infer<typeof configSchema>;
+/**
+ * Folders never worth scanning, on top of the workspace's list (older saved workspaces lack the newer defaults):
+ * build output, IDE state, and a classic NuGet `packages` folder (packages.config restore: it holds .nupkg files).
+ */
+export function ignoredDirsFor(config: { repositoryRoot: string; ignoredDirectories: string[] }) {
+  const dirs = new Set([...config.ignoredDirectories, 'bin', 'obj', '.git', '.vs', 'node_modules', 'TestResults']);
+  const pkgs = path.join(config.repositoryRoot, 'packages');
+  try {
+    if (readdirSync(pkgs, { withFileTypes: true }).some((d) => d.isDirectory() && readdirSync(path.join(pkgs, d.name)).some((f) => f.endsWith('.nupkg')))) dirs.add('packages');
+  } catch { /* no packages folder */ }
+  return [...dirs];
+}
 // STUDIO_ROOT / STUDIO_DATA let a host (the Electron desktop app) put read-only resources and writable state elsewhere.
 export const projectRoot = process.env.STUDIO_ROOT ? path.resolve(process.env.STUDIO_ROOT) : path.resolve(import.meta.dirname, '..');
 export const dataRoot = process.env.STUDIO_DATA ? path.resolve(process.env.STUDIO_DATA) : projectRoot;
-import { existsSync } from 'node:fs';
+import { existsSync, readdirSync } from 'node:fs';
 const localDotnet = path.resolve(projectRoot, '../.tools/dotnet/dotnet.exe');
 export const dotnet = process.env.DOTNET_PATH || (existsSync(localDotnet) ? localDotnet : 'dotnet');
 export const scannerDll = path.join(projectRoot, 'scanner/bin/Release/net10.0/Scanner.dll');
@@ -280,7 +292,7 @@ export async function scan(config: Config): Promise<Index> {
   const target = await confined(root, config.targetProject);
   const stat = await fs.stat(target);
   const targetDir = stat.isFile() ? path.dirname(target) : target;
-  const ignore = config.ignoredDirectories.map((d) => `**/${d}/**`);
+  const ignore = ignoredDirsFor(config).map((d) => `**/${d}/**`);
   // Solution projects outside the opened folder are scanned too (their folders join the file boundary).
   const outside = await updateExtraRoots(config);
   const dirs = [targetDir, ...outside];
@@ -391,7 +403,8 @@ export async function scan(config: Config): Promise<Index> {
       };
       visit(parsed);
     } catch {
-      index.diagnostics.push(`Unable to parse ${relative(root, file)}`);
+      // Only files that look like selector dictionaries are worth a diagnostic (other XML is not ours).
+      if (/<(Page|Section|Field)\b/.test(await fs.readFile(file, 'utf8').catch(() => ''))) index.diagnostics.push(`Unable to parse ${relative(root, file)}`);
     }
   }
   const unresolved = index.callEdges.filter((e) => e.resolution === 'Unresolved').length;
