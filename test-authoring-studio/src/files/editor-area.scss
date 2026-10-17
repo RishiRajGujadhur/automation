@@ -2340,3 +2340,24 @@
     grid-template-columns: 1fr;
   }
 }
+
+.spy-snapshots {
+  height: 28px;
+  margin-left: auto;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  background: var(--surface);
+  color: var(--text);
+  font-size: 12px;
+}
+.spy-offline {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+  padding: 6px 10px;
+  border: 1px solid var(--accent, #9270dd);
+  border-radius: 6px;
+  background: var(--accent-soft, #9270dd22);
+  font-size: 12px;
+}

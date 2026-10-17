@@ -67,6 +67,18 @@ test('Spy: track and pick an element, browse the tree, check a selector, add it 
     await expect(page.getByText(/Added Coupon to Dictionaries\/CheckoutPage\.xml/).first()).toBeVisible();
     const xml = await fs.readFile(path.join(root, 'Dictionaries/CheckoutPage.xml'), 'utf8');
     expect(xml).toMatch(/<Field XRefCode="coupon" Type="TextBox">\s*<Selector Type="testid">coupon<\/Selector>/);
+
+    // Snapshot: save the page, open it offline, browse it.
+    await spy.getByRole('button', { name: 'Snapshot' }).click();
+    await expect(page.getByText(/Snapshot saved: 127\.0\.0\.1-.*\.spy\.json \(\d+ elements\)/).first()).toBeVisible();
+    const name = (await (await request.get('/api/spy/snapshots')).json())[0].name as string;
+    await spy.getByLabel('Open snapshot').selectOption(name);
+    await expect(spy.getByRole('status').filter({ hasText: 'Snapshot of' })).toContainText('Shop');
+    await tree.getByRole('button', { name: /Apply coupon/ }).click();
+    await expect(props).toContainText('#apply');
+    await expect(cands.locator('li').first()).toContainText('not verified');
+    await spy.getByRole('button', { name: 'Close snapshot' }).click();
+    await expect(spy.getByRole('status').filter({ hasText: 'Snapshot of' })).toHaveCount(0);
   } finally {
     await browser?.close().catch(() => {});
     await request.post('/api/spy/stop').catch(() => {});

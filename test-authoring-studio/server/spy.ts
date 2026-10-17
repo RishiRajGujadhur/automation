@@ -1,6 +1,9 @@
 import { chromium, type Browser, type BrowserContext, type Page } from 'playwright';
 import { createServer } from 'node:net';
 import { supportedRoles } from './dictionaries.js';
+import fs from 'node:fs/promises';
+import path from 'node:path';
+import { spySnapshotsDir } from './settings.js';
 
 /**
  * Spy (like Ranorex Spy's GUI object recognition, for web pages): a browser the user explores with Track — hover
@@ -132,6 +135,8 @@ export const SPY_SCRIPT = String.raw`(() => {
     select: (id) => { const el = byId.get(id); if (!el || !el.isConnected) return null; el.scrollIntoView({ block: 'center', inline: 'nearest' }); current = el; show(el); return details(el); },
     mark: (els) => { clearMarks(); attach(); for (const el of els.slice(0, 50)) { const r = el.getBoundingClientRect(); const m = document.createElement('div'); m.setAttribute('data-tas-spy', ''); m.style.cssText = 'position:fixed;z-index:2147483646;pointer-events:none;border:2px dashed #3e63dd;background:rgba(62,99,221,.10);left:' + r.x + 'px;top:' + r.y + 'px;width:' + r.width + 'px;height:' + r.height + 'px'; document.documentElement.appendChild(m); marks.push(m); } if (els[0]) els[0].scrollIntoView({ block: 'center' }); setTimeout(clearMarks, 4000); return els.length; },
     el: (id) => byId.get(id) || null,
+    // Snapshot: the element tree plus every element's properties, for offline browsing.
+    snapshot: () => { const t = window.__tasSpy.tree(); const all = []; const walk = (n) => n.forEach((x) => { all.push(x.id); walk(x.children); }); walk(t); const details = {}; for (const id of all) { const el = byId.get(id); if (el) details[id] = window.__tasSpy.details(id); } return { title: document.title, tree: t, details }; },
   };
 })();`;
 
@@ -234,6 +239,17 @@ export class Spy {
     const el = handle.asElement() as import('playwright').ElementHandle | null;
     if (!el) throw new Error('That element is no longer on the page.');
     return (await el.screenshot({ timeout: 10_000 })).toString('base64');
+  }
+  /** Saves the page's element tree, every element's properties and a screenshot (JSON) for offline browsing. */
+  async snapshot() {
+    const p = this.live();
+    const data = (await p.evaluate('window.__tasSpy.snapshot()')) as { title: string; tree: SpyTreeNode[]; details: Record<string, SpyElement> };
+    const screenshot = (await p.screenshot({ type: 'jpeg', quality: 70 }).catch(() => undefined))?.toString('base64');
+    const host = (() => { try { return new URL(p.url()).hostname.replace(/[^\w.-]+/g, '_') || 'page'; } catch { return 'page'; } })();
+    const name = `${host}-${new Date().toISOString().replace(/[:.]/g, '-')}.spy.json`;
+    await fs.mkdir(spySnapshotsDir, { recursive: true });
+    await fs.writeFile(path.join(spySnapshotsDir, name), JSON.stringify({ format: 'tas-spy-snapshot/1', url: p.url(), takenAt: new Date().toISOString(), ...data, screenshot }));
+    return { name, elements: Object.keys(data.details).length };
   }
   state() {
     return { status: this.status, tracking: this.tracking, url: this.page && !this.page.isClosed() ? this.page.url() : null, selected: this.selected ?? null, version: this.version, ...(this.cdpPort ? { cdpPort: this.cdpPort } : {}) };

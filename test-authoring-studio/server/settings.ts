@@ -24,6 +24,7 @@ function findRoot() {
 const root = process.env.STUDIO_DATA ? path.resolve(process.env.STUDIO_DATA) : findRoot();
 export const settingsFile = path.join(root, '.local/settings.json');
 export const tracesDir = path.join(root, '.local/traces');
+export const spySnapshotsDir = path.join(root, '.local/spy-snapshots');
 
 const port = z.coerce.number().int().min(1024, 'Use a port from 1024 to 65535.').max(65535, 'Use a port from 1024 to 65535.');
 export const settingsSchema = z

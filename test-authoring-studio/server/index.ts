@@ -36,7 +36,7 @@ import { installed as nugetInstalled, updates as nugetUpdates, search as nugetSe
 import { status as gitStatus, stage as gitStage, unstage as gitUnstage, discard as gitDiscard, commit as gitCommit, headInfo, log as gitLog, branches as gitBranches, checkout as gitCheckout, createBranch as gitCreateBranch, sync as gitSync, merge as gitMerge, blame as gitBlame, clone as gitClone } from './git.js';
 import { LanguageService } from './langService.js';
 import type { Index } from '../src/types.js';
-import { readSettings, writeSettings, settingsSchema, tracesDir } from './settings.js';
+import { readSettings, writeSettings, settingsSchema, tracesDir, spySnapshotsDir } from './settings.js';
 import { WorkspaceSearch } from './stepSearch.js';
 import { scenarioSteps, scenarioText, featureWithScenario } from './recordingFeature.js';
 import { defineSteps, argumentKind, type StepArgument } from './stepScaffold.js';
@@ -660,6 +660,18 @@ app.post('/api/spy/track', async (req, res) => { await spy.track(z.boolean().par
 app.get('/api/spy/tree', async (_req, res) => res.json(await spy.tree()));
 app.post('/api/spy/select', async (req, res) => res.json(await spy.select(z.number().int().min(1).parse(req.body.id))));
 app.post('/api/spy/verify', async (req, res) => { const { type, value } = z.object({ type: z.string().max(60), value: z.string().min(1).max(2000) }).parse(req.body); res.json(await spy.verify(type, value)); });
+app.post('/api/spy/snapshot', async (_req, res) => res.json(await spy.snapshot()));
+app.get('/api/spy/snapshots', async (_req, res) => {
+  const files = (await fs.readdir(spySnapshotsDir).catch(() => [] as string[])).filter((f) => /^[\w.-]+\.spy\.json$/.test(f));
+  res.json((await Promise.all(files.map(async (name) => ({ name, modified: (await fs.stat(path.join(spySnapshotsDir, name))).mtime })))).sort((a, b) => +b.modified - +a.modified));
+});
+app.get('/api/spy/snapshots/:name', async (req, res) => {
+  const name = z.string().regex(/^[\w.-]+\.spy\.json$/, 'Invalid snapshot name').parse(req.params.name);
+  // Read directly: sendFile refuses paths through dot-folders (.local).
+  const body = await fs.readFile(path.join(spySnapshotsDir, name), 'utf8').catch(() => { throw new Error(`Snapshot ${name} was not found.`); });
+  if (req.query.download) res.setHeader('Content-Disposition', `attachment; filename="${name}"`);
+  res.type('application/json').send(body);
+});
 app.post('/api/spy/screenshot', async (req, res) => res.json({ png: await spy.screenshot(z.number().int().min(1).parse(req.body.id)) }));
 app.get('/api/recording', (_req, res) =>
   res.json({ status: recorder.status, actions: recorder.actions, ...(recorder.cdpPort ? { cdpPort: recorder.cdpPort } : {}) }),
@@ -915,7 +927,8 @@ app.get('/api/traces', async (_req, res) => {
 });
 app.get('/api/traces/:name', (req, res) => {
   const name = z.string().regex(/^[\w.-]+\.zip$/, 'Invalid trace name').parse(req.params.name);
-  res.download(path.join(tracesDir, name), name);
+  // dotfiles: the traces folder is under .local (send refuses dot-folders by default).
+  res.download(path.join(tracesDir, name), name, { dotfiles: 'allow' });
 });
 // Debugger (Visual Studio style): breakpoints in .feature and .cs files, stepping, call stack, locals and watch.
 const debug = new Debugger();
