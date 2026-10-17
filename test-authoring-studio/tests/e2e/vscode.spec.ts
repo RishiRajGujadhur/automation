@@ -275,3 +275,31 @@ test('Rider navigation: Back / Forward, Recent Files and Locations (Ctrl+E), Sea
   await page.keyboard.press('Enter');
   await expect(page.getByRole('region', { name: 'Output' })).toBeVisible();
 });
+
+test('Bookmarks: Ctrl+K Ctrl+K toggles a margin bookmark; Ctrl+K Ctrl+B lists them and jumps', async ({ page }) => {
+  await page.addInitScript(() => { if (!sessionStorage.getItem('seeded')) { localStorage.setItem('tas:prefs', JSON.stringify({ mode: 'advanced', autoSave: 'off' })); sessionStorage.setItem('seeded', '1'); } });
+  await page.goto('/#/features/editor');
+  await expect(page.getByLabel('Gherkin source')).toBeVisible();
+  const nav = page.getByRole('navigation');
+  await nav.getByRole('button', { name: 'SearchSteps.cs', exact: true }).first().click();
+  const src = page.getByLabel('Source of Steps/SearchSteps.cs');
+  await src.locator('.cm-line', { hasText: 'public async Task Results' }).first().click();
+  await page.keyboard.press('Control+K');
+  await page.keyboard.press('Control+K');
+  await expect(page.locator('.code-editor:not([hidden]) .cm-bookmark')).toHaveCount(1);
+  await expect(page.getByRole('dialog', { name: /Command palette|Search/ })).toHaveCount(0);
+  // From another file: the list jumps back to the bookmarked line.
+  await nav.getByRole('button', { name: 'AuthSteps.cs', exact: true }).first().click();
+  await page.getByLabel('Source of Steps/AuthSteps.cs').locator('.cm-line').first().click();
+  await page.keyboard.press('Control+K');
+  await page.keyboard.press('Control+B'); // Ctrl+K Ctrl+W on desktop (a browser closes the tab on Ctrl+W)
+  const list = page.getByRole('list', { name: 'Bookmarks' });
+  await expect(list).toContainText('SearchSteps.cs');
+  await list.getByRole('button', { name: /SearchSteps\.cs/ }).first().click();
+  await expect(page.locator('.editor-tab-label[aria-current="true"]')).toHaveAttribute('title', 'Steps/SearchSteps.cs');
+  await expect(page.locator('.code-editor:not([hidden]) .cm-activeLine')).toContainText('public async Task Results');
+  // Toggle off again.
+  await page.keyboard.press('Control+K');
+  await page.keyboard.press('Control+K');
+  await expect(page.locator('.code-editor:not([hidden]) .cm-bookmark')).toHaveCount(0);
+});

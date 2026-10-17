@@ -2452,3 +2452,17 @@
     }
   }
 }
+
+// Bookmarks
+.cm-bookmark-gutter .cm-bookmark {
+  display: block;
+  font-size: 10px;
+  line-height: inherit;
+}
+.hooks-list .bookmark-row {
+  display: flex;
+  align-items: center;
+  > button:first-child {
+    flex: 1;
+  }
+}

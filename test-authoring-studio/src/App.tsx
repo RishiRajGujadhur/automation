@@ -33,6 +33,7 @@ import SpyView from './SpyView';
 import OutputPanel, { type OutputSource } from './OutputPanel';
 import { studioLog } from './outputLog';
 import RecentPopup from './RecentPopup';
+import { useBookmarks, removeBookmark } from './editor/bookmarks';
 import { visitFile, back as navBack, forward as navForward, reveal } from './navHistory';
 import { useKeybindings, KeybindingEditor } from './keybindings';
 import BuildPanel from './build/BuildPanel';
@@ -353,6 +354,9 @@ export default function App() {
     // Navigate Back / Forward (Rider: Ctrl+Alt+← / →; Visual Studio: Ctrl+- / Ctrl+Shift+-).
     if ((e.altKey && e.key === 'ArrowLeft') || (!e.altKey && !e.shiftKey && e.key === '-')) { e.preventDefault(); const l = navBack(); if (l) navigateTo(l); return; }
     if ((e.altKey && e.key === 'ArrowRight') || (!e.altKey && (e.key === '_' || (e.shiftKey && e.key === '-')))) { e.preventDefault(); const l = navForward(); if (l) navigateTo(l); return; }
+    if (!e.altKey && !e.shiftKey && e.key.toLowerCase() === 'k') chordK.current = Date.now();
+    // Ctrl+K Ctrl+W as in Visual Studio (desktop: a browser closes the tab on Ctrl+W), Ctrl+K Ctrl+B everywhere.
+    else if (!e.altKey && !e.shiftKey && (e.key.toLowerCase() === 'b' || (desktop && e.key.toLowerCase() === 'w')) && Date.now() - chordK.current < 1500) { e.preventDefault(); chordK.current = 0; setModal('bookmarks'); return; }
     // Recent Files (Ctrl+E) / Recent Locations (Ctrl+Shift+E), as in Rider.
     if (!e.altKey && e.key.toLowerCase() === 'e') { e.preventDefault(); setRecentMode(e.shiftKey ? 'locations' : 'files'); setModal('recent'); return; }
     if (!desktop && e.shiftKey && !e.altKey && e.key.toLowerCase() === 'o') { e.preventDefault(); setModal('solution'); return; }
@@ -503,6 +507,9 @@ export default function App() {
     if (loc.line) for (const ms of [60, 400, 1200]) setTimeout(() => reveal(loc.file, loc.line!, loc.column ?? 1), ms);
   };
   const [recentMode, setRecentMode] = useState<'files' | 'locations'>('files');
+  const bookmarkList = useBookmarks();
+  // Ctrl+K Ctrl+W: the Bookmarks window (Visual Studio).
+  const chordK = useRef(0);
   // Search Everywhere (Rider): press Shift twice.
   useEffect(() => {
     let last = 0, other = false;
@@ -1000,6 +1007,7 @@ export default function App() {
         { label: 'Command palette', icon: CommandIcon, run: () => setPaletteOpen(true), shortcut: 'Ctrl K' },
         { label: 'Start a recording', icon: Circle, run: () => { setTab('Features'); setView('recorder'); setModal('record'); } },
         { label: 'View: Output', icon: ScrollText, run: () => openOutput() },
+        { label: 'View: Bookmarks', icon: ScrollText, run: () => setModal('bookmarks') },
         { label: 'Spy: find elements and selectors on a page', icon: ScanSearch, run: () => { setTab('Features'); setView('spy'); } },
         { label: 'New feature', icon: Plus, run: () => beginFeature() },
         { label: 'Rescan repository', icon: RefreshCw, disabled: busy, run: () => work(async () => { setIndex(await api('/scan', {})); setNotice('Repository index refreshed.'); }) },
@@ -2190,6 +2198,7 @@ export default function App() {
                       'save-recording': 'Save recording',
                       hooks: 'Go To Hooks',
                       recent: 'Recent',
+                      bookmarks: 'Bookmarks',
                       'unused-steps': 'Unused step definitions',
                       'define-steps': 'Define Steps',
                       record: 'Record a browser workflow',
@@ -2214,6 +2223,25 @@ export default function App() {
               <div className={modal === 'preferences' ? 'settings-body' : 'modal-body'}>
                 {modal === 'nuget' && (
                   <NugetManager initialProject={nugetProject} onNotice={setNotice} onChanged={() => { api('/scan', {}).then(setIndex, () => {}); }} />
+                )}
+                {modal === 'bookmarks' && (
+                  <div className="hooks-list">
+                    <p className="subtle">{bookmarkList.length ? `Ctrl+K Ctrl+K toggles a bookmark on the current line; Ctrl+K Ctrl+N / Ctrl+K Ctrl+P go to the next / previous one in a file; ${desktop ? 'Ctrl+K Ctrl+W' : 'Ctrl+K Ctrl+B'} opens this list.` : 'No bookmarks yet: put the cursor on a line and press Ctrl+K Ctrl+K.'}</p>
+                    {bookmarkList.length > 0 && (
+                      <ul aria-label="Bookmarks">
+                        {bookmarkList.map((b) => (
+                          <li key={`${b.file}:${b.line}`} className="bookmark-row">
+                            <button onClick={() => { setModal(undefined); navigateTo({ file: b.file, line: b.line }); }}>
+                              <span className="hook-kind">{b.file.split('/').pop()}:{b.line}</span>
+                              <span><code>{b.text || '(empty line)'}</code></span>
+                              <small>{b.file}</small>
+                            </button>
+                            <button className="icon-button" aria-label={`Remove bookmark ${b.file}:${b.line}`} onClick={() => removeBookmark(b)}><X size={13} /></button>
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+                  </div>
                 )}
                 {modal === 'recent' && <RecentPopup mode={recentMode} onMode={setRecentMode} onOpen={(loc) => { setModal(undefined); navigateTo(loc); }} />}
                 {modal === 'goto' && (

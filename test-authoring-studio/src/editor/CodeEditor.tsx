@@ -22,6 +22,7 @@ import { vsKeys, commentTokenFor } from './vsKeys';
 import { braceFolding, braceRange } from './folding';
 import { stickyScroll } from './stickyScroll';
 import { revealOn, cursorTracker } from './cursor';
+import { bookmarks } from './bookmarks';
 import NavBar from './NavBar';
 import RenameStep from './RenameStep';
 import { api, type FilePreview } from '../api';
@@ -359,6 +360,7 @@ export default function CodeEditor({ file, reveal, active = true, onNotice, onIn
     labelled(`Source of ${file}`, false),
     cursorTracker(file, () => eolRef.current),
     revealOn(file),
+    bookmarks(file),
     caretTracker,
     blameGutter(),
     coverageGutter(),
