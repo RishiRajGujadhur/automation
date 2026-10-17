@@ -13,7 +13,7 @@ import { useEditorTheme } from '../themes';
 import { lintGutter, forEachDiagnostic, nextDiagnostic, openLintPanel } from '@codemirror/lint';
 import { startCompletion } from '@codemirror/autocomplete';
 import { toggleComment, selectAll } from '@codemirror/commands';
-import { Play, Save, Check, Wand2, Copy, Scissors, ClipboardPaste, MessageSquareCode, TextSelect, CircleAlert, ListChecks, Sparkles, Maximize2, Minimize2, Anchor, Code2 } from 'lucide-react';
+import { Play, Save, Check, Wand2, Copy, Scissors, ClipboardPaste, MessageSquareCode, TextSelect, CircleAlert, ListChecks, Sparkles, Maximize2, Minimize2, Anchor, Code2, History } from 'lucide-react';
 import { gherkinExtensions, formatFeature } from './gherkin';
 import { RowMenu } from '../ui';
 import { labelled } from './a11y';
@@ -33,7 +33,7 @@ export type Problems = { errors: number; warnings: number };
  * right-click menu with Run tests / Preview changes. The menu replaces the browser menu inside the
  * editor, so clipboard actions are included.
  */
-export default function GherkinEditor({ file, onSave, runMarks, onRunLine, value, onChange, onPreview, onRun, onValidate, height = '470px', onNotice, onDefinition, onHooks, onDefineSteps }: { onHooks?: (line: number) => void; onDefineSteps?: () => void; file?: string; runMarks?: RunMark[]; onRunLine?: (line: number, debug: boolean) => void; onSave?: () => void; onDefinition?: (step: { keyword: string; text: string; line: number }) => void; value: string; onChange: (v: string) => void; onPreview: () => void; onRun: () => void; onValidate: () => void; height?: string; onNotice?: (m: string) => void }) {
+export default function GherkinEditor({ file, onSave, runMarks, onRunLine, value, onChange, onPreview, onRun, onValidate, height = '470px', onNotice, onDefinition, onHooks, onDefineSteps, onHistory }: { onHooks?: (line: number) => void; onDefineSteps?: () => void; onHistory?: () => void; file?: string; runMarks?: RunMark[]; onRunLine?: (line: number, debug: boolean) => void; onSave?: () => void; onDefinition?: (step: { keyword: string; text: string; line: number }) => void; value: string; onChange: (v: string) => void; onPreview: () => void; onRun: () => void; onValidate: () => void; height?: string; onNotice?: (m: string) => void }) {
   const editorTheme = useEditorTheme();
   const ref = useRef<ReactCodeMirrorRef>(null);
   const [problems, setProblems] = useState<Problems>({ errors: 0, warnings: 0 });
@@ -98,6 +98,7 @@ export default function GherkinEditor({ file, onSave, runMarks, onRunLine, value
           { label: 'Review changes (diff)…', icon: Save, onSelect: onPreview },
           { label: 'Validate bindings', icon: Check, shortcut: 'Ctrl ↵', onSelect: onValidate },
           ...(onDefineSteps ? [{ label: 'Define Steps…', icon: Code2, onSelect: onDefineSteps }] : []),
+          ...(onHistory ? [{ label: 'Local History…', icon: History, onSelect: onHistory }] : []),
           ...(onHooks ? [{ label: 'Go To Hooks', icon: Anchor, onSelect: withView((v) => onHooks(v.state.doc.lineAt(v.state.selection.main.head).number)) }] : []),
           'separator',
           { label: 'Suggest steps', icon: Sparkles, shortcut: 'Ctrl Space', onSelect: withView((v) => startCompletion(v)) },

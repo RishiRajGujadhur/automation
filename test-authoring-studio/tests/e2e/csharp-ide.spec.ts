@@ -379,3 +379,29 @@ test('Edit Project File: .csproj opens with MSBuild IntelliSense', async ({ page
   await page.keyboard.type('\n<Nulla');
   await expect(page.getByRole('listbox').getByRole('option', { name: /Nullable/ })).toBeVisible();
 });
+
+test('Local History: versions kept before each save, diff, revert into the editor', async ({ page }) => {
+  await open(page);
+  await explorerFile(page, 'Extra.cs').click();
+  const file = 'Steps/Extra.cs';
+  const src = page.getByLabel(`Source of ${file}`);
+  await line(page, file, 'public class Extra').click();
+  await page.keyboard.press('End');
+  await page.keyboard.type(' // first');
+  await page.keyboard.press('Control+S');
+  await expect.poll(() => disk(file)).toContain('// first');
+  await page.keyboard.type(' second');
+  await page.keyboard.press('Control+S');
+  await expect.poll(() => disk(file)).toContain('// first second');
+  // Two versions: before the first save (original) and before the second.
+  await src.click({ button: 'right' });
+  await page.getByRole('menuitem', { name: 'Local History…' }).click();
+  const panel = page.getByRole('region', { name: `Local history of ${file}` });
+  const versions = panel.getByRole('list', { name: 'Versions' }).getByRole('button');
+  await expect(versions).toHaveCount(2);
+  await versions.nth(1).click(); // the oldest: the original file
+  await expect(panel.getByLabel('Changes since the selected version')).toContainText('+public class Extra // first second');
+  await panel.getByRole('button', { name: 'Revert to this version' }).click();
+  await expect(src).not.toContainText('// first');
+  await expect(src).toContainText('public class Extra');
+});

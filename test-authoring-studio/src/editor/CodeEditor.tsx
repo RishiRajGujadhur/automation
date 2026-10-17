@@ -23,6 +23,7 @@ import { braceFolding, braceRange } from './folding';
 import { stickyScroll } from './stickyScroll';
 import { revealOn, cursorTracker } from './cursor';
 import { bookmarks } from './bookmarks';
+import LocalHistory from '../LocalHistory';
 import NavBar from './NavBar';
 import RenameStep from './RenameStep';
 import { api, type FilePreview } from '../api';
@@ -162,6 +163,7 @@ export default function CodeEditor({ file, reveal, active = true, onNotice, onIn
   useEffect(() => { let tries = 0; const apply = () => { const v = ref.current?.view; if (v) v.dispatch({ effects: setCoverage.of(fileCoverage) }); else if (tries++ < 30) requestAnimationFrame(apply); }; if (loaded) apply(); }, [fileCoverage, loaded]);
   /** Compare with Unmodified (Git): the editor text against the committed version, as a unified diff. */
   const [headDiff, setHeadDiff] = useState<string>();
+  const [historyOpen, setHistoryOpen] = useState(false);
   const compareWithHead = async () => {
     const v = ref.current?.view;
     if (!v) return;
@@ -428,7 +430,7 @@ export default function CodeEditor({ file, reveal, active = true, onNotice, onIn
             { label: 'Remove and Sort Usings', icon: ListOrdered, shortcut: 'Ctrl R, Ctrl G', onSelect: () => void organize() },
             'separator' as const,
           ] : []),
-          ...(!browser ? [{ label: 'Compare with Unmodified', icon: GitCompareArrows, onSelect: () => void compareWithHead() }, { label: 'Annotate (Git Blame)', icon: History, onSelect: () => void annotate() }, 'separator' as const] : []),
+          ...(!browser ? [{ label: 'Compare with Unmodified', icon: GitCompareArrows, onSelect: () => void compareWithHead() }, { label: 'Local History…', icon: History, onSelect: () => setHistoryOpen(true) }, { label: 'Annotate (Git Blame)', icon: History, onSelect: () => void annotate() }, 'separator' as const] : []),
           { label: 'Cut', icon: Scissors, shortcut: 'Ctrl X', onSelect: () => clip('cut') },
           { label: 'Copy', icon: Copy, shortcut: 'Ctrl C', onSelect: () => clip('copy') },
           { label: 'Paste', icon: ClipboardPaste, shortcut: 'Ctrl V', onSelect: () => clip('paste') },
@@ -516,6 +518,15 @@ export default function CodeEditor({ file, reveal, active = true, onNotice, onIn
           onClose={() => { setRenameStep(undefined); ref.current?.view?.focus(); }}
           onDone={(written, index) => { setRenameStep(undefined); window.dispatchEvent(new CustomEvent(FILES_CHANGED_EVENT, { detail: written })); onIndex?.(index); setTimeout(loadLenses, 300); }}
         />
+      )}
+      {historyOpen && (
+        <section className="references-panel compare-panel" aria-label={`Local history of ${file}`}>
+          <div className="references-head">
+            <strong>Local History</strong> <span className="meta">{file}</span>
+            <IconButton label="Close local history" onClick={() => setHistoryOpen(false)}><X size={13} /></IconButton>
+          </div>
+          <LocalHistory file={file} current={value} onRevert={(src) => { setValue(src); setHistoryOpen(false); onNotice?.('Reverted in the editor: save to keep it.'); }} />
+        </section>
       )}
       {headDiff !== undefined && (
         <section className="references-panel compare-panel" aria-label={`Changes in ${file}`}>

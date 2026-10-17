@@ -33,6 +33,7 @@ import SpyView from './SpyView';
 import OutputPanel, { type OutputSource } from './OutputPanel';
 import { studioLog } from './outputLog';
 import RecentPopup from './RecentPopup';
+import LocalHistory from './LocalHistory';
 import { useBookmarks, removeBookmark } from './editor/bookmarks';
 import { visitFile, back as navBack, forward as navForward, reveal } from './navHistory';
 import { useKeybindings, KeybindingEditor } from './keybindings';
@@ -1860,6 +1861,7 @@ export default function App() {
               <GherkinEditor
                   onHooks={(line) => { if (feature) void showHooks(feature.file, line); }}
                   onDefineSteps={feature ? () => setModal('define-steps') : undefined}
+                  onHistory={feature && fileSrc.kind !== 'browser' ? () => setModal('history') : undefined}
                 file={feature?.file}
                 runMarks={feature ? marksFor(feature.file) : undefined}
                 onRunLine={(line, debug) => feature && runLine(feature.file, line, debug)}
@@ -2199,6 +2201,7 @@ export default function App() {
                       hooks: 'Go To Hooks',
                       recent: 'Recent',
                       bookmarks: 'Bookmarks',
+                      history: 'Local History',
                       'unused-steps': 'Unused step definitions',
                       'define-steps': 'Define Steps',
                       record: 'Record a browser workflow',
@@ -2223,6 +2226,9 @@ export default function App() {
               <div className={modal === 'preferences' ? 'settings-body' : 'modal-body'}>
                 {modal === 'nuget' && (
                   <NugetManager initialProject={nugetProject} onNotice={setNotice} onChanged={() => { api('/scan', {}).then(setIndex, () => {}); }} />
+                )}
+                {modal === 'history' && feature && (
+                  <LocalHistory file={feature.file} current={source} onRevert={(src) => { setSource(src); setModal(undefined); setNotice('Reverted in the editor: save to keep it.'); }} />
                 )}
                 {modal === 'bookmarks' && (
                   <div className="hooks-list">

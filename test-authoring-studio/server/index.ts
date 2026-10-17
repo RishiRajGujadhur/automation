@@ -44,6 +44,7 @@ import { scenarioSteps, scenarioText, featureWithScenario } from './recordingFea
 import { defineSteps, argumentKind, type StepArgument } from './stepScaffold.js';
 import { recordedStepsSource } from './recordedSteps.js';
 import { editorConfigFor } from './editorconfig.js';
+import { recordHistory, historyOf, historyItem } from './localHistory.js';
 import { findVisualStudio, classicProjects, msbuildArgs, classicOutput, CLASSIC_HELP } from './msbuild.js';
 import { mergeDictionary, proposeField, findEntry, parseDictionary, selectorRank, fieldName, type FieldProposal } from './dictionaries.js';
 const studio = readSettings();
@@ -395,6 +396,7 @@ app.post('/api/file/save', async (req, res) => {
   const target = await confined(config.repositoryRoot, file, false);
   const before = await fs.readFile(target, 'utf8').catch((e) => { if (e.code === 'ENOENT') return ''; throw e; });
   if (hash(before) !== baseHash) { res.status(409).json({ error: `${file} changed outside the studio. Reload it before saving.`, hash: hash(before) }); return; }
+  await recordHistory(config.repositoryRoot, file, before, 'save').catch(() => {});
   await fs.mkdir(path.dirname(target), { recursive: true });
   await fs.writeFile(target, source, 'utf8');
   // Re-index shortly after the last save so bindings and features stay current without rescanning on every keystroke.
@@ -654,10 +656,14 @@ app.post('/api/file/delete', async (req, res) => {
   const { file } = z.object({ file: z.string().min(1).max(400), approved: z.literal(true) }).parse(req.body);
   const target = await confined(config.repositoryRoot, file);
   if (target === path.resolve(config.repositoryRoot)) throw new Error('The repository root cannot be deleted.');
+  if ((await fs.stat(target)).isFile()) await recordHistory(config.repositoryRoot, file, await fs.readFile(target, 'utf8').catch(() => ''), 'delete').catch(() => {});
   await fs.rm(target, { recursive: true });
   afterFileChange([file]);
   res.json({ ok: true });
 });
+// Local History (Rider): earlier versions of a file the studio wrote.
+app.get('/api/history', async (req, res) => { const file = z.string().min(1).max(400).parse(req.query.file); await confined(config.repositoryRoot, file, false); res.json(await historyOf(config.repositoryRoot, file)); });
+app.get('/api/history/item', async (req, res) => { const { file, id } = z.object({ file: z.string().min(1).max(400), id: z.string().max(80) }).parse(req.query); await confined(config.repositoryRoot, file, false); res.json({ source: await historyItem(config.repositoryRoot, file, id) }); });
 app.get('/api/source', async (req, res) => {
   const file = await confined(config.repositoryRoot, String(req.query.file));
   if (!/\.(cs|feature|xml|csproj|json|config|runsettings|props|targets|sln|md|yaml|yml|csv|txt|resx)$/.test(file)) throw new Error('Unsupported source file');
@@ -914,6 +920,7 @@ app.post('/api/generation/apply', async (req, res) => {
     res.status(409).json({ error: 'File changed since preview. Review a fresh diff.' });
     return;
   }
+  await recordHistory(config.repositoryRoot, p.file, before, 'change').catch(() => {});
   await fs.mkdir(path.dirname(target), { recursive: true });
   await fs.writeFile(target, p.source, 'utf8');
   previews.delete(id);

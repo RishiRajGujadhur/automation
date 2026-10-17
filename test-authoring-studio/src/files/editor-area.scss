@@ -2466,3 +2466,46 @@
     flex: 1;
   }
 }
+
+// Local History
+.local-history {
+  display: grid;
+  grid-template-columns: minmax(220px, 280px) 1fr;
+  gap: 10px;
+  min-width: min(860px, 90vw);
+  ul {
+    max-height: 300px;
+    margin: 0;
+    padding: 0;
+    overflow: auto;
+    list-style: none;
+  }
+  li button {
+    display: grid;
+    grid-template-columns: 16px 1fr;
+    gap: 0 6px;
+    width: 100%;
+    padding: 4px 6px;
+    border: 0;
+    border-radius: 3px;
+    background: transparent;
+    color: var(--text);
+    font-size: 12px;
+    text-align: left;
+    cursor: pointer;
+    small {
+      grid-column: 2;
+      color: var(--text-muted);
+    }
+    &.active,
+    &:hover {
+      background: var(--accent-soft, #9270dd22);
+    }
+  }
+  .local-history-diff {
+    display: grid;
+    gap: 6px;
+    align-content: start;
+    min-width: 0;
+  }
+}
