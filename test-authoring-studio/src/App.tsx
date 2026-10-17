@@ -27,6 +27,7 @@ import { readDraft, sha256, useAutoSave, unsavedFiles, editedThisSession } from 
 import EditorTabs, { EditorActions } from './files/EditorTabs';
 import OpenSolution from './OpenSolution';
 import StartWindow from './StartWindow';
+import SaveRecording from './SaveRecording';
 import { useKeybindings, KeybindingEditor } from './keybindings';
 import BuildPanel from './build/BuildPanel';
 import TestExplorer from './testing/TestExplorer';
@@ -1362,6 +1363,10 @@ export default function App() {
                           work(async () => {
                             const r = await api<{ trace: string | null }>('/recording/stop', {});
                             setRecordStatus('stopped');
+                            // The last actions may be newer than the 1 s poll: take the final list, and match it right away.
+                            const final = await api<{ actions: Action[] }>('/recording');
+                            setActions(final.actions);
+                            if (final.actions.length) setMatches(await api('/recording/match', { actions: final.actions }));
                             setLastTrace(r.trace);
                             if (r.trace) setNotice(`Trace saved: ${r.trace}`);
                           })
@@ -1712,12 +1717,17 @@ export default function App() {
                     Create scenario
                   </Button>
                   <Button
-                    variant="primary"
+                    variant="ghost"
                     disabled={!acceptedCount}
                     onClick={applyRecording}
+                    title="Append the accepted steps to the feature in the editor"
                   >
                     <CheckCheck size={16} />
                     Apply to editor
+                  </Button>
+                  <Button variant="primary" disabled={!actions.length || recordStatus === 'demo'} onClick={() => setModal('save-recording')} title="Create the feature file and dictionary entries from this recording">
+                    <Save size={16} />
+                    Save recording…
                     <ArrowRight size={15} />
                   </Button>
                 </div>
@@ -2111,6 +2121,7 @@ export default function App() {
                       solution: 'Open Project/Solution',
                       goto: 'Go to All',
                       nuget: 'Manage NuGet Packages',
+                      'save-recording': 'Save recording',
                       record: 'Record a browser workflow',
                       new: 'Create a feature',
                       parameters: 'Configure step parameters',
@@ -2349,6 +2360,20 @@ export default function App() {
                   </dl>
                 )}
                 {modal === 'shortcuts' && <KeybindingEditor />}
+                {modal === 'save-recording' && (
+                  <SaveRecording
+                    actions={actions}
+                    accepted={accepted}
+                    features={(index?.features ?? []).map((f) => ({ file: f.file, name: f.name }))}
+                    onSaved={async (file, next) => {
+                      if (next) setIndex(next);
+                      setModal(undefined);
+                      await loadFeature(file);
+                      setView('editor');
+                      setNotice(`Saved ${file}. Steps without a binding are underlined: Create Step adds them.`);
+                    }}
+                  />
+                )}
                 {modal === 'dictionary' && (
                   <RecordingDictionary
                     actions={actions.filter((a) => !matches.find((m) => m.action.id === a.id)?.candidates.length)}

@@ -1942,3 +1942,65 @@
     height: 22px;
   }
 }
+
+// Save recording (feature file + dictionary)
+.save-recording {
+  display: grid;
+  gap: 12px;
+  min-width: min(760px, 90vw);
+  fieldset {
+    display: grid;
+    gap: 8px;
+    margin: 0;
+    padding: 10px 12px;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+  }
+  legend {
+    display: inline-flex;
+    gap: 6px;
+    align-items: center;
+    padding: 0 4px;
+    font-weight: 600;
+  }
+  .field {
+    display: grid;
+    gap: 4px;
+    font-size: 11px;
+    color: var(--text-muted);
+    input {
+      height: 30px;
+      padding: 0 8px;
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      background: var(--surface);
+      color: var(--text);
+      font-size: 13px;
+    }
+  }
+  .check {
+    display: flex;
+    gap: 6px;
+    align-items: center;
+    font-size: 13px;
+  }
+  .save-steps ol {
+    margin: 0;
+    padding-left: 22px;
+    font-size: 12px;
+    li {
+      padding: 2px 0;
+    }
+    li.drafted code {
+      text-decoration: underline wavy var(--accent, #9270dd);
+      text-underline-offset: 3px;
+    }
+    small {
+      display: inline-flex;
+      gap: 3px;
+      align-items: center;
+      margin-left: 8px;
+      color: var(--accent, #9270dd);
+    }
+  }
+}

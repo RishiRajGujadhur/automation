@@ -16,8 +16,11 @@ export default defineConfig({
   },
   webServer: {
     command: 'npm run dev',
-    url: `http://127.0.0.1:${webPort}`,
+    // The API starts a moment after Vite: wait until it answers through the proxy.
+    url: `http://127.0.0.1:${webPort}/api/health`,
     reuseExistingServer: true,
     timeout: 30000,
+    // The recorder e2e test drives the recording browser over CDP (port reported by GET /api/recording).
+    env: { STUDIO_RECORDER_CDP: '1' },
   },
 });

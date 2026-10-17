@@ -36,6 +36,7 @@ import { LanguageService } from './langService.js';
 import type { Index } from '../src/types.js';
 import { readSettings, writeSettings, settingsSchema, tracesDir } from './settings.js';
 import { WorkspaceSearch } from './stepSearch.js';
+import { scenarioSteps, scenarioText, featureWithScenario } from './recordingFeature.js';
 import { mergeDictionary, proposeField, findEntry, parseDictionary, selectorRank, fieldName, type FieldProposal } from './dictionaries.js';
 const studio = readSettings();
 const allowedHosts = [studio.apiPort, studio.webPort].flatMap((p) => [`127.0.0.1:${p}`, `localhost:${p}`]);
@@ -609,7 +610,7 @@ app.post('/api/scenario/validate', async (req, res) => {
   res.json({ ...feature, diagnostics });
 });
 app.get('/api/recording', (_req, res) =>
-  res.json({ status: recorder.status, actions: recorder.actions }),
+  res.json({ status: recorder.status, actions: recorder.actions, ...(recorder.cdpPort ? { cdpPort: recorder.cdpPort } : {}) }),
 );
 app.post('/api/recording/start', async (req, res) => {
   await recorder.start(z.string().url().parse(req.body.url), false, readSettings().tracing);
@@ -649,6 +650,34 @@ app.post('/api/recording/match', async (req, res) => {
 });
 app.post('/api/recording/dictionary-proposal',async(req,res)=>{
  const {actions,page,section,file,pageObjectFile}=z.object({actions:z.array(actionSchema).min(1).max(200),page:z.string().min(1).max(200),section:z.string().min(1).max(200),file:z.string().min(5).max(400),pageObjectFile:z.string().endsWith('.cs').optional()}).parse(req.body);
+ res.json(await recordingDictionary(actions,page,section,file,pageObjectFile));
+});
+/**
+ * Save recording: one preview for the feature file (new, or the scenario appended to an existing one) and the
+ * dictionary entries for the same actions. Nothing is written until each preview is approved (/api/generation/apply).
+ */
+app.post('/api/recording/save-preview',async(req,res)=>{
+ const b=z.object({
+  actions:z.array(actionSchema).min(1).max(500),
+  accepted:z.record(z.string(),z.string().max(1000)).default({}),
+  featureFile:z.string().trim().min(1).max(400).regex(/\.feature$/i,'Feature files end with .feature.'),
+  featureName:z.string().trim().min(1).max(200),
+  scenario:z.string().trim().min(1).max(200),
+  dictionary:z.object({page:z.string().trim().min(1).max(200),section:z.string().trim().min(1).max(200),file:z.string().trim().min(5).max(400)}).optional(),
+ }).parse(req.body);
+ const steps=scenarioSteps(b.actions,b.accepted);
+ if(!steps.length)throw new Error('The recording has no steps to save.');
+ const target=await confined(config.repositoryRoot,b.featureFile,false);
+ const before=await fs.readFile(target,'utf8').catch(e=>{if(e.code==='ENOENT')return '';throw e;});
+ const source=featureWithScenario(before,b.featureName,scenarioText(b.scenario,steps));
+ parseFeature(source,b.featureFile,[]); // throws on invalid Gherkin before anything is offered
+ const id=randomUUID();previews.set(id,{file:b.featureFile,source,hash:hash(before),root:config.repositoryRoot});
+ const feature={id,file:b.featureFile,created:!before,changed:true,diff:createPatch(b.featureFile,before,source,'repository','proposed')};
+ const dictionary=b.dictionary?await recordingDictionary(b.actions,b.dictionary.page,b.dictionary.section,b.dictionary.file):null;
+ res.json({feature,steps,drafted:steps.filter(s=>s.drafted).length,dictionary});
+});
+/** Recording → dictionary entries (and optionally a dictionary-backed page object), previewed, never written here. */
+async function recordingDictionary(actions:z.infer<typeof actionSchema>[],page:string,section:string,file:string,pageObjectFile?:string){
  const i=await ensure();const proposals:FieldProposal[]=[];const members:{action:z.infer<typeof actionSchema>;section:string;field:string}[]=[];const skipped:string[]=[];
  for(const a of actions){
   const existing=a.target?.name?findEntry(i.dictionaryEntries??[],page,section,fieldName(a.target.name)):undefined;
@@ -667,8 +696,8 @@ app.post('/api/recording/dictionary-proposal',async(req,res)=>{
   previews.set(id,{file:pageObjectFile,source:po.source,hash:hash(''),root:config.repositoryRoot});
   pageObject={...po,id,file:pageObjectFile,diff:createPatch(pageObjectFile,'',po.source,'repository','proposed')};
  }
- res.json({proposals,dictionary,pageObject,skipped,reused:members.length-proposals.length});
-});
+ return {proposals,dictionary,pageObject,skipped,reused:members.length-proposals.length};
+}
 app.post('/api/generation/proposal', async (req, res) => {
   const { action, wording, file } = z
     .object({
