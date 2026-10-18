@@ -354,3 +354,20 @@ test('J17 Type Hierarchy (Ctrl+H): bases, the type, derived types as a tree, int
   await tree.getByRole('button', { name: /AdminLoginPage/ }).click();
   await expect(src.locator('.cm-activeLine')).toContainText('public class AdminLoginPage');
 });
+
+test('J18 Call Hierarchy (Ctrl+Alt+H): callers of a method, expand a caller to its callers, click a caller to its call', async ({ page, request }) => {
+  await hierarchyFixture(request);
+  const src = await openCs(page, 'Pages/Pages.cs', 'public void SignIn()');
+  await page.keyboard.press('Home');
+  for (let i = 0; i < 3; i++) await page.keyboard.press('Control+ArrowRight'); // end of "SignIn"
+  await page.keyboard.press('Control+Alt+H');
+  const tree = page.getByRole('list', { name: 'Callers' });
+  await expect(tree).toContainText('LoginPage.SignIn', { timeout: 60_000 });
+  await expect(tree).toContainText('AdminLoginPage.Elevate');
+  await expect(tree).toContainText('ReportsPage.Show');
+  // Nobody calls Elevate.
+  await tree.getByRole('button', { name: 'Expand Demo.Pages.AdminLoginPage.Elevate' }).click();
+  await expect(tree).toContainText('No callers.');
+  await tree.getByRole('button', { name: /^method Demo\.Pages\.ReportsPage\.Show/ }).click();
+  await expect(src.locator('.cm-activeLine')).toContainText('public void Show()');
+});

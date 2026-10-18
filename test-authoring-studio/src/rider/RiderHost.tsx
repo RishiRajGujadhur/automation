@@ -17,7 +17,7 @@ import { surroundTemplates, surroundWith } from '../editor/surround';
 import { setUsages, wordUsages } from '../editor/usages';
 import { fileOutline, itemAt, type OutlineItem } from './outline';
 import type { RiderTool } from './RiderToolWindow';
-import { setHierarchy, type TypeHierarchy } from './hierarchy';
+import { setHierarchy, type CallHierarchy, type TypeHierarchy } from './hierarchy';
 import { changeFontSize, setViewOptions, viewOptions } from '../editor/viewOptions';
 
 export type RiderHostProps = {
@@ -113,6 +113,14 @@ export default function RiderHost(props: RiderHostProps) {
     p.current.onTool('hierarchy');
     try { setHierarchy({ kind: 'type', data: await api<TypeHierarchy>('/csharp/typeHierarchy', position(a.view, a.file)) }); } catch (e) { setHierarchy({ kind: 'type', error: (e as Error).message }); }
   };
+  /** Call Hierarchy (Ctrl+Alt+H): who calls the member at the caret; expand a caller to see its callers. */
+  const callHierarchy = async () => {
+    const a = activeEditor();
+    if (!a || !a.file.endsWith('.cs') || isBrowser()) { p.current.onNotice('Call Hierarchy works in C# files of a studio-indexed folder.'); return; }
+    setHierarchy({ kind: 'call', loading: true });
+    p.current.onTool('hierarchy');
+    try { setHierarchy({ kind: 'call', data: await api<CallHierarchy>('/csharp/callers', position(a.view, a.file)) }); } catch (e) { setHierarchy({ kind: 'call', error: (e as Error).message }); }
+  };
   const closeAndFocus = () => { setPopup(null); requestAnimationFrame(() => target.current?.view.focus()); };
   /** Runs an editor action on the active editor (and gives it focus back). */
   const inEditor = (fn: (v: EditorView, file: string) => unknown) => () => {
@@ -154,6 +162,7 @@ export default function RiderHost(props: RiderHostProps) {
       { id: 'file-structure', label: 'File Structure…', menu: 'Navigate', shortcut: 'Ctrl Alt F12', run: () => void fileStructure() },
       { id: 'tool-structure', label: 'Structure', menu: 'View', group: true, shortcut: 'Alt 7', run: () => p.current.onTool('structure') },
       { id: 'type-hierarchy', label: 'Type Hierarchy', menu: 'Navigate', group: true, shortcut: 'Ctrl H', run: () => void typeHierarchy() },
+      { id: 'call-hierarchy', label: 'Call Hierarchy', menu: 'Navigate', shortcut: 'Ctrl Alt H', run: () => void callHierarchy() },
       { id: 'carets-line-ends', label: 'Add Carets to Ends of Selected Lines', menu: 'Edit', shortcut: 'Alt Shift G', run: inEditor(caretsAtLineEnds) },
     ];
     return registerRider(list);
