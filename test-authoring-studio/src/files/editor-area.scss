@@ -3084,3 +3084,17 @@ html[data-breakpoints-muted] .cm-bp {
   font-size: 11px;
   cursor: pointer;
 }
+
+// Numbered bookmarks
+.cm-bookmark-digit {
+  display: inline-block;
+  min-width: 13px;
+  padding: 0 2px;
+  border-radius: 3px;
+  background: #3e63dd;
+  color: #fff;
+  font-size: 10px;
+  font-weight: 700;
+  line-height: 14px;
+  text-align: center;
+}

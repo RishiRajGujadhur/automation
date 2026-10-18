@@ -11,7 +11,7 @@ import { replaceText } from '../editor/csharp';
 import { formatFeature } from '../editor/gherkin';
 import { blockComment } from '../editor/riderKeys';
 import { extendSelection, shrinkSelection, toggleCase, joinLines, selectNextOccurrence, unselectOccurrence, selectAllOccurrences, startNewLine, startNewLineBefore, caretsAtLineEnds } from '../editor/riderKeys';
-import { registerRider, riderChanged, runRider, useRiderCommands, type RiderCommand } from './commands';
+import { noteUsage, registerRider, riderChanged, runRider, useRiderCommands, type RiderCommand } from './commands';
 import { api } from '../api';
 import { copyText } from '../ui';
 import { isBrowser } from '../files/provider';
@@ -20,6 +20,7 @@ import ListPopup from './ListPopup';
 import { insertTemplate, liveTemplates } from '../editor/snippets';
 import { surroundTemplates, surroundWith } from '../editor/surround';
 import { setUsages, wordUsages } from '../editor/usages';
+import { bookmarkByDigit } from '../editor/bookmarks';
 import { fileOutline, itemAt, type OutlineItem } from './outline';
 import type { RiderTool } from './RiderToolWindow';
 import RunAnything from './RunAnything';
@@ -257,8 +258,19 @@ export default function RiderHost(props: RiderHostProps) {
       [(e) => e.altKey && e.shiftKey && !e.ctrlKey && !e.metaKey && e.code === 'KeyC', 'recent-changes'],
       [(e) => (e.ctrlKey || e.metaKey) && e.altKey && e.shiftKey && e.key === 'Insert', 'new-scratch'],
     ];
+    // Ctrl+digit: go to numbered bookmark (Rider), when there is one with that digit.
+    const digit = (e: KeyboardEvent) => {
+      const d = /^Digit(\d)$/.exec(e.code)?.[1];
+      if (!d || !(e.ctrlKey || e.metaKey) || e.shiftKey || e.altKey) return false;
+      const b = bookmarkByDigit(d);
+      if (!b) return false;
+      e.preventDefault(); e.stopPropagation();
+      noteUsage('numbered-bookmarks', 'key');
+      p.current.onNavigate({ file: b.file, line: b.line });
+      return true;
+    };
     // Capture phase: the keys also work while the Terminal (xterm.js swallows key events) or a field has focus.
-    const h = (e: KeyboardEvent) => { const k = keys.find(([t]) => t(e)); if (k) { e.preventDefault(); e.stopPropagation(); runRider(k[1], 'key'); } };
+    const h = (e: KeyboardEvent) => { if (digit(e)) return; const k = keys.find(([t]) => t(e)); if (k) { e.preventDefault(); e.stopPropagation(); runRider(k[1], 'key'); } };
     window.addEventListener('keydown', h, true);
     return () => window.removeEventListener('keydown', h, true);
   }, []);
@@ -331,6 +343,7 @@ export default function RiderHost(props: RiderHostProps) {
       { id: 'rollback-lines', label: 'Rollback Lines', menu: 'Edit', shortcut: 'Ctrl Alt Z', run: inEditor((v) => { if (!rollbackLines(v)) p.current.onNotice('No uncommitted change at the caret.'); }) },
       { id: 'new-scratch', label: 'New Scratch File…', menu: 'Tools', group: true, shortcut: 'Ctrl Alt Shift Insert', run: () => { if (isBrowser()) { p.current.onNotice('Scratch files need a folder indexed by the studio server.'); return; } openPopup({ kind: 'scratch' }, false); } },
       { id: 'scratches', label: 'Scratch Files…', menu: 'Tools', run: () => { api<{ file: string; modified: number }[]>('/scratch').then((items) => { if (!items.length) p.current.onNotice('No scratch files yet: Tools ▸ New Scratch File (Ctrl+Alt+Shift+Insert).'); else setPopup({ kind: 'scratches', items }); }, (e) => p.current.onNotice((e as Error).message)); } },
+      { id: 'numbered-bookmarks', label: 'Numbered Bookmarks (Ctrl+Shift+digit sets, Ctrl+digit jumps)', menu: 'Navigate', group: true, run: () => p.current.onNotice('Put the caret on a line and press Ctrl+Shift+1…9 to set bookmark 1…9; Ctrl+1…9 jumps to it from anywhere.') },
       { id: 'carets-line-ends', label: 'Add Carets to Ends of Selected Lines', menu: 'Edit', shortcut: 'Alt Shift G', run: inEditor(caretsAtLineEnds) },
     ];
     return registerRider(list);

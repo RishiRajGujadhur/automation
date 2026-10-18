@@ -57,7 +57,7 @@ Status: ⬜ todo · ✅ done (date)
 | J41 | Next / Previous Change (Alt+F5 / Shift+Alt+F5) | ✅ 2026-10-18 |
 | J42 | Rollback Lines (undo the uncommitted change at the caret) | ✅ 2026-10-18 |
 | J43 | Scratch Files (Ctrl+Alt+Shift+Insert) | ✅ 2026-10-18 |
-| J44 | Numbered bookmarks (Ctrl+Shift+digit toggles, Ctrl+digit jumps) | ⬜ |
+| J44 | Numbered bookmarks (Ctrl+Shift+digit toggles, Ctrl+digit jumps) | ✅ 2026-10-18 |
 | J45 | Expand All / Collapse All / Collapse to Definitions | ⬜ |
 | J46 | Select In… (Alt+F1): Explorer, Structure, Terminal, file manager | ⬜ |
 | J47 | Compare With… another file | ⬜ |
@@ -121,3 +121,4 @@ Status: ⬜ todo · ✅ done (date)
 - 2026-10-18 J41: Next / Previous Change (Alt+F5 / Shift+Alt+F5, as in VS Code: Ctrl+Alt+Shift+arrows are Move Statement): the caret jumps between uncommitted change regions, wrapping.
 - 2026-10-18 J42: Rollback Lines (Ctrl+Alt+Z): the uncommitted change region at the caret (or touched by the selection) goes back to the committed text: modified lines restored, added lines removed, deleted lines put back.
 - 2026-10-18 J43: Scratch Files: New Scratch File (Ctrl+Alt+Shift+Insert) in C#, Gherkin, JSON, XML, HTTP, Markdown or text with a starter, under .tas/scratches (added to .git/info/exclude); Scratch Files… lists them. Bug fix: jumping to a file no longer moves the caret again after you start typing.
+- 2026-10-18 J44: Numbered bookmarks: Ctrl+Shift+1…9 sets bookmark n on the caret line (shown as its digit in the margin; again removes it; a digit moves if used elsewhere), Ctrl+1…9 jumps to it from any file. They move with edits and appear in the Bookmarks list.

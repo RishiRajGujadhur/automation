@@ -47,6 +47,7 @@ const ROWS: Record<'edit' | 'view' | 'navigate' | 'code' | 'tools' | 'help', Row
   ],
   navigate: [
     ['Recent Changes…', 'recent-changes', 'Alt+Shift+C'],
+    ['Numbered Bookmarks (Ctrl+Shift+digit, Ctrl+digit)', 'numbered-bookmarks'],
     ['Next Change', 'next-change', 'Alt+F5'],
     ['Previous Change', 'previous-change', 'Shift+Alt+F5'],
     ['Go to Related Files…', 'related-files', 'CmdOrCtrl+Alt+Home'],

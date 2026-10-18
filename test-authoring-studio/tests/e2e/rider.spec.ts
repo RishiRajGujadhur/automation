@@ -858,3 +858,17 @@ test('J43 Scratch Files (Ctrl+Alt+Shift+Insert): a new C# scratch opens with a s
   await page.getByRole('menuitem', { name: /^Scratch Files/ }).click();
   await expect(page.getByRole('listbox', { name: 'Scratch files' })).toContainText('scratch_1.cs');
 });
+
+test('J44 Numbered bookmarks: Ctrl+Shift+1 sets bookmark 1 (shown as 1), Ctrl+1 jumps to it from another file', async ({ page }) => {
+  await openFeature(page);
+  await caretAt(page, 'signs in');
+  await page.keyboard.press('Control+Shift+Digit1');
+  await expect(page.locator('.gherkin-editor .cm-bookmark-digit')).toHaveText('1');
+  await page.getByRole('navigation').getByRole('button', { name: 'AuthSteps.cs', exact: true }).first().click();
+  await page.getByLabel('Source of Steps/AuthSteps.cs').locator('.cm-line').first().click();
+  await page.keyboard.press('Control+1');
+  await expect(page.locator('.gherkin-editor .cm-activeLine')).toContainText('When the user signs in');
+  // Again on the same line removes it.
+  await page.keyboard.press('Control+Shift+Digit1');
+  await expect(page.locator('.gherkin-editor .cm-bookmark-digit')).toHaveCount(0);
+});
