@@ -1143,3 +1143,16 @@ test('J62 The identifier at the caret highlights its other whole-word usages; Vi
   await caretAt(page, 'the login');
   await expect(matches).toHaveCount(0);
 });
+
+test('A CRLF feature file keeps CRLF when saved from the feature editor', async ({ page, request }) => {
+  const file = path.join(root, 'Features/Auth/Login.feature');
+  await fs.writeFile(file, (await fs.readFile(file, 'utf8')).replace(/\r?\n/g, '\r\n'));
+  expect((await request.post('/api/workspace', { data: { repositoryRoot: root, targetProject: '.' } })).ok()).toBe(true);
+  await openFeature(page);
+  await caretAt(page, 'signs in');
+  await page.keyboard.press('End');
+  await page.keyboard.type(' now');
+  await page.keyboard.press('Control+S');
+  await expect.poll(() => fs.readFile(file, 'utf8')).toContain('"test-user" now\r\n');
+  expect((await fs.readFile(file, 'utf8')).match(/(^|[^\r])\n/)).toBeNull();
+});

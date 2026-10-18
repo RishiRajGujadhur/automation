@@ -32,6 +32,7 @@ import DefineSteps from './DefineSteps';
 import SpyView from './SpyView';
 import OutputPanel, { type OutputSource } from './OutputPanel';
 import TodoPanel from './TodoPanel';
+import { eolOf, withEol, SET_EOL_EVENT, type Eol } from './editor/lineSeparator';
 import RiderHost from './rider/RiderHost';
 import RiderMenubar from './rider/RiderMenubar';
 import RiderToolWindow, { RIDER_TOOLS, type RiderTool } from './rider/RiderToolWindow';
@@ -667,7 +668,16 @@ export default function App() {
   const [featureLinks, setFeatureLinks] = useState<{ stepFiles: { file: string; steps: number }[]; convention: string; conventionExists: boolean; codeBehind: string | null; stepFolders: string[] }>();
   useEffect(() => { setFeatureLinks(undefined); if (feature?.file) api(`/feature/links?file=${encodeURIComponent(feature.file)}`).then(setFeatureLinks).catch(() => {}); }, [feature?.file, revision]);
   useEffect(() => { let live = true; setFeatureBase(undefined); if (feature) sha256(feature.source).then((hash) => live && setFeatureBase({ file: feature.file, source: feature.source, hash })); return () => { live = false; }; }, [feature]);
-  const featureAuto = useAutoSave({ file: feature?.file, value: source, loaded: featureBase });
+  // The feature file's line separator (the editor works in LF): saves and drafts use it; CRLF ⇄ LF changes it.
+  const [featureEol, setFeatureEol] = useState<Eol>('\n');
+  useEffect(() => { setFeatureEol(eolOf(feature?.source ?? '')); }, [feature]);
+  useEffect(() => {
+    const h = (e: Event) => { const d = (e as CustomEvent<{ file: string; eol: Eol }>).detail; if (d.file === feature?.file) setFeatureEol(d.eol); };
+    window.addEventListener(SET_EOL_EVENT, h);
+    return () => window.removeEventListener(SET_EOL_EVENT, h);
+  }, [feature?.file]);
+  const featureDisk = useMemo(() => withEol(source, featureEol), [source, featureEol]);
+  const featureAuto = useAutoSave({ file: feature?.file, value: featureDisk, loaded: featureBase });
   // Ctrl+S / the save icon write the feature straight to disk; a new (unsaved) feature goes through the diff.
   // Saving is quiet (the tab's ● and the status show it); only failures are announced.
   const saveFeature = () => { if (feature) void featureAuto.save().then((ok) => { if (!ok) setNotice('Not saved: see the editor status.'); }); else previewChange(); };

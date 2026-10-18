@@ -66,7 +66,9 @@ export default function GherkinEditor({ file, onSave, runMarks, onRunLine, value
     return () => { document.removeEventListener('fullscreenchange', sync); window.removeEventListener('keydown', esc); window.removeEventListener('keydown', key); };
   });
   const eolRef = useRef<'CRLF' | 'LF'>('LF');
-  eolRef.current = value.includes('\r\n') ? 'CRLF' : 'LF';
+  // The file's separator as loaded (the buffer is LF after the first edit); CRLF ⇄ LF updates the status bar itself.
+  const loadedEol = useMemo(() => (value.includes('\r\n') ? 'CRLF' : 'LF'), [file]); // eslint-disable-line react-hooks/exhaustive-deps
+  eolRef.current = loadedEol;
   const handlers = useRef<{ onRunLine?: (line: number, debug: boolean) => void; onPreview: () => void; onSave?: () => void; onValidate: () => void; onDefinition?: (s: { keyword: string; text: string; line: number }) => void }>({ onRunLine, onPreview, onSave, onValidate, onDefinition });
   handlers.current = { onRunLine, onPreview, onSave, onValidate, onDefinition };
   const extensions = useMemo(() => [...gherkinExtensions({ onSave: () => (handlers.current.onSave ?? handlers.current.onPreview)(), onValidate: () => handlers.current.onValidate(), onDefinition: (s) => handlers.current.onDefinition?.(s) }), lintGutter(), vsKeys('#'), gherkinTables(), indentFolding(), stickyScroll(indentRange), labelled('Gherkin source'), featureFile.of(file ?? ''), cursorTracker(file ?? 'untitled.feature', () => eolRef.current), revealOn(file ?? 'untitled.feature'), ...(file ? [bookmarks(file)] : []), trackActive(file ?? 'untitled.feature'), riderKeys(file ?? 'untitled.feature'), viewOptionsExtension(), ...(file ? [breakpoints(file), runGutter((l, d) => handlers.current.onRunLine?.(l, d)), changeGutter()] : [])], [file]);

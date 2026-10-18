@@ -22,7 +22,7 @@ test('C# editor: highlighting, Roslyn errors, auto save to disk', async ({ page 
   try {
     const editor = page.getByLabel(`Source of ${file}`);
     await expect(editor).toContainText('[Binding]');
-    await expect(page.locator('.code-editor .cm-content span').first()).toHaveClass(/ͼ/); // syntax colouring
+    await expect(page.locator('.code-editor .cm-content span[class*="ͼ"]').first()).toBeVisible(); // syntax colouring
     await editor.click();
     await page.keyboard.press('Control+End');
     await page.keyboard.type('\n// added by test');
