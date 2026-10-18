@@ -956,3 +956,16 @@ test('J50 Column Selection Mode (Alt+Shift+Insert): Shift+↓ makes a column of 
   await page.keyboard.press('Alt+Shift+Insert');
   await expect(page.locator('.gherkin-editor .cm-editor')).not.toHaveClass(/cm-column-mode/);
 });
+
+test('J51 Copy Path / Reference… (Ctrl+Shift+C): absolute path, root-relative path, file name, path:line, reference', async ({ page, context }) => {
+  await context.grantPermissions(['clipboard-read', 'clipboard-write']);
+  await openFeature(page);
+  await caretAt(page, 'signs in');
+  await page.keyboard.press('Control+Shift+C');
+  const list = page.getByRole('listbox', { name: 'Copy targets' });
+  await expect(list.getByRole('option', { name: /^Absolute Path/ })).toContainText(path.join(root, 'Features', 'Auth', 'Login.feature'));
+  await expect(list.getByRole('option', { name: /^Path:Line/ })).toContainText('Features/Auth/Login.feature:7');
+  await page.getByLabel('Filter copy targets').fill('File Name');
+  await page.keyboard.press('Enter');
+  await expect.poll(() => page.evaluate(() => navigator.clipboard.readText())).toBe('Login.feature');
+});

@@ -59,8 +59,8 @@ export type RiderHostProps = {
  * JetBrains Rider features: registers their commands (menus, palette, desktop menus) and hosts their popups, dialogs
  * and global keys. Editor keys live in editor/riderKeys.ts.
  */
-type Popup = { kind: 'unwrap'; items: Unwrappable[] } | { kind: 'compare-with'; files: string[] } | { kind: 'compare-file'; patch: string; other: string } | { kind: 'select-in'; file: string } | { kind: 'scratch' } | { kind: 'scratches'; items: { file: string; modified: number }[] } | { kind: 'related'; items: { file: string; line: number; reason: string }[] } | { kind: 'recent-changes'; items: { file: string; id: string; at: string; reason: string }[] } | { kind: 'file-history'; file: string; current: string } | { kind: 'compare'; patch: string; what: string } | { kind: 'regexp'; initial: string } | { kind: 'evaluate'; initial: string } | { kind: 'tip' } | { kind: 'productivity' } | { kind: 'run' } | { kind: 'paste' } | { kind: 'template' } | { kind: 'surround' } | { kind: 'structure'; items: OutlineItem[]; current: number };
-const TITLES: Record<Popup['kind'], string> = { unwrap: 'Unwrap / Remove', 'compare-with': 'Compare With…', 'compare-file': 'Compare Files', 'select-in': 'Select In', scratch: 'New Scratch File', scratches: 'Scratch Files', related: 'Related Files', 'recent-changes': 'Recent Changes', 'file-history': 'Local History', compare: 'Compare with Clipboard', regexp: 'Check RegExp', evaluate: 'Evaluate Expression', tip: 'Tip of the Day', productivity: 'Productivity Guide', run: 'Run Anything', paste: 'Paste from History', template: 'Insert Live Template', surround: 'Surround With', structure: 'File Structure' };
+type Popup = { kind: 'copy-path'; items: { label: string; value: string }[] } | { kind: 'unwrap'; items: Unwrappable[] } | { kind: 'compare-with'; files: string[] } | { kind: 'compare-file'; patch: string; other: string } | { kind: 'select-in'; file: string } | { kind: 'scratch' } | { kind: 'scratches'; items: { file: string; modified: number }[] } | { kind: 'related'; items: { file: string; line: number; reason: string }[] } | { kind: 'recent-changes'; items: { file: string; id: string; at: string; reason: string }[] } | { kind: 'file-history'; file: string; current: string } | { kind: 'compare'; patch: string; what: string } | { kind: 'regexp'; initial: string } | { kind: 'evaluate'; initial: string } | { kind: 'tip' } | { kind: 'productivity' } | { kind: 'run' } | { kind: 'paste' } | { kind: 'template' } | { kind: 'surround' } | { kind: 'structure'; items: OutlineItem[]; current: number };
+const TITLES: Record<Popup['kind'], string> = { 'copy-path': 'Copy Path / Reference', unwrap: 'Unwrap / Remove', 'compare-with': 'Compare With…', 'compare-file': 'Compare Files', 'select-in': 'Select In', scratch: 'New Scratch File', scratches: 'Scratch Files', related: 'Related Files', 'recent-changes': 'Recent Changes', 'file-history': 'Local History', compare: 'Compare with Clipboard', regexp: 'Check RegExp', evaluate: 'Evaluate Expression', tip: 'Tip of the Day', productivity: 'Productivity Guide', run: 'Run Anything', paste: 'Paste from History', template: 'Insert Live Template', surround: 'Surround With', structure: 'File Structure' };
 
 function PowerSaveBadge() {
   useRiderCommands();
@@ -215,6 +215,26 @@ export default function RiderHost(props: RiderHostProps) {
     replaceText(view, text);
     p.current.onNotice(`Code Cleanup: ${['formatted', ...done].join(', ')}.`);
     view.focus();
+  };
+  /** Copy Path / Reference… (Rider, Ctrl+Shift+C): absolute path, path from the root, file name, path:line, reference. */
+  const copyPathPopup = async () => {
+    const a = activeEditor();
+    if (!a) { p.current.onNotice('Open a file in the editor first.'); return; }
+    const at = position(a.view, a.file);
+    let root = '';
+    if (!isBrowser()) { try { root = (await api<{ config: { repositoryRoot: string } }>('/workspace')).config.repositoryRoot; } catch { /* no root */ } }
+    const sep = root.includes('\\') ? '\\' : '/';
+    let reference = `${a.file}:${at.line}`;
+    if (a.file.endsWith('.cs') && !isBrowser()) { try { reference = (await api<{ name: string }>('/csharp/symbolId', at)).name; } catch { /* path:line */ } }
+    const items = [
+      ...(root ? [{ label: 'Absolute Path', value: `${root.replace(/[\\/]$/, '')}${sep}${a.file.split('/').join(sep)}` }] : []),
+      { label: 'Path From Repository Root', value: a.file },
+      { label: 'File Name', value: a.file.split('/').pop()! },
+      { label: 'Path:Line', value: `${a.file}:${at.line}` },
+      { label: 'Reference', value: reference },
+    ];
+    target.current = a;
+    setPopup({ kind: 'copy-path', items });
   };
   const closeAndFocus = () => { setPopup(null); requestAnimationFrame(() => target.current?.view.focus()); };
   /** Runs an editor action on the active editor (and gives it focus back). */
@@ -374,6 +394,7 @@ export default function RiderHost(props: RiderHostProps) {
         setPopup({ kind: 'unwrap', items });
       } },
       { id: 'column-mode', label: 'Column Selection Mode', menu: 'Edit', group: true, shortcut: 'Alt Shift Insert', checked: () => !!viewOptions().columnMode, run: () => { setViewOptions({ columnMode: !viewOptions().columnMode }); riderChanged(); p.current.onNotice(viewOptions().columnMode ? 'Column Selection Mode: drag or Shift+↑/↓ to select a block of columns.' : 'Column Selection Mode off.'); } },
+      { id: 'copy-path', label: 'Copy Path / Reference…', menu: 'Edit', shortcut: 'Ctrl Shift C', run: () => void copyPathPopup() },
       { id: 'carets-line-ends', label: 'Add Carets to Ends of Selected Lines', menu: 'Edit', shortcut: 'Alt Shift G', run: inEditor(caretsAtLineEnds) },
     ];
     return registerRider(list);
@@ -393,6 +414,10 @@ export default function RiderHost(props: RiderHostProps) {
     const { view } = target.current;
     const items = popup.items;
     body = <ListPopup label="File structure" placeholder="File structure: type to filter" empty="No matches." initial={popup.current} items={items.map((it, i) => ({ key: String(i), label: it.label, detail: `${it.kind} · line ${it.line}`, indent: it.depth }))} onPick={(k) => { const it = items[Number(k)]; goTo(view, it.line, it.column); closeAndFocus(); }} />;
+  }
+  if (popup?.kind === 'copy-path') {
+    const items = popup.items;
+    body = <ListPopup label="Copy targets" placeholder="Copy path / reference" empty="Nothing to copy." items={items.map((c, i) => ({ key: String(i), label: c.label, detail: c.value }))} onPick={(k) => { const c = items[Number(k)]; void copyText(c.value).then((ok) => p.current.onNotice(ok ? `Copied: ${c.value}` : 'Clipboard unavailable.')); closeAndFocus(); }} />;
   }
   if (popup?.kind === 'unwrap' && target.current) {
     const { view } = target.current;

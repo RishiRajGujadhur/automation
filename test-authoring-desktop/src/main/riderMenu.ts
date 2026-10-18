@@ -26,6 +26,7 @@ const ROWS: Record<'edit' | 'view' | 'navigate' | 'code' | 'tools' | 'help', Row
     null,
     ['Paste from History…', 'paste-history', 'CmdOrCtrl+Shift+V'],
     ['Copy Reference', 'copy-reference', 'CmdOrCtrl+Alt+Shift+C'],
+    ['Copy Path / Reference…', 'copy-path', 'CmdOrCtrl+Shift+C'],
     ['Compare with Clipboard', 'compare-clipboard'],
     ['Compare With…', 'compare-with'],
     ['Rollback Lines', 'rollback-lines', 'CmdOrCtrl+Alt+Z'],
