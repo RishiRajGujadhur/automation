@@ -195,7 +195,25 @@ test('README screenshots: JetBrains Rider features', async () => {
   await shot('rider-run-anything');
   await page.keyboard.press('Escape');
 
-  // 8. Productivity Guide (from the native Help menu).
+  // 8. Git Log (Alt+9): the sample as a small Git history with a branch.
+  {
+    const { execFileSync } = await import('node:child_process');
+    const g = (...args: string[]) => execFileSync('git', ['-c', 'user.email=ada@example.com', '-c', 'user.name=Ada Lovelace', ...args], { cwd: repo });
+    g('init', '-q', '-b', 'main'); g('add', '-A'); g('commit', '-qm', 'Calculator sample: Add feature and steps');
+    g('checkout', '-qb', 'feature/subtract');
+    fs.appendFileSync(path.join(repo, 'Features', 'Add.feature'), '\n  Scenario: Add a negative number\n    Given the first number is 50\n    And the second number is -20\n    When the two numbers are added\n    Then the result should be 30\n');
+    g('commit', '-qam', 'Add a scenario with a negative number\n\nCovers the sign handling in Calculator.Add.');
+    g('checkout', '-q', 'main');
+  }
+  await page.locator('.gherkin-editor .cm-content, .code-editor:not([hidden]) .cm-content').first().click().catch(() => {});
+  await page.keyboard.press('Alt+9');
+  const log = page.getByRole('region', { name: 'Git Log' });
+  await expect(log.getByRole('listbox', { name: 'Commits' }).getByRole('option').first()).toBeVisible({ timeout: 30_000 });
+  await log.getByRole('listbox', { name: 'Commits' }).getByRole('option').first().click();
+  await expect(log.getByLabel('Patch')).toContainText('negative', { timeout: 15_000 });
+  await shot('rider-git-log');
+
+  // 9. Productivity Guide (from the native Help menu).
   await app.evaluate(({ Menu }) => { const help = Menu.getApplicationMenu()!.items.find((x) => x.label.replace('&', '') === 'Help')!; help.submenu!.items.find((x) => x.label === 'Productivity Guide')!.click(); });
   await expect(page.getByRole('table', { name: 'Feature usage' })).toBeVisible();
   await shot('rider-productivity-guide');

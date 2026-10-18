@@ -180,3 +180,18 @@ test('Rider features from the native menus: Navigate / Code / Tools menus, Struc
   await page.getByRole('button', { name: 'Close Terminal', exact: true }).click();
   await page.getByRole('button', { name: 'Close Structure', exact: true }).click();
 });
+
+test('Rider features (second batch) in the native menus', async () => {
+  const labels = await appProcess.evaluate(({ Menu }) => {
+    const out: Record<string, string[]> = {};
+    for (const m of Menu.getApplicationMenu()!.items) out[m.label.replace('&', '')] = (m.submenu?.items ?? []).map((i) => i.label);
+    return out;
+  });
+  expect(labels.Navigate).toEqual(expect.arrayContaining(['Select In…', 'Next Change', 'Go to Related Files…']));
+  expect(labels.Code).toEqual(expect.arrayContaining(['Move Statement Up', 'Unwrap / Remove…', 'Collapse to Definitions (Ctrl+K, Ctrl+2)']));
+  expect(labels.Tools).toEqual(expect.arrayContaining(['External Tools…', 'New File from Template…', 'Compare with Branch… (Git)']));
+  expect(labels.View).toEqual(expect.arrayContaining(['Git Log', 'Show Indent Guides', 'Show Line Numbers']));
+  await menu('Tools', 'New File from Template…');
+  await expect(page.getByRole('listbox', { name: 'File templates' })).toBeVisible();
+  await page.keyboard.press('Escape');
+});

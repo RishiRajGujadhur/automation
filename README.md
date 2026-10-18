@@ -81,6 +81,9 @@ the Terminal.
 
 ![Run Anything](docs/screenshots/rider-run-anything.png)
 
+**Git Log.** Alt+9 lists every branch's commits with the graph. Select a commit to see its message, changed files and
+patch. Show History for Selection and Compare with Branch also come from Git.
+
 **Productivity Guide.** Shows which features you use, how often, and how often with the shortcut. The Key Promoter
 shows a feature's shortcut when you use the feature from a menu.
 
@@ -102,14 +105,18 @@ shows a feature's shortcut when you use the feature from a menu.
   Scenario Outline checks, and Gherkin formatting from `.editorconfig`. See [REQNROLL.md](REQNROLL.md).
 - **Spy:** element tracking, element browser, properties, verified selectors, add to dictionary, snapshots. See
   [SPY.md](SPY.md).
-- **JetBrains Rider features (37):**
-  - Editing: extend / shrink selection, toggle case, join lines, carets at the next or all occurrences, paste from
-    history, live templates, surround with, copy reference, highlight usages.
-  - Navigation: File Structure, Structure, type and call hierarchy, recent changes, related files.
-  - Tool windows: Problems, Terminal, Run Anything, Shelf.
-  - Files: HTTP Client, Markdown preview.
-  - View: distraction-free and presentation modes, hide all tool windows, soft wraps, show whitespaces, Ctrl+wheel
-    font size.
+- **JetBrains Rider features (62):**
+  - Editing: extend / shrink selection, move statement, toggle case, join lines, carets at the next or all
+    occurrences, column selection mode, complete current statement, unwrap / remove, block comments, code cleanup,
+    paste from history, live templates, surround with, copy reference and copy path, rollback lines.
+  - Navigation: File Structure, Structure window, breadcrumbs for features, type and call hierarchy, related files,
+    recent changes, Select In, next / previous change, numbered bookmarks, highlight usages (also automatic at the
+    caret).
+  - Tool windows: Problems, Terminal, Run Anything, Shelf, Git Log, External Tools.
+  - Files: HTTP Client, Markdown preview, scratch files, new file from template, compare with clipboard / another
+    file / a branch, CRLF ⇄ LF.
+  - View: distraction-free and presentation modes, hide all tool windows, soft wraps, whitespace, line numbers,
+    indent guides, TODO highlighting, Ctrl+wheel font size, folding (collapse to definitions).
   - Debugging: Evaluate Expression, mute breakpoints.
   - Help: Key Promoter, Productivity Guide, Tip of the Day, Power Save Mode.
 
