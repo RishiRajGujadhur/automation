@@ -27,6 +27,9 @@ import { riderKeys } from './riderKeys';
 import { trackActive } from './activeEditor';
 import { viewOptionsExtension } from './viewOptions';
 import { pushClipboard } from '../rider/clipboardRing';
+import { httpClient, isHttpFile, parseHttp } from './httpClient';
+import { http as httpMode } from '@codemirror/legacy-modes/mode/http';
+import HttpResponse, { type HttpResult } from '../rider/HttpResponse';
 import LocalHistory from '../LocalHistory';
 import NavBar from './NavBar';
 import RenameStep from './RenameStep';
@@ -74,6 +77,7 @@ function languageOf(file: string, browser: boolean) {
   if (file.endsWith('.cs')) return [...(browser ? [] : [breakpoints(file)]), StreamLanguage.define(csharp), csharpLinter(file)];
   if (/\.(xml|csproj|props|targets|config|runsettings|resx)$/.test(file)) return xmlExtensions(false, /\.(csproj|props|targets)$/.test(file));
   if (file.endsWith('.feature')) return [...(browser ? [] : [breakpoints(file)]), ...gherkinSyntaxExtensions()];
+  if (isHttpFile(file)) return [StreamLanguage.define(httpMode)];
   return [];
 }
 
@@ -168,6 +172,19 @@ export default function CodeEditor({ file, reveal, active = true, onNotice, onIn
   /** Compare with Unmodified (Git): the editor text against the committed version, as a unified diff. */
   const [headDiff, setHeadDiff] = useState<string>();
   const [historyOpen, setHistoryOpen] = useState(false);
+  // HTTP Client: the response of the last request sent from this .http file.
+  const [httpResult, setHttpResult] = useState<HttpResult>();
+  const sendHttp = async (line: number) => {
+    const v = ref.current?.view;
+    if (!v) return;
+    const r = parseHttp(v.state.doc.toString()).find((x) => x.line === line);
+    if (!r) return;
+    const request = { method: r.method, url: r.url };
+    setHttpResult({ request, loading: true });
+    try { setHttpResult({ request, ...(await api<Omit<HttpResult, 'request'>>('/http/send', { method: r.method, url: r.url, headers: r.headers, body: r.body || undefined })) }); } catch (e) { setHttpResult({ request, error: (e as Error).message }); }
+  };
+  const sendHttpRef = useRef(sendHttp);
+  sendHttpRef.current = sendHttp;
   const compareWithHead = async () => {
     const v = ref.current?.view;
     if (!v) return;
@@ -379,6 +396,7 @@ export default function CodeEditor({ file, reveal, active = true, onNotice, onIn
       { key: 'Mod-s', preventDefault: true, run: () => { void saveRef.current(); return true; } },
       ...(isCs && !browser ? [{ key: 'Mod-r Mod-g', preventDefault: true, run: () => { void organizeRef.current(); return true; } }] : []),
     ]),
+    ...(isHttpFile(file) && !browser ? [httpClient((l) => void sendHttpRef.current(l))] : []),
     ...(isCs && !browser ? [...csharpLanguage(file, csHandlers), stepLenses((l) => showUsagesRef.current(l), (l) => openRefLensRef.current(l)), runGutter((l, d) => runRef.current?.(l, d))] : []),
     // Stable per file: rebuilding extensions on every keystroke would reset the linter before it reports.
   ], [file, browser]);
@@ -526,6 +544,7 @@ export default function CodeEditor({ file, reveal, active = true, onNotice, onIn
           onDone={(written, index) => { setRenameStep(undefined); window.dispatchEvent(new CustomEvent(FILES_CHANGED_EVENT, { detail: written })); onIndex?.(index); setTimeout(loadLenses, 300); }}
         />
       )}
+      {httpResult && <HttpResponse result={httpResult} onClose={() => setHttpResult(undefined)} />}
       {historyOpen && (
         <section className="references-panel compare-panel" aria-label={`Local history of ${file}`}>
           <div className="references-head">

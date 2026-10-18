@@ -2695,3 +2695,46 @@
     }
   }
 }
+
+// HTTP Client response
+.http-response {
+  .http-status {
+    padding: 0 6px;
+    border-radius: 3px;
+    font-weight: 700;
+    &.ok {
+      background: #2a9d8f33;
+      color: #2a9d8f;
+    }
+    &.bad {
+      background: #d9534f33;
+      color: #d9534f;
+    }
+  }
+  .http-tabs {
+    display: inline-flex;
+    gap: 2px;
+    margin-left: auto;
+    button {
+      padding: 1px 6px;
+      border: 0;
+      border-radius: 3px;
+      background: transparent;
+      color: var(--text-muted);
+      font-size: 12px;
+      cursor: pointer;
+      &[aria-selected='true'] {
+        background: var(--accent-soft, #9270dd22);
+        color: var(--text);
+      }
+    }
+  }
+  .http-body {
+    max-height: 260px;
+    margin: 0;
+    padding: 6px 10px;
+    overflow: auto;
+    font-size: 12px;
+    white-space: pre-wrap;
+  }
+}

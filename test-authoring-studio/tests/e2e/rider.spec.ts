@@ -438,3 +438,39 @@ test('J21 Run Anything (Ctrl twice): suggestions for the projects, a typed comma
   await expect(list.getByRole('option').first()).toContainText('run-');
   await expect(list.getByRole('option').first()).toContainText('Recent');
 });
+
+test('J22 HTTP Client: .http requests with variables, ▶ / Ctrl+Enter sends, status, JSON body and headers', async ({ page, request }) => {
+  // A local endpoint: the studio's own health check.
+  const base = new URL(test.info().project.use.baseURL!).origin;
+  await fs.writeFile(path.join(root, 'api.http'), [
+    `@host = ${base}`,
+    '',
+    '### Health',
+    'GET {{host}}/api/health',
+    'Accept: application/json',
+    '',
+    '### Missing',
+    'GET {{host}}/api/does-not-exist',
+    '',
+  ].join('\n'));
+  expect((await request.post('/api/workspace', { data: { repositoryRoot: root, targetProject: '.' } })).ok()).toBe(true);
+  await openFeature(page);
+  await page.getByRole('button', { name: 'Show all files' }).click();
+  await page.getByRole('navigation').getByRole('button', { name: 'api.http', exact: true }).first().click();
+  const src = page.getByLabel('Source of api.http');
+  await src.locator('.cm-line', { hasText: 'Health' }).first().click();
+  await page.locator('.code-editor:not([hidden])').locator('.cm-http-send[aria-label="Send request on line 4"]').click();
+  const resp = page.getByRole('region', { name: 'Response' });
+  await expect(resp.getByRole('status')).toHaveText(/^200/, { timeout: 30_000 });
+  await expect(resp.getByLabel('Response body')).toContainText('"ok"');
+  await resp.getByRole('tab', { name: 'Headers' }).click();
+  await expect(resp.getByLabel('Response headers')).toContainText('content-type: application/json');
+  await src.locator('.cm-line', { hasText: 'does-not-exist' }).click();
+  await page.keyboard.press('Control+Enter');
+  await expect(resp.getByRole('status')).toHaveText(/^404/, { timeout: 30_000 });
+  // .http files save like any other text file.
+  await page.keyboard.press('End');
+  await page.keyboard.type('?x=1');
+  await page.keyboard.press('Control+S');
+  await expect.poll(() => fs.readFile(path.join(root, 'api.http'), 'utf8')).toContain('does-not-exist?x=1');
+});

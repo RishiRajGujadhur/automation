@@ -382,7 +382,8 @@ app.get('/api/features',async(req,res)=>{const i=await ensure();const {q,offset,
 app.get('/api/selectors',async(req,res)=>{await ensure();const {q,offset,limit}=paging.parse(req.query);res.json(await search!.query('selectors',q,offset,limit,z.string().max(40).default('').parse(req.query.type)));});
 app.get('/api/backgrounds',async(req,res)=>{await ensure();const {q,offset,limit}=paging.parse(req.query);res.json(await search!.query('backgrounds',q,offset,limit));});
 // ---- Code editing (C#, feature, XML) --------------------------------------------------------------
-const editable = /.(cs|feature|xml)$/i;
+// Text files the editors can save (project files, JSON, Markdown, .http requests, scripts, …).
+const editable = /\.(cs|feature|xml|csproj|props|targets|config|runsettings|resx|json|md|markdown|txt|http|rest|ya?ml|editorconfig|sln|slnx|ps1|psm1|sh|cmd|bat|js|mjs|cjs|ts|tsx|css|scss|html?|gitignore|gitattributes|env|ini|csv|sql)$/i;
 // Roslyn syntax diagnostics + step-binding checks for one C# buffer (scanner --diagnostics).
 app.post('/api/csharp/diagnostics', async (req, res) => {
   const { source, path: file } = z.object({ source: z.string().max(1_000_000), path: z.string().max(400).default('') }).parse(req.body);
@@ -709,7 +710,7 @@ app.get('/api/history', async (req, res) => { const file = z.string().min(1).max
 app.get('/api/history/item', async (req, res) => { const { file, id } = z.object({ file: z.string().min(1).max(400), id: z.string().max(80) }).parse(req.query); await confined(config.repositoryRoot, file, false); res.json({ source: await historyItem(config.repositoryRoot, file, id) }); });
 app.get('/api/source', async (req, res) => {
   const file = await confined(config.repositoryRoot, String(req.query.file));
-  if (!/\.(cs|feature|xml|csproj|json|config|runsettings|props|targets|sln|md|yaml|yml|csv|txt|resx)$/.test(file)) throw new Error('Unsupported source file');
+  if (!editable.test(file)) throw new Error('Unsupported source file');
   if((await fs.stat(file)).size>2_000_000)throw new Error('Source preview is limited to 2 MB. Open this file in your IDE.');
   const source = await fs.readFile(file, 'utf8');
   res.json({ source, hash: hash(source) });
@@ -1008,6 +1009,21 @@ for (const signal of ['SIGINT', 'SIGTERM', 'SIGHUP'] as const) process.once(sign
 process.once('exit', () => { void debug.stop(); });
 const repoFile = z.string().min(1).max(500).refine((v) => !v.split(/[\\/]/).includes('..'), 'Path cannot contain ..');
 app.get('/api/debug', (_req, res) => res.json(debug.state));
+// HTTP Client (Rider's .http files): sends one request from the editor and returns the response (body up to 1 MB).
+app.post('/api/http/send', async (req, res) => {
+  const b = z.object({ method: z.string().regex(/^[A-Z]{3,7}$/), url: z.string().url().max(8000).refine((u) => /^https?:\/\//i.test(u), 'Only http:// and https:// URLs.'), headers: z.record(z.string().max(200), z.string().max(8000)).default({}), body: z.string().max(5_000_000).optional() }).parse(req.body);
+  const started = Date.now();
+  const ctl = new AbortController();
+  const timer = setTimeout(() => ctl.abort(), 60_000);
+  try {
+    const r = await fetch(b.url, { method: b.method, headers: b.headers, body: ['GET', 'HEAD'].includes(b.method) || !b.body ? undefined : b.body, signal: ctl.signal, redirect: 'follow' });
+    const text = await r.text();
+    res.json({ status: r.status, statusText: r.statusText, ms: Date.now() - started, headers: Object.fromEntries(r.headers.entries()), body: text.slice(0, 1_000_000), truncated: text.length > 1_000_000 });
+  } catch (e) {
+    const err = e as Error & { cause?: { code?: string; message?: string } };
+    res.json({ error: ctl.signal.aborted ? 'No response within 60 s.' : `${err.message}${err.cause?.message ? `: ${err.cause.message}` : ''}`, ms: Date.now() - started });
+  } finally { clearTimeout(timer); }
+});
 // Terminal tool window (Rider, Alt+F12): shell sessions in the repository folder; output streams as server-sent events.
 app.post('/api/terminal/start', async (_req, res) => { res.json(startTerminal(config.repositoryRoot)); });
 const termId = z.object({ id: z.string().uuid() });
