@@ -1130,3 +1130,16 @@ test('J61 Indent guides: shown for indented code by default; View ▸ Show Inden
   await page.getByRole('menuitem', { name: /Show Indent Guides/ }).click();
   await expect(markers).toHaveCount(0);
 });
+
+test('J62 The identifier at the caret highlights its other whole-word usages; View toggles it', async ({ page }) => {
+  await openFeature(page);
+  const matches = page.locator('.gherkin-editor .cm-selectionMatch:not(.cm-selectionMatch-main)');
+  await caretAt(page, 'the login');
+  await page.keyboard.press('ArrowRight');
+  const doc = (await selection(page)).doc;
+  await expect(matches).toHaveCount(doc.match(/\bthe\b/g)!.length - 1);
+  await page.getByRole('button', { name: 'View menu' }).click();
+  await page.getByRole('menuitem', { name: /Highlight Usages at Caret/ }).click();
+  await caretAt(page, 'the login');
+  await expect(matches).toHaveCount(0);
+});

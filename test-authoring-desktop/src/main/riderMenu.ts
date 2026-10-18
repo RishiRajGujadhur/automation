@@ -40,6 +40,7 @@ const ROWS: Record<'edit' | 'view' | 'navigate' | 'code' | 'tools' | 'help', Row
     ['Show Whitespaces', 'whitespace'],
     ['Show Line Numbers', 'line-numbers'],
     ['Show Indent Guides', 'indent-guides'],
+    ['Highlight Usages at Caret', 'caret-usages'],
     ['Increase Font Size (Ctrl+Mouse Wheel)', 'font-bigger'],
     ['Decrease Font Size', 'font-smaller'],
     ['Reset Font Size', 'font-reset'],

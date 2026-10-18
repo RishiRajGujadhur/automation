@@ -75,7 +75,7 @@ Status: ⬜ todo · ✅ done (date)
 | J59 | Line separators (CRLF ⇄ LF) from the status bar | ✅ 2026-10-18 |
 | J60 | Show Line Numbers toggle | ✅ 2026-10-18 |
 | J61 | Indent guides | ✅ 2026-10-18 |
-| J62 | Highlight usages of the identifier at the caret (automatic) | ⬜ |
+| J62 | Highlight usages of the identifier at the caret (automatic) | ✅ 2026-10-18 |
 
 ## Progress log
 - 2026-10-18 J1: Rider command registry (web menu bar, desktop native menus, palette); Extend/Shrink Selection (word → string → brackets → line → indentation block → document).
@@ -139,3 +139,4 @@ Status: ⬜ todo · ✅ done (date)
 - 2026-10-18 J59: Line separators: the status bar's CRLF / LF is a menu (also Edit ▸ Line Separators) that converts the file (save to keep it). Bug fix: CRLF files were saved as LF on their first edit (CodeMirror joins lines with \n); the editor now keeps each file's separator for saves, drafts and previews.
 - 2026-10-18 J60: Show Line Numbers (View): hides / shows the line number gutter in every editor, remembered.
 - 2026-10-18 J61: Indent guides (on by default, View ▸ Show Indent Guides): a thin line per indentation level with the caret's block brighter, via @replit/codemirror-indentation-markers.
+- 2026-10-18 J62: Highlight usages at the caret (on by default, View toggle): the other whole-word occurrences of the identifier under the caret are tinted as you move.

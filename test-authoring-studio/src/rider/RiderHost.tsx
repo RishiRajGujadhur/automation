@@ -464,6 +464,7 @@ export default function RiderHost(props: RiderHostProps) {
       { id: 'eol-lf', label: 'Line Separators: LF (Unix)', menu: 'Edit', run: () => { const a = activeEditor(); if (a) requestEol(a.file, '\n'); else p.current.onNotice('Open a file in the editor first.'); } },
       { id: 'line-numbers', label: 'Show Line Numbers', menu: 'View', checked: () => !viewOptions().hideLineNumbers, run: () => { setViewOptions({ hideLineNumbers: !viewOptions().hideLineNumbers }); riderChanged(); } },
       { id: 'indent-guides', label: 'Show Indent Guides', menu: 'View', checked: () => !viewOptions().hideIndentGuides, run: () => { setViewOptions({ hideIndentGuides: !viewOptions().hideIndentGuides }); riderChanged(); } },
+      { id: 'caret-usages', label: 'Highlight Usages at Caret', menu: 'View', checked: () => !viewOptions().noCaretUsages, run: () => { setViewOptions({ noCaretUsages: !viewOptions().noCaretUsages }); riderChanged(); } },
       { id: 'carets-line-ends', label: 'Add Carets to Ends of Selected Lines', menu: 'Edit', shortcut: 'Alt Shift G', run: inEditor(caretsAtLineEnds) },
     ];
     return registerRider(list);
