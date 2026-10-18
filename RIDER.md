@@ -18,7 +18,7 @@ Status: ⬜ todo · ✅ done (date)
 | J2 | Toggle Case (Ctrl+Shift+U) | ✅ 2026-10-18 |
 | J3 | Join Lines (Ctrl+Shift+J) | ✅ 2026-10-18 |
 | J4 | Add Selection for Next Occurrence (Alt+J), Unselect (Alt+Shift+J), Select All Occurrences (Ctrl+Alt+Shift+J) | ✅ 2026-10-18 |
-| J5 | Start New Line (Shift+Enter) / Start New Line Before Current (Ctrl+Alt+Enter) | ⬜ |
+| J5 | Start New Line (Shift+Enter) / Start New Line Before Current (Ctrl+Alt+Enter) | ✅ 2026-10-18 |
 | J6 | Add Carets to Ends of Selected Lines (Alt+Shift+G) | ⬜ |
 | J7 | Paste from History (Ctrl+Shift+V) | ⬜ |
 | J8 | Insert Live Template (Ctrl+J) | ⬜ |
@@ -57,3 +57,4 @@ Status: ⬜ todo · ✅ done (date)
 - 2026-10-18 J2: Toggle Case: selection or word at the caret; upper case, or lower case when already upper.
 - 2026-10-18 J3: Join Lines: selected lines or the next line, one space, indentation dropped.
 - 2026-10-18 J4: Occurrence carets: Alt+J adds the next match, Alt+Shift+J drops the last, Ctrl+Alt+Shift+J selects all (whole words for word selections). Ctrl+Alt chords match the physical key (CodeMirror reads Ctrl+Alt as AltGr on Windows).
+- 2026-10-18 J5: Start New Line after the current line from anywhere in it (Shift+Enter); Start New Line Before Current with its indentation (Ctrl+Alt+Enter).

@@ -95,3 +95,14 @@ test('J4 Add Selection for Next Occurrence (Alt+J), Unselect (Alt+Shift+J), Sele
   await expect(gherkin(page)).toContainText('Given a login page is open');
   await expect(gherkin(page)).toContainText('Then a dashboard is displayed');
 });
+
+test('J5 Start New Line (Shift+Enter) and Start New Line Before Current (Ctrl+Alt+Enter)', async ({ page }) => {
+  await openFeature(page);
+  await caretAt(page, 'signs in');
+  await page.keyboard.press('Shift+Enter');
+  await page.keyboard.type('And below');
+  await page.keyboard.press('Control+Alt+Enter');
+  await page.keyboard.type('And above');
+  const doc = (await selection(page)).doc;
+  expect(doc).toContain(['When the user signs in as "test-user"', '    And above', '    And below', '    Then'].join('\n'));
+});

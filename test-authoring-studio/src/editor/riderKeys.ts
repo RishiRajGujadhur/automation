@@ -1,5 +1,6 @@
 import { EditorSelection, Prec, StateEffect, StateField, type EditorState, type Extension } from '@codemirror/state';
 import { EditorView, keymap } from '@codemirror/view';
+import { insertNewlineAndIndent } from '@codemirror/commands';
 import { selectNextOccurrence, SearchCursor } from '@codemirror/search';
 import { noteUsage } from '../rider/commands';
 
@@ -189,6 +190,28 @@ export function selectAllOccurrences(view: EditorView) {
 }
 export { selectNextOccurrence };
 
+/** Start New Line (Shift+Enter): a new line after the current one, wherever the caret is in it. */
+export function startNewLine(view: EditorView) {
+  view.dispatch({ selection: EditorSelection.create(view.state.selection.ranges.map((r) => EditorSelection.cursor(view.state.doc.lineAt(r.head).to))) });
+  return insertNewlineAndIndent(view);
+}
+/** Start New Line Before Current (Ctrl+Alt+Enter): a new line above, with the current line's indentation. */
+export function startNewLineBefore(view: EditorView) {
+  const st = view.state;
+  const lines = [...new Set(st.selection.ranges.map((r) => st.doc.lineAt(r.head).number))];
+  let shift = 0;
+  const cursors: number[] = [];
+  const changes = lines.map((n) => {
+    const l = st.doc.line(n);
+    const indent = /^\s*/.exec(l.text)![0];
+    cursors.push(l.from + shift + indent.length);
+    shift += indent.length + 1;
+    return { from: l.from, insert: indent + st.lineBreak };
+  });
+  view.dispatch({ changes, selection: EditorSelection.create(cursors.map((c) => EditorSelection.cursor(c))), scrollIntoView: true, userEvent: 'input' });
+  return true;
+}
+
 const keyed = (key: string, id: string, run: (v: EditorView) => boolean) => ({ key, preventDefault: true, run: (v: EditorView) => { noteUsage(id, 'key'); return run(v); } });
 
 /** Rider editing actions shared by the code and Gherkin editors. */
@@ -196,6 +219,7 @@ export function riderKeys(): Extension {
   // Ctrl+Alt chords: CodeMirror reads Ctrl+Alt as AltGr on Windows, so these match on the physical key.
   const chords: [code: string, shift: boolean, id: string, run: (v: EditorView) => boolean][] = [
     ['KeyJ', true, 'all-occurrences', selectAllOccurrences],
+    ['Enter', false, 'new-line-before', startNewLineBefore],
   ];
   const ctrlAlt = EditorView.domEventHandlers({
     keydown(e, view) {
@@ -214,5 +238,6 @@ export function riderKeys(): Extension {
     keyed('Mod-Shift-j', 'join-lines', joinLines),
     keyed('Alt-j', 'next-occurrence', selectNextOccurrence),
     keyed('Alt-Shift-j', 'unselect-occurrence', unselectOccurrence),
+    keyed('Shift-Enter', 'new-line', startNewLine),
   ]))];
 }
