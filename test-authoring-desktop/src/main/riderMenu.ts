@@ -81,6 +81,7 @@ const ROWS: Record<'edit' | 'view' | 'navigate' | 'code' | 'tools' | 'help', Row
   ],
   tools: [
     ['Run Anything… (Ctrl twice)', 'run-anything'],
+    ['New File from Template…', 'new-from-template', 'Alt+Insert'],
     ['New Scratch File…', 'new-scratch', 'CmdOrCtrl+Alt+Shift+Insert'],
     ['External Tools…', 'external-tools'],
     ['Scratch Files…', 'scratches'],

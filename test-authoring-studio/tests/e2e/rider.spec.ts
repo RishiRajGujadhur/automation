@@ -1066,3 +1066,24 @@ test('J57 External Tools: a command with macros runs in the Terminal for the act
   await page.getByRole('button', { name: 'Tools menu' }).click();
   await expect(page.getByRole('menuitem', { name: /External Tool: Where am I/ })).toBeVisible();
 });
+
+test('J58 New File from Template (Alt+Insert): a step definitions class in the active file\'s folder, with its namespace', async ({ page }) => {
+  await openCs(page, 'Steps/AuthSteps.cs', 'SignIn');
+  await page.keyboard.press('Alt+Insert');
+  await page.getByLabel('Filter file templates').fill('Step Definitions');
+  await page.keyboard.press('Enter');
+  await page.getByLabel('File name').fill('CheckoutSteps');
+  await page.keyboard.press('Enter');
+  const src = page.getByLabel('Source of Steps/CheckoutSteps.cs');
+  await expect(src).toContainText('namespace Fixtures.Steps;');
+  await expect(src).toContainText('public class CheckoutSteps');
+  const disk = await fs.readFile(path.join(root, 'Steps/CheckoutSteps.cs'), 'utf8');
+  expect(disk).toContain('using TechTalk.SpecFlow;');
+  // Again with the same name: refused.
+  await page.keyboard.press('Alt+Insert');
+  await page.getByLabel('Filter file templates').fill('Step Definitions');
+  await page.keyboard.press('Enter');
+  await page.getByLabel('File name').fill('CheckoutSteps');
+  await page.keyboard.press('Enter');
+  await expect(page.getByText('Steps/CheckoutSteps.cs already exists.')).toBeVisible();
+});

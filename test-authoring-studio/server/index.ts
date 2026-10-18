@@ -784,6 +784,16 @@ app.post('/api/file/rename', async (req, res) => {
   afterFileChange([from, to]);
   res.json({ ok: true, file: to });
 });
+// New File from Template (Rider): creates a file that does not exist yet.
+app.post('/api/file/create', async (req, res) => {
+  const { file, source } = z.object({ file: z.string().min(1).max(400).regex(editable, 'Choose a text file type (.cs, .feature, .json, .md, .http…).').refine((v) => !v.split(/[\\/]/).includes('..'), 'Path cannot contain ..'), source: z.string().max(1_000_000) }).parse(req.body);
+  const target = await confined(config.repositoryRoot, file, false);
+  if (await exists(target)) throw new Error(`${file} already exists.`);
+  await fs.mkdir(path.dirname(target), { recursive: true });
+  await fs.writeFile(target, source, 'utf8');
+  afterFileChange([file]);
+  res.json({ ok: true, file });
+});
 app.post('/api/file/copy', async (req, res) => {
   const { from, to } = z.object({ from: z.string().min(1).max(400), to: z.string().min(1).max(400) }).parse(req.body);
   const src = await confined(config.repositoryRoot, from);

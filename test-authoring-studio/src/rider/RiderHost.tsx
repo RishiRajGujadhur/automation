@@ -35,6 +35,7 @@ import { powerSave, setPowerSave } from './powerSave';
 import CheckRegExp from './CheckRegExp';
 import CompareClipboard from './CompareClipboard';
 import LineHistory from './LineHistory';
+import { FILE_TEMPLATES, renderTemplate } from './fileTemplates';
 import ExternalToolsDialog, { expandMacros, externalTools, type ExternalTool } from './ExternalTools';
 import LocalHistory from '../LocalHistory';
 import { readFile } from '../files/provider';
@@ -61,8 +62,8 @@ export type RiderHostProps = {
  * JetBrains Rider features: registers their commands (menus, palette, desktop menus) and hosts their popups, dialogs
  * and global keys. Editor keys live in editor/riderKeys.ts.
  */
-type Popup = { kind: 'external-tools' } | { kind: 'compare-branch'; branches: string[] } | { kind: 'line-history'; file: string; start: number; end: number } | { kind: 'copy-path'; items: { label: string; value: string }[] } | { kind: 'unwrap'; items: Unwrappable[] } | { kind: 'compare-with'; files: string[] } | { kind: 'compare-file'; patch: string; other: string } | { kind: 'select-in'; file: string } | { kind: 'scratch' } | { kind: 'scratches'; items: { file: string; modified: number }[] } | { kind: 'related'; items: { file: string; line: number; reason: string }[] } | { kind: 'recent-changes'; items: { file: string; id: string; at: string; reason: string }[] } | { kind: 'file-history'; file: string; current: string } | { kind: 'compare'; patch: string; what: string } | { kind: 'regexp'; initial: string } | { kind: 'evaluate'; initial: string } | { kind: 'tip' } | { kind: 'productivity' } | { kind: 'run' } | { kind: 'paste' } | { kind: 'template' } | { kind: 'surround' } | { kind: 'structure'; items: OutlineItem[]; current: number };
-const TITLES: Record<Popup['kind'], string> = { 'external-tools': 'External Tools', 'compare-branch': 'Compare with Branch', 'line-history': 'History for Selection', 'copy-path': 'Copy Path / Reference', unwrap: 'Unwrap / Remove', 'compare-with': 'Compare With…', 'compare-file': 'Compare Files', 'select-in': 'Select In', scratch: 'New Scratch File', scratches: 'Scratch Files', related: 'Related Files', 'recent-changes': 'Recent Changes', 'file-history': 'Local History', compare: 'Compare with Clipboard', regexp: 'Check RegExp', evaluate: 'Evaluate Expression', tip: 'Tip of the Day', productivity: 'Productivity Guide', run: 'Run Anything', paste: 'Paste from History', template: 'Insert Live Template', surround: 'Surround With', structure: 'File Structure' };
+type Popup = { kind: 'new-from-template'; folder: string } | { kind: 'new-file-name'; folder: string; template: string } | { kind: 'external-tools' } | { kind: 'compare-branch'; branches: string[] } | { kind: 'line-history'; file: string; start: number; end: number } | { kind: 'copy-path'; items: { label: string; value: string }[] } | { kind: 'unwrap'; items: Unwrappable[] } | { kind: 'compare-with'; files: string[] } | { kind: 'compare-file'; patch: string; other: string } | { kind: 'select-in'; file: string } | { kind: 'scratch' } | { kind: 'scratches'; items: { file: string; modified: number }[] } | { kind: 'related'; items: { file: string; line: number; reason: string }[] } | { kind: 'recent-changes'; items: { file: string; id: string; at: string; reason: string }[] } | { kind: 'file-history'; file: string; current: string } | { kind: 'compare'; patch: string; what: string } | { kind: 'regexp'; initial: string } | { kind: 'evaluate'; initial: string } | { kind: 'tip' } | { kind: 'productivity' } | { kind: 'run' } | { kind: 'paste' } | { kind: 'template' } | { kind: 'surround' } | { kind: 'structure'; items: OutlineItem[]; current: number };
+const TITLES: Record<Popup['kind'], string> = { 'new-from-template': 'New from Template', 'new-file-name': 'New File', 'external-tools': 'External Tools', 'compare-branch': 'Compare with Branch', 'line-history': 'History for Selection', 'copy-path': 'Copy Path / Reference', unwrap: 'Unwrap / Remove', 'compare-with': 'Compare With…', 'compare-file': 'Compare Files', 'select-in': 'Select In', scratch: 'New Scratch File', scratches: 'Scratch Files', related: 'Related Files', 'recent-changes': 'Recent Changes', 'file-history': 'Local History', compare: 'Compare with Clipboard', regexp: 'Check RegExp', evaluate: 'Evaluate Expression', tip: 'Tip of the Day', productivity: 'Productivity Guide', run: 'Run Anything', paste: 'Paste from History', template: 'Insert Live Template', surround: 'Surround With', structure: 'File Structure' };
 
 function PowerSaveBadge() {
   useRiderCommands();
@@ -251,6 +252,28 @@ export default function RiderHost(props: RiderHostProps) {
     if (document.querySelector('.terminal-host:not([hidden])')) runInTerminal(cmd); else queueTerminalCommand(cmd);
     p.current.onTool('terminal');
   };
+  /** New File from Template: the file is created in the folder of the active file (or the root), then opened. */
+  const createFromTemplate = async (folder: string, templateId: string, name: string) => {
+    const t = FILE_TEMPLATES.find((x) => x.id === templateId)!;
+    const base = name.trim().replace(/\.[^.]*$/, '');
+    if (!/^[\w .-]+$/.test(base)) { p.current.onNotice('Use letters, digits, spaces, dots, dashes or underscores.'); return; }
+    const file = `${folder ? `${folder}/` : ''}${base}.${t.ext}`;
+    // Namespace: the owning project's name plus the folders below it (Visual Studio's default namespace).
+    let namespace = '', reqnroll = false;
+    try {
+      const s = await api<{ name: string; projects: { name: string; dir: string; packages: string[] }[] }>('/solution');
+      const proj = [...s.projects].sort((a, b) => b.dir.length - a.dir.length).find((pr) => !pr.dir || folder === pr.dir || folder.startsWith(`${pr.dir}/`)) ?? s.projects[0];
+      const rel = proj ? folder.slice(proj.dir ? proj.dir.length + 1 : 0) : folder;
+      namespace = [proj?.name ?? s.name, ...rel.split('/').filter(Boolean)].join('.').replace(/[^\w.]/g, '_');
+      reqnroll = !!proj?.packages.some((pk) => /^Reqnroll/i.test(pk));
+    } catch { /* defaults */ }
+    try {
+      await api('/file/create', { file, source: renderTemplate(t, file, namespace, reqnroll) });
+      setPopup(null);
+      p.current.onNavigate({ file, line: 1 });
+      p.current.onNotice(`Created ${file}.`);
+    } catch (e) { p.current.onNotice((e as Error).message); }
+  };
   const closeAndFocus = () => { setPopup(null); requestAnimationFrame(() => target.current?.view.focus()); };
   /** Runs an editor action on the active editor (and gives it focus back). */
   const inEditor = (fn: (v: EditorView, file: string) => unknown) => () => {
@@ -307,6 +330,7 @@ export default function RiderHost(props: RiderHostProps) {
       [(e) => (e.ctrlKey || e.metaKey) && e.altKey && e.shiftKey && e.key === 'Insert', 'new-scratch'],
       [(e) => e.altKey && !e.ctrlKey && !e.shiftKey && !e.metaKey && e.key === 'F1', 'select-in'],
       [(e) => e.altKey && e.shiftKey && !e.ctrlKey && !e.metaKey && e.key === 'Insert', 'column-mode'],
+      [(e) => e.altKey && !e.shiftKey && !e.ctrlKey && !e.metaKey && e.key === 'Insert', 'new-from-template'],
     ];
     // Ctrl+digit: go to numbered bookmark (Rider), when there is one with that digit.
     const digit = (e: KeyboardEvent) => {
@@ -430,6 +454,11 @@ export default function RiderHost(props: RiderHostProps) {
         api<{ local: { name: string; current: boolean }[]; remote: string[] }>('/git/branches').then((b) => setPopup({ kind: 'compare-branch', branches: [...b.local.filter((l) => !l.current).map((l) => l.name), ...b.remote, ...b.local.filter((l) => l.current).map((l) => l.name)] }), (e) => p.current.onNotice((e as Error).message));
       } },
       { id: 'external-tools', label: 'External Tools…', menu: 'Tools', group: true, run: () => { if (isBrowser()) { p.current.onNotice('External tools need a folder indexed by the studio server.'); return; } target.current = activeEditor(); openPopup({ kind: 'external-tools' }, false); } },
+      { id: 'new-from-template', label: 'New File from Template…', menu: 'Tools', group: true, shortcut: 'Alt Insert', run: () => {
+        if (isBrowser()) { p.current.onNotice('New files from templates need a folder indexed by the studio server.'); return; }
+        const f = activeEditor()?.file ?? '';
+        openPopup({ kind: 'new-from-template', folder: f.includes('/') && !f.startsWith('.tas/') ? f.slice(0, f.lastIndexOf('/')) : '' }, false);
+      } },
       { id: 'carets-line-ends', label: 'Add Carets to Ends of Selected Lines', menu: 'Edit', shortcut: 'Alt Shift G', run: inEditor(caretsAtLineEnds) },
     ];
     return registerRider(list);
@@ -449,6 +478,22 @@ export default function RiderHost(props: RiderHostProps) {
     const { view } = target.current;
     const items = popup.items;
     body = <ListPopup label="File structure" placeholder="File structure: type to filter" empty="No matches." initial={popup.current} items={items.map((it, i) => ({ key: String(i), label: it.label, detail: `${it.kind} · line ${it.line}`, indent: it.depth }))} onPick={(k) => { const it = items[Number(k)]; goTo(view, it.line, it.column); closeAndFocus(); }} />;
+  }
+  if (popup?.kind === 'new-from-template') {
+    const folder = popup.folder;
+    body = <ListPopup label="File templates" placeholder={`New file in ${folder || 'the root'}…`} empty="No such template." items={FILE_TEMPLATES.map((t) => ({ key: t.id, label: t.label, detail: `.${t.ext}` }))} onPick={(k) => setPopup({ kind: 'new-file-name', folder, template: k })} />;
+  }
+  if (popup?.kind === 'new-file-name') {
+    const { folder, template } = popup;
+    const t = FILE_TEMPLATES.find((x) => x.id === template)!;
+    body = (
+      <form className="new-file-form" onSubmit={(e) => { e.preventDefault(); void createFromTemplate(folder, template, String(new FormData(e.currentTarget).get('name') ?? '')); }}>
+        <label>{t.label} name <small>in {folder || 'the root'}</small>
+          <input name="name" aria-label="File name" autoFocus required placeholder={t.ext === 'cs' ? 'CheckoutPage' : 'checkout'} />
+        </label>
+        <button className="button" type="submit">Create</button>
+      </form>
+    );
   }
   if (popup?.kind === 'external-tools') body = <ExternalToolsDialog onRun={(t) => void runExternal(t)} />;
   if (popup?.kind === 'compare-branch' && target.current) {
