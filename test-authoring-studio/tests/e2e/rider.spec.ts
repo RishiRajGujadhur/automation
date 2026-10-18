@@ -969,3 +969,12 @@ test('J51 Copy Path / Reference… (Ctrl+Shift+C): absolute path, root-relative 
   await page.keyboard.press('Enter');
   await expect.poll(() => page.evaluate(() => navigator.clipboard.readText())).toBe('Login.feature');
 });
+
+test('J52 TODO highlighting: TODO / FIXME comments stand out in C# and feature files', async ({ page, request }) => {
+  await fs.writeFile(path.join(root, 'Steps/Todo.cs'), ['namespace Demo;', 'public class Coupons', '{', '    // TODO: wire the coupon field', '    // FIXME broken rounding', '    public void Apply() { } // not a todo here', '}', ''].join('\n'));
+  expect((await request.post('/api/workspace', { data: { repositoryRoot: root, targetProject: '.' } })).ok()).toBe(true);
+  const src = await openCs(page, 'Steps/Todo.cs', 'Coupons');
+  await expect(src.locator('.cm-todo-todo')).toHaveText('TODO: wire the coupon field');
+  await expect(src.locator('.cm-todo-fixme')).toHaveText('FIXME broken rounding');
+  await expect(src.locator('.cm-todo')).toHaveCount(2);
+});

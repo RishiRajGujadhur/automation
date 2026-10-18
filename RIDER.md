@@ -65,7 +65,7 @@ Status: ⬜ todo · ✅ done (date)
 | J49 | Unwrap / Remove (Ctrl+Shift+Delete) | ✅ 2026-10-18 |
 | J50 | Column Selection Mode (Alt+Shift+Insert) | ✅ 2026-10-18 |
 | J51 | Copy Path / Reference… popup (Ctrl+Shift+C) | ✅ 2026-10-18 |
-| J52 | TODO highlighting in the editor | ⬜ |
+| J52 | TODO highlighting in the editor | ✅ 2026-10-18 |
 | J53 | Breadcrumbs for feature files (Feature › Rule › Scenario) | ⬜ |
 | J54 | Git: Show History for Selection | ⬜ |
 | J55 | Git Log tool window (Alt+9) with commit details | ⬜ |
@@ -129,3 +129,4 @@ Status: ⬜ todo · ✅ done (date)
 - 2026-10-18 J49: Unwrap / Remove (Ctrl+Shift+Delete): lists the if / else / while / for / foreach / using / lock / { } blocks around the caret (innermost first, stopping at the member); the chosen one loses its header and braces, its body is dedented.
 - 2026-10-18 J50: Column Selection Mode (Alt+Shift+Insert, Edit menu): plain drag selects a rectangle, Shift+Up/Down grows a column of carets, typing goes into every line. Bug fix: menu commands that put focus back into the editor keep it (the menu no longer takes it back).
 - 2026-10-18 J51: Copy Path / Reference… (Ctrl+Shift+C): absolute path, path from the repository root, file name, path:line, or the C# reference, to the clipboard.
+- 2026-10-18 J52: TODO highlighting: TODO / FIXME / HACK / BUG comments are coloured from the keyword to the end of the line in every editor (FIXME and BUG red, HACK amber).

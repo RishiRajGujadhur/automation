@@ -5,6 +5,7 @@ import { selectNextOccurrence, SearchCursor } from '@codemirror/search';
 import { noteUsage, runRider } from '../rider/commands';
 import { pushClipboard } from '../rider/clipboardRing';
 import { usageHighlights } from './usages';
+import { todoHighlight } from './todoHighlight';
 import { moveStatement } from './moveStatement';
 import { gotoChange, rollbackLines } from './changeGutter';
 import { completeStatement } from './completeStatement';
@@ -313,7 +314,7 @@ export function riderKeys(file = ''): Extension {
       return c[3](view);
     },
   });
-  return [selStack, recordCopies, usageHighlights(), Prec.highest(ctrlAlt), Prec.high(keymap.of([
+  return [selStack, recordCopies, usageHighlights(), todoHighlight, Prec.highest(ctrlAlt), Prec.high(keymap.of([
     opens('Mod-Shift-v', 'paste-history'),
     opens('Mod-j', 'live-template'),
     opens('Mod-k Mod-e', 'code-cleanup'),
