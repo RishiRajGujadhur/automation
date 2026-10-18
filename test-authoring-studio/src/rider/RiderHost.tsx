@@ -57,8 +57,8 @@ export type RiderHostProps = {
  * JetBrains Rider features: registers their commands (menus, palette, desktop menus) and hosts their popups, dialogs
  * and global keys. Editor keys live in editor/riderKeys.ts.
  */
-type Popup = { kind: 'select-in'; file: string } | { kind: 'scratch' } | { kind: 'scratches'; items: { file: string; modified: number }[] } | { kind: 'related'; items: { file: string; line: number; reason: string }[] } | { kind: 'recent-changes'; items: { file: string; id: string; at: string; reason: string }[] } | { kind: 'file-history'; file: string; current: string } | { kind: 'compare'; patch: string; what: string } | { kind: 'regexp'; initial: string } | { kind: 'evaluate'; initial: string } | { kind: 'tip' } | { kind: 'productivity' } | { kind: 'run' } | { kind: 'paste' } | { kind: 'template' } | { kind: 'surround' } | { kind: 'structure'; items: OutlineItem[]; current: number };
-const TITLES: Record<Popup['kind'], string> = { 'select-in': 'Select In', scratch: 'New Scratch File', scratches: 'Scratch Files', related: 'Related Files', 'recent-changes': 'Recent Changes', 'file-history': 'Local History', compare: 'Compare with Clipboard', regexp: 'Check RegExp', evaluate: 'Evaluate Expression', tip: 'Tip of the Day', productivity: 'Productivity Guide', run: 'Run Anything', paste: 'Paste from History', template: 'Insert Live Template', surround: 'Surround With', structure: 'File Structure' };
+type Popup = { kind: 'compare-with'; files: string[] } | { kind: 'compare-file'; patch: string; other: string } | { kind: 'select-in'; file: string } | { kind: 'scratch' } | { kind: 'scratches'; items: { file: string; modified: number }[] } | { kind: 'related'; items: { file: string; line: number; reason: string }[] } | { kind: 'recent-changes'; items: { file: string; id: string; at: string; reason: string }[] } | { kind: 'file-history'; file: string; current: string } | { kind: 'compare'; patch: string; what: string } | { kind: 'regexp'; initial: string } | { kind: 'evaluate'; initial: string } | { kind: 'tip' } | { kind: 'productivity' } | { kind: 'run' } | { kind: 'paste' } | { kind: 'template' } | { kind: 'surround' } | { kind: 'structure'; items: OutlineItem[]; current: number };
+const TITLES: Record<Popup['kind'], string> = { 'compare-with': 'Compare With…', 'compare-file': 'Compare Files', 'select-in': 'Select In', scratch: 'New Scratch File', scratches: 'Scratch Files', related: 'Related Files', 'recent-changes': 'Recent Changes', 'file-history': 'Local History', compare: 'Compare with Clipboard', regexp: 'Check RegExp', evaluate: 'Evaluate Expression', tip: 'Tip of the Day', productivity: 'Productivity Guide', run: 'Run Anything', paste: 'Paste from History', template: 'Insert Live Template', surround: 'Surround With', structure: 'File Structure' };
 
 function PowerSaveBadge() {
   useRiderCommands();
@@ -354,6 +354,13 @@ export default function RiderHost(props: RiderHostProps) {
       { id: 'collapse-all', label: 'Collapse All', menu: 'Code', shortcut: 'Ctrl K, Ctrl 0', run: inEditor(collapseAll) },
       { id: 'collapse-definitions', label: 'Collapse to Definitions', menu: 'Code', shortcut: 'Ctrl K, Ctrl 2', run: inEditor(collapseToDefinitions) },
       { id: 'select-in', label: 'Select In…', menu: 'Navigate', group: true, shortcut: 'Alt F1', run: () => { const a = activeEditor(); if (!a) { p.current.onNotice('Open a file in the editor first.'); return; } setPopup({ kind: 'select-in', file: a.file }); } },
+      { id: 'compare-with', label: 'Compare With…', menu: 'Edit', run: () => {
+        const a = activeEditor();
+        if (!a) { p.current.onNotice('Open a file in the editor first.'); return; }
+        target.current = a;
+        if (isBrowser()) { p.current.onNotice('Compare With needs a folder indexed by the studio server.'); return; }
+        api<{ files: { file: string }[] }>('/solution').then((s) => setPopup({ kind: 'compare-with', files: s.files.map((f) => f.file).filter((f) => f !== a.file) }), (e) => p.current.onNotice((e as Error).message));
+      } },
       { id: 'carets-line-ends', label: 'Add Carets to Ends of Selected Lines', menu: 'Edit', shortcut: 'Alt Shift G', run: inEditor(caretsAtLineEnds) },
     ];
     return registerRider(list);
@@ -374,6 +381,18 @@ export default function RiderHost(props: RiderHostProps) {
     const items = popup.items;
     body = <ListPopup label="File structure" placeholder="File structure: type to filter" empty="No matches." initial={popup.current} items={items.map((it, i) => ({ key: String(i), label: it.label, detail: `${it.kind} · line ${it.line}`, indent: it.depth }))} onPick={(k) => { const it = items[Number(k)]; goTo(view, it.line, it.column); closeAndFocus(); }} />;
   }
+  if (popup?.kind === 'compare-with' && target.current) {
+    const { view, file } = target.current;
+    body = <ListPopup label="Files to compare with" placeholder="Compare with… (type a file name)" empty="No other files." items={popup.files.map((f) => ({ key: f, label: f.split('/').pop()!, detail: f }))} onPick={(k) => {
+      readFile(k).then((r) => {
+        const norm = (t: string) => t.replace(/\r\n/g, '\n');
+        const mine = norm(view.state.doc.toString()), theirs = norm(r.source);
+        const patch = mine === theirs ? '' : createTwoFilesPatch(file, k, mine, theirs, '', '', { context: 3 }).split('\n').slice(2).join('\n');
+        setPopup({ kind: 'compare-file', patch, other: k });
+      }, (e) => p.current.onNotice((e as Error).message));
+    }} />;
+  }
+  if (popup?.kind === 'compare-file') body = <CompareClipboard patch={popup.patch} what="This file" against={popup.other} />;
   if (popup?.kind === 'select-in') {
     const file = popup.file;
     const dir = file.includes('/') ? file.slice(0, file.lastIndexOf('/')) : '.';

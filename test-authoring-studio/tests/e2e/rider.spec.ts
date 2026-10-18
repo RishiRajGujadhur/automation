@@ -905,3 +905,17 @@ test('J46 Select In… (Alt+F1): Explorer reveals the file, Terminal opens in it
   await page.keyboard.press('Enter');
   await expect(page.getByRole('region', { name: 'Terminal' }).locator('.terminal-host:not([hidden]) .xterm-rows')).toContainText(`PS ${path.join(root, 'Features', 'Auth')}>`, { timeout: 30_000 });
 });
+
+test('J47 Compare With…: the editor text against another file of the solution', async ({ page, request }) => {
+  await fs.writeFile(path.join(root, 'Features/Auth/Login2.feature'), (await fs.readFile(path.join(root, 'Features/Auth/Login.feature'), 'utf8')).replace('test-user', 'admin'));
+  expect((await request.post('/api/workspace', { data: { repositoryRoot: root, targetProject: '.' } })).ok()).toBe(true);
+  await openFeature(page);
+  await caretAt(page, 'signs in');
+  await page.getByRole('button', { name: 'Edit menu' }).click();
+  await page.getByRole('menuitem', { name: /Compare With…/ }).click();
+  await page.getByLabel('Filter files to compare with').fill('Login2');
+  await page.keyboard.press('Enter');
+  const dlg = page.getByRole('dialog', { name: 'Compare Files' });
+  await expect(dlg.getByRole('status')).toContainText('This file vs. Features/Auth/Login2.feature: 1 line only in this file, 1 only in Features/Auth/Login2.feature.');
+  await expect(dlg).toContainText('+    When the user signs in as "admin"');
+});

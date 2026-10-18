@@ -7,13 +7,13 @@ const SETUP = { foldGutter: false, autocompletion: false };
 const EXTENSIONS = [StreamLanguage.define(diffMode)];
 
 /** Compare with Clipboard (Rider): the selection (or the file) against the clipboard, as a unified diff. */
-export default function CompareClipboard({ patch, what }: { patch: string; what: string }) {
+export default function CompareClipboard({ patch, what, against = 'the clipboard' }: { patch: string; what: string; against?: string }) {
   const theme = useEditorTheme();
   const added = patch.split('\n').filter((l) => l.startsWith('+') && !l.startsWith('+++')).length;
   const removed = patch.split('\n').filter((l) => l.startsWith('-') && !l.startsWith('---')).length;
   return (
     <div className="compare-clipboard">
-      <p className="subtle" role="status">{patch ? `${what} vs. clipboard: ${removed} line${removed === 1 ? '' : 's'} only in ${what.toLowerCase()}, ${added} only in the clipboard.` : `${what} and the clipboard are identical.`}</p>
+      <p className="subtle" role="status">{patch ? `${what} vs. ${against === 'the clipboard' ? 'clipboard' : against}: ${removed} line${removed === 1 ? '' : 's'} only in ${what.toLowerCase()}, ${added} only in ${against}.` : `${what} and ${against} are identical.`}</p>
       {patch && <CodeMirror value={patch} theme={theme} editable={false} basicSetup={SETUP} extensions={EXTENSIONS} height="50vh" aria-label="Differences" />}
     </div>
   );
