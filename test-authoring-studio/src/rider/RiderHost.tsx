@@ -35,6 +35,7 @@ import { powerSave, setPowerSave } from './powerSave';
 import CheckRegExp from './CheckRegExp';
 import CompareClipboard from './CompareClipboard';
 import LineHistory from './LineHistory';
+import ExternalToolsDialog, { expandMacros, externalTools, type ExternalTool } from './ExternalTools';
 import LocalHistory from '../LocalHistory';
 import { readFile } from '../files/provider';
 import { createTwoFilesPatch } from 'diff';
@@ -60,8 +61,8 @@ export type RiderHostProps = {
  * JetBrains Rider features: registers their commands (menus, palette, desktop menus) and hosts their popups, dialogs
  * and global keys. Editor keys live in editor/riderKeys.ts.
  */
-type Popup = { kind: 'compare-branch'; branches: string[] } | { kind: 'line-history'; file: string; start: number; end: number } | { kind: 'copy-path'; items: { label: string; value: string }[] } | { kind: 'unwrap'; items: Unwrappable[] } | { kind: 'compare-with'; files: string[] } | { kind: 'compare-file'; patch: string; other: string } | { kind: 'select-in'; file: string } | { kind: 'scratch' } | { kind: 'scratches'; items: { file: string; modified: number }[] } | { kind: 'related'; items: { file: string; line: number; reason: string }[] } | { kind: 'recent-changes'; items: { file: string; id: string; at: string; reason: string }[] } | { kind: 'file-history'; file: string; current: string } | { kind: 'compare'; patch: string; what: string } | { kind: 'regexp'; initial: string } | { kind: 'evaluate'; initial: string } | { kind: 'tip' } | { kind: 'productivity' } | { kind: 'run' } | { kind: 'paste' } | { kind: 'template' } | { kind: 'surround' } | { kind: 'structure'; items: OutlineItem[]; current: number };
-const TITLES: Record<Popup['kind'], string> = { 'compare-branch': 'Compare with Branch', 'line-history': 'History for Selection', 'copy-path': 'Copy Path / Reference', unwrap: 'Unwrap / Remove', 'compare-with': 'Compare With…', 'compare-file': 'Compare Files', 'select-in': 'Select In', scratch: 'New Scratch File', scratches: 'Scratch Files', related: 'Related Files', 'recent-changes': 'Recent Changes', 'file-history': 'Local History', compare: 'Compare with Clipboard', regexp: 'Check RegExp', evaluate: 'Evaluate Expression', tip: 'Tip of the Day', productivity: 'Productivity Guide', run: 'Run Anything', paste: 'Paste from History', template: 'Insert Live Template', surround: 'Surround With', structure: 'File Structure' };
+type Popup = { kind: 'external-tools' } | { kind: 'compare-branch'; branches: string[] } | { kind: 'line-history'; file: string; start: number; end: number } | { kind: 'copy-path'; items: { label: string; value: string }[] } | { kind: 'unwrap'; items: Unwrappable[] } | { kind: 'compare-with'; files: string[] } | { kind: 'compare-file'; patch: string; other: string } | { kind: 'select-in'; file: string } | { kind: 'scratch' } | { kind: 'scratches'; items: { file: string; modified: number }[] } | { kind: 'related'; items: { file: string; line: number; reason: string }[] } | { kind: 'recent-changes'; items: { file: string; id: string; at: string; reason: string }[] } | { kind: 'file-history'; file: string; current: string } | { kind: 'compare'; patch: string; what: string } | { kind: 'regexp'; initial: string } | { kind: 'evaluate'; initial: string } | { kind: 'tip' } | { kind: 'productivity' } | { kind: 'run' } | { kind: 'paste' } | { kind: 'template' } | { kind: 'surround' } | { kind: 'structure'; items: OutlineItem[]; current: number };
+const TITLES: Record<Popup['kind'], string> = { 'external-tools': 'External Tools', 'compare-branch': 'Compare with Branch', 'line-history': 'History for Selection', 'copy-path': 'Copy Path / Reference', unwrap: 'Unwrap / Remove', 'compare-with': 'Compare With…', 'compare-file': 'Compare Files', 'select-in': 'Select In', scratch: 'New Scratch File', scratches: 'Scratch Files', related: 'Related Files', 'recent-changes': 'Recent Changes', 'file-history': 'Local History', compare: 'Compare with Clipboard', regexp: 'Check RegExp', evaluate: 'Evaluate Expression', tip: 'Tip of the Day', productivity: 'Productivity Guide', run: 'Run Anything', paste: 'Paste from History', template: 'Insert Live Template', surround: 'Surround With', structure: 'File Structure' };
 
 function PowerSaveBadge() {
   useRiderCommands();
@@ -237,6 +238,19 @@ export default function RiderHost(props: RiderHostProps) {
     target.current = a;
     setPopup({ kind: 'copy-path', items });
   };
+  /** Runs an External Tool in the Terminal with the macros of the active editor. */
+  const runExternal = async (tool: ExternalTool) => {
+    const a = activeEditor() ?? target.current;
+    let root = '';
+    try { root = (await api<{ config: { repositoryRoot: string } }>('/workspace')).config.repositoryRoot; } catch { /* no root */ }
+    const st = a?.view.state;
+    const head = st?.selection.main.head ?? 0;
+    const line = st ? st.doc.lineAt(head) : undefined;
+    const cmd = expandMacros(tool.command, { root, file: a?.file ?? '', line: line?.number ?? 1, column: line ? head - line.from + 1 : 1, selection: st ? st.sliceDoc(st.selection.main.from, st.selection.main.to) : '' });
+    setPopup(null);
+    if (document.querySelector('.terminal-host:not([hidden])')) runInTerminal(cmd); else queueTerminalCommand(cmd);
+    p.current.onTool('terminal');
+  };
   const closeAndFocus = () => { setPopup(null); requestAnimationFrame(() => target.current?.view.focus()); };
   /** Runs an editor action on the active editor (and gives it focus back). */
   const inEditor = (fn: (v: EditorView, file: string) => unknown) => () => {
@@ -270,6 +284,11 @@ export default function RiderHost(props: RiderHostProps) {
     window.addEventListener('keyup', up, true);
     return () => { window.removeEventListener('keydown', down, true); window.removeEventListener('keyup', up, true); };
   }, []);
+  // Each External Tool is a command of its own (palette, Tools menu), refreshed when the dialog closes.
+  useEffect(() => {
+    if (popup) return;
+    return registerRider(externalTools().map((t, i) => ({ id: `external:${i}`, label: `External Tool: ${t.name}`, menu: 'Tools' as const, group: i === 0, run: () => void runExternal(t) })));
+  }, [popup]); // eslint-disable-line react-hooks/exhaustive-deps
   // Tool window keys work everywhere (not only in an editor).
   useEffect(() => {
     const keys: [test: (e: KeyboardEvent) => boolean, id: string][] = [
@@ -410,6 +429,7 @@ export default function RiderHost(props: RiderHostProps) {
         target.current = a;
         api<{ local: { name: string; current: boolean }[]; remote: string[] }>('/git/branches').then((b) => setPopup({ kind: 'compare-branch', branches: [...b.local.filter((l) => !l.current).map((l) => l.name), ...b.remote, ...b.local.filter((l) => l.current).map((l) => l.name)] }), (e) => p.current.onNotice((e as Error).message));
       } },
+      { id: 'external-tools', label: 'External Tools…', menu: 'Tools', group: true, run: () => { if (isBrowser()) { p.current.onNotice('External tools need a folder indexed by the studio server.'); return; } target.current = activeEditor(); openPopup({ kind: 'external-tools' }, false); } },
       { id: 'carets-line-ends', label: 'Add Carets to Ends of Selected Lines', menu: 'Edit', shortcut: 'Alt Shift G', run: inEditor(caretsAtLineEnds) },
     ];
     return registerRider(list);
@@ -430,6 +450,7 @@ export default function RiderHost(props: RiderHostProps) {
     const items = popup.items;
     body = <ListPopup label="File structure" placeholder="File structure: type to filter" empty="No matches." initial={popup.current} items={items.map((it, i) => ({ key: String(i), label: it.label, detail: `${it.kind} · line ${it.line}`, indent: it.depth }))} onPick={(k) => { const it = items[Number(k)]; goTo(view, it.line, it.column); closeAndFocus(); }} />;
   }
+  if (popup?.kind === 'external-tools') body = <ExternalToolsDialog onRun={(t) => void runExternal(t)} />;
   if (popup?.kind === 'compare-branch' && target.current) {
     const { view, file } = target.current;
     body = <ListPopup label="Branches" placeholder="Compare with branch…" empty="No other branches." items={popup.branches.map((b) => ({ key: b, label: b }))} onPick={(ref) => {

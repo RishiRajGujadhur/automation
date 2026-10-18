@@ -1050,3 +1050,19 @@ test('J56 Compare with Branch…: the editor text against the file on another br
   await expect(dlg).toContainText('-    When the user signs in as "admin"');
   await expect(dlg).toContainText('+    When the user signs in as "test-user"');
 });
+
+test('J57 External Tools: a command with macros runs in the Terminal for the active file; tools show in the Tools menu', async ({ page }) => {
+  await openFeature(page);
+  await caretAt(page, 'signs in');
+  await page.getByRole('button', { name: 'Tools menu' }).click();
+  await page.getByRole('menuitem', { name: /^External Tools…/ }).click();
+  const dlg = page.getByRole('dialog', { name: 'External Tools' });
+  await dlg.getByRole('button', { name: 'Add tool' }).click();
+  const n = await dlg.getByRole('list', { name: 'External tools' }).getByRole('listitem').count();
+  await dlg.getByLabel(`Name of tool ${n}`).fill('Where am I');
+  await dlg.getByLabel(`Command of tool ${n}`).fill('Write-Output ("at " + "$FileName$:$LineNumber$")');
+  await dlg.getByRole('button', { name: 'Run Where am I' }).click();
+  await expect(page.getByRole('region', { name: 'Terminal' }).locator('.terminal-host:not([hidden]) .xterm-rows')).toContainText('at Login.feature:7', { timeout: 30_000 });
+  await page.getByRole('button', { name: 'Tools menu' }).click();
+  await expect(page.getByRole('menuitem', { name: /External Tool: Where am I/ })).toBeVisible();
+});

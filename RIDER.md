@@ -70,7 +70,7 @@ Status: ⬜ todo · ✅ done (date)
 | J54 | Git: Show History for Selection | ✅ 2026-10-18 |
 | J55 | Git Log tool window (Alt+9) with commit details | ✅ 2026-10-18 |
 | J56 | Git: Compare with Branch… | ✅ 2026-10-18 |
-| J57 | External Tools (commands with $FilePath$-style macros) | ⬜ |
+| J57 | External Tools (commands with $FilePath$-style macros) | ✅ 2026-10-18 |
 | J58 | New File from Template (class, interface, test, step definitions, feature, .http, .md) | ⬜ |
 | J59 | Line separators (CRLF ⇄ LF) from the status bar | ⬜ |
 | J60 | Show Line Numbers toggle | ⬜ |
@@ -134,3 +134,4 @@ Status: ⬜ todo · ✅ done (date)
 - 2026-10-18 J54: Show History for Selection (Tools): the commits that changed the selected lines (git log -L), newest first, with each one's change as a diff. Server also gains commit details, the log graph and file-at-ref for J55/J56.
 - 2026-10-18 J55: Git Log tool window (Alt+9): all branches' commits with git's graph and branch / tag labels, filter by text / hash / author / branch; a commit shows its message, author, changed files (click to open) and patch.
 - 2026-10-18 J56: Compare with Branch… (Tools): pick a local or remote branch; the editor text is diffed against the file on that branch (or noted as missing there).
+- 2026-10-18 J57: External Tools (Tools ▸ External Tools…): your own commands with Rider's macros ($FilePath$, $FileRelativePath$, $FileDir$, $FileName$, $LineNumber$, $SelectedText$, $ProjectFileDir$…), run in the Terminal for the active file; each tool is also a Tools menu / palette command.

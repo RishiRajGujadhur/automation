@@ -82,6 +82,7 @@ const ROWS: Record<'edit' | 'view' | 'navigate' | 'code' | 'tools' | 'help', Row
   tools: [
     ['Run Anything… (Ctrl twice)', 'run-anything'],
     ['New Scratch File…', 'new-scratch', 'CmdOrCtrl+Alt+Shift+Insert'],
+    ['External Tools…', 'external-tools'],
     ['Scratch Files…', 'scratches'],
     null,
     ['Evaluate Expression… (debugger)', 'evaluate-expression', 'Alt+F8'],

@@ -3230,3 +3230,32 @@ html[data-breakpoints-muted] .cm-bp {
     cursor: pointer;
   }
 }
+
+// External Tools
+.external-tools {
+  display: grid;
+  gap: 8px;
+  min-width: min(820px, 92vw);
+  ul {
+    display: grid;
+    gap: 6px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+  li {
+    display: flex;
+    gap: 6px;
+    align-items: center;
+    input {
+      width: 160px;
+    }
+    .ext-command {
+      flex: 1;
+      font-family: var(--font-mono, monospace);
+    }
+  }
+  code {
+    font-size: 11px;
+  }
+}
