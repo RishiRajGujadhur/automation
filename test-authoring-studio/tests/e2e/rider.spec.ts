@@ -387,3 +387,37 @@ test('J19 Problems (Alt+Shift+6): C# compiler errors and unbound feature steps a
   await list.getByRole('button', { name: /CS0029/ }).click();
   await expect(page.locator('.code-editor:not([hidden]) .cm-activeLine')).toContainText('int x = "text"');
 });
+
+test('J20 Terminal (Alt+F12): a shell in the repository folder; commands, cd, history, Ctrl+C, tabs', async ({ page }) => {
+  await openFeature(page);
+  await page.keyboard.press('Alt+F12');
+  const panel = page.getByRole('region', { name: 'Terminal' });
+  const screen = panel.locator('.terminal-host:not([hidden]) .xterm-rows');
+  await expect(screen).toContainText(`PS ${root}>`, { timeout: 30_000 });
+  await panel.locator('.terminal-host:not([hidden])').click();
+  await page.keyboard.type('Write-Output ("sum=" + (2 + 3))');
+  await page.keyboard.press('Enter');
+  await expect(screen).toContainText('sum=5');
+  await page.keyboard.type('cd Features');
+  await page.keyboard.press('Enter');
+  await expect(screen).toContainText(`PS ${path.join(root, 'Features')}>`);
+  await page.keyboard.type('Get-ChildItem -Name *.feature');
+  await page.keyboard.press('Enter');
+  await expect(screen).toContainText('GoogleSearch.feature');
+  // History: ↑ brings back the last command.
+  await page.keyboard.press('ArrowUp');
+  await expect(screen).toContainText(/>\s*Get-ChildItem -Name \*\.feature\s*$/m);
+  await page.keyboard.press('Control+U').catch(() => {});
+  // Ctrl+C stops a long command; the shell keeps its folder.
+  await page.keyboard.press('Escape');
+  for (let i = 0; i < 40; i++) await page.keyboard.press('Backspace');
+  await page.keyboard.type('Start-Sleep -Seconds 30');
+  await page.keyboard.press('Enter');
+  await page.waitForTimeout(500);
+  await page.keyboard.press('Control+C');
+  await expect(screen).toContainText('^C');
+  await expect(screen).toContainText(`PS ${path.join(root, 'Features')}>`, { timeout: 20_000 });
+  await panel.getByRole('button', { name: 'New terminal' }).click();
+  await expect(panel.getByRole('tab')).toHaveCount(2);
+  await expect(screen).toContainText(`PS ${root}>`, { timeout: 30_000 });
+});

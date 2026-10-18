@@ -134,6 +134,7 @@ export default function RiderHost(props: RiderHostProps) {
     const keys: [test: (e: KeyboardEvent) => boolean, id: string][] = [
       [(e) => e.altKey && !e.ctrlKey && !e.shiftKey && !e.metaKey && e.code === 'Digit7', 'tool-structure'],
       [(e) => e.altKey && e.shiftKey && !e.ctrlKey && !e.metaKey && e.code === 'Digit6', 'tool-problems'],
+      [(e) => e.altKey && !e.shiftKey && !e.ctrlKey && !e.metaKey && e.key === 'F12', 'tool-terminal'],
     ];
     const h = (e: KeyboardEvent) => { const k = keys.find(([t]) => t(e)); if (k) { e.preventDefault(); runRider(k[1], 'key'); } };
     window.addEventListener('keydown', h);
@@ -165,6 +166,7 @@ export default function RiderHost(props: RiderHostProps) {
       { id: 'type-hierarchy', label: 'Type Hierarchy', menu: 'Navigate', group: true, shortcut: 'Ctrl H', run: () => void typeHierarchy() },
       { id: 'call-hierarchy', label: 'Call Hierarchy', menu: 'Navigate', shortcut: 'Ctrl Alt H', run: () => void callHierarchy() },
       { id: 'tool-problems', label: 'Problems', menu: 'View', shortcut: 'Alt Shift 6', run: () => p.current.onTool('problems') },
+      { id: 'tool-terminal', label: 'Terminal', menu: 'View', shortcut: 'Alt F12', run: () => { if (isBrowser()) { p.current.onNotice('The terminal needs a folder indexed by the studio server.'); return; } p.current.onTool('terminal'); } },
       { id: 'carets-line-ends', label: 'Add Carets to Ends of Selected Lines', menu: 'Edit', shortcut: 'Alt Shift G', run: inEditor(caretsAtLineEnds) },
     ];
     return registerRider(list);

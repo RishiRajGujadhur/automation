@@ -22,6 +22,7 @@ import {
   ignoredDirsFor,
   extraRootsOf,
 } from './core.js';
+import { startTerminal, stopTerminal, terminal, type TerminalEvent } from './terminal.js';
 import { Recorder } from './recorder.js';
 import { Spy } from './spy.js';
 import { proposeCode, proposeDictionaryPageObject } from './proposals.js';
@@ -1007,6 +1008,22 @@ for (const signal of ['SIGINT', 'SIGTERM', 'SIGHUP'] as const) process.once(sign
 process.once('exit', () => { void debug.stop(); });
 const repoFile = z.string().min(1).max(500).refine((v) => !v.split(/[\\/]/).includes('..'), 'Path cannot contain ..');
 app.get('/api/debug', (_req, res) => res.json(debug.state));
+// Terminal tool window (Rider, Alt+F12): shell sessions in the repository folder; output streams as server-sent events.
+app.post('/api/terminal/start', async (_req, res) => { res.json(startTerminal(config.repositoryRoot)); });
+const termId = z.object({ id: z.string().uuid() });
+const termOf = (id: string) => { const t = terminal(id); if (!t) throw Object.assign(new Error('That terminal has ended. Open a new one.'), { status: 404 }); return t; };
+app.post('/api/terminal/input', (req, res) => { const b = termId.extend({ line: z.string().max(20_000) }).parse(req.body); termOf(b.id).run(b.line); res.json({ ok: true }); });
+app.post('/api/terminal/interrupt', (req, res) => { termOf(termId.parse(req.body).id).interrupt(); res.json({ ok: true }); });
+app.post('/api/terminal/stop', (req, res) => { stopTerminal(termId.parse(req.body).id); res.json({ ok: true }); });
+app.get('/api/terminal/events', (req, res) => {
+  const t = termOf(termId.parse(req.query).id);
+  res.writeHead(200, { 'Content-Type': 'text/event-stream', 'Cache-Control': 'no-cache', Connection: 'keep-alive' });
+  const send = (e: TerminalEvent) => res.write(`data: ${JSON.stringify(e)}\n\n`);
+  for (const e of t.backlog) send(e);
+  t.on('event', send);
+  const ping = setInterval(() => res.write('event: ping\ndata: 1\n\n'), 10_000);
+  req.on('close', () => { clearInterval(ping); t.off('event', send); });
+});
 app.get('/api/debug/events', (req, res) => {
   res.writeHead(200, { 'Content-Type': 'text/event-stream', 'Cache-Control': 'no-cache', Connection: 'keep-alive' });
   const send = (s: unknown) => res.write(`data: ${JSON.stringify(s)}\n\n`);
