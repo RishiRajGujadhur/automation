@@ -5,6 +5,9 @@ import type { EditorView } from '@codemirror/view';
 import { activeEditor } from '../editor/activeEditor';
 import { extendSelection, shrinkSelection, toggleCase, joinLines, selectNextOccurrence, unselectOccurrence, selectAllOccurrences, startNewLine, startNewLineBefore, caretsAtLineEnds } from '../editor/riderKeys';
 import { registerRider, riderChanged, type RiderCommand } from './commands';
+import { api } from '../api';
+import { copyText } from '../ui';
+import { isBrowser } from '../files/provider';
 import PasteHistory from './PasteHistory';
 import ListPopup from './ListPopup';
 import { insertTemplate, liveTemplates } from '../editor/snippets';
@@ -34,6 +37,25 @@ export default function RiderHost(props: RiderHostProps) {
     if (needsEditor && !target.current) { p.current.onNotice('Open a file in the editor first.'); return; }
     setPopup(next);
   };
+  /** Line / column (1-based) of the main cursor, with the editor's text, for the C# language service. */
+  const position = (view: EditorView, file: string) => {
+    const head = view.state.selection.main.head;
+    const line = view.state.doc.lineAt(head);
+    return { file, source: view.state.doc.toString(), line: line.number, column: head - line.from + 1 };
+  };
+  /** Copy Reference (Ctrl+Alt+Shift+C): C# symbols by fully qualified name, other files as path:line. */
+  const copyReference = async () => {
+    const a = activeEditor();
+    if (!a) { p.current.onNotice('Open a file in the editor first.'); return; }
+    const at = position(a.view, a.file);
+    let ref = `${a.file}:${at.line}`;
+    if (a.file.endsWith('.cs') && !isBrowser()) {
+      try { ref = (await api<{ name: string }>('/csharp/symbolId', at)).name; } catch { /* no symbol: path:line */ }
+    }
+    const ok = await copyText(ref);
+    p.current.onNotice(ok ? `Copied reference: ${ref}` : 'Clipboard unavailable.');
+    a.view.focus();
+  };
   const closeAndFocus = () => { setPopup(null); requestAnimationFrame(() => target.current?.view.focus()); };
   /** Runs an editor action on the active editor (and gives it focus back). */
   const inEditor = (fn: (v: EditorView, file: string) => unknown) => () => {
@@ -61,6 +83,7 @@ export default function RiderHost(props: RiderHostProps) {
       { id: 'font-bigger', label: 'Increase Font Size', menu: 'View', group: true, shortcut: 'Ctrl Wheel ↑', run: () => changeFontSize(1, activeEditor()?.view) },
       { id: 'font-smaller', label: 'Decrease Font Size', menu: 'View', shortcut: 'Ctrl Wheel ↓', run: () => changeFontSize(-1, activeEditor()?.view) },
       { id: 'font-reset', label: 'Reset Font Size', menu: 'View', run: () => changeFontSize(0) },
+      { id: 'copy-reference', label: 'Copy Reference', menu: 'Edit', group: true, shortcut: 'Ctrl Alt Shift C', run: () => void copyReference() },
       { id: 'carets-line-ends', label: 'Add Carets to Ends of Selected Lines', menu: 'Edit', shortcut: 'Alt Shift G', run: inEditor(caretsAtLineEnds) },
     ];
     return registerRider(list);

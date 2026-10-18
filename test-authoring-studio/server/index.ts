@@ -429,7 +429,7 @@ app.post('/api/file/save', async (req, res) => {
 // C# language service (Roslyn): IntelliSense, quick info, go to definition, references, rename, organize usings.
 const lang = new LanguageService();
 const csPosition = z.object({ file: z.string().max(400).regex(/\.cs$/), source: z.string().max(1_000_000).optional(), line: z.number().int().min(1), column: z.number().int().min(1) });
-for (const op of ['complete', 'hover', 'definition', 'references', 'signature', 'implementations', 'base'] as const) {
+for (const op of ['complete', 'hover', 'definition', 'references', 'signature', 'implementations', 'base', 'symbolId', 'typeHierarchy', 'callers'] as const) {
   app.post(`/api/csharp/${op}`, async (req, res) => {
     const body = csPosition.parse(req.body);
     await confined(config.repositoryRoot, body.file, false);
@@ -450,6 +450,10 @@ app.post('/api/csharp/rename', async (req, res) => {
   }
   if (written.length) rescanSoon(1500);
   res.json({ ...r, written, current: r.changes.find((c) => c.file === body.file)?.text ?? null });
+});
+// Problems (Rider's solution-wide analysis): compiler errors and warnings of every project.
+app.get('/api/csharp/problems', async (_req, res) => {
+  res.json(await lang.request(config.repositoryRoot, { op: 'solutionDiagnostics' }, 180_000));
 });
 app.post('/api/csharp/outline', async (req, res) => {
   const body = z.object({ file: z.string().max(400).regex(/\.cs$/), source: z.string().max(1_000_000).optional() }).parse(req.body);

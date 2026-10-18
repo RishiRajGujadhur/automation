@@ -24,6 +24,7 @@ const ROWS: Record<'edit' | 'view' | 'navigate' | 'code' | 'tools' | 'help', Row
     ['Add Carets to Ends of Selected Lines', 'carets-line-ends', 'Alt+Shift+G'],
     null,
     ['Paste from History…', 'paste-history', 'CmdOrCtrl+Shift+V'],
+    ['Copy Reference', 'copy-reference', 'CmdOrCtrl+Alt+Shift+C'],
   ],
   view: [
     null,

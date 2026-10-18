@@ -70,6 +70,7 @@ sealed class LanguageService
         if (op == "update") { foreach (var f in req["files"]!.AsArray()) Refresh((string)f!); return true; }
         if (op == "tests") return await DiscoverTests();
         if (op == "symbols") return await Symbols((string)req["query"]!);
+        if (op == "solutionDiagnostics") return await SolutionDiagnostics();
         var doc = Document((string)req["file"]!, (string?)req["source"]);
         int Pos(SourceText t) => t.Lines[Math.Clamp((int)req["line"]! - 1, 0, t.Lines.Count - 1)].Start + (int)req["column"]! - 1;
         var text = await doc.GetTextAsync();
@@ -81,6 +82,9 @@ sealed class LanguageService
             "references" => await References(doc, Math.Min(Pos(text), text.Length)),
             "implementations" => await Implementations(doc, Math.Min(Pos(text), text.Length)),
             "base" => await BaseOf(doc, Math.Min(Pos(text), text.Length)),
+            "symbolId" => await SymbolId(doc, Math.Min(Pos(text), text.Length)),
+            "typeHierarchy" => await TypeHierarchy(doc, Math.Min(Pos(text), text.Length)),
+            "callers" => await Callers(doc, Math.Min(Pos(text), text.Length)),
             "rename" => await Rename(doc, Math.Min(Pos(text), text.Length), (string)req["newName"]!),
             "organize" => await Organize(doc),
             "outline" => await Outline(doc),
@@ -688,6 +692,100 @@ sealed class LanguageService
         var list = found.ToList();
         var locations = list.SelectMany(s => s.Locations).Where(InRepo).Distinct().Select(Location).ToList();
         return new { name = symbol.ToDisplayString(), locations, external = locations.Count == 0 ? list.FirstOrDefault()?.ToDisplayString() : null };
+    }
+
+    static readonly SymbolDisplayFormat Qualified = new(
+        globalNamespaceStyle: SymbolDisplayGlobalNamespaceStyle.Omitted,
+        typeQualificationStyle: SymbolDisplayTypeQualificationStyle.NameAndContainingTypesAndNamespaces,
+        genericsOptions: SymbolDisplayGenericsOptions.IncludeTypeParameters,
+        memberOptions: SymbolDisplayMemberOptions.IncludeContainingType);
+
+    /// <summary>The symbol at the cursor, or the member / type declared around it.</summary>
+    async Task<ISymbol?> SymbolOrEnclosing(Document doc, int position)
+    {
+        var symbol = await SymbolAt(doc, position);
+        if (symbol != null && symbol.Kind != SymbolKind.Namespace) return symbol;
+        var root = (await doc.GetSyntaxRootAsync())!;
+        var model = (await doc.GetSemanticModelAsync())!;
+        var node = root.FindToken(Math.Min(position, Math.Max(0, root.FullSpan.End - 1))).Parent;
+        foreach (var n in node?.AncestorsAndSelf() ?? [])
+            if (n is MemberDeclarationSyntax and not NamespaceDeclarationSyntax and not FileScopedNamespaceDeclarationSyntax || n is BaseTypeDeclarationSyntax)
+            {
+                if (n is FieldDeclarationSyntax f && f.Declaration.Variables.FirstOrDefault() is { } v) return model.GetDeclaredSymbol(v);
+                if (model.GetDeclaredSymbol(n) is { } s) return s;
+            }
+        return symbol;
+    }
+
+    /// <summary>Copy Reference (Rider, Ctrl+Alt+Shift+C): the fully qualified name of the symbol at the cursor.</summary>
+    async Task<object> SymbolId(Document doc, int position)
+    {
+        var symbol = await SymbolOrEnclosing(doc, position) ?? throw new InvalidOperationException("No symbol at the cursor.");
+        return new { name = symbol.ToDisplayString(Qualified), kind = symbol.Kind.ToString() };
+    }
+
+    object Node(ISymbol s) => new { name = s.ToDisplayString(Qualified), kind = s is INamedTypeSymbol t ? t.TypeKind.ToString().ToLowerInvariant() : s.Kind.ToString().ToLowerInvariant(), location = s.Locations.Where(InRepo).Select(Location).FirstOrDefault(), external = !s.Locations.Any(InRepo) };
+
+    /// <summary>Type Hierarchy (Rider, Ctrl+H): base types up to object, interfaces, and every type deriving from / implementing it.</summary>
+    async Task<object> TypeHierarchy(Document doc, int position)
+    {
+        var symbol = await SymbolOrEnclosing(doc, position) ?? throw new InvalidOperationException("No type at the cursor.");
+        var type = symbol as INamedTypeSymbol ?? symbol.ContainingType ?? (symbol as ILocalSymbol)?.Type as INamedTypeSymbol ?? (symbol as IParameterSymbol)?.Type as INamedTypeSymbol
+            ?? throw new InvalidOperationException($"{symbol.Name} is not a type.");
+        type = type.OriginalDefinition;
+        var solution = doc.Project.Solution;
+        var bases = new List<object>();
+        for (var b = type.BaseType; b != null; b = b.BaseType) bases.Insert(0, Node(b));
+        IEnumerable<INamedTypeSymbol> derived = type.TypeKind == TypeKind.Interface
+            ? (await SymbolFinder.FindImplementationsAsync(type, solution)).OfType<INamedTypeSymbol>().Concat(await SymbolFinder.FindDerivedInterfacesAsync(type, solution, transitive: true))
+            : await SymbolFinder.FindDerivedClassesAsync(type, solution, transitive: true);
+        return new
+        {
+            type = Node(type),
+            bases,
+            interfaces = type.AllInterfaces.Select(Node).ToList(),
+            derived = derived.Distinct<INamedTypeSymbol>(SymbolEqualityComparer.Default).Take(500).Select(d => new
+            {
+                node = Node(d),
+                parent = (type.TypeKind == TypeKind.Interface ? d.Interfaces.FirstOrDefault(i => i.AllInterfaces.Contains(type, SymbolEqualityComparer.Default) || SymbolEqualityComparer.Default.Equals(i.OriginalDefinition, type)) as ISymbol : d.BaseType)?.OriginalDefinition.ToDisplayString(Qualified),
+            }).ToList(),
+        };
+    }
+
+    /// <summary>Call Hierarchy (Rider, Ctrl+Alt+H): the members calling the method / property / constructor at the cursor, with the call sites.</summary>
+    async Task<object> Callers(Document doc, int position)
+    {
+        var symbol = await SymbolOrEnclosing(doc, position) ?? throw new InvalidOperationException("No member at the cursor.");
+        if (symbol is not (IMethodSymbol or IPropertySymbol or IEventSymbol or IFieldSymbol)) throw new InvalidOperationException($"{symbol.Name} is not a method, property, event or field.");
+        var solution = doc.Project.Solution;
+        var callers = await SymbolFinder.FindCallersAsync(symbol, solution);
+        return new
+        {
+            target = Node(symbol),
+            callers = callers.Where(c => c.Locations.Any(InRepo)).Take(300).Select(c => new
+            {
+                node = Node(c.CallingSymbol),
+                sites = c.Locations.Where(InRepo).Select(Location).ToList(),
+            }).ToList(),
+        };
+    }
+
+    /// <summary>Problems (Rider's solution-wide analysis): compiler errors and warnings in every project's sources.</summary>
+    async Task<object> SolutionDiagnostics()
+    {
+        var out_ = new List<object>();
+        foreach (var p in workspace!.CurrentSolution.Projects)
+        {
+            var c = await p.GetCompilationAsync();
+            if (c == null) continue;
+            foreach (var d in c.GetDiagnostics())
+            {
+                if (d.Severity is not (DiagnosticSeverity.Error or DiagnosticSeverity.Warning) || !InRepo(d.Location) || out_.Count >= 3000) continue;
+                var span = d.Location.GetLineSpan();
+                out_.Add(new { project = p.Name, file = Rel(span.Path), line = span.StartLinePosition.Line + 1, column = span.StartLinePosition.Character + 1, severity = d.Severity == DiagnosticSeverity.Error ? "error" : "warning", id = d.Id, message = d.GetMessage() });
+            }
+        }
+        return out_;
     }
 
     /// <summary>Renames the symbol at the cursor and every reference to it, like Visual Studio's Rename (F2).</summary>

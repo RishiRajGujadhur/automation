@@ -227,3 +227,27 @@ test('J12 Ctrl+Mouse Wheel changes the editor font size; View ▸ Reset Font Siz
   await page.getByRole('menuitem', { name: /Reset Font Size/ }).click();
   await expect.poll(size).toBe(before);
 });
+
+async function openCs(page: Page, file: string, text: string) {
+  await page.addInitScript(() => { if (!sessionStorage.getItem('seeded')) { localStorage.setItem('tas:prefs', JSON.stringify({ mode: 'advanced', autoSave: 'off' })); sessionStorage.setItem('seeded', '1'); } });
+  await page.goto('/#/features/editor');
+  await expect(page.getByText('Repository indexed')).toBeVisible();
+  await page.getByRole('navigation').getByRole('button', { name: file.split('/').pop(), exact: true }).first().click();
+  const src = page.getByLabel(`Source of ${file}`);
+  await src.locator('.cm-line', { hasText: text }).first().click();
+  return src;
+}
+
+test('J13 Copy Reference (Ctrl+Alt+Shift+C): fully qualified C# member, path:line in a feature', async ({ page, context }) => {
+  await context.grantPermissions(['clipboard-read', 'clipboard-write']);
+  await openCs(page, 'Steps/AuthSteps.cs', 'SignIn');
+  await page.keyboard.press('End');
+  await page.keyboard.press('ArrowLeft'); // inside the method body
+  await page.keyboard.press('Control+Alt+Shift+C');
+  await expect(page.getByText('Copied reference: Demo.AuthSteps.SignIn')).toBeVisible({ timeout: 60_000 });
+  expect(await page.evaluate(() => navigator.clipboard.readText())).toBe('Demo.AuthSteps.SignIn');
+  await page.getByRole('navigation').getByRole('button', { name: 'Login.feature', exact: true }).first().click();
+  await caretAt(page, 'signs in');
+  await page.keyboard.press('Control+Alt+Shift+C');
+  await expect(page.getByText('Copied reference: Features/Auth/Login.feature:7')).toBeVisible();
+});
