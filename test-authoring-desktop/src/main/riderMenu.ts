@@ -88,6 +88,7 @@ const ROWS: Record<'edit' | 'view' | 'navigate' | 'code' | 'tools' | 'help', Row
     ['Mute Breakpoints', 'mute-breakpoints'],
     null,
     ['Show History for Selection (Git)', 'line-history'],
+    ['Compare with Branch… (Git)', 'compare-branch'],
     null,
     ['Power Save Mode', 'power-save'],
   ],

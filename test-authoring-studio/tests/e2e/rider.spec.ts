@@ -1030,3 +1030,23 @@ test('J55 Git Log (Alt+9): commits of every branch with the graph; a commit show
   await panel.getByLabel('Filter commits').fill('base');
   await expect(list.getByRole('option')).toHaveCount(1);
 });
+
+test('J56 Compare with Branch…: the editor text against the file on another branch', async ({ page }) => {
+  await commitAll();
+  const { execFileSync } = await import('node:child_process');
+  const g = (...a: string[]) => execFileSync('git', ['-c', 'user.email=t@t', '-c', 'user.name=Ada', ...a], { cwd: root });
+  g('checkout', '-qb', 'feature/admin');
+  const login = path.join(root, 'Features/Auth/Login.feature');
+  await fs.writeFile(login, (await fs.readFile(login, 'utf8')).replace('"test-user"', '"admin"'));
+  g('commit', '-qam', 'admin');
+  g('checkout', '-q', '-');
+  await openFeature(page);
+  await caretAt(page, 'signs in');
+  await page.getByRole('button', { name: 'Tools menu' }).click();
+  await page.getByRole('menuitem', { name: /Compare with Branch/ }).click();
+  await page.getByRole('listbox', { name: 'Branches' }).getByRole('option', { name: 'feature/admin' }).click();
+  const dlg = page.getByRole('dialog', { name: 'Compare Files' });
+  await expect(dlg.getByRole('status')).toContainText('vs. feature/admin');
+  await expect(dlg).toContainText('-    When the user signs in as "admin"');
+  await expect(dlg).toContainText('+    When the user signs in as "test-user"');
+});

@@ -60,8 +60,8 @@ export type RiderHostProps = {
  * JetBrains Rider features: registers their commands (menus, palette, desktop menus) and hosts their popups, dialogs
  * and global keys. Editor keys live in editor/riderKeys.ts.
  */
-type Popup = { kind: 'line-history'; file: string; start: number; end: number } | { kind: 'copy-path'; items: { label: string; value: string }[] } | { kind: 'unwrap'; items: Unwrappable[] } | { kind: 'compare-with'; files: string[] } | { kind: 'compare-file'; patch: string; other: string } | { kind: 'select-in'; file: string } | { kind: 'scratch' } | { kind: 'scratches'; items: { file: string; modified: number }[] } | { kind: 'related'; items: { file: string; line: number; reason: string }[] } | { kind: 'recent-changes'; items: { file: string; id: string; at: string; reason: string }[] } | { kind: 'file-history'; file: string; current: string } | { kind: 'compare'; patch: string; what: string } | { kind: 'regexp'; initial: string } | { kind: 'evaluate'; initial: string } | { kind: 'tip' } | { kind: 'productivity' } | { kind: 'run' } | { kind: 'paste' } | { kind: 'template' } | { kind: 'surround' } | { kind: 'structure'; items: OutlineItem[]; current: number };
-const TITLES: Record<Popup['kind'], string> = { 'line-history': 'History for Selection', 'copy-path': 'Copy Path / Reference', unwrap: 'Unwrap / Remove', 'compare-with': 'Compare With…', 'compare-file': 'Compare Files', 'select-in': 'Select In', scratch: 'New Scratch File', scratches: 'Scratch Files', related: 'Related Files', 'recent-changes': 'Recent Changes', 'file-history': 'Local History', compare: 'Compare with Clipboard', regexp: 'Check RegExp', evaluate: 'Evaluate Expression', tip: 'Tip of the Day', productivity: 'Productivity Guide', run: 'Run Anything', paste: 'Paste from History', template: 'Insert Live Template', surround: 'Surround With', structure: 'File Structure' };
+type Popup = { kind: 'compare-branch'; branches: string[] } | { kind: 'line-history'; file: string; start: number; end: number } | { kind: 'copy-path'; items: { label: string; value: string }[] } | { kind: 'unwrap'; items: Unwrappable[] } | { kind: 'compare-with'; files: string[] } | { kind: 'compare-file'; patch: string; other: string } | { kind: 'select-in'; file: string } | { kind: 'scratch' } | { kind: 'scratches'; items: { file: string; modified: number }[] } | { kind: 'related'; items: { file: string; line: number; reason: string }[] } | { kind: 'recent-changes'; items: { file: string; id: string; at: string; reason: string }[] } | { kind: 'file-history'; file: string; current: string } | { kind: 'compare'; patch: string; what: string } | { kind: 'regexp'; initial: string } | { kind: 'evaluate'; initial: string } | { kind: 'tip' } | { kind: 'productivity' } | { kind: 'run' } | { kind: 'paste' } | { kind: 'template' } | { kind: 'surround' } | { kind: 'structure'; items: OutlineItem[]; current: number };
+const TITLES: Record<Popup['kind'], string> = { 'compare-branch': 'Compare with Branch', 'line-history': 'History for Selection', 'copy-path': 'Copy Path / Reference', unwrap: 'Unwrap / Remove', 'compare-with': 'Compare With…', 'compare-file': 'Compare Files', 'select-in': 'Select In', scratch: 'New Scratch File', scratches: 'Scratch Files', related: 'Related Files', 'recent-changes': 'Recent Changes', 'file-history': 'Local History', compare: 'Compare with Clipboard', regexp: 'Check RegExp', evaluate: 'Evaluate Expression', tip: 'Tip of the Day', productivity: 'Productivity Guide', run: 'Run Anything', paste: 'Paste from History', template: 'Insert Live Template', surround: 'Surround With', structure: 'File Structure' };
 
 function PowerSaveBadge() {
   useRiderCommands();
@@ -404,6 +404,12 @@ export default function RiderHost(props: RiderHostProps) {
         setPopup({ kind: 'line-history', file: a.file, start: st.doc.lineAt(r.from).number, end: st.doc.lineAt(r.to).number });
       } },
       { id: 'tool-gitlog', label: 'Git Log', menu: 'View', shortcut: 'Alt 9', run: () => { if (isBrowser()) { p.current.onNotice('The Git Log needs a folder indexed by the studio server.'); return; } p.current.onTool('gitlog'); } },
+      { id: 'compare-branch', label: 'Compare with Branch…', menu: 'Tools', run: () => {
+        const a = activeEditor();
+        if (!a || isBrowser()) { p.current.onNotice('Open a file of a studio-indexed Git repository first.'); return; }
+        target.current = a;
+        api<{ local: { name: string; current: boolean }[]; remote: string[] }>('/git/branches').then((b) => setPopup({ kind: 'compare-branch', branches: [...b.local.filter((l) => !l.current).map((l) => l.name), ...b.remote, ...b.local.filter((l) => l.current).map((l) => l.name)] }), (e) => p.current.onNotice((e as Error).message));
+      } },
       { id: 'carets-line-ends', label: 'Add Carets to Ends of Selected Lines', menu: 'Edit', shortcut: 'Alt Shift G', run: inEditor(caretsAtLineEnds) },
     ];
     return registerRider(list);
@@ -423,6 +429,17 @@ export default function RiderHost(props: RiderHostProps) {
     const { view } = target.current;
     const items = popup.items;
     body = <ListPopup label="File structure" placeholder="File structure: type to filter" empty="No matches." initial={popup.current} items={items.map((it, i) => ({ key: String(i), label: it.label, detail: `${it.kind} · line ${it.line}`, indent: it.depth }))} onPick={(k) => { const it = items[Number(k)]; goTo(view, it.line, it.column); closeAndFocus(); }} />;
+  }
+  if (popup?.kind === 'compare-branch' && target.current) {
+    const { view, file } = target.current;
+    body = <ListPopup label="Branches" placeholder="Compare with branch…" empty="No other branches." items={popup.branches.map((b) => ({ key: b, label: b }))} onPick={(ref) => {
+      api<{ text: string | null }>(`/git/at?file=${encodeURIComponent(file)}&ref=${encodeURIComponent(ref)}`).then((r) => {
+        const norm = (t: string) => t.replace(/\r\n/g, '\n');
+        const mine = norm(view.state.doc.toString()), theirs = norm(r.text ?? '');
+        const patch = mine === theirs ? '' : createTwoFilesPatch(`${file} (${ref})`, file, theirs, mine, '', '', { context: 3 }).split('\n').slice(2).join('\n');
+        setPopup({ kind: 'compare-file', patch, other: r.text === null ? `${ref} (the file does not exist there)` : ref });
+      }, (e) => p.current.onNotice((e as Error).message));
+    }} />;
   }
   if (popup?.kind === 'line-history') body = <LineHistory file={popup.file} start={popup.start} end={popup.end} />;
   if (popup?.kind === 'copy-path') {
