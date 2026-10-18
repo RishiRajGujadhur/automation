@@ -202,7 +202,7 @@ test('Rider features from the native menus: Structure, Run Anything, Terminal, N
   await expect(page.getByRole('region', { name: 'Structure' })).toBeVisible();
   await menu('Tools', 'Run Anything… (Ctrl twice)');
   await expect(page.getByRole('listbox', { name: 'Run Anything' })).toBeVisible();
-  await page.keyboard.press('Escape');
+  await page.getByRole('dialog', { name: 'Run Anything' }).getByRole('button', { name: 'Close dialog' }).click();
   await menu('View', 'Terminal');
   const screen = page.getByRole('region', { name: 'Terminal' }).locator('.terminal-host:not([hidden]) .xterm-rows');
   await expect(screen).toContainText('PS ', { timeout: 30_000 });
@@ -214,7 +214,7 @@ test('Rider features from the native menus: Structure, Run Anything, Terminal, N
   await page.getByRole('button', { name: 'Close Structure', exact: true }).click();
   await menu('Tools', 'New File from Template…');
   await expect(page.getByRole('listbox', { name: 'File templates' })).toBeVisible();
-  await page.keyboard.press('Escape');
+  await page.getByRole('dialog', { name: 'New from Template' }).getByRole('button', { name: 'Close dialog' }).click();
   await featureSet('VS essentials');
   await expect.poll(async () => (await menuLabels()).Tools).not.toContain('Run Anything… (Ctrl twice)');
 });
