@@ -515,3 +515,17 @@ test('J24 Distraction-Free Mode (View menu, Alt+Shift+Z): only the editor, centr
   await expect(page.locator('html')).not.toHaveAttribute('data-rider-mode', /./);
   await expect(page.getByRole('dialog')).toHaveCount(0);
 });
+
+test('J25 Presentation Mode: only the editor, full screen, large font; Exit restores', async ({ page }) => {
+  await openFeature(page);
+  const size = () => gherkin(page).evaluate((el) => parseFloat(getComputedStyle(el).fontSize));
+  const before = await size();
+  await page.getByRole('button', { name: 'View menu' }).click();
+  await page.getByRole('menuitem', { name: /Presentation Mode/ }).click();
+  await expect(page.locator('html')).toHaveAttribute('data-rider-mode', 'presentation');
+  await expect.poll(size).toBe(22);
+  await expect(page.locator('.app-header')).toBeHidden();
+  await page.getByRole('button', { name: 'Exit Presentation Mode' }).click();
+  await expect.poll(size).toBe(before);
+  await expect(page.locator('.app-header')).toBeVisible();
+});

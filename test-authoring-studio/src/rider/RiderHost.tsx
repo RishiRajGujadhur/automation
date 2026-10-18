@@ -188,6 +188,7 @@ export default function RiderHost(props: RiderHostProps) {
       { id: 'tool-terminal', label: 'Terminal', menu: 'View', shortcut: 'Alt F12', run: () => { if (isBrowser()) { p.current.onNotice('The terminal needs a folder indexed by the studio server.'); return; } p.current.onTool('terminal'); } },
       { id: 'run-anything', label: 'Run Anything…', menu: 'Tools', shortcut: 'Ctrl Ctrl', run: () => { if (isBrowser()) { p.current.onNotice('Run Anything needs a folder indexed by the studio server.'); return; } openPopup({ kind: 'run' }, false); } },
       { id: 'zen-mode', label: 'Distraction-Free Mode', menu: 'View', group: true, shortcut: 'Alt Shift Z', checked: () => layoutState().mode === 'zen', run: () => { toggleMode('zen'); riderChanged(); } },
+      { id: 'presentation-mode', label: 'Presentation Mode', menu: 'View', checked: () => layoutState().mode === 'presentation', run: () => { toggleMode('presentation'); riderChanged(); } },
       { id: 'carets-line-ends', label: 'Add Carets to Ends of Selected Lines', menu: 'Edit', shortcut: 'Alt Shift G', run: inEditor(caretsAtLineEnds) },
     ];
     return registerRider(list);

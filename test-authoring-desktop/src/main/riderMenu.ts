@@ -39,6 +39,7 @@ const ROWS: Record<'edit' | 'view' | 'navigate' | 'code' | 'tools' | 'help', Row
     ['Terminal', 'tool-terminal', 'Alt+F12'],
     null,
     ['Distraction-Free Mode', 'zen-mode', 'Alt+Shift+Z'],
+    ['Presentation Mode', 'presentation-mode'],
   ],
   navigate: [
     ['File Structure…', 'file-structure', 'CmdOrCtrl+Alt+F12'],
