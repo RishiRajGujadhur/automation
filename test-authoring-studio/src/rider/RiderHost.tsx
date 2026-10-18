@@ -22,6 +22,8 @@ import { insertTemplate, liveTemplates } from '../editor/snippets';
 import { surroundTemplates, surroundWith } from '../editor/surround';
 import { setUsages, wordUsages } from '../editor/usages';
 import { bookmarkByDigit } from '../editor/bookmarks';
+import { SELECT_IN_EXPLORER } from '../SolutionExplorer';
+import { desktop } from '../desktop';
 import { fileOutline, itemAt, type OutlineItem } from './outline';
 import type { RiderTool } from './RiderToolWindow';
 import RunAnything from './RunAnything';
@@ -47,14 +49,16 @@ export type RiderHostProps = {
   onNavigate: (loc: { file: string; line?: number; column?: number }) => void;
   /** Shows a Rider tool window in the bottom panel. */
   onTool: (tool: RiderTool) => void;
+  /** Shows the Explorer side bar. */
+  onExplorer: () => void;
 };
 
 /**
  * JetBrains Rider features: registers their commands (menus, palette, desktop menus) and hosts their popups, dialogs
  * and global keys. Editor keys live in editor/riderKeys.ts.
  */
-type Popup = { kind: 'scratch' } | { kind: 'scratches'; items: { file: string; modified: number }[] } | { kind: 'related'; items: { file: string; line: number; reason: string }[] } | { kind: 'recent-changes'; items: { file: string; id: string; at: string; reason: string }[] } | { kind: 'file-history'; file: string; current: string } | { kind: 'compare'; patch: string; what: string } | { kind: 'regexp'; initial: string } | { kind: 'evaluate'; initial: string } | { kind: 'tip' } | { kind: 'productivity' } | { kind: 'run' } | { kind: 'paste' } | { kind: 'template' } | { kind: 'surround' } | { kind: 'structure'; items: OutlineItem[]; current: number };
-const TITLES: Record<Popup['kind'], string> = { scratch: 'New Scratch File', scratches: 'Scratch Files', related: 'Related Files', 'recent-changes': 'Recent Changes', 'file-history': 'Local History', compare: 'Compare with Clipboard', regexp: 'Check RegExp', evaluate: 'Evaluate Expression', tip: 'Tip of the Day', productivity: 'Productivity Guide', run: 'Run Anything', paste: 'Paste from History', template: 'Insert Live Template', surround: 'Surround With', structure: 'File Structure' };
+type Popup = { kind: 'select-in'; file: string } | { kind: 'scratch' } | { kind: 'scratches'; items: { file: string; modified: number }[] } | { kind: 'related'; items: { file: string; line: number; reason: string }[] } | { kind: 'recent-changes'; items: { file: string; id: string; at: string; reason: string }[] } | { kind: 'file-history'; file: string; current: string } | { kind: 'compare'; patch: string; what: string } | { kind: 'regexp'; initial: string } | { kind: 'evaluate'; initial: string } | { kind: 'tip' } | { kind: 'productivity' } | { kind: 'run' } | { kind: 'paste' } | { kind: 'template' } | { kind: 'surround' } | { kind: 'structure'; items: OutlineItem[]; current: number };
+const TITLES: Record<Popup['kind'], string> = { 'select-in': 'Select In', scratch: 'New Scratch File', scratches: 'Scratch Files', related: 'Related Files', 'recent-changes': 'Recent Changes', 'file-history': 'Local History', compare: 'Compare with Clipboard', regexp: 'Check RegExp', evaluate: 'Evaluate Expression', tip: 'Tip of the Day', productivity: 'Productivity Guide', run: 'Run Anything', paste: 'Paste from History', template: 'Insert Live Template', surround: 'Surround With', structure: 'File Structure' };
 
 function PowerSaveBadge() {
   useRiderCommands();
@@ -258,6 +262,7 @@ export default function RiderHost(props: RiderHostProps) {
       [(e) => e.altKey && !e.ctrlKey && !e.shiftKey && !e.metaKey && e.key === 'F8', 'evaluate-expression'],
       [(e) => e.altKey && e.shiftKey && !e.ctrlKey && !e.metaKey && e.code === 'KeyC', 'recent-changes'],
       [(e) => (e.ctrlKey || e.metaKey) && e.altKey && e.shiftKey && e.key === 'Insert', 'new-scratch'],
+      [(e) => e.altKey && !e.ctrlKey && !e.shiftKey && !e.metaKey && e.key === 'F1', 'select-in'],
     ];
     // Ctrl+digit: go to numbered bookmark (Rider), when there is one with that digit.
     const digit = (e: KeyboardEvent) => {
@@ -348,6 +353,7 @@ export default function RiderHost(props: RiderHostProps) {
       { id: 'expand-all', label: 'Expand All', menu: 'Code', group: true, shortcut: 'Ctrl K, Ctrl J', run: inEditor(expandAll) },
       { id: 'collapse-all', label: 'Collapse All', menu: 'Code', shortcut: 'Ctrl K, Ctrl 0', run: inEditor(collapseAll) },
       { id: 'collapse-definitions', label: 'Collapse to Definitions', menu: 'Code', shortcut: 'Ctrl K, Ctrl 2', run: inEditor(collapseToDefinitions) },
+      { id: 'select-in', label: 'Select In…', menu: 'Navigate', group: true, shortcut: 'Alt F1', run: () => { const a = activeEditor(); if (!a) { p.current.onNotice('Open a file in the editor first.'); return; } setPopup({ kind: 'select-in', file: a.file }); } },
       { id: 'carets-line-ends', label: 'Add Carets to Ends of Selected Lines', menu: 'Edit', shortcut: 'Alt Shift G', run: inEditor(caretsAtLineEnds) },
     ];
     return registerRider(list);
@@ -367,6 +373,23 @@ export default function RiderHost(props: RiderHostProps) {
     const { view } = target.current;
     const items = popup.items;
     body = <ListPopup label="File structure" placeholder="File structure: type to filter" empty="No matches." initial={popup.current} items={items.map((it, i) => ({ key: String(i), label: it.label, detail: `${it.kind} · line ${it.line}`, indent: it.depth }))} onPick={(k) => { const it = items[Number(k)]; goTo(view, it.line, it.column); closeAndFocus(); }} />;
+  }
+  if (popup?.kind === 'select-in') {
+    const file = popup.file;
+    const dir = file.includes('/') ? file.slice(0, file.lastIndexOf('/')) : '.';
+    const targets = [
+      { key: 'explorer', label: 'Explorer', detail: 'reveal the file in the Solution Explorer' },
+      { key: 'structure', label: 'Structure', detail: 'the file\'s outline' },
+      ...(isBrowser() ? [] : [{ key: 'terminal', label: 'Terminal', detail: `a terminal in ${dir}` }]),
+      ...(desktop ? [{ key: 'files', label: 'File Explorer', detail: 'show the file in Windows Explorer' }] : []),
+    ];
+    body = <ListPopup label="Select in targets" placeholder="Select in… (Alt+F1)" empty="Nowhere to select it." items={targets} onPick={(k) => {
+      setPopup(null);
+      if (k === 'explorer') { p.current.onExplorer(); setTimeout(() => window.dispatchEvent(new Event(SELECT_IN_EXPLORER)), 50); }
+      else if (k === 'structure') p.current.onTool('structure');
+      else if (k === 'terminal') { const cmd = `Set-Location "${dir}"`; if (document.querySelector('.terminal-host:not([hidden])')) runInTerminal(cmd); else queueTerminalCommand(cmd); p.current.onTool('terminal'); }
+      else if (k === 'files' && desktop) void desktop.reveal(file);
+    }} />;
   }
   if (popup?.kind === 'scratch') {
     const kinds = [['cs', 'C#'], ['feature', 'Gherkin feature'], ['json', 'JSON'], ['xml', 'XML'], ['http', 'HTTP request'], ['md', 'Markdown'], ['txt', 'Plain text']];

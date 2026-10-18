@@ -80,6 +80,9 @@ function buildTree(files: { file: string; layer: string }[], prefix = ''): Node[
  * with file nesting (a feature shows the step files its steps bind to, and its generated code-behind),
  * Sync with Active Document, a pending-changes filter, Collapse All, Show All Files and search (Ctrl+;).
  */
+/** Reveal the active file in the Explorer (Select In ▸ Explorer). */
+export const SELECT_IN_EXPLORER = 'tas:select-in-explorer';
+
 export default function SolutionExplorer({ features, revision, activeFile, query, activeFolder, onQuery, onSelect, onOpenFile, onFolder, onNew, onSource, browserSolution, onFileOp: fileOpProp, onManagePackages, onNotice, onConfirm }: Props) {
   // After a rename, copy or delete the tree reloads itself too (not only when the index revision changes).
   const loads = useRef(0);
@@ -215,12 +218,22 @@ export default function SolutionExplorer({ features, revision, activeFile, query
   const toggle = (p: string, open?: boolean) => setCollapsed((prev) => { const next = new Set(prev); if (open ?? next.has(p)) next.delete(p); else next.add(p); return next; });
   const allFolders = () => { const s = new Set<string>(); const walk = (ns: Node[]) => ns.forEach((n) => { if (n.kind === 'folder') { s.add(n.path); walk(n.children); } }); walk(nodes); return s; };
   const collapseAll = () => setCollapsed(allFolders());
+  const activeFileRef = useRef(activeFile);
+  activeFileRef.current = activeFile;
   const sync = () => {
     if (!activeFile) return;
     const f = normalizeFeaturePath(activeFile);
     setCollapsed((prev) => { const next = new Set(prev); parentFolders(f).forEach((p) => next.delete(p)); for (const k of [...next]) if (k.startsWith('@')) next.delete(k); return next; });
     requestAnimationFrame(() => tree.current?.querySelector<HTMLElement>(`[data-path="${CSS.escape(f)}"]`)?.scrollIntoView({ block: 'center' }));
   };
+  // Select In ▸ Explorer (Rider, Alt+F1): reveal and select the active file.
+  const syncRef = useRef(sync);
+  syncRef.current = sync;
+  useEffect(() => {
+    const h = () => { syncRef.current(); requestAnimationFrame(() => requestAnimationFrame(() => tree.current?.querySelector<HTMLElement>(`[data-path="${CSS.escape(normalizeFeaturePath(activeFileRef.current ?? ''))}"] button, [data-path="${CSS.escape(normalizeFeaturePath(activeFileRef.current ?? ''))}"]`)?.focus())); };
+    window.addEventListener(SELECT_IN_EXPLORER, h);
+    return () => window.removeEventListener(SELECT_IN_EXPLORER, h);
+  }, []);
   // Opening a file reveals it (like Visual Studio's "Track Active Item").
   useEffect(() => { if (activeFile) setCollapsed((prev) => { const next = new Set(prev); parentFolders(normalizeFeaturePath(activeFile)).forEach((p) => next.delete(p)); return next; }); }, [activeFile]);
 

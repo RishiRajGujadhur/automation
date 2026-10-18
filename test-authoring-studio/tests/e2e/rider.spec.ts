@@ -891,3 +891,17 @@ test('J45 Collapse to Definitions (Ctrl+K, Ctrl+2), Expand All, Collapse All', a
   await page.keyboard.press('Control+0');
   await expect(src).not.toContainText('public class Folds');
 });
+
+test('J46 Select In… (Alt+F1): Explorer reveals the file, Terminal opens in its folder', async ({ page }) => {
+  await openFeature(page);
+  await page.getByRole('button', { name: 'Collapse all folders' }).click();
+  await caretAt(page, 'signs in');
+  await page.keyboard.press('Alt+F1');
+  await page.getByRole('listbox', { name: 'Select in targets' }).getByRole('option', { name: /^Explorer/ }).click();
+  await expect(page.getByRole('navigation').getByRole('button', { name: 'Login.feature', exact: true }).first()).toBeVisible();
+  await caretAt(page, 'signs in');
+  await page.keyboard.press('Alt+F1');
+  await page.getByLabel('Filter select in targets').fill('Terminal');
+  await page.keyboard.press('Enter');
+  await expect(page.getByRole('region', { name: 'Terminal' }).locator('.terminal-host:not([hidden]) .xterm-rows')).toContainText(`PS ${path.join(root, 'Features', 'Auth')}>`, { timeout: 30_000 });
+});

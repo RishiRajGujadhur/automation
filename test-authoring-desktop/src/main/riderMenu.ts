@@ -46,6 +46,7 @@ const ROWS: Record<'edit' | 'view' | 'navigate' | 'code' | 'tools' | 'help', Row
     ['Hide All Tool Windows', 'hide-tools', 'CmdOrCtrl+Shift+F12'],
   ],
   navigate: [
+    ['Select In…', 'select-in', 'Alt+F1'],
     ['Recent Changes…', 'recent-changes', 'Alt+Shift+C'],
     ['Numbered Bookmarks (Ctrl+Shift+digit, Ctrl+digit)', 'numbered-bookmarks'],
     ['Next Change', 'next-change', 'Alt+F5'],

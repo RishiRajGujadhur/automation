@@ -1090,7 +1090,7 @@ export default function App() {
         }}
       >
       <CreateStepDialog onOpen={(file, line) => editFile(file, line)} onIndex={setIndex} onNotice={setNotice} />
-      <RiderHost onNotice={setNotice} onNavigate={navigateTo} onTool={showRiderTool} />
+      <RiderHost onNotice={setNotice} onNavigate={navigateTo} onTool={showRiderTool} onExplorer={() => { setTab('Features'); if (view !== 'code' && view !== 'editor') setView('editor'); setSidebarView('explorer'); setPrefs({ sidebar: true }); }} />
       <SearchPalette
         open={paletteOpen}
         onOpenChange={setPaletteOpen}
