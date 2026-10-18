@@ -36,7 +36,8 @@ import { eolOf, withEol, SET_EOL_EVENT, type Eol } from './editor/lineSeparator'
 import RiderHost from './rider/RiderHost';
 import RiderMenubar from './rider/RiderMenubar';
 import RiderToolWindow, { RIDER_TOOLS, type RiderTool } from './rider/RiderToolWindow';
-import { menuEntries, runRider, useRiderCommands } from './rider/commands';
+import { menuEntries, runRider, useRiderCommands, commandOn } from './rider/commands';
+import { featureOn, disabledCommands, onFeaturesChanged } from './features';
 import { studioLog } from './outputLog';
 import RecentPopup from './RecentPopup';
 import LocalHistory from './LocalHistory';
@@ -448,7 +449,7 @@ export default function App() {
   const [outputOpen, setOutputOpen] = useLocalState('outputOpen', false);
   const [outputSource, setOutputSource] = useLocalState<OutputSource>('outputSource', 'build');
   const openTodoRef = useRef(() => {});
-  const openTodo = () => { setTodoOpen(true); setDockTab('todo'); if (tab !== 'Features' || (view !== 'code' && view !== 'editor')) { setTab('Features'); setView('editor'); } };
+  const openTodo = () => { if (!featureOn('todo-window')) { setNotice('The TODO window is turned off in Settings ▸ Features.'); return; } setTodoOpen(true); setDockTab('todo'); if (tab !== 'Features' || (view !== 'code' && view !== 'editor')) { setTab('Features'); setView('editor'); } };
   openTodoRef.current = openTodo;
   const openOutput = (source?: OutputSource) => { setOutputOpen(true); setDockTab('output'); if (source) setOutputSource(source); if (tab !== 'Features' || (view !== 'code' && view !== 'editor')) { setTab('Features'); setView('editor'); } };
   useEffect(() => { if (build.status === 'running') setDockTab('build'); }, [build.status]); // eslint-disable-line react-hooks/exhaustive-deps
@@ -538,6 +539,10 @@ export default function App() {
     window.addEventListener('keydown', h);
     return () => window.removeEventListener('keydown', h);
   }, []);
+  // Notices from places without access to setNotice (e.g. a turned-off feature's command).
+  useEffect(() => { const h = (e: Event) => setNotice((e as CustomEvent<string>).detail); window.addEventListener('tas:notice', h); return () => window.removeEventListener('tas:notice', h); }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  // The desktop app's native menus hide the commands of turned-off features.
+  useEffect(() => { const push = () => desktop?.setDisabledCommands?.(disabledCommands()); push(); return onFeaturesChanged(push); }, []);
   // Search Everywhere (Rider): press Shift twice.
   useEffect(() => {
     let last = 0, other = false;
@@ -545,7 +550,7 @@ export default function App() {
     const up = (e: KeyboardEvent) => {
       if (e.key !== 'Shift') return;
       const now = Date.now();
-      if (!other && now - last < 400) { last = 0; setModal('goto'); } else last = now;
+      if (!other && now - last < 400 && featureOn('search-everywhere')) { last = 0; setModal('goto'); } else last = now;
       other = false;
     };
     window.addEventListener('keydown', down, true);
@@ -1119,7 +1124,7 @@ export default function App() {
           { label: 'Preferences', run: () => setModal('preferences') },
           { label: 'Toggle focus mode', run: () => setPrefs({ focus: !prefs.focus }), shortcut: 'Ctrl .' },
           { label: 'Copy link to this page', run: () => copyText(location.href).then((ok) => setNotice(ok ? 'Link copied.' : 'Clipboard unavailable.')) },
-          ...riderList.map((c) => ({ label: `${c.menu}: ${c.label}`, shortcut: c.shortcut, run: () => { runRider(c.id, 'palette'); } })),
+          ...riderList.filter((c) => commandOn(c.id)).map((c) => ({ label: `${c.menu}: ${c.label}`, shortcut: c.shortcut, run: () => { runRider(c.id, 'palette'); } })),
           ...designTools.map((d) => ({ label: `Test Design: ${d.label}`, run: () => { try { localStorage.setItem('tas:design:tool', JSON.stringify(d.id)); } catch { /* storage blocked */ } setDesignKey((k) => k + 1); setTab('Test Design'); } })),
         ]}
       />
@@ -1915,7 +1920,7 @@ export default function App() {
               <GherkinEditor
                   onHooks={(line) => { if (feature) void showHooks(feature.file, line); }}
                   onDefineSteps={feature ? () => setModal('define-steps') : undefined}
-                  onHistory={feature && fileSrc.kind !== 'browser' ? () => setModal('history') : undefined}
+                  onHistory={feature && fileSrc.kind !== 'browser' && featureOn('local-history') ? () => setModal('history') : undefined}
                 file={feature?.file}
                 runMarks={feature ? marksFor(feature.file) : undefined}
                 onRunLine={(line, debug) => feature && runLine(feature.file, line, debug)}

@@ -434,6 +434,8 @@ app.post('/api/workspace', async (req, res) => {
   const next = configSchema.parse(req.body);
   clearTimeout(rescanTimer);
   if (next.repositoryRoot !== config.repositoryRoot || next.solution !== config.solution) tests.reset();
+  // Breakpoints are kept by repository-relative path: those of the previous folder would land on unrelated files.
+  if (next.repositoryRoot !== config.repositoryRoot) debug.clearBreakpoints();
   const scanned = await scan(next);
   config = next;
   activate(scanned);

@@ -1,6 +1,8 @@
 import { Compartment, EditorSelection, Prec, type Extension } from '@codemirror/state';
 import { indentationMarkers } from '@replit/codemirror-indentation-markers';
 import { highlightSelectionMatches } from '@codemirror/search';
+import { featureOn, onFeaturesChanged } from '../features';
+import { todoHighlight } from './todoHighlight';
 import { EditorView, ViewPlugin, highlightWhitespace, highlightTrailingWhitespace, rectangularSelection, keymap } from '@codemirror/view';
 
 /** View ▸ Active Editor options (Rider): soft wraps, …, shared by every editor and remembered. */
@@ -9,6 +11,8 @@ const KEY = 'tas:rider:view';
 const DEFAULTS: ViewOptions = { softWrap: false, whitespace: false, fontSize: null };
 let options: ViewOptions = (() => { try { return { ...DEFAULTS, ...JSON.parse(localStorage.getItem(KEY) ?? '{}') }; } catch { return DEFAULTS; } })();
 const listeners = new Set<() => void>();
+// Settings ▸ Features turn some of these on and off too.
+onFeaturesChanged(() => { for (const l of listeners) l(); });
 export const viewOptions = () => options;
 export function setViewOptions(next: Partial<ViewOptions>) {
   options = { ...options, ...next };
@@ -54,6 +58,7 @@ const column = new Compartment();
 const numbers = new Compartment();
 const guides = new Compartment();
 const caretUsages = new Compartment();
+const todos = new Compartment();
 // Highlight usages of the identifier at the caret (Rider's default): whole-word matches of the word under the caret.
 const wordAtCaret = [highlightSelectionMatches({ highlightWordAroundCursor: true, minSelectionLength: 2, wholeWords: true }), EditorView.baseTheme({ '.cm-selectionMatch': { backgroundColor: 'rgba(98, 166, 255, 0.18)' } })];
 // Indent guides (Rider shows them by default): a thin line per indentation level, the active block's brighter.
@@ -63,7 +68,7 @@ const hideNumbers = [EditorView.editorAttributes.of({ class: 'cm-no-line-numbers
 const spaces = new Compartment();
 const font = new Compartment();
 const fontTheme = (px: number | null) => (px ? EditorView.theme({ '&': { fontSize: `${px}px` }, '.cm-content, .cm-gutters': { fontSize: `${px}px` } }) : []);
-const extensionsFor = (o: ViewOptions) => ({ caret: o.noCaretUsages ? [] : wordAtCaret, guides: o.hideIndentGuides ? [] : indentGuides, numbers: o.hideLineNumbers ? hideNumbers : [], column: o.columnMode ? columnMode : [], font: fontTheme(o.fontSize), wrap: o.softWrap ? EditorView.lineWrapping : [], spaces: o.whitespace ? [highlightWhitespace(), highlightTrailingWhitespace()] : [] });
+const extensionsFor = (o: ViewOptions) => ({ todos: featureOn('todo-highlighting') ? todoHighlight : [], caret: o.noCaretUsages || !featureOn('highlight-usages') ? [] : wordAtCaret, guides: o.hideIndentGuides || !featureOn('indent-guides') ? [] : indentGuides, numbers: o.hideLineNumbers ? hideNumbers : [], column: o.columnMode ? columnMode : [], font: fontTheme(o.fontSize), wrap: o.softWrap ? EditorView.lineWrapping : [], spaces: o.whitespace ? [highlightWhitespace(), highlightTrailingWhitespace()] : [] });
 
 /** Applies the options to an editor and follows later changes. */
 export function viewOptionsExtension(): Extension {
@@ -76,14 +81,15 @@ export function viewOptionsExtension(): Extension {
     numbers.of(now.numbers),
     guides.of(now.guides),
     caretUsages.of(now.caret),
+    todos.of(now.todos),
     ViewPlugin.fromClass(class {
       off: () => void;
       constructor(view: EditorView) {
-        const apply = () => { const e = extensionsFor(options); view.dispatch({ effects: [wrap.reconfigure(e.wrap), spaces.reconfigure(e.spaces), font.reconfigure(e.font), column.reconfigure(e.column), numbers.reconfigure(e.numbers), guides.reconfigure(e.guides), caretUsages.reconfigure(e.caret)] }); };
+        const apply = () => { const e = extensionsFor(options); view.dispatch({ effects: [wrap.reconfigure(e.wrap), spaces.reconfigure(e.spaces), font.reconfigure(e.font), column.reconfigure(e.column), numbers.reconfigure(e.numbers), guides.reconfigure(e.guides), caretUsages.reconfigure(e.caret), todos.reconfigure(e.todos)] }); };
         listeners.add(apply);
         // Ctrl+Mouse Wheel changes the font size of the editors (Rider's "Change font size with Ctrl+Mouse Wheel").
         const wheel = (e: WheelEvent) => {
-          if (!(e.ctrlKey || e.metaKey) || !e.deltaY) return;
+          if (!(e.ctrlKey || e.metaKey) || !e.deltaY || !featureOn('font-zoom')) return;
           e.preventDefault();
           changeFontSize(e.deltaY < 0 ? 1 : -1, view);
         };

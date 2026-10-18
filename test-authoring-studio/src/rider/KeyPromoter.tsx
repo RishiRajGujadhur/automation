@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Keyboard, X } from 'lucide-react';
 import { PROMOTE_EVENT, type Promotion } from './commands';
+import { featureOn } from '../features';
 
 const OFF = 'tas:rider:keyPromoterOff';
 export const keyPromoterOn = () => { try { return localStorage.getItem(OFF) !== '1'; } catch { return true; } };
@@ -12,7 +13,7 @@ export default function KeyPromoter() {
   useEffect(() => {
     let t = 0;
     const h = (e: Event) => {
-      if (!keyPromoterOn()) return;
+      if (!keyPromoterOn() || !featureOn('key-promoter')) return;
       setShown((e as CustomEvent<Promotion>).detail);
       clearTimeout(t);
       t = window.setTimeout(() => setShown(null), 6000);

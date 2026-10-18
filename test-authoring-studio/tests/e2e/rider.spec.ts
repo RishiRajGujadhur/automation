@@ -779,7 +779,7 @@ test('J40 Code Cleanup (Ctrl+K, Ctrl+E): C# usings and formatting; Gherkin forma
   const src = await openCs(page, 'Steps/Messy.cs', 'class Messy');
   await page.keyboard.press('Control+K');
   await page.keyboard.press('Control+E');
-  await expect(page.getByText(/Code Cleanup: formatted, 1 unnecessary using removed/)).toBeVisible({ timeout: 60_000 });
+  await expect(page.getByText(/Code Cleanup: formatted, 1 unnecessary using removed/).first()).toBeVisible({ timeout: 60_000 });
   const doc = (await selection(page)).doc;
   expect(doc).not.toContain('using System.Text;');
   expect(doc).toContain('public void M()');

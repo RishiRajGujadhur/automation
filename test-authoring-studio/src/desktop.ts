@@ -9,6 +9,8 @@ type DesktopBridge = {
   versions: Record<string, string>;
   pickFolder(title?: string): Promise<string | null>;
   openSolution?(): Promise<void>;
+  /** Rider command ids whose feature is off (Settings ▸ Features): hidden from the native menus. */
+  setDisabledCommands?(ids: string[]): void;
   openInEditor(file: string, line?: number): Promise<string>;
   copyPath(file: string): Promise<string>;
   reveal(file: string): Promise<void>;

@@ -2,10 +2,9 @@ import { EditorSelection, Prec, StateEffect, StateField, type EditorState, type 
 import { EditorView, keymap } from '@codemirror/view';
 import { insertNewlineAndIndent } from '@codemirror/commands';
 import { selectNextOccurrence, SearchCursor } from '@codemirror/search';
-import { noteUsage, runRider } from '../rider/commands';
+import { noteUsage, runRider, commandOn } from '../rider/commands';
 import { pushClipboard } from '../rider/clipboardRing';
 import { usageHighlights } from './usages';
-import { todoHighlight } from './todoHighlight';
 import { moveStatement } from './moveStatement';
 import { gotoChange, rollbackLines } from './changeGutter';
 import { completeStatement } from './completeStatement';
@@ -245,7 +244,7 @@ function selectedText(view: EditorView) {
   return ranges.map((r) => st.sliceDoc(r.from, r.to)).join(st.lineBreak);
 }
 /** A key that opens a Rider popup (handled by RiderHost). */
-const opens = (key: string, id: string) => ({ key, preventDefault: true, run: () => runRider(id, 'key') });
+const opens = (key: string, id: string) => ({ key, run: () => runRider(id, 'key') });
 
 /** Block comment tokens by file type (Gherkin has none: its lines get # instead). */
 const blockTokens = (file: string): [string, string] | null => (/\.(xml|xaml|csproj|props|targets|config|html?|resx|runsettings|md)$/i.test(file) ? ['<!--', '-->'] : /\.(cs|js|ts|tsx|mjs|css|scss|json)$/i.test(file) ? ['/*', '*/'] : null);
@@ -285,7 +284,7 @@ export function blockComment(file: string) {
   };
 }
 
-const keyed = (key: string, id: string, run: (v: EditorView) => boolean) => ({ key, preventDefault: true, run: (v: EditorView) => { noteUsage(id, 'key'); return run(v); } });
+const keyed = (key: string, id: string, run: (v: EditorView) => boolean) => ({ key, run: (v: EditorView) => { if (!commandOn(id)) return false; noteUsage(id, 'key'); return run(v); } });
 
 /** Rider editing actions shared by the code and Gherkin editors. */
 export function riderKeys(file = ''): Extension {
@@ -305,16 +304,16 @@ export function riderKeys(file = ''): Extension {
   const ctrlAlt = EditorView.domEventHandlers({
     keydown(e, view) {
       // Ctrl+Shift+/ (the key reads "?" with Shift on most layouts).
-      if ((e.ctrlKey || e.metaKey) && e.shiftKey && !e.altKey && e.code === 'Slash') { e.preventDefault(); noteUsage('block-comment', 'key'); return blockComment(file)(view); }
+      if ((e.ctrlKey || e.metaKey) && e.shiftKey && !e.altKey && e.code === 'Slash' && commandOn('block-comment')) { e.preventDefault(); noteUsage('block-comment', 'key'); return blockComment(file)(view); }
       if (!(e.ctrlKey || e.metaKey) || !e.altKey) return false;
       const c = chords.find(([code, shift]) => code === e.code && shift === e.shiftKey);
-      if (!c) return false;
+      if (!c || !commandOn(c[2])) return false;
       e.preventDefault();
       noteUsage(c[2], 'key');
       return c[3](view);
     },
   });
-  return [selStack, recordCopies, usageHighlights(), todoHighlight, Prec.highest(ctrlAlt), Prec.high(keymap.of([
+  return [selStack, recordCopies, usageHighlights(), Prec.highest(ctrlAlt), Prec.high(keymap.of([
     opens('Mod-Shift-v', 'paste-history'),
     opens('Mod-j', 'live-template'),
     opens('Mod-k Mod-e', 'code-cleanup'),

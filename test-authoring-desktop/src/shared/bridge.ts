@@ -9,6 +9,7 @@ export type DesktopBridge = {
   pickFolder(title?: string): Promise<string | null>;
   /** File ▸ Open Project/Solution: the native file dialog (.sln / .slnx / .csproj), then opens it. */
   openSolution?(): Promise<void>;
+  setDisabledCommands?(ids: string[]): void;
   /** Opens a repository file (relative to the current repository root) in the OS default app. */
   openInEditor(file: string, line?: number): Promise<string>;
   /** Copies the absolute path of a repository file. */
@@ -35,6 +36,7 @@ export const IPC = {
   progress: 'desktop:progress',
   theme: 'desktop:theme',
   menu: 'desktop:menu',
+  disabledCommands: 'desktop:disabled-commands',
   dropFolder: 'desktop:drop-folder',
   copyPath: 'desktop:copy-path',
 } as const;

@@ -9,4 +9,6 @@ export const ctx: {
   quitting?: boolean;
   /** K8: opens another window on the same API. */
   newWindow?: () => void;
+  /** Rider commands of features turned off in the studio's Settings ▸ Features (hidden from the native menus). */
+  disabledCommands?: string[];
 } = { origin: '' };

@@ -45,7 +45,8 @@ test.beforeAll(async () => {
   page = await app.firstWindow();
   await page.waitForURL(/127\.0\.0\.1:\d+\/#\//, { timeout: 30_000 });
   await app.evaluate(({ BrowserWindow }) => { const w = BrowserWindow.getAllWindows()[0]; w.unmaximize(); w.setContentSize(1440, 900); w.center(); });
-  await page.evaluate(() => { localStorage.setItem('tas:prefs', JSON.stringify({ mode: 'advanced' })); });
+  // Every feature on for the screenshots (the desktop app starts with the Visual Studio essentials).
+  await page.evaluate(() => { localStorage.setItem('tas:prefs', JSON.stringify({ mode: 'advanced' })); localStorage.setItem('tas:features', JSON.stringify({ preset: 'all' })); });
   await call('/solution/open', { path: path.join(repo, 'Calculator.csproj') });
   await page.goto(page.url().replace(/#.*$/, '#/features/editor'));
   await page.reload();

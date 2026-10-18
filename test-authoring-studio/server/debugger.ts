@@ -73,6 +73,8 @@ export class Debugger extends EventEmitter {
   }
   get active() { return ['building', 'starting', 'running', 'paused'].includes(this.state.status); }
 
+  /** Another folder was opened: its paths mean other files, so the old breakpoints go (not during a session). */
+  clearBreakpoints() { if (!this.active) this.update({ breakpoints: {} }); }
   /** Replaces the breakpoints of one repository file; sent to the debugger right away when a session is live. */
   async setBreakpoints(root: string, file: string, specs: BreakpointSpec[]) {
     const byLine = new Map<number, BreakpointSpec>();

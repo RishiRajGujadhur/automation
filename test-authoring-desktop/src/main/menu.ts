@@ -64,7 +64,7 @@ export function buildMenu() {
   const isMac = process.platform === 'darwin';
   const s = read();
   const toggle = (label: string, key: keyof Shape, after?: (v: boolean) => void, def = false): MenuItemConstructorOptions => ({ label, type: 'checkbox', checked: (s[key] as boolean | undefined) ?? def, click: (i) => { write({ [key]: i.checked } as Partial<Shape>); after?.(i.checked); buildMenu(); } });
-  const rider = riderMenus((id) => send('rider', id));
+  const rider = riderMenus((id) => send('rider', id), ctx.disabledCommands);
   const template: MenuItemConstructorOptions[] = [
     ...(isMac ? [{ role: 'appMenu' as const }] : []),
     {
@@ -325,7 +325,7 @@ export function navigateForward() { const h = ctx.win?.webContents.navigationHis
 function desktopShortcuts() {
   const rows = [
     ['Ctrl+Shift+O', 'Open repository'], ['Ctrl+Shift+T', 'Reopen last closed repository'], ['Ctrl+N', 'New feature'], ['Ctrl+Shift+R', 'Start a recording'],
-    ['F5 / F10 / F11', 'Debug: continue / step over / step into'], ['Ctrl+Alt+R', 'Rescan repository'], ['Ctrl+,', 'Preferences'], ['Ctrl+Shift+P', 'Command palette'], ['Ctrl+L', 'Copy link to this page'], ['Ctrl+Shift+V', 'Paste as plain text'],
+    ['F5 / F10 / F11', 'Debug: continue / step over / step into'], ['Ctrl+Alt+R', 'Rescan repository'], ['Ctrl+,', 'Preferences'], ['Ctrl+Shift+P', 'Command palette'], ['Ctrl+L', 'Copy link to this page'], ['Ctrl+Shift+V', 'Paste from History'],
     ['Alt+1…5', 'Pages'], ['Alt+← / Alt+→', 'Back / forward (also mouse buttons)'], ['Ctrl+Shift+N', 'New window'], ['Ctrl + / − / 0', 'Zoom'], ['Shift+Alt+Enter', 'Full screen (Esc leaves)'],
     ['Ctrl+Alt+T', 'Show/hide the app (when enabled)'], ['F1', 'Studio shortcuts'],
   ];

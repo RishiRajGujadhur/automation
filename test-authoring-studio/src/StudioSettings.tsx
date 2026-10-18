@@ -4,7 +4,7 @@ import * as Yup from 'yup';
 import CodeMirror from '@uiw/react-codemirror';
 import { StreamLanguage } from '@codemirror/language';
 import { gherkin } from '@codemirror/legacy-modes/mode/gherkin';
-import { Download, Trash2, RotateCcw, Search, Settings2, Palette, Code2, Accessibility, PanelLeft, Network, Activity, FolderCog, HardDrive, Keyboard, X, Cpu, Info, type LucideIcon } from 'lucide-react';
+import { Download, Trash2, RotateCcw, Search, Settings2, Palette, Code2, Accessibility, PanelLeft, Network, Activity, FolderCog, HardDrive, Keyboard, X, Cpu, Info, ToggleRight, type LucideIcon } from 'lucide-react';
 import { api } from './api';
 import { TextField } from './forms';
 import { Switch as SwitchPrimitive, Segmented, usePrefs, useConfirm, useAlgorithms, Tip } from './radix2';
@@ -15,6 +15,7 @@ import { appThemes, editorThemes, resolveEditorTheme, type AppThemeId, type Edit
 import { labelled } from './editor/a11y';
 import { accents, contrast } from './accents';
 import { defaultPrefs } from './radix2';
+import { FEATURES, GROUPS, featureOn, featurePreset, setFeature, setFeaturePreset, setFeatures, useFeatures } from './features';
 
 type Settings = { webPort: number; apiPort: number; tracing: { enabled: boolean; screenshots: boolean; snapshots: boolean; sources: boolean } };
 type Trace = { name: string; size: number; modified: string };
@@ -34,6 +35,7 @@ const sections: { id: string; label: string; icon: LucideIcon }[] = [
   { id: 'Ports', label: 'Ports', icon: Network },
   { id: 'Playwright tracing', label: 'Playwright tracing', icon: Activity },
   { id: 'Workspace', label: 'Workspace', icon: FolderCog },
+  { id: 'Features', label: 'Features', icon: ToggleRight },
   { id: 'Algorithms', label: 'Algorithms', icon: Cpu },
   { id: 'Storage', label: 'Storage', icon: HardDrive },
   { id: 'Shortcuts', label: 'Keyboard shortcuts', icon: Keyboard },
@@ -73,6 +75,10 @@ export default function StudioSettings({ onNotice, onWorkspace, shortcuts, onClo
   const cacheCount = cachedKeys().length;
   const sw = (id: string, checked: boolean, onChange: (v: boolean) => void, label: string, disabled = false) => <SwitchPrimitive id={id} label={<span className="sr-only">{label}</span>} checked={checked} onCheckedChange={onChange} disabled={disabled} />;
   const custom = algo.preset === 'custom';
+  // Re-render on feature switches (and know whether they differ from the preset).
+  useFeatures();
+  const featureVersion = FEATURES.map((f) => (featureOn(f.id) ? 1 : 0)).join('');
+  const customized = FEATURES.some((f) => featureOn(f.id) !== (featurePreset() === 'all' || f.essential));
 
   const rows: Row[] = useMemo(() => [
     // General
@@ -223,12 +229,40 @@ export default function StudioSettings({ onNotice, onWorkspace, shortcuts, onClo
         { id: `algo-cat-${c}`, section: 'Algorithms', title: c, description: `${onCount} of ${list.length} on · used in ${list[0].usedIn}.`, keywords: list.map((x) => x.name).join(' '), control: sw(`algo-cat-${c.replace(/\W/g, '')}`, onCount === list.length, (v) => algo.set(Object.fromEntries(list.map((x) => [x.id, v]))), `All ${c} algorithms`, !custom) },
         ...list.map((x): Row => ({ id: `algo-${x.id}`, sub: true, section: 'Algorithms', title: x.name, tip: x.tooltip, description: x.tooltip.split('. ')[0].replace(/\.$/, '') + '.', keywords: `${x.id} ${x.tooltip} ${c}`, control: sw(`algo-${x.id}`, algo.on(x.id), (v) => algo.set({ [x.id]: v }), x.name, !custom) })),
       ];
-    }),    // Storage    { id: 'cards', section: 'Storage', title: 'Reset card states', description: 'Every collapsible card returns to its default open or closed state.', keywords: 'collapse cards reset', control: <Button variant="ghost" size="small" onClick={async () => { if (await confirm({ title: 'Reset collapsed cards?', description: 'Every card returns to its default open or closed state.', confirm: 'Reset cards' })) { cachedKeys().filter((k) => k.startsWith('tas:open:') || k.startsWith('tas:card:')).forEach((k) => localStorage.removeItem(k)); location.reload(); } }}><RotateCcw size={13} aria-hidden="true" />Reset card states</Button> },
+    }),
+    // Features (like VS Code's feature settings): every optional IDE feature on or off.
+    {
+      id: 'features-preset', section: 'Features', title: 'Feature set',
+      description: `${FEATURES.filter((f) => featureOn(f.id)).length} of ${FEATURES.length} features on. Visual Studio essentials: only what Visual Studio 2026 has on by default (the desktop app's default). All features: every JetBrains Rider–style feature too.${customized ? ' Some switches differ from the preset.' : ''}`,
+      keywords: 'features enable disable essentials visual studio rider all preset turn off on',
+      control: (
+        <span className="features-preset">
+          <Segmented label="Feature set" value={featurePreset()} onValueChange={(v) => { setFeaturePreset(v as 'essentials' | 'all'); onNotice(v === 'all' ? 'All features on.' : 'Only the Visual Studio essentials are on.'); }} options={[{ value: 'essentials', label: 'VS essentials' }, { value: 'all', label: 'All features' }]} />
+          {customized && <Button variant="ghost" size="small" onClick={() => setFeaturePreset(featurePreset())}><RotateCcw size={13} aria-hidden="true" />Reset switches</Button>}
+        </span>
+      ),
+    },
+    ...GROUPS.flatMap((g): Row[] => {
+      const list = FEATURES.filter((f) => f.group === g);
+      const on = list.filter((f) => featureOn(f.id)).length;
+      return [
+        { id: `features-${g}`, section: 'Features', title: g, description: `${on} of ${list.length} on.`, keywords: list.map((f) => `${f.label} ${f.description}`).join(' '), control: sw(`features-group-${g.replace(/\W/g, '')}`, on === list.length, (v) => setFeatures(Object.fromEntries(list.map((f) => [f.id, v]))), `All ${g} features`) },
+        ...list.map((f): Row => ({
+          id: `feature-${f.id}`, section: 'Features', sub: true, title: f.label,
+          description: `${f.description}${f.essential ? ` Visual Studio: ${f.vs ?? 'on by default'}.` : ''}`,
+          keywords: `${f.id} ${f.group} ${f.essential ? 'essential visual studio' : 'rider optional'} ${f.vs ?? ''}`,
+          tip: f.essential ? 'Essential: on by default in Visual Studio 2026' : 'Optional: off by default in the desktop app',
+          control: sw(`feature-${f.id}`, featureOn(f.id), (v) => setFeature(f.id, v), f.label),
+        })),
+      ];
+    }),
+    // Storage
+    { id: 'cards', section: 'Storage', title: 'Reset card states', description: 'Every collapsible card returns to its default open or closed state.', keywords: 'collapse cards reset', control: <Button variant="ghost" size="small" onClick={async () => { if (await confirm({ title: 'Reset collapsed cards?', description: 'Every card returns to its default open or closed state.', confirm: 'Reset cards' })) { cachedKeys().filter((k) => k.startsWith('tas:open:') || k.startsWith('tas:card:')).forEach((k) => localStorage.removeItem(k)); location.reload(); } }}><RotateCcw size={13} aria-hidden="true" />Reset card states</Button> },
     { id: 'cache', section: 'Storage', title: 'Clear cached UI state', description: `${cacheCount} item${cacheCount === 1 ? '' : 's'} stored in this browser: drafts, preferences, layout and history. Repository files are not affected.`, keywords: 'cache localstorage clear reset delete', control: <Button variant="danger" size="small" disabled={!cacheCount} onClick={async () => { if (await confirm({ title: 'Clear all cached UI state?', description: 'Removes drafts, preferences, layout and history stored in this browser, then reloads. Repository files are not touched.', confirm: 'Clear cache', danger: true })) { cachedKeys().forEach((k) => localStorage.removeItem(k)); location.reload(); } }}><Trash2 size={13} aria-hidden="true" />Clear cache</Button> },
     // Shortcuts
     { id: 'shortcuts', section: 'Shortcuts', title: 'All shortcuts', keywords: shortcuts.map((s) => s.join(' ')).join(' '), block: <dl className="shortcut-list">{shortcuts.map(([k, d]) => <div key={k} className="shortcut-row"><dt><kbd>{k}</kbd></dt><dd>{d}</dd></div>)}</dl> },
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  ], [prefs, settings, traces, error, cacheCount, editor, algo]);
+  ], [prefs, settings, traces, error, cacheCount, editor, algo, featureVersion]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const q = query.trim().toLowerCase();
   const matches = q ? rows.filter((r) => `${r.section} ${r.title} ${r.description ?? ''} ${r.keywords ?? ''}`.toLowerCase().includes(q)) : rows.filter((r) => r.section === section);

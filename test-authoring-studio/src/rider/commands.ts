@@ -1,4 +1,6 @@
 import { useSyncExternalStore } from 'react';
+import { commandOn, featureOfCommand, onFeaturesChanged } from '../features';
+export { commandOn };
 
 /**
  * JetBrains Rider features: one registry of commands shown in the web menu bar, the native desktop menus (which send
@@ -27,6 +29,8 @@ export const useRiderCommands = () => { useSyncExternalStore((l) => { listeners.
 export const riderCommands = () => commands;
 /** Re-renders menus that show checked state. */
 export const riderChanged = changed;
+// Menus and the palette follow Settings ▸ Features.
+onFeaturesChanged(changed);
 
 /** Registers (or replaces, by id) commands; returns a function that removes them. */
 export function registerRider(list: RiderCommand[]) {
@@ -54,6 +58,11 @@ export type Promotion = { label: string; shortcut: string; times: number };
 export function runRider(id: string, via: Via = 'menu') {
   const c = commands.find((x) => x.id === id);
   if (!c) return false;
+  if (!commandOn(id)) {
+    // A key of a turned-off feature does nothing; a menu or palette entry is hidden anyway.
+    if (via !== 'key') window.dispatchEvent(new CustomEvent('tas:notice', { detail: `${featureOfCommand(id)?.label ?? c.label} is turned off in Settings ▸ Features.` }));
+    return false;
+  }
   noteUsage(id, via);
   if (via !== 'key' && c.shortcut) {
     const u = readUsage()[id];
@@ -66,7 +75,7 @@ export function runRider(id: string, via: Via = 'menu') {
 /** Entries for a web menu bar dropdown. */
 export function menuEntries(menu: RiderMenu, list = commands) {
   const out: ({ label: string; shortcut?: string; onSelect: () => void } | 'separator')[] = [];
-  for (const c of list.filter((x) => x.menu === menu)) {
+  for (const c of list.filter((x) => x.menu === menu && commandOn(x.id))) {
     if (c.group && out.length && out.at(-1) !== 'separator') out.push('separator');
     out.push({ label: `${c.checked ? (c.checked() ? '✓ ' : ' ') : ''}${c.label}`, shortcut: c.shortcut, onSelect: () => runRider(c.id, 'menu') });
   }

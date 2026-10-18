@@ -3276,3 +3276,19 @@ html[data-breakpoints-muted] .cm-bp {
     }
   }
 }
+
+// Settings ▸ Features: what turned-off features draw is hidden.
+html[data-features-off~='codelens'] .cm-lens,
+html[data-features-off~='sticky-scroll'] .cm-sticky,
+html[data-features-off~='change-bars'] .cm-change-gutter,
+html[data-features-off~='http-client'] .cm-http-gutter,
+html[data-features-off~='inlay-hints'] .cm-inlay {
+  display: none !important;
+}
+
+// Settings ▸ Features
+.features-preset {
+  display: inline-flex;
+  gap: 8px;
+  align-items: center;
+}

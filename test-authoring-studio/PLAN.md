@@ -277,3 +277,10 @@ Reference: Visual Studio debugger (breakpoints, Step Into/Over/Out, Locals, Watc
 ## Desktop documentation review (2026-10-18)
 - [x] Review shared UI workflows for the 60-item proposal backlog in `../DESKTOP-QOL.md`; no product behavior changes in this documentation update.
 - [x] Refresh the root README with screenshots from the rebuilt Electron host and link the desktop improvement backlog.
+
+## Settings ▸ Features (2026-10-18)
+- [x] F1 `src/features.ts`: a switch for every optional feature (the 62 Rider features, plus CodeLens, inlay hints, sticky scroll, change bars, Local History, the TODO window and Search Everywhere), grouped; "essential" = on by default in Visual Studio 2026
+- [x] F2 Presets: VS essentials (the desktop app's default) / All features (the web app's default); group switches; single switches; Reset switches
+- [x] F3 Off means gone: commands leave the menus, palette and the desktop's native menus; keys do nothing; drawing features are hidden
+- [x] Bug: Settings ▸ Storage ▸ Reset card states was commented out by a stray `// Storage` on the same line
+- [x] Bug: breakpoints of the previously opened folder stayed on the server and landed on files of the new one (a stale tracepoint broke Step Out)

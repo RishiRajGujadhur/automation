@@ -77,6 +77,16 @@ Status: ⬜ todo · ✅ done (date)
 | J61 | Indent guides | ✅ 2026-10-18 |
 | J62 | Highlight usages of the identifier at the caret (automatic) | ✅ 2026-10-18 |
 
+## Settings ▸ Features (2026-10-18)
+`src/features.ts` has a switch for every feature: the 62 Rider features, plus CodeLens, inlay hints, sticky scroll,
+change bars, Local History, the TODO window and Search Everywhere. Each switch is marked **essential** when Visual
+Studio 2026 has the feature on by default.
+- **Defaults:** the desktop app starts with VS essentials and the web app with all features. Both presets, group
+  switches and single switches are under Settings ▸ Features.
+- **Enforcement:** a turned-off feature's commands leave the web menus, the palette and the desktop's native menus
+  (the page sends `desktop:disabled-commands` and `riderMenu.ts` filters on it). Its keys do nothing, and its drawing
+  is hidden through `html[data-features-off]` and the view-option compartments.
+
 ## Progress log
 - 2026-10-18 J1: Rider command registry (web menu bar, desktop native menus, palette); Extend/Shrink Selection (word → string → brackets → line → indentation block → document).
 - 2026-10-18 J2: Toggle Case: selection or word at the caret; upper case, or lower case when already upper.

@@ -14,7 +14,8 @@ import { replaceText } from '../editor/csharp';
 import { formatFeature } from '../editor/gherkin';
 import { blockComment } from '../editor/riderKeys';
 import { extendSelection, shrinkSelection, toggleCase, joinLines, selectNextOccurrence, unselectOccurrence, selectAllOccurrences, startNewLine, startNewLineBefore, caretsAtLineEnds } from '../editor/riderKeys';
-import { noteUsage, registerRider, riderChanged, runRider, useRiderCommands, type RiderCommand } from './commands';
+import { featureOn } from '../features';
+import { commandOn, noteUsage, registerRider, riderChanged, runRider, useRiderCommands, type RiderCommand } from './commands';
 import { api } from '../api';
 import { copyText } from '../ui';
 import { isBrowser } from '../files/provider';
@@ -287,7 +288,7 @@ export default function RiderHost(props: RiderHostProps) {
   useEffect(() => {
     let shown = false;
     try { shown = sessionStorage.getItem('tas:rider:tipShown') === '1'; } catch { /* storage blocked */ }
-    if (!tipsOnStartup() || shown) return;
+    if (!tipsOnStartup() || shown || !featureOn('tip-of-the-day')) return;
     const t = setTimeout(() => {
       try { sessionStorage.setItem('tas:rider:tipShown', '1'); } catch { /* storage blocked */ }
       setPopup((p) => p ?? { kind: 'tip' });
@@ -301,7 +302,7 @@ export default function RiderHost(props: RiderHostProps) {
     const up = (e: KeyboardEvent) => {
       if (e.key !== 'Control') return;
       const now = Date.now();
-      if (!other && now - last < 400) { last = 0; runRider('run-anything', 'key'); } else last = now;
+      if (!other && now - last < 400 && commandOn('run-anything')) { last = 0; runRider('run-anything', 'key'); } else last = now;
       other = false;
     };
     window.addEventListener('keydown', down, true);
@@ -336,7 +337,7 @@ export default function RiderHost(props: RiderHostProps) {
     // Ctrl+digit: go to numbered bookmark (Rider), when there is one with that digit.
     const digit = (e: KeyboardEvent) => {
       const d = /^Digit(\d)$/.exec(e.code)?.[1];
-      if (!d || !(e.ctrlKey || e.metaKey) || e.shiftKey || e.altKey) return false;
+      if (!d || !(e.ctrlKey || e.metaKey) || e.shiftKey || e.altKey || !featureOn('numbered-bookmarks')) return false;
       const b = bookmarkByDigit(d);
       if (!b) return false;
       e.preventDefault(); e.stopPropagation();
@@ -345,7 +346,7 @@ export default function RiderHost(props: RiderHostProps) {
       return true;
     };
     // Capture phase: the keys also work while the Terminal (xterm.js swallows key events) or a field has focus.
-    const h = (e: KeyboardEvent) => { if (digit(e)) return; const k = keys.find(([t]) => t(e)); if (k) { e.preventDefault(); e.stopPropagation(); runRider(k[1], 'key'); } };
+    const h = (e: KeyboardEvent) => { if (digit(e)) return; const k = keys.find(([t, id]) => t(e) && commandOn(id)); if (k) { e.preventDefault(); e.stopPropagation(); runRider(k[1], 'key'); } };
     window.addEventListener('keydown', h, true);
     return () => window.removeEventListener('keydown', h, true);
   }, []);

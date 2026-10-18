@@ -87,6 +87,8 @@ the Terminal.
 **Git Log.** Alt+9 lists every branch's commits with the graph. Select a commit to see its message, changed files and
 patch. Show History for Selection and Compare with Branch also come from Git.
 
+![Git Log](docs/screenshots/rider-git-log.png)
+
 ![Git Log with branch history and selected commit patch](docs/screenshots/rider-git-log.png)
 
 **Productivity Guide.** Shows which features you use, how often, and how often with the shortcut. The Key Promoter
@@ -129,6 +131,11 @@ source references and acceptance criteria. These are future proposals, separate 
   - Help: Key Promoter, Productivity Guide, Tip of the Day, Power Save Mode.
 
   See [RIDER.md](RIDER.md).
+- **Settings ▸ Features:** every optional feature has a switch, grouped like VS Code's settings, with
+  per-group switches and two presets. **VS essentials** keeps only what Visual Studio 2026 has on by default. **All
+  features** adds every Rider-style feature. The desktop app starts with VS essentials and the web app with all
+  features. A feature that is off disappears from the menus (including the desktop's native menus), the palette and
+  the keyboard, and stops drawing in the editors.
 
 Visual Studio feature parity is tracked in [VS2026-PARITY.md](VS2026-PARITY.md); current work is tracked in
 [QOL-PROGRESS.md](QOL-PROGRESS.md).

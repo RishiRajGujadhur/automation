@@ -161,9 +161,42 @@ test('E1: text fields get a native context menu', async () => {
   expect(items.join(' ').toLowerCase()).toContain('paste');
 });
 
-test('Rider features from the native menus: Navigate / Code / Tools menus, Structure, Run Anything, Terminal', async () => {
-  const labels = await appProcess.evaluate(({ Menu }) => Menu.getApplicationMenu()!.items.map((x) => x.label.replace('&', '')));
-  expect(labels).toEqual(expect.arrayContaining(['Navigate', 'Code', 'Tools']));
+/** Labels of every native menu, by menu. */
+const menuLabels = () => appProcess.evaluate(({ Menu }) => {
+  const out: Record<string, string[]> = {};
+  for (const m of Menu.getApplicationMenu()!.items) out[m.label.replace('&', '')] = (m.submenu?.items ?? []).filter((i) => i.visible !== false).map((i) => i.label);
+  return out;
+});
+/** Settings ▸ Features ▸ a preset, through the studio's own settings page. */
+async function featureSet(name: 'VS essentials' | 'All features') {
+  await page.goto(page.url().replace(/#.*$/, '#/features/editor'));
+  await menu('File', 'Preferences…');
+  await page.getByRole('navigation', { name: 'Settings categories' }).getByRole('button', { name: /Features/ }).click();
+  await page.getByRole('radio', { name }).click();
+  await page.getByRole('button', { name: 'Close settings' }).click();
+}
+
+test('Settings ▸ Features: the desktop app starts with the Visual Studio essentials; optional Rider features stay out of the menus', async () => {
+  let labels = await menuLabels();
+  expect(labels).toHaveProperty('Navigate');
+  expect(labels.Code).toEqual(expect.arrayContaining(['Insert Live Template…', 'Collapse to Definitions (Ctrl+K, Ctrl+2)']));
+  expect(labels.Tools).toEqual(expect.arrayContaining(['External Tools…', 'New File from Template…']));
+  expect(labels.View).toEqual(expect.arrayContaining(['Structure', 'Terminal', 'Git Log', 'Show Indent Guides']));
+  // Optional (not on in Visual Studio by default): off.
+  expect(labels.Tools).not.toContain('Run Anything… (Ctrl twice)');
+  expect(labels.Navigate).not.toContain('Select In…');
+  expect(labels.Code).not.toContain('Move Statement Up');
+  expect(labels.View).not.toContain('Distraction-Free Mode');
+  // All features: they appear.
+  await featureSet('All features');
+  await expect.poll(async () => (await menuLabels()).Tools).toContain('Run Anything… (Ctrl twice)');
+  labels = await menuLabels();
+  expect(labels.Navigate).toEqual(expect.arrayContaining(['Select In…', 'Next Change', 'Go to Related Files…']));
+  expect(labels.Code).toEqual(expect.arrayContaining(['Move Statement Up', 'Unwrap / Remove…']));
+  expect(labels.Tools).toEqual(expect.arrayContaining(['Compare with Branch… (Git)']));
+});
+
+test('Rider features from the native menus: Structure, Run Anything, Terminal, New File from Template', async () => {
   await page.goto(page.url().replace(/#.*$/, '#/features/editor'));
   await menu('View', 'Structure');
   await expect(page.getByRole('region', { name: 'Structure' })).toBeVisible();
@@ -179,19 +212,9 @@ test('Rider features from the native menus: Navigate / Code / Tools menus, Struc
   await expect(screen).toContainText('packaged-shell');
   await page.getByRole('button', { name: 'Close Terminal', exact: true }).click();
   await page.getByRole('button', { name: 'Close Structure', exact: true }).click();
-});
-
-test('Rider features (second batch) in the native menus', async () => {
-  const labels = await appProcess.evaluate(({ Menu }) => {
-    const out: Record<string, string[]> = {};
-    for (const m of Menu.getApplicationMenu()!.items) out[m.label.replace('&', '')] = (m.submenu?.items ?? []).map((i) => i.label);
-    return out;
-  });
-  expect(labels.Navigate).toEqual(expect.arrayContaining(['Select In…', 'Next Change', 'Go to Related Files…']));
-  expect(labels.Code).toEqual(expect.arrayContaining(['Move Statement Up', 'Unwrap / Remove…', 'Collapse to Definitions (Ctrl+K, Ctrl+2)']));
-  expect(labels.Tools).toEqual(expect.arrayContaining(['External Tools…', 'New File from Template…', 'Compare with Branch… (Git)']));
-  expect(labels.View).toEqual(expect.arrayContaining(['Git Log', 'Show Indent Guides', 'Show Line Numbers']));
   await menu('Tools', 'New File from Template…');
   await expect(page.getByRole('listbox', { name: 'File templates' })).toBeVisible();
   await page.keyboard.press('Escape');
+  await featureSet('VS essentials');
+  await expect.poll(async () => (await menuLabels()).Tools).not.toContain('Run Anything… (Ctrl twice)');
 });

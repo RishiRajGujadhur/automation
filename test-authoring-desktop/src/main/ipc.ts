@@ -35,6 +35,13 @@ export function registerIpc() {
     try { if (!fs.statSync(String(folder)).isDirectory()) return; } catch { return; }
     openRepository(String(folder)).then(buildMenu).catch((err) => dialog.showErrorBox('Could not open the repository', (err as Error).message));
   });
+  ipcMain.on(IPC.disabledCommands, (e, ids: unknown) => {
+    if (!trusted(e) || !Array.isArray(ids)) return;
+    const next = ids.filter((x): x is string => typeof x === 'string' && /^[\w:-]{1,60}$/.test(x)).slice(0, 500).sort();
+    if (JSON.stringify(next) === JSON.stringify(ctx.disabledCommands ?? [])) return;
+    ctx.disabledCommands = next;
+    buildMenu();
+  });
   ipcMain.on(IPC.progress, (e, value: number) => { if (trusted(e)) ctx.win?.setProgressBar(Number(value)); });
   ipcMain.on(IPC.theme, (e, c: { background: string; text: string; dark: boolean }) => {
     if (!trusted(e) || !ctx.win) return;

@@ -29,6 +29,7 @@ import { viewOptionsExtension } from './viewOptions';
 import { pushClipboard } from '../rider/clipboardRing';
 import { eolOf, toLF, withEol, SET_EOL_EVENT, type Eol } from './lineSeparator';
 import { powerSave } from '../rider/powerSave';
+import { featureOn, useFeature } from '../features';
 import { httpClient, isHttpFile, parseHttp } from './httpClient';
 import { http as httpMode } from '@codemirror/legacy-modes/mode/http';
 import HttpResponse, { type HttpResult } from '../rider/HttpResponse';
@@ -129,7 +130,7 @@ export default function CodeEditor({ file, reveal, active = true, onNotice, onIn
       const apply = () => { const v = ref.current?.view; if (v) v.dispatch({ effects: setLenses.of(list) }); else if (tries++ < 30) requestAnimationFrame(apply); };
       apply();
     }, () => {});
-    if (!powerSave()) api<RefLens[]>('/csharp/referenceCounts', { file }).then((list) => { refLenses.current = list; applyRefLenses(); }, () => {});
+    if (!powerSave() && featureOn('codelens')) api<RefLens[]>('/csharp/referenceCounts', { file }).then((list) => { refLenses.current = list; applyRefLenses(); }, () => {});
   };
   const refLenses = useRef<RefLens[]>([]);
   const marksRef = useRef(runMarks);
@@ -189,13 +190,15 @@ export default function CodeEditor({ file, reveal, active = true, onNotice, onIn
   const [headDiff, setHeadDiff] = useState<string>();
   const [historyOpen, setHistoryOpen] = useState(false);
   // Markdown: editor, editor and preview side by side, or the preview alone (Rider's split editor).
-  const isMd = /\.(md|markdown)$/i.test(file);
+  const mdPreviewOn = useFeature('markdown-preview');
+  const isMd = /\.(md|markdown)$/i.test(file) && mdPreviewOn;
   const [mdMode, setMdMode] = useLocalState<'editor' | 'split' | 'preview'>('mdMode', 'split');
   // HTTP Client: the response of the last request sent from this .http file.
   const [httpResult, setHttpResult] = useState<HttpResult>();
   const sendHttp = async (line: number) => {
     const v = ref.current?.view;
     if (!v) return;
+    if (!featureOn('http-client')) { onNotice?.('The HTTP Client is turned off in Settings ▸ Features.'); return; }
     const r = parseHttp(v.state.doc.toString()).find((x) => x.line === line);
     if (!r) return;
     const request = { method: r.method, url: r.url };
@@ -482,7 +485,7 @@ export default function CodeEditor({ file, reveal, active = true, onNotice, onIn
             { label: 'Remove and Sort Usings', icon: ListOrdered, shortcut: 'Ctrl R, Ctrl G', onSelect: () => void organize() },
             'separator' as const,
           ] : []),
-          ...(!browser ? [{ label: 'Compare with Unmodified', icon: GitCompareArrows, onSelect: () => void compareWithHead() }, { label: 'Local History…', icon: History, onSelect: () => setHistoryOpen(true) }, { label: 'Annotate (Git Blame)', icon: History, onSelect: () => void annotate() }, 'separator' as const] : []),
+          ...(!browser ? [{ label: 'Compare with Unmodified', icon: GitCompareArrows, onSelect: () => void compareWithHead() }, ...(featureOn('local-history') ? [{ label: 'Local History…', icon: History, onSelect: () => setHistoryOpen(true) }] : []), { label: 'Annotate (Git Blame)', icon: History, onSelect: () => void annotate() }, 'separator' as const] : []),
           { label: 'Cut', icon: Scissors, shortcut: 'Ctrl X', onSelect: () => clip('cut') },
           { label: 'Copy', icon: Copy, shortcut: 'Ctrl C', onSelect: () => clip('copy') },
           { label: 'Paste', icon: ClipboardPaste, shortcut: 'Ctrl V', onSelect: () => clip('paste') },

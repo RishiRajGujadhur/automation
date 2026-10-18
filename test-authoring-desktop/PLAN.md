@@ -195,3 +195,6 @@ Legend: `[x]` done · `[ ]` to do. Every feature is committed and pushed when fi
 - [x] Refresh all 16 packaged-desktop screenshots, add Git Log to the root gallery, and add a screenshot gallery to the desktop README.
 - [x] Rebuild the Windows distribution; both screenshot capture scenarios pass; inspect the captures and verify local documentation links.
 - [x] Packaged verification outside the repository: 30 passed; 2 opt-in screenshot scenarios skipped in that run (both passed separately).
+
+## Settings ▸ Features (2026-10-18)
+- [x] F1 The desktop app starts with the Visual Studio essentials; the page sends the turned-off features' commands (`desktop:disabled-commands`) and the native menus leave them out

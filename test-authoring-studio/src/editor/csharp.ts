@@ -1,4 +1,5 @@
 import { autocompletion, type Completion, type CompletionContext, type CompletionResult } from '@codemirror/autocomplete';
+import { featureOn } from '../features';
 import { EditorView, hoverTooltip, keymap, showTooltip, ViewPlugin, type Tooltip, type ViewUpdate } from '@codemirror/view';
 import { StateEffect, StateField, type Extension, type Text } from '@codemirror/state';
 import { api } from '../api';
@@ -194,7 +195,7 @@ export function csharpLanguage(file: string, handlers: { current: CsHandlers }):
     ]),
     ...signatureHelp(file),
     snippetTab(),
-    inlayHints(file, () => localStorage.getItem('tas:inlayHints') !== 'false'),
+    inlayHints(file, () => localStorage.getItem('tas:inlayHints') !== 'false' && featureOn('inlay-hints')),
     // Ctrl+click (Cmd+click) goes to definition, as in Visual Studio and VS Code.
     EditorView.domEventHandlers({
       mousedown: (e, view) => {

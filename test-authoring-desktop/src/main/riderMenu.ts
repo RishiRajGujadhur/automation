@@ -108,14 +108,15 @@ const ROWS: Record<'edit' | 'view' | 'navigate' | 'code' | 'tools' | 'help', Row
   ],
 };
 
-export function riderMenus(send: (id: string) => void) {
-  const items = (rows: Row[]): MenuItemConstructorOptions[] => rows.map((r) => (r ? { label: r[0], ...(r[2] ? { accelerator: r[2], registerAccelerator: false } : {}), click: () => send(r[1]) } : { type: 'separator' }));
+export function riderMenus(send: (id: string) => void, disabled: string[] = []) {
+  // Commands of features turned off in Settings ▸ Features are left out (Electron drops the extra separators).
+  const items = (rows: Row[]): MenuItemConstructorOptions[] => rows.filter((r) => !r || !disabled.includes(r[1])).map((r) => (r ? { label: r[0], ...(r[2] ? { accelerator: r[2], registerAccelerator: false } : {}), click: () => send(r[1]) } : { type: 'separator' }));
   return {
     edit: items(ROWS.edit),
     view: items(ROWS.view),
     help: items(ROWS.help),
     menus: ([['&Navigate', ROWS.navigate], ['&Code', ROWS.code], ['T&ools', ROWS.tools]] as const)
-      .filter(([, rows]) => rows.length)
+      .filter(([, rows]) => rows.some((r) => r && !disabled.includes(r[1])))
       .map(([label, rows]): MenuItemConstructorOptions => ({ label, submenu: items(rows as Row[]) })),
   };
 }
