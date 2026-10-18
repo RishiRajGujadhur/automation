@@ -2595,3 +2595,30 @@
   font-size: 12px;
   white-space: pre;
 }
+
+// Structure tool window
+.structure-panel {
+  .structure-item {
+    &.active {
+      background: var(--accent-soft, #9270dd22);
+      font-weight: 600;
+    }
+  }
+  .structure-kind {
+    min-width: 62px;
+    padding: 0 4px;
+    border-radius: 3px;
+    background: #3e63dd22;
+    color: var(--text-muted);
+    font-size: 10px;
+    text-transform: uppercase;
+    &.method,
+    &.constructor {
+      background: #9270dd22;
+    }
+    &.scenario,
+    &.scenario-outline {
+      background: #2a9d8f22;
+    }
+  }
+}

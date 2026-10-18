@@ -6,7 +6,7 @@ import { EditorView } from '@codemirror/view';
 const EditorViewScroll = (at: number) => EditorView.scrollIntoView(at, { y: 'center' });
 import { activeEditor } from '../editor/activeEditor';
 import { extendSelection, shrinkSelection, toggleCase, joinLines, selectNextOccurrence, unselectOccurrence, selectAllOccurrences, startNewLine, startNewLineBefore, caretsAtLineEnds } from '../editor/riderKeys';
-import { registerRider, riderChanged, type RiderCommand } from './commands';
+import { registerRider, riderChanged, runRider, type RiderCommand } from './commands';
 import { api } from '../api';
 import { copyText } from '../ui';
 import { isBrowser } from '../files/provider';
@@ -16,11 +16,14 @@ import { insertTemplate, liveTemplates } from '../editor/snippets';
 import { surroundTemplates, surroundWith } from '../editor/surround';
 import { setUsages, wordUsages } from '../editor/usages';
 import { fileOutline, itemAt, type OutlineItem } from './outline';
+import type { RiderTool } from './RiderToolWindow';
 import { changeFontSize, setViewOptions, viewOptions } from '../editor/viewOptions';
 
 export type RiderHostProps = {
   onNotice: (m: string) => void;
   onNavigate: (loc: { file: string; line?: number; column?: number }) => void;
+  /** Shows a Rider tool window in the bottom panel. */
+  onTool: (tool: RiderTool) => void;
 };
 
 /**
@@ -109,6 +112,15 @@ export default function RiderHost(props: RiderHostProps) {
     fn(a.view, a.file);
     a.view.focus();
   };
+  // Tool window keys work everywhere (not only in an editor).
+  useEffect(() => {
+    const keys: [test: (e: KeyboardEvent) => boolean, id: string][] = [
+      [(e) => e.altKey && !e.ctrlKey && !e.shiftKey && !e.metaKey && e.code === 'Digit7', 'tool-structure'],
+    ];
+    const h = (e: KeyboardEvent) => { const k = keys.find(([t]) => t(e)); if (k) { e.preventDefault(); runRider(k[1], 'key'); } };
+    window.addEventListener('keydown', h);
+    return () => window.removeEventListener('keydown', h);
+  }, []);
   useEffect(() => {
     const list: RiderCommand[] = [
       { id: 'extend-selection', label: 'Extend Selection', menu: 'Edit', group: true, shortcut: 'Shift Alt →', run: inEditor(extendSelection) },
@@ -131,6 +143,7 @@ export default function RiderHost(props: RiderHostProps) {
       { id: 'copy-reference', label: 'Copy Reference', menu: 'Edit', group: true, shortcut: 'Ctrl Alt Shift C', run: () => void copyReference() },
       { id: 'highlight-usages', label: 'Highlight Usages in File', menu: 'Navigate', shortcut: 'Ctrl Shift F7', run: () => void highlightUsages() },
       { id: 'file-structure', label: 'File Structure…', menu: 'Navigate', shortcut: 'Ctrl Alt F12', run: () => void fileStructure() },
+      { id: 'tool-structure', label: 'Structure', menu: 'View', group: true, shortcut: 'Alt 7', run: () => p.current.onTool('structure') },
       { id: 'carets-line-ends', label: 'Add Carets to Ends of Selected Lines', menu: 'Edit', shortcut: 'Alt Shift G', run: inEditor(caretsAtLineEnds) },
     ];
     return registerRider(list);

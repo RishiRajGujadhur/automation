@@ -33,6 +33,8 @@ const ROWS: Record<'edit' | 'view' | 'navigate' | 'code' | 'tools' | 'help', Row
     ['Increase Font Size (Ctrl+Mouse Wheel)', 'font-bigger'],
     ['Decrease Font Size', 'font-smaller'],
     ['Reset Font Size', 'font-reset'],
+    null,
+    ['Structure', 'tool-structure', 'Alt+7'],
   ],
   navigate: [
     ['File Structure…', 'file-structure', 'CmdOrCtrl+Alt+F12'],

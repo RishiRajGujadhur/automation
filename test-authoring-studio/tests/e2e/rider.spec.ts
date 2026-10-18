@@ -291,3 +291,22 @@ test('J15 File Structure (Ctrl+Alt+F12): C# types and members, Gherkin scenarios
   await page.keyboard.press('Enter');
   expect((await selection(page)).ranges[0].from).toBe((await selection(page)).doc.indexOf('Background'));
 });
+
+test('J16 Structure tool window (Alt+7): follows the editor and the caret; click to go', async ({ page }) => {
+  await openFeature(page);
+  await caretAt(page, 'signs in');
+  await page.keyboard.press('Alt+7');
+  const panel = page.getByRole('region', { name: 'Structure' });
+  const list = panel.getByRole('list', { name: 'Structure of the file' });
+  await expect(list.getByRole('button')).toHaveCount(3);
+  await expect(list.getByRole('button', { name: /Scenario: Sign in/ })).toHaveAttribute('aria-current', 'true');
+  await list.getByRole('button', { name: /Background: Signed out/ }).click();
+  await expect(page.locator('.cm-activeLine').first()).toContainText('Background: Signed out');
+  // Another file: its members.
+  await page.getByRole('navigation').getByRole('button', { name: 'AuthSteps.cs', exact: true }).first().click();
+  await page.getByLabel('Source of Steps/AuthSteps.cs').locator('.cm-line', { hasText: 'SignIn' }).click();
+  await expect(list.getByRole('button', { name: /SignIn/ })).toBeVisible({ timeout: 60_000 });
+  await expect(list.getByRole('button', { name: /SignIn/ })).toHaveAttribute('aria-current', 'true');
+  await panel.getByRole('button', { name: 'Close Structure' }).click();
+  await expect(panel).toHaveCount(0);
+});

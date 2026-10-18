@@ -34,6 +34,7 @@ import OutputPanel, { type OutputSource } from './OutputPanel';
 import TodoPanel from './TodoPanel';
 import RiderHost from './rider/RiderHost';
 import RiderMenubar from './rider/RiderMenubar';
+import RiderToolWindow, { RIDER_TOOLS, type RiderTool } from './rider/RiderToolWindow';
 import { menuEntries, runRider, useRiderCommands } from './rider/commands';
 import { studioLog } from './outputLog';
 import RecentPopup from './RecentPopup';
@@ -435,7 +436,11 @@ export default function App() {
   // Split editor (Window ▸ Split / tab ▸ Split Right): a second editor beside the tab group.
   const [splitFile, setSplitFile] = useLocalState<string | null>('splitFile', null);
   // One docked bottom panel (as in Visual Studio / VS Code): Build and Debug windows share it as tabs.
-  const [dockTab, setDockTab] = useLocalState<'build' | 'debug' | 'output' | 'todo'>('dockTab', 'build');
+  const [dockTab, setDockTab] = useLocalState<'build' | 'debug' | 'output' | 'todo' | RiderTool>('dockTab', 'build');
+  // Rider tool windows (Structure, Problems, Hierarchy, Terminal…): more tabs of the same panel.
+  const [riderTools, setRiderTools] = useLocalState<RiderTool[]>('riderTools', []);
+  const showRiderTool = (k: RiderTool) => { setRiderTools((l) => (l.includes(k) ? l : [...l, k])); setDockTab(k); if (tab !== 'Features' || (view !== 'code' && view !== 'editor')) { setTab('Features'); setView('editor'); } };
+  const closeRiderTool = (k: RiderTool) => setRiderTools((l) => l.filter((x) => x !== k));
   // TODO window (Rider, Alt+6): another tab of the bottom panel.
   const [todoOpen, setTodoOpen] = useLocalState('todoOpen', false);
   // Output window (View ▸ Output, Ctrl+Alt+O): a third tab of the bottom panel.
@@ -449,7 +454,7 @@ export default function App() {
   useEffect(() => { if (debugLive) setDockTab('debug'); }, [debugLive]); // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(() => { if (debugOpen) setDockTab('debug'); }, [debugOpen]); // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(() => { if (buildOpen) setDockTab('build'); }, [buildOpen]); // eslint-disable-line react-hooks/exhaustive-deps
-  const dockOpen = [...(showBuild ? ['build' as const] : []), ...(showDebug ? ['debug' as const] : []), ...(outputOpen ? ['output' as const] : []), ...(todoOpen ? ['todo' as const] : [])];
+  const dockOpen = [...(showBuild ? ['build' as const] : []), ...(showDebug ? ['debug' as const] : []), ...(outputOpen ? ['output' as const] : []), ...(todoOpen ? ['todo' as const] : []), ...riderTools.filter((k) => RIDER_TOOLS[k])];
   const dockShows = dockOpen.includes(dockTab) ? dockTab : dockOpen[0] ?? null;
   // Side bar view: the Explorer or the Test Explorer (activity bar, Test menu).
   // Manage NuGet Packages (project from the Explorer, else the first project).
@@ -1047,12 +1052,13 @@ export default function App() {
       <div className="dock-bar">
         {dockOpen.length > 1 && (
           <div className="dock-tabs" role="tablist" aria-label="Panel">
-            {dockOpen.map((d) => <button key={d} role="tab" aria-selected={dockShows === d} onClick={() => setDockTab(d)}>{d === 'build' ? 'Build' : d === 'debug' ? 'Debug' : d === 'todo' ? 'TODO' : 'Output'}</button>)}
+            {dockOpen.map((d) => <button key={d} role="tab" aria-selected={dockShows === d} onClick={() => setDockTab(d)}>{d === 'build' ? 'Build' : d === 'debug' ? 'Debug' : d === 'todo' ? 'TODO' : d === 'output' ? 'Output' : RIDER_TOOLS[d]}</button>)}
           </div>
         )}
         <button className="icon-button dock-move" aria-label={dockSide === 'bottom' ? 'Move panel right' : 'Move panel to the bottom'} title={dockSide === 'bottom' ? 'Move panel right' : 'Move panel to the bottom'} onClick={() => setDockSide(dockSide === 'bottom' ? 'right' : 'bottom')}>{dockSide === 'bottom' ? <PanelRight size={13} /> : <PanelBottom size={13} />}</button>
       </div>
       {dockShows === 'build' && <BuildPanel onOpen={(file, line, column) => editFile(file, line, column)} onNotice={setNotice} onClose={() => setBuildOpen(false)} />}
+      {dockShows && dockShows in RIDER_TOOLS && <RiderToolWindow tool={dockShows as RiderTool} onOpen={(file, line, column) => navigateTo({ file, line, column })} onNotice={setNotice} onClose={() => closeRiderTool(dockShows as RiderTool)} />}
       {dockShows === 'todo' && <TodoPanel onOpen={(file, line, column) => navigateTo({ file, line, column })} onClose={() => setTodoOpen(false)} />}
       {dockShows === 'output' && <OutputPanel source={outputSource} onSource={setOutputSource} onNotice={setNotice} onClose={() => setOutputOpen(false)} />}
       {dockShows === 'debug' && <DebugPanel editingRequest={bpSettings?.split('#')[0] ?? null} editingNonce={bpSettings} onOpen={openAt} onNotice={setNotice} onClose={() => { setDebugOpen(false); if (debugLive) setNotice('The session keeps running. Stop it with Shift+F5.'); }} />}
@@ -1071,7 +1077,7 @@ export default function App() {
         }}
       >
       <CreateStepDialog onOpen={(file, line) => editFile(file, line)} onIndex={setIndex} onNotice={setNotice} />
-      <RiderHost onNotice={setNotice} onNavigate={navigateTo} />
+      <RiderHost onNotice={setNotice} onNavigate={navigateTo} onTool={showRiderTool} />
       <SearchPalette
         open={paletteOpen}
         onOpenChange={setPaletteOpen}
