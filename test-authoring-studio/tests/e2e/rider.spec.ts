@@ -716,3 +716,19 @@ test('J36 Power Save Mode: no background C# analysis requests while on; a badge 
   await page.keyboard.type(' more');
   await expect.poll(() => calls.length, { timeout: 10_000 }).toBeGreaterThan(0);
 });
+
+test('J37 Go to Related Files (Ctrl+Alt+Home): a feature to its step files, a step file back to its features', async ({ page }) => {
+  await openFeature(page);
+  await caretAt(page, 'signs in');
+  await page.keyboard.press('Control+Alt+Home');
+  const list = page.getByRole('listbox', { name: 'Related files' });
+  await expect(list.getByRole('option', { name: /Steps\/AuthSteps\.cs/ })).toContainText('3 steps bind');
+  await list.getByRole('option', { name: /Steps\/AuthSteps\.cs/ }).click();
+  const src = page.getByLabel('Source of Steps/AuthSteps.cs');
+  await expect(src).toBeVisible();
+  await src.locator('.cm-line', { hasText: 'SignIn' }).click();
+  await page.keyboard.press('Control+Alt+Home');
+  await expect(list.getByRole('option')).toHaveText([/Features\/Auth\/Login\.feature.*3 steps use these bindings/]);
+  await page.keyboard.press('Enter');
+  await expect(gherkin(page)).toContainText('Feature: Authentication');
+});

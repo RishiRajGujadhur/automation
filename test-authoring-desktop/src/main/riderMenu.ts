@@ -46,6 +46,7 @@ const ROWS: Record<'edit' | 'view' | 'navigate' | 'code' | 'tools' | 'help', Row
   ],
   navigate: [
     ['Recent Changes…', 'recent-changes', 'Alt+Shift+C'],
+    ['Go to Related Files…', 'related-files', 'CmdOrCtrl+Alt+Home'],
     ['File Structure…', 'file-structure', 'CmdOrCtrl+Alt+F12'],
     ['Highlight Usages in File', 'highlight-usages', 'CmdOrCtrl+Shift+F7'],
     null,

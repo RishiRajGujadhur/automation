@@ -254,6 +254,7 @@ export function riderKeys(): Extension {
     ['KeyC', true, 'copy-reference', () => runRider('copy-reference', 'key')],
     ['F12', false, 'file-structure', () => runRider('file-structure', 'key')],
     ['KeyH', false, 'call-hierarchy', () => runRider('call-hierarchy', 'key')],
+    ['Home', false, 'related-files', () => runRider('related-files', 'key')],
   ];
   const ctrlAlt = EditorView.domEventHandlers({
     keydown(e, view) {

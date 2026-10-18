@@ -46,8 +46,8 @@ export type RiderHostProps = {
  * JetBrains Rider features: registers their commands (menus, palette, desktop menus) and hosts their popups, dialogs
  * and global keys. Editor keys live in editor/riderKeys.ts.
  */
-type Popup = { kind: 'recent-changes'; items: { file: string; id: string; at: string; reason: string }[] } | { kind: 'file-history'; file: string; current: string } | { kind: 'compare'; patch: string; what: string } | { kind: 'regexp'; initial: string } | { kind: 'evaluate'; initial: string } | { kind: 'tip' } | { kind: 'productivity' } | { kind: 'run' } | { kind: 'paste' } | { kind: 'template' } | { kind: 'surround' } | { kind: 'structure'; items: OutlineItem[]; current: number };
-const TITLES: Record<Popup['kind'], string> = { 'recent-changes': 'Recent Changes', 'file-history': 'Local History', compare: 'Compare with Clipboard', regexp: 'Check RegExp', evaluate: 'Evaluate Expression', tip: 'Tip of the Day', productivity: 'Productivity Guide', run: 'Run Anything', paste: 'Paste from History', template: 'Insert Live Template', surround: 'Surround With', structure: 'File Structure' };
+type Popup = { kind: 'related'; items: { file: string; line: number; reason: string }[] } | { kind: 'recent-changes'; items: { file: string; id: string; at: string; reason: string }[] } | { kind: 'file-history'; file: string; current: string } | { kind: 'compare'; patch: string; what: string } | { kind: 'regexp'; initial: string } | { kind: 'evaluate'; initial: string } | { kind: 'tip' } | { kind: 'productivity' } | { kind: 'run' } | { kind: 'paste' } | { kind: 'template' } | { kind: 'surround' } | { kind: 'structure'; items: OutlineItem[]; current: number };
+const TITLES: Record<Popup['kind'], string> = { related: 'Related Files', 'recent-changes': 'Recent Changes', 'file-history': 'Local History', compare: 'Compare with Clipboard', regexp: 'Check RegExp', evaluate: 'Evaluate Expression', tip: 'Tip of the Day', productivity: 'Productivity Guide', run: 'Run Anything', paste: 'Paste from History', template: 'Insert Live Template', surround: 'Surround With', structure: 'File Structure' };
 
 function PowerSaveBadge() {
   useRiderCommands();
@@ -169,6 +169,17 @@ export default function RiderHost(props: RiderHostProps) {
     try { current = (await readFile(file)).source; } catch { /* deleted: compare against nothing */ }
     setPopup({ kind: 'file-history', file, current });
   };
+  /** Go to Related Files (Ctrl+Alt+Home): feature ⇄ its step definition files (and code-behind). */
+  const relatedFiles = async () => {
+    const a = activeEditor();
+    if (!a) { p.current.onNotice('Open a file in the editor first.'); return; }
+    if (isBrowser()) { p.current.onNotice('Related files need a folder indexed by the studio server.'); return; }
+    try {
+      const items = await api<{ file: string; line: number; reason: string }[]>(`/related?file=${encodeURIComponent(a.file)}`);
+      if (!items.length) { p.current.onNotice(`No related files for ${a.file}.`); return; }
+      setPopup({ kind: 'related', items });
+    } catch (e) { p.current.onNotice((e as Error).message); }
+  };
   const closeAndFocus = () => { setPopup(null); requestAnimationFrame(() => target.current?.view.focus()); };
   /** Runs an editor action on the active editor (and gives it focus back). */
   const inEditor = (fn: (v: EditorView, file: string) => unknown) => () => {
@@ -277,6 +288,7 @@ export default function RiderHost(props: RiderHostProps) {
       { id: 'recent-changes', label: 'Recent Changes…', menu: 'Navigate', shortcut: 'Alt Shift C', run: () => void recentChangesPopup() },
       { id: 'tool-shelf', label: 'Shelf', menu: 'View', run: () => { if (isBrowser()) { p.current.onNotice('The shelf needs a folder indexed by the studio server.'); return; } p.current.onTool('shelf'); } },
       { id: 'power-save', label: 'Power Save Mode', menu: 'Tools', group: true, checked: powerSave, run: () => { setPowerSave(!powerSave()); riderChanged(); p.current.onNotice(powerSave() ? 'Power Save Mode: background analysis (C# diagnostics, CodeLens, inlay hints) is paused.' : 'Power Save Mode off: background analysis resumes.'); } },
+      { id: 'related-files', label: 'Go to Related Files…', menu: 'Navigate', shortcut: 'Ctrl Alt Home', run: () => void relatedFiles() },
       { id: 'carets-line-ends', label: 'Add Carets to Ends of Selected Lines', menu: 'Edit', shortcut: 'Alt Shift G', run: inEditor(caretsAtLineEnds) },
     ];
     return registerRider(list);
@@ -296,6 +308,10 @@ export default function RiderHost(props: RiderHostProps) {
     const { view } = target.current;
     const items = popup.items;
     body = <ListPopup label="File structure" placeholder="File structure: type to filter" empty="No matches." initial={popup.current} items={items.map((it, i) => ({ key: String(i), label: it.label, detail: `${it.kind} · line ${it.line}`, indent: it.depth }))} onPick={(k) => { const it = items[Number(k)]; goTo(view, it.line, it.column); closeAndFocus(); }} />;
+  }
+  if (popup?.kind === 'related') {
+    const items = popup.items;
+    body = <ListPopup label="Related files" placeholder="Related files (Ctrl+Alt+Home)" empty="No related files." items={items.map((r, i) => ({ key: String(i), label: r.file, detail: r.reason }))} onPick={(k) => { const r = items[Number(k)]; setPopup(null); p.current.onNavigate({ file: r.file, line: r.line }); }} />;
   }
   if (popup?.kind === 'recent-changes') {
     const items = popup.items;

@@ -169,6 +169,30 @@ async function unboundSteps(file:string){
  }
  return {feature,steps:out};
 }
+// Go to Related Files (Rider): a feature's step definition files and code-behind; a step file's features.
+app.get('/api/related', async (req, res) => {
+  const file = z.string().min(1).max(400).parse(req.query.file).replaceAll('\\', '/');
+  const i = await ensure();
+  const out: { file: string; line: number; reason: string }[] = [];
+  const add = (f: string, line: number, reason: string) => { const e = out.find((x) => x.file === f); if (e) { const n = Number(/^(\d+)/.exec(e.reason)?.[1] ?? 0); if (n) e.reason = e.reason.replace(/^\d+/, String(n + 1)); } else out.push({ file: f, line, reason }); };
+  const steps = (f: (typeof i.features)[number]) => [...f.backgrounds, ...f.scenarios].flatMap((b) => b.steps);
+  const feature = i.features.find((f) => f.file === file || `${f.file}.cs` === file);
+  if (feature && feature.file === file) {
+    for (const st of steps(feature)) for (const id of st.candidates) { const b = i.stepDefinitions.find((x) => x.id === id); if (b) add(b.file, b.line, '1 step binds here'); }
+    for (const o of out) o.reason = o.reason.replace(/^(\d+) step binds/, (_, n) => (n === '1' ? '1 step binds' : `${n} steps bind`));
+    const behind = `${file}.cs`;
+    if (await fs.stat(path.join(config.repositoryRoot, behind)).then(() => true, () => false)) out.push({ file: behind, line: 1, reason: 'generated code-behind' });
+  } else if (feature) {
+    out.push({ file: feature.file, line: feature.line, reason: 'the feature this code-behind runs' });
+  } else if (file.endsWith('.cs')) {
+    const ids = new Set(i.stepDefinitions.filter((b) => b.file === file).map((b) => b.id));
+    for (const f of i.features) {
+      const n = steps(f).filter((st) => st.candidates.some((c) => ids.has(c))).length;
+      if (n) out.push({ file: f.file, line: f.line, reason: `${n} step${n === 1 ? '' : 's'} use these bindings` });
+    }
+  }
+  res.json(out);
+});
 // Check RegExp (Rider) for step definition patterns: the regular expression (Cucumber expressions converted) and the
 // feature steps it matches.
 app.post('/api/steps/regex', async (req, res) => {
