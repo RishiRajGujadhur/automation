@@ -6,6 +6,7 @@ import { noteUsage, runRider } from '../rider/commands';
 import { pushClipboard } from '../rider/clipboardRing';
 import { usageHighlights } from './usages';
 import { moveStatement } from './moveStatement';
+import { gotoChange } from './changeGutter';
 
 type Span = { from: number; to: number };
 const OPEN = '([{', CLOSE = ')]}';
@@ -313,6 +314,8 @@ export function riderKeys(file = ''): Extension {
     opens('Mod-Shift-v', 'paste-history'),
     opens('Mod-j', 'live-template'),
     opens('Mod-k Mod-e', 'code-cleanup'),
+    keyed('Alt-F5', 'next-change', gotoChange(1)),
+    keyed('Shift-Alt-F5', 'previous-change', gotoChange(-1)),
     opens('Mod-Shift-F7', 'highlight-usages'),
     opens('Mod-h', 'type-hierarchy'),
     keyed('Shift-Alt-ArrowRight', 'extend-selection', extendSelection),

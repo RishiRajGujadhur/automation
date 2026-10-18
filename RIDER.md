@@ -54,7 +54,7 @@ Status: ⬜ todo · ✅ done (date)
 | J38 | Move Statement Up / Down (Ctrl+Shift+Alt+↑/↓): whole blocks and scenarios | ✅ 2026-10-18 |
 | J39 | Comment with Block Comment (Ctrl+Shift+/) | ✅ 2026-10-18 |
 | J40 | Code Cleanup (Ctrl+E, C): format and organize usings (C#), format (Gherkin) | ✅ 2026-10-18 |
-| J41 | Next / Previous Change (Ctrl+Alt+Shift+↓/↑) | ⬜ |
+| J41 | Next / Previous Change (Ctrl+Alt+Shift+↓/↑) | ✅ 2026-10-18 |
 | J42 | Rollback Lines (undo the uncommitted change at the caret) | ⬜ |
 | J43 | Scratch Files (Ctrl+Alt+Shift+Insert) | ⬜ |
 | J44 | Numbered bookmarks (Ctrl+Shift+digit toggles, Ctrl+digit jumps) | ⬜ |
@@ -118,3 +118,4 @@ Status: ⬜ todo · ✅ done (date)
 - 2026-10-18 J38: Move Statement Up / Down: moves the statement with its { } block or indented body (C# blocks, Gherkin scenarios with their steps, steps with tables) past its neighbour, never out of its parent.
 - 2026-10-18 J39: Comment with Block Comment (Ctrl+Shift+/): /* */ in C#, <!-- --> in XML, toggles off when already commented; Gherkin (no block comments) gets # per line.
 - 2026-10-18 J40: Code Cleanup (Ctrl+K, Ctrl+E as in Visual Studio): C# usings organized and formatted by Roslyn, features formatted, trailing whitespace trimmed, final newline. Bug fixes: Ctrl+K inside an editor no longer opens the command palette (it starts the editor's chords; the palette is also Ctrl+Shift+P), and Ctrl+K Ctrl+E no longer opens Recent Files.
+- 2026-10-18 J41: Next / Previous Change (Alt+F5 / Shift+Alt+F5, as in VS Code: Ctrl+Alt+Shift+arrows are Move Statement): the caret jumps between uncommitted change regions, wrapping.

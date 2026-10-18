@@ -794,3 +794,32 @@ test('J40 Code Cleanup (Ctrl+K, Ctrl+E): C# usings and formatting; Gherkin forma
   await page.getByRole('menuitem', { name: /Code Cleanup/ }).click();
   expect((await selection(page)).doc).toContain('\n    When the user signs in');
 });
+
+/** Makes the temporary repository a Git repository with everything committed. */
+async function commitAll() {
+  const { execFileSync } = await import('node:child_process');
+  const g = (...args: string[]) => execFileSync('git', ['-c', 'user.email=t@t', '-c', 'user.name=t', ...args], { cwd: root, encoding: 'utf8' });
+  g('init', '-q'); g('add', '-A'); g('commit', '-qm', 'base');
+}
+
+test('J41 Next / Previous Change (Alt+F5 / Shift+Alt+F5): jumps between uncommitted changes', async ({ page }) => {
+  await commitAll();
+  await openFeature(page);
+  await caretAt(page, 'the browser is started');
+  await page.keyboard.press('End');
+  await page.keyboard.type(' again');
+  await caretAt(page, 'the dashboard');
+  await page.keyboard.press('End');
+  await page.keyboard.type(' now');
+  await expect(page.locator('.gherkin-editor .cm-change-modified')).toHaveCount(2);
+  await caretAt(page, 'Feature:');
+  const line = async () => { const s = await selection(page); return s.doc.slice(0, s.ranges[0].from).split('\n').length; };
+  await page.keyboard.press('Alt+F5');
+  expect(await line()).toBe(4);
+  await page.keyboard.press('Alt+F5');
+  expect(await line()).toBe(8);
+  await page.keyboard.press('Alt+F5');
+  expect(await line()).toBe(4); // wraps
+  await page.keyboard.press('Shift+Alt+F5');
+  expect(await line()).toBe(8);
+});
