@@ -1,6 +1,6 @@
 /** Contract between the preload script and the studio web app (`window.desktop`). */
 export type MenuCommand =
-  | 'palette' | 'preferences' | 'shortcuts' | 'workspace-settings' | 'new-feature' | 'record' | 'tour' | 'toggle-mode' | 'toggle-explorer' | 'focus-mode' | 'repository-changed' | 'set-pref' | 'diagnostics' | 'run-tests' | 'continue-draft' | 'design-tool' | 'debug' | 'open-folder' | 'open-solution' | 'build' | 'rebuild' | 'clean' | 'cancel-build' | 'build-windows' | 'test-explorer' | 'find-in-files' | 'replace-in-files' | 'go-to-all' | 'git-changes' | 'nuget' | 'unused-steps' | 'spy' | 'output' | 'todo' | 'run-all-tests' | 'save' | 'save-all' | 'close-editor' | 'close-all-editors';
+  | 'palette' | 'preferences' | 'shortcuts' | 'workspace-settings' | 'new-feature' | 'record' | 'tour' | 'toggle-mode' | 'toggle-explorer' | 'focus-mode' | 'repository-changed' | 'set-pref' | 'diagnostics' | 'run-tests' | 'continue-draft' | 'design-tool' | 'debug' | 'open-folder' | 'open-solution' | 'build' | 'rebuild' | 'clean' | 'cancel-build' | 'build-windows' | 'test-explorer' | 'find-in-files' | 'replace-in-files' | 'go-to-all' | 'git-changes' | 'nuget' | 'unused-steps' | 'spy' | 'output' | 'todo' | 'rider' | 'run-all-tests' | 'save' | 'save-all' | 'close-editor' | 'close-all-editors';
 
 export type DesktopBridge = {
   platform: NodeJS.Platform;

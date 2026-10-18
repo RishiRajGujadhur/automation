@@ -23,6 +23,8 @@ import { braceFolding, braceRange } from './folding';
 import { stickyScroll } from './stickyScroll';
 import { revealOn, cursorTracker } from './cursor';
 import { bookmarks } from './bookmarks';
+import { riderKeys } from './riderKeys';
+import { trackActive } from './activeEditor';
 import LocalHistory from '../LocalHistory';
 import NavBar from './NavBar';
 import RenameStep from './RenameStep';
@@ -363,6 +365,8 @@ export default function CodeEditor({ file, reveal, active = true, onNotice, onIn
     cursorTracker(file, () => eolRef.current),
     revealOn(file),
     bookmarks(file),
+    trackActive(file),
+    riderKeys(),
     caretTracker,
     blameGutter(),
     coverageGutter(),

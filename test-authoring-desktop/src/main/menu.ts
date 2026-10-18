@@ -15,6 +15,7 @@ import { currentPageLink } from './protocol';
 import { checkHealth, copyDiagnostics, crashFolder, reportIssue, systemInfo } from './diagnostics';
 import { clearWebData, exportSettings, importSettings, resetDesktopSettings, restart } from './settingsIO';
 import { toggleWindow } from './tray';
+import { riderMenus } from './riderMenu';
 
 const send = (c: MenuCommand, arg?: unknown) => ctx.win?.webContents.send(IPC.menu, c, arg);
 /** Pages are deep links (#/page), so navigation needs no web-app changes. */
@@ -63,6 +64,7 @@ export function buildMenu() {
   const isMac = process.platform === 'darwin';
   const s = read();
   const toggle = (label: string, key: keyof Shape, after?: (v: boolean) => void, def = false): MenuItemConstructorOptions => ({ label, type: 'checkbox', checked: (s[key] as boolean | undefined) ?? def, click: (i) => { write({ [key]: i.checked } as Partial<Shape>); after?.(i.checked); buildMenu(); } });
+  const rider = riderMenus((id) => send('rider', id));
   const template: MenuItemConstructorOptions[] = [
     ...(isMac ? [{ role: 'appMenu' as const }] : []),
     {
@@ -141,6 +143,7 @@ export function buildMenu() {
         { label: 'Replace in Files', accelerator: 'CmdOrCtrl+Shift+H', registerAccelerator: false, click: () => send('replace-in-files') },
         { type: 'separator' },
         { label: 'Copy Link to This Page', accelerator: 'CmdOrCtrl+L', click: () => { const l = currentPageLink(); clipboard.writeText(l); notify('Link copied', l, { always: true }); } },
+        ...rider.edit,
       ],
     },
     {
@@ -173,9 +176,12 @@ export function buildMenu() {
         toggle('Auto-hide Menu Bar', 'autoHideMenu', (v) => { ctx.win?.setAutoHideMenuBar(v); ctx.win?.setMenuBarVisibility(!v); }),
         { label: 'Auto-rescan When Files Change', type: 'checkbox', checked: autoRescanEnabled(), click: (item) => setAutoRescan(item.checked) },
         { type: 'separator' },
+        ...rider.view,
+        { type: 'separator' },
         { role: 'reload' }, { role: 'forceReload' }, { role: 'toggleDevTools' },
       ],
     },
+    ...rider.menus,
     {
       label: 'Gi&t',
       submenu: [
@@ -272,6 +278,7 @@ export function buildMenu() {
         { label: 'Keyboard Shortcuts', accelerator: 'F1', click: () => send('shortcuts') },
         { label: 'Desktop Shortcuts', click: desktopShortcuts },
         { label: 'Guided Tour', click: () => send('tour') },
+        ...rider.help,
         { label: 'User Guide', click: tools.readme },
         { type: 'separator' },
         { label: 'Index Diagnostics', click: () => send('diagnostics') },

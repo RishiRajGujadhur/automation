@@ -32,6 +32,9 @@ import DefineSteps from './DefineSteps';
 import SpyView from './SpyView';
 import OutputPanel, { type OutputSource } from './OutputPanel';
 import TodoPanel from './TodoPanel';
+import RiderHost from './rider/RiderHost';
+import RiderMenubar from './rider/RiderMenubar';
+import { menuEntries, runRider, useRiderCommands } from './rider/commands';
 import { studioLog } from './outputLog';
 import RecentPopup from './RecentPopup';
 import LocalHistory from './LocalHistory';
@@ -857,6 +860,7 @@ export default function App() {
     if (c === 'unused-steps') { void showUnused(); return; }
     if (c === 'output') { openOutput(); return; }
     if (c === 'todo') { openTodo(); return; }
+    if (c === 'rider' && typeof arg === 'string') { runRider(arg, 'menu'); return; }
     if (c === 'spy') { setTab('Features'); setView('spy'); return; }
     if (c === 'run-all-tests') { showTests(); runTests('all').catch((e) => setNotice((e as Error).message)); return; }
     if (c === 'build-windows') { setTab('Features'); if (view !== 'code' && view !== 'editor') setView('editor'); setBuildOpen(true); return; }
@@ -1011,6 +1015,7 @@ export default function App() {
           ? `press("${a.key}")`
           : `click("${a.target?.description ?? a.target?.name ?? 'element'}")`;
   const matched = matches.filter((m) => m.candidates.length).length;
+  const riderList = useRiderCommands();
   const menuProps = {
     pages: basic ? [] : moreTabs.map((t) => ({ ...t })),
     primary: navTabs.map((t, i) => ({ name: t.name, icon: t.icon, hint: `Alt+${i + 1}` })),
@@ -1066,6 +1071,7 @@ export default function App() {
         }}
       >
       <CreateStepDialog onOpen={(file, line) => editFile(file, line)} onIndex={setIndex} onNotice={setNotice} />
+      <RiderHost onNotice={setNotice} onNavigate={navigateTo} />
       <SearchPalette
         open={paletteOpen}
         onOpenChange={setPaletteOpen}
@@ -1084,6 +1090,7 @@ export default function App() {
           { label: 'Preferences', run: () => setModal('preferences') },
           { label: 'Toggle focus mode', run: () => setPrefs({ focus: !prefs.focus }), shortcut: 'Ctrl .' },
           { label: 'Copy link to this page', run: () => copyText(location.href).then((ok) => setNotice(ok ? 'Link copied.' : 'Clipboard unavailable.')) },
+          ...riderList.map((c) => ({ label: `${c.menu}: ${c.label}`, shortcut: c.shortcut, run: () => { runRider(c.id, 'palette'); } })),
           ...designTools.map((d) => ({ label: `Test Design: ${d.label}`, run: () => { try { localStorage.setItem('tas:design:tool', JSON.stringify(d.id)); } catch { /* storage blocked */ } setDesignKey((k) => k + 1); setTab('Test Design'); } })),
         ]}
       />
@@ -1145,6 +1152,7 @@ export default function App() {
               'separator' as const,
               { label: 'Find in Files', icon: Search, shortcut: 'Ctrl Shift F', onSelect: () => showSearch(false) },
               { label: 'Replace in Files', shortcut: 'Ctrl Shift H', onSelect: () => showSearch(true) },
+              ...menuEntries('Edit', riderList),
             ]}
           />
         )}
@@ -1180,6 +1188,7 @@ export default function App() {
             ]}
           />
         )}
+        {!desktop && <RiderMenubar menus={['View', 'Navigate', 'Code', 'Tools', 'Help']} />}
         <nav className="workspace-breadcrumb page-heading" aria-label="Breadcrumb">
           <span className="header-divider" aria-hidden="true" />
           <ol>
