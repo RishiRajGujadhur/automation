@@ -21,7 +21,7 @@ Status: ⬜ todo · ✅ done (date)
 | J5 | Start New Line (Shift+Enter) / Start New Line Before Current (Ctrl+Alt+Enter) | ✅ 2026-10-18 |
 | J6 | Add Carets to Ends of Selected Lines (Alt+Shift+G) | ✅ 2026-10-18 |
 | J7 | Paste from History (Ctrl+Shift+V) | ✅ 2026-10-18 |
-| J8 | Insert Live Template (Ctrl+J) | ⬜ |
+| J8 | Insert Live Template (Ctrl+J) | ✅ 2026-10-18 |
 | J9 | Surround With (Ctrl+Alt+J) | ⬜ |
 | J10 | Soft-Wrap toggle (View ▸ Active Editor) | ⬜ |
 | J11 | Show Whitespaces toggle | ⬜ |
@@ -60,3 +60,4 @@ Status: ⬜ todo · ✅ done (date)
 - 2026-10-18 J5: Start New Line after the current line from anywhere in it (Shift+Enter); Start New Line Before Current with its indentation (Ctrl+Alt+Enter).
 - 2026-10-18 J6: Add Carets to Ends of Selected Lines: one caret per selected line, at its end.
 - 2026-10-18 J7: Paste from History: copies and cuts in the editors (and the editor's context menu) feed a 40-entry history; filter, Enter pastes, Delete forgets. Desktop: Ctrl+Shift+V moves from Paste as Plain Text (still in Edit) to Paste from History.
+- 2026-10-18 J8: Insert Live Template popup: the C# snippets in .cs files, new Gherkin templates (scenario, outline, background, rule, examples, table, doc string, tag) in .feature files; fields with Tab. New Code menu.

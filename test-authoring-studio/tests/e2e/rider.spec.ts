@@ -142,3 +142,23 @@ test('J7 Paste from History (Ctrl+Shift+V): earlier copies, filter, Enter pastes
   await expect(page.getByRole('dialog')).toHaveCount(0);
   expect((await selection(page)).doc).toContain('signs in as "test-user"the\n');
 });
+
+test('J8 Insert Live Template (Ctrl+J): a Scenario Outline template with fields, in a feature file', async ({ page }) => {
+  await openFeature(page);
+  await caretAt(page, 'Then the dashboard');
+  await page.keyboard.press('End');
+  await page.keyboard.press('Enter');
+  await page.keyboard.press('Enter');
+  await page.keyboard.press('Control+J');
+  const list = page.getByRole('listbox', { name: 'Live templates' });
+  await expect(list).toContainText('outline');
+  await page.getByLabel('Filter live templates').fill('outl');
+  await page.keyboard.press('Enter');
+  await expect(page.getByRole('dialog')).toHaveCount(0);
+  await page.keyboard.type('Many sign-ins');
+  const doc = (await selection(page)).doc;
+  expect(doc).toContain('Scenario Outline: Many sign-ins');
+  expect(doc).toContain('Examples:');
+  // Indented like the line it was inserted on, fields one level deeper.
+  expect(doc).toMatch(/\n {4}Scenario Outline: Many sign-ins\n {8}Given /);
+});

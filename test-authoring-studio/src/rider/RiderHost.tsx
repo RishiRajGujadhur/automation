@@ -6,6 +6,8 @@ import { activeEditor } from '../editor/activeEditor';
 import { extendSelection, shrinkSelection, toggleCase, joinLines, selectNextOccurrence, unselectOccurrence, selectAllOccurrences, startNewLine, startNewLineBefore, caretsAtLineEnds } from '../editor/riderKeys';
 import { registerRider, type RiderCommand } from './commands';
 import PasteHistory from './PasteHistory';
+import ListPopup from './ListPopup';
+import { insertTemplate, liveTemplates } from '../editor/snippets';
 
 export type RiderHostProps = {
   onNotice: (m: string) => void;
@@ -16,8 +18,8 @@ export type RiderHostProps = {
  * JetBrains Rider features: registers their commands (menus, palette, desktop menus) and hosts their popups, dialogs
  * and global keys. Editor keys live in editor/riderKeys.ts.
  */
-type Popup = { kind: 'paste' };
-const TITLES: Record<Popup['kind'], string> = { paste: 'Paste from History' };
+type Popup = { kind: 'paste' } | { kind: 'template' };
+const TITLES: Record<Popup['kind'], string> = { paste: 'Paste from History', template: 'Insert Live Template' };
 
 export default function RiderHost(props: RiderHostProps) {
   const p = useRef(props);
@@ -50,11 +52,17 @@ export default function RiderHost(props: RiderHostProps) {
       { id: 'new-line', label: 'Start New Line', menu: 'Edit', group: true, shortcut: 'Shift Enter', run: inEditor(startNewLine) },
       { id: 'new-line-before', label: 'Start New Line Before Current', menu: 'Edit', shortcut: 'Ctrl Alt Enter', run: inEditor(startNewLineBefore) },
       { id: 'paste-history', label: 'Paste from History…', menu: 'Edit', group: true, shortcut: 'Ctrl Shift V', run: () => openPopup({ kind: 'paste' }) },
+      { id: 'live-template', label: 'Insert Live Template…', menu: 'Code', shortcut: 'Ctrl J', run: () => openPopup({ kind: 'template' }) },
       { id: 'carets-line-ends', label: 'Add Carets to Ends of Selected Lines', menu: 'Edit', shortcut: 'Alt Shift G', run: inEditor(caretsAtLineEnds) },
     ];
     return registerRider(list);
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
   let body: ReactNode = null;
+  if (popup?.kind === 'template' && target.current) {
+    const { view, file } = target.current;
+    const items = liveTemplates(file);
+    body = <ListPopup label="Live templates" placeholder="Template (Ctrl+J)" empty="No live templates for this kind of file." items={items.map((t) => ({ key: t.label, label: t.label, detail: t.detail }))} onPick={(k) => { insertTemplate(view, file, k); closeAndFocus(); }} />;
+  }
   if (popup?.kind === 'paste') body = <PasteHistory onPaste={(text) => { const v = target.current?.view; closeAndFocus(); if (v) v.dispatch(v.state.replaceSelection(text), { scrollIntoView: true, userEvent: 'input.paste' }); }} />;
   return (
     <Dialog.Root open={!!popup} onOpenChange={(o) => { if (!o) closeAndFocus(); }}>

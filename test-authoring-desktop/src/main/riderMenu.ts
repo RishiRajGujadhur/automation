@@ -27,7 +27,9 @@ const ROWS: Record<'edit' | 'view' | 'navigate' | 'code' | 'tools' | 'help', Row
   ],
   view: [],
   navigate: [],
-  code: [],
+  code: [
+    ['Insert Live Template…', 'live-template', 'CmdOrCtrl+J'],
+  ],
   tools: [],
   help: [],
 };

@@ -38,6 +38,31 @@ function enclosingClass(view: EditorView, pos: number) {
 }
 const expand = (view: EditorView, body: string, from: number, to: number) => snippet(body.replace(/\t/g, '    '))(view, null, from, to);
 
+// Gherkin live templates (Rider's Insert Live Template in .feature files).
+const gherkinTemplates: { label: string; detail: string; body: (cls: string) => string }[] = [
+  { label: 'scenario', detail: 'Scenario', body: () => 'Scenario: ${name}\n\tGiven ${context}\n\tWhen ${action}\n\tThen ${outcome}' },
+  { label: 'outline', detail: 'Scenario Outline with Examples', body: () => 'Scenario Outline: ${name}\n\tGiven ${context} <${param}>\n\tWhen ${action}\n\tThen ${outcome}\n\n\tExamples:\n\t\t| ${param} |\n\t\t| ${value} |' },
+  { label: 'background', detail: 'Background', body: () => 'Background:\n\tGiven ${context}' },
+  { label: 'rule', detail: 'Rule', body: () => 'Rule: ${business rule}\n\n\tScenario: ${name}\n\t\tGiven ${context}' },
+  { label: 'examples', detail: 'Examples table', body: () => 'Examples:\n\t| ${column} |\n\t| ${value} |' },
+  { label: 'table', detail: 'Data table', body: () => '| ${column} | ${column2} |\n| ${value} | ${value2} |' },
+  { label: 'docstring', detail: 'Doc string', body: () => `${'"'.repeat(3)}\n\${text}\n${'"'.repeat(3)}` },
+  { label: 'tag', detail: 'Tag', body: () => '@${tag}' },
+];
+
+/** Insert Live Template (Ctrl+J): the templates for a file, by extension. */
+export function liveTemplates(file: string) {
+  return (file.endsWith('.feature') ? gherkinTemplates : file.endsWith('.cs') ? templates : []).map((t) => ({ label: t.label, detail: t.detail }));
+}
+/** Expands a live template at the selection. */
+export function insertTemplate(view: EditorView, file: string, label: string) {
+  const t = (file.endsWith('.feature') ? gherkinTemplates : templates).find((x) => x.label === label);
+  if (!t) return;
+  const r = view.state.selection.main;
+  // snippet() indents the template's lines like the line it is inserted on.
+  expand(view, t.body(enclosingClass(view, r.from)), r.from, r.to);
+}
+
 /** Snippets as completions (shown with IntelliSense when the typed word matches a shortcut). */
 export function snippetOptions(view: EditorView, pos: number): Completion[] {
   return templates.map((t) => snippetCompletion(t.body(enclosingClass(view, pos)).replace(/\t/g, '    '), { label: t.label, detail: `${t.detail} (snippet)`, type: 'text', boost: -10 }));
