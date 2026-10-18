@@ -51,6 +51,31 @@ Status: ⬜ todo · ✅ done (date)
 | J35 | Shelf (shelve / unshelve changes; Git stash) | ✅ 2026-10-18 |
 | J36 | Power Save Mode | ✅ 2026-10-18 |
 | J37 | Go to Related Files (Ctrl+Alt+Home) | ✅ 2026-10-18 |
+| J38 | Move Statement Up / Down (Ctrl+Shift+Alt+↑/↓): whole blocks and scenarios | ⬜ |
+| J39 | Comment with Block Comment (Ctrl+Shift+/) | ⬜ |
+| J40 | Code Cleanup (Ctrl+E, C): format and organize usings (C#), format (Gherkin) | ⬜ |
+| J41 | Next / Previous Change (Ctrl+Alt+Shift+↓/↑) | ⬜ |
+| J42 | Rollback Lines (undo the uncommitted change at the caret) | ⬜ |
+| J43 | Scratch Files (Ctrl+Alt+Shift+Insert) | ⬜ |
+| J44 | Numbered bookmarks (Ctrl+Shift+digit toggles, Ctrl+digit jumps) | ⬜ |
+| J45 | Expand All / Collapse All / Collapse to Definitions | ⬜ |
+| J46 | Select In… (Alt+F1): Explorer, Structure, Terminal, file manager | ⬜ |
+| J47 | Compare With… another file | ⬜ |
+| J48 | Complete Current Statement (Ctrl+Shift+Enter) | ⬜ |
+| J49 | Unwrap / Remove (Ctrl+Shift+Delete) | ⬜ |
+| J50 | Column Selection Mode (Alt+Shift+Insert) | ⬜ |
+| J51 | Copy Path / Reference… popup (Ctrl+Shift+C) | ⬜ |
+| J52 | TODO highlighting in the editor | ⬜ |
+| J53 | Breadcrumbs for feature files (Feature › Rule › Scenario) | ⬜ |
+| J54 | Git: Show History for Selection | ⬜ |
+| J55 | Git Log tool window (Alt+9) with commit details | ⬜ |
+| J56 | Git: Compare with Branch… | ⬜ |
+| J57 | External Tools (commands with $FilePath$-style macros) | ⬜ |
+| J58 | New File from Template (class, interface, test, step definitions, feature, .http, .md) | ⬜ |
+| J59 | Line separators (CRLF ⇄ LF) from the status bar | ⬜ |
+| J60 | Show Line Numbers toggle | ⬜ |
+| J61 | Indent guides | ⬜ |
+| J62 | Highlight usages of the identifier at the caret (automatic) | ⬜ |
 
 ## Progress log
 - 2026-10-18 J1: Rider command registry (web menu bar, desktop native menus, palette); Extend/Shrink Selection (word → string → brackets → line → indentation block → document).

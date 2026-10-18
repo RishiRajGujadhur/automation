@@ -732,3 +732,20 @@ test('J37 Go to Related Files (Ctrl+Alt+Home): a feature to its step files, a st
   await page.keyboard.press('Enter');
   await expect(gherkin(page)).toContainText('Feature: Authentication');
 });
+
+test('Tool window keys work while the Terminal has focus', async ({ page }) => {
+  await openFeature(page);
+  await page.keyboard.press('Alt+F12');
+  const term = page.getByRole('region', { name: 'Terminal' });
+  await expect(term.locator('.terminal-host:not([hidden]) .xterm-rows')).toContainText('PS ', { timeout: 30_000 });
+  await term.locator('.terminal-host:not([hidden])').click();
+  await page.keyboard.press('Alt+7');
+  await expect(page.getByRole('region', { name: 'Structure' })).toBeVisible();
+});
+
+test('Alt+F12 stays Peek Definition in a C# editor; Ctrl+` opens the Terminal from there', async ({ page }) => {
+  await openCs(page, 'Steps/AuthSteps.cs', 'SignIn');
+  await page.keyboard.press('Control+`');
+  await expect(page.getByRole('region', { name: 'Terminal' })).toBeVisible();
+  await expect(page.getByRole('region', { name: /^Peek Definition/ })).toHaveCount(0);
+});

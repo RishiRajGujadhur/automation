@@ -123,3 +123,81 @@ test('README screenshots', async () => {
   await expect(page.getByRole('region', { name: 'Start Window' })).toBeVisible();
   await shot('start-window');
 });
+
+test('README screenshots: JetBrains Rider features', async () => {
+  // Files for the HTTP Client and Markdown preview (the Explorer re-reads the folder).
+  const origin = new URL(page.url()).origin;
+  fs.writeFileSync(path.join(repo, 'api.http'), [`@host = ${origin}`, '', '### Studio health', 'GET {{host}}/api/health', 'Accept: application/json', '', '### Workspace', 'GET {{host}}/api/workspace', ''].join('\n'));
+  fs.writeFileSync(path.join(repo, 'NOTES.md'), ['# Calculator tests', '', 'Scenarios for **Add**, run from the feature files.', '', '| Feature | Scenarios | Status |', '| --- | --- | --- |', '| Add | 2 | passing |', '', '- [x] Positive numbers', '- [ ] Overflow', '', '```csharp', 'var result = calculator.Add();', '```', ''].join('\n'));
+  await call('/scan', {});
+  await page.goto(page.url().replace(/#.*$/, '#/features/editor'));
+  await page.reload();
+  await expect(page.getByText('Repository indexed')).toBeVisible({ timeout: 60_000 });
+  const explorer = page.getByRole('navigation');
+  const open = async (name: string) => { await explorer.getByRole('button', { name, exact: true }).first().click(); };
+
+  // 1. Structure tool window and the File Structure popup on a C# file.
+  await open('CalculatorSteps.cs');
+  const cs = page.getByLabel('Source of Steps/CalculatorSteps.cs');
+  await cs.locator('.cm-line', { hasText: 'result = calculator.Add();' }).click();
+  await page.keyboard.press('Alt+7');
+  await expect(page.getByRole('list', { name: 'Structure of the file' }).getByRole('button').first()).toBeVisible({ timeout: 60_000 });
+  await page.keyboard.press('Control+Alt+F12');
+  await expect(page.getByRole('listbox', { name: 'File structure' }).getByRole('option').first()).toBeVisible({ timeout: 60_000 });
+  await shot('rider-file-structure');
+  await page.keyboard.press('Escape');
+
+  // 2. Call Hierarchy of Calculator.Add.
+  await cs.locator('.cm-line', { hasText: 'public int Add()' }).click();
+  await page.keyboard.press('Home');
+  for (let i = 0; i < 3; i++) await page.keyboard.press('Control+ArrowRight');
+  await page.keyboard.press('Control+Alt+H');
+  await expect(page.getByRole('list', { name: 'Callers' })).toContainText('WhenTheTwoNumbersAreAdded', { timeout: 60_000 });
+  await shot('rider-call-hierarchy');
+
+  // 3. Terminal.
+  await page.keyboard.press('Control+`');
+  const term = page.getByRole('region', { name: 'Terminal' });
+  const screen = term.locator('.terminal-host:not([hidden]) .xterm-rows');
+  await expect(screen).toContainText('PS ', { timeout: 30_000 });
+  await term.locator('.terminal-host:not([hidden])').click();
+  await page.keyboard.type('Get-ChildItem -Recurse -Name -Include *.feature, *.cs | Where-Object { $_ -notmatch "obj|bin" }');
+  await page.keyboard.press('Enter');
+  await expect(screen).toContainText('CalculatorSteps.cs', { timeout: 30_000 });
+  await page.keyboard.type('git --version');
+  await page.keyboard.press('Enter');
+  await page.waitForTimeout(1500);
+  await shot('rider-terminal');
+
+  // 4. Problems: solution-wide analysis.
+  await app.evaluate(({ Menu }) => { const v = Menu.getApplicationMenu()!.items.find((x) => x.label.replace('&', '') === 'View')!; v.submenu!.items.find((x) => x.label === 'Problems')!.click(); });
+  await expect(page.getByRole('region', { name: 'Problems' }).getByRole('toolbar').getByText(/error|warning/)).toBeVisible({ timeout: 120_000 });
+  await shot('rider-problems');
+
+  // 5. HTTP Client: send a request from an .http file.
+  await page.getByRole('button', { name: 'Show all files' }).click();
+  await open('api.http');
+  await page.locator('.code-editor:not([hidden]) .cm-http-send').first().click();
+  await expect(page.getByRole('region', { name: 'Response' }).getByRole('status')).toHaveText(/^200/, { timeout: 30_000 });
+  await shot('rider-http-client');
+
+  // 6. Markdown preview.
+  await open('NOTES.md');
+  await expect(page.getByRole('article', { name: 'Markdown preview' }).getByRole('heading', { name: 'Calculator tests' })).toBeVisible();
+  await shot('rider-markdown-preview');
+
+  // 7. Run Anything (Ctrl twice).
+  await page.getByLabel('Source of NOTES.md').click();
+  await page.keyboard.press('Control');
+  await page.keyboard.press('Control');
+  await expect(page.getByRole('listbox', { name: 'Run Anything' })).toContainText('dotnet test');
+  await page.getByLabel('Command to run').fill('dotnet');
+  await shot('rider-run-anything');
+  await page.keyboard.press('Escape');
+
+  // 8. Productivity Guide (from the native Help menu).
+  await app.evaluate(({ Menu }) => { const help = Menu.getApplicationMenu()!.items.find((x) => x.label.replace('&', '') === 'Help')!; help.submenu!.items.find((x) => x.label === 'Productivity Guide')!.click(); });
+  await expect(page.getByRole('table', { name: 'Feature usage' })).toBeVisible();
+  await shot('rider-productivity-guide');
+  await page.keyboard.press('Escape');
+});

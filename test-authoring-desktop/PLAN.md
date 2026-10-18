@@ -184,3 +184,8 @@ Legend: `[x]` done · `[ ]` to do. Every feature is committed and pushed when fi
 ## Tabs and Open Folder (2026-10-11)
 - [x] D4 File menu: Open Folder… (was Open Repository…), Save, Save All, Close Editor (Ctrl+W), Close All Editors; Window ▸ Close moves to Ctrl+Shift+W; tray says Open Folder…
 
+
+## JetBrains Rider features (2026-10-18)
+- [x] R1 Native Navigate, Code and Tools menus plus Rider items in Edit, View and Help (`src/main/riderMenu.ts`); each sends `rider` with the command id, the page handles the keys
+- [x] R2 Ctrl+Shift+V is Paste from History (Paste as Plain Text keeps its Edit menu item without the key)
+- [x] R3 Terminal runs PowerShell over pipes (no native pty), so the packaged app needs nothing extra; packaged test runs a command in it

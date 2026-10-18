@@ -218,16 +218,20 @@ export default function RiderHost(props: RiderHostProps) {
     const keys: [test: (e: KeyboardEvent) => boolean, id: string][] = [
       [(e) => e.altKey && !e.ctrlKey && !e.shiftKey && !e.metaKey && e.code === 'Digit7', 'tool-structure'],
       [(e) => e.altKey && e.shiftKey && !e.ctrlKey && !e.metaKey && e.code === 'Digit6', 'tool-problems'],
-      [(e) => e.altKey && !e.shiftKey && !e.ctrlKey && !e.metaKey && e.key === 'F12', 'tool-terminal'],
+      // Alt+F12 opens the Terminal (Rider) except in a C# editor, where it stays Peek Definition (Visual Studio);
+      // Ctrl+` (Visual Studio's View ▸ Terminal) works everywhere.
+      [(e) => e.altKey && !e.shiftKey && !e.ctrlKey && !e.metaKey && e.key === 'F12' && !((e.target as HTMLElement | null)?.closest?.('.cm-editor') && activeEditor()?.file.endsWith('.cs')), 'tool-terminal'],
+      [(e) => e.ctrlKey && !e.shiftKey && !e.altKey && !e.metaKey && (e.key === '`' || e.code === 'Backquote'), 'tool-terminal'],
       // Distraction-Free Mode (Rider has no default key; Ctrl+K is the command palette here).
       [(e) => e.altKey && e.shiftKey && !e.ctrlKey && !e.metaKey && e.code === 'KeyZ', 'zen-mode'],
       [(e) => (e.ctrlKey || e.metaKey) && e.shiftKey && !e.altKey && e.key === 'F12', 'hide-tools'],
       [(e) => e.altKey && !e.ctrlKey && !e.shiftKey && !e.metaKey && e.key === 'F8', 'evaluate-expression'],
       [(e) => e.altKey && e.shiftKey && !e.ctrlKey && !e.metaKey && e.code === 'KeyC', 'recent-changes'],
     ];
-    const h = (e: KeyboardEvent) => { const k = keys.find(([t]) => t(e)); if (k) { e.preventDefault(); runRider(k[1], 'key'); } };
-    window.addEventListener('keydown', h);
-    return () => window.removeEventListener('keydown', h);
+    // Capture phase: the keys also work while the Terminal (xterm.js swallows key events) or a field has focus.
+    const h = (e: KeyboardEvent) => { const k = keys.find(([t]) => t(e)); if (k) { e.preventDefault(); e.stopPropagation(); runRider(k[1], 'key'); } };
+    window.addEventListener('keydown', h, true);
+    return () => window.removeEventListener('keydown', h, true);
   }, []);
   useEffect(() => {
     const list: RiderCommand[] = [
@@ -255,7 +259,7 @@ export default function RiderHost(props: RiderHostProps) {
       { id: 'type-hierarchy', label: 'Type Hierarchy', menu: 'Navigate', group: true, shortcut: 'Ctrl H', run: () => void typeHierarchy() },
       { id: 'call-hierarchy', label: 'Call Hierarchy', menu: 'Navigate', shortcut: 'Ctrl Alt H', run: () => void callHierarchy() },
       { id: 'tool-problems', label: 'Problems', menu: 'View', shortcut: 'Alt Shift 6', run: () => p.current.onTool('problems') },
-      { id: 'tool-terminal', label: 'Terminal', menu: 'View', shortcut: 'Alt F12', run: () => { if (isBrowser()) { p.current.onNotice('The terminal needs a folder indexed by the studio server.'); return; } p.current.onTool('terminal'); } },
+      { id: 'tool-terminal', label: 'Terminal', menu: 'View', shortcut: 'Alt F12 / Ctrl `', run: () => { if (isBrowser()) { p.current.onNotice('The terminal needs a folder indexed by the studio server.'); return; } p.current.onTool('terminal'); } },
       { id: 'run-anything', label: 'Run Anything…', menu: 'Tools', shortcut: 'Ctrl Ctrl', run: () => { if (isBrowser()) { p.current.onNotice('Run Anything needs a folder indexed by the studio server.'); return; } openPopup({ kind: 'run' }, false); } },
       { id: 'zen-mode', label: 'Distraction-Free Mode', menu: 'View', group: true, shortcut: 'Alt Shift Z', checked: () => layoutState().mode === 'zen', run: () => { toggleMode('zen'); riderChanged(); } },
       { id: 'presentation-mode', label: 'Presentation Mode', menu: 'View', checked: () => layoutState().mode === 'presentation', run: () => { toggleMode('presentation'); riderChanged(); } },

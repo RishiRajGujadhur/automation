@@ -45,6 +45,47 @@ XML dictionary. Snapshots keep a page to explore offline.
 
 ![Start Window](docs/screenshots/start-window.png)
 
+### JetBrains Rider features
+
+**File Structure and Structure window.** Ctrl+Alt+F12 lists the file's types and members (or a feature's scenarios),
+and the Structure window (Alt+7) follows the caret.
+
+![File Structure](docs/screenshots/rider-file-structure.png)
+
+**Call Hierarchy.** Ctrl+Alt+H shows who calls a method, and you can expand each caller in turn. Ctrl+H shows the
+type hierarchy.
+
+![Call Hierarchy](docs/screenshots/rider-call-hierarchy.png)
+
+**Terminal.** Alt+F12 opens PowerShell in the repository folder. It keeps history and the current folder, Ctrl+C
+stops a command, and you can open several tabs.
+
+![Terminal](docs/screenshots/rider-terminal.png)
+
+**Problems.** Alt+Shift+6 runs a solution-wide analysis: C# compiler errors and warnings from every project, plus
+feature steps that have no step definition.
+
+![Problems](docs/screenshots/rider-problems.png)
+
+**HTTP Client.** `.http` files can define variables and several requests. Send a request with ▶ or Ctrl+Enter to see
+the status, the headers and the JSON body.
+
+![HTTP Client](docs/screenshots/rider-http-client.png)
+
+**Markdown preview.** Show Markdown as the editor alone, the editor and preview side by side, or the preview alone.
+
+![Markdown preview](docs/screenshots/rider-markdown-preview.png)
+
+**Run Anything.** Press Ctrl twice, then type a command or pick a suggestion: build, test, restore or Git. It runs in
+the Terminal.
+
+![Run Anything](docs/screenshots/rider-run-anything.png)
+
+**Productivity Guide.** Shows which features you use, how often, and how often with the shortcut. The Key Promoter
+shows a feature's shortcut when you use the feature from a menu.
+
+![Productivity Guide](docs/screenshots/rider-productivity-guide.png)
+
 ## Highlights
 
 - **Solutions:** `.sln` / `.slnx` / `.csproj`, multiple projects, NuGet package management, build, Error List and
@@ -61,6 +102,18 @@ XML dictionary. Snapshots keep a page to explore offline.
   Scenario Outline checks, and Gherkin formatting from `.editorconfig`. See [REQNROLL.md](REQNROLL.md).
 - **Spy:** element tracking, element browser, properties, verified selectors, add to dictionary, snapshots. See
   [SPY.md](SPY.md).
+- **JetBrains Rider features (37):**
+  - Editing: extend / shrink selection, toggle case, join lines, carets at the next or all occurrences, paste from
+    history, live templates, surround with, copy reference, highlight usages.
+  - Navigation: File Structure, Structure, type and call hierarchy, recent changes, related files.
+  - Tool windows: Problems, Terminal, Run Anything, Shelf.
+  - Files: HTTP Client, Markdown preview.
+  - View: distraction-free and presentation modes, hide all tool windows, soft wraps, show whitespaces, Ctrl+wheel
+    font size.
+  - Debugging: Evaluate Expression, mute breakpoints.
+  - Help: Key Promoter, Productivity Guide, Tip of the Day, Power Save Mode.
+
+  See [RIDER.md](RIDER.md).
 
 Visual Studio feature parity is tracked in [VS2026-PARITY.md](VS2026-PARITY.md); current work is tracked in
 [QOL-PROGRESS.md](QOL-PROGRESS.md).

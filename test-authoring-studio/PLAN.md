@@ -268,3 +268,8 @@ Reference: Visual Studio debugger (breakpoints, Step Into/Over/Out, Locals, Watc
 - [x] T5 File menu in the web title bar (New Feature, Open Folder…, Save, Save All, Close Editor, Close All, Close Folder, Preferences); the desktop app's native File menu gains Open Folder…, Save, Save All, Close Editor (Ctrl+W; window close moves to Ctrl+Shift+W)
 - [x] T6 Web Open Folder uses the File System Access API: the folder is read and written in place (no upload), the Explorer is built in the browser, files open in tabs and save with Ctrl+S; the folder is reopened on the next visit when the browser allows. Indexing and debugging need the folder's path (the API never reveals it): File ▸ Index Folder with Studio Server…
 
+
+## JetBrains Rider features (2026-10-18)
+- [x] R7–R43 37 Rider features (J1–J37 in `../RIDER.md`): command registry (`src/rider/commands.ts`) shown in the web menu bar (Edit, View, Navigate, Code, Tools, Help), the palette and the desktop's native menus; editor keys in `src/editor/riderKeys.ts`; tool windows (Structure, Hierarchy, Problems, Terminal, Shelf) as tabs of the bottom panel
+- [x] Language server ops `symbolId`, `typeHierarchy`, `callers`, `solutionDiagnostics`; server: `/api/problems`, `/api/terminal/*`, `/api/http/send`, `/api/steps/regex`, `/api/related`, `/api/history/recent`, `/api/git/shelves|shelve|unshelve|shelf/delete`
+- [x] Bug: editors could only save `.cs` / `.feature` / `.xml` (now any text file: `.csproj`, `.json`, `.md`, `.http`, scripts…); the source reader and the Explorer skipped `.http` and script files

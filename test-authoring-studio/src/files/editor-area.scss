@@ -2634,6 +2634,14 @@
     display: flex;
     gap: 2px;
     align-items: center;
+    > .icon-button {
+      flex: none;
+      width: auto;
+    }
+    > .structure-item {
+      flex: 1;
+      min-width: 0;
+    }
   }
   .hierarchy-group > small {
     display: block;

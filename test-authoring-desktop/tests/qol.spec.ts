@@ -160,3 +160,23 @@ test('E1: text fields get a native context menu', async () => {
   const items = await shown;
   expect(items.join(' ').toLowerCase()).toContain('paste');
 });
+
+test('Rider features from the native menus: Navigate / Code / Tools menus, Structure, Run Anything, Terminal', async () => {
+  const labels = await appProcess.evaluate(({ Menu }) => Menu.getApplicationMenu()!.items.map((x) => x.label.replace('&', '')));
+  expect(labels).toEqual(expect.arrayContaining(['Navigate', 'Code', 'Tools']));
+  await page.goto(page.url().replace(/#.*$/, '#/features/editor'));
+  await menu('View', 'Structure');
+  await expect(page.getByRole('region', { name: 'Structure' })).toBeVisible();
+  await menu('Tools', 'Run Anything… (Ctrl twice)');
+  await expect(page.getByRole('listbox', { name: 'Run Anything' })).toBeVisible();
+  await page.keyboard.press('Escape');
+  await menu('View', 'Terminal');
+  const screen = page.getByRole('region', { name: 'Terminal' }).locator('.terminal-host:not([hidden]) .xterm-rows');
+  await expect(screen).toContainText('PS ', { timeout: 30_000 });
+  await page.getByRole('region', { name: 'Terminal' }).locator('.terminal-host:not([hidden])').click();
+  await page.keyboard.type('Write-Output ("packaged-" + "shell")');
+  await page.keyboard.press('Enter');
+  await expect(screen).toContainText('packaged-shell');
+  await page.getByRole('button', { name: 'Close Terminal', exact: true }).click();
+  await page.getByRole('button', { name: 'Close Structure', exact: true }).click();
+});
