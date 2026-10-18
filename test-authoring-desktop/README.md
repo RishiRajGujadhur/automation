@@ -12,6 +12,33 @@ The Electron (TypeScript) desktop version of [TestAuthoring Studio](../test-auth
 
 The studio has three small host hooks: `STUDIO_ROOT` (resources), `STUDIO_DATA` (writable state) and `STUDIO_SCANNER_EXE` (self-contained scanner). It also has `src/desktop.ts`, which lights up native features when `window.desktop` exists and does nothing in a browser.
 
+## Desktop screenshots
+
+Fresh captures of the packaged Windows app, taken on **2026-10-18** with the Calculator sample.
+
+**Feature authoring and Solution Explorer**
+
+![Desktop feature editor and Solution Explorer](../docs/screenshots/feature-editor.png)
+
+**C# navigation and editing**
+
+![Desktop C# editor](../docs/screenshots/csharp-editor.png)
+
+**Test discovery and run results**
+
+![Desktop Test Explorer](../docs/screenshots/test-explorer.png)
+
+**Debugging a Gherkin scenario**
+
+![Desktop debugger paused on a feature breakpoint](../docs/screenshots/debugger.png)
+
+**Git history and commit review**
+
+![Desktop Git Log and commit patch](../docs/screenshots/rider-git-log.png)
+
+See the [full screenshot gallery and capture instructions](../README.md#screenshots) and the
+[60 proposed quality-of-life improvements](../DESKTOP-QOL.md), with priorities and acceptance criteria.
+
 ## Requirements
 
 - Node.js 24+.

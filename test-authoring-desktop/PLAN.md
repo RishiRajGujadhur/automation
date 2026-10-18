@@ -189,3 +189,9 @@ Legend: `[x]` done · `[ ]` to do. Every feature is committed and pushed when fi
 - [x] R1 Native Navigate, Code and Tools menus plus Rider items in Edit, View and Help (`src/main/riderMenu.ts`); each sends `rider` with the command id, the page handles the keys
 - [x] R2 Ctrl+Shift+V is Paste from History (Paste as Plain Text keeps its Edit menu item without the key)
 - [x] R3 Terminal runs PowerShell over pipes (no native pty), so the packaged app needs nothing extra; packaged test runs a command in it
+
+## Desktop documentation review (2026-10-18)
+- [x] Audit the Electron shell and shared authoring workflows; document 60 proposed improvements with priorities, source references and acceptance criteria in `../DESKTOP-QOL.md` (proposals only).
+- [x] Refresh all 16 packaged-desktop screenshots, add Git Log to the root gallery, and add a screenshot gallery to the desktop README.
+- [x] Rebuild the Windows distribution; both screenshot capture scenarios pass; inspect the captures and verify local documentation links.
+- [x] Packaged verification outside the repository: 30 passed; 2 opt-in screenshot scenarios skipped in that run (both passed separately).

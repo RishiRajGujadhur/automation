@@ -273,3 +273,7 @@ Reference: Visual Studio debugger (breakpoints, Step Into/Over/Out, Locals, Watc
 - [x] R7–R43 37 Rider features (J1–J37 in `../RIDER.md`): command registry (`src/rider/commands.ts`) shown in the web menu bar (Edit, View, Navigate, Code, Tools, Help), the palette and the desktop's native menus; editor keys in `src/editor/riderKeys.ts`; tool windows (Structure, Hierarchy, Problems, Terminal, Shelf) as tabs of the bottom panel
 - [x] Language server ops `symbolId`, `typeHierarchy`, `callers`, `solutionDiagnostics`; server: `/api/problems`, `/api/terminal/*`, `/api/http/send`, `/api/steps/regex`, `/api/related`, `/api/history/recent`, `/api/git/shelves|shelve|unshelve|shelf/delete`
 - [x] Bug: editors could only save `.cs` / `.feature` / `.xml` (now any text file: `.csproj`, `.json`, `.md`, `.http`, scripts…); the source reader and the Explorer skipped `.http` and script files
+
+## Desktop documentation review (2026-10-18)
+- [x] Review shared UI workflows for the 60-item proposal backlog in `../DESKTOP-QOL.md`; no product behavior changes in this documentation update.
+- [x] Refresh the root README with screenshots from the rebuilt Electron host and link the desktop improvement backlog.

@@ -10,6 +10,9 @@ It ships as a **Windows desktop app** (`test-authoring-desktop/`, Electron) and 
 
 ## Screenshots
 
+Captured from the Windows Electron desktop build on **2026-10-18**, using a temporary copy of the Calculator
+sample. These are running-app captures, not mockups; image dimensions follow the Windows display scaling.
+
 **Feature editor and Solution Explorer.** Open a `.sln` / `.slnx` / `.csproj`; projects, dependencies and files
 appear as in Visual Studio.
 
@@ -84,10 +87,15 @@ the Terminal.
 **Git Log.** Alt+9 lists every branch's commits with the graph. Select a commit to see its message, changed files and
 patch. Show History for Selection and Compare with Branch also come from Git.
 
+![Git Log with branch history and selected commit patch](docs/screenshots/rider-git-log.png)
+
 **Productivity Guide.** Shows which features you use, how often, and how often with the shortcut. The Key Promoter
 shows a feature's shortcut when you use the feature from a menu.
 
 ![Productivity Guide](docs/screenshots/rider-productivity-guide.png)
+
+The proposed [desktop quality-of-life backlog](DESKTOP-QOL.md) contains **60 improvements**, with priorities,
+source references and acceptance criteria. These are future proposals, separate from the implemented features above.
 
 ## Highlights
 
@@ -143,7 +151,11 @@ The .NET helpers need the .NET 10 SDK. The repository can use a local SDK in `.t
 
 To refresh the screenshots after building the desktop app:
 
-```bash
+```powershell
 cd test-authoring-desktop
-TAS_SCREENSHOTS=1 TAS_EXE="release/win-unpacked/TestAuthoring Studio.exe" npx playwright test screenshots
+npm run dist
+$env:TAS_SCREENSHOTS = '1'
+$env:TAS_EXE = 'release/win-unpacked/TestAuthoring Studio.exe'
+npx playwright test screenshots
+Remove-Item Env:TAS_SCREENSHOTS, Env:TAS_EXE
 ```
