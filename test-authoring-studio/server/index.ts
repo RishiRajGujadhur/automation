@@ -39,7 +39,7 @@ import { Builder } from './build.js';
 import { findInFiles, replaceInFiles } from './search.js';
 import { values, render, parameterCount, replaceAttributePattern } from './stepRename.js';
 import { installed as nugetInstalled, updates as nugetUpdates, search as nugetSearch, versions as nugetVersions, install as nugetInstall, uninstall as nugetUninstall } from './nuget.js';
-import { status as gitStatus, stage as gitStage, unstage as gitUnstage, discard as gitDiscard, commit as gitCommit, headInfo, log as gitLog, branches as gitBranches, checkout as gitCheckout, createBranch as gitCreateBranch, sync as gitSync, merge as gitMerge, blame as gitBlame, clone as gitClone } from './git.js';
+import { status as gitStatus, stage as gitStage, unstage as gitUnstage, discard as gitDiscard, commit as gitCommit, headInfo, log as gitLog, branches as gitBranches, checkout as gitCheckout, createBranch as gitCreateBranch, sync as gitSync, merge as gitMerge, blame as gitBlame, clone as gitClone, shelves, shelve, unshelve, deleteShelf } from './git.js';
 import { LanguageService } from './langService.js';
 import type { Index } from '../src/types.js';
 import { readSettings, writeSettings, settingsSchema, tracesDir, spySnapshotsDir } from './settings.js';
@@ -538,6 +538,26 @@ app.post('/api/git/checkout', async (req, res) => {
   if (create) await gitCreateBranch(config.repositoryRoot, name); else await gitCheckout(config.repositoryRoot, name);
   rescanSoon(300);
   res.json(await gitStatus(config.repositoryRoot));
+});
+// Shelf (Rider): shelve / unshelve uncommitted changes (Git stashes). Unshelving changes files on disk: re-index.
+app.get('/api/git/shelves', async (_req, res) => res.json(await shelves(config.repositoryRoot)));
+app.post('/api/git/shelve', async (req, res) => {
+  const { message } = z.object({ message: z.string().trim().min(1).max(200) }).parse(req.body);
+  const output = await shelve(config.repositoryRoot, message);
+  rescanSoon(300);
+  res.json({ output, shelves: await shelves(config.repositoryRoot) });
+});
+const shelfRef = z.object({ ref: z.string().regex(/^stash@\{\d+\}$/), remove: z.boolean().optional() });
+app.post('/api/git/unshelve', async (req, res) => {
+  const { ref, remove } = shelfRef.parse(req.body);
+  const files = (await shelves(config.repositoryRoot)).find((s) => s.ref === ref)?.files ?? [];
+  const output = await unshelve(config.repositoryRoot, ref, !!remove);
+  rescanSoon(300);
+  res.json({ output, files, shelves: await shelves(config.repositoryRoot) });
+});
+app.post('/api/git/shelf/delete', async (req, res) => {
+  const { ref } = shelfRef.parse(req.body);
+  res.json({ output: await deleteShelf(config.repositoryRoot, ref), shelves: await shelves(config.repositoryRoot) });
 });
 app.post('/api/git/merge', async (req, res) => {
   const { name } = z.object({ name: z.string().trim().min(1).max(200) }).parse(req.body);

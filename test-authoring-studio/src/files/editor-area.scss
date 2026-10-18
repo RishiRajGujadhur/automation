@@ -3041,3 +3041,23 @@ html[data-breakpoints-muted] .cm-bp {
     cursor: pointer;
   }
 }
+
+// Shelf
+.shelf-panel {
+  .shelf-name {
+    width: min(320px, 40vw);
+    font-size: 12px;
+  }
+  .shelf-item {
+    padding: 4px 0;
+    border-bottom: 1px solid var(--border);
+  }
+  .shelf-head {
+    display: flex;
+    gap: 6px;
+    align-items: center;
+    small {
+      color: var(--text-muted);
+    }
+  }
+}

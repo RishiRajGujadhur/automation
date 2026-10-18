@@ -183,3 +183,40 @@ export async function sync(root: string, action: 'fetch' | 'pull' | 'push') {
   const st = await status(root);
   return st.upstream ? git(top, ['push']) : git(top, ['push', '-u', 'origin', st.branch ?? 'HEAD']);
 }
+
+/**
+ * Shelf (JetBrains Rider): shelve uncommitted changes (tracked and new files) under a name, unshelve them later.
+ * Stored as Git stashes, so they also show in other Git tools.
+ */
+export type Shelf = { ref: string; message: string; date: string; files: string[] };
+const STASH = /^stash@\{\d+\}$/;
+export async function shelves(root: string): Promise<Shelf[]> {
+  let top: string;
+  try { ({ top } = await locate(root)); } catch { return []; }
+  const out = await git(top, ['stash', 'list', '--format=%gd%x00%gs%x00%cI']);
+  const list: Shelf[] = [];
+  for (const line of out.split('\n').filter(Boolean).slice(0, 50)) {
+    const [ref, subject, date] = line.split('\0');
+    // "On main: message" / "WIP on main: abc123 subject"
+    const message = subject.replace(/^(?:WIP )?[Oo]n [^:]+:\s*/, '');
+    const files = (await git(top, ['stash', 'show', '--name-only', '--include-untracked', ref]).catch(() => git(top, ['stash', 'show', '--name-only', ref]).catch(() => ''))).split('\n').filter(Boolean);
+    list.push({ ref, message, date, files });
+  }
+  return list;
+}
+export async function shelve(root: string, message: string) {
+  const { top } = await locate(root);
+  const out = await git(top, ['stash', 'push', '--include-untracked', '-m', message]);
+  if (/No local changes to save/i.test(out)) throw new Error('There are no changes to shelve.');
+  return out.trim();
+}
+export async function unshelve(root: string, ref: string, remove: boolean) {
+  if (!STASH.test(ref)) throw new Error('Unknown shelf.');
+  const { top } = await locate(root);
+  return (await git(top, ['stash', remove ? 'pop' : 'apply', ref])).trim();
+}
+export async function deleteShelf(root: string, ref: string) {
+  if (!STASH.test(ref)) throw new Error('Unknown shelf.');
+  const { top } = await locate(root);
+  return (await git(top, ['stash', 'drop', ref])).trim();
+}

@@ -48,7 +48,7 @@ Status: ⬜ todo · ✅ done (date)
 | J32 | Check RegExp (step definition patterns) | ✅ 2026-10-18 |
 | J33 | Compare with Clipboard | ✅ 2026-10-18 |
 | J34 | Recent Changes (Alt+Shift+C) | ✅ 2026-10-18 |
-| J35 | Shelf (shelve / unshelve changes; Git stash) | ⬜ |
+| J35 | Shelf (shelve / unshelve changes; Git stash) | ✅ 2026-10-18 |
 | J36 | Power Save Mode | ⬜ |
 | J37 | Go to Related Files (Ctrl+Alt+Home) | ⬜ |
 
@@ -87,3 +87,4 @@ Status: ⬜ todo · ✅ done (date)
 - 2026-10-18 J32: Check RegExp (Code menu): takes the [Given/When/Then] pattern at the caret (C# string unescaped), converts Cucumber expressions like Reqnroll, tests a sample (match + groups) and lists the feature steps it matches (click to open).
 - 2026-10-18 J33: Compare with Clipboard (Edit): the selection, or the whole file, against the clipboard as a unified diff with a summary.
 - 2026-10-18 J34: Recent Changes (Alt+Shift+C): the newest Local History versions across all files (saved / changed / deleted, when); pick one to open the file with its history, compare and revert.
+- 2026-10-18 J35: Shelf tool window: unsaved editors are saved, then Shelve Changes puts every uncommitted change (new files too) aside under a name (git stash -u); Unshelve (pop) or Apply, keep; delete asks twice; open editors reload changed files.

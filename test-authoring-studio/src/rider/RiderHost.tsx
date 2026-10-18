@@ -268,6 +268,7 @@ export default function RiderHost(props: RiderHostProps) {
       } },
       { id: 'compare-clipboard', label: 'Compare with Clipboard', menu: 'Edit', run: () => void compareWithClipboard() },
       { id: 'recent-changes', label: 'Recent Changes…', menu: 'Navigate', shortcut: 'Alt Shift C', run: () => void recentChangesPopup() },
+      { id: 'tool-shelf', label: 'Shelf', menu: 'View', run: () => { if (isBrowser()) { p.current.onNotice('The shelf needs a folder indexed by the studio server.'); return; } p.current.onTool('shelf'); } },
       { id: 'carets-line-ends', label: 'Add Carets to Ends of Selected Lines', menu: 'Edit', shortcut: 'Alt Shift G', run: inEditor(caretsAtLineEnds) },
     ];
     return registerRider(list);

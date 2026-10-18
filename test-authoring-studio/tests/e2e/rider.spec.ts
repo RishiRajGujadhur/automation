@@ -676,3 +676,25 @@ test('J34 Recent Changes (Alt+Shift+C): the latest saves across files; pick one 
   await dlg.getByRole('button', { name: /Revert/ }).first().click();
   await expect.poll(async () => (await selection(page)).doc).not.toContain('"test-user" now');
 });
+
+test('J35 Shelf: shelve uncommitted changes under a name, unshelve them back', async ({ page }) => {
+  const { execFileSync } = await import('node:child_process');
+  const g = (...args: string[]) => execFileSync('git', args, { cwd: root, encoding: 'utf8' });
+  g('init', '-q'); g('-c', 'user.email=t@t', '-c', 'user.name=t', 'add', '-A'); g('-c', 'user.email=t@t', '-c', 'user.name=t', 'commit', '-qm', 'base');
+  const login = path.join(root, 'Features/Auth/Login.feature');
+  await fs.writeFile(login, (await fs.readFile(login, 'utf8')).replace('the dashboard is displayed', 'the dashboard is displayed quickly'));
+  await openFeature(page);
+  await page.getByRole('button', { name: 'View menu' }).click();
+  await page.getByRole('menuitem', { name: /^Shelf/ }).click();
+  const panel = page.getByRole('region', { name: 'Shelf' });
+  await expect(panel).toContainText('Nothing on the shelf');
+  await panel.getByLabel('Shelf name').fill('Faster dashboard');
+  await panel.getByRole('button', { name: 'Shelve Changes' }).click();
+  const list = panel.getByRole('list', { name: 'Shelved changes' });
+  await expect(list).toContainText('Faster dashboard');
+  await expect(list).toContainText('Features/Auth/Login.feature');
+  await expect.poll(() => fs.readFile(login, 'utf8')).not.toContain('quickly');
+  await panel.getByRole('button', { name: 'Unshelve Faster dashboard', exact: true }).click();
+  await expect.poll(() => fs.readFile(login, 'utf8')).toContain('quickly');
+  await expect(panel).toContainText('Nothing on the shelf');
+});
