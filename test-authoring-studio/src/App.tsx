@@ -364,7 +364,7 @@ export default function App() {
     // Ctrl+K Ctrl+W as in Visual Studio (desktop: a browser closes the tab on Ctrl+W), Ctrl+K Ctrl+B everywhere.
     else if (!e.altKey && !e.shiftKey && (e.key.toLowerCase() === 'b' || (desktop && e.key.toLowerCase() === 'w')) && Date.now() - chordK.current < 1500) { e.preventDefault(); chordK.current = 0; setModal('bookmarks'); return; }
     // Recent Files (Ctrl+E) / Recent Locations (Ctrl+Shift+E), as in Rider.
-    if (!e.altKey && e.key.toLowerCase() === 'e') { e.preventDefault(); setRecentMode(e.shiftKey ? 'locations' : 'files'); setModal('recent'); return; }
+    if (!e.altKey && e.key.toLowerCase() === 'e' && Date.now() - chordK.current > 1500) { e.preventDefault(); setRecentMode(e.shiftKey ? 'locations' : 'files'); setModal('recent'); return; }
     if (!desktop && e.shiftKey && !e.altKey && e.key.toLowerCase() === 'o') { e.preventDefault(); setModal('solution'); return; }
     if (e.shiftKey && !e.altKey && e.key.toLowerCase() === 'f') { e.preventDefault(); showSearch(false); return; }
     if (e.shiftKey && !e.altKey && e.key.toLowerCase() === 'h') { e.preventDefault(); showSearch(true); return; }
@@ -820,7 +820,14 @@ export default function App() {
         e.preventDefault();
         setModal('shortcuts');
       }
-      if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
+      // In an editor Ctrl+K starts a chord (Ctrl+K Ctrl+C comment, Ctrl+K Ctrl+K bookmark, Ctrl+K Ctrl+E cleanup…),
+      // as in Visual Studio; the palette is also Ctrl+Shift+P everywhere.
+      const inEditor = !!(e.target as HTMLElement | null)?.closest?.('.cm-editor');
+      if ((e.ctrlKey || e.metaKey) && !e.shiftKey && e.key.toLowerCase() === 'k' && !inEditor) {
+        e.preventDefault();
+        setPaletteOpen(true);
+      }
+      if ((e.ctrlKey || e.metaKey) && e.shiftKey && !e.altKey && e.key.toLowerCase() === 'p') {
         e.preventDefault();
         setPaletteOpen(true);
       }

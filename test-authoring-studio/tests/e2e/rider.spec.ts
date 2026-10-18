@@ -772,3 +772,25 @@ test('J39 Comment with Block Comment (Ctrl+Shift+/): /* */ around the C# selecti
   await page.keyboard.press('Control+Shift+/');
   expect((await selection(page)).doc).toContain('    # When the user signs in');
 });
+
+test('J40 Code Cleanup (Ctrl+K, Ctrl+E): C# usings and formatting; Gherkin formatting', async ({ page, request }) => {
+  await fs.writeFile(path.join(root, 'Steps/Messy.cs'), ['using System.Text;', 'using TechTalk.SpecFlow;', 'namespace Demo;', '[Binding]', 'public class Messy {', '[Given("messy")]   public void M( ) {  }   ', '}', ''].join('\n'));
+  expect((await request.post('/api/workspace', { data: { repositoryRoot: root, targetProject: '.' } })).ok()).toBe(true);
+  const src = await openCs(page, 'Steps/Messy.cs', 'class Messy');
+  await page.keyboard.press('Control+K');
+  await page.keyboard.press('Control+E');
+  await expect(page.getByText(/Code Cleanup: formatted, 1 unnecessary using removed/)).toBeVisible({ timeout: 60_000 });
+  const doc = (await selection(page)).doc;
+  expect(doc).not.toContain('using System.Text;');
+  expect(doc).toContain('public void M()');
+  expect(doc).not.toMatch(/[ \t]\n/);
+  await expect(page.getByRole('dialog')).toHaveCount(0);
+  void src;
+  await page.getByRole('navigation').getByRole('button', { name: 'Login.feature', exact: true }).first().click();
+  await caretAt(page, 'signs in');
+  await page.keyboard.press('Home');
+  await page.keyboard.type('      ');
+  await page.getByRole('button', { name: 'Code menu' }).click();
+  await page.getByRole('menuitem', { name: /Code Cleanup/ }).click();
+  expect((await selection(page)).doc).toContain('\n    When the user signs in');
+});

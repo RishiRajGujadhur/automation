@@ -60,6 +60,7 @@ const ROWS: Record<'edit' | 'view' | 'navigate' | 'code' | 'tools' | 'help', Row
     ['Check RegExp… (step patterns)', 'check-regexp'],
     null,
     ['Comment with Block Comment', 'block-comment', 'CmdOrCtrl+Shift+/'],
+    ['Code Cleanup (Ctrl+K, Ctrl+E)', 'code-cleanup'],
     ['Move Statement Up', 'statement-up', 'CmdOrCtrl+Shift+Alt+Up'],
     ['Move Statement Down', 'statement-down', 'CmdOrCtrl+Shift+Alt+Down'],
   ],

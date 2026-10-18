@@ -6,6 +6,8 @@ import { EditorView } from '@codemirror/view';
 const EditorViewScroll = (at: number) => EditorView.scrollIntoView(at, { y: 'center' });
 import { activeEditor } from '../editor/activeEditor';
 import { moveStatement } from '../editor/moveStatement';
+import { replaceText } from '../editor/csharp';
+import { formatFeature } from '../editor/gherkin';
 import { blockComment } from '../editor/riderKeys';
 import { extendSelection, shrinkSelection, toggleCase, joinLines, selectNextOccurrence, unselectOccurrence, selectAllOccurrences, startNewLine, startNewLineBefore, caretsAtLineEnds } from '../editor/riderKeys';
 import { registerRider, riderChanged, runRider, useRiderCommands, type RiderCommand } from './commands';
@@ -182,6 +184,29 @@ export default function RiderHost(props: RiderHostProps) {
       setPopup({ kind: 'related', items });
     } catch (e) { p.current.onNotice((e as Error).message); }
   };
+  /** Code Cleanup (Visual Studio Ctrl+K, Ctrl+E): C# usings organized and formatted (Roslyn), features formatted, trailing whitespace trimmed. */
+  const codeCleanup = async () => {
+    const a = activeEditor();
+    if (!a) { p.current.onNotice('Open a file in the editor first.'); return; }
+    const { view, file } = a;
+    const before = view.state.doc.toString();
+    let text = before;
+    const done: string[] = [];
+    try {
+      if (file.endsWith('.cs') && !isBrowser()) {
+        const o = await api<{ text: string; removed: number }>('/csharp/organize', { file, source: text });
+        if (o.removed) done.push(`${o.removed} unnecessary using${o.removed === 1 ? '' : 's'} removed`);
+        text = o.text;
+        text = (await api<{ text: string }>('/csharp/format', { file, source: text })).text;
+      } else if (file.endsWith('.feature')) text = formatFeature(text, file);
+    } catch (e) { p.current.onNotice((e as Error).message); return; }
+    text = text.replace(/[ \t]+(\r?\n)/g, '$1').replace(/[ \t]+$/, '');
+    if (!/\n$/.test(text) && text) text += view.state.lineBreak;
+    if (text === before) { p.current.onNotice('Code Cleanup: nothing to change.'); return; }
+    replaceText(view, text);
+    p.current.onNotice(`Code Cleanup: ${['formatted', ...done].join(', ')}.`);
+    view.focus();
+  };
   const closeAndFocus = () => { setPopup(null); requestAnimationFrame(() => target.current?.view.focus()); };
   /** Runs an editor action on the active editor (and gives it focus back). */
   const inEditor = (fn: (v: EditorView, file: string) => unknown) => () => {
@@ -298,6 +323,7 @@ export default function RiderHost(props: RiderHostProps) {
       { id: 'statement-up', label: 'Move Statement Up', menu: 'Code', group: true, shortcut: 'Ctrl Shift Alt ↑', run: inEditor(moveStatement(-1)) },
       { id: 'statement-down', label: 'Move Statement Down', menu: 'Code', shortcut: 'Ctrl Shift Alt ↓', run: inEditor(moveStatement(1)) },
       { id: 'block-comment', label: 'Comment with Block Comment', menu: 'Code', group: true, shortcut: 'Ctrl Shift /', run: inEditor((v, f) => blockComment(f)(v)) },
+      { id: 'code-cleanup', label: 'Code Cleanup', menu: 'Code', shortcut: 'Ctrl K, Ctrl E', run: () => void codeCleanup() },
       { id: 'carets-line-ends', label: 'Add Carets to Ends of Selected Lines', menu: 'Edit', shortcut: 'Alt Shift G', run: inEditor(caretsAtLineEnds) },
     ];
     return registerRider(list);
