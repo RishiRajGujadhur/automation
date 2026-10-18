@@ -68,6 +68,7 @@ const ROWS: Record<'edit' | 'view' | 'navigate' | 'code' | 'tools' | 'help', Row
     ['Comment with Block Comment', 'block-comment', 'CmdOrCtrl+Shift+/'],
     ['Code Cleanup (Ctrl+K, Ctrl+E)', 'code-cleanup'],
     ['Complete Current Statement', 'complete-statement', 'CmdOrCtrl+Shift+Enter'],
+    ['Unwrap / Remove…', 'unwrap', 'CmdOrCtrl+Shift+Delete'],
     null,
     ['Expand All (Ctrl+K, Ctrl+J)', 'expand-all'],
     ['Collapse All (Ctrl+K, Ctrl+0)', 'collapse-all'],

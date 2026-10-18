@@ -930,3 +930,13 @@ test('J48 Complete Current Statement (Ctrl+Shift+Enter): closes the call and add
   await page.keyboard.type('// next');
   expect((await selection(page)).doc).toMatch(/System\.Console\.WriteLine\("done"\);\n\s*\/\/ next/);
 });
+
+test('J49 Unwrap / Remove (Ctrl+Shift+Delete): unwrap the if around the caret', async ({ page, request }) => {
+  await fs.writeFile(path.join(root, 'Steps/Wrapped.cs'), ['namespace Demo;', 'public class Wrapped', '{', '    public void M(bool ok)', '    {', '        if (ok)', '        {', '            Step();', '        }', '    }', '    void Step() { }', '}', ''].join('\n'));
+  expect((await request.post('/api/workspace', { data: { repositoryRoot: root, targetProject: '.' } })).ok()).toBe(true);
+  await openCs(page, 'Steps/Wrapped.cs', 'Step();');
+  await page.keyboard.press('Control+Shift+Delete');
+  await expect(page.getByRole('listbox', { name: 'Unwrap targets' })).toContainText("Unwrap 'if'");
+  await page.keyboard.press('Enter');
+  expect((await selection(page)).doc).toContain('    public void M(bool ok)\n    {\n        Step();\n    }');
+});

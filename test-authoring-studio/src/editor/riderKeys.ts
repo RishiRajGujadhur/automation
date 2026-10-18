@@ -317,6 +317,7 @@ export function riderKeys(file = ''): Extension {
     opens('Mod-Shift-v', 'paste-history'),
     opens('Mod-j', 'live-template'),
     opens('Mod-k Mod-e', 'code-cleanup'),
+    opens('Mod-Shift-Delete', 'unwrap'),
     keyed('Alt-F5', 'next-change', gotoChange(1)),
     keyed('Mod-Shift-NumpadAdd', 'expand-all', expandAll),
     keyed('Mod-Shift-NumpadSubtract', 'collapse-all', collapseAll),
