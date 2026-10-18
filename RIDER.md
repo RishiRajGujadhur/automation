@@ -32,7 +32,7 @@ Status: ⬜ todo · ✅ done (date)
 | J16 | Structure tool window (Alt+7) | ✅ 2026-10-18 |
 | J17 | Type Hierarchy (Ctrl+H) | ✅ 2026-10-18 |
 | J18 | Call Hierarchy (Ctrl+Alt+H) | ✅ 2026-10-18 |
-| J19 | Problems tool window: solution-wide analysis (Alt+3) | ⬜ |
+| J19 | Problems tool window: solution-wide analysis (Alt+Shift+6; Alt+3 is the Features page) | ✅ 2026-10-18 |
 | J20 | Terminal tool window (Alt+F12) | ⬜ |
 | J21 | Run Anything (Ctrl twice) | ⬜ |
 | J22 | HTTP Client (`.http` / `.rest` files) | ⬜ |
@@ -71,3 +71,4 @@ Status: ⬜ todo · ✅ done (date)
 - 2026-10-18 J16: Structure tool window (bottom panel tab, Alt+7): outline of the file being edited, entry at the caret highlighted, sort alphabetically, click to go. Rider tool windows are now tabs of the shared bottom panel.
 - 2026-10-18 J17: Type Hierarchy in a Hierarchy tool window: base chain to System.Object, the type, derived types as a tree (transitive), implemented interfaces; click to go. Roslyn op typeHierarchy.
 - 2026-10-18 J18: Call Hierarchy in the Hierarchy tool window: callers of the method/property at the caret with their call sites (Roslyn FindCallers), expand a caller for its callers (lazy), click goes to the call.
+- 2026-10-18 J19: Problems tool window: C# compiler errors/warnings of every project (Roslyn solutionDiagnostics) and unbound / ambiguous feature steps, grouped by file, filter by severity, click to go.

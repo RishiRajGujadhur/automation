@@ -35,6 +35,7 @@ const ROWS: Record<'edit' | 'view' | 'navigate' | 'code' | 'tools' | 'help', Row
     ['Reset Font Size', 'font-reset'],
     null,
     ['Structure', 'tool-structure', 'Alt+7'],
+    ['Problems', 'tool-problems', 'Alt+Shift+6'],
   ],
   navigate: [
     ['File Structure…', 'file-structure', 'CmdOrCtrl+Alt+F12'],

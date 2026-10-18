@@ -451,6 +451,22 @@ app.post('/api/csharp/rename', async (req, res) => {
   if (written.length) rescanSoon(1500);
   res.json({ ...r, written, current: r.changes.find((c) => c.file === body.file)?.text ?? null });
 });
+// Problems tool window (Rider's solution-wide analysis): feature steps without (or with several) step definitions, and
+// the C# compiler's errors and warnings in every project.
+app.get('/api/problems', async (_req, res) => {
+  const i = await ensure();
+  const problems: { source: 'C#' | 'Gherkin'; file: string; line: number; column: number; severity: 'error' | 'warning'; id: string; message: string; project?: string }[] = [];
+  for (const f of i.features) for (const block of [...f.backgrounds, ...f.scenarios]) for (const st of block.steps) {
+    if (st.status === 'Unmatched') problems.push({ source: 'Gherkin', file: f.file, line: st.line, column: 1, severity: 'warning', id: 'TAS-UNBOUND', message: `No step definition for "${st.keyword.trim()} ${st.text}"` });
+    else if (st.status === 'Ambiguous') problems.push({ source: 'Gherkin', file: f.file, line: st.line, column: 1, severity: 'error', id: 'TAS-AMBIGUOUS', message: `Several step definitions match "${st.keyword.trim()} ${st.text}"` });
+  }
+  let csharp: string | undefined;
+  try {
+    const cs = await lang.request<{ project: string; file: string; line: number; column: number; severity: 'error' | 'warning'; id: string; message: string }[]>(config.repositoryRoot, { op: 'solutionDiagnostics' }, 180_000);
+    problems.push(...cs.map((d) => ({ ...d, source: 'C#' as const })));
+  } catch (e) { csharp = `C# analysis unavailable: ${(e as Error).message}`; }
+  res.json({ problems, csharp });
+});
 // Problems (Rider's solution-wide analysis): compiler errors and warnings of every project.
 app.get('/api/csharp/problems', async (_req, res) => {
   res.json(await lang.request(config.repositoryRoot, { op: 'solutionDiagnostics' }, 180_000));

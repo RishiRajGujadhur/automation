@@ -371,3 +371,19 @@ test('J18 Call Hierarchy (Ctrl+Alt+H): callers of a method, expand a caller to i
   await tree.getByRole('button', { name: /^method Demo\.Pages\.ReportsPage\.Show/ }).click();
   await expect(src.locator('.cm-activeLine')).toContainText('public void Show()');
 });
+
+test('J19 Problems (Alt+Shift+6): C# compiler errors and unbound feature steps across the solution; filter; click to go', async ({ page, request }) => {
+  await fs.writeFile(path.join(root, 'Steps/Broken.cs'), ['namespace Demo;', 'public class Broken', '{', '    public void Go() { int x = "text"; }', '}', ''].join('\n'));
+  await fs.writeFile(path.join(root, 'Features/Orphan.feature'), ['Feature: Orphans', '  Scenario: Nobody binds this', '    Given a step nobody wrote', ''].join('\n'));
+  expect((await request.post('/api/workspace', { data: { repositoryRoot: root, targetProject: '.' } })).ok()).toBe(true);
+  await openFeature(page);
+  await page.keyboard.press('Alt+Shift+6');
+  const panel = page.getByRole('region', { name: 'Problems' });
+  const list = panel.getByRole('list', { name: 'Problems in the solution' });
+  await expect(list).toContainText('CS0029', { timeout: 90_000 });
+  await expect(list).toContainText('No step definition for "Given a step nobody wrote"');
+  await panel.getByLabel('Warnings').uncheck();
+  await expect(list).not.toContainText('nobody wrote');
+  await list.getByRole('button', { name: /CS0029/ }).click();
+  await expect(page.locator('.code-editor:not([hidden]) .cm-activeLine')).toContainText('int x = "text"');
+});

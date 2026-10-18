@@ -2644,3 +2644,14 @@
     margin: 8px;
   }
 }
+
+.problems-panel {
+  .problem-error {
+    flex: none;
+    color: #d9534f;
+  }
+  .problem-warning {
+    flex: none;
+    color: #d9a21b;
+  }
+}
