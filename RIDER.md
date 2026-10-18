@@ -43,7 +43,7 @@ Status: ⬜ todo · ✅ done (date)
 | J27 | Key Promoter (shortcut hints when a command is used from a menu) | ✅ 2026-10-18 |
 | J28 | Productivity Guide | ✅ 2026-10-18 |
 | J29 | Tip of the Day | ✅ 2026-10-18 |
-| J30 | Evaluate Expression (Alt+F8, debugger) | ⬜ |
+| J30 | Evaluate Expression (Alt+F8, debugger) | ✅ 2026-10-18 |
 | J31 | Mute Breakpoints | ⬜ |
 | J32 | Check RegExp (step definition patterns) | ⬜ |
 | J33 | Compare with Clipboard | ⬜ |
@@ -82,3 +82,4 @@ Status: ⬜ todo · ✅ done (date)
 - 2026-10-18 J27: Key Promoter: a Rider command run from a menu or the palette shows its shortcut and how many times it was used without it; toggle in Help.
 - 2026-10-18 J28: Productivity Guide (Help): every Rider feature with its use count, share used with the shortcut, last use and key; unused ones listed; click a feature to try it.
 - 2026-10-18 J29: Tip of the Day (Help): studio tips plus one per Rider command with a shortcut, previous / next, Try it runs the feature; Show tips on startup (off by default), once per session.
+- 2026-10-18 J30: Evaluate Expression (Alt+F8) while paused: starts from the selection / word at the caret, evaluates in the selected frame (netcoredbg), members expand lazily, history with ↑/↓, errors shown.

@@ -2951,3 +2951,37 @@ html[data-rider-tools='hidden'] {
     }
   }
 }
+
+// Evaluate Expression
+.evaluate-expression {
+  display: grid;
+  gap: 8px;
+  min-width: min(620px, 90vw);
+  .evaluate-input {
+    display: flex;
+    gap: 6px;
+    input {
+      flex: 1;
+      font-family: var(--font-mono, monospace);
+    }
+  }
+  .evaluate-result,
+  ul[role='group'] {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    font-size: 12.5px;
+  }
+  .evaluate-row {
+    display: flex;
+    gap: 4px;
+    align-items: center;
+    small {
+      color: var(--text-muted);
+    }
+  }
+  .evaluate-leaf {
+    display: inline-block;
+    width: 22px;
+  }
+}

@@ -19,6 +19,7 @@ import { fileOutline, itemAt, type OutlineItem } from './outline';
 import type { RiderTool } from './RiderToolWindow';
 import RunAnything from './RunAnything';
 import ProductivityGuide from './ProductivityGuide';
+import EvaluateExpression from './EvaluateExpression';
 import TipOfTheDay, { tipsOnStartup } from './TipOfTheDay';
 import KeyPromoter, { keyPromoterOn, setKeyPromoter } from './KeyPromoter';
 import { exitMode, layoutState, toggleMode, toggleToolWindows, useLayoutState } from './layoutModes';
@@ -37,8 +38,8 @@ export type RiderHostProps = {
  * JetBrains Rider features: registers their commands (menus, palette, desktop menus) and hosts their popups, dialogs
  * and global keys. Editor keys live in editor/riderKeys.ts.
  */
-type Popup = { kind: 'tip' } | { kind: 'productivity' } | { kind: 'run' } | { kind: 'paste' } | { kind: 'template' } | { kind: 'surround' } | { kind: 'structure'; items: OutlineItem[]; current: number };
-const TITLES: Record<Popup['kind'], string> = { tip: 'Tip of the Day', productivity: 'Productivity Guide', run: 'Run Anything', paste: 'Paste from History', template: 'Insert Live Template', surround: 'Surround With', structure: 'File Structure' };
+type Popup = { kind: 'evaluate'; initial: string } | { kind: 'tip' } | { kind: 'productivity' } | { kind: 'run' } | { kind: 'paste' } | { kind: 'template' } | { kind: 'surround' } | { kind: 'structure'; items: OutlineItem[]; current: number };
+const TITLES: Record<Popup['kind'], string> = { evaluate: 'Evaluate Expression', tip: 'Tip of the Day', productivity: 'Productivity Guide', run: 'Run Anything', paste: 'Paste from History', template: 'Insert Live Template', surround: 'Surround With', structure: 'File Structure' };
 
 export default function RiderHost(props: RiderHostProps) {
   const p = useRef(props);
@@ -169,6 +170,7 @@ export default function RiderHost(props: RiderHostProps) {
       // Distraction-Free Mode (Rider has no default key; Ctrl+K is the command palette here).
       [(e) => e.altKey && e.shiftKey && !e.ctrlKey && !e.metaKey && e.code === 'KeyZ', 'zen-mode'],
       [(e) => (e.ctrlKey || e.metaKey) && e.shiftKey && !e.altKey && e.key === 'F12', 'hide-tools'],
+      [(e) => e.altKey && !e.ctrlKey && !e.shiftKey && !e.metaKey && e.key === 'F8', 'evaluate-expression'],
     ];
     const h = (e: KeyboardEvent) => { const k = keys.find(([t]) => t(e)); if (k) { e.preventDefault(); runRider(k[1], 'key'); } };
     window.addEventListener('keydown', h);
@@ -208,6 +210,13 @@ export default function RiderHost(props: RiderHostProps) {
       { id: 'key-promoter', label: 'Key Promoter', menu: 'Help', group: true, checked: keyPromoterOn, run: () => { setKeyPromoter(!keyPromoterOn()); riderChanged(); } },
       { id: 'productivity-guide', label: 'Productivity Guide', menu: 'Help', run: () => openPopup({ kind: 'productivity' }, false) },
       { id: 'tip-of-the-day', label: 'Tip of the Day', menu: 'Help', run: () => openPopup({ kind: 'tip' }, false) },
+      { id: 'evaluate-expression', label: 'Evaluate Expression…', menu: 'Tools', group: true, shortcut: 'Alt F8', run: () => {
+        // The selection (or the word at the caret) of the active editor is the starting expression.
+        const a = activeEditor();
+        let initial = '';
+        if (a) { const st = a.view.state; const r = st.selection.main; const w = r.empty ? st.wordAt(r.head) : r; initial = w ? st.sliceDoc(w.from, w.to) : ''; }
+        openPopup({ kind: 'evaluate', initial }, false);
+      } },
       { id: 'carets-line-ends', label: 'Add Carets to Ends of Selected Lines', menu: 'Edit', shortcut: 'Alt Shift G', run: inEditor(caretsAtLineEnds) },
     ];
     return registerRider(list);
@@ -228,6 +237,7 @@ export default function RiderHost(props: RiderHostProps) {
     const items = popup.items;
     body = <ListPopup label="File structure" placeholder="File structure: type to filter" empty="No matches." initial={popup.current} items={items.map((it, i) => ({ key: String(i), label: it.label, detail: `${it.kind} · line ${it.line}`, indent: it.depth }))} onPick={(k) => { const it = items[Number(k)]; goTo(view, it.line, it.column); closeAndFocus(); }} />;
   }
+  if (popup?.kind === 'evaluate') body = <EvaluateExpression initial={popup.initial} />;
   if (popup?.kind === 'tip') body = <TipOfTheDay onClose={() => setPopup(null)} />;
   if (popup?.kind === 'productivity') body = <ProductivityGuide onClose={() => setPopup(null)} />;
   if (popup?.kind === 'run') {
