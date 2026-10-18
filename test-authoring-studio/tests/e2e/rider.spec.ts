@@ -1007,3 +1007,26 @@ test('J54 Show History for Selection: the commits that changed the selected line
   await dlg.getByRole('option').nth(1).click();
   await expect(dlg.getByLabel('Change')).toContainText('"test-user"');
 });
+
+test('J55 Git Log (Alt+9): commits of every branch with the graph; a commit shows its message, files and patch', async ({ page }) => {
+  await commitAll();
+  const { execFileSync } = await import('node:child_process');
+  const g = (...a: string[]) => execFileSync('git', ['-c', 'user.email=t@t', '-c', 'user.name=Ada', ...a], { cwd: root });
+  g('checkout', '-qb', 'feature/admin');
+  const login = path.join(root, 'Features/Auth/Login.feature');
+  await fs.writeFile(login, (await fs.readFile(login, 'utf8')).replace('"test-user"', '"admin"'));
+  g('commit', '-qam', 'Sign in as admin\n\nAdmins have their own dashboard.');
+  await openFeature(page);
+  await page.keyboard.press('Alt+9');
+  const panel = page.getByRole('region', { name: 'Git Log' });
+  const list = panel.getByRole('listbox', { name: 'Commits' });
+  await expect(list.getByRole('option')).toHaveCount(2);
+  await expect(list.getByRole('option').first()).toContainText('feature/admin');
+  await list.getByRole('option').first().click();
+  const details = panel.getByLabel('Commit details');
+  await expect(details).toContainText('Admins have their own dashboard.');
+  await expect(details.getByRole('list', { name: 'Changed files' })).toContainText('Features/Auth/Login.feature');
+  await expect(details.getByLabel('Patch')).toContainText('+    When the user signs in as "admin"');
+  await panel.getByLabel('Filter commits').fill('base');
+  await expect(list.getByRole('option')).toHaveCount(1);
+});

@@ -43,6 +43,7 @@ const ROWS: Record<'edit' | 'view' | 'navigate' | 'code' | 'tools' | 'help', Row
     ['Problems', 'tool-problems', 'Alt+Shift+6'],
     ['Terminal', 'tool-terminal', 'CmdOrCtrl+`'],
     ['Shelf (shelved changes)', 'tool-shelf'],
+    ['Git Log', 'tool-gitlog', 'Alt+9'],
     null,
     ['Distraction-Free Mode', 'zen-mode', 'Alt+Shift+Z'],
     ['Presentation Mode', 'presentation-mode'],

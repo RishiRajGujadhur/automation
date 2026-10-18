@@ -68,7 +68,7 @@ Status: ⬜ todo · ✅ done (date)
 | J52 | TODO highlighting in the editor | ✅ 2026-10-18 |
 | J53 | Breadcrumbs for feature files (Feature › Rule › Scenario) | ✅ 2026-10-18 |
 | J54 | Git: Show History for Selection | ✅ 2026-10-18 |
-| J55 | Git Log tool window (Alt+9) with commit details | ⬜ |
+| J55 | Git Log tool window (Alt+9) with commit details | ✅ 2026-10-18 |
 | J56 | Git: Compare with Branch… | ⬜ |
 | J57 | External Tools (commands with $FilePath$-style macros) | ⬜ |
 | J58 | New File from Template (class, interface, test, step definitions, feature, .http, .md) | ⬜ |
@@ -132,3 +132,4 @@ Status: ⬜ todo · ✅ done (date)
 - 2026-10-18 J52: TODO highlighting: TODO / FIXME / HACK / BUG comments are coloured from the keyword to the end of the line in every editor (FIXME and BUG red, HACK amber).
 - 2026-10-18 J53: Breadcrumbs for feature files: Feature › Rule › Scenario / Examples at the caret above the editor; each part lists the entries at its level to jump to.
 - 2026-10-18 J54: Show History for Selection (Tools): the commits that changed the selected lines (git log -L), newest first, with each one's change as a diff. Server also gains commit details, the log graph and file-at-ref for J55/J56.
+- 2026-10-18 J55: Git Log tool window (Alt+9): all branches' commits with git's graph and branch / tag labels, filter by text / hash / author / branch; a commit shows its message, author, changed files (click to open) and patch.

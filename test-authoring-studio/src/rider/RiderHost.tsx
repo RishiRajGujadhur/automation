@@ -274,6 +274,7 @@ export default function RiderHost(props: RiderHostProps) {
   useEffect(() => {
     const keys: [test: (e: KeyboardEvent) => boolean, id: string][] = [
       [(e) => e.altKey && !e.ctrlKey && !e.shiftKey && !e.metaKey && e.code === 'Digit7', 'tool-structure'],
+      [(e) => e.altKey && !e.ctrlKey && !e.shiftKey && !e.metaKey && e.code === 'Digit9', 'tool-gitlog'],
       [(e) => e.altKey && e.shiftKey && !e.ctrlKey && !e.metaKey && e.code === 'Digit6', 'tool-problems'],
       // Alt+F12 opens the Terminal (Rider) except in a C# editor, where it stays Peek Definition (Visual Studio);
       // Ctrl+` (Visual Studio's View ▸ Terminal) works everywhere.
@@ -402,6 +403,7 @@ export default function RiderHost(props: RiderHostProps) {
         const st = a.view.state, r = st.selection.main;
         setPopup({ kind: 'line-history', file: a.file, start: st.doc.lineAt(r.from).number, end: st.doc.lineAt(r.to).number });
       } },
+      { id: 'tool-gitlog', label: 'Git Log', menu: 'View', shortcut: 'Alt 9', run: () => { if (isBrowser()) { p.current.onNotice('The Git Log needs a folder indexed by the studio server.'); return; } p.current.onTool('gitlog'); } },
       { id: 'carets-line-ends', label: 'Add Carets to Ends of Selected Lines', menu: 'Edit', shortcut: 'Alt Shift G', run: inEditor(caretsAtLineEnds) },
     ];
     return registerRider(list);

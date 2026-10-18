@@ -3142,3 +3142,91 @@ html[data-breakpoints-muted] .cm-bp {
     }
   }
 }
+
+// Git Log tool window
+.git-log-panel {
+  .git-log-body {
+    display: grid;
+    flex: 1;
+    grid-template-columns: minmax(280px, 1fr) minmax(320px, 1fr);
+    gap: 8px;
+    min-height: 0;
+  }
+  .git-log-list {
+    margin: 0;
+    padding: 0 4px;
+    overflow: auto;
+    list-style: none;
+    font-size: 12px;
+    li {
+      display: flex;
+      gap: 6px;
+      align-items: baseline;
+      padding: 1px 4px;
+      white-space: nowrap;
+      cursor: pointer;
+      &.active,
+      &:hover {
+        background: var(--accent-soft, #9270dd22);
+      }
+      small {
+        margin-left: auto;
+        color: var(--text-muted);
+      }
+    }
+  }
+  .git-graph {
+    color: var(--accent);
+    font-family: var(--font-mono, monospace);
+    white-space: pre;
+  }
+  .git-refs {
+    padding: 0 4px;
+    border-radius: 3px;
+    background: #2a9d8f33;
+    color: #2a9d8f;
+    font-size: 11px;
+  }
+  .git-subject {
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .git-log-details {
+    min-width: 0;
+    overflow: auto;
+    font-size: 12.5px;
+  }
+  .git-commit-head {
+    margin: 4px 0;
+  }
+  .git-commit-body {
+    margin: 0 0 6px;
+    white-space: pre-wrap;
+  }
+  .git-commit-files {
+    margin: 0 0 6px;
+    padding: 0;
+    list-style: none;
+  }
+  .git-status {
+    display: inline-block;
+    width: 14px;
+    font-weight: 700;
+    &.s-A {
+      color: #2a9d8f;
+    }
+    &.s-D {
+      color: #d9534f;
+    }
+    &.s-M {
+      color: #3e63dd;
+    }
+  }
+  .link-button {
+    padding: 0;
+    border: 0;
+    background: none;
+    color: var(--accent);
+    cursor: pointer;
+  }
+}
