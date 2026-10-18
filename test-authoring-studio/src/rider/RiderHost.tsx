@@ -1,7 +1,7 @@
 import { useEffect, useRef } from 'react';
 import type { EditorView } from '@codemirror/view';
 import { activeEditor } from '../editor/activeEditor';
-import { extendSelection, shrinkSelection, toggleCase, joinLines, selectNextOccurrence, unselectOccurrence, selectAllOccurrences, startNewLine, startNewLineBefore } from '../editor/riderKeys';
+import { extendSelection, shrinkSelection, toggleCase, joinLines, selectNextOccurrence, unselectOccurrence, selectAllOccurrences, startNewLine, startNewLineBefore, caretsAtLineEnds } from '../editor/riderKeys';
 import { registerRider, type RiderCommand } from './commands';
 
 export type RiderHostProps = {
@@ -34,6 +34,7 @@ export default function RiderHost(props: RiderHostProps) {
       { id: 'all-occurrences', label: 'Select All Occurrences', menu: 'Edit', shortcut: 'Ctrl Alt Shift J', run: inEditor(selectAllOccurrences) },
       { id: 'new-line', label: 'Start New Line', menu: 'Edit', group: true, shortcut: 'Shift Enter', run: inEditor(startNewLine) },
       { id: 'new-line-before', label: 'Start New Line Before Current', menu: 'Edit', shortcut: 'Ctrl Alt Enter', run: inEditor(startNewLineBefore) },
+      { id: 'carets-line-ends', label: 'Add Carets to Ends of Selected Lines', menu: 'Edit', shortcut: 'Alt Shift G', run: inEditor(caretsAtLineEnds) },
     ];
     return registerRider(list);
   }, []); // eslint-disable-line react-hooks/exhaustive-deps

@@ -212,6 +212,19 @@ export function startNewLineBefore(view: EditorView) {
   return true;
 }
 
+/** Add Carets to Ends of Selected Lines (Alt+Shift+G): one caret at the end of every line the selection touches. */
+export function caretsAtLineEnds(view: EditorView) {
+  const doc = view.state.doc;
+  const ends = new Set<number>();
+  for (const r of view.state.selection.ranges) {
+    const last = doc.lineAt(r.to > r.from && doc.lineAt(r.to).from === r.to ? r.to - 1 : r.to).number;
+    for (let n = doc.lineAt(r.from).number; n <= last; n++) ends.add(doc.line(n).to);
+  }
+  if (ends.size < 2) return true;
+  view.dispatch({ selection: EditorSelection.create([...ends].sort((a, b) => a - b).map((e) => EditorSelection.cursor(e))), userEvent: 'select' });
+  return true;
+}
+
 const keyed = (key: string, id: string, run: (v: EditorView) => boolean) => ({ key, preventDefault: true, run: (v: EditorView) => { noteUsage(id, 'key'); return run(v); } });
 
 /** Rider editing actions shared by the code and Gherkin editors. */
@@ -239,5 +252,6 @@ export function riderKeys(): Extension {
     keyed('Alt-j', 'next-occurrence', selectNextOccurrence),
     keyed('Alt-Shift-j', 'unselect-occurrence', unselectOccurrence),
     keyed('Shift-Enter', 'new-line', startNewLine),
+    keyed('Alt-Shift-g', 'carets-line-ends', caretsAtLineEnds),
   ]))];
 }

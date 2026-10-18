@@ -106,3 +106,17 @@ test('J5 Start New Line (Shift+Enter) and Start New Line Before Current (Ctrl+Al
   const doc = (await selection(page)).doc;
   expect(doc).toContain(['When the user signs in as "test-user"', '    And above', '    And below', '    Then'].join('\n'));
 });
+
+test('J6 Add Carets to Ends of Selected Lines (Alt+Shift+G): type once at the end of each line', async ({ page }) => {
+  await openFeature(page);
+  await caretAt(page, 'Given the login page');
+  await page.keyboard.press('Shift+ArrowDown');
+  await page.keyboard.press('Shift+ArrowDown');
+  await page.keyboard.press('Alt+Shift+G');
+  expect((await selection(page)).ranges).toHaveLength(3);
+  await page.keyboard.type(' now');
+  const doc = (await selection(page)).doc;
+  expect(doc).toContain('Given the login page is open now');
+  expect(doc).toContain('When the user signs in as "test-user" now');
+  expect(doc).toContain('Then the dashboard is displayed now');
+});
