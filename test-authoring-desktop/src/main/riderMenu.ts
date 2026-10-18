@@ -39,6 +39,7 @@ const ROWS: Record<'edit' | 'view' | 'navigate' | 'code' | 'tools' | 'help', Row
     ['Soft-Wrap (Active Editor)', 'soft-wrap'],
     ['Show Whitespaces', 'whitespace'],
     ['Show Line Numbers', 'line-numbers'],
+    ['Show Indent Guides', 'indent-guides'],
     ['Increase Font Size (Ctrl+Mouse Wheel)', 'font-bigger'],
     ['Decrease Font Size', 'font-smaller'],
     ['Reset Font Size', 'font-reset'],

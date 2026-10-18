@@ -1119,3 +1119,14 @@ test('J60 Show Line Numbers (View): hides and shows the line number gutter in ev
   await page.getByRole('menuitem', { name: /Show Line Numbers/ }).click();
   await expect(numbers).toBeVisible();
 });
+
+test('J61 Indent guides: shown for indented code by default; View ▸ Show Indent Guides turns them off', async ({ page, request }) => {
+  await fs.writeFile(path.join(root, 'Steps/Guides.cs'), ['namespace Demo', '{', '    public class Guides', '    {', '        public void A()', '        {', '            var x = 1;', '        }', '    }', '}', ''].join('\n'));
+  expect((await request.post('/api/workspace', { data: { repositoryRoot: root, targetProject: '.' } })).ok()).toBe(true);
+  await openCs(page, 'Steps/Guides.cs', 'var x');
+  const markers = page.locator('.code-editor:not([hidden]) .cm-indent-markers');
+  await expect(markers.first()).toBeAttached();
+  await page.getByRole('button', { name: 'View menu' }).click();
+  await page.getByRole('menuitem', { name: /Show Indent Guides/ }).click();
+  await expect(markers).toHaveCount(0);
+});
