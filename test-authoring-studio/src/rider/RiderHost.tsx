@@ -19,6 +19,7 @@ import { fileOutline, itemAt, type OutlineItem } from './outline';
 import type { RiderTool } from './RiderToolWindow';
 import RunAnything from './RunAnything';
 import ProductivityGuide from './ProductivityGuide';
+import TipOfTheDay, { tipsOnStartup } from './TipOfTheDay';
 import KeyPromoter, { keyPromoterOn, setKeyPromoter } from './KeyPromoter';
 import { exitMode, layoutState, toggleMode, toggleToolWindows, useLayoutState } from './layoutModes';
 import { queueTerminalCommand, runInTerminal } from './TerminalPanel';
@@ -36,8 +37,8 @@ export type RiderHostProps = {
  * JetBrains Rider features: registers their commands (menus, palette, desktop menus) and hosts their popups, dialogs
  * and global keys. Editor keys live in editor/riderKeys.ts.
  */
-type Popup = { kind: 'productivity' } | { kind: 'run' } | { kind: 'paste' } | { kind: 'template' } | { kind: 'surround' } | { kind: 'structure'; items: OutlineItem[]; current: number };
-const TITLES: Record<Popup['kind'], string> = { productivity: 'Productivity Guide', run: 'Run Anything', paste: 'Paste from History', template: 'Insert Live Template', surround: 'Surround With', structure: 'File Structure' };
+type Popup = { kind: 'tip' } | { kind: 'productivity' } | { kind: 'run' } | { kind: 'paste' } | { kind: 'template' } | { kind: 'surround' } | { kind: 'structure'; items: OutlineItem[]; current: number };
+const TITLES: Record<Popup['kind'], string> = { tip: 'Tip of the Day', productivity: 'Productivity Guide', run: 'Run Anything', paste: 'Paste from History', template: 'Insert Live Template', surround: 'Surround With', structure: 'File Structure' };
 
 export default function RiderHost(props: RiderHostProps) {
   const p = useRef(props);
@@ -134,6 +135,17 @@ export default function RiderHost(props: RiderHostProps) {
     fn(a.view, a.file);
     a.view.focus();
   };
+  // Tip of the Day at startup (when chosen in the dialog), once per session.
+  useEffect(() => {
+    let shown = false;
+    try { shown = sessionStorage.getItem('tas:rider:tipShown') === '1'; } catch { /* storage blocked */ }
+    if (!tipsOnStartup() || shown) return;
+    const t = setTimeout(() => {
+      try { sessionStorage.setItem('tas:rider:tipShown', '1'); } catch { /* storage blocked */ }
+      setPopup((p) => p ?? { kind: 'tip' });
+    }, 1500);
+    return () => clearTimeout(t);
+  }, []);
   // Run Anything: press Ctrl twice (Rider).
   useEffect(() => {
     let last = 0, other = false;
@@ -195,6 +207,7 @@ export default function RiderHost(props: RiderHostProps) {
       { id: 'hide-tools', label: 'Hide All Tool Windows', menu: 'View', shortcut: 'Ctrl Shift F12', checked: () => layoutState().toolsHidden, run: () => { toggleToolWindows(); riderChanged(); } },
       { id: 'key-promoter', label: 'Key Promoter', menu: 'Help', group: true, checked: keyPromoterOn, run: () => { setKeyPromoter(!keyPromoterOn()); riderChanged(); } },
       { id: 'productivity-guide', label: 'Productivity Guide', menu: 'Help', run: () => openPopup({ kind: 'productivity' }, false) },
+      { id: 'tip-of-the-day', label: 'Tip of the Day', menu: 'Help', run: () => openPopup({ kind: 'tip' }, false) },
       { id: 'carets-line-ends', label: 'Add Carets to Ends of Selected Lines', menu: 'Edit', shortcut: 'Alt Shift G', run: inEditor(caretsAtLineEnds) },
     ];
     return registerRider(list);
@@ -215,6 +228,7 @@ export default function RiderHost(props: RiderHostProps) {
     const items = popup.items;
     body = <ListPopup label="File structure" placeholder="File structure: type to filter" empty="No matches." initial={popup.current} items={items.map((it, i) => ({ key: String(i), label: it.label, detail: `${it.kind} · line ${it.line}`, indent: it.depth }))} onPick={(k) => { const it = items[Number(k)]; goTo(view, it.line, it.column); closeAndFocus(); }} />;
   }
+  if (popup?.kind === 'tip') body = <TipOfTheDay onClose={() => setPopup(null)} />;
   if (popup?.kind === 'productivity') body = <ProductivityGuide onClose={() => setPopup(null)} />;
   if (popup?.kind === 'run') {
     body = <RunAnything onRun={(cmd) => {

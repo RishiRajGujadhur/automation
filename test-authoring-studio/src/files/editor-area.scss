@@ -2926,3 +2926,28 @@ html[data-rider-tools='hidden'] {
     cursor: pointer;
   }
 }
+
+// Tip of the Day
+.tip-of-the-day {
+  display: grid;
+  gap: 12px;
+  min-width: min(520px, 90vw);
+  article {
+    min-height: 110px;
+    padding: 12px 14px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    h3 {
+      margin: 0 0 6px;
+    }
+  }
+  .tip-actions {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    label {
+      flex: 1;
+      font-size: 12.5px;
+    }
+  }
+}

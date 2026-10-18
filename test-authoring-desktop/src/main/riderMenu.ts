@@ -60,6 +60,7 @@ const ROWS: Record<'edit' | 'view' | 'navigate' | 'code' | 'tools' | 'help', Row
     null,
     ['Key Promoter (shortcut hints)', 'key-promoter'],
     ['Productivity Guide', 'productivity-guide'],
+    ['Tip of the Day', 'tip-of-the-day'],
   ],
 };
 

@@ -581,3 +581,24 @@ test('J28 Productivity Guide: features used, how often with the shortcut, unused
   await expect(table.getByRole('row', { name: /Call Hierarchy/ })).toContainText('never');
   await expect(page.getByRole('status').filter({ hasText: 'features used' })).toContainText('with the keyboard');
 });
+
+test('J29 Tip of the Day: next / previous, Try it runs the feature, optional on startup', async ({ page }) => {
+  await openFeature(page);
+  await page.getByRole('button', { name: 'Help menu' }).click();
+  await page.getByRole('menuitem', { name: /Tip of the Day/ }).click();
+  const tip = page.getByRole('article', { name: 'Tip' });
+  await expect(tip).toContainText('Search Everywhere');
+  await page.getByRole('button', { name: 'Next tip' }).click();
+  await expect(tip).toContainText('Recent Files');
+  await page.getByRole('button', { name: 'Previous tip' }).click();
+  await expect(tip).toContainText('Search Everywhere');
+  await page.getByLabel('Show tips on startup').check();
+  // A tip for a Rider command: Try it runs it.
+  for (let i = 0; i < 60 && (await tip.getByRole('heading').textContent()) !== 'Structure'; i++) await page.getByRole('button', { name: 'Next tip' }).click();
+  await tip.getByRole('button', { name: 'Try it' }).click();
+  await expect(page.getByRole('region', { name: 'Structure' })).toBeVisible();
+  // Shown at startup in a new session.
+  await page.evaluate(() => sessionStorage.clear());
+  await page.reload();
+  await expect(page.getByRole('article', { name: 'Tip' })).toBeVisible({ timeout: 10_000 });
+});
