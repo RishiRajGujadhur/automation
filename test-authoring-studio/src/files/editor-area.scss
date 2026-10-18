@@ -2806,3 +2806,55 @@
   display: inline-flex;
   gap: 1px;
 }
+
+// Distraction-Free / Presentation Mode, Hide All Tool Windows (Rider's View ▸ Appearance)
+html[data-rider-mode] {
+  .app-header,
+  .activity-bar,
+  .sidebar,
+  .dock,
+  .status-bar,
+  .nav-bar,
+  .editor-tabs,
+  .editor-toolbar,
+  .editor-problems {
+    display: none !important;
+  }
+  .cm-scroller {
+    padding: 0 max(0px, calc((100% - 960px) / 2));
+  }
+}
+html[data-rider-mode='presentation'] .cm-editor {
+  font-size: 22px !important;
+  .cm-content,
+  .cm-gutters {
+    font-size: 22px !important;
+  }
+}
+html[data-rider-tools='hidden'] {
+  .sidebar,
+  .dock {
+    display: none !important;
+  }
+}
+.rider-exit-mode {
+  position: fixed;
+  top: 0;
+  left: 50%;
+  z-index: 60;
+  padding: 3px 12px;
+  transform: translate(-50%, -70%);
+  border: 1px solid var(--border);
+  border-radius: 0 0 6px 6px;
+  background: var(--panel);
+  color: var(--text);
+  font-size: 12px;
+  opacity: 0.4;
+  transition: transform 0.15s, opacity 0.15s;
+  cursor: pointer;
+  &:hover,
+  &:focus-visible {
+    transform: translate(-50%, 0);
+    opacity: 1;
+  }
+}

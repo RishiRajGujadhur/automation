@@ -497,3 +497,21 @@ test('J23 Markdown preview: split by default, editor only / preview only, live w
   await expect(preview).toHaveCount(0);
   await expect(src).toBeVisible();
 });
+
+test('J24 Distraction-Free Mode (View menu, Alt+Shift+Z): only the editor, centred; exit from the top edge', async ({ page }) => {
+  await openFeature(page);
+  await page.getByRole('button', { name: 'View menu' }).click();
+  await page.getByRole('menuitem', { name: /Distraction-Free Mode/ }).click();
+  await expect(page.locator('html')).toHaveAttribute('data-rider-mode', 'zen');
+  await expect(page.locator('.app-header')).toBeHidden();
+  await expect(page.locator('#feature-sidebar')).toBeHidden();
+  await expect(gherkin(page)).toBeVisible();
+  await page.getByRole('button', { name: 'Exit Distraction-Free Mode' }).click();
+  await expect(page.locator('.app-header')).toBeVisible();
+  await gherkin(page).click();
+  await page.keyboard.press('Alt+Shift+Z');
+  await expect(page.locator('html')).toHaveAttribute('data-rider-mode', 'zen');
+  await page.keyboard.press('Alt+Shift+Z');
+  await expect(page.locator('html')).not.toHaveAttribute('data-rider-mode', /./);
+  await expect(page.getByRole('dialog')).toHaveCount(0);
+});

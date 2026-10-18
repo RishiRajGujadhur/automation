@@ -37,7 +37,7 @@ Status: ⬜ todo · ✅ done (date)
 | J21 | Run Anything (Ctrl twice) | ✅ 2026-10-18 |
 | J22 | HTTP Client (`.http` / `.rest` files) | ✅ 2026-10-18 |
 | J23 | Markdown preview | ✅ 2026-10-18 |
-| J24 | Distraction-Free Mode | ⬜ |
+| J24 | Distraction-Free Mode (Alt+Shift+Z) | ✅ 2026-10-18 |
 | J25 | Presentation Mode | ⬜ |
 | J26 | Hide All Tool Windows (Ctrl+Shift+F12) | ⬜ |
 | J27 | Key Promoter (shortcut hints when a command is used from a menu) | ⬜ |
@@ -76,3 +76,4 @@ Status: ⬜ todo · ✅ done (date)
 - 2026-10-18 J21: Run Anything (press Ctrl twice, Tools menu): type any command or pick a suggestion (recent commands, dotnet build/test/restore per project and solution, git); it runs in the Terminal (opened if needed). New Tools menu.
 - 2026-10-18 J22: HTTP Client for .http / .rest files: ### separated requests, headers, body, @variables and {{$guid}}/{{$timestamp}}/{{$randomInt}}; ▶ in the gutter or Ctrl+Enter sends (server-side fetch), response panel with status, time, pretty JSON body, headers. Bug fixes on the way: the editors could only save .cs/.feature/.xml (now any text file: .csproj, .json, .md, scripts…), the source reader and the Explorer skipped .http and script files.
 - 2026-10-18 J23: Markdown preview for .md files: editor only / editor and preview / preview only (remembered), live while typing, GitHub-flavoured Markdown via marked, sanitized with DOMPurify, links open outside.
+- 2026-10-18 J24: Distraction-Free Mode (View menu, Alt+Shift+Z): header, activity bar, explorer, panels, tabs and status bar hidden, text centred; an Exit pill at the top edge.

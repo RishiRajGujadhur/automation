@@ -18,6 +18,7 @@ import { setUsages, wordUsages } from '../editor/usages';
 import { fileOutline, itemAt, type OutlineItem } from './outline';
 import type { RiderTool } from './RiderToolWindow';
 import RunAnything from './RunAnything';
+import { exitMode, layoutState, toggleMode, useLayoutState } from './layoutModes';
 import { queueTerminalCommand, runInTerminal } from './TerminalPanel';
 import { setHierarchy, type CallHierarchy, type TypeHierarchy } from './hierarchy';
 import { changeFontSize, setViewOptions, viewOptions } from '../editor/viewOptions';
@@ -151,6 +152,8 @@ export default function RiderHost(props: RiderHostProps) {
       [(e) => e.altKey && !e.ctrlKey && !e.shiftKey && !e.metaKey && e.code === 'Digit7', 'tool-structure'],
       [(e) => e.altKey && e.shiftKey && !e.ctrlKey && !e.metaKey && e.code === 'Digit6', 'tool-problems'],
       [(e) => e.altKey && !e.shiftKey && !e.ctrlKey && !e.metaKey && e.key === 'F12', 'tool-terminal'],
+      // Distraction-Free Mode (Rider has no default key; Ctrl+K is the command palette here).
+      [(e) => e.altKey && e.shiftKey && !e.ctrlKey && !e.metaKey && e.code === 'KeyZ', 'zen-mode'],
     ];
     const h = (e: KeyboardEvent) => { const k = keys.find(([t]) => t(e)); if (k) { e.preventDefault(); runRider(k[1], 'key'); } };
     window.addEventListener('keydown', h);
@@ -184,10 +187,12 @@ export default function RiderHost(props: RiderHostProps) {
       { id: 'tool-problems', label: 'Problems', menu: 'View', shortcut: 'Alt Shift 6', run: () => p.current.onTool('problems') },
       { id: 'tool-terminal', label: 'Terminal', menu: 'View', shortcut: 'Alt F12', run: () => { if (isBrowser()) { p.current.onNotice('The terminal needs a folder indexed by the studio server.'); return; } p.current.onTool('terminal'); } },
       { id: 'run-anything', label: 'Run Anything…', menu: 'Tools', shortcut: 'Ctrl Ctrl', run: () => { if (isBrowser()) { p.current.onNotice('Run Anything needs a folder indexed by the studio server.'); return; } openPopup({ kind: 'run' }, false); } },
+      { id: 'zen-mode', label: 'Distraction-Free Mode', menu: 'View', group: true, shortcut: 'Alt Shift Z', checked: () => layoutState().mode === 'zen', run: () => { toggleMode('zen'); riderChanged(); } },
       { id: 'carets-line-ends', label: 'Add Carets to Ends of Selected Lines', menu: 'Edit', shortcut: 'Alt Shift G', run: inEditor(caretsAtLineEnds) },
     ];
     return registerRider(list);
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  const layout = useLayoutState();
   let body: ReactNode = null;
   if (popup?.kind === 'template' && target.current) {
     const { view, file } = target.current;
@@ -213,6 +218,12 @@ export default function RiderHost(props: RiderHostProps) {
   }
   if (popup?.kind === 'paste') body = <PasteHistory onPaste={(text) => { const v = target.current?.view; closeAndFocus(); if (v) v.dispatch(v.state.replaceSelection(text), { scrollIntoView: true, userEvent: 'input.paste' }); }} />;
   return (
+    <>
+    {layout.mode !== 'normal' && (
+      <button className="rider-exit-mode" onClick={() => { exitMode(); riderChanged(); }}>
+        Exit {layout.mode === 'zen' ? 'Distraction-Free' : 'Presentation'} Mode
+      </button>
+    )}
     <Dialog.Root open={!!popup} onOpenChange={(o) => { if (!o) closeAndFocus(); }}>
       <Dialog.Portal>
         <Dialog.Overlay className="dialog-overlay" />
@@ -227,5 +238,6 @@ export default function RiderHost(props: RiderHostProps) {
         )}
       </Dialog.Portal>
     </Dialog.Root>
+    </>
   );
 }

@@ -37,6 +37,8 @@ const ROWS: Record<'edit' | 'view' | 'navigate' | 'code' | 'tools' | 'help', Row
     ['Structure', 'tool-structure', 'Alt+7'],
     ['Problems', 'tool-problems', 'Alt+Shift+6'],
     ['Terminal', 'tool-terminal', 'Alt+F12'],
+    null,
+    ['Distraction-Free Mode', 'zen-mode', 'Alt+Shift+Z'],
   ],
   navigate: [
     ['File Structure…', 'file-structure', 'CmdOrCtrl+Alt+F12'],
