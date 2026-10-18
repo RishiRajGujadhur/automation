@@ -41,7 +41,7 @@ Status: ⬜ todo · ✅ done (date)
 | J25 | Presentation Mode | ✅ 2026-10-18 |
 | J26 | Hide All Tool Windows (Ctrl+Shift+F12) | ✅ 2026-10-18 |
 | J27 | Key Promoter (shortcut hints when a command is used from a menu) | ✅ 2026-10-18 |
-| J28 | Productivity Guide | ⬜ |
+| J28 | Productivity Guide | ✅ 2026-10-18 |
 | J29 | Tip of the Day | ⬜ |
 | J30 | Evaluate Expression (Alt+F8, debugger) | ⬜ |
 | J31 | Mute Breakpoints | ⬜ |
@@ -80,3 +80,4 @@ Status: ⬜ todo · ✅ done (date)
 - 2026-10-18 J25: Presentation Mode: Distraction-Free layout, full screen and a 22 px editor font; Exit pill restores.
 - 2026-10-18 J26: Hide All Tool Windows (Ctrl+Shift+F12): explorer and bottom panel hidden, editors take the room; the same key brings them back.
 - 2026-10-18 J27: Key Promoter: a Rider command run from a menu or the palette shows its shortcut and how many times it was used without it; toggle in Help.
+- 2026-10-18 J28: Productivity Guide (Help): every Rider feature with its use count, share used with the shortcut, last use and key; unused ones listed; click a feature to try it.

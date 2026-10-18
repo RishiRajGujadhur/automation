@@ -18,6 +18,7 @@ import { setUsages, wordUsages } from '../editor/usages';
 import { fileOutline, itemAt, type OutlineItem } from './outline';
 import type { RiderTool } from './RiderToolWindow';
 import RunAnything from './RunAnything';
+import ProductivityGuide from './ProductivityGuide';
 import KeyPromoter, { keyPromoterOn, setKeyPromoter } from './KeyPromoter';
 import { exitMode, layoutState, toggleMode, toggleToolWindows, useLayoutState } from './layoutModes';
 import { queueTerminalCommand, runInTerminal } from './TerminalPanel';
@@ -35,8 +36,8 @@ export type RiderHostProps = {
  * JetBrains Rider features: registers their commands (menus, palette, desktop menus) and hosts their popups, dialogs
  * and global keys. Editor keys live in editor/riderKeys.ts.
  */
-type Popup = { kind: 'run' } | { kind: 'paste' } | { kind: 'template' } | { kind: 'surround' } | { kind: 'structure'; items: OutlineItem[]; current: number };
-const TITLES: Record<Popup['kind'], string> = { run: 'Run Anything', paste: 'Paste from History', template: 'Insert Live Template', surround: 'Surround With', structure: 'File Structure' };
+type Popup = { kind: 'productivity' } | { kind: 'run' } | { kind: 'paste' } | { kind: 'template' } | { kind: 'surround' } | { kind: 'structure'; items: OutlineItem[]; current: number };
+const TITLES: Record<Popup['kind'], string> = { productivity: 'Productivity Guide', run: 'Run Anything', paste: 'Paste from History', template: 'Insert Live Template', surround: 'Surround With', structure: 'File Structure' };
 
 export default function RiderHost(props: RiderHostProps) {
   const p = useRef(props);
@@ -193,6 +194,7 @@ export default function RiderHost(props: RiderHostProps) {
       { id: 'presentation-mode', label: 'Presentation Mode', menu: 'View', checked: () => layoutState().mode === 'presentation', run: () => { toggleMode('presentation'); riderChanged(); } },
       { id: 'hide-tools', label: 'Hide All Tool Windows', menu: 'View', shortcut: 'Ctrl Shift F12', checked: () => layoutState().toolsHidden, run: () => { toggleToolWindows(); riderChanged(); } },
       { id: 'key-promoter', label: 'Key Promoter', menu: 'Help', group: true, checked: keyPromoterOn, run: () => { setKeyPromoter(!keyPromoterOn()); riderChanged(); } },
+      { id: 'productivity-guide', label: 'Productivity Guide', menu: 'Help', run: () => openPopup({ kind: 'productivity' }, false) },
       { id: 'carets-line-ends', label: 'Add Carets to Ends of Selected Lines', menu: 'Edit', shortcut: 'Alt Shift G', run: inEditor(caretsAtLineEnds) },
     ];
     return registerRider(list);
@@ -213,6 +215,7 @@ export default function RiderHost(props: RiderHostProps) {
     const items = popup.items;
     body = <ListPopup label="File structure" placeholder="File structure: type to filter" empty="No matches." initial={popup.current} items={items.map((it, i) => ({ key: String(i), label: it.label, detail: `${it.kind} · line ${it.line}`, indent: it.depth }))} onPick={(k) => { const it = items[Number(k)]; goTo(view, it.line, it.column); closeAndFocus(); }} />;
   }
+  if (popup?.kind === 'productivity') body = <ProductivityGuide onClose={() => setPopup(null)} />;
   if (popup?.kind === 'run') {
     body = <RunAnything onRun={(cmd) => {
       setPopup(null);

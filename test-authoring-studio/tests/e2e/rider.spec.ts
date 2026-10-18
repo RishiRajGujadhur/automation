@@ -564,3 +564,20 @@ test('J27 Key Promoter: a command from a menu shows its shortcut and how often; 
   await page.waitForTimeout(300);
   await expect(toast).toHaveCount(0);
 });
+
+test('J28 Productivity Guide: features used, how often with the shortcut, unused ones listed', async ({ page }) => {
+  await openFeature(page);
+  await caretAt(page, 'signs in');
+  await page.keyboard.press('Control+Shift+U'); // Toggle Case with the key
+  await page.keyboard.press('Control+Shift+U');
+  await page.getByRole('button', { name: 'Edit menu' }).click();
+  await page.getByRole('menuitem', { name: /Toggle Case/ }).click(); // and from the menu
+  await page.getByRole('button', { name: 'Help menu' }).click();
+  await page.getByRole('menuitem', { name: /Productivity Guide/ }).click();
+  const table = page.getByRole('table', { name: 'Feature usage' });
+  const row = table.getByRole('row', { name: /Toggle Case/ });
+  await expect(row.getByRole('cell').nth(1)).toHaveText('3');
+  await expect(row.getByRole('cell').nth(2)).toHaveText('67%');
+  await expect(table.getByRole('row', { name: /Call Hierarchy/ })).toContainText('never');
+  await expect(page.getByRole('status').filter({ hasText: 'features used' })).toContainText('with the keyboard');
+});
