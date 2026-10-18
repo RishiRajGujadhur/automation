@@ -978,3 +978,14 @@ test('J52 TODO highlighting: TODO / FIXME comments stand out in C# and feature f
   await expect(src.locator('.cm-todo-fixme')).toHaveText('FIXME broken rounding');
   await expect(src.locator('.cm-todo')).toHaveCount(2);
 });
+
+test('J53 Breadcrumbs in feature files: Feature › Scenario at the caret; a part lists its siblings to jump to', async ({ page }) => {
+  await openFeature(page);
+  await caretAt(page, 'signs in');
+  const crumbs = page.getByRole('navigation', { name: 'Breadcrumbs' });
+  await expect(crumbs.getByRole('button')).toHaveText(['Feature: Authentication', 'Scenario: Sign in']);
+  await crumbs.getByRole('button', { name: 'Breadcrumb: Scenario: Sign in' }).click();
+  await page.getByRole('menuitem', { name: 'Background: Signed out' }).click();
+  await expect(crumbs.getByRole('button')).toHaveText(['Feature: Authentication', 'Background: Signed out']);
+  await expect(page.locator('.gherkin-editor .cm-activeLine')).toContainText('Background: Signed out');
+});

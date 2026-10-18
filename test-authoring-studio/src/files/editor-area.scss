@@ -3103,3 +3103,11 @@ html[data-breakpoints-muted] .cm-bp {
 .cm-editor.cm-column-mode .cm-content {
   cursor: crosshair;
 }
+
+// Breadcrumbs for feature files
+.gherkin-breadcrumbs {
+  .crumb-part {
+    display: inline-flex;
+    align-items: center;
+  }
+}

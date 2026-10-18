@@ -23,6 +23,8 @@ import { changeGutter } from './changeGutter';
 import { useChangeBars } from './useChangeBars';
 import { cursorTracker, revealOn } from './cursor';
 import { bookmarks } from './bookmarks';
+import { EditorView } from '@codemirror/view';
+import GherkinBreadcrumbs from '../rider/GherkinBreadcrumbs';
 import { riderKeys } from './riderKeys';
 import { trackActive } from './activeEditor';
 import { viewOptionsExtension } from './viewOptions';
@@ -93,6 +95,7 @@ export default function GherkinEditor({ file, onSave, runMarks, onRunLine, value
           {full ? <Minimize2 size={15} /> : <Maximize2 size={15} />}
         </IconButton>
       </div>
+      {file && <GherkinBreadcrumbs file={file} source={value} onGo={(l, c) => { const v = ref.current?.view; if (!v) return; const line = v.state.doc.line(Math.min(l, v.state.doc.lines)); const at = Math.min(line.to, line.from + c - 1); v.dispatch({ selection: { anchor: at }, effects: EditorView.scrollIntoView(at, { y: 'center' }) }); v.focus(); }} />}
       <RowMenu
         label="Editor actions"
         items={[
