@@ -162,3 +162,22 @@ test('J8 Insert Live Template (Ctrl+J): a Scenario Outline template with fields,
   // Indented like the line it was inserted on, fields one level deeper.
   expect(doc).toMatch(/\n {4}Scenario Outline: Many sign-ins\n {8}Given /);
 });
+
+test('J9 Surround With (Ctrl+Alt+J): steps become a new scenario; a word gets quotes', async ({ page }) => {
+  await openFeature(page);
+  await caretAt(page, 'When the user signs in');
+  await page.keyboard.press('Shift+ArrowDown');
+  await page.keyboard.press('Control+Alt+J');
+  await expect(page.getByRole('listbox', { name: 'Surround templates' })).toContainText('Scenario Outline');
+  await page.getByLabel('Filter surround templates').fill('Scenario');
+  await page.keyboard.press('Enter');
+  await page.keyboard.type('Signed in');
+  let doc = (await selection(page)).doc;
+  expect(doc).toContain(['    Scenario: Signed in', '      When the user signs in as "test-user"', '      Then the dashboard is displayed'].join('\n'));
+  await caretAt(page, 'dashboard');
+  await page.keyboard.press('Control+Alt+J');
+  await page.getByLabel('Filter surround templates').fill('step parameter');
+  await page.keyboard.press('Enter');
+  doc = (await selection(page)).doc;
+  expect(doc).toContain('Then the "dashboard" is displayed');
+});

@@ -249,6 +249,7 @@ export function riderKeys(): Extension {
   const chords: [code: string, shift: boolean, id: string, run: (v: EditorView) => boolean][] = [
     ['KeyJ', true, 'all-occurrences', selectAllOccurrences],
     ['Enter', false, 'new-line-before', startNewLineBefore],
+    ['KeyJ', false, 'surround-with', () => runRider('surround-with', 'key')],
   ];
   const ctrlAlt = EditorView.domEventHandlers({
     keydown(e, view) {

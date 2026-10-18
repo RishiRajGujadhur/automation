@@ -29,6 +29,7 @@ const ROWS: Record<'edit' | 'view' | 'navigate' | 'code' | 'tools' | 'help', Row
   navigate: [],
   code: [
     ['Insert Live Template…', 'live-template', 'CmdOrCtrl+J'],
+    ['Surround With…', 'surround-with', 'CmdOrCtrl+Alt+J'],
   ],
   tools: [],
   help: [],
