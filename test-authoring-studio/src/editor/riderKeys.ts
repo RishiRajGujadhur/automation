@@ -7,6 +7,7 @@ import { pushClipboard } from '../rider/clipboardRing';
 import { usageHighlights } from './usages';
 import { moveStatement } from './moveStatement';
 import { gotoChange, rollbackLines } from './changeGutter';
+import { collapseAll, collapseToDefinitions, expandAll } from './foldAll';
 
 type Span = { from: number; to: number };
 const OPEN = '([{', CLOSE = ')]}';
@@ -316,6 +317,11 @@ export function riderKeys(file = ''): Extension {
     opens('Mod-j', 'live-template'),
     opens('Mod-k Mod-e', 'code-cleanup'),
     keyed('Alt-F5', 'next-change', gotoChange(1)),
+    keyed('Mod-Shift-NumpadAdd', 'expand-all', expandAll),
+    keyed('Mod-Shift-NumpadSubtract', 'collapse-all', collapseAll),
+    keyed('Mod-k Mod-0', 'collapse-all', collapseAll),
+    keyed('Mod-k Mod-j', 'expand-all', expandAll),
+    keyed('Mod-k Mod-2', 'collapse-definitions', collapseToDefinitions),
     keyed('Shift-Alt-F5', 'previous-change', gotoChange(-1)),
     opens('Mod-Shift-F7', 'highlight-usages'),
     opens('Mod-h', 'type-hierarchy'),

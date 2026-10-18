@@ -872,3 +872,22 @@ test('J44 Numbered bookmarks: Ctrl+Shift+1 sets bookmark 1 (shown as 1), Ctrl+1 
   await page.keyboard.press('Control+Shift+Digit1');
   await expect(page.locator('.gherkin-editor .cm-bookmark-digit')).toHaveCount(0);
 });
+
+test('J45 Collapse to Definitions (Ctrl+K, Ctrl+2), Expand All, Collapse All', async ({ page, request }) => {
+  await fs.writeFile(path.join(root, 'Steps/Folds.cs'), ['namespace Demo', '{', '    public class Folds', '    {', '        public void A()', '        {', '            var x = 1;', '        }', '        public void B()', '        {', '            var y = 2;', '        }', '    }', '}', ''].join('\n'));
+  expect((await request.post('/api/workspace', { data: { repositoryRoot: root, targetProject: '.' } })).ok()).toBe(true);
+  const src = await openCs(page, 'Steps/Folds.cs', 'public void A()');
+  await page.keyboard.press('Control+K');
+  await page.keyboard.press('Control+2');
+  // The two method bodies fold; the class and namespace stay open.
+  await expect(src.locator('.cm-foldPlaceholder')).toHaveCount(2);
+  await expect(src).toContainText('public class Folds');
+  await expect(src).not.toContainText('var x = 1;');
+  await page.getByRole('button', { name: 'Code menu' }).click();
+  await page.getByRole('menuitem', { name: /^Expand All/ }).click();
+  await expect(src.locator('.cm-foldPlaceholder')).toHaveCount(0);
+  await src.locator('.cm-line', { hasText: 'var x' }).click();
+  await page.keyboard.press('Control+K');
+  await page.keyboard.press('Control+0');
+  await expect(src).not.toContainText('public class Folds');
+});

@@ -6,6 +6,7 @@ import { EditorView } from '@codemirror/view';
 const EditorViewScroll = (at: number) => EditorView.scrollIntoView(at, { y: 'center' });
 import { activeEditor } from '../editor/activeEditor';
 import { moveStatement } from '../editor/moveStatement';
+import { collapseAll, collapseToDefinitions, expandAll } from '../editor/foldAll';
 import { gotoChange, rollbackLines } from '../editor/changeGutter';
 import { replaceText } from '../editor/csharp';
 import { formatFeature } from '../editor/gherkin';
@@ -344,6 +345,9 @@ export default function RiderHost(props: RiderHostProps) {
       { id: 'new-scratch', label: 'New Scratch File…', menu: 'Tools', group: true, shortcut: 'Ctrl Alt Shift Insert', run: () => { if (isBrowser()) { p.current.onNotice('Scratch files need a folder indexed by the studio server.'); return; } openPopup({ kind: 'scratch' }, false); } },
       { id: 'scratches', label: 'Scratch Files…', menu: 'Tools', run: () => { api<{ file: string; modified: number }[]>('/scratch').then((items) => { if (!items.length) p.current.onNotice('No scratch files yet: Tools ▸ New Scratch File (Ctrl+Alt+Shift+Insert).'); else setPopup({ kind: 'scratches', items }); }, (e) => p.current.onNotice((e as Error).message)); } },
       { id: 'numbered-bookmarks', label: 'Numbered Bookmarks (Ctrl+Shift+digit sets, Ctrl+digit jumps)', menu: 'Navigate', group: true, run: () => p.current.onNotice('Put the caret on a line and press Ctrl+Shift+1…9 to set bookmark 1…9; Ctrl+1…9 jumps to it from anywhere.') },
+      { id: 'expand-all', label: 'Expand All', menu: 'Code', group: true, shortcut: 'Ctrl K, Ctrl J', run: inEditor(expandAll) },
+      { id: 'collapse-all', label: 'Collapse All', menu: 'Code', shortcut: 'Ctrl K, Ctrl 0', run: inEditor(collapseAll) },
+      { id: 'collapse-definitions', label: 'Collapse to Definitions', menu: 'Code', shortcut: 'Ctrl K, Ctrl 2', run: inEditor(collapseToDefinitions) },
       { id: 'carets-line-ends', label: 'Add Carets to Ends of Selected Lines', menu: 'Edit', shortcut: 'Alt Shift G', run: inEditor(caretsAtLineEnds) },
     ];
     return registerRider(list);
