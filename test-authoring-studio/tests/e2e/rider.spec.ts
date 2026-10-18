@@ -839,3 +839,22 @@ test('J42 Rollback Lines (Ctrl+Alt+Z): the change at the caret goes back to the 
   expect(doc).toContain('Then the dashboard is displayed\n');
   expect(doc).toContain('the browser is started again');
 });
+
+test('J43 Scratch Files (Ctrl+Alt+Shift+Insert): a new C# scratch opens with a starter, saves, and is listed; kept out of Git', async ({ page }) => {
+  await commitAll();
+  await openFeature(page);
+  await page.keyboard.press('Control+Alt+Shift+Insert');
+  await page.getByLabel('Filter scratch file types').fill('C#');
+  await page.keyboard.press('Enter');
+  const src = page.getByLabel('Source of .tas/scratches/scratch_1.cs');
+  await expect(src).toContainText('Console.WriteLine("Hello");');
+  await src.locator('.cm-line', { hasText: 'Hello' }).click();
+  await page.keyboard.press('End');
+  await page.keyboard.type(' // tried');
+  await page.keyboard.press('Control+S');
+  await expect.poll(() => fs.readFile(path.join(root, '.tas/scratches/scratch_1.cs'), 'utf8')).toContain('// tried');
+  expect(await fs.readFile(path.join(root, '.git/info/exclude'), 'utf8')).toContain('.tas/');
+  await page.getByRole('button', { name: 'Tools menu' }).click();
+  await page.getByRole('menuitem', { name: /^Scratch Files/ }).click();
+  await expect(page.getByRole('listbox', { name: 'Scratch files' })).toContainText('scratch_1.cs');
+});

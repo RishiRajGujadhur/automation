@@ -56,7 +56,7 @@ Status: ⬜ todo · ✅ done (date)
 | J40 | Code Cleanup (Ctrl+E, C): format and organize usings (C#), format (Gherkin) | ✅ 2026-10-18 |
 | J41 | Next / Previous Change (Alt+F5 / Shift+Alt+F5) | ✅ 2026-10-18 |
 | J42 | Rollback Lines (undo the uncommitted change at the caret) | ✅ 2026-10-18 |
-| J43 | Scratch Files (Ctrl+Alt+Shift+Insert) | ⬜ |
+| J43 | Scratch Files (Ctrl+Alt+Shift+Insert) | ✅ 2026-10-18 |
 | J44 | Numbered bookmarks (Ctrl+Shift+digit toggles, Ctrl+digit jumps) | ⬜ |
 | J45 | Expand All / Collapse All / Collapse to Definitions | ⬜ |
 | J46 | Select In… (Alt+F1): Explorer, Structure, Terminal, file manager | ⬜ |
@@ -120,3 +120,4 @@ Status: ⬜ todo · ✅ done (date)
 - 2026-10-18 J40: Code Cleanup (Ctrl+K, Ctrl+E as in Visual Studio): C# usings organized and formatted by Roslyn, features formatted, trailing whitespace trimmed, final newline. Bug fixes: Ctrl+K inside an editor no longer opens the command palette (it starts the editor's chords; the palette is also Ctrl+Shift+P), and Ctrl+K Ctrl+E no longer opens Recent Files.
 - 2026-10-18 J41: Next / Previous Change (Alt+F5 / Shift+Alt+F5, as in VS Code: Ctrl+Alt+Shift+arrows are Move Statement): the caret jumps between uncommitted change regions, wrapping.
 - 2026-10-18 J42: Rollback Lines (Ctrl+Alt+Z): the uncommitted change region at the caret (or touched by the selection) goes back to the committed text: modified lines restored, added lines removed, deleted lines put back.
+- 2026-10-18 J43: Scratch Files: New Scratch File (Ctrl+Alt+Shift+Insert) in C#, Gherkin, JSON, XML, HTTP, Markdown or text with a starter, under .tas/scratches (added to .git/info/exclude); Scratch Files… lists them. Bug fix: jumping to a file no longer moves the caret again after you start typing.

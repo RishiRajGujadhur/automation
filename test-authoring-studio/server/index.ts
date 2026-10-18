@@ -169,6 +169,35 @@ async function unboundSteps(file:string){
  }
  return {feature,steps:out};
 }
+// Scratch Files (Rider): throwaway files under .tas/scratches (kept out of Git through .git/info/exclude).
+const SCRATCH_DIR = '.tas/scratches';
+const SCRATCH_STARTERS: Record<string, string> = {
+  cs: 'using System;\n\npublic static class Scratch\n{\n    public static void Main()\n    {\n        Console.WriteLine("Hello");\n    }\n}\n',
+  feature: 'Feature: Scratch\n\n  Scenario: Try something\n    Given \n',
+  json: '{\n  \n}\n', xml: '<?xml version="1.0" encoding="utf-8"?>\n<root>\n</root>\n',
+  http: '### Request\nGET https://example.com\n', md: '# Notes\n\n', txt: '',
+};
+app.get('/api/scratch', async (_req, res) => {
+  const dir = path.join(config.repositoryRoot, SCRATCH_DIR);
+  const names = (await fs.readdir(dir).catch(() => [] as string[])).filter((n) => /^scratch_\d+\.\w+$/.test(n));
+  const list = await Promise.all(names.map(async (n) => ({ file: `${SCRATCH_DIR}/${n}`, modified: (await fs.stat(path.join(dir, n))).mtimeMs })));
+  res.json(list.sort((a, b) => b.modified - a.modified));
+});
+app.post('/api/scratch/new', async (req, res) => {
+  const { ext } = z.object({ ext: z.enum(Object.keys(SCRATCH_STARTERS) as [string, ...string[]]) }).parse(req.body);
+  const dir = path.join(config.repositoryRoot, SCRATCH_DIR);
+  await fs.mkdir(dir, { recursive: true });
+  const used = (await fs.readdir(dir)).map((n) => Number(/^scratch_(\d+)\./.exec(n)?.[1] ?? 0));
+  const name = `scratch_${Math.max(0, ...used) + 1}.${ext}`;
+  await fs.writeFile(path.join(dir, name), SCRATCH_STARTERS[ext], 'utf8');
+  // Not part of the repository's history.
+  const exclude = path.join(config.repositoryRoot, '.git', 'info', 'exclude');
+  if (await fs.stat(path.dirname(exclude)).then(() => true, () => false)) {
+    const text = await fs.readFile(exclude, 'utf8').catch(() => '');
+    if (!/^\.tas\/?$/m.test(text)) await fs.appendFile(exclude, `${text && !text.endsWith('\n') ? '\n' : ''}.tas/\n`);
+  }
+  res.json({ file: `${SCRATCH_DIR}/${name}` });
+});
 // Go to Related Files (Rider): a feature's step definition files and code-behind; a step file's features.
 app.get('/api/related', async (req, res) => {
   const file = z.string().min(1).max(400).parse(req.query.file).replaceAll('\\', '/');

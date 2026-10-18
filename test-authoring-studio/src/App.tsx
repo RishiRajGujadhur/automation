@@ -519,7 +519,13 @@ export default function App() {
   const navigateTo = (loc: { file: string; line?: number; column?: number }) => {
     if (loc.file.endsWith('.feature') && fileSrc.kind !== 'browser') { setTab('Features'); setView('editor'); if (feature?.file !== loc.file) void loadFeature(loc.file); else openTab(loc.file, 'feature'); }
     else editFile(loc.file, loc.line, loc.column);
-    if (loc.line) for (const ms of [60, 400, 1200]) setTimeout(() => reveal(loc.file, loc.line!, loc.column ?? 1), ms);
+    if (loc.line) {
+      // Again while the editor loads; stops as soon as the user types or clicks (the caret is theirs then).
+      const timers = [60, 400, 1200].map((ms) => window.setTimeout(() => reveal(loc.file, loc.line!, loc.column ?? 1), ms));
+      const stop = () => { timers.forEach(clearTimeout); window.removeEventListener('keydown', stop, true); window.removeEventListener('mousedown', stop, true); };
+      window.setTimeout(() => { window.addEventListener('keydown', stop, true); window.addEventListener('mousedown', stop, true); }, 100);
+      window.setTimeout(stop, 1300);
+    }
   };
   const [recentMode, setRecentMode] = useState<'files' | 'locations'>('files');
   const bookmarkList = useBookmarks();

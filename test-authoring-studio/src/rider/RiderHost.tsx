@@ -51,8 +51,8 @@ export type RiderHostProps = {
  * JetBrains Rider features: registers their commands (menus, palette, desktop menus) and hosts their popups, dialogs
  * and global keys. Editor keys live in editor/riderKeys.ts.
  */
-type Popup = { kind: 'related'; items: { file: string; line: number; reason: string }[] } | { kind: 'recent-changes'; items: { file: string; id: string; at: string; reason: string }[] } | { kind: 'file-history'; file: string; current: string } | { kind: 'compare'; patch: string; what: string } | { kind: 'regexp'; initial: string } | { kind: 'evaluate'; initial: string } | { kind: 'tip' } | { kind: 'productivity' } | { kind: 'run' } | { kind: 'paste' } | { kind: 'template' } | { kind: 'surround' } | { kind: 'structure'; items: OutlineItem[]; current: number };
-const TITLES: Record<Popup['kind'], string> = { related: 'Related Files', 'recent-changes': 'Recent Changes', 'file-history': 'Local History', compare: 'Compare with Clipboard', regexp: 'Check RegExp', evaluate: 'Evaluate Expression', tip: 'Tip of the Day', productivity: 'Productivity Guide', run: 'Run Anything', paste: 'Paste from History', template: 'Insert Live Template', surround: 'Surround With', structure: 'File Structure' };
+type Popup = { kind: 'scratch' } | { kind: 'scratches'; items: { file: string; modified: number }[] } | { kind: 'related'; items: { file: string; line: number; reason: string }[] } | { kind: 'recent-changes'; items: { file: string; id: string; at: string; reason: string }[] } | { kind: 'file-history'; file: string; current: string } | { kind: 'compare'; patch: string; what: string } | { kind: 'regexp'; initial: string } | { kind: 'evaluate'; initial: string } | { kind: 'tip' } | { kind: 'productivity' } | { kind: 'run' } | { kind: 'paste' } | { kind: 'template' } | { kind: 'surround' } | { kind: 'structure'; items: OutlineItem[]; current: number };
+const TITLES: Record<Popup['kind'], string> = { scratch: 'New Scratch File', scratches: 'Scratch Files', related: 'Related Files', 'recent-changes': 'Recent Changes', 'file-history': 'Local History', compare: 'Compare with Clipboard', regexp: 'Check RegExp', evaluate: 'Evaluate Expression', tip: 'Tip of the Day', productivity: 'Productivity Guide', run: 'Run Anything', paste: 'Paste from History', template: 'Insert Live Template', surround: 'Surround With', structure: 'File Structure' };
 
 function PowerSaveBadge() {
   useRiderCommands();
@@ -255,6 +255,7 @@ export default function RiderHost(props: RiderHostProps) {
       [(e) => (e.ctrlKey || e.metaKey) && e.shiftKey && !e.altKey && e.key === 'F12', 'hide-tools'],
       [(e) => e.altKey && !e.ctrlKey && !e.shiftKey && !e.metaKey && e.key === 'F8', 'evaluate-expression'],
       [(e) => e.altKey && e.shiftKey && !e.ctrlKey && !e.metaKey && e.code === 'KeyC', 'recent-changes'],
+      [(e) => (e.ctrlKey || e.metaKey) && e.altKey && e.shiftKey && e.key === 'Insert', 'new-scratch'],
     ];
     // Capture phase: the keys also work while the Terminal (xterm.js swallows key events) or a field has focus.
     const h = (e: KeyboardEvent) => { const k = keys.find(([t]) => t(e)); if (k) { e.preventDefault(); e.stopPropagation(); runRider(k[1], 'key'); } };
@@ -328,6 +329,8 @@ export default function RiderHost(props: RiderHostProps) {
       { id: 'next-change', label: 'Next Change', menu: 'Navigate', group: true, shortcut: 'Alt F5', run: inEditor(gotoChange(1)) },
       { id: 'previous-change', label: 'Previous Change', menu: 'Navigate', shortcut: 'Shift Alt F5', run: inEditor(gotoChange(-1)) },
       { id: 'rollback-lines', label: 'Rollback Lines', menu: 'Edit', shortcut: 'Ctrl Alt Z', run: inEditor((v) => { if (!rollbackLines(v)) p.current.onNotice('No uncommitted change at the caret.'); }) },
+      { id: 'new-scratch', label: 'New Scratch File…', menu: 'Tools', group: true, shortcut: 'Ctrl Alt Shift Insert', run: () => { if (isBrowser()) { p.current.onNotice('Scratch files need a folder indexed by the studio server.'); return; } openPopup({ kind: 'scratch' }, false); } },
+      { id: 'scratches', label: 'Scratch Files…', menu: 'Tools', run: () => { api<{ file: string; modified: number }[]>('/scratch').then((items) => { if (!items.length) p.current.onNotice('No scratch files yet: Tools ▸ New Scratch File (Ctrl+Alt+Shift+Insert).'); else setPopup({ kind: 'scratches', items }); }, (e) => p.current.onNotice((e as Error).message)); } },
       { id: 'carets-line-ends', label: 'Add Carets to Ends of Selected Lines', menu: 'Edit', shortcut: 'Alt Shift G', run: inEditor(caretsAtLineEnds) },
     ];
     return registerRider(list);
@@ -347,6 +350,14 @@ export default function RiderHost(props: RiderHostProps) {
     const { view } = target.current;
     const items = popup.items;
     body = <ListPopup label="File structure" placeholder="File structure: type to filter" empty="No matches." initial={popup.current} items={items.map((it, i) => ({ key: String(i), label: it.label, detail: `${it.kind} · line ${it.line}`, indent: it.depth }))} onPick={(k) => { const it = items[Number(k)]; goTo(view, it.line, it.column); closeAndFocus(); }} />;
+  }
+  if (popup?.kind === 'scratch') {
+    const kinds = [['cs', 'C#'], ['feature', 'Gherkin feature'], ['json', 'JSON'], ['xml', 'XML'], ['http', 'HTTP request'], ['md', 'Markdown'], ['txt', 'Plain text']];
+    body = <ListPopup label="Scratch file types" placeholder="New scratch file: language" empty="No such type." items={kinds.map(([k, l]) => ({ key: k, label: l, detail: `.${k}` }))} onPick={(k) => { setPopup(null); api<{ file: string }>('/scratch/new', { ext: k }).then((r) => p.current.onNavigate({ file: r.file, line: 1 }), (e) => p.current.onNotice((e as Error).message)); }} />;
+  }
+  if (popup?.kind === 'scratches') {
+    const items = popup.items;
+    body = <ListPopup label="Scratch files" placeholder="Scratch files" empty="No scratch files." items={items.map((s) => ({ key: s.file, label: s.file.split('/').pop()!, detail: new Date(s.modified).toLocaleString() }))} onPick={(k) => { setPopup(null); p.current.onNavigate({ file: k, line: 1 }); }} />;
   }
   if (popup?.kind === 'related') {
     const items = popup.items;
