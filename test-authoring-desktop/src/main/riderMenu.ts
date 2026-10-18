@@ -40,6 +40,7 @@ const ROWS: Record<'edit' | 'view' | 'navigate' | 'code' | 'tools' | 'help', Row
     null,
     ['Distraction-Free Mode', 'zen-mode', 'Alt+Shift+Z'],
     ['Presentation Mode', 'presentation-mode'],
+    ['Hide All Tool Windows', 'hide-tools', 'CmdOrCtrl+Shift+F12'],
   ],
   navigate: [
     ['File Structure…', 'file-structure', 'CmdOrCtrl+Alt+F12'],

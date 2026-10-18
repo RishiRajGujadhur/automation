@@ -39,7 +39,7 @@ Status: ⬜ todo · ✅ done (date)
 | J23 | Markdown preview | ✅ 2026-10-18 |
 | J24 | Distraction-Free Mode (Alt+Shift+Z) | ✅ 2026-10-18 |
 | J25 | Presentation Mode | ✅ 2026-10-18 |
-| J26 | Hide All Tool Windows (Ctrl+Shift+F12) | ⬜ |
+| J26 | Hide All Tool Windows (Ctrl+Shift+F12) | ✅ 2026-10-18 |
 | J27 | Key Promoter (shortcut hints when a command is used from a menu) | ⬜ |
 | J28 | Productivity Guide | ⬜ |
 | J29 | Tip of the Day | ⬜ |
@@ -78,3 +78,4 @@ Status: ⬜ todo · ✅ done (date)
 - 2026-10-18 J23: Markdown preview for .md files: editor only / editor and preview / preview only (remembered), live while typing, GitHub-flavoured Markdown via marked, sanitized with DOMPurify, links open outside.
 - 2026-10-18 J24: Distraction-Free Mode (View menu, Alt+Shift+Z): header, activity bar, explorer, panels, tabs and status bar hidden, text centred; an Exit pill at the top edge.
 - 2026-10-18 J25: Presentation Mode: Distraction-Free layout, full screen and a 22 px editor font; Exit pill restores.
+- 2026-10-18 J26: Hide All Tool Windows (Ctrl+Shift+F12): explorer and bottom panel hidden, editors take the room; the same key brings them back.

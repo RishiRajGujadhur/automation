@@ -529,3 +529,19 @@ test('J25 Presentation Mode: only the editor, full screen, large font; Exit rest
   await expect.poll(size).toBe(before);
   await expect(page.locator('.app-header')).toBeVisible();
 });
+
+test('J26 Hide All Tool Windows (Ctrl+Shift+F12): explorer and panels hide, the editor keeps the window; again restores', async ({ page }) => {
+  await openFeature(page);
+  await page.keyboard.press('Alt+7');
+  await expect(page.getByRole('region', { name: 'Structure' })).toBeVisible();
+  const width = () => gherkin(page).evaluate((el) => el.closest('.cm-editor')!.getBoundingClientRect().width);
+  const before = await width();
+  await page.keyboard.press('Control+Shift+F12');
+  await expect(page.locator('#feature-sidebar')).toBeHidden();
+  await expect(page.getByRole('region', { name: 'Structure' })).toBeHidden();
+  await expect(page.locator('.app-header')).toBeVisible();
+  await expect.poll(width).toBeGreaterThan(before + 100);
+  await page.keyboard.press('Control+Shift+F12');
+  await expect(page.locator('#feature-sidebar')).toBeVisible();
+  await expect(page.getByRole('region', { name: 'Structure' })).toBeVisible();
+});

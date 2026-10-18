@@ -18,7 +18,7 @@ import { setUsages, wordUsages } from '../editor/usages';
 import { fileOutline, itemAt, type OutlineItem } from './outline';
 import type { RiderTool } from './RiderToolWindow';
 import RunAnything from './RunAnything';
-import { exitMode, layoutState, toggleMode, useLayoutState } from './layoutModes';
+import { exitMode, layoutState, toggleMode, toggleToolWindows, useLayoutState } from './layoutModes';
 import { queueTerminalCommand, runInTerminal } from './TerminalPanel';
 import { setHierarchy, type CallHierarchy, type TypeHierarchy } from './hierarchy';
 import { changeFontSize, setViewOptions, viewOptions } from '../editor/viewOptions';
@@ -154,6 +154,7 @@ export default function RiderHost(props: RiderHostProps) {
       [(e) => e.altKey && !e.shiftKey && !e.ctrlKey && !e.metaKey && e.key === 'F12', 'tool-terminal'],
       // Distraction-Free Mode (Rider has no default key; Ctrl+K is the command palette here).
       [(e) => e.altKey && e.shiftKey && !e.ctrlKey && !e.metaKey && e.code === 'KeyZ', 'zen-mode'],
+      [(e) => (e.ctrlKey || e.metaKey) && e.shiftKey && !e.altKey && e.key === 'F12', 'hide-tools'],
     ];
     const h = (e: KeyboardEvent) => { const k = keys.find(([t]) => t(e)); if (k) { e.preventDefault(); runRider(k[1], 'key'); } };
     window.addEventListener('keydown', h);
@@ -189,6 +190,7 @@ export default function RiderHost(props: RiderHostProps) {
       { id: 'run-anything', label: 'Run Anything…', menu: 'Tools', shortcut: 'Ctrl Ctrl', run: () => { if (isBrowser()) { p.current.onNotice('Run Anything needs a folder indexed by the studio server.'); return; } openPopup({ kind: 'run' }, false); } },
       { id: 'zen-mode', label: 'Distraction-Free Mode', menu: 'View', group: true, shortcut: 'Alt Shift Z', checked: () => layoutState().mode === 'zen', run: () => { toggleMode('zen'); riderChanged(); } },
       { id: 'presentation-mode', label: 'Presentation Mode', menu: 'View', checked: () => layoutState().mode === 'presentation', run: () => { toggleMode('presentation'); riderChanged(); } },
+      { id: 'hide-tools', label: 'Hide All Tool Windows', menu: 'View', shortcut: 'Ctrl Shift F12', checked: () => layoutState().toolsHidden, run: () => { toggleToolWindows(); riderChanged(); } },
       { id: 'carets-line-ends', label: 'Add Carets to Ends of Selected Lines', menu: 'Edit', shortcut: 'Alt Shift G', run: inEditor(caretsAtLineEnds) },
     ];
     return registerRider(list);
