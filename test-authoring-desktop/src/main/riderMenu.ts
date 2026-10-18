@@ -56,7 +56,10 @@ const ROWS: Record<'edit' | 'view' | 'navigate' | 'code' | 'tools' | 'help', Row
   tools: [
     ['Run Anything… (Ctrl twice)', 'run-anything'],
   ],
-  help: [],
+  help: [
+    null,
+    ['Key Promoter (shortcut hints)', 'key-promoter'],
+  ],
 };
 
 export function riderMenus(send: (id: string) => void) {

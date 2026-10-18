@@ -2858,3 +2858,34 @@ html[data-rider-tools='hidden'] {
     opacity: 1;
   }
 }
+
+// Key Promoter
+.key-promoter {
+  position: fixed;
+  right: 16px;
+  bottom: 34px;
+  z-index: 70;
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  max-width: 340px;
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--panel);
+  box-shadow: 0 8px 24px #0004;
+  color: var(--text);
+  font-size: 13px;
+  kbd {
+    margin-left: 4px;
+    padding: 1px 6px;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    font-size: 12px;
+  }
+  small {
+    display: block;
+    margin-top: 2px;
+    color: var(--text-muted);
+  }
+}

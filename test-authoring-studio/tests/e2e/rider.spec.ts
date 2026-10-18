@@ -545,3 +545,22 @@ test('J26 Hide All Tool Windows (Ctrl+Shift+F12): explorer and panels hide, the 
   await expect(page.locator('#feature-sidebar')).toBeVisible();
   await expect(page.getByRole('region', { name: 'Structure' })).toBeVisible();
 });
+
+test('J27 Key Promoter: a command from a menu shows its shortcut and how often; the key itself does not; can be turned off', async ({ page }) => {
+  await openFeature(page);
+  await page.getByRole('button', { name: 'View menu' }).click();
+  await page.getByRole('menuitem', { name: /^Structure/ }).click();
+  const toast = page.getByRole('status', { name: 'Key Promoter' });
+  await expect(toast).toContainText('Structure');
+  await expect(toast).toContainText('Alt 7');
+  await expect(toast).toContainText('Used 1 time without the shortcut');
+  await toast.getByRole('button', { name: 'Dismiss' }).click();
+  await page.keyboard.press('Alt+7');
+  await expect(toast).toHaveCount(0);
+  await page.getByRole('button', { name: 'Help menu' }).click();
+  await page.getByRole('menuitem', { name: /Key Promoter/ }).click();
+  await page.getByRole('button', { name: 'View menu' }).click();
+  await page.getByRole('menuitem', { name: /^Structure/ }).click();
+  await page.waitForTimeout(300);
+  await expect(toast).toHaveCount(0);
+});

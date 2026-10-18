@@ -18,6 +18,7 @@ import { setUsages, wordUsages } from '../editor/usages';
 import { fileOutline, itemAt, type OutlineItem } from './outline';
 import type { RiderTool } from './RiderToolWindow';
 import RunAnything from './RunAnything';
+import KeyPromoter, { keyPromoterOn, setKeyPromoter } from './KeyPromoter';
 import { exitMode, layoutState, toggleMode, toggleToolWindows, useLayoutState } from './layoutModes';
 import { queueTerminalCommand, runInTerminal } from './TerminalPanel';
 import { setHierarchy, type CallHierarchy, type TypeHierarchy } from './hierarchy';
@@ -191,6 +192,7 @@ export default function RiderHost(props: RiderHostProps) {
       { id: 'zen-mode', label: 'Distraction-Free Mode', menu: 'View', group: true, shortcut: 'Alt Shift Z', checked: () => layoutState().mode === 'zen', run: () => { toggleMode('zen'); riderChanged(); } },
       { id: 'presentation-mode', label: 'Presentation Mode', menu: 'View', checked: () => layoutState().mode === 'presentation', run: () => { toggleMode('presentation'); riderChanged(); } },
       { id: 'hide-tools', label: 'Hide All Tool Windows', menu: 'View', shortcut: 'Ctrl Shift F12', checked: () => layoutState().toolsHidden, run: () => { toggleToolWindows(); riderChanged(); } },
+      { id: 'key-promoter', label: 'Key Promoter', menu: 'Help', group: true, checked: keyPromoterOn, run: () => { setKeyPromoter(!keyPromoterOn()); riderChanged(); } },
       { id: 'carets-line-ends', label: 'Add Carets to Ends of Selected Lines', menu: 'Edit', shortcut: 'Alt Shift G', run: inEditor(caretsAtLineEnds) },
     ];
     return registerRider(list);
@@ -222,6 +224,7 @@ export default function RiderHost(props: RiderHostProps) {
   if (popup?.kind === 'paste') body = <PasteHistory onPaste={(text) => { const v = target.current?.view; closeAndFocus(); if (v) v.dispatch(v.state.replaceSelection(text), { scrollIntoView: true, userEvent: 'input.paste' }); }} />;
   return (
     <>
+    <KeyPromoter />
     {layout.mode !== 'normal' && (
       <button className="rider-exit-mode" onClick={() => { exitMode(); riderChanged(); }}>
         Exit {layout.mode === 'zen' ? 'Distraction-Free' : 'Presentation'} Mode
