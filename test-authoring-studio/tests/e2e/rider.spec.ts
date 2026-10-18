@@ -749,3 +749,13 @@ test('Alt+F12 stays Peek Definition in a C# editor; Ctrl+` opens the Terminal fr
   await expect(page.getByRole('region', { name: 'Terminal' })).toBeVisible();
   await expect(page.getByRole('region', { name: /^Peek Definition/ })).toHaveCount(0);
 });
+
+test('J38 Move Statement Up / Down (Ctrl+Shift+Alt+↑/↓): steps, and a whole scenario with its steps', async ({ page }) => {
+  await openFeature(page);
+  await caretAt(page, 'Given the login page');
+  await page.keyboard.press('Control+Shift+Alt+ArrowDown');
+  expect((await selection(page)).doc).toContain('    When the user signs in as "test-user"\n    Given the login page is open\n');
+  await caretAt(page, 'Scenario: Sign in');
+  await page.keyboard.press('Control+Shift+Alt+ArrowUp');
+  expect((await selection(page)).doc).toMatch(/Feature: Authentication\n  Scenario: Sign in\n(    .*\n){3}  Background: Signed out\n    Given the browser is started/);
+});

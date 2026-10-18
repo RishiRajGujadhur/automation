@@ -58,6 +58,9 @@ const ROWS: Record<'edit' | 'view' | 'navigate' | 'code' | 'tools' | 'help', Row
     ['Surround With…', 'surround-with', 'CmdOrCtrl+Alt+J'],
     null,
     ['Check RegExp… (step patterns)', 'check-regexp'],
+    null,
+    ['Move Statement Up', 'statement-up', 'CmdOrCtrl+Shift+Alt+Up'],
+    ['Move Statement Down', 'statement-down', 'CmdOrCtrl+Shift+Alt+Down'],
   ],
   tools: [
     ['Run Anything… (Ctrl twice)', 'run-anything'],

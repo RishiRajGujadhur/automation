@@ -5,6 +5,7 @@ import { selectNextOccurrence, SearchCursor } from '@codemirror/search';
 import { noteUsage, runRider } from '../rider/commands';
 import { pushClipboard } from '../rider/clipboardRing';
 import { usageHighlights } from './usages';
+import { moveStatement } from './moveStatement';
 
 type Span = { from: number; to: number };
 const OPEN = '([{', CLOSE = ')]}';
@@ -249,6 +250,8 @@ export function riderKeys(): Extension {
   // Ctrl+Alt chords: CodeMirror reads Ctrl+Alt as AltGr on Windows, so these match on the physical key.
   const chords: [code: string, shift: boolean, id: string, run: (v: EditorView) => boolean][] = [
     ['KeyJ', true, 'all-occurrences', selectAllOccurrences],
+    ['ArrowUp', true, 'statement-up', moveStatement(-1)],
+    ['ArrowDown', true, 'statement-down', moveStatement(1)],
     ['Enter', false, 'new-line-before', startNewLineBefore],
     ['KeyJ', false, 'surround-with', () => runRider('surround-with', 'key')],
     ['KeyC', true, 'copy-reference', () => runRider('copy-reference', 'key')],

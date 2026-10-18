@@ -5,6 +5,7 @@ import { EditorView } from '@codemirror/view';
 
 const EditorViewScroll = (at: number) => EditorView.scrollIntoView(at, { y: 'center' });
 import { activeEditor } from '../editor/activeEditor';
+import { moveStatement } from '../editor/moveStatement';
 import { extendSelection, shrinkSelection, toggleCase, joinLines, selectNextOccurrence, unselectOccurrence, selectAllOccurrences, startNewLine, startNewLineBefore, caretsAtLineEnds } from '../editor/riderKeys';
 import { registerRider, riderChanged, runRider, useRiderCommands, type RiderCommand } from './commands';
 import { api } from '../api';
@@ -293,6 +294,8 @@ export default function RiderHost(props: RiderHostProps) {
       { id: 'tool-shelf', label: 'Shelf', menu: 'View', run: () => { if (isBrowser()) { p.current.onNotice('The shelf needs a folder indexed by the studio server.'); return; } p.current.onTool('shelf'); } },
       { id: 'power-save', label: 'Power Save Mode', menu: 'Tools', group: true, checked: powerSave, run: () => { setPowerSave(!powerSave()); riderChanged(); p.current.onNotice(powerSave() ? 'Power Save Mode: background analysis (C# diagnostics, CodeLens, inlay hints) is paused.' : 'Power Save Mode off: background analysis resumes.'); } },
       { id: 'related-files', label: 'Go to Related Files…', menu: 'Navigate', shortcut: 'Ctrl Alt Home', run: () => void relatedFiles() },
+      { id: 'statement-up', label: 'Move Statement Up', menu: 'Code', group: true, shortcut: 'Ctrl Shift Alt ↑', run: inEditor(moveStatement(-1)) },
+      { id: 'statement-down', label: 'Move Statement Down', menu: 'Code', shortcut: 'Ctrl Shift Alt ↓', run: inEditor(moveStatement(1)) },
       { id: 'carets-line-ends', label: 'Add Carets to Ends of Selected Lines', menu: 'Edit', shortcut: 'Alt Shift G', run: inEditor(caretsAtLineEnds) },
     ];
     return registerRider(list);
