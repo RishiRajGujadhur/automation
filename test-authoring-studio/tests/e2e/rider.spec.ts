@@ -622,3 +622,24 @@ test('J31 Mute Breakpoints: breakpoints stay but are sent disabled; unmute resto
   await caretAt(page, 'signs in');
   await page.keyboard.press('F9');
 });
+
+test('J32 Check RegExp: the step pattern at the caret, a sample with its groups, the feature steps it matches', async ({ page }) => {
+  await openCs(page, 'Steps/AuthSteps.cs', 'SignIn');
+  await page.getByRole('button', { name: 'Code menu' }).click();
+  await page.getByRole('menuitem', { name: /Check RegExp/ }).click();
+  const dlg = page.getByRole('dialog', { name: 'Check RegExp' });
+  await expect(dlg.getByLabel('Pattern')).toHaveValue('the user signs in as "(.*)"');
+  await expect(dlg.getByRole('region', { name: 'Matching steps' })).toContainText('1 step in features match');
+  await expect(dlg.getByLabel('Sample')).toHaveValue('the user signs in as "test-user"');
+  await expect(dlg.getByRole('status')).toContainText('Matches');
+  await expect(dlg.getByRole('list', { name: 'Groups' })).toContainText('test-user');
+  await dlg.getByLabel('Sample').fill('the user signs out');
+  await expect(dlg.getByRole('status')).toContainText('No match');
+  // A Cucumber expression is shown as its regular expression.
+  await dlg.getByLabel('Pattern').fill('the user signs in as {string}');
+  await expect(dlg).toContainText('Cucumber expression');
+  await dlg.getByLabel('Sample').fill('the user signs in as "x"');
+  await expect(dlg.getByRole('status')).toContainText('Matches');
+  await dlg.getByRole('region', { name: 'Matching steps' }).getByRole('button').first().click();
+  await expect(gherkin(page)).toContainText('signs in as');
+});

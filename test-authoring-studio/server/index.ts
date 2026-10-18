@@ -21,6 +21,8 @@ import {
   resolveStep,
   ignoredDirsFor,
   extraRootsOf,
+  isCucumberExpression as isCucumberPattern,
+  expressionToRegex as patternToRegex,
 } from './core.js';
 import { startTerminal, stopTerminal, terminal, type TerminalEvent } from './terminal.js';
 import { Recorder } from './recorder.js';
@@ -167,6 +169,19 @@ async function unboundSteps(file:string){
  }
  return {feature,steps:out};
 }
+// Check RegExp (Rider) for step definition patterns: the regular expression (Cucumber expressions converted) and the
+// feature steps it matches.
+app.post('/api/steps/regex', async (req, res) => {
+  const { pattern } = z.object({ pattern: z.string().max(2000) }).parse(req.body);
+  const cucumber = isCucumberPattern(pattern);
+  const regex = patternToRegex(pattern, cucumber);
+  let re: RegExp;
+  try { re = new RegExp(`^(?:${regex.replace(/^\^/, '').replace(/\$$/, '')})$`); } catch (e) { res.json({ regex, cucumber, steps: [], error: (e as Error).message }); return; }
+  const i = await ensure();
+  const steps: { file: string; line: number; text: string }[] = [];
+  for (const f of i.features) for (const b of [...f.backgrounds, ...f.scenarios]) for (const st of b.steps) if (steps.length < 500 && re.test(st.text)) steps.push({ file: f.file, line: st.line, text: st.text });
+  res.json({ regex, cucumber, steps });
+});
 // Find unused step definitions (Reqnroll): bindings no feature step resolves to.
 // Gherkin formatting settings (.editorconfig, as Reqnroll reads them) for a feature file.
 app.get('/api/editorconfig',async(req,res)=>{const file=z.string().min(1).max(400).parse(req.query.file);await confined(config.repositoryRoot,file,false);res.json(await editorConfigFor(config.repositoryRoot,file));});

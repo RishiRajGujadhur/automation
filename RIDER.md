@@ -45,7 +45,7 @@ Status: ⬜ todo · ✅ done (date)
 | J29 | Tip of the Day | ✅ 2026-10-18 |
 | J30 | Evaluate Expression (Alt+F8, debugger) | ✅ 2026-10-18 |
 | J31 | Mute Breakpoints | ✅ 2026-10-18 |
-| J32 | Check RegExp (step definition patterns) | ⬜ |
+| J32 | Check RegExp (step definition patterns) | ✅ 2026-10-18 |
 | J33 | Compare with Clipboard | ⬜ |
 | J34 | Recent Changes (Alt+Shift+C) | ⬜ |
 | J35 | Shelf (shelve / unshelve changes; Git stash) | ⬜ |
@@ -84,3 +84,4 @@ Status: ⬜ todo · ✅ done (date)
 - 2026-10-18 J29: Tip of the Day (Help): studio tips plus one per Rider command with a shortcut, previous / next, Try it runs the feature; Show tips on startup (off by default), once per session.
 - 2026-10-18 J30: Evaluate Expression (Alt+F8) while paused: starts from the selection / word at the caret, evaluates in the selected frame (netcoredbg), members expand lazily, history with ↑/↓, errors shown.
 - 2026-10-18 J31: Mute Breakpoints (Tools): all breakpoints are sent to the debugger disabled while their own settings are kept; margin dots go grey; remembered.
+- 2026-10-18 J32: Check RegExp (Code menu): takes the [Given/When/Then] pattern at the caret (C# string unescaped), converts Cucumber expressions like Reqnroll, tests a sample (match + groups) and lists the feature steps it matches (click to open).

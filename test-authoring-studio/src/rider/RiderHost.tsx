@@ -20,6 +20,7 @@ import type { RiderTool } from './RiderToolWindow';
 import RunAnything from './RunAnything';
 import ProductivityGuide from './ProductivityGuide';
 import EvaluateExpression from './EvaluateExpression';
+import CheckRegExp from './CheckRegExp';
 import { breakpointsMuted, muteBreakpoints } from '../debug/store';
 import TipOfTheDay, { tipsOnStartup } from './TipOfTheDay';
 import KeyPromoter, { keyPromoterOn, setKeyPromoter } from './KeyPromoter';
@@ -39,8 +40,8 @@ export type RiderHostProps = {
  * JetBrains Rider features: registers their commands (menus, palette, desktop menus) and hosts their popups, dialogs
  * and global keys. Editor keys live in editor/riderKeys.ts.
  */
-type Popup = { kind: 'evaluate'; initial: string } | { kind: 'tip' } | { kind: 'productivity' } | { kind: 'run' } | { kind: 'paste' } | { kind: 'template' } | { kind: 'surround' } | { kind: 'structure'; items: OutlineItem[]; current: number };
-const TITLES: Record<Popup['kind'], string> = { evaluate: 'Evaluate Expression', tip: 'Tip of the Day', productivity: 'Productivity Guide', run: 'Run Anything', paste: 'Paste from History', template: 'Insert Live Template', surround: 'Surround With', structure: 'File Structure' };
+type Popup = { kind: 'regexp'; initial: string } | { kind: 'evaluate'; initial: string } | { kind: 'tip' } | { kind: 'productivity' } | { kind: 'run' } | { kind: 'paste' } | { kind: 'template' } | { kind: 'surround' } | { kind: 'structure'; items: OutlineItem[]; current: number };
+const TITLES: Record<Popup['kind'], string> = { regexp: 'Check RegExp', evaluate: 'Evaluate Expression', tip: 'Tip of the Day', productivity: 'Productivity Guide', run: 'Run Anything', paste: 'Paste from History', template: 'Insert Live Template', surround: 'Surround With', structure: 'File Structure' };
 
 export default function RiderHost(props: RiderHostProps) {
   const p = useRef(props);
@@ -219,6 +220,19 @@ export default function RiderHost(props: RiderHostProps) {
         openPopup({ kind: 'evaluate', initial }, false);
       } },
       { id: 'mute-breakpoints', label: 'Mute Breakpoints', menu: 'Tools', checked: breakpointsMuted, run: () => { muteBreakpoints(!breakpointsMuted()); riderChanged(); p.current.onNotice(breakpointsMuted() ? 'Breakpoints muted: the debugger will not stop at them.' : 'Breakpoints active again.'); } },
+      { id: 'check-regexp', label: 'Check RegExp…', menu: 'Code', run: () => {
+        // The step definition pattern at the caret ([Given(@"…")] in C#), else the selection.
+        const a = activeEditor();
+        let initial = '';
+        if (a) {
+          const st = a.view.state;
+          const r = st.selection.main;
+          const line = st.doc.lineAt(r.head).text;
+          const m = /\[(?:Given|When|Then|StepDefinition)\s*\(\s*(@?)"((?:[^"]|"")*)"/.exec(line);
+          initial = m ? (m[1] ? m[2].replace(/""/g, '"') : m[2].replace(/\\\\/g, '\\')) : st.sliceDoc(r.from, r.to);
+        }
+        openPopup({ kind: 'regexp', initial }, false);
+      } },
       { id: 'carets-line-ends', label: 'Add Carets to Ends of Selected Lines', menu: 'Edit', shortcut: 'Alt Shift G', run: inEditor(caretsAtLineEnds) },
     ];
     return registerRider(list);
@@ -239,6 +253,7 @@ export default function RiderHost(props: RiderHostProps) {
     const items = popup.items;
     body = <ListPopup label="File structure" placeholder="File structure: type to filter" empty="No matches." initial={popup.current} items={items.map((it, i) => ({ key: String(i), label: it.label, detail: `${it.kind} · line ${it.line}`, indent: it.depth }))} onPick={(k) => { const it = items[Number(k)]; goTo(view, it.line, it.column); closeAndFocus(); }} />;
   }
+  if (popup?.kind === 'regexp') body = <CheckRegExp initial={popup.initial} onOpen={(file, line) => { setPopup(null); p.current.onNavigate({ file, line }); }} />;
   if (popup?.kind === 'evaluate') body = <EvaluateExpression initial={popup.initial} />;
   if (popup?.kind === 'tip') body = <TipOfTheDay onClose={() => setPopup(null)} />;
   if (popup?.kind === 'productivity') body = <ProductivityGuide onClose={() => setPopup(null)} />;
