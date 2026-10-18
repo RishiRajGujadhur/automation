@@ -34,7 +34,9 @@ const ROWS: Record<'edit' | 'view' | 'navigate' | 'code' | 'tools' | 'help', Row
     ['Decrease Font Size', 'font-smaller'],
     ['Reset Font Size', 'font-reset'],
   ],
-  navigate: [],
+  navigate: [
+    ['Highlight Usages in File', 'highlight-usages', 'CmdOrCtrl+Shift+F7'],
+  ],
   code: [
     ['Insert Live Template…', 'live-template', 'CmdOrCtrl+J'],
     ['Surround With…', 'surround-with', 'CmdOrCtrl+Alt+J'],

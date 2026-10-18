@@ -12,6 +12,7 @@ import PasteHistory from './PasteHistory';
 import ListPopup from './ListPopup';
 import { insertTemplate, liveTemplates } from '../editor/snippets';
 import { surroundTemplates, surroundWith } from '../editor/surround';
+import { setUsages, wordUsages } from '../editor/usages';
 import { changeFontSize, setViewOptions, viewOptions } from '../editor/viewOptions';
 
 export type RiderHostProps = {
@@ -56,6 +57,28 @@ export default function RiderHost(props: RiderHostProps) {
     p.current.onNotice(ok ? `Copied reference: ${ref}` : 'Clipboard unavailable.');
     a.view.focus();
   };
+  /** Highlight Usages in File (Ctrl+Shift+F7): the C# symbol's references in this file (Roslyn), else the word. */
+  const highlightUsages = async () => {
+    const a = activeEditor();
+    if (!a) { p.current.onNotice('Open a file in the editor first.'); return; }
+    const { view, file } = a;
+    let ranges = wordUsages(view);
+    if (file.endsWith('.cs') && !isBrowser()) {
+      try {
+        const r = await api<{ locations: { file: string; line: number; column: number; endLine?: number; endColumn?: number }[] }>('/csharp/references', position(view, file));
+        const doc = view.state.doc;
+        const here = r.locations.filter((l) => l.file === file && l.line <= doc.lines).map((l) => {
+          const from = doc.line(l.line).from + l.column - 1;
+          const to = l.endLine && l.endColumn && l.endLine <= doc.lines ? doc.line(l.endLine).from + l.endColumn - 1 : from;
+          return { from, to };
+        });
+        if (here.length) ranges = here;
+      } catch { /* not a symbol: the word */ }
+    }
+    view.dispatch({ effects: setUsages.of(ranges) });
+    p.current.onNotice(ranges.length ? `${ranges.length} usage${ranges.length === 1 ? '' : 's'} in this file (F3 / Shift+F3 to move, Esc to clear).` : 'Nothing to highlight here.');
+    view.focus();
+  };
   const closeAndFocus = () => { setPopup(null); requestAnimationFrame(() => target.current?.view.focus()); };
   /** Runs an editor action on the active editor (and gives it focus back). */
   const inEditor = (fn: (v: EditorView, file: string) => unknown) => () => {
@@ -84,6 +107,7 @@ export default function RiderHost(props: RiderHostProps) {
       { id: 'font-smaller', label: 'Decrease Font Size', menu: 'View', shortcut: 'Ctrl Wheel ↓', run: () => changeFontSize(-1, activeEditor()?.view) },
       { id: 'font-reset', label: 'Reset Font Size', menu: 'View', run: () => changeFontSize(0) },
       { id: 'copy-reference', label: 'Copy Reference', menu: 'Edit', group: true, shortcut: 'Ctrl Alt Shift C', run: () => void copyReference() },
+      { id: 'highlight-usages', label: 'Highlight Usages in File', menu: 'Navigate', shortcut: 'Ctrl Shift F7', run: () => void highlightUsages() },
       { id: 'carets-line-ends', label: 'Add Carets to Ends of Selected Lines', menu: 'Edit', shortcut: 'Alt Shift G', run: inEditor(caretsAtLineEnds) },
     ];
     return registerRider(list);

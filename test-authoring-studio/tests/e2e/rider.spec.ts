@@ -251,3 +251,24 @@ test('J13 Copy Reference (Ctrl+Alt+Shift+C): fully qualified C# member, path:lin
   await page.keyboard.press('Control+Alt+Shift+C');
   await expect(page.getByText('Copied reference: Features/Auth/Login.feature:7')).toBeVisible();
 });
+
+test('J14 Highlight Usages in File (Ctrl+Shift+F7): Roslyn references in C#, words in features; F3 moves, Esc clears', async ({ page }) => {
+  const src = await openCs(page, 'Steps/AuthSteps.cs', 'SignIn');
+  await page.keyboard.press('End');
+  // Caret on "userName" (the parameter).
+  const doc = (await selection(page)).doc;
+  await page.keyboard.press('Home');
+  for (let i = 0; i < doc.split('\n').find((l) => l.includes('SignIn'))!.indexOf('userName') - doc.split('\n').find((l) => l.includes('SignIn'))!.search(/\S/); i++) await page.keyboard.press('ArrowRight');
+  await page.keyboard.press('Control+Shift+F7');
+  await expect(src.locator('.cm-usage-highlight')).toHaveCount(1, { timeout: 60_000 });
+  await expect(src.locator('.cm-usage-highlight')).toHaveText('userName');
+  await page.keyboard.press('Escape');
+  await expect(src.locator('.cm-usage-highlight')).toHaveCount(0);
+  await page.getByRole('navigation').getByRole('button', { name: 'Login.feature', exact: true }).first().click();
+  await caretAt(page, 'the login');
+  await page.keyboard.press('Control+Shift+F7');
+  const n = (await selection(page)).doc.match(/\bthe\b/g)!.length;
+  await expect(gherkin(page).locator('.cm-usage-highlight')).toHaveCount(n);
+  await page.keyboard.press('F3');
+  expect((await selection(page)).ranges[0].text).toBe('the');
+});
