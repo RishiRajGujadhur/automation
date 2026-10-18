@@ -207,3 +207,23 @@ test('J11 Show Whitespaces (View menu): spaces and trailing whitespace are drawn
   await page.getByRole('menuitem', { name: /Show Whitespaces/ }).click();
   await expect(gherkin(page).locator('.cm-highlightSpace')).toHaveCount(0);
 });
+
+test('J12 Ctrl+Mouse Wheel changes the editor font size; View ▸ Reset Font Size', async ({ page }) => {
+  await openFeature(page);
+  const size = () => gherkin(page).evaluate((el) => parseFloat(getComputedStyle(el).fontSize));
+  const before = await size();
+  await gherkin(page).hover();
+  await page.keyboard.down('Control');
+  await page.mouse.wheel(0, -100);
+  await page.mouse.wheel(0, -100);
+  await page.keyboard.up('Control');
+  await expect.poll(size).toBe(before + 2);
+  // Page zoom is untouched.
+  expect(await page.evaluate(() => window.devicePixelRatio)).toBe(1);
+  await page.getByRole('button', { name: 'View menu' }).click();
+  await page.getByRole('menuitem', { name: /Decrease Font Size/ }).click();
+  await expect.poll(size).toBe(before + 1);
+  await page.getByRole('button', { name: 'View menu' }).click();
+  await page.getByRole('menuitem', { name: /Reset Font Size/ }).click();
+  await expect.poll(size).toBe(before);
+});

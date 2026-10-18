@@ -29,6 +29,9 @@ const ROWS: Record<'edit' | 'view' | 'navigate' | 'code' | 'tools' | 'help', Row
     null,
     ['Soft-Wrap (Active Editor)', 'soft-wrap'],
     ['Show Whitespaces', 'whitespace'],
+    ['Increase Font Size (Ctrl+Mouse Wheel)', 'font-bigger'],
+    ['Decrease Font Size', 'font-smaller'],
+    ['Reset Font Size', 'font-reset'],
   ],
   navigate: [],
   code: [

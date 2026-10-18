@@ -25,7 +25,7 @@ Status: ⬜ todo · ✅ done (date)
 | J9 | Surround With (Ctrl+Alt+J) | ✅ 2026-10-18 |
 | J10 | Soft-Wrap toggle (View ▸ Active Editor) | ✅ 2026-10-18 |
 | J11 | Show Whitespaces toggle | ✅ 2026-10-18 |
-| J12 | Change font size with Ctrl+Mouse Wheel, Reset Font Size | ⬜ |
+| J12 | Change font size with Ctrl+Mouse Wheel, Reset Font Size | ✅ 2026-10-18 |
 | J13 | Copy Reference (Ctrl+Alt+Shift+C) | ⬜ |
 | J14 | Highlight Usages in File (Ctrl+Shift+F7) | ⬜ |
 | J15 | File Structure popup (Ctrl+F12 on desktop, Ctrl+Alt+F12 on the web) | ⬜ |
@@ -64,3 +64,4 @@ Status: ⬜ todo · ✅ done (date)
 - 2026-10-18 J9: Surround With: C# (if, if/else, while, for, foreach, try/catch, try/finally, using, lock, #region, braces, parentheses, cast, string) and Gherkin (Scenario, Scenario Outline, Rule, Background, doc string, step and outline parameters); the placeholder is selected afterwards.
 - 2026-10-18 J10: Soft-Wrap toggle for every editor (View menu, remembered), via a shared view-options store.
 - 2026-10-18 J11: Show Whitespaces toggle: spaces, tabs and trailing whitespace drawn in every editor.
+- 2026-10-18 J12: Editor font size: Ctrl+Mouse Wheel over an editor (page zoom untouched), Increase / Decrease / Reset Font Size in View; all editors, remembered.

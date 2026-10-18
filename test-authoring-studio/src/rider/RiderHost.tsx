@@ -9,7 +9,7 @@ import PasteHistory from './PasteHistory';
 import ListPopup from './ListPopup';
 import { insertTemplate, liveTemplates } from '../editor/snippets';
 import { surroundTemplates, surroundWith } from '../editor/surround';
-import { setViewOptions, viewOptions } from '../editor/viewOptions';
+import { changeFontSize, setViewOptions, viewOptions } from '../editor/viewOptions';
 
 export type RiderHostProps = {
   onNotice: (m: string) => void;
@@ -58,6 +58,9 @@ export default function RiderHost(props: RiderHostProps) {
       { id: 'surround-with', label: 'Surround With…', menu: 'Code', shortcut: 'Ctrl Alt J', run: () => openPopup({ kind: 'surround' }) },
       { id: 'soft-wrap', label: 'Soft-Wrap', menu: 'View', group: true, checked: () => viewOptions().softWrap, run: () => { setViewOptions({ softWrap: !viewOptions().softWrap }); riderChanged(); } },
       { id: 'whitespace', label: 'Show Whitespaces', menu: 'View', checked: () => viewOptions().whitespace, run: () => { setViewOptions({ whitespace: !viewOptions().whitespace }); riderChanged(); } },
+      { id: 'font-bigger', label: 'Increase Font Size', menu: 'View', group: true, shortcut: 'Ctrl Wheel ↑', run: () => changeFontSize(1, activeEditor()?.view) },
+      { id: 'font-smaller', label: 'Decrease Font Size', menu: 'View', shortcut: 'Ctrl Wheel ↓', run: () => changeFontSize(-1, activeEditor()?.view) },
+      { id: 'font-reset', label: 'Reset Font Size', menu: 'View', run: () => changeFontSize(0) },
       { id: 'carets-line-ends', label: 'Add Carets to Ends of Selected Lines', menu: 'Edit', shortcut: 'Alt Shift G', run: inEditor(caretsAtLineEnds) },
     ];
     return registerRider(list);
