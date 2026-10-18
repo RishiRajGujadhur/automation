@@ -46,7 +46,7 @@ Status: ⬜ todo · ✅ done (date)
 | J30 | Evaluate Expression (Alt+F8, debugger) | ✅ 2026-10-18 |
 | J31 | Mute Breakpoints | ✅ 2026-10-18 |
 | J32 | Check RegExp (step definition patterns) | ✅ 2026-10-18 |
-| J33 | Compare with Clipboard | ⬜ |
+| J33 | Compare with Clipboard | ✅ 2026-10-18 |
 | J34 | Recent Changes (Alt+Shift+C) | ⬜ |
 | J35 | Shelf (shelve / unshelve changes; Git stash) | ⬜ |
 | J36 | Power Save Mode | ⬜ |
@@ -85,3 +85,4 @@ Status: ⬜ todo · ✅ done (date)
 - 2026-10-18 J30: Evaluate Expression (Alt+F8) while paused: starts from the selection / word at the caret, evaluates in the selected frame (netcoredbg), members expand lazily, history with ↑/↓, errors shown.
 - 2026-10-18 J31: Mute Breakpoints (Tools): all breakpoints are sent to the debugger disabled while their own settings are kept; margin dots go grey; remembered.
 - 2026-10-18 J32: Check RegExp (Code menu): takes the [Given/When/Then] pattern at the caret (C# string unescaped), converts Cucumber expressions like Reqnroll, tests a sample (match + groups) and lists the feature steps it matches (click to open).
+- 2026-10-18 J33: Compare with Clipboard (Edit): the selection, or the whole file, against the clipboard as a unified diff with a summary.

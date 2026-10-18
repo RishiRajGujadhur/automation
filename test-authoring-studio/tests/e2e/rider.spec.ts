@@ -643,3 +643,18 @@ test('J32 Check RegExp: the step pattern at the caret, a sample with its groups,
   await dlg.getByRole('region', { name: 'Matching steps' }).getByRole('button').first().click();
   await expect(gherkin(page)).toContainText('signs in as');
 });
+
+test('J33 Compare with Clipboard: the selection against copied text, as a diff', async ({ page, context }) => {
+  await context.grantPermissions(['clipboard-read', 'clipboard-write']);
+  await openFeature(page);
+  await page.evaluate(() => navigator.clipboard.writeText('Given the login page is open\n    When the admin signs in'));
+  await caretAt(page, 'Given the login page');
+  await page.keyboard.press('Shift+ArrowDown');
+  await page.keyboard.press('Shift+End');
+  await page.getByRole('button', { name: 'Edit menu' }).click();
+  await page.getByRole('menuitem', { name: /Compare with Clipboard/ }).click();
+  const dlg = page.getByRole('dialog', { name: 'Compare with Clipboard' });
+  await expect(dlg.getByRole('status')).toContainText('Selection vs. clipboard: 1 line only in selection, 1 only in the clipboard.');
+  await expect(dlg).toContainText('-    When the user signs in as "test-user"');
+  await expect(dlg).toContainText('+    When the admin signs in');
+});

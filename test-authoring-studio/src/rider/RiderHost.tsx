@@ -21,6 +21,9 @@ import RunAnything from './RunAnything';
 import ProductivityGuide from './ProductivityGuide';
 import EvaluateExpression from './EvaluateExpression';
 import CheckRegExp from './CheckRegExp';
+import CompareClipboard from './CompareClipboard';
+import { createTwoFilesPatch } from 'diff';
+import { clipboardHistory } from './clipboardRing';
 import { breakpointsMuted, muteBreakpoints } from '../debug/store';
 import TipOfTheDay, { tipsOnStartup } from './TipOfTheDay';
 import KeyPromoter, { keyPromoterOn, setKeyPromoter } from './KeyPromoter';
@@ -40,8 +43,8 @@ export type RiderHostProps = {
  * JetBrains Rider features: registers their commands (menus, palette, desktop menus) and hosts their popups, dialogs
  * and global keys. Editor keys live in editor/riderKeys.ts.
  */
-type Popup = { kind: 'regexp'; initial: string } | { kind: 'evaluate'; initial: string } | { kind: 'tip' } | { kind: 'productivity' } | { kind: 'run' } | { kind: 'paste' } | { kind: 'template' } | { kind: 'surround' } | { kind: 'structure'; items: OutlineItem[]; current: number };
-const TITLES: Record<Popup['kind'], string> = { regexp: 'Check RegExp', evaluate: 'Evaluate Expression', tip: 'Tip of the Day', productivity: 'Productivity Guide', run: 'Run Anything', paste: 'Paste from History', template: 'Insert Live Template', surround: 'Surround With', structure: 'File Structure' };
+type Popup = { kind: 'compare'; patch: string; what: string } | { kind: 'regexp'; initial: string } | { kind: 'evaluate'; initial: string } | { kind: 'tip' } | { kind: 'productivity' } | { kind: 'run' } | { kind: 'paste' } | { kind: 'template' } | { kind: 'surround' } | { kind: 'structure'; items: OutlineItem[]; current: number };
+const TITLES: Record<Popup['kind'], string> = { compare: 'Compare with Clipboard', regexp: 'Check RegExp', evaluate: 'Evaluate Expression', tip: 'Tip of the Day', productivity: 'Productivity Guide', run: 'Run Anything', paste: 'Paste from History', template: 'Insert Live Template', surround: 'Surround With', structure: 'File Structure' };
 
 export default function RiderHost(props: RiderHostProps) {
   const p = useRef(props);
@@ -129,6 +132,22 @@ export default function RiderHost(props: RiderHostProps) {
     setHierarchy({ kind: 'call', loading: true });
     p.current.onTool('hierarchy');
     try { setHierarchy({ kind: 'call', data: await api<CallHierarchy>('/csharp/callers', position(a.view, a.file)) }); } catch (e) { setHierarchy({ kind: 'call', error: (e as Error).message }); }
+  };
+  /** Compare with Clipboard: the selection, or the whole file, against the clipboard text. */
+  const compareWithClipboard = async () => {
+    const a = activeEditor();
+    if (!a) { p.current.onNotice('Open a file in the editor first.'); return; }
+    let clip: string | undefined;
+    try { clip = await navigator.clipboard.readText(); } catch { clip = clipboardHistory()[0]; }
+    if (clip === undefined) { p.current.onNotice('The clipboard cannot be read here; copy the text in an editor first.'); return; }
+    const st = a.view.state;
+    const r = st.selection.main;
+    const mine = r.empty ? st.doc.toString() : st.sliceDoc(r.from, r.to);
+    const what = r.empty ? 'File' : 'Selection';
+    const norm = (t: string) => t.replace(/\r\n/g, '\n');
+    const patch = norm(mine) === norm(clip) ? '' : createTwoFilesPatch(`${a.file}${r.empty ? '' : ' (selection)'}`, 'Clipboard', norm(mine), norm(clip), '', '', { context: 3 }).split('\n').slice(2).join('\n');
+    target.current = a;
+    setPopup({ kind: 'compare', patch, what });
   };
   const closeAndFocus = () => { setPopup(null); requestAnimationFrame(() => target.current?.view.focus()); };
   /** Runs an editor action on the active editor (and gives it focus back). */
@@ -233,6 +252,7 @@ export default function RiderHost(props: RiderHostProps) {
         }
         openPopup({ kind: 'regexp', initial }, false);
       } },
+      { id: 'compare-clipboard', label: 'Compare with Clipboard', menu: 'Edit', run: () => void compareWithClipboard() },
       { id: 'carets-line-ends', label: 'Add Carets to Ends of Selected Lines', menu: 'Edit', shortcut: 'Alt Shift G', run: inEditor(caretsAtLineEnds) },
     ];
     return registerRider(list);
@@ -253,6 +273,7 @@ export default function RiderHost(props: RiderHostProps) {
     const items = popup.items;
     body = <ListPopup label="File structure" placeholder="File structure: type to filter" empty="No matches." initial={popup.current} items={items.map((it, i) => ({ key: String(i), label: it.label, detail: `${it.kind} · line ${it.line}`, indent: it.depth }))} onPick={(k) => { const it = items[Number(k)]; goTo(view, it.line, it.column); closeAndFocus(); }} />;
   }
+  if (popup?.kind === 'compare') body = <CompareClipboard patch={popup.patch} what={popup.what} />;
   if (popup?.kind === 'regexp') body = <CheckRegExp initial={popup.initial} onOpen={(file, line) => { setPopup(null); p.current.onNavigate({ file, line }); }} />;
   if (popup?.kind === 'evaluate') body = <EvaluateExpression initial={popup.initial} />;
   if (popup?.kind === 'tip') body = <TipOfTheDay onClose={() => setPopup(null)} />;
