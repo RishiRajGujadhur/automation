@@ -134,6 +134,26 @@ export function toggleCase(view: EditorView) {
   return true;
 }
 
+/** Join Lines (Ctrl+Shift+J): the selected lines (or this line and the next) become one, separated by one space. */
+export function joinLines(view: EditorView) {
+  const doc = view.state.doc;
+  const changes: { from: number; to: number; insert: string }[] = [];
+  let last = 0;
+  for (const r of view.state.selection.ranges) {
+    const a = doc.lineAt(r.from).number;
+    const b = Math.max(a + 1, doc.lineAt(r.to).number);
+    for (let n = Math.max(a, last + 1); n < b && n < doc.lines; n++) {
+      const end = doc.line(n).to, next = doc.line(n + 1);
+      const trailing = /\s*$/.exec(doc.line(n).text)![0].length;
+      const lead = /^\s*/.exec(next.text)![0].length;
+      changes.push({ from: end - trailing, to: next.from + lead, insert: next.text.trim() && doc.line(n).text.trim() ? ' ' : '' });
+      last = n;
+    }
+  }
+  if (changes.length) view.dispatch({ changes, userEvent: 'delete.join' });
+  return true;
+}
+
 const keyed = (key: string, id: string, run: (v: EditorView) => boolean) => ({ key, preventDefault: true, run: (v: EditorView) => { noteUsage(id, 'key'); return run(v); } });
 
 /** Rider editing actions shared by the code and Gherkin editors. */
@@ -142,5 +162,6 @@ export function riderKeys(): Extension {
     keyed('Shift-Alt-ArrowRight', 'extend-selection', extendSelection),
     keyed('Shift-Alt-ArrowLeft', 'shrink-selection', shrinkSelection),
     keyed('Mod-Shift-u', 'toggle-case', toggleCase),
+    keyed('Mod-Shift-j', 'join-lines', joinLines),
   ]))];
 }

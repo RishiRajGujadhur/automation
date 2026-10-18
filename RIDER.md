@@ -16,7 +16,7 @@ Status: ⬜ todo · ✅ done (date)
 | --- | --- | --- |
 | J1 | Extend / Shrink Selection (Shift+Alt+→ / Shift+Alt+←; Ctrl+W stays Close Editor) | ✅ 2026-10-18 |
 | J2 | Toggle Case (Ctrl+Shift+U) | ✅ 2026-10-18 |
-| J3 | Join Lines (Ctrl+Shift+J) | ⬜ |
+| J3 | Join Lines (Ctrl+Shift+J) | ✅ 2026-10-18 |
 | J4 | Add Selection for Next Occurrence (Alt+J), Unselect (Alt+Shift+J), Select All Occurrences (Ctrl+Alt+Shift+J) | ⬜ |
 | J5 | Start New Line (Shift+Enter) / Start New Line Before Current (Ctrl+Alt+Enter) | ⬜ |
 | J6 | Add Carets to Ends of Selected Lines (Alt+Shift+G) | ⬜ |
@@ -55,3 +55,4 @@ Status: ⬜ todo · ✅ done (date)
 ## Progress log
 - 2026-10-18 J1: Rider command registry (web menu bar, desktop native menus, palette); Extend/Shrink Selection (word → string → brackets → line → indentation block → document).
 - 2026-10-18 J2: Toggle Case: selection or word at the caret; upper case, or lower case when already upper.
+- 2026-10-18 J3: Join Lines: selected lines or the next line, one space, indentation dropped.

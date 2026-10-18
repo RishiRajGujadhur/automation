@@ -13,6 +13,7 @@ const ROWS: Record<'edit' | 'view' | 'navigate' | 'code' | 'tools' | 'help', Row
     ['Shrink Selection', 'shrink-selection', 'Shift+Alt+Left'],
     null,
     ['Toggle Case', 'toggle-case', 'CmdOrCtrl+Shift+U'],
+    ['Join Lines', 'join-lines', 'CmdOrCtrl+Shift+J'],
   ],
   view: [],
   navigate: [],

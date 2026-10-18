@@ -63,3 +63,10 @@ test('J2 Toggle Case (Ctrl+Shift+U): word at the caret to upper case and back', 
   await page.keyboard.press('Control+Shift+U');
   await expect(gherkin(page)).toContainText('the user signs in');
 });
+
+test('J3 Join Lines (Ctrl+Shift+J): this line and the next become one, indentation dropped', async ({ page }) => {
+  await openFeature(page);
+  await caretAt(page, 'signs in');
+  await page.keyboard.press('Control+Shift+J');
+  await expect(gherkin(page)).toContainText('When the user signs in as "test-user" Then the dashboard is displayed');
+});
