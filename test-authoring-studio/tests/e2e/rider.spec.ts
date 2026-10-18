@@ -919,3 +919,14 @@ test('J47 Compare With…: the editor text against another file of the solution'
   await expect(dlg.getByRole('status')).toContainText('This file vs. Features/Auth/Login2.feature: 1 line only in this file, 1 only in Features/Auth/Login2.feature.');
   await expect(dlg).toContainText('+    When the user signs in as "admin"');
 });
+
+test('J48 Complete Current Statement (Ctrl+Shift+Enter): closes the call and adds the semicolon in C#', async ({ page }) => {
+  const src = await openCs(page, 'Steps/AuthSteps.cs', 'Dashboard');
+  await src.locator('.cm-line', { hasText: 'Dashboard' }).click();
+  await page.keyboard.press('End');
+  await page.keyboard.press('Enter');
+  await page.keyboard.type('System.Console.WriteLine("done"');
+  await page.keyboard.press('Control+Shift+Enter');
+  await page.keyboard.type('// next');
+  expect((await selection(page)).doc).toMatch(/System\.Console\.WriteLine\("done"\);\n\s*\/\/ next/);
+});

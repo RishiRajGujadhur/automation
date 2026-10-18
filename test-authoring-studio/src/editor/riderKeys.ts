@@ -7,6 +7,7 @@ import { pushClipboard } from '../rider/clipboardRing';
 import { usageHighlights } from './usages';
 import { moveStatement } from './moveStatement';
 import { gotoChange, rollbackLines } from './changeGutter';
+import { completeStatement } from './completeStatement';
 import { collapseAll, collapseToDefinitions, expandAll } from './foldAll';
 
 type Span = { from: number; to: number };
@@ -332,6 +333,7 @@ export function riderKeys(file = ''): Extension {
     keyed('Alt-j', 'next-occurrence', selectNextOccurrence),
     keyed('Alt-Shift-j', 'unselect-occurrence', unselectOccurrence),
     keyed('Shift-Enter', 'new-line', startNewLine),
+    keyed('Mod-Shift-Enter', 'complete-statement', completeStatement(file)),
     keyed('Alt-Shift-g', 'carets-line-ends', caretsAtLineEnds),
   ]))];
 }

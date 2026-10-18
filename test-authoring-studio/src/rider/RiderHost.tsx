@@ -6,6 +6,7 @@ import { EditorView } from '@codemirror/view';
 const EditorViewScroll = (at: number) => EditorView.scrollIntoView(at, { y: 'center' });
 import { activeEditor } from '../editor/activeEditor';
 import { moveStatement } from '../editor/moveStatement';
+import { completeStatement } from '../editor/completeStatement';
 import { collapseAll, collapseToDefinitions, expandAll } from '../editor/foldAll';
 import { gotoChange, rollbackLines } from '../editor/changeGutter';
 import { replaceText } from '../editor/csharp';
@@ -361,6 +362,7 @@ export default function RiderHost(props: RiderHostProps) {
         if (isBrowser()) { p.current.onNotice('Compare With needs a folder indexed by the studio server.'); return; }
         api<{ files: { file: string }[] }>('/solution').then((s) => setPopup({ kind: 'compare-with', files: s.files.map((f) => f.file).filter((f) => f !== a.file) }), (e) => p.current.onNotice((e as Error).message));
       } },
+      { id: 'complete-statement', label: 'Complete Current Statement', menu: 'Code', group: true, shortcut: 'Ctrl Shift Enter', run: inEditor((v, f) => completeStatement(f)(v)) },
       { id: 'carets-line-ends', label: 'Add Carets to Ends of Selected Lines', menu: 'Edit', shortcut: 'Alt Shift G', run: inEditor(caretsAtLineEnds) },
     ];
     return registerRider(list);

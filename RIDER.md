@@ -61,7 +61,7 @@ Status: ⬜ todo · ✅ done (date)
 | J45 | Expand All / Collapse All / Collapse to Definitions (Ctrl+K Ctrl+J / 0 / 2) | ✅ 2026-10-18 |
 | J46 | Select In… (Alt+F1): Explorer, Structure, Terminal, file manager | ✅ 2026-10-18 |
 | J47 | Compare With… another file | ✅ 2026-10-18 |
-| J48 | Complete Current Statement (Ctrl+Shift+Enter) | ⬜ |
+| J48 | Complete Current Statement (Ctrl+Shift+Enter) | ✅ 2026-10-18 |
 | J49 | Unwrap / Remove (Ctrl+Shift+Delete) | ⬜ |
 | J50 | Column Selection Mode (Alt+Shift+Insert) | ⬜ |
 | J51 | Copy Path / Reference… popup (Ctrl+Shift+C) | ⬜ |
@@ -125,3 +125,4 @@ Status: ⬜ todo · ✅ done (date)
 - 2026-10-18 J45: Expand All / Collapse All / Collapse to Definitions (method bodies and scenarios fold, types / namespaces / features / rules stay open): Code menu and Ctrl+K Ctrl+J / Ctrl+0 / Ctrl+2 (Ctrl+M is CodeMirror's Tab focus mode, so no Visual Studio Ctrl+M chords).
 - 2026-10-18 J46: Select In… (Alt+F1): reveal the active file in the Explorer, its Structure, a Terminal in its folder, or (desktop) Windows Explorer.
 - 2026-10-18 J47: Compare With… (Edit): pick any file of the solution; the editor text is diffed against it.
+- 2026-10-18 J48: Complete Current Statement (Ctrl+Shift+Enter): closes open parentheses, adds ';' or opens a { } block after if/for/while/method headers in the file's brace style (Allman or K&R) with the caret inside; in features, a new step line.
