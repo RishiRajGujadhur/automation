@@ -196,3 +196,14 @@ test('J10 Soft-Wrap (View menu): long lines wrap in every editor; remembered', a
   await page.getByRole('menuitem', { name: /Soft-Wrap/ }).click();
   await expect(gherkin(page)).not.toHaveClass(/cm-lineWrapping/);
 });
+
+test('J11 Show Whitespaces (View menu): spaces and trailing whitespace are drawn', async ({ page }) => {
+  await openFeature(page);
+  await expect(gherkin(page).locator('.cm-highlightSpace')).toHaveCount(0);
+  await page.getByRole('button', { name: 'View menu' }).click();
+  await page.getByRole('menuitem', { name: /Show Whitespaces/ }).click();
+  await expect(gherkin(page).locator('.cm-highlightSpace').first()).toBeVisible();
+  await page.getByRole('button', { name: 'View menu' }).click();
+  await page.getByRole('menuitem', { name: /Show Whitespaces/ }).click();
+  await expect(gherkin(page).locator('.cm-highlightSpace')).toHaveCount(0);
+});

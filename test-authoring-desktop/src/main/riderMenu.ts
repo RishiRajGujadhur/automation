@@ -28,6 +28,7 @@ const ROWS: Record<'edit' | 'view' | 'navigate' | 'code' | 'tools' | 'help', Row
   view: [
     null,
     ['Soft-Wrap (Active Editor)', 'soft-wrap'],
+    ['Show Whitespaces', 'whitespace'],
   ],
   navigate: [],
   code: [
