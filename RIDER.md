@@ -34,7 +34,7 @@ Status: ⬜ todo · ✅ done (date)
 | J18 | Call Hierarchy (Ctrl+Alt+H) | ✅ 2026-10-18 |
 | J19 | Problems tool window: solution-wide analysis (Alt+Shift+6; Alt+3 is the Features page) | ✅ 2026-10-18 |
 | J20 | Terminal tool window (Alt+F12) | ✅ 2026-10-18 |
-| J21 | Run Anything (Ctrl twice) | ⬜ |
+| J21 | Run Anything (Ctrl twice) | ✅ 2026-10-18 |
 | J22 | HTTP Client (`.http` / `.rest` files) | ⬜ |
 | J23 | Markdown preview | ⬜ |
 | J24 | Distraction-Free Mode | ⬜ |
@@ -73,3 +73,4 @@ Status: ⬜ todo · ✅ done (date)
 - 2026-10-18 J18: Call Hierarchy in the Hierarchy tool window: callers of the method/property at the caret with their call sites (Roslyn FindCallers), expand a caller for its callers (lazy), click goes to the call.
 - 2026-10-18 J19: Problems tool window: C# compiler errors/warnings of every project (Roslyn solutionDiagnostics) and unbound / ambiguous feature steps, grouped by file, filter by severity, click to go.
 - 2026-10-18 J20: Terminal tool window (xterm.js): PowerShell (sh elsewhere) in the repository folder, line editing with history, cd tracked in the prompt, Ctrl+C stops the command tree, Ctrl+L clears, several tabs. Line-based shell over pipes (no native pty), so the desktop bundle needs nothing extra.
+- 2026-10-18 J21: Run Anything (press Ctrl twice, Tools menu): type any command or pick a suggestion (recent commands, dotnet build/test/restore per project and solution, git); it runs in the Terminal (opened if needed). New Tools menu.

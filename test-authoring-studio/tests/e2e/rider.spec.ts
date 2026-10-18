@@ -421,3 +421,20 @@ test('J20 Terminal (Alt+F12): a shell in the repository folder; commands, cd, hi
   await expect(panel.getByRole('tab')).toHaveCount(2);
   await expect(screen).toContainText(`PS ${root}>`, { timeout: 30_000 });
 });
+
+test('J21 Run Anything (Ctrl twice): suggestions for the projects, a typed command runs in the Terminal, then it is recent', async ({ page }) => {
+  await openFeature(page);
+  await page.keyboard.press('Control');
+  await page.keyboard.press('Control');
+  const list = page.getByRole('listbox', { name: 'Run Anything' });
+  await expect(list).toContainText('dotnet test "Fixtures.csproj"');
+  await page.getByLabel('Command to run').fill('Write-Output ("run-" + "anything")');
+  await page.keyboard.press('Enter');
+  const screen = page.getByRole('region', { name: 'Terminal' }).locator('.terminal-host:not([hidden]) .xterm-rows');
+  await expect(screen).toContainText('run-anything', { timeout: 30_000 });
+  // Again: the command is listed as recent, and runs in the open terminal.
+  await page.getByRole('button', { name: 'Tools menu' }).click();
+  await page.getByRole('menuitem', { name: /Run Anything/ }).click();
+  await expect(list.getByRole('option').first()).toContainText('run-');
+  await expect(list.getByRole('option').first()).toContainText('Recent');
+});

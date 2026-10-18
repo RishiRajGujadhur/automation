@@ -17,6 +17,8 @@ import { surroundTemplates, surroundWith } from '../editor/surround';
 import { setUsages, wordUsages } from '../editor/usages';
 import { fileOutline, itemAt, type OutlineItem } from './outline';
 import type { RiderTool } from './RiderToolWindow';
+import RunAnything from './RunAnything';
+import { queueTerminalCommand, runInTerminal } from './TerminalPanel';
 import { setHierarchy, type CallHierarchy, type TypeHierarchy } from './hierarchy';
 import { changeFontSize, setViewOptions, viewOptions } from '../editor/viewOptions';
 
@@ -31,8 +33,8 @@ export type RiderHostProps = {
  * JetBrains Rider features: registers their commands (menus, palette, desktop menus) and hosts their popups, dialogs
  * and global keys. Editor keys live in editor/riderKeys.ts.
  */
-type Popup = { kind: 'paste' } | { kind: 'template' } | { kind: 'surround' } | { kind: 'structure'; items: OutlineItem[]; current: number };
-const TITLES: Record<Popup['kind'], string> = { paste: 'Paste from History', template: 'Insert Live Template', surround: 'Surround With', structure: 'File Structure' };
+type Popup = { kind: 'run' } | { kind: 'paste' } | { kind: 'template' } | { kind: 'surround' } | { kind: 'structure'; items: OutlineItem[]; current: number };
+const TITLES: Record<Popup['kind'], string> = { run: 'Run Anything', paste: 'Paste from History', template: 'Insert Live Template', surround: 'Surround With', structure: 'File Structure' };
 
 export default function RiderHost(props: RiderHostProps) {
   const p = useRef(props);
@@ -129,6 +131,20 @@ export default function RiderHost(props: RiderHostProps) {
     fn(a.view, a.file);
     a.view.focus();
   };
+  // Run Anything: press Ctrl twice (Rider).
+  useEffect(() => {
+    let last = 0, other = false;
+    const down = (e: KeyboardEvent) => { if (e.key !== 'Control') other = true; };
+    const up = (e: KeyboardEvent) => {
+      if (e.key !== 'Control') return;
+      const now = Date.now();
+      if (!other && now - last < 400) { last = 0; runRider('run-anything', 'key'); } else last = now;
+      other = false;
+    };
+    window.addEventListener('keydown', down, true);
+    window.addEventListener('keyup', up, true);
+    return () => { window.removeEventListener('keydown', down, true); window.removeEventListener('keyup', up, true); };
+  }, []);
   // Tool window keys work everywhere (not only in an editor).
   useEffect(() => {
     const keys: [test: (e: KeyboardEvent) => boolean, id: string][] = [
@@ -167,6 +183,7 @@ export default function RiderHost(props: RiderHostProps) {
       { id: 'call-hierarchy', label: 'Call Hierarchy', menu: 'Navigate', shortcut: 'Ctrl Alt H', run: () => void callHierarchy() },
       { id: 'tool-problems', label: 'Problems', menu: 'View', shortcut: 'Alt Shift 6', run: () => p.current.onTool('problems') },
       { id: 'tool-terminal', label: 'Terminal', menu: 'View', shortcut: 'Alt F12', run: () => { if (isBrowser()) { p.current.onNotice('The terminal needs a folder indexed by the studio server.'); return; } p.current.onTool('terminal'); } },
+      { id: 'run-anything', label: 'Run Anything…', menu: 'Tools', shortcut: 'Ctrl Ctrl', run: () => { if (isBrowser()) { p.current.onNotice('Run Anything needs a folder indexed by the studio server.'); return; } openPopup({ kind: 'run' }, false); } },
       { id: 'carets-line-ends', label: 'Add Carets to Ends of Selected Lines', menu: 'Edit', shortcut: 'Alt Shift G', run: inEditor(caretsAtLineEnds) },
     ];
     return registerRider(list);
@@ -185,6 +202,14 @@ export default function RiderHost(props: RiderHostProps) {
     const { view } = target.current;
     const items = popup.items;
     body = <ListPopup label="File structure" placeholder="File structure: type to filter" empty="No matches." initial={popup.current} items={items.map((it, i) => ({ key: String(i), label: it.label, detail: `${it.kind} · line ${it.line}`, indent: it.depth }))} onPick={(k) => { const it = items[Number(k)]; goTo(view, it.line, it.column); closeAndFocus(); }} />;
+  }
+  if (popup?.kind === 'run') {
+    body = <RunAnything onRun={(cmd) => {
+      setPopup(null);
+      // An open Terminal runs it at once; otherwise the new one runs it when its shell is ready.
+      if (document.querySelector('.terminal-host:not([hidden])')) runInTerminal(cmd); else queueTerminalCommand(cmd);
+      p.current.onTool('terminal');
+    }} />;
   }
   if (popup?.kind === 'paste') body = <PasteHistory onPaste={(text) => { const v = target.current?.view; closeAndFocus(); if (v) v.dispatch(v.state.replaceSelection(text), { scrollIntoView: true, userEvent: 'input.paste' }); }} />;
   return (
