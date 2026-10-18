@@ -25,6 +25,7 @@ import { revealOn, cursorTracker } from './cursor';
 import { bookmarks } from './bookmarks';
 import { riderKeys } from './riderKeys';
 import { trackActive } from './activeEditor';
+import { pushClipboard } from '../rider/clipboardRing';
 import LocalHistory from '../LocalHistory';
 import NavBar from './NavBar';
 import RenameStep from './RenameStep';
@@ -339,6 +340,7 @@ export default function CodeEditor({ file, reveal, active = true, onNotice, onIn
     const r = v.state.selection.main;
     if (action === 'paste') { navigator.clipboard?.readText().then((t) => v.dispatch(v.state.replaceSelection(t)), () => onNotice?.('Paste with Ctrl+V; the browser blocked clipboard access.')); return; }
     void navigator.clipboard?.writeText(v.state.sliceDoc(r.from, r.to));
+    pushClipboard(v.state.sliceDoc(r.from, r.to));
     if (action === 'cut') v.dispatch(v.state.replaceSelection(''));
   };
 

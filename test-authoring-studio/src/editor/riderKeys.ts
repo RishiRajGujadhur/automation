@@ -2,7 +2,8 @@ import { EditorSelection, Prec, StateEffect, StateField, type EditorState, type 
 import { EditorView, keymap } from '@codemirror/view';
 import { insertNewlineAndIndent } from '@codemirror/commands';
 import { selectNextOccurrence, SearchCursor } from '@codemirror/search';
-import { noteUsage } from '../rider/commands';
+import { noteUsage, runRider } from '../rider/commands';
+import { pushClipboard } from '../rider/clipboardRing';
 
 type Span = { from: number; to: number };
 const OPEN = '([{', CLOSE = ')]}';
@@ -225,6 +226,21 @@ export function caretsAtLineEnds(view: EditorView) {
   return true;
 }
 
+/** Copied and cut text goes to the clipboard history (Paste from History). */
+const recordCopies = EditorView.domEventHandlers({
+  copy: (_e, view) => { pushClipboard(selectedText(view)); return false; },
+  cut: (_e, view) => { pushClipboard(selectedText(view)); return false; },
+});
+function selectedText(view: EditorView) {
+  const st = view.state;
+  const ranges = st.selection.ranges.filter((r) => !r.empty);
+  // An empty selection copies the line (CodeMirror's line-wise copy).
+  if (!ranges.length) return st.selection.ranges.map((r) => st.doc.lineAt(r.head).text).join(st.lineBreak) + st.lineBreak;
+  return ranges.map((r) => st.sliceDoc(r.from, r.to)).join(st.lineBreak);
+}
+/** A key that opens a Rider popup (handled by RiderHost). */
+const opens = (key: string, id: string) => ({ key, preventDefault: true, run: () => runRider(id, 'key') });
+
 const keyed = (key: string, id: string, run: (v: EditorView) => boolean) => ({ key, preventDefault: true, run: (v: EditorView) => { noteUsage(id, 'key'); return run(v); } });
 
 /** Rider editing actions shared by the code and Gherkin editors. */
@@ -244,7 +260,8 @@ export function riderKeys(): Extension {
       return c[3](view);
     },
   });
-  return [selStack, Prec.highest(ctrlAlt), Prec.high(keymap.of([
+  return [selStack, recordCopies, Prec.highest(ctrlAlt), Prec.high(keymap.of([
+    opens('Mod-Shift-v', 'paste-history'),
     keyed('Shift-Alt-ArrowRight', 'extend-selection', extendSelection),
     keyed('Shift-Alt-ArrowLeft', 'shrink-selection', shrinkSelection),
     keyed('Mod-Shift-u', 'toggle-case', toggleCase),

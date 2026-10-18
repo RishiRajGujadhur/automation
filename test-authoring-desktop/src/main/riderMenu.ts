@@ -22,6 +22,8 @@ const ROWS: Record<'edit' | 'view' | 'navigate' | 'code' | 'tools' | 'help', Row
     ['Start New Line', 'new-line', 'Shift+Enter'],
     ['Start New Line Before Current', 'new-line-before', 'CmdOrCtrl+Alt+Enter'],
     ['Add Carets to Ends of Selected Lines', 'carets-line-ends', 'Alt+Shift+G'],
+    null,
+    ['Paste from History…', 'paste-history', 'CmdOrCtrl+Shift+V'],
   ],
   view: [],
   navigate: [],

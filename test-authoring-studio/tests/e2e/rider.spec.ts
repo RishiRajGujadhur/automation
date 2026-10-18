@@ -120,3 +120,25 @@ test('J6 Add Carets to Ends of Selected Lines (Alt+Shift+G): type once at the en
   expect(doc).toContain('When the user signs in as "test-user" now');
   expect(doc).toContain('Then the dashboard is displayed now');
 });
+
+test('J7 Paste from History (Ctrl+Shift+V): earlier copies, filter, Enter pastes at the caret', async ({ page }) => {
+  await openFeature(page);
+  await caretAt(page, 'the login page');
+  await page.keyboard.press('Shift+Alt+ArrowRight');
+  await page.keyboard.press('Control+C'); // "the"
+  await caretAt(page, 'the dashboard');
+  await page.keyboard.press('End');
+  await page.keyboard.press('Shift+Home');
+  await page.keyboard.press('Control+C'); // the whole step
+  await caretAt(page, 'signs in');
+  await page.keyboard.press('End');
+  await page.keyboard.press('Control+Shift+V');
+  const list = page.getByRole('listbox', { name: 'Clipboard history' });
+  await expect(list.getByRole('option')).toHaveCount(2);
+  await expect(list.getByRole('option').first()).toContainText('Then the dashboard is displayed');
+  await page.getByLabel('Filter clipboard history').fill('the');
+  await page.keyboard.press('ArrowDown');
+  await page.keyboard.press('Enter');
+  await expect(page.getByRole('dialog')).toHaveCount(0);
+  expect((await selection(page)).doc).toContain('signs in as "test-user"the\n');
+});

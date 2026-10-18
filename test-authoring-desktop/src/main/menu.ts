@@ -135,7 +135,7 @@ export function buildMenu() {
       label: '&Edit',
       submenu: [
         { role: 'undo' }, { role: 'redo' }, { type: 'separator' }, { role: 'cut' }, { role: 'copy' }, { role: 'paste' },
-        { label: 'Paste as Plain Text', accelerator: 'CmdOrCtrl+Shift+V', click: async () => { ctx.win?.webContents.insertText(await clipboard.readText()); } },
+        { label: 'Paste as Plain Text', click: async () => { ctx.win?.webContents.insertText(await clipboard.readText()); } },
         { role: 'selectAll' },
         { type: 'separator' },
         { label: 'Go to All…', accelerator: 'CmdOrCtrl+T', registerAccelerator: false, click: () => send('go-to-all') },

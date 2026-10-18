@@ -1,8 +1,11 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState, type ReactNode } from 'react';
+import * as Dialog from '@radix-ui/react-dialog';
+import { X } from 'lucide-react';
 import type { EditorView } from '@codemirror/view';
 import { activeEditor } from '../editor/activeEditor';
 import { extendSelection, shrinkSelection, toggleCase, joinLines, selectNextOccurrence, unselectOccurrence, selectAllOccurrences, startNewLine, startNewLineBefore, caretsAtLineEnds } from '../editor/riderKeys';
 import { registerRider, type RiderCommand } from './commands';
+import PasteHistory from './PasteHistory';
 
 export type RiderHostProps = {
   onNotice: (m: string) => void;
@@ -13,9 +16,21 @@ export type RiderHostProps = {
  * JetBrains Rider features: registers their commands (menus, palette, desktop menus) and hosts their popups, dialogs
  * and global keys. Editor keys live in editor/riderKeys.ts.
  */
+type Popup = { kind: 'paste' };
+const TITLES: Record<Popup['kind'], string> = { paste: 'Paste from History' };
+
 export default function RiderHost(props: RiderHostProps) {
   const p = useRef(props);
   p.current = props;
+  const [popup, setPopup] = useState<Popup | null>(null);
+  // The editor a popup acts on (it loses focus while the popup is open).
+  const target = useRef<{ view: EditorView; file: string } | undefined>(undefined);
+  const openPopup = (next: Popup, needsEditor = true) => {
+    target.current = activeEditor();
+    if (needsEditor && !target.current) { p.current.onNotice('Open a file in the editor first.'); return; }
+    setPopup(next);
+  };
+  const closeAndFocus = () => { setPopup(null); requestAnimationFrame(() => target.current?.view.focus()); };
   /** Runs an editor action on the active editor (and gives it focus back). */
   const inEditor = (fn: (v: EditorView, file: string) => unknown) => () => {
     const a = activeEditor();
@@ -34,9 +49,27 @@ export default function RiderHost(props: RiderHostProps) {
       { id: 'all-occurrences', label: 'Select All Occurrences', menu: 'Edit', shortcut: 'Ctrl Alt Shift J', run: inEditor(selectAllOccurrences) },
       { id: 'new-line', label: 'Start New Line', menu: 'Edit', group: true, shortcut: 'Shift Enter', run: inEditor(startNewLine) },
       { id: 'new-line-before', label: 'Start New Line Before Current', menu: 'Edit', shortcut: 'Ctrl Alt Enter', run: inEditor(startNewLineBefore) },
+      { id: 'paste-history', label: 'Paste from History…', menu: 'Edit', group: true, shortcut: 'Ctrl Shift V', run: () => openPopup({ kind: 'paste' }) },
       { id: 'carets-line-ends', label: 'Add Carets to Ends of Selected Lines', menu: 'Edit', shortcut: 'Alt Shift G', run: inEditor(caretsAtLineEnds) },
     ];
     return registerRider(list);
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
-  return null;
+  let body: ReactNode = null;
+  if (popup?.kind === 'paste') body = <PasteHistory onPaste={(text) => { const v = target.current?.view; closeAndFocus(); if (v) v.dispatch(v.state.replaceSelection(text), { scrollIntoView: true, userEvent: 'input.paste' }); }} />;
+  return (
+    <Dialog.Root open={!!popup} onOpenChange={(o) => { if (!o) closeAndFocus(); }}>
+      <Dialog.Portal>
+        <Dialog.Overlay className="dialog-overlay" />
+        {popup && (
+          <Dialog.Content className="modal rider-popup" aria-describedby={undefined} onCloseAutoFocus={(e) => e.preventDefault()}>
+            <div className="modal-header">
+              <Dialog.Title asChild><h2>{TITLES[popup.kind]}</h2></Dialog.Title>
+              <Dialog.Close className="icon-button" aria-label="Close dialog"><X size={19} /></Dialog.Close>
+            </div>
+            <div className="modal-body">{body}</div>
+          </Dialog.Content>
+        )}
+      </Dialog.Portal>
+    </Dialog.Root>
+  );
 }
