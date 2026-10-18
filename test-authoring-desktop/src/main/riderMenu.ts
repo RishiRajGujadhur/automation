@@ -86,6 +86,8 @@ const ROWS: Record<'edit' | 'view' | 'navigate' | 'code' | 'tools' | 'help', Row
     ['Evaluate Expression… (debugger)', 'evaluate-expression', 'Alt+F8'],
     ['Mute Breakpoints', 'mute-breakpoints'],
     null,
+    ['Show History for Selection (Git)', 'line-history'],
+    null,
     ['Power Save Mode', 'power-save'],
   ],
   help: [

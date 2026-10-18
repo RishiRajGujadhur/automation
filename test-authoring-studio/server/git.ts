@@ -220,3 +220,41 @@ export async function deleteShelf(root: string, ref: string) {
   const { top } = await locate(root);
   return (await git(top, ['stash', 'drop', ref])).trim();
 }
+
+/** Show History for Selection (Rider): the commits that changed lines start–end of a file, with each change. */
+export async function lineHistory(root: string, file: string, start: number, end: number) {
+  const { top, prefix } = await locate(root);
+  const out = await git(top, ['log', `-L${start},${end}:${toRepo(prefix, file)}`, '--format=%x01%H%x1f%h%x1f%an%x1f%aI%x1f%s', '-n', '50']).catch((e: Error) => { if (/no path|does not exist|has only|unknown revision|bad revision/i.test(e.message)) return ''; throw e; });
+  return out.split('\x01').filter((c) => c.trim()).map((chunk) => {
+    const nl = chunk.indexOf('\n');
+    const [hash, short, author, date, subject] = chunk.slice(0, nl < 0 ? undefined : nl).split('\x1f');
+    return { hash, short, author, date, subject, patch: nl < 0 ? '' : chunk.slice(nl + 1).trim() };
+  });
+}
+/** A commit for the Git Log window: message, author, date, changed files and the patch (capped). */
+export async function commitDetails(root: string, hash: string) {
+  if (!/^[0-9a-f]{4,40}$/i.test(hash)) throw new Error('Unknown commit.');
+  const { top } = await locate(root);
+  const head = await git(top, ['show', '-s', '--format=%H%x1f%an%x1f%ae%x1f%aI%x1f%B', hash]);
+  const [full, author, email, date, ...msg] = head.split('\x1f');
+  const files = (await git(top, ['show', '--format=', '--name-status', hash])).split('\n').filter(Boolean).map((l) => { const [status, ...p] = l.split('\t'); return { status: status[0], file: p.at(-1)! }; });
+  const patch = (await git(top, ['show', '--format=', '--patch', '--stat=0', hash])).slice(0, 400_000);
+  return { hash: full, author, email, date, message: msg.join('\x1f').trim(), files, patch };
+}
+/** Commits for the Git Log window, with the branch graph drawn by git. */
+export async function graphLog(root: string, max = 200) {
+  const { top } = await locate(root);
+  const out = await git(top, ['log', '--all', '--graph', `-${max}`, '--date-order', '--format=%x01%h%x1f%an%x1f%ar%x1f%d%x1f%s']);
+  return out.split('\n').filter(Boolean).map((l) => {
+    const at = l.indexOf('\x01');
+    if (at < 0) return { graph: l };
+    const [hash, author, when, refs, subject] = l.slice(at + 1).split('\x1f');
+    return { graph: l.slice(0, at), hash, author, when, refs: refs.trim().replace(/^\(|\)$/g, ''), subject };
+  });
+}
+/** A file's text at a branch / tag / commit (Compare with Branch); null when it does not exist there. */
+export async function fileAt(root: string, ref: string, file: string) {
+  if (!/^[\w./@{}~^-]{1,200}$/.test(ref) || ref.startsWith('-')) throw new Error('Unknown branch.');
+  const { top, prefix } = await locate(root);
+  try { return await git(top, ['show', `${ref}:${toRepo(prefix, file)}`]); } catch { return null; }
+}

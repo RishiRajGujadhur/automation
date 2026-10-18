@@ -989,3 +989,21 @@ test('J53 Breadcrumbs in feature files: Feature › Scenario at the caret; a par
   await expect(crumbs.getByRole('button')).toHaveText(['Feature: Authentication', 'Background: Signed out']);
   await expect(page.locator('.gherkin-editor .cm-activeLine')).toContainText('Background: Signed out');
 });
+
+test('J54 Show History for Selection: the commits that changed the selected lines, with each change', async ({ page }) => {
+  await commitAll();
+  const { execFileSync } = await import('node:child_process');
+  const login = path.join(root, 'Features/Auth/Login.feature');
+  await fs.writeFile(login, (await fs.readFile(login, 'utf8')).replace('"test-user"', '"admin"'));
+  execFileSync('git', ['-c', 'user.email=t@t', '-c', 'user.name=Ada', 'commit', '-qam', 'Sign in as admin'], { cwd: root });
+  await openFeature(page);
+  await caretAt(page, 'signs in');
+  await page.getByRole('button', { name: 'Tools menu' }).click();
+  await page.getByRole('menuitem', { name: /Show History for Selection/ }).click();
+  const dlg = page.getByRole('dialog', { name: 'History for Selection' });
+  await expect(dlg.getByRole('status')).toContainText('2 commits changed lines 7–7');
+  await expect(dlg.getByRole('option').first()).toContainText('Sign in as admin');
+  await expect(dlg.getByLabel('Change')).toContainText('+    When the user signs in as "admin"');
+  await dlg.getByRole('option').nth(1).click();
+  await expect(dlg.getByLabel('Change')).toContainText('"test-user"');
+});

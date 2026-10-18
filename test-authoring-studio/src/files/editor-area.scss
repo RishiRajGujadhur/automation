@@ -3111,3 +3111,34 @@ html[data-breakpoints-muted] .cm-bp {
     align-items: center;
   }
 }
+
+// Show History for Selection
+.line-history {
+  min-width: min(960px, 92vw);
+  .line-history-body {
+    display: grid;
+    grid-template-columns: minmax(220px, 320px) 1fr;
+    gap: 10px;
+  }
+  ul {
+    max-height: 46vh;
+    margin: 0;
+    padding: 0;
+    overflow: auto;
+    list-style: none;
+  }
+  li {
+    padding: 4px 6px;
+    border-radius: 3px;
+    font-size: 12.5px;
+    cursor: pointer;
+    small {
+      display: block;
+      color: var(--text-muted);
+    }
+    &.active,
+    &:hover {
+      background: var(--accent-soft, #9270dd22);
+    }
+  }
+}
