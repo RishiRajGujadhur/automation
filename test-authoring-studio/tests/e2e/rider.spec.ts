@@ -1087,3 +1087,22 @@ test('J58 New File from Template (Alt+Insert): a step definitions class in the a
   await page.keyboard.press('Enter');
   await expect(page.getByText('Steps/CheckoutSteps.cs already exists.')).toBeVisible();
 });
+
+test('J59 Line separators: a CRLF file keeps CRLF when saved; the status bar converts it to LF', async ({ page, request }) => {
+  await fs.writeFile(path.join(root, 'Steps/Crlf.cs'), ['namespace Demo;', 'public class Crlf', '{', '    public void A() { }', '}', ''].join('\r\n'));
+  expect((await request.post('/api/workspace', { data: { repositoryRoot: root, targetProject: '.' } })).ok()).toBe(true);
+  const src = await openCs(page, 'Steps/Crlf.cs', 'public void A()');
+  await expect(page.getByRole('button', { name: 'Line separators: CRLF' })).toBeVisible();
+  await page.keyboard.press('End');
+  await page.keyboard.type(' // edited');
+  await page.keyboard.press('Control+S');
+  const disk = () => fs.readFile(path.join(root, 'Steps/Crlf.cs'), 'utf8');
+  await expect.poll(disk).toContain('// edited\r\n}');
+  expect((await disk()).split('\r\n')).toHaveLength(6);
+  await page.getByRole('button', { name: 'Line separators: CRLF' }).click();
+  await page.getByRole('menuitem', { name: /LF – Unix/ }).click();
+  await expect(page.getByRole('button', { name: 'Line separators: LF' })).toBeVisible();
+  await src.click();
+  await page.keyboard.press('Control+S');
+  await expect.poll(disk).not.toContain('\r\n');
+});

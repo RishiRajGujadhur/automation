@@ -24,6 +24,7 @@ import { insertTemplate, liveTemplates } from '../editor/snippets';
 import { surroundTemplates, surroundWith } from '../editor/surround';
 import { setUsages, wordUsages } from '../editor/usages';
 import { bookmarkByDigit } from '../editor/bookmarks';
+import { requestEol } from '../editor/lineSeparator';
 import { SELECT_IN_EXPLORER } from '../SolutionExplorer';
 import { desktop } from '../desktop';
 import { fileOutline, itemAt, type OutlineItem } from './outline';
@@ -459,6 +460,8 @@ export default function RiderHost(props: RiderHostProps) {
         const f = activeEditor()?.file ?? '';
         openPopup({ kind: 'new-from-template', folder: f.includes('/') && !f.startsWith('.tas/') ? f.slice(0, f.lastIndexOf('/')) : '' }, false);
       } },
+      { id: 'eol-crlf', label: 'Line Separators: CRLF (Windows)', menu: 'Edit', group: true, run: () => { const a = activeEditor(); if (a) requestEol(a.file, '\r\n'); else p.current.onNotice('Open a file in the editor first.'); } },
+      { id: 'eol-lf', label: 'Line Separators: LF (Unix)', menu: 'Edit', run: () => { const a = activeEditor(); if (a) requestEol(a.file, '\n'); else p.current.onNotice('Open a file in the editor first.'); } },
       { id: 'carets-line-ends', label: 'Add Carets to Ends of Selected Lines', menu: 'Edit', shortcut: 'Alt Shift G', run: inEditor(caretsAtLineEnds) },
     ];
     return registerRider(list);

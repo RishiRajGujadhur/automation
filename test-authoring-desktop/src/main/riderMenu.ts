@@ -29,6 +29,9 @@ const ROWS: Record<'edit' | 'view' | 'navigate' | 'code' | 'tools' | 'help', Row
     ['Copy Path / Reference…', 'copy-path', 'CmdOrCtrl+Shift+C'],
     ['Compare with Clipboard', 'compare-clipboard'],
     ['Compare With…', 'compare-with'],
+    null,
+    ['Line Separators: CRLF (Windows)', 'eol-crlf'],
+    ['Line Separators: LF (Unix)', 'eol-lf'],
     ['Rollback Lines', 'rollback-lines', 'CmdOrCtrl+Alt+Z'],
   ],
   view: [

@@ -27,6 +27,7 @@ import { riderKeys } from './riderKeys';
 import { trackActive } from './activeEditor';
 import { viewOptionsExtension } from './viewOptions';
 import { pushClipboard } from '../rider/clipboardRing';
+import { eolOf, toLF, withEol, SET_EOL_EVENT, type Eol } from './lineSeparator';
 import { powerSave } from '../rider/powerSave';
 import { httpClient, isHttpFile, parseHttp } from './httpClient';
 import { http as httpMode } from '@codemirror/legacy-modes/mode/http';
@@ -96,6 +97,10 @@ export default function CodeEditor({ file, reveal, active = true, onNotice, onIn
   const ref = useRef<ReactCodeMirrorRef>(null);
   const [loaded, setLoaded] = useState<{ file: string; source: string; hash: string }>();
   const [value, setValue] = useState('');
+  // The file's line separator: the editor works in LF, saves and previews use this.
+  const [eol, setEol] = useState<Eol>('\n');
+  const setText = (raw: string) => { setEol(eolOf(raw)); setValue(toLF(raw)); };
+  const diskValue = useMemo(() => withEol(value, eol), [value, eol]);
   const [error, setError] = useState('');
   const [restorable, setRestorable] = useState<string | null>(null);
   const [preview, setPreview] = useState<FilePreview>();
@@ -164,12 +169,18 @@ export default function CodeEditor({ file, reveal, active = true, onNotice, onIn
         const draft = readDraft(file);
         const changed = draft !== null && draft !== r.source;
         // Edited earlier in this session (e.g. before switching tabs): bring the buffer straight back.
-        if (changed && editedThisSession(file)) { setValue(draft); setRestorable(null); } else { setRestorable(changed ? draft : null); setValue(r.source); }
+        if (changed && editedThisSession(file)) { setText(draft); setRestorable(null); } else { setRestorable(changed ? draft : null); setText(r.source); }
       })
       .catch((e) => live && setError((e as Error).message));
     return () => { live = false; };
   }, [file]);
-  const auto = useAutoSave({ file, value, loaded });
+  const auto = useAutoSave({ file, value: diskValue, loaded });
+  // CRLF ⇄ LF (status bar, Edit menu): the buffer is unchanged, the file's separator changes (save to keep it).
+  useEffect(() => {
+    const h = (e: Event) => { const d = (e as CustomEvent<{ file: string; eol: Eol }>).detail; if (d.file === file) setEol(d.eol); };
+    window.addEventListener(SET_EOL_EVENT, h);
+    return () => window.removeEventListener(SET_EOL_EVENT, h);
+  }, [file]);
   useChangeBars(ref, file, !!loaded);
   // Coverage bars from the last test run with coverage (Test Explorer ▸ Analyze Code Coverage).
   const fileCoverage = useTestRun().coverage?.files[file] ?? null;
@@ -241,7 +252,7 @@ export default function CodeEditor({ file, reveal, active = true, onNotice, onIn
       readFile(file).then((r) => {
         if (auto.dirty) { onNotice?.(`${file} changed on disk while it has unsaved edits; saving will ask you to reload.`); return; }
         setLoaded({ file, ...r });
-        setValue(r.source);
+        setText(r.source);
       }, () => {});
     };
     window.addEventListener(FILES_CHANGED_EVENT, h);
@@ -374,14 +385,14 @@ export default function CodeEditor({ file, reveal, active = true, onNotice, onIn
   // Quiet on success (the tab's ● disappears); only a failure is announced.
   const save = () => auto.save().then((ok) => { if (!ok) onNotice?.('Not saved: see the editor status.'); });
   const compare = async () => {
-    try { setPreview(await api<FilePreview>('/file/preview', { file, source: value })); } catch (e) { onNotice?.((e as Error).message); }
+    try { setPreview(await api<FilePreview>('/file/preview', { file, source: diskValue })); } catch (e) { onNotice?.((e as Error).message); }
   };
   // Ctrl+S saves straight to disk (the latest buffer is read through a ref, so the keymap never rebuilds).
   // Cursor line for the navigation bar.
   const [caretLine, setCaretLine] = useState(1);
   const caretTracker = useMemo(() => EditorView.updateListener.of((u) => { if (u.selectionSet || u.docChanged) setCaretLine(u.state.doc.lineAt(u.state.selection.main.head).number); }), []);
   const eolRef = useRef<'CRLF' | 'LF'>('LF');
-  eolRef.current = loaded?.source.includes('\r\n') ? 'CRLF' : 'LF';
+  eolRef.current = eol === '\r\n' ? 'CRLF' : 'LF';
   const saveRef = useRef(save);
   saveRef.current = save;
   useEffect(() => { const h = () => { if (auto.dirty) void auto.save(); }; window.addEventListener(SAVE_ALL_EVENT, h); return () => window.removeEventListener(SAVE_ALL_EVENT, h); });
@@ -434,13 +445,13 @@ export default function CodeEditor({ file, reveal, active = true, onNotice, onIn
             <IconButton label="Preview only" aria-pressed={mdMode === 'preview'} onClick={() => setMdMode('preview')}><FileText size={14} /></IconButton>
           </span>
         )}
-        <IconButton label="Revert file" disabled={!auto.dirty} onClick={() => loaded && setValue(loaded.source)}><RotateCcw size={14} /></IconButton>
+        <IconButton label="Revert file" disabled={!auto.dirty} onClick={() => loaded && setText(loaded.source)}><RotateCcw size={14} /></IconButton>
         <IconButton label="Save" shortcut="Ctrl S" disabled={!auto.dirty} onClick={save}><Save size={14} /></IconButton>
       </EditorActions>
       {restorable !== null && (
         <div className="info-box restore-box" role="status">
           <TriangleAlert size={14} /> Unsaved changes from an earlier session were kept.
-          <Button size="tiny" onClick={() => { setValue(restorable); setRestorable(null); }}>Restore</Button>
+          <Button size="tiny" onClick={() => { setText(restorable); setRestorable(null); }}>Restore</Button>
           <Button size="tiny" variant="ghost" onClick={() => setRestorable(null)}>Discard</Button>
         </div>
       )}
@@ -569,7 +580,7 @@ export default function CodeEditor({ file, reveal, active = true, onNotice, onIn
             <strong>Local History</strong> <span className="meta">{file}</span>
             <IconButton label="Close local history" onClick={() => setHistoryOpen(false)}><X size={13} /></IconButton>
           </div>
-          <LocalHistory file={file} current={value} onRevert={(src) => { setValue(src); setHistoryOpen(false); onNotice?.('Reverted in the editor: save to keep it.'); }} />
+          <LocalHistory file={file} current={value} onRevert={(src) => { setText(src); setHistoryOpen(false); onNotice?.('Reverted in the editor: save to keep it.'); }} />
         </section>
       )}
       {headDiff !== undefined && (
@@ -596,7 +607,7 @@ export default function CodeEditor({ file, reveal, active = true, onNotice, onIn
       )}
       {preview && (
         <div className="code-editor-preview">
-          <DiffApproval preview={preview} height="200px" onApplied={(i) => { auto.markSaved(value); setPreview(undefined); onIndex?.(i); onNotice?.(`${file} written.`); }} />
+          <DiffApproval preview={preview} height="200px" onApplied={(i) => { auto.markSaved(diskValue); setPreview(undefined); onIndex?.(i); onNotice?.(`${file} written.`); }} />
           <Button size="small" variant="ghost" onClick={() => setPreview(undefined)}>Close comparison</Button>
         </div>
       )}

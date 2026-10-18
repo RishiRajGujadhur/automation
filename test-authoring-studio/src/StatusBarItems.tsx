@@ -4,6 +4,8 @@ import { api } from './api';
 import { useBuild } from './build/store';
 import { useCursor } from './editor/cursor';
 import { GIT_CHANGED_EVENT } from './editor/events';
+import { Dropdown } from './radix';
+import { requestEol } from './editor/lineSeparator';
 
 /**
  * Right side of the status bar, like Visual Studio's: Git branch (with ↑/↓), errors and warnings of the last build,
@@ -29,7 +31,14 @@ export default function StatusBarItems({ repository, onGit, onErrors }: { reposi
       {cursor && (
         <>
           <span className="status-item" aria-label="Cursor position" title={cursor.file}>Ln {cursor.line}, Col {cursor.column}{cursor.selected ? ` (${cursor.selected} selected)` : ''}</span>
-          <span className="status-item" title="Line endings">{cursor.eol}</span>
+          <Dropdown
+            label="Line separators"
+            trigger={<button className="status-item" aria-label={`Line separators: ${cursor.eol}`} title="Line separators (click to change)">{cursor.eol}</button>}
+            entries={[
+              { label: `${cursor.eol === 'CRLF' ? '✓ ' : '\u2003'}CRLF – Windows (\\r\\n)`, onSelect: () => requestEol(cursor.file, '\r\n') },
+              { label: `${cursor.eol === 'LF' ? '✓ ' : '\u2003'}LF – Unix and macOS (\\n)`, onSelect: () => requestEol(cursor.file, '\n') },
+            ]}
+          />
           <span className="status-item" title="Encoding">UTF-8</span>
         </>
       )}

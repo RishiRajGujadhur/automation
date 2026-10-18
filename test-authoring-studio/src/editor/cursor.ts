@@ -13,6 +13,8 @@ const set = (next: CursorInfo) => {
 };
 export const useCursor = () => useSyncExternalStore((l) => { listeners.add(l); return () => listeners.delete(l); }, () => info);
 
+// CRLF ⇄ LF changes the status bar without moving the cursor.
+if (typeof window !== 'undefined') window.addEventListener('tas:set-eol', (e) => { const d = (e as CustomEvent<{ file: string; eol: string }>).detail; if (info && info.file === d.file) set({ ...info, eol: d.eol === '\r\n' ? 'CRLF' : 'LF' }); });
 /** Reports the cursor of an editor while it has focus (and keeps the last position after it loses it). */
 export function cursorTracker(file: string, eol: () => 'CRLF' | 'LF') {
   return EditorView.updateListener.of((u) => {

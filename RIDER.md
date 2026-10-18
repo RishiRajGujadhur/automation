@@ -72,7 +72,7 @@ Status: ⬜ todo · ✅ done (date)
 | J56 | Git: Compare with Branch… | ✅ 2026-10-18 |
 | J57 | External Tools (commands with $FilePath$-style macros) | ✅ 2026-10-18 |
 | J58 | New File from Template (class, interface, test, step definitions, feature, .http, .md) | ✅ 2026-10-18 |
-| J59 | Line separators (CRLF ⇄ LF) from the status bar | ⬜ |
+| J59 | Line separators (CRLF ⇄ LF) from the status bar | ✅ 2026-10-18 |
 | J60 | Show Line Numbers toggle | ⬜ |
 | J61 | Indent guides | ⬜ |
 | J62 | Highlight usages of the identifier at the caret (automatic) | ⬜ |
@@ -136,3 +136,4 @@ Status: ⬜ todo · ✅ done (date)
 - 2026-10-18 J56: Compare with Branch… (Tools): pick a local or remote branch; the editor text is diffed against the file on that branch (or noted as missing there).
 - 2026-10-18 J57: External Tools (Tools ▸ External Tools…): your own commands with Rider's macros ($FilePath$, $FileRelativePath$, $FileDir$, $FileName$, $LineNumber$, $SelectedText$, $ProjectFileDir$…), run in the Terminal for the active file; each tool is also a Tools menu / palette command.
 - 2026-10-18 J58: New File from Template (Alt+Insert, Tools): C# class / interface / record / enum, NUnit fixture, step definitions (Reqnroll or SpecFlow by the project's packages), Playwright page object, feature, .http, Markdown, JSON; created next to the active file with the project's namespace, opened; existing names refused.
+- 2026-10-18 J59: Line separators: the status bar's CRLF / LF is a menu (also Edit ▸ Line Separators) that converts the file (save to keep it). Bug fix: CRLF files were saved as LF on their first edit (CodeMirror joins lines with \n); the editor now keeps each file's separator for saves, drafts and previews.
