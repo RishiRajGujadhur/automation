@@ -72,8 +72,21 @@ export function subscribe(l: () => void) {
 export const getSnapshot = () => snapshot;
 export function useDebug() { return useSyncExternalStore(subscribe, getSnapshot); }
 
+// Mute Breakpoints (Rider): every breakpoint is sent disabled while muted; their own enabled state is kept.
+let muted = read<boolean>('tas:breakpointsMuted', false);
+const sent = (specs: BreakpointSpec[]) => (muted ? specs.map((b) => ({ ...b, enabled: false })) : specs);
+const markMuted = () => { if (typeof document !== 'undefined') { if (muted) document.documentElement.dataset.breakpointsMuted = 'true'; else delete document.documentElement.dataset.breakpointsMuted; } };
+markMuted();
+export const breakpointsMuted = () => muted;
+export function muteBreakpoints(on: boolean) {
+  muted = on;
+  write('tas:breakpointsMuted', on);
+  markMuted();
+  set({});
+  void pushAll();
+}
 async function pushAll() {
-  for (const [file, breakpoints] of Object.entries(snapshot.breakpoints)) await api('/debug/breakpoints', { file, breakpoints }).catch(() => {});
+  for (const [file, breakpoints] of Object.entries(snapshot.breakpoints)) await api('/debug/breakpoints', { file, breakpoints: sent(breakpoints) }).catch(() => {});
 }
 /** Breakpoint lines of a file (the editor margin). */
 export function breakpointsOf(file: string) { return (snapshot.breakpoints[file] ?? []).map((b) => b.line); }
@@ -84,7 +97,7 @@ function store(file: string, specs: BreakpointSpec[]) {
   if (specs.length) breakpoints[file] = specs; else delete breakpoints[file];
   write('tas:breakpoints', breakpoints);
   set({ breakpoints });
-  void api('/debug/breakpoints', { file, breakpoints: specs }).catch(() => {});
+  void api('/debug/breakpoints', { file, breakpoints: sent(specs) }).catch(() => {});
 }
 /**
  * New breakpoint lines for a file. Settings stay with their breakpoint: same line, or (when edits moved every line

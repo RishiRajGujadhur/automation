@@ -2985,3 +2985,9 @@ html[data-rider-tools='hidden'] {
     width: 22px;
   }
 }
+
+// Mute Breakpoints: the margin dots go grey.
+html[data-breakpoints-muted] .cm-bp {
+  filter: grayscale(1);
+  opacity: 0.55;
+}

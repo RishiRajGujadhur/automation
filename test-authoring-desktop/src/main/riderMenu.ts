@@ -57,6 +57,7 @@ const ROWS: Record<'edit' | 'view' | 'navigate' | 'code' | 'tools' | 'help', Row
     ['Run Anything… (Ctrl twice)', 'run-anything'],
     null,
     ['Evaluate Expression… (debugger)', 'evaluate-expression', 'Alt+F8'],
+    ['Mute Breakpoints', 'mute-breakpoints'],
   ],
   help: [
     null,

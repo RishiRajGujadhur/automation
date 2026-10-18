@@ -20,6 +20,7 @@ import type { RiderTool } from './RiderToolWindow';
 import RunAnything from './RunAnything';
 import ProductivityGuide from './ProductivityGuide';
 import EvaluateExpression from './EvaluateExpression';
+import { breakpointsMuted, muteBreakpoints } from '../debug/store';
 import TipOfTheDay, { tipsOnStartup } from './TipOfTheDay';
 import KeyPromoter, { keyPromoterOn, setKeyPromoter } from './KeyPromoter';
 import { exitMode, layoutState, toggleMode, toggleToolWindows, useLayoutState } from './layoutModes';
@@ -217,6 +218,7 @@ export default function RiderHost(props: RiderHostProps) {
         if (a) { const st = a.view.state; const r = st.selection.main; const w = r.empty ? st.wordAt(r.head) : r; initial = w ? st.sliceDoc(w.from, w.to) : ''; }
         openPopup({ kind: 'evaluate', initial }, false);
       } },
+      { id: 'mute-breakpoints', label: 'Mute Breakpoints', menu: 'Tools', checked: breakpointsMuted, run: () => { muteBreakpoints(!breakpointsMuted()); riderChanged(); p.current.onNotice(breakpointsMuted() ? 'Breakpoints muted: the debugger will not stop at them.' : 'Breakpoints active again.'); } },
       { id: 'carets-line-ends', label: 'Add Carets to Ends of Selected Lines', menu: 'Edit', shortcut: 'Alt Shift G', run: inEditor(caretsAtLineEnds) },
     ];
     return registerRider(list);

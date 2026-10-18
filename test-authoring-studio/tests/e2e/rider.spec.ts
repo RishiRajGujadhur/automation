@@ -602,3 +602,23 @@ test('J29 Tip of the Day: next / previous, Try it runs the feature, optional on 
   await page.reload();
   await expect(page.getByRole('article', { name: 'Tip' })).toBeVisible({ timeout: 10_000 });
 });
+
+test('J31 Mute Breakpoints: breakpoints stay but are sent disabled; unmute restores them', async ({ page, request }) => {
+  await openFeature(page);
+  await caretAt(page, 'signs in');
+  await page.keyboard.press('F9');
+  const sent = async () => (await (await request.get('/api/debug')).json()).breakpoints['Features/Auth/Login.feature']?.map((b: { line: number; enabled?: boolean }) => b.enabled !== false);
+  await expect.poll(sent).toEqual([true]);
+  await page.getByRole('button', { name: 'Tools menu' }).click();
+  await page.getByRole('menuitem', { name: /Mute Breakpoints/ }).click();
+  await expect.poll(sent).toEqual([false]);
+  await expect(page.locator('html')).toHaveAttribute('data-breakpoints-muted', 'true');
+  await expect(page.locator('.gherkin-editor .cm-bp:visible')).toHaveCount(1);
+  await page.getByRole('button', { name: 'Tools menu' }).click();
+  await expect(page.getByRole('menuitem', { name: /Mute Breakpoints/ })).toContainText('✓');
+  await page.getByRole('menuitem', { name: /Mute Breakpoints/ }).click();
+  await expect.poll(sent).toEqual([true]);
+  await gherkin(page).click();
+  await caretAt(page, 'signs in');
+  await page.keyboard.press('F9');
+});
