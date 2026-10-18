@@ -28,7 +28,7 @@ Status: ⬜ todo · ✅ done (date)
 | J12 | Change font size with Ctrl+Mouse Wheel, Reset Font Size | ✅ 2026-10-18 |
 | J13 | Copy Reference (Ctrl+Alt+Shift+C) | ✅ 2026-10-18 |
 | J14 | Highlight Usages in File (Ctrl+Shift+F7) | ✅ 2026-10-18 |
-| J15 | File Structure popup (Ctrl+F12 on desktop, Ctrl+Alt+F12 on the web) | ⬜ |
+| J15 | File Structure popup (Ctrl+Alt+F12; Ctrl+F12 stays Go To Implementation) | ✅ 2026-10-18 |
 | J16 | Structure tool window (Alt+7) | ⬜ |
 | J17 | Type Hierarchy (Ctrl+H) | ⬜ |
 | J18 | Call Hierarchy (Ctrl+Alt+H) | ⬜ |
@@ -67,3 +67,4 @@ Status: ⬜ todo · ✅ done (date)
 - 2026-10-18 J12: Editor font size: Ctrl+Mouse Wheel over an editor (page zoom untouched), Increase / Decrease / Reset Font Size in View; all editors, remembered.
 - 2026-10-18 J13: Copy Reference: C# symbol at the cursor (or the enclosing member/type) as a fully qualified name via the new language-server op symbolId; other files as path:line. Language server also gains typeHierarchy, callers and solutionDiagnostics ops.
 - 2026-10-18 J14: Highlight Usages in File: Roslyn references of the C# symbol in this file, whole-word matches elsewhere; F3 / Shift+F3 move between them, Esc or an edit clears. New Navigate menu.
+- 2026-10-18 J15: File Structure popup: C# types and members (Roslyn outline), Gherkin Feature/Rule/Background/Scenario/Examples, Markdown headings; opens on the entry at the caret; filter and Enter jumps.

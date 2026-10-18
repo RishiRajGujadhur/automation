@@ -35,6 +35,7 @@ const ROWS: Record<'edit' | 'view' | 'navigate' | 'code' | 'tools' | 'help', Row
     ['Reset Font Size', 'font-reset'],
   ],
   navigate: [
+    ['File Structure…', 'file-structure', 'CmdOrCtrl+Alt+F12'],
     ['Highlight Usages in File', 'highlight-usages', 'CmdOrCtrl+Shift+F7'],
   ],
   code: [

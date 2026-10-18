@@ -1,7 +1,9 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import * as Dialog from '@radix-ui/react-dialog';
 import { X } from 'lucide-react';
-import type { EditorView } from '@codemirror/view';
+import { EditorView } from '@codemirror/view';
+
+const EditorViewScroll = (at: number) => EditorView.scrollIntoView(at, { y: 'center' });
 import { activeEditor } from '../editor/activeEditor';
 import { extendSelection, shrinkSelection, toggleCase, joinLines, selectNextOccurrence, unselectOccurrence, selectAllOccurrences, startNewLine, startNewLineBefore, caretsAtLineEnds } from '../editor/riderKeys';
 import { registerRider, riderChanged, type RiderCommand } from './commands';
@@ -13,6 +15,7 @@ import ListPopup from './ListPopup';
 import { insertTemplate, liveTemplates } from '../editor/snippets';
 import { surroundTemplates, surroundWith } from '../editor/surround';
 import { setUsages, wordUsages } from '../editor/usages';
+import { fileOutline, itemAt, type OutlineItem } from './outline';
 import { changeFontSize, setViewOptions, viewOptions } from '../editor/viewOptions';
 
 export type RiderHostProps = {
@@ -24,8 +27,8 @@ export type RiderHostProps = {
  * JetBrains Rider features: registers their commands (menus, palette, desktop menus) and hosts their popups, dialogs
  * and global keys. Editor keys live in editor/riderKeys.ts.
  */
-type Popup = { kind: 'paste' } | { kind: 'template' } | { kind: 'surround' };
-const TITLES: Record<Popup['kind'], string> = { paste: 'Paste from History', template: 'Insert Live Template', surround: 'Surround With' };
+type Popup = { kind: 'paste' } | { kind: 'template' } | { kind: 'surround' } | { kind: 'structure'; items: OutlineItem[]; current: number };
+const TITLES: Record<Popup['kind'], string> = { paste: 'Paste from History', template: 'Insert Live Template', surround: 'Surround With', structure: 'File Structure' };
 
 export default function RiderHost(props: RiderHostProps) {
   const p = useRef(props);
@@ -79,6 +82,25 @@ export default function RiderHost(props: RiderHostProps) {
     p.current.onNotice(ranges.length ? `${ranges.length} usage${ranges.length === 1 ? '' : 's'} in this file (F3 / Shift+F3 to move, Esc to clear).` : 'Nothing to highlight here.');
     view.focus();
   };
+  /** File Structure (Rider's Ctrl+F12): the file's types and members (or scenarios, headings), filter and jump. */
+  const fileStructure = async () => {
+    const a = activeEditor();
+    if (!a) { p.current.onNotice('Open a file in the editor first.'); return; }
+    let items: OutlineItem[] = [];
+    try { items = await fileOutline(a.file, a.view.state.doc.toString()); } catch (e) { p.current.onNotice((e as Error).message); return; }
+    if (!items.length) { p.current.onNotice('This file has no structure to show.'); return; }
+    const line = a.view.state.doc.lineAt(a.view.state.selection.main.head).number;
+    const here = itemAt(items, line);
+    target.current = a;
+    setPopup({ kind: 'structure', items, current: here ? items.indexOf(here) : 0 });
+  };
+  /** Puts the cursor at a line / column of the target editor and scrolls it to the middle. */
+  const goTo = (view: EditorView, line: number, column: number) => {
+    const doc = view.state.doc;
+    const l = doc.line(Math.max(1, Math.min(line, doc.lines)));
+    const at = Math.min(l.to, l.from + column - 1);
+    view.dispatch({ selection: { anchor: at }, effects: EditorViewScroll(at) });
+  };
   const closeAndFocus = () => { setPopup(null); requestAnimationFrame(() => target.current?.view.focus()); };
   /** Runs an editor action on the active editor (and gives it focus back). */
   const inEditor = (fn: (v: EditorView, file: string) => unknown) => () => {
@@ -108,6 +130,7 @@ export default function RiderHost(props: RiderHostProps) {
       { id: 'font-reset', label: 'Reset Font Size', menu: 'View', run: () => changeFontSize(0) },
       { id: 'copy-reference', label: 'Copy Reference', menu: 'Edit', group: true, shortcut: 'Ctrl Alt Shift C', run: () => void copyReference() },
       { id: 'highlight-usages', label: 'Highlight Usages in File', menu: 'Navigate', shortcut: 'Ctrl Shift F7', run: () => void highlightUsages() },
+      { id: 'file-structure', label: 'File Structure…', menu: 'Navigate', shortcut: 'Ctrl Alt F12', run: () => void fileStructure() },
       { id: 'carets-line-ends', label: 'Add Carets to Ends of Selected Lines', menu: 'Edit', shortcut: 'Alt Shift G', run: inEditor(caretsAtLineEnds) },
     ];
     return registerRider(list);
@@ -121,6 +144,11 @@ export default function RiderHost(props: RiderHostProps) {
   if (popup?.kind === 'surround' && target.current) {
     const { view, file } = target.current;
     body = <ListPopup label="Surround templates" placeholder="Surround with (Ctrl+Alt+J)" empty="Nothing to surround with here." items={surroundTemplates(file).map((t) => ({ key: t.id, label: t.label, detail: t.block ? 'lines' : 'selection' }))} onPick={(k) => { surroundWith(view, file, k); closeAndFocus(); }} />;
+  }
+  if (popup?.kind === 'structure' && target.current) {
+    const { view } = target.current;
+    const items = popup.items;
+    body = <ListPopup label="File structure" placeholder="File structure: type to filter" empty="No matches." initial={popup.current} items={items.map((it, i) => ({ key: String(i), label: it.label, detail: `${it.kind} · line ${it.line}`, indent: it.depth }))} onPick={(k) => { const it = items[Number(k)]; goTo(view, it.line, it.column); closeAndFocus(); }} />;
   }
   if (popup?.kind === 'paste') body = <PasteHistory onPaste={(text) => { const v = target.current?.view; closeAndFocus(); if (v) v.dispatch(v.state.replaceSelection(text), { scrollIntoView: true, userEvent: 'input.paste' }); }} />;
   return (

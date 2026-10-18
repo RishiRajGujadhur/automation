@@ -272,3 +272,22 @@ test('J14 Highlight Usages in File (Ctrl+Shift+F7): Roslyn references in C#, wor
   await page.keyboard.press('F3');
   expect((await selection(page)).ranges[0].text).toBe('the');
 });
+
+test('J15 File Structure (Ctrl+Alt+F12): C# types and members, Gherkin scenarios; filter and jump', async ({ page }) => {
+  await openCs(page, 'Steps/AuthSteps.cs', 'SignIn');
+  await page.keyboard.press('Control+Alt+F12');
+  const list = page.getByRole('listbox', { name: 'File structure' });
+  await expect(list.getByRole('option')).toHaveCount(4, { timeout: 60_000 }); // class + 3 methods
+  await expect(list.getByRole('option', { selected: true })).toContainText('SignIn');
+  await page.getByLabel('Filter file structure').fill('Dash');
+  await page.keyboard.press('Enter');
+  await expect(page.locator('.code-editor:not([hidden]) .cm-activeLine')).toContainText('Dashboard()');
+  await page.getByRole('navigation').getByRole('button', { name: 'Login.feature', exact: true }).first().click();
+  await caretAt(page, 'signs in');
+  await page.keyboard.press('Control+Alt+F12');
+  await expect(list.getByRole('option')).toHaveText([/Feature: Authentication/, /Background: Signed out/, /Scenario: Sign in/]);
+  await expect(list.getByRole('option', { selected: true })).toContainText('Scenario: Sign in');
+  await page.keyboard.press('ArrowUp');
+  await page.keyboard.press('Enter');
+  expect((await selection(page)).ranges[0].from).toBe((await selection(page)).doc.indexOf('Background'));
+});
