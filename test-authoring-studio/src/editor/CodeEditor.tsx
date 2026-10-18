@@ -30,6 +30,9 @@ import { pushClipboard } from '../rider/clipboardRing';
 import { httpClient, isHttpFile, parseHttp } from './httpClient';
 import { http as httpMode } from '@codemirror/legacy-modes/mode/http';
 import HttpResponse, { type HttpResult } from '../rider/HttpResponse';
+import MarkdownPreview from '../rider/MarkdownPreview';
+import { useLocalState } from '../ui';
+import { Columns2, FileText, Code as CodeIcon } from 'lucide-react';
 import LocalHistory from '../LocalHistory';
 import NavBar from './NavBar';
 import RenameStep from './RenameStep';
@@ -172,6 +175,9 @@ export default function CodeEditor({ file, reveal, active = true, onNotice, onIn
   /** Compare with Unmodified (Git): the editor text against the committed version, as a unified diff. */
   const [headDiff, setHeadDiff] = useState<string>();
   const [historyOpen, setHistoryOpen] = useState(false);
+  // Markdown: editor, editor and preview side by side, or the preview alone (Rider's split editor).
+  const isMd = /\.(md|markdown)$/i.test(file);
+  const [mdMode, setMdMode] = useLocalState<'editor' | 'split' | 'preview'>('mdMode', 'split');
   // HTTP Client: the response of the last request sent from this .http file.
   const [httpResult, setHttpResult] = useState<HttpResult>();
   const sendHttp = async (line: number) => {
@@ -419,6 +425,13 @@ export default function CodeEditor({ file, reveal, active = true, onNotice, onIn
         </span>
         {problems.errors + problems.warnings > 0 && <span className="meta">{problems.errors} errors · {problems.warnings} warnings</span>}
         {!browser && <IconButton label="Compare with saved" disabled={!auto.dirty} onClick={compare}><GitCompareArrows size={14} /></IconButton>}
+        {isMd && (
+          <span className="md-modes" role="radiogroup" aria-label="Markdown view">
+            <IconButton label="Editor only" aria-pressed={mdMode === 'editor'} onClick={() => setMdMode('editor')}><CodeIcon size={14} /></IconButton>
+            <IconButton label="Editor and preview" aria-pressed={mdMode === 'split'} onClick={() => setMdMode('split')}><Columns2 size={14} /></IconButton>
+            <IconButton label="Preview only" aria-pressed={mdMode === 'preview'} onClick={() => setMdMode('preview')}><FileText size={14} /></IconButton>
+          </span>
+        )}
         <IconButton label="Revert file" disabled={!auto.dirty} onClick={() => loaded && setValue(loaded.source)}><RotateCcw size={14} /></IconButton>
         <IconButton label="Save" shortcut="Ctrl S" disabled={!auto.dirty} onClick={save}><Save size={14} /></IconButton>
       </EditorActions>
@@ -434,6 +447,7 @@ export default function CodeEditor({ file, reveal, active = true, onNotice, onIn
         <NavBar file={file} source={value} line={caretLine} onGo={(l, c) => { const v = ref.current?.view; if (!v) return; const at = offsetOf(v.state.doc, l, c); v.dispatch({ selection: { anchor: at }, effects: EditorView.scrollIntoView(at, { y: 'center' }) }); v.focus(); }} />
       )}
       {loaded && (
+        <div className={isMd ? `md-layout md-mode-${mdMode}` : 'md-none'}>
         <RowMenu label="Editor actions" items={[
           ...(isCs && !browser ? [
             { label: 'Go To Definition', icon: Navigation, shortcut: 'F12', onSelect: () => csHandlers.current.definition(ref.current!.view!.state.selection.main.head) },
@@ -531,6 +545,8 @@ export default function CodeEditor({ file, reveal, active = true, onNotice, onIn
           {busyOp && <span className="cm-busy" role="status"><Loader size={12} className="spin" />{busyOp}</span>}
         </div>
         </RowMenu>
+        {isMd && mdMode !== 'editor' && <MarkdownPreview source={value} />}
+        </div>
       )}
       {renameStep && (
         <RenameStep

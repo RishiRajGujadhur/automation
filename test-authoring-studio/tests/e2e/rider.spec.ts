@@ -474,3 +474,26 @@ test('J22 HTTP Client: .http requests with variables, ▶ / Ctrl+Enter sends, st
   await page.keyboard.press('Control+S');
   await expect.poll(() => fs.readFile(path.join(root, 'api.http'), 'utf8')).toContain('does-not-exist?x=1');
 });
+
+test('J23 Markdown preview: split by default, editor only / preview only, live while typing, scripts stripped', async ({ page, request }) => {
+  await fs.writeFile(path.join(root, 'NOTES.md'), ['# Test notes', '', '- [x] login', '- [ ] checkout', '', '| Step | Status |', '| --- | --- |', '| Login | done |', '', '<script>window.pwned = 1</script>', ''].join('\n'));
+  expect((await request.post('/api/workspace', { data: { repositoryRoot: root, targetProject: '.' } })).ok()).toBe(true);
+  await openFeature(page);
+  await page.getByRole('button', { name: 'Show all files' }).click();
+  await page.getByRole('navigation').getByRole('button', { name: 'NOTES.md', exact: true }).first().click();
+  const preview = page.getByRole('article', { name: 'Markdown preview' });
+  await expect(preview.getByRole('heading', { name: 'Test notes' })).toBeVisible();
+  await expect(preview.getByRole('table')).toContainText('Login');
+  expect(await page.evaluate(() => (window as unknown as { pwned?: number }).pwned)).toBeUndefined();
+  await expect(preview.locator('script')).toHaveCount(0);
+  const src = page.getByLabel('Source of NOTES.md');
+  await src.locator('.cm-line', { hasText: '# Test notes' }).click();
+  await page.keyboard.press('End');
+  await page.keyboard.type(' (draft)');
+  await expect(preview.getByRole('heading', { name: 'Test notes (draft)' })).toBeVisible();
+  await page.getByRole('button', { name: 'Preview only' }).click();
+  await expect(src).toBeHidden();
+  await page.getByRole('button', { name: 'Editor only' }).click();
+  await expect(preview).toHaveCount(0);
+  await expect(src).toBeVisible();
+});
