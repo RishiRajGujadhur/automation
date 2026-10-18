@@ -120,7 +120,11 @@ export function Dropdown({ entries, label, trigger, align = 'start', className =
         )}
       </DropdownMenu.Trigger>
       <DropdownMenu.Portal>
-        <DropdownMenu.Content className="context-menu" align={align} sideOffset={4} aria-label={label} onClick={(e) => e.stopPropagation()}>
+        <DropdownMenu.Content
+          className="context-menu" align={align} sideOffset={4} aria-label={label} onClick={(e) => e.stopPropagation()}
+          // A command that moved focus (e.g. back into the editor) keeps it; otherwise focus returns to the trigger.
+          onCloseAutoFocus={(e) => { const a = document.activeElement as HTMLElement | null; if (a && a !== document.body && !a.closest('.context-menu')) e.preventDefault(); }}
+        >
           <MenuEntries entries={entries} P={DropdownMenu} />
         </DropdownMenu.Content>
       </DropdownMenu.Portal>

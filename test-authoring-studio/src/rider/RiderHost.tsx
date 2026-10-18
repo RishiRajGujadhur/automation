@@ -265,6 +265,7 @@ export default function RiderHost(props: RiderHostProps) {
       [(e) => e.altKey && e.shiftKey && !e.ctrlKey && !e.metaKey && e.code === 'KeyC', 'recent-changes'],
       [(e) => (e.ctrlKey || e.metaKey) && e.altKey && e.shiftKey && e.key === 'Insert', 'new-scratch'],
       [(e) => e.altKey && !e.ctrlKey && !e.shiftKey && !e.metaKey && e.key === 'F1', 'select-in'],
+      [(e) => e.altKey && e.shiftKey && !e.ctrlKey && !e.metaKey && e.key === 'Insert', 'column-mode'],
     ];
     // Ctrl+digit: go to numbered bookmark (Rider), when there is one with that digit.
     const digit = (e: KeyboardEvent) => {
@@ -372,6 +373,7 @@ export default function RiderHost(props: RiderHostProps) {
         target.current = a;
         setPopup({ kind: 'unwrap', items });
       } },
+      { id: 'column-mode', label: 'Column Selection Mode', menu: 'Edit', group: true, shortcut: 'Alt Shift Insert', checked: () => !!viewOptions().columnMode, run: () => { setViewOptions({ columnMode: !viewOptions().columnMode }); riderChanged(); p.current.onNotice(viewOptions().columnMode ? 'Column Selection Mode: drag or Shift+↑/↓ to select a block of columns.' : 'Column Selection Mode off.'); } },
       { id: 'carets-line-ends', label: 'Add Carets to Ends of Selected Lines', menu: 'Edit', shortcut: 'Alt Shift G', run: inEditor(caretsAtLineEnds) },
     ];
     return registerRider(list);

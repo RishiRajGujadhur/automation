@@ -940,3 +940,19 @@ test('J49 Unwrap / Remove (Ctrl+Shift+Delete): unwrap the if around the caret', 
   await page.keyboard.press('Enter');
   expect((await selection(page)).doc).toContain('    public void M(bool ok)\n    {\n        Step();\n    }');
 });
+
+test('J50 Column Selection Mode (Alt+Shift+Insert): Shift+↓ makes a column of carets; typing goes into every line', async ({ page }) => {
+  await openFeature(page);
+  await caretAt(page, 'Given the login page');
+  await page.keyboard.press('Alt+Shift+Insert');
+  await expect(page.locator('.gherkin-editor .cm-editor')).toHaveClass(/cm-column-mode/);
+  await page.keyboard.press('Shift+ArrowDown');
+  await page.keyboard.press('Shift+ArrowDown');
+  expect((await selection(page)).ranges).toHaveLength(3);
+  await page.keyboard.type('* ');
+  const doc = (await selection(page)).doc;
+  expect(doc).toContain('    * Given the login page is open\n    * When the user signs in');
+  expect(doc).toContain('    * Then the dashboard');
+  await page.keyboard.press('Alt+Shift+Insert');
+  await expect(page.locator('.gherkin-editor .cm-editor')).not.toHaveClass(/cm-column-mode/);
+});

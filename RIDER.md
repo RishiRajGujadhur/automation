@@ -63,7 +63,7 @@ Status: ⬜ todo · ✅ done (date)
 | J47 | Compare With… another file | ✅ 2026-10-18 |
 | J48 | Complete Current Statement (Ctrl+Shift+Enter) | ✅ 2026-10-18 |
 | J49 | Unwrap / Remove (Ctrl+Shift+Delete) | ✅ 2026-10-18 |
-| J50 | Column Selection Mode (Alt+Shift+Insert) | ⬜ |
+| J50 | Column Selection Mode (Alt+Shift+Insert) | ✅ 2026-10-18 |
 | J51 | Copy Path / Reference… popup (Ctrl+Shift+C) | ⬜ |
 | J52 | TODO highlighting in the editor | ⬜ |
 | J53 | Breadcrumbs for feature files (Feature › Rule › Scenario) | ⬜ |
@@ -127,3 +127,4 @@ Status: ⬜ todo · ✅ done (date)
 - 2026-10-18 J47: Compare With… (Edit): pick any file of the solution; the editor text is diffed against it.
 - 2026-10-18 J48: Complete Current Statement (Ctrl+Shift+Enter): closes open parentheses, adds ';' or opens a { } block after if/for/while/method headers in the file's brace style (Allman or K&R) with the caret inside; in features, a new step line.
 - 2026-10-18 J49: Unwrap / Remove (Ctrl+Shift+Delete): lists the if / else / while / for / foreach / using / lock / { } blocks around the caret (innermost first, stopping at the member); the chosen one loses its header and braces, its body is dedented.
+- 2026-10-18 J50: Column Selection Mode (Alt+Shift+Insert, Edit menu): plain drag selects a rectangle, Shift+Up/Down grows a column of carets, typing goes into every line. Bug fix: menu commands that put focus back into the editor keep it (the menu no longer takes it back).

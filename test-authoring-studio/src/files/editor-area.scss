@@ -3098,3 +3098,8 @@ html[data-breakpoints-muted] .cm-bp {
   line-height: 14px;
   text-align: center;
 }
+
+// Column Selection Mode
+.cm-editor.cm-column-mode .cm-content {
+  cursor: crosshair;
+}
