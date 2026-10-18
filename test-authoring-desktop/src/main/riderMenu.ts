@@ -25,7 +25,10 @@ const ROWS: Record<'edit' | 'view' | 'navigate' | 'code' | 'tools' | 'help', Row
     null,
     ['Paste from History…', 'paste-history', 'CmdOrCtrl+Shift+V'],
   ],
-  view: [],
+  view: [
+    null,
+    ['Soft-Wrap (Active Editor)', 'soft-wrap'],
+  ],
   navigate: [],
   code: [
     ['Insert Live Template…', 'live-template', 'CmdOrCtrl+J'],

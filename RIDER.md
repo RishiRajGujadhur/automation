@@ -23,7 +23,7 @@ Status: ⬜ todo · ✅ done (date)
 | J7 | Paste from History (Ctrl+Shift+V) | ✅ 2026-10-18 |
 | J8 | Insert Live Template (Ctrl+J) | ✅ 2026-10-18 |
 | J9 | Surround With (Ctrl+Alt+J) | ✅ 2026-10-18 |
-| J10 | Soft-Wrap toggle (View ▸ Active Editor) | ⬜ |
+| J10 | Soft-Wrap toggle (View ▸ Active Editor) | ✅ 2026-10-18 |
 | J11 | Show Whitespaces toggle | ⬜ |
 | J12 | Change font size with Ctrl+Mouse Wheel, Reset Font Size | ⬜ |
 | J13 | Copy Reference (Ctrl+Alt+Shift+C) | ⬜ |
@@ -62,3 +62,4 @@ Status: ⬜ todo · ✅ done (date)
 - 2026-10-18 J7: Paste from History: copies and cuts in the editors (and the editor's context menu) feed a 40-entry history; filter, Enter pastes, Delete forgets. Desktop: Ctrl+Shift+V moves from Paste as Plain Text (still in Edit) to Paste from History.
 - 2026-10-18 J8: Insert Live Template popup: the C# snippets in .cs files, new Gherkin templates (scenario, outline, background, rule, examples, table, doc string, tag) in .feature files; fields with Tab. New Code menu.
 - 2026-10-18 J9: Surround With: C# (if, if/else, while, for, foreach, try/catch, try/finally, using, lock, #region, braces, parentheses, cast, string) and Gherkin (Scenario, Scenario Outline, Rule, Background, doc string, step and outline parameters); the placeholder is selected afterwards.
+- 2026-10-18 J10: Soft-Wrap toggle for every editor (View menu, remembered), via a shared view-options store.

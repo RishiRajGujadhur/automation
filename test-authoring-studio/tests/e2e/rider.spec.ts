@@ -181,3 +181,18 @@ test('J9 Surround With (Ctrl+Alt+J): steps become a new scenario; a word gets qu
   doc = (await selection(page)).doc;
   expect(doc).toContain('Then the "dashboard" is displayed');
 });
+
+test('J10 Soft-Wrap (View menu): long lines wrap in every editor; remembered', async ({ page }) => {
+  await openFeature(page);
+  const content = gherkin(page);
+  await expect(content).not.toHaveClass(/cm-lineWrapping/);
+  await page.getByRole('button', { name: 'View menu' }).click();
+  await page.getByRole('menuitem', { name: /Soft-Wrap/ }).click();
+  await expect(content).toHaveClass(/cm-lineWrapping/);
+  await page.reload();
+  await expect(gherkin(page)).toHaveClass(/cm-lineWrapping/);
+  await page.getByRole('button', { name: 'View menu' }).click();
+  await expect(page.getByRole('menuitem', { name: /Soft-Wrap/ })).toContainText('✓');
+  await page.getByRole('menuitem', { name: /Soft-Wrap/ }).click();
+  await expect(gherkin(page)).not.toHaveClass(/cm-lineWrapping/);
+});
