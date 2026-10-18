@@ -2,7 +2,7 @@ import { Compartment, EditorSelection, Prec, type Extension } from '@codemirror/
 import { EditorView, ViewPlugin, highlightWhitespace, highlightTrailingWhitespace, rectangularSelection, keymap } from '@codemirror/view';
 
 /** View ▸ Active Editor options (Rider): soft wraps, …, shared by every editor and remembered. */
-export type ViewOptions = { softWrap: boolean; whitespace: boolean; fontSize: number | null; columnMode?: boolean };
+export type ViewOptions = { softWrap: boolean; whitespace: boolean; fontSize: number | null; columnMode?: boolean; hideLineNumbers?: boolean };
 const KEY = 'tas:rider:view';
 const DEFAULTS: ViewOptions = { softWrap: false, whitespace: false, fontSize: null };
 let options: ViewOptions = (() => { try { return { ...DEFAULTS, ...JSON.parse(localStorage.getItem(KEY) ?? '{}') }; } catch { return DEFAULTS; } })();
@@ -49,10 +49,13 @@ const columnMode = [
 
 const wrap = new Compartment();
 const column = new Compartment();
+const numbers = new Compartment();
+// Line numbers come with the editors' basic setup; hiding them is a class the theme reacts to.
+const hideNumbers = [EditorView.editorAttributes.of({ class: 'cm-no-line-numbers' }), EditorView.theme({ '.cm-lineNumbers': { display: 'none !important' } })];
 const spaces = new Compartment();
 const font = new Compartment();
 const fontTheme = (px: number | null) => (px ? EditorView.theme({ '&': { fontSize: `${px}px` }, '.cm-content, .cm-gutters': { fontSize: `${px}px` } }) : []);
-const extensionsFor = (o: ViewOptions) => ({ column: o.columnMode ? columnMode : [], font: fontTheme(o.fontSize), wrap: o.softWrap ? EditorView.lineWrapping : [], spaces: o.whitespace ? [highlightWhitespace(), highlightTrailingWhitespace()] : [] });
+const extensionsFor = (o: ViewOptions) => ({ numbers: o.hideLineNumbers ? hideNumbers : [], column: o.columnMode ? columnMode : [], font: fontTheme(o.fontSize), wrap: o.softWrap ? EditorView.lineWrapping : [], spaces: o.whitespace ? [highlightWhitespace(), highlightTrailingWhitespace()] : [] });
 
 /** Applies the options to an editor and follows later changes. */
 export function viewOptionsExtension(): Extension {
@@ -62,10 +65,11 @@ export function viewOptionsExtension(): Extension {
     spaces.of(now.spaces),
     font.of(now.font),
     column.of(now.column),
+    numbers.of(now.numbers),
     ViewPlugin.fromClass(class {
       off: () => void;
       constructor(view: EditorView) {
-        const apply = () => { const e = extensionsFor(options); view.dispatch({ effects: [wrap.reconfigure(e.wrap), spaces.reconfigure(e.spaces), font.reconfigure(e.font), column.reconfigure(e.column)] }); };
+        const apply = () => { const e = extensionsFor(options); view.dispatch({ effects: [wrap.reconfigure(e.wrap), spaces.reconfigure(e.spaces), font.reconfigure(e.font), column.reconfigure(e.column), numbers.reconfigure(e.numbers)] }); };
         listeners.add(apply);
         // Ctrl+Mouse Wheel changes the font size of the editors (Rider's "Change font size with Ctrl+Mouse Wheel").
         const wheel = (e: WheelEvent) => {

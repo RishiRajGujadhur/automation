@@ -1106,3 +1106,16 @@ test('J59 Line separators: a CRLF file keeps CRLF when saved; the status bar con
   await page.keyboard.press('Control+S');
   await expect.poll(disk).not.toContain('\r\n');
 });
+
+test('J60 Show Line Numbers (View): hides and shows the line number gutter in every editor', async ({ page }) => {
+  await openFeature(page);
+  const numbers = page.locator('.gherkin-editor .cm-lineNumbers');
+  await expect(numbers).toBeVisible();
+  await page.getByRole('button', { name: 'View menu' }).click();
+  await expect(page.getByRole('menuitem', { name: /Show Line Numbers/ })).toContainText('✓');
+  await page.getByRole('menuitem', { name: /Show Line Numbers/ }).click();
+  await expect(numbers).toBeHidden();
+  await page.getByRole('button', { name: 'View menu' }).click();
+  await page.getByRole('menuitem', { name: /Show Line Numbers/ }).click();
+  await expect(numbers).toBeVisible();
+});
