@@ -6,7 +6,7 @@ import { noteUsage, runRider } from '../rider/commands';
 import { pushClipboard } from '../rider/clipboardRing';
 import { usageHighlights } from './usages';
 import { moveStatement } from './moveStatement';
-import { gotoChange } from './changeGutter';
+import { gotoChange, rollbackLines } from './changeGutter';
 
 type Span = { from: number; to: number };
 const OPEN = '([{', CLOSE = ')]}';
@@ -297,6 +297,7 @@ export function riderKeys(file = ''): Extension {
     ['F12', false, 'file-structure', () => runRider('file-structure', 'key')],
     ['KeyH', false, 'call-hierarchy', () => runRider('call-hierarchy', 'key')],
     ['Home', false, 'related-files', () => runRider('related-files', 'key')],
+    ['KeyZ', false, 'rollback-lines', (v) => { if (!rollbackLines(v)) runRider('rollback-lines', 'key'); return true; }],
   ];
   const ctrlAlt = EditorView.domEventHandlers({
     keydown(e, view) {

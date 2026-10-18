@@ -6,7 +6,7 @@ import { EditorView } from '@codemirror/view';
 const EditorViewScroll = (at: number) => EditorView.scrollIntoView(at, { y: 'center' });
 import { activeEditor } from '../editor/activeEditor';
 import { moveStatement } from '../editor/moveStatement';
-import { gotoChange } from '../editor/changeGutter';
+import { gotoChange, rollbackLines } from '../editor/changeGutter';
 import { replaceText } from '../editor/csharp';
 import { formatFeature } from '../editor/gherkin';
 import { blockComment } from '../editor/riderKeys';
@@ -327,6 +327,7 @@ export default function RiderHost(props: RiderHostProps) {
       { id: 'code-cleanup', label: 'Code Cleanup', menu: 'Code', shortcut: 'Ctrl K, Ctrl E', run: () => void codeCleanup() },
       { id: 'next-change', label: 'Next Change', menu: 'Navigate', group: true, shortcut: 'Alt F5', run: inEditor(gotoChange(1)) },
       { id: 'previous-change', label: 'Previous Change', menu: 'Navigate', shortcut: 'Shift Alt F5', run: inEditor(gotoChange(-1)) },
+      { id: 'rollback-lines', label: 'Rollback Lines', menu: 'Edit', shortcut: 'Ctrl Alt Z', run: inEditor((v) => { if (!rollbackLines(v)) p.current.onNotice('No uncommitted change at the caret.'); }) },
       { id: 'carets-line-ends', label: 'Add Carets to Ends of Selected Lines', menu: 'Edit', shortcut: 'Alt Shift G', run: inEditor(caretsAtLineEnds) },
     ];
     return registerRider(list);

@@ -823,3 +823,19 @@ test('J41 Next / Previous Change (Alt+F5 / Shift+Alt+F5): jumps between uncommit
   await page.keyboard.press('Shift+Alt+F5');
   expect(await line()).toBe(8);
 });
+
+test('J42 Rollback Lines (Ctrl+Alt+Z): the change at the caret goes back to the committed text, others stay', async ({ page }) => {
+  await commitAll();
+  await openFeature(page);
+  await caretAt(page, 'the browser is started');
+  await page.keyboard.press('End');
+  await page.keyboard.type(' again');
+  await caretAt(page, 'the dashboard');
+  await page.keyboard.press('End');
+  await page.keyboard.type(' now');
+  await expect(page.locator('.gherkin-editor .cm-change-modified')).toHaveCount(2);
+  await page.keyboard.press('Control+Alt+Z');
+  const doc = (await selection(page)).doc;
+  expect(doc).toContain('Then the dashboard is displayed\n');
+  expect(doc).toContain('the browser is started again');
+});
