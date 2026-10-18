@@ -6,6 +6,7 @@ import { EditorView } from '@codemirror/view';
 const EditorViewScroll = (at: number) => EditorView.scrollIntoView(at, { y: 'center' });
 import { activeEditor } from '../editor/activeEditor';
 import { moveStatement } from '../editor/moveStatement';
+import { blockComment } from '../editor/riderKeys';
 import { extendSelection, shrinkSelection, toggleCase, joinLines, selectNextOccurrence, unselectOccurrence, selectAllOccurrences, startNewLine, startNewLineBefore, caretsAtLineEnds } from '../editor/riderKeys';
 import { registerRider, riderChanged, runRider, useRiderCommands, type RiderCommand } from './commands';
 import { api } from '../api';
@@ -296,6 +297,7 @@ export default function RiderHost(props: RiderHostProps) {
       { id: 'related-files', label: 'Go to Related Files…', menu: 'Navigate', shortcut: 'Ctrl Alt Home', run: () => void relatedFiles() },
       { id: 'statement-up', label: 'Move Statement Up', menu: 'Code', group: true, shortcut: 'Ctrl Shift Alt ↑', run: inEditor(moveStatement(-1)) },
       { id: 'statement-down', label: 'Move Statement Down', menu: 'Code', shortcut: 'Ctrl Shift Alt ↓', run: inEditor(moveStatement(1)) },
+      { id: 'block-comment', label: 'Comment with Block Comment', menu: 'Code', group: true, shortcut: 'Ctrl Shift /', run: inEditor((v, f) => blockComment(f)(v)) },
       { id: 'carets-line-ends', label: 'Add Carets to Ends of Selected Lines', menu: 'Edit', shortcut: 'Alt Shift G', run: inEditor(caretsAtLineEnds) },
     ];
     return registerRider(list);

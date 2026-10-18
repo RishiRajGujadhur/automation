@@ -394,7 +394,7 @@ export default function CodeEditor({ file, reveal, active = true, onNotice, onIn
     revealOn(file),
     bookmarks(file),
     trackActive(file),
-    riderKeys(), viewOptionsExtension(),
+    riderKeys(file), viewOptionsExtension(),
     caretTracker,
     blameGutter(),
     coverageGutter(),

@@ -243,10 +243,48 @@ function selectedText(view: EditorView) {
 /** A key that opens a Rider popup (handled by RiderHost). */
 const opens = (key: string, id: string) => ({ key, preventDefault: true, run: () => runRider(id, 'key') });
 
+/** Block comment tokens by file type (Gherkin has none: its lines get # instead). */
+const blockTokens = (file: string): [string, string] | null => (/\.(xml|xaml|csproj|props|targets|config|html?|resx|runsettings|md)$/i.test(file) ? ['<!--', '-->'] : /\.(cs|js|ts|tsx|mjs|css|scss|json)$/i.test(file) ? ['/*', '*/'] : null);
+
+/** Comment with Block Comment (Ctrl+Shift+/): wraps the selection (or the line) in a block comment, or removes it. */
+export function blockComment(file: string) {
+  return (view: EditorView) => {
+    const st = view.state;
+    const tokens = blockTokens(file);
+    const changes: { from: number; to?: number; insert: string }[] = [];
+    for (const r of st.selection.ranges) {
+      const line = st.doc.lineAt(r.head);
+      const lead = /^\s*/.exec(line.text)![0].length;
+      const from = r.empty ? line.from + lead : r.from, to = r.empty ? line.to : r.to;
+      const text = st.sliceDoc(from, to);
+      if (!tokens) {
+        // Gherkin: # on every line of the range (or off when they all have one).
+        const lines = text.split('\n');
+        const all = lines.every((l) => !l.trim() || l.trimStart().startsWith('#'));
+        changes.push({ from, to, insert: lines.map((l) => (!l.trim() ? l : all ? l.replace(/^(\s*)# ?/, '$1') : l.replace(/^(\s*)/, '$1# '))).join('\n') });
+        continue;
+      }
+      const [open, close] = tokens;
+      const t = text.trim();
+      if (t.startsWith(open) && t.endsWith(close)) {
+        const a = from + text.indexOf(open), b = from + text.lastIndexOf(close);
+        changes.push({ from: b, to: b + close.length, insert: '' }, { from: a, to: a + open.length, insert: '' });
+        // Also the space we added.
+        if (st.sliceDoc(a + open.length, a + open.length + 1) === ' ') changes.push({ from: a + open.length, to: a + open.length + 1, insert: '' });
+        if (st.sliceDoc(b - 1, b) === ' ') changes.push({ from: b - 1, to: b, insert: '' });
+      } else {
+        changes.push({ from, insert: `${open} ` }, { from: to, insert: ` ${close}` });
+      }
+    }
+    view.dispatch({ changes, userEvent: 'comment' });
+    return true;
+  };
+}
+
 const keyed = (key: string, id: string, run: (v: EditorView) => boolean) => ({ key, preventDefault: true, run: (v: EditorView) => { noteUsage(id, 'key'); return run(v); } });
 
 /** Rider editing actions shared by the code and Gherkin editors. */
-export function riderKeys(): Extension {
+export function riderKeys(file = ''): Extension {
   // Ctrl+Alt chords: CodeMirror reads Ctrl+Alt as AltGr on Windows, so these match on the physical key.
   const chords: [code: string, shift: boolean, id: string, run: (v: EditorView) => boolean][] = [
     ['KeyJ', true, 'all-occurrences', selectAllOccurrences],
@@ -261,6 +299,8 @@ export function riderKeys(): Extension {
   ];
   const ctrlAlt = EditorView.domEventHandlers({
     keydown(e, view) {
+      // Ctrl+Shift+/ (the key reads "?" with Shift on most layouts).
+      if ((e.ctrlKey || e.metaKey) && e.shiftKey && !e.altKey && e.code === 'Slash') { e.preventDefault(); noteUsage('block-comment', 'key'); return blockComment(file)(view); }
       if (!(e.ctrlKey || e.metaKey) || !e.altKey) return false;
       const c = chords.find(([code, shift]) => code === e.code && shift === e.shiftKey);
       if (!c) return false;

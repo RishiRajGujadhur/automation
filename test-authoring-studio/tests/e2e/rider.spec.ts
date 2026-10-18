@@ -759,3 +759,16 @@ test('J38 Move Statement Up / Down (Ctrl+Shift+Alt+↑/↓): steps, and a whole 
   await page.keyboard.press('Control+Shift+Alt+ArrowUp');
   expect((await selection(page)).doc).toMatch(/Feature: Authentication\n  Scenario: Sign in\n(    .*\n){3}  Background: Signed out\n    Given the browser is started/);
 });
+
+test('J39 Comment with Block Comment (Ctrl+Shift+/): /* */ around the C# selection and back; # lines in Gherkin', async ({ page }) => {
+  const src = await openCs(page, 'Steps/AuthSteps.cs', 'Dashboard');
+  await src.locator('.cm-line', { hasText: 'Dashboard' }).click();
+  await page.keyboard.press('Control+Shift+/');
+  expect((await selection(page)).doc).toContain('/* [Then("the dashboard is displayed")] public void Dashboard() { } */');
+  await page.keyboard.press('Control+Shift+/');
+  expect((await selection(page)).doc).toContain('\n [Then("the dashboard is displayed")] public void Dashboard() { }\n');
+  await page.getByRole('navigation').getByRole('button', { name: 'Login.feature', exact: true }).first().click();
+  await caretAt(page, 'signs in');
+  await page.keyboard.press('Control+Shift+/');
+  expect((await selection(page)).doc).toContain('    # When the user signs in');
+});

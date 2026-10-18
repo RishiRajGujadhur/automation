@@ -52,7 +52,7 @@ Status: ⬜ todo · ✅ done (date)
 | J36 | Power Save Mode | ✅ 2026-10-18 |
 | J37 | Go to Related Files (Ctrl+Alt+Home) | ✅ 2026-10-18 |
 | J38 | Move Statement Up / Down (Ctrl+Shift+Alt+↑/↓): whole blocks and scenarios | ✅ 2026-10-18 |
-| J39 | Comment with Block Comment (Ctrl+Shift+/) | ⬜ |
+| J39 | Comment with Block Comment (Ctrl+Shift+/) | ✅ 2026-10-18 |
 | J40 | Code Cleanup (Ctrl+E, C): format and organize usings (C#), format (Gherkin) | ⬜ |
 | J41 | Next / Previous Change (Ctrl+Alt+Shift+↓/↑) | ⬜ |
 | J42 | Rollback Lines (undo the uncommitted change at the caret) | ⬜ |
@@ -116,3 +116,4 @@ Status: ⬜ todo · ✅ done (date)
 - 2026-10-18 J36: Power Save Mode (Tools): C# diagnostics as you type, CodeLens reference counts and inlay hints pause; a Power Save badge shows it and turns it off.
 - 2026-10-18 J37: Go to Related Files (Ctrl+Alt+Home): from a feature, the C# files whose step definitions its steps use (with counts) and its code-behind; from a step file, the features that use its bindings.
 - 2026-10-18 J38: Move Statement Up / Down: moves the statement with its { } block or indented body (C# blocks, Gherkin scenarios with their steps, steps with tables) past its neighbour, never out of its parent.
+- 2026-10-18 J39: Comment with Block Comment (Ctrl+Shift+/): /* */ in C#, <!-- --> in XML, toggles off when already commented; Gherkin (no block comments) gets # per line.
