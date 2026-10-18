@@ -1,7 +1,7 @@
 import { useEffect, useRef } from 'react';
 import type { EditorView } from '@codemirror/view';
 import { activeEditor } from '../editor/activeEditor';
-import { extendSelection, shrinkSelection, toggleCase, joinLines } from '../editor/riderKeys';
+import { extendSelection, shrinkSelection, toggleCase, joinLines, selectNextOccurrence, unselectOccurrence, selectAllOccurrences } from '../editor/riderKeys';
 import { registerRider, type RiderCommand } from './commands';
 
 export type RiderHostProps = {
@@ -29,6 +29,9 @@ export default function RiderHost(props: RiderHostProps) {
       { id: 'shrink-selection', label: 'Shrink Selection', menu: 'Edit', shortcut: 'Shift Alt ←', run: inEditor(shrinkSelection) },
       { id: 'toggle-case', label: 'Toggle Case', menu: 'Edit', group: true, shortcut: 'Ctrl Shift U', run: inEditor(toggleCase) },
       { id: 'join-lines', label: 'Join Lines', menu: 'Edit', shortcut: 'Ctrl Shift J', run: inEditor(joinLines) },
+      { id: 'next-occurrence', label: 'Add Selection for Next Occurrence', menu: 'Edit', group: true, shortcut: 'Alt J', run: inEditor(selectNextOccurrence) },
+      { id: 'unselect-occurrence', label: 'Unselect Occurrence', menu: 'Edit', shortcut: 'Alt Shift J', run: inEditor(unselectOccurrence) },
+      { id: 'all-occurrences', label: 'Select All Occurrences', menu: 'Edit', shortcut: 'Ctrl Alt Shift J', run: inEditor(selectAllOccurrences) },
     ];
     return registerRider(list);
   }, []); // eslint-disable-line react-hooks/exhaustive-deps

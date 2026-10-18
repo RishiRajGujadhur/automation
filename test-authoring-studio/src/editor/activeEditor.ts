@@ -30,3 +30,6 @@ export function trackActive(file: string) {
     destroy() { this.off(); if (last?.view === this.view) last = undefined; }
   });
 }
+
+// e2e tests read the editor state through this (development builds only).
+if (import.meta.env?.DEV && typeof window !== 'undefined') (window as unknown as { __activeEditor: typeof activeEditor }).__activeEditor = activeEditor;

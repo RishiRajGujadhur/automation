@@ -36,6 +36,13 @@ async function caretAt(page: Page, text: string) {
   await page.keyboard.press('ArrowLeft', { delay: 0 });
   for (let i = 1; i < full.length - full.indexOf(text); i++) await page.keyboard.press('ArrowLeft');
 }
+type Sel = { ranges: { from: number; to: number; text: string }[]; main: number; doc: string };
+/** The active editor's selection ranges (development build hook). */
+const selection = (page: Page) => page.evaluate(() => {
+  const a = (window as unknown as { __activeEditor: () => { view: { state: { selection: { ranges: { from: number; to: number }[]; mainIndex: number }; doc: { toString(): string }; sliceDoc(a: number, b: number): string } } } | undefined }).__activeEditor();
+  const st = a!.view.state;
+  return { ranges: st.selection.ranges.map((r) => ({ from: r.from, to: r.to, text: st.sliceDoc(r.from, r.to) })), main: st.selection.mainIndex, doc: st.doc.toString() } as Sel;
+});
 const selected = (page: Page) => page.evaluate(() => getSelection()?.toString() ?? '');
 
 test('J1 Extend / Shrink Selection: word, line, scenario; back again; also from the Edit menu', async ({ page }) => {
@@ -69,4 +76,22 @@ test('J3 Join Lines (Ctrl+Shift+J): this line and the next become one, indentati
   await caretAt(page, 'signs in');
   await page.keyboard.press('Control+Shift+J');
   await expect(gherkin(page)).toContainText('When the user signs in as "test-user" Then the dashboard is displayed');
+});
+
+test('J4 Add Selection for Next Occurrence (Alt+J), Unselect (Alt+Shift+J), Select All (Ctrl+Alt+Shift+J)', async ({ page }) => {
+  await openFeature(page);
+  const carets = async () => (await selection(page)).ranges.length;
+  await caretAt(page, 'the login page');
+  await page.keyboard.press('Alt+J'); // the word
+  await page.keyboard.press('Alt+J'); // the next "the"
+  await page.keyboard.press('Alt+J');
+  await expect.poll(carets).toBe(3);
+  await page.keyboard.press('Alt+Shift+J');
+  await expect.poll(carets).toBe(2);
+  await page.keyboard.press('Control+Alt+Shift+J');
+  const doc = (await selection(page)).doc;
+  await expect.poll(carets).toBe(doc.match(/\bthe\b/g)!.length);
+  await page.keyboard.type('a');
+  await expect(gherkin(page)).toContainText('Given a login page is open');
+  await expect(gherkin(page)).toContainText('Then a dashboard is displayed');
 });

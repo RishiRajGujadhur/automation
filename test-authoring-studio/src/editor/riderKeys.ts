@@ -1,5 +1,6 @@
 import { EditorSelection, Prec, StateEffect, StateField, type EditorState, type Extension } from '@codemirror/state';
 import { EditorView, keymap } from '@codemirror/view';
+import { selectNextOccurrence, SearchCursor } from '@codemirror/search';
 import { noteUsage } from '../rider/commands';
 
 type Span = { from: number; to: number };
@@ -154,14 +155,64 @@ export function joinLines(view: EditorView) {
   return true;
 }
 
+/** Unselect Occurrence (Alt+Shift+J): drops the occurrence added last (the main selection). */
+export function unselectOccurrence(view: EditorView) {
+  const sel = view.state.selection;
+  if (sel.ranges.length < 2) return true;
+  const removed = sel.main;
+  const rest = sel.ranges.filter((_, i) => i !== sel.mainIndex);
+  const before = rest.filter((r) => r.from < removed.from);
+  const main = before.length ? rest.indexOf(before.at(-1)!) : rest.length - 1;
+  view.dispatch({ selection: EditorSelection.create(rest, main), scrollIntoView: true, userEvent: 'select' });
+  return true;
+}
+/** Select All Occurrences (Ctrl+Alt+Shift+J): every match of the main selection (or of the word at the caret, whole words). */
+export function selectAllOccurrences(view: EditorView) {
+  const st = view.state;
+  const word = st.selection.main.empty ? st.wordAt(st.selection.main.head) : null;
+  const main = word ?? st.selection.main;
+  if (main.empty) return true;
+  const text = st.sliceDoc(main.from, main.to);
+  const bounded = (a: number, b: number) => (!/\w/.test(st.sliceDoc(a - 1, a)) && !/\w/.test(st.sliceDoc(b, b + 1)));
+  // A whole word (from the caret, or a selection that is one) matches whole words only, as in Rider.
+  const wholeWords = !!word || (/^\w+$/.test(text) && bounded(main.from, main.to));
+  const isWord = (a: number, b: number) => !wholeWords || bounded(a, b);
+  const ranges: ReturnType<typeof EditorSelection.range>[] = [];
+  let mainIndex = 0;
+  for (const cur = new SearchCursor(st.doc, text); !cur.next().done && ranges.length < 1000;) {
+    if (!isWord(cur.value.from, cur.value.to)) continue;
+    if (cur.value.from === main.from) mainIndex = ranges.length;
+    ranges.push(EditorSelection.range(cur.value.from, cur.value.to));
+  }
+  if (ranges.length) view.dispatch({ selection: EditorSelection.create(ranges, mainIndex), userEvent: 'select' });
+  return true;
+}
+export { selectNextOccurrence };
+
 const keyed = (key: string, id: string, run: (v: EditorView) => boolean) => ({ key, preventDefault: true, run: (v: EditorView) => { noteUsage(id, 'key'); return run(v); } });
 
 /** Rider editing actions shared by the code and Gherkin editors. */
 export function riderKeys(): Extension {
-  return [selStack, Prec.high(keymap.of([
+  // Ctrl+Alt chords: CodeMirror reads Ctrl+Alt as AltGr on Windows, so these match on the physical key.
+  const chords: [code: string, shift: boolean, id: string, run: (v: EditorView) => boolean][] = [
+    ['KeyJ', true, 'all-occurrences', selectAllOccurrences],
+  ];
+  const ctrlAlt = EditorView.domEventHandlers({
+    keydown(e, view) {
+      if (!(e.ctrlKey || e.metaKey) || !e.altKey) return false;
+      const c = chords.find(([code, shift]) => code === e.code && shift === e.shiftKey);
+      if (!c) return false;
+      e.preventDefault();
+      noteUsage(c[2], 'key');
+      return c[3](view);
+    },
+  });
+  return [selStack, Prec.highest(ctrlAlt), Prec.high(keymap.of([
     keyed('Shift-Alt-ArrowRight', 'extend-selection', extendSelection),
     keyed('Shift-Alt-ArrowLeft', 'shrink-selection', shrinkSelection),
     keyed('Mod-Shift-u', 'toggle-case', toggleCase),
     keyed('Mod-Shift-j', 'join-lines', joinLines),
+    keyed('Alt-j', 'next-occurrence', selectNextOccurrence),
+    keyed('Alt-Shift-j', 'unselect-occurrence', unselectOccurrence),
   ]))];
 }
