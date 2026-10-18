@@ -310,3 +310,47 @@ test('J16 Structure tool window (Alt+7): follows the editor and the caret; click
   await panel.getByRole('button', { name: 'Close Structure' }).click();
   await expect(panel).toHaveCount(0);
 });
+
+/** Page classes with inheritance and calls, for the hierarchy tools (the workspace is re-opened to index them). */
+async function hierarchyFixture(request: import('@playwright/test').APIRequestContext) {
+  await fs.mkdir(path.join(root, 'Pages'), { recursive: true });
+  await fs.writeFile(path.join(root, 'Pages/Pages.cs'), [
+    'namespace Demo.Pages;',
+    'public interface IPage { void Open(); }',
+    'public class BasePage : IPage',
+    '{',
+    '    public virtual void Open() { }',
+    '}',
+    'public class LoginPage : BasePage',
+    '{',
+    '    public void SignIn() { Open(); }',
+    '}',
+    'public class AdminLoginPage : LoginPage',
+    '{',
+    '    public void Elevate() { SignIn(); }',
+    '}',
+    'public class ReportsPage : BasePage',
+    '{',
+    '    public void Show() { Open(); new LoginPage().SignIn(); }',
+    '}',
+    '',
+  ].join('\n'));
+  expect((await request.post('/api/workspace', { data: { repositoryRoot: root, targetProject: '.' } })).ok()).toBe(true);
+}
+
+test('J17 Type Hierarchy (Ctrl+H): bases, the type, derived types as a tree, interfaces; click to go', async ({ page, request }) => {
+  await hierarchyFixture(request);
+  const src = await openCs(page, 'Pages/Pages.cs', 'public class LoginPage');
+  await page.keyboard.press('Home');
+  for (let i = 0; i < 3; i++) await page.keyboard.press('Control+ArrowRight'); // end of "LoginPage"
+  await page.keyboard.press('Control+H');
+  const tree = page.getByRole('list', { name: 'Type hierarchy' });
+  await expect(tree).toContainText('Demo.Pages.LoginPage', { timeout: 60_000 });
+  await expect(tree.getByRole('button').first()).toContainText('System.Object');
+  await expect(tree.getByRole('button', { name: /Demo\.Pages\.BasePage/ })).toBeVisible();
+  await expect(tree.getByRole('list', { name: 'Derived types' })).toContainText('AdminLoginPage');
+  await expect(tree.getByRole('list', { name: 'Derived types' })).not.toContainText('ReportsPage');
+  await expect(tree.getByRole('list', { name: 'Interfaces' })).toContainText('IPage');
+  await tree.getByRole('button', { name: /AdminLoginPage/ }).click();
+  await expect(src.locator('.cm-activeLine')).toContainText('public class AdminLoginPage');
+});

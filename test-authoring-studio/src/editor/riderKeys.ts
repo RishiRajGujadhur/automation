@@ -268,6 +268,7 @@ export function riderKeys(): Extension {
     opens('Mod-Shift-v', 'paste-history'),
     opens('Mod-j', 'live-template'),
     opens('Mod-Shift-F7', 'highlight-usages'),
+    opens('Mod-h', 'type-hierarchy'),
     keyed('Shift-Alt-ArrowRight', 'extend-selection', extendSelection),
     keyed('Shift-Alt-ArrowLeft', 'shrink-selection', shrinkSelection),
     keyed('Mod-Shift-u', 'toggle-case', toggleCase),

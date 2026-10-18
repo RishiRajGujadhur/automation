@@ -2622,3 +2622,25 @@
     }
   }
 }
+
+// Hierarchy tool window
+.hierarchy-panel {
+  .hierarchy-sub {
+    margin: 0;
+    padding-left: 14px;
+    list-style: none;
+  }
+  .hierarchy-row {
+    display: flex;
+    gap: 2px;
+    align-items: center;
+  }
+  .hierarchy-group > small {
+    display: block;
+    margin: 6px 0 2px;
+    color: var(--text-muted);
+  }
+  .hierarchy-hint {
+    margin: 8px;
+  }
+}

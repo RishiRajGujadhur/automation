@@ -30,7 +30,7 @@ Status: ⬜ todo · ✅ done (date)
 | J14 | Highlight Usages in File (Ctrl+Shift+F7) | ✅ 2026-10-18 |
 | J15 | File Structure popup (Ctrl+Alt+F12; Ctrl+F12 stays Go To Implementation) | ✅ 2026-10-18 |
 | J16 | Structure tool window (Alt+7) | ✅ 2026-10-18 |
-| J17 | Type Hierarchy (Ctrl+H) | ⬜ |
+| J17 | Type Hierarchy (Ctrl+H) | ✅ 2026-10-18 |
 | J18 | Call Hierarchy (Ctrl+Alt+H) | ⬜ |
 | J19 | Problems tool window: solution-wide analysis (Alt+3) | ⬜ |
 | J20 | Terminal tool window (Alt+F12) | ⬜ |
@@ -69,3 +69,4 @@ Status: ⬜ todo · ✅ done (date)
 - 2026-10-18 J14: Highlight Usages in File: Roslyn references of the C# symbol in this file, whole-word matches elsewhere; F3 / Shift+F3 move between them, Esc or an edit clears. New Navigate menu.
 - 2026-10-18 J15: File Structure popup: C# types and members (Roslyn outline), Gherkin Feature/Rule/Background/Scenario/Examples, Markdown headings; opens on the entry at the caret; filter and Enter jumps.
 - 2026-10-18 J16: Structure tool window (bottom panel tab, Alt+7): outline of the file being edited, entry at the caret highlighted, sort alphabetically, click to go. Rider tool windows are now tabs of the shared bottom panel.
+- 2026-10-18 J17: Type Hierarchy in a Hierarchy tool window: base chain to System.Object, the type, derived types as a tree (transitive), implemented interfaces; click to go. Roslyn op typeHierarchy.

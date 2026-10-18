@@ -17,6 +17,7 @@ import { surroundTemplates, surroundWith } from '../editor/surround';
 import { setUsages, wordUsages } from '../editor/usages';
 import { fileOutline, itemAt, type OutlineItem } from './outline';
 import type { RiderTool } from './RiderToolWindow';
+import { setHierarchy, type TypeHierarchy } from './hierarchy';
 import { changeFontSize, setViewOptions, viewOptions } from '../editor/viewOptions';
 
 export type RiderHostProps = {
@@ -104,6 +105,14 @@ export default function RiderHost(props: RiderHostProps) {
     const at = Math.min(l.to, l.from + column - 1);
     view.dispatch({ selection: { anchor: at }, effects: EditorViewScroll(at) });
   };
+  /** Type Hierarchy (Ctrl+H): base types, interfaces and derived types of the type at the caret (Roslyn). */
+  const typeHierarchy = async () => {
+    const a = activeEditor();
+    if (!a || !a.file.endsWith('.cs') || isBrowser()) { p.current.onNotice('Type Hierarchy works in C# files of a studio-indexed folder.'); return; }
+    setHierarchy({ kind: 'type', loading: true });
+    p.current.onTool('hierarchy');
+    try { setHierarchy({ kind: 'type', data: await api<TypeHierarchy>('/csharp/typeHierarchy', position(a.view, a.file)) }); } catch (e) { setHierarchy({ kind: 'type', error: (e as Error).message }); }
+  };
   const closeAndFocus = () => { setPopup(null); requestAnimationFrame(() => target.current?.view.focus()); };
   /** Runs an editor action on the active editor (and gives it focus back). */
   const inEditor = (fn: (v: EditorView, file: string) => unknown) => () => {
@@ -144,6 +153,7 @@ export default function RiderHost(props: RiderHostProps) {
       { id: 'highlight-usages', label: 'Highlight Usages in File', menu: 'Navigate', shortcut: 'Ctrl Shift F7', run: () => void highlightUsages() },
       { id: 'file-structure', label: 'File Structure…', menu: 'Navigate', shortcut: 'Ctrl Alt F12', run: () => void fileStructure() },
       { id: 'tool-structure', label: 'Structure', menu: 'View', group: true, shortcut: 'Alt 7', run: () => p.current.onTool('structure') },
+      { id: 'type-hierarchy', label: 'Type Hierarchy', menu: 'Navigate', group: true, shortcut: 'Ctrl H', run: () => void typeHierarchy() },
       { id: 'carets-line-ends', label: 'Add Carets to Ends of Selected Lines', menu: 'Edit', shortcut: 'Alt Shift G', run: inEditor(caretsAtLineEnds) },
     ];
     return registerRider(list);
