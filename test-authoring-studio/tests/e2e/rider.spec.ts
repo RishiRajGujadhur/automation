@@ -698,3 +698,21 @@ test('J35 Shelf: shelve uncommitted changes under a name, unshelve them back', a
   await expect.poll(() => fs.readFile(login, 'utf8')).toContain('quickly');
   await expect(panel).toContainText('Nothing on the shelf');
 });
+
+test('J36 Power Save Mode: no background C# analysis requests while on; a badge turns it off', async ({ page }) => {
+  await openCs(page, 'Steps/AuthSteps.cs', 'SignIn');
+  await page.getByRole('button', { name: 'Tools menu' }).click();
+  await page.getByRole('menuitem', { name: /Power Save Mode/ }).click();
+  await expect(page.getByRole('button', { name: 'Power Save' })).toBeVisible();
+  const calls: string[] = [];
+  page.on('request', (r) => { if (/csharp\/(diagnostics|inlayHints|referenceCounts)/.test(r.url())) calls.push(r.url()); });
+  await page.keyboard.press('End');
+  await page.keyboard.type(' // edit');
+  await page.waitForTimeout(2000);
+  expect(calls).toEqual([]);
+  await page.getByRole('button', { name: 'Power Save' }).click();
+  await expect(page.getByRole('button', { name: 'Power Save' })).toHaveCount(0);
+  await page.getByLabel('Source of Steps/AuthSteps.cs').locator('.cm-line', { hasText: 'SignIn' }).first().click();
+  await page.keyboard.type(' more');
+  await expect.poll(() => calls.length, { timeout: 10_000 }).toBeGreaterThan(0);
+});

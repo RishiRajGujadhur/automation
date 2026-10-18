@@ -3061,3 +3061,18 @@ html[data-breakpoints-muted] .cm-bp {
     }
   }
 }
+
+// Power Save Mode badge (bottom right, above the status bar)
+.power-save-badge {
+  position: fixed;
+  right: 12px;
+  bottom: 28px;
+  z-index: 55;
+  padding: 1px 8px;
+  border: 1px solid #d9a21b88;
+  border-radius: 10px;
+  background: #d9a21b22;
+  color: #b8860b;
+  font-size: 11px;
+  cursor: pointer;
+}

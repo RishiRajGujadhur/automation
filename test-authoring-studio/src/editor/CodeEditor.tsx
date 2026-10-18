@@ -27,6 +27,7 @@ import { riderKeys } from './riderKeys';
 import { trackActive } from './activeEditor';
 import { viewOptionsExtension } from './viewOptions';
 import { pushClipboard } from '../rider/clipboardRing';
+import { powerSave } from '../rider/powerSave';
 import { httpClient, isHttpFile, parseHttp } from './httpClient';
 import { http as httpMode } from '@codemirror/legacy-modes/mode/http';
 import HttpResponse, { type HttpResult } from '../rider/HttpResponse';
@@ -61,6 +62,7 @@ type CsDiagnostic = { line: number; column: number; endLine: number; endColumn: 
 /** Roslyn diagnostics (syntax + step-binding checks) from the scanner, as CodeMirror lint. */
 const csharpLinter = (file: string) => linter(async (view) => {
   const doc = view.state.doc;
+  if (powerSave()) return [];
   try {
     const items = await api<CsDiagnostic[]>('/csharp/diagnostics', { source: doc.toString(), path: file });
     return items.map((d): Diagnostic => {
@@ -122,7 +124,7 @@ export default function CodeEditor({ file, reveal, active = true, onNotice, onIn
       const apply = () => { const v = ref.current?.view; if (v) v.dispatch({ effects: setLenses.of(list) }); else if (tries++ < 30) requestAnimationFrame(apply); };
       apply();
     }, () => {});
-    api<RefLens[]>('/csharp/referenceCounts', { file }).then((list) => { refLenses.current = list; applyRefLenses(); }, () => {});
+    if (!powerSave()) api<RefLens[]>('/csharp/referenceCounts', { file }).then((list) => { refLenses.current = list; applyRefLenses(); }, () => {});
   };
   const refLenses = useRef<RefLens[]>([]);
   const marksRef = useRef(runMarks);

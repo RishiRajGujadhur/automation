@@ -1,4 +1,5 @@
 import { StateEffect, StateField, type Extension } from '@codemirror/state';
+import { powerSave } from '../rider/powerSave';
 import { Decoration, EditorView, ViewPlugin, WidgetType, type DecorationSet, type ViewUpdate } from '@codemirror/view';
 import { api } from '../api';
 import { offsetOf } from './csharp';
@@ -46,6 +47,7 @@ export function inlayHints(file: string, enabled: () => boolean): Extension {
       if (!enabled()) { this.view.dispatch({ effects: setHints.of(Decoration.none) }); return; }
       const doc = this.view.state.doc;
       let hints: Hint[];
+      if (powerSave()) return;
       try { hints = await api<Hint[]>('/csharp/inlayHints', { file, source: doc.toString() }); } catch { return; }
       // Drop stale answers: the text changed while the request ran.
       if (seq !== this.seq || this.view.state.doc !== doc) return;

@@ -63,6 +63,8 @@ const ROWS: Record<'edit' | 'view' | 'navigate' | 'code' | 'tools' | 'help', Row
     null,
     ['Evaluate Expression… (debugger)', 'evaluate-expression', 'Alt+F8'],
     ['Mute Breakpoints', 'mute-breakpoints'],
+    null,
+    ['Power Save Mode', 'power-save'],
   ],
   help: [
     null,

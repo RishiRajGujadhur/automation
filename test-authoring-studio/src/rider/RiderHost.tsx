@@ -6,7 +6,7 @@ import { EditorView } from '@codemirror/view';
 const EditorViewScroll = (at: number) => EditorView.scrollIntoView(at, { y: 'center' });
 import { activeEditor } from '../editor/activeEditor';
 import { extendSelection, shrinkSelection, toggleCase, joinLines, selectNextOccurrence, unselectOccurrence, selectAllOccurrences, startNewLine, startNewLineBefore, caretsAtLineEnds } from '../editor/riderKeys';
-import { registerRider, riderChanged, runRider, type RiderCommand } from './commands';
+import { registerRider, riderChanged, runRider, useRiderCommands, type RiderCommand } from './commands';
 import { api } from '../api';
 import { copyText } from '../ui';
 import { isBrowser } from '../files/provider';
@@ -20,6 +20,7 @@ import type { RiderTool } from './RiderToolWindow';
 import RunAnything from './RunAnything';
 import ProductivityGuide from './ProductivityGuide';
 import EvaluateExpression from './EvaluateExpression';
+import { powerSave, setPowerSave } from './powerSave';
 import CheckRegExp from './CheckRegExp';
 import CompareClipboard from './CompareClipboard';
 import LocalHistory from '../LocalHistory';
@@ -47,6 +48,12 @@ export type RiderHostProps = {
  */
 type Popup = { kind: 'recent-changes'; items: { file: string; id: string; at: string; reason: string }[] } | { kind: 'file-history'; file: string; current: string } | { kind: 'compare'; patch: string; what: string } | { kind: 'regexp'; initial: string } | { kind: 'evaluate'; initial: string } | { kind: 'tip' } | { kind: 'productivity' } | { kind: 'run' } | { kind: 'paste' } | { kind: 'template' } | { kind: 'surround' } | { kind: 'structure'; items: OutlineItem[]; current: number };
 const TITLES: Record<Popup['kind'], string> = { 'recent-changes': 'Recent Changes', 'file-history': 'Local History', compare: 'Compare with Clipboard', regexp: 'Check RegExp', evaluate: 'Evaluate Expression', tip: 'Tip of the Day', productivity: 'Productivity Guide', run: 'Run Anything', paste: 'Paste from History', template: 'Insert Live Template', surround: 'Surround With', structure: 'File Structure' };
+
+function PowerSaveBadge() {
+  useRiderCommands();
+  if (!powerSave()) return null;
+  return <button className="power-save-badge" title="Power Save Mode is on: background analysis is paused" onClick={() => runRider('power-save', 'menu')}>Power Save</button>;
+}
 
 export default function RiderHost(props: RiderHostProps) {
   const p = useRef(props);
@@ -269,6 +276,7 @@ export default function RiderHost(props: RiderHostProps) {
       { id: 'compare-clipboard', label: 'Compare with Clipboard', menu: 'Edit', run: () => void compareWithClipboard() },
       { id: 'recent-changes', label: 'Recent Changes…', menu: 'Navigate', shortcut: 'Alt Shift C', run: () => void recentChangesPopup() },
       { id: 'tool-shelf', label: 'Shelf', menu: 'View', run: () => { if (isBrowser()) { p.current.onNotice('The shelf needs a folder indexed by the studio server.'); return; } p.current.onTool('shelf'); } },
+      { id: 'power-save', label: 'Power Save Mode', menu: 'Tools', group: true, checked: powerSave, run: () => { setPowerSave(!powerSave()); riderChanged(); p.current.onNotice(powerSave() ? 'Power Save Mode: background analysis (C# diagnostics, CodeLens, inlay hints) is paused.' : 'Power Save Mode off: background analysis resumes.'); } },
       { id: 'carets-line-ends', label: 'Add Carets to Ends of Selected Lines', menu: 'Edit', shortcut: 'Alt Shift G', run: inEditor(caretsAtLineEnds) },
     ];
     return registerRider(list);
@@ -319,6 +327,8 @@ export default function RiderHost(props: RiderHostProps) {
   return (
     <>
     <KeyPromoter />
+    {/* Status bar badge while Power Save Mode is on (click to turn it off). */}
+    <PowerSaveBadge />
     {layout.mode !== 'normal' && (
       <button className="rider-exit-mode" onClick={() => { exitMode(); riderChanged(); }}>
         Exit {layout.mode === 'zen' ? 'Distraction-Free' : 'Presentation'} Mode
