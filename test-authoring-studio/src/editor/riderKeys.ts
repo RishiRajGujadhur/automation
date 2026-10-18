@@ -123,6 +123,17 @@ export function shrinkSelection(view: EditorView) {
   return true;
 }
 
+/** Toggle Case (Ctrl+Shift+U): the selection (or the word at the caret) to upper case, or to lower case when it has no lower-case letters. */
+export function toggleCase(view: EditorView) {
+  const st = view.state;
+  const spans = st.selection.ranges.map((r) => (r.empty ? st.wordAt(r.head) ?? r : r)).filter((r) => r.to > r.from);
+  if (!spans.length) return true;
+  const all = spans.map((r) => st.sliceDoc(r.from, r.to)).join('');
+  const upper = all !== all.toUpperCase();
+  view.dispatch({ changes: spans.map((r) => ({ from: r.from, to: r.to, insert: upper ? st.sliceDoc(r.from, r.to).toUpperCase() : st.sliceDoc(r.from, r.to).toLowerCase() })), selection: EditorSelection.create(spans.map((r) => EditorSelection.range(r.from, r.to))), userEvent: 'input.case' });
+  return true;
+}
+
 const keyed = (key: string, id: string, run: (v: EditorView) => boolean) => ({ key, preventDefault: true, run: (v: EditorView) => { noteUsage(id, 'key'); return run(v); } });
 
 /** Rider editing actions shared by the code and Gherkin editors. */
@@ -130,5 +141,6 @@ export function riderKeys(): Extension {
   return [selStack, Prec.high(keymap.of([
     keyed('Shift-Alt-ArrowRight', 'extend-selection', extendSelection),
     keyed('Shift-Alt-ArrowLeft', 'shrink-selection', shrinkSelection),
+    keyed('Mod-Shift-u', 'toggle-case', toggleCase),
   ]))];
 }

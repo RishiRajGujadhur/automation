@@ -11,6 +11,8 @@ const ROWS: Record<'edit' | 'view' | 'navigate' | 'code' | 'tools' | 'help', Row
     null,
     ['Extend Selection', 'extend-selection', 'Shift+Alt+Right'],
     ['Shrink Selection', 'shrink-selection', 'Shift+Alt+Left'],
+    null,
+    ['Toggle Case', 'toggle-case', 'CmdOrCtrl+Shift+U'],
   ],
   view: [],
   navigate: [],

@@ -1,7 +1,7 @@
 import { useEffect, useRef } from 'react';
 import type { EditorView } from '@codemirror/view';
 import { activeEditor } from '../editor/activeEditor';
-import { extendSelection, shrinkSelection } from '../editor/riderKeys';
+import { extendSelection, shrinkSelection, toggleCase } from '../editor/riderKeys';
 import { registerRider, type RiderCommand } from './commands';
 
 export type RiderHostProps = {
@@ -27,6 +27,7 @@ export default function RiderHost(props: RiderHostProps) {
     const list: RiderCommand[] = [
       { id: 'extend-selection', label: 'Extend Selection', menu: 'Edit', group: true, shortcut: 'Shift Alt →', run: inEditor(extendSelection) },
       { id: 'shrink-selection', label: 'Shrink Selection', menu: 'Edit', shortcut: 'Shift Alt ←', run: inEditor(shrinkSelection) },
+      { id: 'toggle-case', label: 'Toggle Case', menu: 'Edit', group: true, shortcut: 'Ctrl Shift U', run: inEditor(toggleCase) },
     ];
     return registerRider(list);
   }, []); // eslint-disable-line react-hooks/exhaustive-deps

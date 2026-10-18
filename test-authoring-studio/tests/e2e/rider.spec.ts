@@ -54,3 +54,12 @@ test('J1 Extend / Shrink Selection: word, line, scenario; back again; also from 
   await page.getByRole('menuitem', { name: /Extend Selection/ }).click();
   expect(await selected(page)).toMatch(/^When the user signs in/);
 });
+
+test('J2 Toggle Case (Ctrl+Shift+U): word at the caret to upper case and back', async ({ page }) => {
+  await openFeature(page);
+  await caretAt(page, 'signs in');
+  await page.keyboard.press('Control+Shift+U');
+  await expect(gherkin(page)).toContainText('the user SIGNS in');
+  await page.keyboard.press('Control+Shift+U');
+  await expect(gherkin(page)).toContainText('the user signs in');
+});
