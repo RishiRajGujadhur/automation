@@ -34,6 +34,20 @@ export async function historyOf(root: string, file: string) {
     return { id, at: new Date(Number(at)).toISOString(), reason, size: text.length, lines: text.split('\n').length };
   }));
 }
+/** Recent Changes (Rider, Alt+Shift+C): the newest versions kept across every file of the repository. */
+export async function recentChanges(root: string, limit = 100) {
+  const base = path.join(dataRoot, '.local', 'history', short(path.resolve(root).toLowerCase()));
+  const out: { file: string; id: string; at: string; reason: string }[] = [];
+  for (const d of await fs.readdir(base).catch(() => [] as string[])) {
+    const meta = await fs.readFile(path.join(base, d, 'file.json'), 'utf8').then((t) => JSON.parse(t) as { file: string }).catch(() => null);
+    if (!meta) continue;
+    for (const id of (await fs.readdir(path.join(base, d)).catch(() => [] as string[])).filter((f) => /^\d+-\w+\.txt$/.test(f))) {
+      const [at, reason] = id.replace('.txt', '').split('-');
+      out.push({ file: meta.file, id, at: new Date(Number(at)).toISOString(), reason });
+    }
+  }
+  return out.sort((a, b) => b.at.localeCompare(a.at)).slice(0, limit);
+}
 export async function historyItem(root: string, file: string, id: string) {
   if (!/^\d+-\w+\.txt$/.test(id)) throw new Error('Invalid history id.');
   return fs.readFile(path.join(dirFor(root, file), id), 'utf8').catch(() => { throw new Error('That version is no longer in the local history.'); });

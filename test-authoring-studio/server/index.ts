@@ -48,7 +48,7 @@ import { scenarioSteps, scenarioText, featureWithScenario } from './recordingFea
 import { defineSteps, argumentKind, type StepArgument } from './stepScaffold.js';
 import { recordedStepsSource } from './recordedSteps.js';
 import { editorConfigFor } from './editorconfig.js';
-import { recordHistory, historyOf, historyItem } from './localHistory.js';
+import { recordHistory, historyOf, historyItem, recentChanges } from './localHistory.js';
 import { findVisualStudio, classicProjects, msbuildArgs, classicOutput, CLASSIC_HELP } from './msbuild.js';
 import { mergeDictionary, proposeField, findEntry, parseDictionary, selectorRank, fieldName, type FieldProposal } from './dictionaries.js';
 const studio = readSettings();
@@ -722,6 +722,7 @@ app.post('/api/file/delete', async (req, res) => {
 });
 // Local History (Rider): earlier versions of a file the studio wrote.
 app.get('/api/history', async (req, res) => { const file = z.string().min(1).max(400).parse(req.query.file); await confined(config.repositoryRoot, file, false); res.json(await historyOf(config.repositoryRoot, file)); });
+app.get('/api/history/recent', async (_req, res) => { res.json(await recentChanges(config.repositoryRoot)); });
 app.get('/api/history/item', async (req, res) => { const { file, id } = z.object({ file: z.string().min(1).max(400), id: z.string().max(80) }).parse(req.query); await confined(config.repositoryRoot, file, false); res.json({ source: await historyItem(config.repositoryRoot, file, id) }); });
 app.get('/api/source', async (req, res) => {
   const file = await confined(config.repositoryRoot, String(req.query.file));

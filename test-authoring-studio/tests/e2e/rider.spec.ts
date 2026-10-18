@@ -658,3 +658,21 @@ test('J33 Compare with Clipboard: the selection against copied text, as a diff',
   await expect(dlg).toContainText('-    When the user signs in as "test-user"');
   await expect(dlg).toContainText('+    When the admin signs in');
 });
+
+test('J34 Recent Changes (Alt+Shift+C): the latest saves across files; pick one to see and revert its history', async ({ page }) => {
+  await openFeature(page);
+  await caretAt(page, 'signs in');
+  await page.keyboard.press('End');
+  await page.keyboard.type(' now');
+  await page.keyboard.press('Control+S');
+  await expect.poll(() => fs.readFile(path.join(root, 'Features/Auth/Login.feature'), 'utf8')).toContain('"test-user" now');
+  await page.keyboard.press('Alt+Shift+C');
+  const list = page.getByRole('listbox', { name: 'Recent changes' });
+  await expect(list.getByRole('option').first()).toContainText('Features/Auth/Login.feature');
+  await expect(list.getByRole('option').first()).toContainText('saved');
+  await page.keyboard.press('Enter');
+  const dlg = page.getByRole('dialog', { name: 'Local History' });
+  await expect(dlg).toContainText('"test-user" now');
+  await dlg.getByRole('button', { name: /Revert/ }).first().click();
+  await expect.poll(async () => (await selection(page)).doc).not.toContain('"test-user" now');
+});

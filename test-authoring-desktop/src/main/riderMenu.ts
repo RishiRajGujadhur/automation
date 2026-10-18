@@ -44,6 +44,7 @@ const ROWS: Record<'edit' | 'view' | 'navigate' | 'code' | 'tools' | 'help', Row
     ['Hide All Tool Windows', 'hide-tools', 'CmdOrCtrl+Shift+F12'],
   ],
   navigate: [
+    ['Recent Changes…', 'recent-changes', 'Alt+Shift+C'],
     ['File Structure…', 'file-structure', 'CmdOrCtrl+Alt+F12'],
     ['Highlight Usages in File', 'highlight-usages', 'CmdOrCtrl+Shift+F7'],
     null,

@@ -22,6 +22,8 @@ import ProductivityGuide from './ProductivityGuide';
 import EvaluateExpression from './EvaluateExpression';
 import CheckRegExp from './CheckRegExp';
 import CompareClipboard from './CompareClipboard';
+import LocalHistory from '../LocalHistory';
+import { readFile } from '../files/provider';
 import { createTwoFilesPatch } from 'diff';
 import { clipboardHistory } from './clipboardRing';
 import { breakpointsMuted, muteBreakpoints } from '../debug/store';
@@ -43,8 +45,8 @@ export type RiderHostProps = {
  * JetBrains Rider features: registers their commands (menus, palette, desktop menus) and hosts their popups, dialogs
  * and global keys. Editor keys live in editor/riderKeys.ts.
  */
-type Popup = { kind: 'compare'; patch: string; what: string } | { kind: 'regexp'; initial: string } | { kind: 'evaluate'; initial: string } | { kind: 'tip' } | { kind: 'productivity' } | { kind: 'run' } | { kind: 'paste' } | { kind: 'template' } | { kind: 'surround' } | { kind: 'structure'; items: OutlineItem[]; current: number };
-const TITLES: Record<Popup['kind'], string> = { compare: 'Compare with Clipboard', regexp: 'Check RegExp', evaluate: 'Evaluate Expression', tip: 'Tip of the Day', productivity: 'Productivity Guide', run: 'Run Anything', paste: 'Paste from History', template: 'Insert Live Template', surround: 'Surround With', structure: 'File Structure' };
+type Popup = { kind: 'recent-changes'; items: { file: string; id: string; at: string; reason: string }[] } | { kind: 'file-history'; file: string; current: string } | { kind: 'compare'; patch: string; what: string } | { kind: 'regexp'; initial: string } | { kind: 'evaluate'; initial: string } | { kind: 'tip' } | { kind: 'productivity' } | { kind: 'run' } | { kind: 'paste' } | { kind: 'template' } | { kind: 'surround' } | { kind: 'structure'; items: OutlineItem[]; current: number };
+const TITLES: Record<Popup['kind'], string> = { 'recent-changes': 'Recent Changes', 'file-history': 'Local History', compare: 'Compare with Clipboard', regexp: 'Check RegExp', evaluate: 'Evaluate Expression', tip: 'Tip of the Day', productivity: 'Productivity Guide', run: 'Run Anything', paste: 'Paste from History', template: 'Insert Live Template', surround: 'Surround With', structure: 'File Structure' };
 
 export default function RiderHost(props: RiderHostProps) {
   const p = useRef(props);
@@ -149,6 +151,17 @@ export default function RiderHost(props: RiderHostProps) {
     target.current = a;
     setPopup({ kind: 'compare', patch, what });
   };
+  /** Recent Changes (Alt+Shift+C): the latest Local History versions of every file; pick one to see its history. */
+  const recentChangesPopup = async () => {
+    if (isBrowser()) { p.current.onNotice('Recent Changes needs a folder indexed by the studio server.'); return; }
+    try { setPopup({ kind: 'recent-changes', items: await api('/history/recent') }); } catch (e) { p.current.onNotice((e as Error).message); }
+  };
+  const showFileHistory = async (file: string) => {
+    p.current.onNavigate({ file });
+    let current = '';
+    try { current = (await readFile(file)).source; } catch { /* deleted: compare against nothing */ }
+    setPopup({ kind: 'file-history', file, current });
+  };
   const closeAndFocus = () => { setPopup(null); requestAnimationFrame(() => target.current?.view.focus()); };
   /** Runs an editor action on the active editor (and gives it focus back). */
   const inEditor = (fn: (v: EditorView, file: string) => unknown) => () => {
@@ -192,6 +205,7 @@ export default function RiderHost(props: RiderHostProps) {
       [(e) => e.altKey && e.shiftKey && !e.ctrlKey && !e.metaKey && e.code === 'KeyZ', 'zen-mode'],
       [(e) => (e.ctrlKey || e.metaKey) && e.shiftKey && !e.altKey && e.key === 'F12', 'hide-tools'],
       [(e) => e.altKey && !e.ctrlKey && !e.shiftKey && !e.metaKey && e.key === 'F8', 'evaluate-expression'],
+      [(e) => e.altKey && e.shiftKey && !e.ctrlKey && !e.metaKey && e.code === 'KeyC', 'recent-changes'],
     ];
     const h = (e: KeyboardEvent) => { const k = keys.find(([t]) => t(e)); if (k) { e.preventDefault(); runRider(k[1], 'key'); } };
     window.addEventListener('keydown', h);
@@ -253,6 +267,7 @@ export default function RiderHost(props: RiderHostProps) {
         openPopup({ kind: 'regexp', initial }, false);
       } },
       { id: 'compare-clipboard', label: 'Compare with Clipboard', menu: 'Edit', run: () => void compareWithClipboard() },
+      { id: 'recent-changes', label: 'Recent Changes…', menu: 'Navigate', shortcut: 'Alt Shift C', run: () => void recentChangesPopup() },
       { id: 'carets-line-ends', label: 'Add Carets to Ends of Selected Lines', menu: 'Edit', shortcut: 'Alt Shift G', run: inEditor(caretsAtLineEnds) },
     ];
     return registerRider(list);
@@ -272,6 +287,19 @@ export default function RiderHost(props: RiderHostProps) {
     const { view } = target.current;
     const items = popup.items;
     body = <ListPopup label="File structure" placeholder="File structure: type to filter" empty="No matches." initial={popup.current} items={items.map((it, i) => ({ key: String(i), label: it.label, detail: `${it.kind} · line ${it.line}`, indent: it.depth }))} onPick={(k) => { const it = items[Number(k)]; goTo(view, it.line, it.column); closeAndFocus(); }} />;
+  }
+  if (popup?.kind === 'recent-changes') {
+    const items = popup.items;
+    const when = (at: string) => { const s = Math.round((Date.now() - Date.parse(at)) / 1000); return s < 60 ? 'just now' : s < 3600 ? `${Math.round(s / 60)} min ago` : s < 86_400 ? `${Math.round(s / 3600)} h ago` : new Date(at).toLocaleString(); };
+    body = <ListPopup label="Recent changes" placeholder="Recent changes (Alt+Shift+C)" empty="No local history yet: it fills as files are saved, changed or deleted." items={items.map((c, i) => ({ key: String(i), label: c.file, detail: `${c.reason === 'save' ? 'saved' : c.reason === 'delete' ? 'deleted' : 'changed'} · ${when(c.at)}` }))} onPick={(k) => void showFileHistory(items[Number(k)].file)} />;
+  }
+  if (popup?.kind === 'file-history') {
+    const { file, current } = popup;
+    body = <LocalHistory file={file} current={current} onRevert={(src) => {
+      setPopup(null);
+      // Into the file's editor (opened by showFileHistory), as unsaved changes.
+      requestAnimationFrame(() => { const a = activeEditor(); if (a?.file === file) { a.view.dispatch({ changes: { from: 0, to: a.view.state.doc.length, insert: src } }); p.current.onNotice('Reverted in the editor: save to keep it.'); } else p.current.onNotice(`Open ${file} to revert it.`); });
+    }} />;
   }
   if (popup?.kind === 'compare') body = <CompareClipboard patch={popup.patch} what={popup.what} />;
   if (popup?.kind === 'regexp') body = <CheckRegExp initial={popup.initial} onOpen={(file, line) => { setPopup(null); p.current.onNavigate({ file, line }); }} />;
