@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { EditorState, type TransactionSpec } from '@codemirror/state';
 import { EditorView } from '@codemirror/view';
-import { cycleStepKeyword, scenarioToOutline, tableInsertRow, tableAddColumn, tableDeleteColumn, tableSortByColumn, testFilter, selectScenario, renameTag, extractExamplesParameter, outlineToScenario } from '../src/editor/gherkinTools';
+import { cycleStepKeyword, scenarioToOutline, tableInsertRow, tableAddColumn, tableDeleteColumn, tableSortByColumn, testFilter, selectScenario, renameTag, extractExamplesParameter, outlineToScenario, duplicateScenario } from '../src/editor/gherkinTools';
 
 /** Runs an editor command on `doc` with the selection between « and » (or a caret at ‸); with `caret`, the result marks the caret with ¦. */
 function run(doc: string, cmd: (v: EditorView) => boolean, caret = false) {
@@ -68,5 +68,9 @@ describe('Gherkin tools (IDE-FEATURES X49…)', () => {
     const doc = 'Feature: F\n  Scenario Outline: Sign in as <role>‸\n    Given the user "<user>" is a <role>\n\n    Examples:\n      | user | role  |\n      | ada  | admin |\n\n  Scenario: Next';
     expect(run(doc, outlineToScenario)).toBe('Feature: F\n  Scenario: Sign in as admin\n    Given the user "ada" is a admin\n\n  Scenario: Next');
     expect(run('Scenario Outline: S‸\n  Given <a>\n  Examples:\n    | a |\n    | 1 |\n    | 2 |', outlineToScenario)).toContain('Scenario Outline');
+  });
+  it('X88 Duplicate Scenario: tags through Examples, "(copy)" title, caret on it', () => {
+    const doc = 'Feature: F\n  @a\n  Scenario: S‸\n    Given x\n\n  Scenario: T';
+    expect(run(doc, duplicateScenario, true)).toBe('Feature: F\n  @a\n  Scenario: S\n    Given x\n\n  @a\n  ¦Scenario: S (copy)\n    Given x\n\n  Scenario: T');
   });
 });

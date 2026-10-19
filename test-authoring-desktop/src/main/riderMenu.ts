@@ -149,6 +149,7 @@ const ROWS: Record<'edit' | 'view' | 'navigate' | 'code' | 'tools' | 'help', Row
     ['Split String', 'split-string'],
     ['Extract Examples Parameter…', 'extract-examples-param'],
     ['Convert Outline to Scenario', 'outline-to-scenario'],
+    ['Duplicate Scenario', 'duplicate-scenario'],
   ],
   tools: [
     ['Run Anything… (Ctrl twice)', 'run-anything'],

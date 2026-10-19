@@ -216,3 +216,17 @@ export function outlineToScenario(view: EditorView) {
   view.dispatch({ changes: { from: state.doc.line(b.head).from, to: state.doc.line(last === b.end ? b.end : b.end).to, insert: lines.join(state.lineBreak) }, userEvent: 'input' });
   return true;
 }
+
+/** Duplicate Scenario: a copy (tags, steps, Examples) below, titled "… (copy)", the caret on its title. */
+export function duplicateScenario(view: EditorView) {
+  const { state } = view;
+  const b = scenarioBlock(state, state.doc.lineAt(state.selection.main.head).number);
+  if (!b) return false;
+  const lines: string[] = [];
+  for (let n = b.first; n <= b.end; n++) lines.push(n === b.head ? state.doc.line(n).text.replace(/\s*$/, ' (copy)') : state.doc.line(n).text);
+  const at = state.doc.line(b.end).to;
+  const insert = state.lineBreak + state.lineBreak + lines.join(state.lineBreak);
+  const title = at + state.lineBreak.length * 2 + lines.slice(0, b.head - b.first).reduce((n, l) => n + l.length + state.lineBreak.length, 0);
+  view.dispatch({ changes: { from: at, insert }, selection: { anchor: title + /^\s*/.exec(lines[b.head - b.first])![0].length }, scrollIntoView: true, userEvent: 'input' });
+  return true;
+}
