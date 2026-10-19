@@ -10,6 +10,11 @@ It ships as a **Windows desktop app** (`test-authoring-desktop/`, Electron) and 
 
 ## Screenshots
 
+**Settings workbench (2026-10-19).** Search across categories, adjust preferences and open workspace settings
+from the VS Code-style settings screen. Ctrl+F focuses search; Escape clears the query before closing.
+
+![Desktop settings workbench](docs/screenshots/desktop-settings.png)
+
 Captured from the Windows Electron desktop build on **2026-10-18**, using a temporary copy of the Calculator
 sample. These are running-app captures, not mockups; image dimensions follow the Windows display scaling.
 

@@ -1,4 +1,4 @@
-// App themes, native scrollbars, accent logo and the Claude-Code-style settings shell.
+// App themes, native scrollbars, accent logo and the IDE settings workbench.
 // Tokens are defined for every theme; "studio" keeps the original hand-tuned styles and only uses
 // tokens where new components need them. Other themes re-skin surfaces through the overrides below.
 
@@ -283,10 +283,12 @@
   }
 }
 
-// ---- Settings shell (Claude Code style)
+// ---- IDE settings workbench
 .modal.settings-modal {
-  width: min(1060px, calc(100vw - 32px));
-  height: min(86dvh, 780px);
+  width: calc(100vw - 48px);
+  max-width: 1600px;
+  height: calc(100dvh - 64px);
+  border-radius: 3px;
   max-height: none;
   padding: 0;
   overflow: hidden;
@@ -299,9 +301,32 @@
 }
 .settings-shell {
   display: grid;
-  grid-template-columns: 260px minmax(0, 1fr);
+  grid-template-columns: 230px minmax(0, 1fr);
+  grid-template-rows: auto minmax(0, 1fr);
   height: 100%;
 }
+.settings-workbench-header {
+  grid-column: 1 / -1;
+  padding: 12px 24px 0;
+  border-bottom: 1px solid var(--border);
+  background: var(--surface);
+}
+.settings-title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 12px;
+  .icon-button { margin-left: auto; }
+}
+.settings-scope {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  font-size: 13px;
+  button { background: transparent; border: 0; color: var(--text-muted); cursor: pointer; padding: 10px 0; }
+  [role='status'] { margin-left: auto; color: var(--text-muted); }
+}
+.settings-scope-current { padding: 10px 4px; border-bottom: 2px solid var(--accent); font-weight: 600; }
 .settings-nav {
   display: flex;
   flex-direction: column;
@@ -326,10 +351,10 @@
   padding: 0 10px;
   height: 38px;
   border: 1px solid var(--border);
-  border-radius: 10px;
+  border-radius: 2px;
   background: var(--surface-2);
   color: var(--text-muted);
-  margin-bottom: 14px;
+  margin-bottom: 4px;
   &:focus-within {
     border-color: var(--accent);
   }
@@ -355,7 +380,7 @@
   width: 100%;
   padding: 9px 10px;
   border: 0;
-  border-radius: 9px;
+  border-radius: 0;
   background: none;
   color: var(--text);
   font-size: 14px;
@@ -365,7 +390,8 @@
     background: color-mix(in srgb, var(--text) 6%, transparent);
   }
   &.active {
-    background: color-mix(in srgb, var(--text) 10%, transparent);
+    background: var(--accent-soft);
+    box-shadow: inset 2px 0 var(--accent);
     font-weight: 600;
   }
   &.dim {
@@ -397,11 +423,13 @@
 }
 .settings-row {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-columns: minmax(0, 1fr);
   gap: 8px 32px;
   align-items: center;
-  padding: 18px 0;
-  border-bottom: 1px solid var(--border);
+  padding: 18px 14px;
+  border-left: 2px solid transparent;
+  &:hover, &:focus-within { background: color-mix(in srgb, var(--text) 3%, transparent); }
+  &:focus-within { border-left-color: var(--accent); }
   &:last-child {
     border-bottom: 0;
   }
@@ -466,7 +494,8 @@
   gap: 6px;
 }
 .settings-row-control {
-  justify-self: end;
+  justify-self: start;
+  max-width: 100%;
   .select-trigger {
     min-width: 240px;
   }
@@ -551,8 +580,11 @@
 @media (max-width: 760px) {
   .settings-shell {
     grid-template-columns: minmax(0, 1fr);
-    grid-template-rows: auto minmax(0, 1fr);
+    grid-template-rows: auto auto minmax(0, 1fr);
   }
+  .settings-workbench-header { padding: 10px 12px 0; }
+  .settings-scope { flex-wrap: wrap; gap: 10px; }
+  .settings-scope [role='status'] { margin-left: 0; }
   .settings-nav {
     border-right: 0;
     border-bottom: 1px solid var(--border);

@@ -14,6 +14,10 @@ The studio has three small host hooks: `STUDIO_ROOT` (resources), `STUDIO_DATA` 
 
 ## Desktop screenshots
 
+**Settings workbench — updated 2026-10-19**
+
+![Searchable desktop settings workbench](../docs/screenshots/desktop-settings.png)
+
 Fresh captures of the packaged Windows app, taken on **2026-10-18** with the Calculator sample.
 
 **Feature authoring and Solution Explorer**

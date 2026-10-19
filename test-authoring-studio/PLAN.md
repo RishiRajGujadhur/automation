@@ -284,3 +284,7 @@ Reference: Visual Studio debugger (breakpoints, Step Into/Over/Out, Locals, Watc
 - [x] F3 Off means gone: commands leave the menus, palette and the desktop's native menus; keys do nothing; drawing features are hidden
 - [x] Bug: Settings ▸ Storage ▸ Reset card states was commented out by a stray `// Storage` on the same line
 - [x] Bug: breakpoints of the previously opened folder stayed on the server and landed on files of the new one (a stale tracepoint broke Step Out)
+
+## Settings workbench (2026-10-19)
+- [x] VS Code-style settings layout, full-width multi-keyword search, category navigation, User scope and workspace shortcut; Ctrl+F search and Escape clear-before-close.
+- [x] Verification: four web settings tests, production build, 31 packaged desktop checks; fresh desktop settings screenshot. See `../DESKTOP-QOL.md`.

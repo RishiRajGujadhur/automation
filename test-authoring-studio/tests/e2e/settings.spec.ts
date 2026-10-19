@@ -88,3 +88,28 @@ test('Test Generator scenario text has Gherkin highlighting and autocomplete', a
   await page.keyboard.type('\nWhen the user search');
   await expect(page.locator('.cm-tooltip-autocomplete li').first()).toContainText('the user searches for');
 });
+
+test('IDE settings workbench: search, keyboard navigation and persistence', async ({ page }) => {
+  await page.goto('/#/dashboard');
+  await expect(page.getByText('Repository indexed')).toBeVisible();
+  await page.getByRole('button', { name: 'Preferences', exact: true }).click();
+  const dialog = page.getByRole('dialog', { name: 'Preferences' });
+  const search = dialog.getByRole('searchbox', { name: 'Search settings' });
+  await search.fill('size text');
+  await expect(dialog.getByRole('heading', { name: 'Text size', exact: true })).toBeVisible();
+  await expect(dialog.getByRole('status')).toContainText('settings found');
+  await dialog.getByRole('button', { name: 'Clear settings search' }).click();
+  await dialog.getByRole('navigation').getByRole('button', { name: 'Appearance', exact: true }).click();
+  await dialog.getByRole('radio', { name: /^Light/ }).click();
+  await expect(page.locator('html')).toHaveAttribute('data-theme', 'light');
+  await page.keyboard.press('Control+f');
+  await expect(search).toBeFocused();
+  await search.fill('nonexistent-setting-xyz');
+  await expect(dialog.getByText(/No settings match/)).toBeVisible();
+  await page.keyboard.press('Escape');
+  await expect(search).toHaveValue('');
+  await expect(dialog).toBeVisible();
+  await dialog.getByRole('button', { name: 'Close settings' }).click();
+  await page.reload();
+  await expect(page.locator('html')).toHaveAttribute('data-theme', 'light');
+});

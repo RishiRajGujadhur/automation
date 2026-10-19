@@ -218,3 +218,22 @@ test('Rider features from the native menus: Structure, Run Anything, Terminal, N
   await featureSet('VS essentials');
   await expect.poll(async () => (await menuLabels()).Tools).not.toContain('Run Anything… (Ctrl twice)');
 });
+
+test('IDE settings workbench searches and keeps keyboard focus in the packaged app', async () => {
+  await menu('File', 'Preferences…');
+  const dialog = page.getByRole('dialog', { name: 'Preferences' });
+  const search = dialog.getByRole('searchbox', { name: 'Search settings' });
+  await search.fill('size text');
+  await expect(dialog.getByRole('heading', { name: 'Text size', exact: true })).toBeVisible();
+  await dialog.getByRole('button', { name: 'Clear settings search' }).click();
+  await dialog.getByRole('navigation').getByRole('button', { name: 'Code editor', exact: true }).click();
+  await page.keyboard.press('Control+f');
+  await expect(search).toBeFocused();
+  await search.fill('nonexistent-setting-xyz');
+  await expect(dialog.getByText(/No settings match/)).toBeVisible();
+  await page.keyboard.press('Escape');
+  await expect(search).toHaveValue('');
+  await expect(dialog).toBeVisible();
+  await page.screenshot({ path: '../docs/screenshots/desktop-settings.png' });
+  await dialog.getByRole('button', { name: 'Close settings' }).click();
+});

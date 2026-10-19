@@ -1,6 +1,12 @@
 # Desktop quality-of-life improvement backlog
 
-Reviewed 2026-10-18 against source revision `f61994c`. These **60 proposals are not implemented by this document**. Priorities are recommendations: P1 protects work or removes recurring friction; P2 improves everyday workflows; P3 is optional polish. Each row defines a user outcome and a checkable completion condition. Source references identify the implementation area, not proof that every proposed interaction has been exhaustively tested.
+Reviewed 2026-10-18 against source revision `f61994c`. Implementation started 2026-10-19. The progress log below records verified deliveries; unlisted items remain proposals. Priorities are recommendations: P1 protects work or removes recurring friction; P2 improves everyday workflows; P3 is optional polish. Each row defines a user outcome and a checkable completion condition. Source references identify the implementation area, not proof that every proposed interaction has been exhaustively tested.
+
+## Implementation progress
+
+| Item | Status | Implementation and verification |
+| --- | --- | --- |
+| Settings interface (additional user request) | Done — 2026-10-19 | VS Code-style settings workbench with a full-width search header, categories, User scope, Workspace shortcut, vertically arranged controls, multi-keyword search, results count, clear action and Ctrl+F. Escape clears a search before closing. Verified: four web settings scenarios, production build and 31 packaged desktop tests (two opt-in screenshot tests skipped); desktop screenshot visually inspected. This does not complete DQ24's desktop-only preference controls. |
 
 ## How the app works
 

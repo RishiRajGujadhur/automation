@@ -49,7 +49,7 @@ Feature: Checkout
     Then the order is confirmed
 `;
 
-/** Claude-Code-style settings: searchable sidebar of categories, rows of title/description + control. */
+/** IDE settings workbench: full-width search, category navigation and readable setting rows. */
 export default function StudioSettings({ onNotice, onWorkspace, shortcuts, onClose }: { onNotice: (m: string) => void; onWorkspace: () => void; shortcuts: [string, string][]; onClose: () => void }) {
   const { prefs, setPrefs } = usePrefs();
   const algo = useAlgorithms();
@@ -60,6 +60,7 @@ export default function StudioSettings({ onNotice, onWorkspace, shortcuts, onClo
   const [traces, setTraces] = useState<Trace[]>([]);
   const [error, setError] = useState('');
   const contentRef = useRef<HTMLDivElement>(null);
+  const searchRef = useRef<HTMLInputElement>(null);
   useEffect(() => {
     api('/settings').then(setSettings).catch((e) => setError(e.message));
     api<Trace[]>('/traces').then(setTraces).catch(() => {});
@@ -265,21 +266,27 @@ export default function StudioSettings({ onNotice, onWorkspace, shortcuts, onClo
   ], [prefs, settings, traces, error, cacheCount, editor, algo, featureVersion]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const q = query.trim().toLowerCase();
-  const matches = q ? rows.filter((r) => `${r.section} ${r.title} ${r.description ?? ''} ${r.keywords ?? ''}`.toLowerCase().includes(q)) : rows.filter((r) => r.section === section);
+  const matchesQuery = (r: Row) => q.split(/\s+/).every((word) => `${r.id} ${r.section} ${r.title} ${r.description ?? ''} ${r.keywords ?? ''}`.toLowerCase().includes(word));
+  const matches = q ? rows.filter(matchesQuery) : rows.filter((r) => r.section === section);
   const grouped = q ? sections.map((s) => ({ s, items: matches.filter((r) => r.section === s.id) })).filter((g) => g.items.length) : [{ s: sections.find((s) => s.id === section)!, items: matches }];
-  const counts = useMemo(() => Object.fromEntries(sections.map((s) => [s.id, rows.filter((r) => r.section === s.id && (!q || `${r.section} ${r.title} ${r.description ?? ''} ${r.keywords ?? ''}`.toLowerCase().includes(q))).length])), [rows, q]);
+  const counts = Object.fromEntries(sections.map((s) => [s.id, rows.filter((r) => r.section === s.id && (!q || matchesQuery(r))).length]));
   // Braces matter: Chromium's scrollTo() now returns a Promise, which must not be returned from an effect.
   useEffect(() => { contentRef.current?.scrollTo({ top: 0 }); }, [section, q]);
 
   return (
-    <div className="settings-shell">
-      <nav className="settings-nav" aria-label="Settings categories">
+    <div className="settings-shell" onKeyDown={(e) => { if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'f') { e.preventDefault(); e.stopPropagation(); searchRef.current?.focus(); searchRef.current?.select(); } }}>
+      <header className="settings-workbench-header">
+        <div className="settings-title"><Settings2 size={18} aria-hidden="true" /><strong>Settings</strong><button className="icon-button" aria-label="Close settings" onClick={onClose}><X size={18} /></button></div>
         <label className="settings-search">
           <Search size={15} aria-hidden="true" />
           <span className="sr-only">Search settings</span>
-          <input type="search" placeholder="Search" value={query} onChange={(e) => setQuery(e.target.value)} onKeyDown={(e) => { if (e.key === 'Escape' && query) { e.stopPropagation(); setQuery(''); } }} autoFocus />
+          <input ref={searchRef} type="search" placeholder="Search settings by name or keyword" value={query} onChange={(e) => setQuery(e.target.value)} onKeyDown={(e) => { if (e.key === 'Escape' && query) { e.stopPropagation(); setQuery(''); } }} autoFocus />
+          {query && <button className="icon-button" aria-label="Clear settings search" onClick={() => { setQuery(''); searchRef.current?.focus(); }}><X size={14} /></button>}
         </label>
-        <span className="settings-nav-label">Settings</span>
+        <div className="settings-scope"><span className="settings-scope-current">User</span><button onClick={onWorkspace}>Workspace settings ↗</button><span role="status">{q ? `${matches.length} settings found` : 'Preferences apply immediately'}</span></div>
+      </header>
+      <nav className="settings-nav" aria-label="Settings categories">
+        <span className="settings-nav-label">Categories</span>
         <ul>
           {sections.map((s) => (
             <li key={s.id}>
@@ -297,12 +304,11 @@ export default function StudioSettings({ onNotice, onWorkspace, shortcuts, onClo
         </ul>
       </nav>
       <div className="settings-content" ref={contentRef}>
-        <button className="icon-button settings-close" aria-label="Close settings" onClick={onClose}><X size={18} /></button>
         {grouped.map(({ s, items }) => (
           <section key={s.id} className="settings-section" aria-labelledby={`settings-${s.id.replace(/\W/g, '')}`}>
             <h2 id={`settings-${s.id.replace(/\W/g, '')}`}>{s.label}</h2>
             {items.map((r) => (
-              <div key={r.id} className={`settings-row ${r.block && !r.control ? 'stacked' : ''} ${r.sub ? 'sub' : ''}`}>
+              <div key={r.id} data-setting-id={r.id} className={`settings-row ${r.block && !r.control ? 'stacked' : ''} ${r.sub ? 'sub' : ''}`}>
                 <div className="settings-row-text">
                   <h3>
                     <Highlight text={r.title} query={q} />
@@ -316,7 +322,7 @@ export default function StudioSettings({ onNotice, onWorkspace, shortcuts, onClo
             ))}
           </section>
         ))}
-        {q && !grouped.length && <p className="settings-empty">No settings match “{query}”.</p>}
+        {q && !grouped.length && <div className="settings-empty"><p>No settings match “{query}”. Try a setting name or a shorter keyword.</p><Button variant="ghost" onClick={() => { setQuery(''); searchRef.current?.focus(); }}>Clear search</Button></div>}
       </div>
     </div>
   );

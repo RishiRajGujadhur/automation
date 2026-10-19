@@ -2244,6 +2244,7 @@ export default function App() {
           <Dialog.Overlay className="dialog-overlay" />
           {modal && (
             <Dialog.Content
+              onEscapeKeyDown={(event) => { if (modal === 'preferences' && document.querySelector<HTMLInputElement>('.settings-search input')?.value) event.preventDefault(); }}
               className={`modal ${['preview', 'source', 'settings', 'dictionary'].includes(modal) ? 'wide' : ''} ${modal === 'preferences' ? 'settings-modal' : ''}`}
               aria-describedby={undefined}
             >

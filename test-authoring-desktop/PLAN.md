@@ -198,3 +198,7 @@ Legend: `[x]` done · `[ ]` to do. Every feature is committed and pushed when fi
 
 ## Settings ▸ Features (2026-10-18)
 - [x] F1 The desktop app starts with the Visual Studio essentials; the page sends the turned-off features' commands (`desktop:disabled-commands`) and the native menus leave them out
+
+## Settings workbench (2026-10-19)
+- [x] VS Code-style settings layout, full-width multi-keyword search, category navigation, User scope and workspace shortcut; Ctrl+F search and Escape clear-before-close.
+- [x] Verification: four web settings tests, production build, 31 packaged desktop checks; fresh desktop settings screenshot. See `../DESKTOP-QOL.md`.
