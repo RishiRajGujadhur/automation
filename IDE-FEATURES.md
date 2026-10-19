@@ -31,6 +31,7 @@ has it on by default, so the desktop app starts with it on. The others start off
 | X21 | XML documentation comments (///) | VS 2026 | yes | ✅ 2026-10-20 |
 | X22 | Generate Constructor | VS 2026 / Rider | yes | ✅ 2026-10-20 |
 | X23 | Paste JSON as Classes | VS 2026 | yes | ✅ 2026-10-20 |
+| X24 | Reformat / Minify JSON | VS 2026 / Rider | yes | ✅ 2026-10-20 |
 
 ## Progress log
 - 2026-10-20 X1: Sort Lines: the selected lines (or the whole file) in natural, case-insensitive order, blank lines last. Third-batch plumbing: src/rider/more.ts, src/editor/textTools.ts, IDE-FEATURES.md.
@@ -56,3 +57,4 @@ has it on by default, so the desktop app starts with it on. The others start off
 - 2026-10-20 X21: XML doc comments: typing /// above a C# member writes summary, param and returns tags.
 - 2026-10-20 X22: Generate Constructor: readonly fields and get-only properties of the class at the caret become constructor parameters.
 - 2026-10-20 X23: Paste JSON as Classes: C# classes from the JSON on the clipboard (lists, nested objects, JsonPropertyName).
+- 2026-10-20 X24: Reformat JSON / Minify JSON for the file or selection.

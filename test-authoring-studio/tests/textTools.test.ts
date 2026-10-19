@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { EditorState, type TransactionSpec } from '@codemirror/state';
 import { EditorView } from '@codemirror/view';
-import { sortLines, reverseLines, deleteHorizontalWhiteSpace, setCase, transposeLine, transposeChars, transposeWords, cursorMatchingBracket, selectMatchingBracket, findSelected, lastEditLocation, trackEdits, insertGuid, cyclicExpandWord, gotoMember, toggleVerbatim, convertCase } from '../src/editor/textTools';
+import { sortLines, reverseLines, deleteHorizontalWhiteSpace, setCase, transposeLine, transposeChars, transposeWords, cursorMatchingBracket, selectMatchingBracket, findSelected, lastEditLocation, trackEdits, insertGuid, cyclicExpandWord, gotoMember, toggleVerbatim, convertCase, reformatJson } from '../src/editor/textTools';
 
 /** Runs an editor command on `doc` with the selection between the markers « and » (or a caret at |). */
 export function run(doc: string, cmd: (v: EditorView) => boolean) {
@@ -109,5 +109,10 @@ describe('text tools (IDE-FEATURES X1…)', () => {
     expect(convertCase('the_user_signs_in', 'sentence')).toBe('The user signs in');
     expect(convertCase('user-name', 'constant')).toBe('USER_NAME');
     expect(convertCase('UserName', 'title')).toBe('User Name');
+  });
+  it('X24 Reformat / Minify JSON', () => {
+    expect(run('|{"a":1,"b":[1,2]}', reformatJson())).toBe('{\n  "a": 1,\n  "b": [\n    1,\n    2\n  ]\n}');
+    expect(run('|{\n  "a": 1\n}\n', reformatJson(true))).toBe('{"a":1}');
+    expect(run('|{nope', reformatJson())).toBe('{nope');
   });
 });

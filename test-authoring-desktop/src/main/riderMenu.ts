@@ -112,6 +112,9 @@ const ROWS: Record<'edit' | 'view' | 'navigate' | 'code' | 'tools' | 'help', Row
     ['Cyclic Expand Word', 'expand-word', 'Alt+/'],
     ['To Verbatim / Regular String', 'toggle-verbatim'],
     ['Generate Constructor', 'generate-ctor'],
+    null,
+    ['Reformat JSON', 'reformat-json'],
+    ['Minify JSON', 'minify-json'],
   ],
   tools: [
     ['Run Anything… (Ctrl twice)', 'run-anything'],

@@ -264,3 +264,18 @@ export function applyCase(style: CaseStyle) {
     return true;
   };
 }
+
+/** Reformat JSON (Visual Studio's Format Document for .json; Rider's Reformat Code): 2-space indentation, or one line. */
+export function reformatJson(minify = false) {
+  return (view: EditorView) => {
+    const st = view.state;
+    const r = st.selection.main;
+    const from = r.empty ? 0 : r.from, to = r.empty ? st.doc.length : r.to;
+    const text = st.sliceDoc(from, to);
+    let next: string;
+    try { next = JSON.stringify(JSON.parse(text), null, minify ? undefined : 2); } catch { return false; }
+    if (r.empty && !minify && text.endsWith('\n')) next += '\n';
+    if (next !== text) view.dispatch({ changes: { from, to, insert: next }, userEvent: 'input.format' });
+    return true;
+  };
+}

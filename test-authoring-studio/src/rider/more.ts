@@ -3,7 +3,7 @@ import type { RiderCommand } from './commands';
 import { jsonToClasses } from '../editor/jsonClasses';
 import { generateConstructor } from '../editor/generateCtor';
 import { setViewOptions, viewOptions } from '../editor/viewOptions';
-import { lastEditLocation, insertGuid, cyclicExpandWord, gotoMember, toggleVerbatim } from '../editor/textTools';
+import { lastEditLocation, insertGuid, cyclicExpandWord, gotoMember, toggleVerbatim, reformatJson } from '../editor/textTools';
 import { sortLines, reverseLines, deleteHorizontalWhiteSpace, setCase, transposeLine, transposeChars, transposeWords, cursorMatchingBracket, selectMatchingBracket, findSelected } from '../editor/textTools';
 
 /**
@@ -42,5 +42,7 @@ export function moreCommands(h: MoreHelpers): RiderCommand[] {
     { id: 'toggle-verbatim', label: 'To Verbatim / Regular String', menu: 'Code', run: h.inEditor((v) => { if (!toggleVerbatim(v)) h.notice('Put the caret in a C# string without \\n-style escapes.'); }) },
     { id: 'generate-ctor', label: 'Generate Constructor', menu: 'Code', run: h.inEditor((v) => { const err = generateConstructor(v); if (err) h.notice(err); }) },
     { id: 'paste-json-classes', label: 'Paste JSON as Classes', menu: 'Edit', run: h.inEditor(async (v) => { let text = ''; try { text = await navigator.clipboard.readText(); } catch { h.notice('The clipboard cannot be read here.'); return; } try { const code = jsonToClasses(text); v.dispatch(v.state.replaceSelection(code), { scrollIntoView: true, userEvent: 'input.paste' }); } catch { h.notice('The clipboard does not hold JSON.'); } }) },
+    { id: 'reformat-json', label: 'Reformat JSON', menu: 'Code', group: true, run: h.inEditor((v) => { if (!reformatJson()(v)) h.notice('The file (or selection) is not valid JSON.'); }) },
+    { id: 'minify-json', label: 'Minify JSON', menu: 'Code', run: h.inEditor((v) => { if (!reformatJson(true)(v)) h.notice('The file (or selection) is not valid JSON.'); }) },
   ];
 }
