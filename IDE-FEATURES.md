@@ -96,6 +96,7 @@ has it on by default, so the desktop app starts with it on. The others start off
 | X86 | Extract Examples Parameter | Rider | yes | ✅ 2026-10-20 |
 | X87 | Convert Outline to Scenario | Rider | yes | ✅ 2026-10-20 |
 | X88 | Duplicate Scenario | Rider | yes | ✅ 2026-10-20 |
+| X89 | Close Tabs to the Left | VS Code / Rider | yes | ✅ 2026-10-20 |
 
 ## Progress log
 - 2026-10-20 X1: Sort Lines: the selected lines (or the whole file) in natural, case-insensitive order, blank lines last. Third-batch plumbing: src/rider/more.ts, src/editor/textTools.ts, IDE-FEATURES.md.
@@ -186,3 +187,4 @@ has it on by default, so the desktop app starts with it on. The others start off
 - 2026-10-20 X86: Selection to <param> + Examples column
 - 2026-10-20 X87: Single-row outline inlined
 - 2026-10-20 X88: Copy of the scenario below
+- 2026-10-20 X89: Tab menu closes unpinned tabs before it

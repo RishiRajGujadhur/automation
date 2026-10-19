@@ -6,7 +6,7 @@ import { ChevronLeft, ChevronRight, ChevronDown, X, Copy, XCircle, Pin, PinOff }
 import { RowMenu, copyText } from '../ui';
 import { Dropdown } from '../radix';
 import { UNSAVED_EVENT, unsavedFiles } from '../editor/autosave';
-import { useTabs, activateTab, closeOthers, closeToRight, closeAll, setPinned, keepTab, type EditorTab } from './tabs';
+import { useTabs, activateTab, closeOthers, closeToRight, closeToLeft, closeAll, setPinned, keepTab, type EditorTab } from './tabs';
 import { fileType } from './fileTypes';
 
 const base = (f: string) => f.split('/').pop()!;
@@ -75,6 +75,7 @@ export default function EditorTabs({ onClose, onSplit, children }: { onClose: (f
                 'separator',
                 { label: 'Close', shortcut: 'Ctrl F4', onSelect: () => onClose(t.file) },
                 { label: 'Close Others', onSelect: () => closeOthers(t.file) },
+                ...(featureOn('close-left') ? [{ label: 'Close to the Left', onSelect: () => closeToLeft(t.file) }] : []),
                 { label: 'Close to the Right', onSelect: () => closeToRight(t.file) },
                 { label: 'Close All', icon: XCircle, onSelect: () => closeAll() },
                 'separator',

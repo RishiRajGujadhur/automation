@@ -380,3 +380,79 @@ test('X81–X88 smoke: Duplicate Scenario and Split String from the menus', asyn
   await menuItem(page, 'Code', /^Split String/);
   await expect.poll(() => doc(page)).toContain('"Hello " +');
 });
+
+const tabLabel = (page: Page, name: string) => page.locator('.editor-tab-label', { hasText: name });
+test('X89 Close Tabs to the Left', async ({ page }) => {
+  await openFeature(page);
+  await page.getByRole('navigation').getByRole('button', { name: 'AuthSteps.cs', exact: true }).first().click();
+  await page.getByRole('navigation').getByRole('button', { name: 'GoogleSearch.feature', exact: true }).first().click();
+  const labels = page.locator('.editor-tab-label');
+  await expect(labels).toHaveCount(3);
+  const last = (await labels.nth(2).textContent())!;
+  await labels.nth(2).click({ button: 'right' });
+  await page.getByRole('menuitem', { name: 'Close to the Left' }).click();
+  await expect(labels).toHaveCount(1);
+  await expect(labels.first()).toHaveText(last);
+});
+
+test('X90 Tab Reveal in Explorer', async ({ page }) => {
+  await openFeature(page);
+  const nav = page.getByRole('navigation', { name: 'Solution' });
+  await nav.getByRole('button', { name: 'Collapse folder Features', exact: true }).click();
+  await expect(nav.getByRole('button', { name: 'Login.feature', exact: true })).toHaveCount(0);
+  await tabLabel(page, 'Login.feature').click({ button: 'right' });
+  await page.getByRole('menuitem', { name: 'Reveal in Explorer' }).click();
+  await expect(nav.getByRole('button', { name: 'Login.feature', exact: true }).first()).toBeVisible();
+});
+
+test('X91–X94 Search: history, Collapse All, Copy All, only open editors', async ({ page, context }) => {
+  await context.grantPermissions(['clipboard-read', 'clipboard-write']);
+  await openFeature(page);
+  await page.keyboard.press('Control+Shift+F');
+  const view = page.getByRole('region', { name: 'Search' });
+  const box = view.getByLabel('Search in files');
+  await box.fill('browser');
+  await expect(view.getByRole('status')).toHaveText(/\d+ results? in/);
+  await box.fill('dashboard');
+  await expect(view.getByRole('status')).toHaveText(/\d+ results? in/);
+  // X91 history.
+  await box.fill('');
+  await box.press('ArrowUp');
+  await expect(box).toHaveValue('dashboard');
+  await box.press('ArrowUp');
+  await expect(box).toHaveValue('browser');
+  await box.press('ArrowDown');
+  await expect(box).toHaveValue('dashboard');
+  await expect(view.getByRole('status')).toHaveText(/\d+ results? in/);
+  // X92 Collapse All / Expand All.
+  const results = view.getByRole('navigation', { name: 'Search results' });
+  await expect(results.locator('.search-match').first()).toBeVisible();
+  await view.getByRole('button', { name: 'Collapse All' }).click();
+  await expect(results.locator('.search-match')).toHaveCount(0);
+  await view.getByRole('button', { name: 'Expand All' }).click();
+  await expect(results.locator('.search-match').first()).toBeVisible();
+  // X93 Copy All.
+  await view.getByRole('button', { name: 'Copy All Results' }).click();
+  await expect.poll(() => page.evaluate(() => navigator.clipboard.readText())).toContain('Login.feature');
+  // X94 Only in open editors: Login.feature is open, other files are not searched.
+  await box.fill('Given');
+  await expect(view.getByRole('status')).toHaveText(/in [2-9]\d* files/);
+  await view.getByRole('button', { name: 'Toggle search details' }).click();
+  await view.getByRole('button', { name: 'Search only in open editors' }).click();
+  await expect(view.getByRole('status')).toHaveText(/in 1 file/);
+  await expect(results).toContainText('Login.feature');
+});
+
+test('X95 Indentation from the status bar: tabs, size, conversion', async ({ page }) => {
+  await openFeature(page);
+  await caretAt(page, 'Feature:');
+  const item = page.getByRole('button', { name: /^Indentation:/ });
+  await expect(item).toHaveText('Spaces: 2');
+  await item.click();
+  await page.getByRole('menuitem', { name: /Indent Using Tabs/ }).click();
+  await expect(item).toHaveText('Tab Size: 4');
+  await caretAt(page, 'Feature:');
+  await page.keyboard.press('Home');
+  await page.keyboard.press('Tab');
+  await expect.poll(() => doc(page)).toMatch(/\tFeature:/);
+});

@@ -55,6 +55,8 @@ export function closeTab(file: string) {
 // Bulk closes keep pinned tabs, as in VS Code / Visual Studio.
 export function closeOthers(file: string) { remember(state.tabs.filter((t) => t.file !== file && !t.pinned).map((t) => t.file)); set({ tabs: state.tabs.filter((t) => t.file === file || t.pinned), active: file }); }
 export function closeToRight(file: string) { const i = state.tabs.findIndex((t) => t.file === file); const tabs = state.tabs.filter((t, j) => j <= i || t.pinned); set({ tabs, active: tabs.some((t) => t.file === state.active) ? state.active : file }); }
+/** Close Tabs to the Left (VS Code / Rider): pinned tabs stay. */
+export function closeToLeft(file: string) { const i = state.tabs.findIndex((t) => t.file === file); remember(state.tabs.filter((t, j) => j < i && !t.pinned).map((t) => t.file)); const tabs = state.tabs.filter((t, j) => j >= i || t.pinned); set({ tabs, active: tabs.some((t) => t.file === state.active) ? state.active : file }); }
 export function closeAll() { remember(state.tabs.filter((t) => !t.pinned).map((t) => t.file)); const tabs = state.tabs.filter((t) => t.pinned); set({ tabs, active: tabs.some((t) => t.file === state.active) ? state.active : tabs[0]?.file }); }
 /** Pinned tabs move to the front (in pin order) and survive Close Others / Close All. */
 export function setPinned(file: string, pinned: boolean) {
