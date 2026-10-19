@@ -44,6 +44,21 @@ export default function StatusBarItems({ repository, onGit, onErrors }: { reposi
             ]}
           />
           <span className="status-item" title="Encoding">UTF-8</span>
+          {featureOn('indentation') && (
+            <Dropdown
+              label="Indentation"
+              trigger={<button className="status-item" aria-label={`Indentation: ${view.indent?.tabs ? 'tabs' : 'spaces'} ${view.indent?.size ?? 2}`} title="Indentation (click to change)">{view.indent?.tabs ? 'Tab Size' : 'Spaces'}: {view.indent?.size ?? 2}</button>}
+              entries={[
+                { label: `${!view.indent?.tabs ? '✓ ' : '\u2003'}Indent Using Spaces`, onSelect: () => setViewOptions({ indent: { tabs: false, size: view.indent?.size ?? 4 } }) },
+                { label: `${view.indent?.tabs ? '✓ ' : '\u2003'}Indent Using Tabs`, onSelect: () => setViewOptions({ indent: { tabs: true, size: view.indent?.size ?? 4 } }) },
+                'separator',
+                ...[2, 4, 8].map((n) => ({ label: `${(view.indent?.size ?? 2) === n ? '✓ ' : '\u2003'}Size ${n}`, onSelect: () => setViewOptions({ indent: { tabs: !!view.indent?.tabs, size: n } }) })),
+                'separator',
+                { label: 'Convert Indentation to Spaces', onSelect: () => { runRider('untabify', 'menu'); } },
+                { label: 'Convert Indentation to Tabs', onSelect: () => { runRider('tabify', 'menu'); } },
+              ]}
+            />
+          )}
           {featureOn('zoom-indicator') && <button className="status-item" aria-label={`Editor zoom ${view.fontSize ? Math.round((view.fontSize / 13) * 100) : 100}%: reset`} title="Editor zoom (Ctrl+Mouse Wheel); click to reset" onClick={() => setViewOptions({ fontSize: null })}>{view.fontSize ? Math.round((view.fontSize / 13) * 100) : 100}%</button>}
           {view.overtype && <button className="status-item" aria-label="Overtype mode: on" title="Overtype: typing replaces characters (Insert)" onClick={() => setViewOptions({ overtype: false })}>OVR</button>}
         </>

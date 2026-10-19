@@ -102,6 +102,7 @@ has it on by default, so the desktop app starts with it on. The others start off
 | X92 | Search: Collapse / Expand All | VS Code / VS 2026 | yes | ✅ 2026-10-20 |
 | X93 | Search: Copy All Results | VS Code | yes | ✅ 2026-10-20 |
 | X94 | Search Only in Open Editors | VS Code / VS 2026 | yes | ✅ 2026-10-20 |
+| X95 | Indentation (status bar) | VS Code / VS 2026 | yes | ✅ 2026-10-20 |
 
 ## Progress log
 - 2026-10-20 X1: Sort Lines: the selected lines (or the whole file) in natural, case-insensitive order, blank lines last. Third-batch plumbing: src/rider/more.ts, src/editor/textTools.ts, IDE-FEATURES.md.
@@ -198,3 +199,4 @@ has it on by default, so the desktop app starts with it on. The others start off
 - 2026-10-20 X92: Toggle every result file
 - 2026-10-20 X93: file / line / text to the clipboard
 - 2026-10-20 X94: Limit to open tabs
+- 2026-10-20 X95: Spaces/tabs and size, convert

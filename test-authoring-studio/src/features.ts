@@ -192,6 +192,7 @@ export const FEATURES: Feature[] = [
   { id: 'search-collapse', label: 'Search: Collapse / Expand All', group: 'Navigation', essential: true, vs: 'Find Results ▸ Collapse All', description: 'Collapses or expands every file of the search results.' },
   { id: 'search-copy', label: 'Search: Copy All Results', group: 'Navigation', essential: true, vs: 'Find Results ▸ Copy All', description: 'Copies every result as file, line and text.' },
   { id: 'search-open-only', label: 'Search Only in Open Editors', group: 'Navigation', essential: true, vs: 'Look in: All Open Documents', description: 'A toggle by "files to include" limits the search to the open tabs.' },
+  { id: 'indentation', label: 'Indentation (status bar)', group: 'Editing', essential: true, vs: 'Tabs ▸ Indent size / Keep tabs', description: 'Spaces or tabs and the indent size, from the status bar.' },
 ];
 export const GROUPS: FeatureGroup[] = ['Editing', 'Navigation', 'Code intelligence', 'Tool windows', 'Files', 'Git', 'Gherkin', 'View', 'Debugging', 'Help and productivity'];
 

@@ -1,5 +1,6 @@
 import { useSyncExternalStore } from 'react';
-import { Compartment, EditorSelection, Prec, type Extension } from '@codemirror/state';
+import { Compartment, EditorSelection, EditorState, Prec, type Extension } from '@codemirror/state';
+import { indentUnit } from '@codemirror/language';
 import { indentationMarkers } from '@replit/codemirror-indentation-markers';
 import { highlightSelectionMatches } from '@codemirror/search';
 import { featureOn, onFeaturesChanged } from '../features';
@@ -8,7 +9,7 @@ import { bracketColors } from './bracketColors';
 import { EditorView, ViewPlugin, highlightWhitespace, highlightTrailingWhitespace, rectangularSelection, keymap } from '@codemirror/view';
 
 /** View ▸ Active Editor options (Rider): soft wraps, …, shared by every editor and remembered. */
-export type ViewOptions = { softWrap: boolean; whitespace: boolean; fontSize: number | null; columnMode?: boolean; hideLineNumbers?: boolean; hideIndentGuides?: boolean; noCaretUsages?: boolean; overtype?: boolean; noActiveLine?: boolean; multiRowTabs?: boolean; noBracketColors?: boolean; todoTokens?: string[]; rightMargin?: number };
+export type ViewOptions = { softWrap: boolean; whitespace: boolean; fontSize: number | null; columnMode?: boolean; hideLineNumbers?: boolean; hideIndentGuides?: boolean; noCaretUsages?: boolean; overtype?: boolean; noActiveLine?: boolean; multiRowTabs?: boolean; noBracketColors?: boolean; todoTokens?: string[]; rightMargin?: number; indent?: { tabs: boolean; size: number } };
 const KEY = 'tas:rider:view';
 const DEFAULTS: ViewOptions = { softWrap: false, whitespace: false, fontSize: null };
 let options: ViewOptions = (() => { try { return { ...DEFAULTS, ...JSON.parse(localStorage.getItem(KEY) ?? '{}') }; } catch { return DEFAULTS; } })();
@@ -102,6 +103,8 @@ const marginGuide = (col: number) => [
 const EXTRA: [Compartment, (o: ViewOptions) => Extension][] = [
   [new Compartment(), (o) => (o.noBracketColors || !featureOn('bracket-colors') ? [] : bracketColors)],
   [new Compartment(), (o) => (featureOn('right-margin') && (o.rightMargin ?? 120) > 0 ? marginGuide(o.rightMargin ?? 120) : [])],
+  // Indentation (VS Code's status bar / Visual Studio's Tabs options): spaces or tabs, and the size.
+  [new Compartment(), (o) => (o.indent && featureOn('indentation') ? Prec.high([indentUnit.of(o.indent.tabs ? '\t' : ' '.repeat(o.indent.size)), EditorState.tabSize.of(o.indent.size)]) : [])],
   // extra view options
 ];
 
