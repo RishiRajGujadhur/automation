@@ -308,3 +308,11 @@ Reference: Visual Studio debugger (breakpoints, Step Into/Over/Out, Locals, Watc
 ## DQ19 — validate settings imports (2026-10-19)
 - [x] Validate all supplied desktop, studio and workspace fields and export version before changing settings; report field-specific errors.
 - [x] Schema regression and packaged invalid-import test pass, including unchanged file contents and a still-running app; desktop typecheck passes.
+
+## IDE features, third batch — Visual Studio 2026 / Rider (2026-10-20)
+
+Tracked feature by feature in [IDE-FEATURES.md](../IDE-FEATURES.md) (one commit each, each with a Settings ▸ Features switch, a desktop native menu row where it is a command, and tests).
+
+- [x] X1–X104 (text tools, Git Log actions, Gherkin tools and Code ▸ Gherkin submenu, view options, Explorer, Error List / Output, Test Explorer, Tags window, Code Metrics, C# file tools)
+- [ ] X105–X200
+- [ ] Rebuild the desktop exe with `npm run dist -- --scanner` (the language server gained the `metrics` and `unnecessary` operations) and run `npm run test:packaged`
