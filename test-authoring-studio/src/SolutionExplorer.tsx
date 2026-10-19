@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { keepTab } from './files/tabs';
 import {
   ChevronDown, ChevronRight, Folder, FolderOpen, FileCode2, FileText, FileCog, Braces, Plus, Search, X, Copy, ChevronsDownUp, ChevronsUpDown,
-  Eye, Package, Boxes, Link2, LocateFixed, PencilLine, Files, Layers, SquareStack, Scissors, ClipboardPaste, Trash2, TextCursorInput, Focus, House, FilePlus,
+  Eye, Package, Boxes, Link2, LocateFixed, PencilLine, Files, Layers, SquareStack, Scissors, ClipboardPaste, Trash2, TextCursorInput, Focus, House, FilePlus, GitCompare,
 } from 'lucide-react';
 import { fileType } from './files/fileTypes';
 import { featureOn } from './features';
@@ -50,6 +50,10 @@ type Props = {
   onConfirm?: (o: { title: string; description: string; confirm: string; danger?: boolean }) => Promise<boolean>;
 };
 export type FileOp = { kind: 'rename' | 'copy' | 'delete'; from: string; to?: string; folder?: boolean };
+/** Select for Compare (VS Code / Rider): the first file of a two-file comparison. */
+let compareLeft: string | null = null;
+/** Asks RiderHost to show the difference of two files (detail: { left, right }). */
+export const COMPARE_FILES_EVENT = 'tas:compare-files';
 /** Explorer clipboard (Copy / Cut, then Paste on a folder or beside a file), kept while the app is open. */
 let clipboard: { mode: 'copy' | 'cut'; path: string } | null = null;
 /** Layers hidden until "Show all files" (build output and unclassified files). */
@@ -148,6 +152,7 @@ export default function SolutionExplorer({ features, revision, activeFile, query
     else if (mod && e.key.toLowerCase() === 'v') { e.preventDefault(); void paste(folder ? path : dirOf(path)); }
   };
   const [serverSolution, setSolution] = useState<Solution>();
+  const [cmpLeft, setCmpLeft] = useState(compareLeft);
   // Add ▸ New Project / Existing Project; Remove from Solution (files stay on disk).
   const [adding, setAdding] = useState<{ kind: 'new'; template: string; name: string; folder: string } | { kind: 'existing'; path: string } | null>(null);
   const [addBusy, setAddBusy] = useState(false);
@@ -265,6 +270,7 @@ export default function SolutionExplorer({ features, revision, activeFile, query
         { label: 'Open', icon: FileCode2, onSelect: () => open(path) },
         ...(onSource ? [{ label: 'View source', icon: Eye, onSelect: () => onSource(path, 1) }] : []),
         { label: 'Copy path', icon: Copy, onSelect: () => copyText(path) },
+        ...(featureOn('explorer-compare') ? [{ label: 'Select for Compare', icon: GitCompare, onSelect: () => { compareLeft = path; setCmpLeft(path); onNotice?.(`Selected ${path.split('/').pop()} for compare.`); } }, ...(cmpLeft && cmpLeft !== path ? [{ label: `Compare with ${cmpLeft.split('/').pop()}`, icon: GitCompare, onSelect: () => window.dispatchEvent(new CustomEvent(COMPARE_FILES_EVENT, { detail: { left: cmpLeft, right: path } })) }] : [])] : []),
         ...(path.endsWith('.feature') ? ['separator' as const, { label: 'New feature beside this', icon: Plus, onSelect: () => onNew(path.split('/').slice(0, -1).join('/')) }] : []),
         ...(extra?.linked ? [] : editItems(path, false)),
       ]}>

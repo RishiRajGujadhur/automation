@@ -96,3 +96,33 @@ test('X78 Run Tagged Scenarios: the Tags window runs a tag\'s scenarios', async 
   expect(ids).toEqual(all.filter((t) => t.kind === 'scenario').map((t) => t.id));
   await expect.poll(() => status(page), { timeout: 240_000, intervals: [2000] }).toMatch(/done|failed/);
 });
+
+test('X114–X116 Code coverage for selected tests; Run Not Run / Run Passed Tests', async ({ page }) => {
+  await start(page);
+  await page.getByRole('button', { name: 'Test Explorer' }).click();
+  const te = page.getByRole('region', { name: 'Test Explorer' });
+  const tree = te.getByRole('navigation', { name: 'Tests' });
+  await expect(tree.locator('.t-label', { hasText: /AddsTwoNumbers/ })).toBeVisible({ timeout: 60_000 });
+  const runs: string[] = [];
+  page.on('request', (r) => { if (r.method() === 'POST' && r.url().endsWith('/api/tests/run')) runs.push(r.postData() ?? ''); });
+  // X114: one test with coverage.
+  await tree.locator('.t-label', { hasText: /AddsTwoNumbers/ }).click({ button: 'right' });
+  await page.getByRole('menuitem', { name: 'Analyze Code Coverage' }).click();
+  await expect.poll(() => runs.length, { timeout: 30_000 }).toBe(1);
+  expect(JSON.parse(runs[0])).toMatchObject({ coverage: true });
+  expect(JSON.parse(runs[0]).ids).toHaveLength(1);
+  await expect.poll(() => status(page), { timeout: 240_000, intervals: [2000] }).toMatch(/done|failed/);
+  await expect(tree.locator('.t-label', { hasText: /AddsTwoNumbers/ }).getByLabel('Passed')).toBeVisible({ timeout: 30_000 });
+  // X115: the others (not run yet).
+  await te.getByRole('button', { name: 'More run options' }).click();
+  await page.getByRole('menuitem', { name: 'Run Not Run Tests' }).click();
+  await expect.poll(() => runs.length, { timeout: 30_000 }).toBe(2);
+  expect(JSON.parse(runs[1]).ids).not.toContain(JSON.parse(runs[0]).ids[0]);
+  await expect.poll(() => status(page), { timeout: 240_000, intervals: [2000] }).toMatch(/done|failed/);
+  // X116: the passed ones again.
+  await te.getByRole('button', { name: 'More run options' }).click();
+  await page.getByRole('menuitem', { name: 'Run Passed Tests' }).click();
+  await expect.poll(() => runs.length, { timeout: 30_000 }).toBe(3);
+  expect(JSON.parse(runs[2]).ids).toContain(JSON.parse(runs[0]).ids[0]);
+  await expect.poll(() => status(page), { timeout: 240_000, intervals: [2000] }).toMatch(/done|failed/);
+});

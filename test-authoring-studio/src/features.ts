@@ -202,6 +202,7 @@ export const FEATURES: Feature[] = [
   { id: 'output-clear', label: 'Output: Clear All', group: 'Tool windows', essential: true, vs: 'Output ▸ Clear All', description: 'Clears the build Output window.' },
   { id: 'output-wrap', label: 'Output: Word Wrap', group: 'Tool windows', essential: true, vs: 'Output ▸ Toggle Word Wrap', description: 'Wraps long lines in the build Output window.' },
   { id: 'next-error', label: 'Next / Previous Error', group: 'Navigation', essential: true, vs: 'View.NextError', description: 'Goes to the next (or previous) build error or warning in the editor.', commands: ['next-error', 'previous-error'] },
+  { id: 'explorer-compare', label: 'Explorer: Compare Selected Files', group: 'Files', essential: true, vs: 'Compare Files', description: 'Select for Compare, then Compare with… on another file shows their difference.' },
 ];
 export const GROUPS: FeatureGroup[] = ['Editing', 'Navigation', 'Code intelligence', 'Tool windows', 'Files', 'Git', 'Gherkin', 'View', 'Debugging', 'Help and productivity'];
 

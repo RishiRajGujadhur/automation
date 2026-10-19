@@ -128,3 +128,13 @@ test('X48 Branches popup: the status bar branch switches to or creates a branch'
   await expect(page.getByText('Created and switched to topic/new.').first()).toBeVisible();
   expect(g('branch', '--show-current')).toBe('topic/new');
 });
+
+test('X108 Undo Last Commit: the commit goes, its changes stay staged', async ({ page }) => {
+  await open(page);
+  page.once('dialog', (d) => void d.accept());
+  await page.getByRole('button', { name: 'Tools menu' }).click();
+  await page.getByRole('menuitem', { name: /Undo Last Commit/ }).click();
+  await expect(page.getByText(/Undid the last commit/).first()).toBeVisible();
+  expect(g('log', '-1', '--format=%s')).toBe('base');
+  expect(g('diff', '--cached', '--name-only')).toContain('Login.feature');
+});

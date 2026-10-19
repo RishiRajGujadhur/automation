@@ -484,3 +484,73 @@ test('X97–X101 smoke: Gherkin ▸ Toggle Tag and Add Examples Table', async ({
   await gherkinItem(page, /^Move Scenario Up/);
   await expect.poll(() => doc(page)).toMatch(/@wip\r?\n\s*Scenario: Sign in/);
 });
+
+test('X105 Explorer Select for Compare / Compare with…', async ({ page }) => {
+  await openFeature(page);
+  const nav = page.getByRole('navigation', { name: 'Solution' });
+  await nav.getByRole('button', { name: 'Login.feature', exact: true }).first().click({ button: 'right' });
+  await page.getByRole('menuitem', { name: 'Select for Compare' }).click();
+  await nav.getByRole('button', { name: 'GoogleSearch.feature', exact: true }).first().click({ button: 'right' });
+  await page.getByRole('menuitem', { name: 'Compare with Login.feature' }).click();
+  const dlg = page.getByRole('dialog', { name: 'Compare Files' });
+  await expect(dlg).toContainText('Feature: Authentication');
+});
+
+test('X106 Add Watch: the name at the caret goes to the Watch window', async ({ page }) => {
+  const src = await openCs(page, 'Steps/AuthSteps.cs', 'class');
+  await src.locator('.cm-line', { hasText: 'class' }).first().click();
+  await page.keyboard.press('End');
+  await page.keyboard.press('Control+ArrowLeft');
+  await menuItem(page, 'Tools', /^Add Watch/);
+  await expect.poll(() => page.evaluate(() => JSON.parse(localStorage.getItem('tas:watches') ?? '[]') as string[])).toHaveLength(1);
+});
+
+test('X109 Save As…: a copy under a new name, opened', async ({ page }) => {
+  await openFeature(page);
+  await caretAt(page, 'Feature:');
+  page.once('dialog', (d) => void d.accept('Features/Auth/LoginCopy.feature'));
+  await menuItem(page, 'Edit', /^Save As/);
+  await expect(page.getByRole('button', { name: 'Close LoginCopy.feature' })).toBeVisible();
+  expect(await fs.readFile(path.join(root, 'Features/Auth/LoginCopy.feature'), 'utf8')).toContain('Feature: Authentication');
+});
+
+test('X110 Explorer Find in Folder…: Search limited to the folder', async ({ page }) => {
+  await openFeature(page);
+  const nav = page.getByRole('navigation', { name: 'Solution' });
+  await nav.getByRole('button', { name: 'Collapse folder Steps', exact: true }).click({ button: 'right' });
+  await page.getByRole('menuitem', { name: 'Find in Folder…' }).click();
+  const view = page.getByRole('region', { name: 'Search' });
+  await expect(view.getByLabel('Files to include')).toHaveValue('Steps/**');
+  await view.getByLabel('Search in files').fill('Given');
+  await expect(view.getByRole('navigation', { name: 'Search results' })).toContainText('AuthSteps.cs');
+  await expect(view.getByRole('navigation', { name: 'Search results' })).not.toContainText('Login.feature');
+});
+
+test('X111 Explorer Copy Full Path', async ({ page, context }) => {
+  await context.grantPermissions(['clipboard-read', 'clipboard-write']);
+  await openFeature(page);
+  await page.getByRole('navigation', { name: 'Solution' }).getByRole('button', { name: 'Login.feature', exact: true }).first().click({ button: 'right' });
+  await page.getByRole('menuitem', { name: 'Copy Full Path' }).click();
+  await expect.poll(() => page.evaluate(() => navigator.clipboard.readText())).toBe(path.join(root, 'Features', 'Auth', 'Login.feature'));
+});
+
+test('X112 Comment / Uncomment Scenario from Code ▸ Gherkin', async ({ page }) => {
+  await openFeature(page);
+  await caretAt(page, 'Scenario: Sign in');
+  await gherkinItem(page, /^Comment \/ Uncomment Scenario/);
+  await expect.poll(() => doc(page)).toMatch(/# Scenario: Sign in/);
+  await gherkinItem(page, /^Comment \/ Uncomment Scenario/);
+  await expect.poll(() => doc(page)).not.toMatch(/# Scenario: Sign in/);
+});
+
+test('X113 Quick Info (Ctrl+K, Ctrl+I): the hover information at the caret', async ({ page }) => {
+  const src = await openCs(page, 'Steps/AuthSteps.cs', 'class');
+  await src.locator('.cm-line', { hasText: 'class' }).first().click();
+  await page.keyboard.press('End');
+  await page.keyboard.press('Control+ArrowLeft');
+  await page.keyboard.press('Control+K');
+  await page.keyboard.press('Control+I');
+  await expect(page.locator('.cm-tooltip .cm-quickinfo')).toBeVisible({ timeout: 90_000 });
+  await page.keyboard.press('Escape');
+  await expect(page.locator('.cm-tooltip .cm-quickinfo')).toHaveCount(0);
+});

@@ -27,6 +27,7 @@ import { setUsages, wordUsages } from '../editor/usages';
 import { moreCommands } from './more';
 import WindowLayouts from './WindowLayouts';
 import BranchPopup from './BranchPopup';
+import { COMPARE_FILES_EVENT } from '../SolutionExplorer';
 import CodeMetrics, { type TypeMetrics } from './CodeMetrics';
 import StackTrace from './StackTrace';
 import { applyCase, CASE_STYLES } from '../editor/textTools';
@@ -72,8 +73,8 @@ export type RiderHostProps = {
  * JetBrains Rider features: registers their commands (menus, palette, desktop menus) and hosts their popups, dialogs
  * and global keys. Editor keys live in editor/riderKeys.ts.
  */
-type Popup = { kind: 'metrics'; file: string; types: TypeMetrics[] } | { kind: 'branches' } | { kind: 'stack-trace'; text: string } | { kind: 'file-props'; info: Record<string, string | number | boolean> } | { kind: 'switcher'; items: { file: string; label: string }[] } | { kind: 'window-layouts' } | { kind: 'convert-case' } | { kind: 'new-from-template'; folder: string } | { kind: 'new-file-name'; folder: string; template: string } | { kind: 'external-tools' } | { kind: 'compare-branch'; branches: string[] } | { kind: 'line-history'; file: string; start: number; end: number } | { kind: 'copy-path'; items: { label: string; value: string }[] } | { kind: 'unwrap'; items: Unwrappable[] } | { kind: 'compare-with'; files: string[] } | { kind: 'compare-file'; patch: string; other: string } | { kind: 'select-in'; file: string } | { kind: 'scratch' } | { kind: 'scratches'; items: { file: string; modified: number }[] } | { kind: 'related'; items: { file: string; line: number; reason: string }[] } | { kind: 'recent-changes'; items: { file: string; id: string; at: string; reason: string }[] } | { kind: 'file-history'; file: string; current: string } | { kind: 'compare'; patch: string; what: string } | { kind: 'regexp'; initial: string } | { kind: 'evaluate'; initial: string } | { kind: 'tip' } | { kind: 'productivity' } | { kind: 'run' } | { kind: 'paste' } | { kind: 'template' } | { kind: 'surround' } | { kind: 'structure'; items: OutlineItem[]; current: number };
-const TITLES: Record<Popup['kind'], string> = { metrics: 'Code Metrics', branches: 'Branches', 'stack-trace': 'Analyze Stack Trace', 'file-props': 'Properties', 'switcher': 'Switcher', 'window-layouts': 'Window Layouts', 'convert-case': 'Convert Case', 'new-from-template': 'New from Template', 'new-file-name': 'New File', 'external-tools': 'External Tools', 'compare-branch': 'Compare with Branch', 'line-history': 'History for Selection', 'copy-path': 'Copy Path / Reference', unwrap: 'Unwrap / Remove', 'compare-with': 'Compare With…', 'compare-file': 'Compare Files', 'select-in': 'Select In', scratch: 'New Scratch File', scratches: 'Scratch Files', related: 'Related Files', 'recent-changes': 'Recent Changes', 'file-history': 'Local History', compare: 'Compare with Clipboard', regexp: 'Check RegExp', evaluate: 'Evaluate Expression', tip: 'Tip of the Day', productivity: 'Productivity Guide', run: 'Run Anything', paste: 'Paste from History', template: 'Insert Live Template', surround: 'Surround With', structure: 'File Structure' };
+type Popup = { kind: 'compare-pair'; patch: string; left: string; right: string } | { kind: 'metrics'; file: string; types: TypeMetrics[] } | { kind: 'branches' } | { kind: 'stack-trace'; text: string } | { kind: 'file-props'; info: Record<string, string | number | boolean> } | { kind: 'switcher'; items: { file: string; label: string }[] } | { kind: 'window-layouts' } | { kind: 'convert-case' } | { kind: 'new-from-template'; folder: string } | { kind: 'new-file-name'; folder: string; template: string } | { kind: 'external-tools' } | { kind: 'compare-branch'; branches: string[] } | { kind: 'line-history'; file: string; start: number; end: number } | { kind: 'copy-path'; items: { label: string; value: string }[] } | { kind: 'unwrap'; items: Unwrappable[] } | { kind: 'compare-with'; files: string[] } | { kind: 'compare-file'; patch: string; other: string } | { kind: 'select-in'; file: string } | { kind: 'scratch' } | { kind: 'scratches'; items: { file: string; modified: number }[] } | { kind: 'related'; items: { file: string; line: number; reason: string }[] } | { kind: 'recent-changes'; items: { file: string; id: string; at: string; reason: string }[] } | { kind: 'file-history'; file: string; current: string } | { kind: 'compare'; patch: string; what: string } | { kind: 'regexp'; initial: string } | { kind: 'evaluate'; initial: string } | { kind: 'tip' } | { kind: 'productivity' } | { kind: 'run' } | { kind: 'paste' } | { kind: 'template' } | { kind: 'surround' } | { kind: 'structure'; items: OutlineItem[]; current: number };
+const TITLES: Record<Popup['kind'], string> = { 'compare-pair': 'Compare Files', metrics: 'Code Metrics', branches: 'Branches', 'stack-trace': 'Analyze Stack Trace', 'file-props': 'Properties', 'switcher': 'Switcher', 'window-layouts': 'Window Layouts', 'convert-case': 'Convert Case', 'new-from-template': 'New from Template', 'new-file-name': 'New File', 'external-tools': 'External Tools', 'compare-branch': 'Compare with Branch', 'line-history': 'History for Selection', 'copy-path': 'Copy Path / Reference', unwrap: 'Unwrap / Remove', 'compare-with': 'Compare With…', 'compare-file': 'Compare Files', 'select-in': 'Select In', scratch: 'New Scratch File', scratches: 'Scratch Files', related: 'Related Files', 'recent-changes': 'Recent Changes', 'file-history': 'Local History', compare: 'Compare with Clipboard', regexp: 'Check RegExp', evaluate: 'Evaluate Expression', tip: 'Tip of the Day', productivity: 'Productivity Guide', run: 'Run Anything', paste: 'Paste from History', template: 'Insert Live Template', surround: 'Surround With', structure: 'File Structure' };
 
 function PowerSaveBadge() {
   useRiderCommands();
@@ -292,6 +293,19 @@ export default function RiderHost(props: RiderHostProps) {
     fn(a.view, a.file);
     a.view.focus();
   };
+  // Explorer ▸ Compare with Selected: the two files' unified diff.
+  useEffect(() => {
+    const h = (e: Event) => {
+      const { left, right } = (e as CustomEvent<{ left: string; right: string }>).detail;
+      Promise.all([readFile(left), readFile(right)]).then(([a, b]) => {
+        const norm = (t: string) => t.replace(/\r\n/g, '\n');
+        const patch = norm(a.source) === norm(b.source) ? '' : createTwoFilesPatch(left, right, norm(a.source), norm(b.source), '', '', { context: 3 }).split('\n').slice(2).join('\n');
+        setPopup({ kind: 'compare-pair', patch, left, right });
+      }, (err) => p.current.onNotice((err as Error).message));
+    };
+    window.addEventListener(COMPARE_FILES_EVENT, h);
+    return () => window.removeEventListener(COMPARE_FILES_EVENT, h);
+  }, []);
   // Tip of the Day at startup (when chosen in the dialog), once per session.
   useEffect(() => {
     let shown = false;
@@ -574,6 +588,7 @@ export default function RiderHost(props: RiderHostProps) {
       }, (e) => p.current.onNotice((e as Error).message));
     }} />;
   }
+  if (popup?.kind === 'compare-pair') body = <CompareClipboard patch={popup.patch} what={popup.left} against={popup.right} />;
   if (popup?.kind === 'compare-file') body = <CompareClipboard patch={popup.patch} what="This file" against={popup.other} />;
   if (popup?.kind === 'select-in') {
     const file = popup.file;
