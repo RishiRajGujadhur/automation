@@ -70,3 +70,34 @@ export function scenarioToOutline(view: EditorView) {
   view.dispatch({ changes: { from: head.from, to: doc.line(b.end).to, insert: text }, selection: EditorSelection.cursor(head.from + /^\s*/.exec(head.text)![0].length), userEvent: 'input' });
   return true;
 }
+
+/** The table around the caret: its line range, the caret's row and column, and the cells. */
+function tableAt(state: EditorState) {
+  const head = state.selection.main.head;
+  const line = state.doc.lineAt(head);
+  if (!line.text.trim().startsWith('|')) return undefined;
+  const { from, to } = block(state, line.number);
+  const rows: string[][] = [];
+  for (let n = from; n <= to; n++) rows.push(splitRow(state.doc.line(n).text));
+  return { from, to, row: line.number - from, col: Math.max(0, cellAt(line.text, head - line.from) - 1), cols: Math.max(...rows.map((r) => r.length)), indent: /^\s*/.exec(state.doc.line(from).text)![0], rows };
+}
+type Table = NonNullable<ReturnType<typeof tableAt>>;
+/** Writes the rows back aligned, with the caret at the start of cell (row, col). */
+function writeTable(view: EditorView, t: Table, rows: string[][], row: number, col: number) {
+  const { state } = view;
+  const cols = Math.max(1, ...rows.map((r) => r.length));
+  const aligned = alignTable(rows.map((r) => `${t.indent}| ${Array.from({ length: cols }, (_, k) => r[k] ?? '').join(' | ')} |`));
+  const start = state.doc.line(t.from).from;
+  const rowStart = start + aligned.slice(0, row).reduce((n, r) => n + r.length + state.lineBreak.length, 0);
+  view.dispatch({ changes: { from: start, to: state.doc.line(t.to).to, insert: aligned.join(state.lineBreak) }, selection: EditorSelection.cursor(rowStart + cellStart(aligned[row], col + 1)), userEvent: 'input.format' });
+  return true;
+}
+
+/** Table ▸ Insert Row: an empty row below the caret's row, the caret in its first cell. */
+export function tableInsertRow(view: EditorView) {
+  const t = tableAt(view.state);
+  if (!t) return false;
+  const rows = [...t.rows];
+  rows.splice(t.row + 1, 0, Array<string>(t.cols).fill(''));
+  return writeTable(view, t, rows, t.row + 1, 0);
+}

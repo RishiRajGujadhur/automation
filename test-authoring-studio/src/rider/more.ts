@@ -1,6 +1,6 @@
 import type { EditorView } from '@codemirror/view';
 import type { RiderCommand } from './commands';
-import { cycleStepKeyword, scenarioToOutline } from '../editor/gherkinTools';
+import { cycleStepKeyword, scenarioToOutline, tableInsertRow } from '../editor/gherkinTools';
 import { unsavedFiles } from '../editor/autosave';
 import { getTabs, closeTab } from '../files/tabs';
 import { reopenClosed } from '../files/tabs';
@@ -67,5 +67,6 @@ export function moreCommands(h: MoreHelpers): RiderCommand[] {
     { id: 'multi-row-tabs', label: 'Tabs in Multiple Rows', menu: 'View', checked: () => !!viewOptions().multiRowTabs, run: () => setViewOptions({ multiRowTabs: !viewOptions().multiRowTabs }) },
     { id: 'cycle-step-keyword', label: 'Cycle Step Keyword', menu: 'Code', group: true, run: h.inEditor(cycleStepKeyword) },
     { id: 'scenario-to-outline', label: 'Convert Scenario to Outline', menu: 'Code', run: h.inEditor((v) => scenarioToOutline(v) || (h.notice('Put the caret in a Scenario whose steps have "quoted" values.'), false)) },
+    { id: 'table-insert-row', label: 'Table: Insert Row', menu: 'Code', group: true, run: h.inEditor(tableInsertRow) },
   ];
 }

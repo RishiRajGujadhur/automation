@@ -128,6 +128,8 @@ const ROWS: Record<'edit' | 'view' | 'navigate' | 'code' | 'tools' | 'help', Row
     null,
     ['Cycle Step Keyword', 'cycle-step-keyword'],
     ['Convert Scenario to Outline', 'scenario-to-outline'],
+    null,
+    ['Table: Insert Row', 'table-insert-row'],
   ],
   tools: [
     ['Run Anything… (Ctrl twice)', 'run-anything'],
