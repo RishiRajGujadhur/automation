@@ -122,6 +122,20 @@ export function clearBreakpoints() { for (const file of Object.keys(snapshot.bre
 /** Debug ▸ Disable All / Enable All Breakpoints. */
 export function enableAllBreakpoints(enabled: boolean) { for (const file of Object.keys(snapshot.breakpoints)) store(file, specsOf(file).map((b) => ({ ...b, enabled }))); }
 
+/** Export / Import Breakpoints (Visual Studio): every breakpoint with its settings, as JSON. */
+export const exportBreakpoints = () => JSON.stringify({ version: 1, breakpoints: snapshot.breakpoints }, null, 2);
+export function importBreakpoints(json: string) {
+  const data = JSON.parse(json) as { breakpoints?: Record<string, BreakpointSpec[]> };
+  if (!data.breakpoints || typeof data.breakpoints !== 'object') throw new Error('Not a breakpoints file.');
+  let n = 0;
+  for (const [file, list] of Object.entries(data.breakpoints)) {
+    if (!Array.isArray(list)) continue;
+    const valid = list.filter((b) => Number.isInteger(b?.line) && b.line > 0).map((b) => ({ line: b.line, condition: b.condition, hitCondition: b.hitCondition, logMessage: b.logMessage, enabled: b.enabled }));
+    store(file, [...specsOf(file).filter((b) => !valid.some((v) => v.line === b.line)), ...valid].sort((a, b) => a.line - b.line));
+    n += valid.length;
+  }
+  return n;
+}
 export function setWatches(watches: string[]) { write('tas:watches', watches); set({ watches }); }
 export function selectFrame(frameIndex: number) { set({ frameIndex }); }
 export function currentFrame() { const s = snapshot; return s.state.status === 'paused' ? s.state.frames[s.frameIndex] : undefined; }

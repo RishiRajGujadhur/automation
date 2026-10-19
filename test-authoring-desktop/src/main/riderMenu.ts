@@ -138,6 +138,8 @@ const ROWS: Record<'edit' | 'view' | 'navigate' | 'code' | 'tools' | 'help', Row
     ['Enable / Disable Breakpoint', 'toggle-bp-enabled', 'CmdOrCtrl+F9'],
     ['Show Next Statement', 'show-next-statement'],
     ['Copy Call Stack', 'copy-call-stack'],
+    ['Export Breakpoints…', 'export-breakpoints'],
+    ['Import Breakpoints…', 'import-breakpoints'],
   ],
   help: [
     null,

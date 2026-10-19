@@ -1,5 +1,6 @@
 import type { EditorView } from '@codemirror/view';
 import type { RiderCommand } from './commands';
+import { exportBreakpoints, importBreakpoints } from '../debug/store';
 import { copyText } from '../ui';
 import { specAt, toggleBreakpoint, updateBreakpoint, currentFrame, getSnapshot } from '../debug/store';
 import { lastTestRun, runTests } from '../testing/store';
@@ -53,5 +54,7 @@ export function moreCommands(h: MoreHelpers): RiderCommand[] {
     { id: 'toggle-bp-enabled', label: 'Enable / Disable Breakpoint', menu: 'Tools', group: true, shortcut: 'Ctrl F9', run: h.inEditor((v, file) => { const line = v.state.doc.lineAt(v.state.selection.main.head).number; const b = specAt(file, line); if (!b) { toggleBreakpoint(file, line); updateBreakpoint(file, line, { enabled: false }); h.notice('Disabled breakpoint set.'); return; } updateBreakpoint(file, line, { enabled: b.enabled === false }); h.notice(b.enabled === false ? 'Breakpoint enabled.' : 'Breakpoint disabled.'); }) },
     { id: 'show-next-statement', label: 'Show Next Statement', menu: 'Tools', shortcut: 'Alt Num *', run: () => { const f = currentFrame(); if (!f?.file) { h.notice('The debugger is not paused in your code.'); return; } h.navigate({ file: f.file, line: f.line, column: f.column }); } },
     { id: 'copy-call-stack', label: 'Copy Call Stack', menu: 'Tools', run: () => { const s = getSnapshot().state; if (s.status !== 'paused' || !s.frames.length) { h.notice('The call stack is shown while the debugger is paused.'); return; } const text = s.frames.map((f) => `${f.name}${f.file ? ` in ${f.file}:line ${f.line}` : ''}`).join('\n'); void copyText(text).then((ok) => h.notice(ok ? `Copied ${s.frames.length} frames.` : 'Clipboard unavailable.')); } },
+    { id: 'export-breakpoints', label: 'Export Breakpoints…', menu: 'Tools', run: () => { const blob = new Blob([exportBreakpoints()], { type: 'application/json' }); const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'breakpoints.json'; a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 1000); h.notice('Breakpoints exported to breakpoints.json.'); } },
+    { id: 'import-breakpoints', label: 'Import Breakpoints…', menu: 'Tools', run: () => { const input = document.createElement('input'); input.type = 'file'; input.accept = '.json,application/json'; input.onchange = () => { const f = input.files?.[0]; if (!f) return; f.text().then((t) => { try { h.notice(`Imported ${importBreakpoints(t)} breakpoints.`); } catch (e) { h.notice((e as Error).message); } }); }; input.click(); } },
   ];
 }

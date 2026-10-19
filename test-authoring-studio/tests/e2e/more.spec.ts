@@ -118,3 +118,52 @@ test('X28 Enable / Disable Breakpoint (Ctrl+F9) keeps the breakpoint, toggles it
   await expect.poll(bp).toEqual([true]);
   await page.keyboard.press('F9');
 });
+
+test('X32 Window Layouts: save the arrangement under a name and apply it later', async ({ page }) => {
+  await openFeature(page);
+  await page.keyboard.press('Alt+7'); // Structure open
+  await expect(page.getByRole('region', { name: 'Structure' })).toBeVisible();
+  await menuItem(page, 'View', /Window Layouts/);
+  await page.getByLabel('Layout name').fill('Outline');
+  await page.getByRole('button', { name: 'Save', exact: true }).click();
+  await expect(page.getByRole('list', { name: 'Saved layouts' })).toContainText('Outline');
+  await page.keyboard.press('Escape');
+  await page.getByRole('button', { name: 'Close Structure', exact: true }).click();
+  await expect(page.getByRole('region', { name: 'Structure' })).toHaveCount(0);
+  await menuItem(page, 'View', /Window Layouts/);
+  await page.getByRole('list', { name: 'Saved layouts' }).getByRole('button', { name: 'Outline' }).click();
+  await page.waitForLoadState('load');
+  await expect(page.getByRole('region', { name: 'Structure' })).toBeVisible({ timeout: 20_000 });
+});
+
+test('X33 Reset Window Layout: tool windows closed, side bar back', async ({ page }) => {
+  await openFeature(page);
+  await page.keyboard.press('Alt+7');
+  await expect(page.getByRole('region', { name: 'Structure' })).toBeVisible();
+  page.once('dialog', (d) => void d.accept());
+  await menuItem(page, 'View', /Reset Window Layout/);
+  await page.waitForLoadState('load');
+  await expect(page.getByText('Repository indexed')).toBeVisible();
+  await expect(page.getByRole('region', { name: 'Structure' })).toHaveCount(0);
+});
+
+test('X34 Reopen Closed Tab brings back the last closed editor; X35 Close Unmodified Tabs keeps edited ones', async ({ page }) => {
+  await openFeature(page);
+  const tabs = page.locator('.editor-tab-label');
+  await page.getByRole('navigation').getByRole('button', { name: 'GoogleSearch.feature', exact: true }).first().click();
+  await page.getByRole('navigation').getByRole('button', { name: 'AuthSteps.cs', exact: true }).first().click();
+  await expect(tabs).toHaveCount(3);
+  await page.getByRole('button', { name: 'Close AuthSteps.cs' }).click();
+  await expect(tabs).toHaveCount(2);
+  await menuItem(page, 'View', /Reopen Closed Tab/);
+  await expect(page.locator('.editor-tab-label[aria-current="true"]')).toHaveAttribute('title', 'Steps/AuthSteps.cs');
+  // Edit AuthSteps.cs (unsaved), make Login.feature active: Close Unmodified closes only GoogleSearch.feature.
+  await page.getByLabel('Source of Steps/AuthSteps.cs').locator('.cm-line').first().click();
+  await page.keyboard.press('End');
+  await page.keyboard.type(' // edited');
+  await expect(page.locator('.save-state')).toContainText('Unsaved');
+  await page.getByRole('button', { name: 'Login.feature', exact: true }).first().click();
+  await menuItem(page, 'View', /Close Unmodified Tabs/);
+  await expect(tabs).toHaveCount(2);
+  await expect(page.locator('.editor-tab-label[title="Features/GoogleSearch.feature"]')).toHaveCount(0);
+});
