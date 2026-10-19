@@ -150,6 +150,7 @@ export const FEATURES: Feature[] = [
   { id: 'scenario-to-outline', label: 'Convert Scenario to Outline', group: 'Gherkin', essential: true, description: 'Quoted step values become <parameters> with an Examples table.', commands: ['scenario-to-outline'] },
   { id: 'table-insert-row', label: 'Table: Insert Row', group: 'Gherkin', essential: true, description: 'An empty aligned row below the caret\'s table row.', commands: ['table-insert-row'] },
   { id: 'table-add-column', label: 'Table: Add Column', group: 'Gherkin', essential: true, description: 'An empty column after the caret\'s column.', commands: ['table-add-column'] },
+  { id: 'table-delete-column', label: 'Table: Delete Column', group: 'Gherkin', essential: true, description: 'Removes the caret\'s column from every row.', commands: ['table-delete-column'] },
 ];
 export const GROUPS: FeatureGroup[] = ['Editing', 'Navigation', 'Code intelligence', 'Tool windows', 'Files', 'Git', 'Gherkin', 'View', 'Debugging', 'Help and productivity'];
 

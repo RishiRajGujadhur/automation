@@ -109,3 +109,11 @@ export function tableAddColumn(view: EditorView) {
   const rows = t.rows.map((r) => { const c = [...r, ...Array<string>(Math.max(0, t.cols - r.length)).fill('')]; c.splice(t.col + 1, 0, ''); return c; });
   return writeTable(view, t, rows, 0, t.col + 1);
 }
+
+/** Table ▸ Delete Column: removes the caret's column from every row (not the last column). */
+export function tableDeleteColumn(view: EditorView) {
+  const t = tableAt(view.state);
+  if (!t || t.cols < 2) return false;
+  const rows = t.rows.map((r) => r.filter((_, k) => k !== t.col));
+  return writeTable(view, t, rows, t.row, Math.min(t.col, t.cols - 2));
+}

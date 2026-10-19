@@ -131,6 +131,7 @@ const ROWS: Record<'edit' | 'view' | 'navigate' | 'code' | 'tools' | 'help', Row
     null,
     ['Table: Insert Row', 'table-insert-row'],
     ['Table: Add Column', 'table-add-column'],
+    ['Table: Delete Column', 'table-delete-column'],
   ],
   tools: [
     ['Run Anything… (Ctrl twice)', 'run-anything'],

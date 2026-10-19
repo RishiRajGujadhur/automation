@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { EditorState, type TransactionSpec } from '@codemirror/state';
 import { EditorView } from '@codemirror/view';
-import { cycleStepKeyword, scenarioToOutline, tableInsertRow, tableAddColumn } from '../src/editor/gherkinTools';
+import { cycleStepKeyword, scenarioToOutline, tableInsertRow, tableAddColumn, tableDeleteColumn } from '../src/editor/gherkinTools';
 
 /** Runs an editor command on `doc` with the selection between « and » (or a caret at ‸); with `caret`, the result marks the caret with ¦. */
 function run(doc: string, cmd: (v: EditorView) => boolean, caret = false) {
@@ -34,5 +34,9 @@ describe('Gherkin tools (IDE-FEATURES X49…)', () => {
   });
   it('X52 Table Add Column: an empty column after the caret\'s, caret in the header cell', () => {
     expect(run('| a | b |\n| 1‸ | 2 |', tableAddColumn, true)).toBe('| a | ¦ | b |\n| 1 |  | 2 |');
+  });
+  it('X53 Table Delete Column: the caret\'s column goes from every row', () => {
+    expect(run('| name | age | city |\n| ada  | 3‸6  | Oslo |', tableDeleteColumn, true)).toBe('| name | city |\n| ada  | ¦Oslo |');
+    expect(run('| a |\n| ‸1 |', tableDeleteColumn)).toBe('| a |\n| 1 |');
   });
 });
