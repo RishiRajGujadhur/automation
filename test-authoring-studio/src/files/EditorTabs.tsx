@@ -6,6 +6,7 @@ import { ChevronLeft, ChevronRight, ChevronDown, X, Copy, XCircle, Pin, PinOff }
 import { RowMenu, copyText } from '../ui';
 import { Dropdown } from '../radix';
 import { UNSAVED_EVENT, unsavedFiles } from '../editor/autosave';
+import { SELECT_IN_EXPLORER } from '../SolutionExplorer';
 import { useTabs, activateTab, closeOthers, closeToRight, closeToLeft, closeAll, setPinned, keepTab, type EditorTab } from './tabs';
 import { fileType } from './fileTypes';
 
@@ -80,6 +81,7 @@ export default function EditorTabs({ onClose, onSplit, children }: { onClose: (f
                 { label: 'Close All', icon: XCircle, onSelect: () => closeAll() },
                 'separator',
                 { label: 'Copy Relative Path', icon: Copy, onSelect: () => copyText(t.file) },
+                ...(featureOn('tab-reveal') ? [{ label: 'Reveal in Explorer', onSelect: () => { activateTab(t.file); requestAnimationFrame(() => window.dispatchEvent(new Event(SELECT_IN_EXPLORER))); } }] : []),
                 ...(onSplit && !t.file.endsWith('.feature') ? ['separator' as const, { label: 'Split Right', onSelect: () => onSplit(t.file) }] : []),
               ]}>
                 <div className={`editor-tab ${selected ? 'active' : ''} ${unsaved ? 'unsaved' : ''} ${t.pinned ? 'pinned' : ''} ${t.preview ? 'preview' : ''}`} onDoubleClick={() => keepTab(t.file)} data-menu-row style={{ '--file-color': color } as React.CSSProperties}>
