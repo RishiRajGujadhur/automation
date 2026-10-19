@@ -3,7 +3,9 @@ import * as Tabs from '@radix-ui/react-tabs';
 import { ChevronRight, ChevronDown, Play, Pause, Square, RotateCw, ArrowDownToLine, ArrowUpFromLine, Redo2, X, CircleDot, Trash2, Bug, Loader, CircleOff, Settings2 } from 'lucide-react';
 import { IconButton } from '../radix2';
 import { api } from '../api';
-import { useDebug, debugControl, selectFrame, setWatches, setBreakpoints, clearBreakpoints, startDebugging, isLive, breakpointsOf, updateBreakpoint, enableAllBreakpoints, type Variable, type DebugFrame } from './store';
+import { RowMenu, copyText } from '../ui';
+import { featureOn } from '../features';
+import { useDebug, debugControl, selectFrame, setWatches, getSnapshot, setBreakpoints, clearBreakpoints, startDebugging, isLive, breakpointsOf, updateBreakpoint, enableAllBreakpoints, type Variable, type DebugFrame } from './store';
 import { useLocalState } from '../ui';
 import { readFile } from '../files/provider';
 
@@ -24,7 +26,8 @@ function VariableRow({ v, depth, frameKey }: { v: { name: string; value: string;
   };
   return (
     <>
-      <div className="dbg-row" role="row" aria-expanded={expandable ? open : undefined}>
+      <RowMenu label={`${v.name} value`} items={featureOn('copy-value') ? [{ label: 'Copy Value', onSelect: () => void copyText(v.value) }, { label: 'Copy Expression', onSelect: () => void copyText(v.name) }, { label: 'Add Watch', onSelect: () => { const w = getSnapshot().watches; if (!w.includes(v.name)) setWatches([...w, v.name]); } }] : []}>
+      <div className="dbg-row" data-menu-row role="row" aria-expanded={expandable ? open : undefined}>
         <span role="gridcell" className="dbg-name" style={{ paddingLeft: depth * 14 }}>
           {expandable ? <button className="se-twisty" aria-label={`${open ? 'Collapse' : 'Expand'} ${v.name}`} onClick={toggle}>{open ? <ChevronDown size={13} /> : <ChevronRight size={13} />}</button> : <span className="se-twisty-space" />}
           {v.name}
@@ -32,6 +35,7 @@ function VariableRow({ v, depth, frameKey }: { v: { name: string; value: string;
         <span role="gridcell" className="dbg-value" title={v.value}>{v.value}</span>
         <span role="gridcell" className="dbg-type">{v.type ?? ''}</span>
       </div>
+      </RowMenu>
       {open && children?.map((c) => <VariableRow key={c.name} v={c} depth={depth + 1} frameKey={frameKey} />)}
     </>
   );
