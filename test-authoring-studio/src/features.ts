@@ -189,6 +189,7 @@ export const FEATURES: Feature[] = [
   { id: 'close-left', label: 'Close Tabs to the Left', group: 'Files', essential: true, vs: 'Close Tabs to the Left', description: 'The tab menu closes every unpinned tab before it.' },
   { id: 'tab-reveal', label: 'Tab: Reveal in Explorer', group: 'Files', essential: true, vs: 'Tab ▸ Reveal in Solution Explorer', description: 'The tab menu shows the file in the Explorer.' },
   { id: 'search-history', label: 'Search history', group: 'Navigation', essential: true, vs: 'Find in Files ▸ recent searches', description: '↑ / ↓ in the search box recall earlier searches.' },
+  { id: 'search-collapse', label: 'Search: Collapse / Expand All', group: 'Navigation', essential: true, vs: 'Find Results ▸ Collapse All', description: 'Collapses or expands every file of the search results.' },
 ];
 export const GROUPS: FeatureGroup[] = ['Editing', 'Navigation', 'Code intelligence', 'Tool windows', 'Files', 'Git', 'Gherkin', 'View', 'Debugging', 'Help and productivity'];
 
