@@ -45,3 +45,15 @@ export function matchTest(t: DiscoveredTest, query: string, outcome: Outcome) {
     return field.toLowerCase().includes(value) !== not;
   });
 }
+
+/** Copy (Visual Studio's Test Detail Summary): name, full name, outcome, duration, message and stack trace. */
+export function testDetails(t: DiscoveredTest, outcome: Outcome, results: { name: string; outcome: string; durationMs: number; message?: string; stackTrace?: string }[]) {
+  const head = [`Test Name:\t${t.name}`, `Test FullName:\t${t.className}.${t.method}`, `Test Source:\t${t.file} : line ${t.line}`, `Test Outcome:\t${outcome === 'none' ? 'Not Run' : outcome[0].toUpperCase() + outcome.slice(1)}`];
+  const body = results.flatMap((r) => [
+    ...(results.length > 1 ? ['', `Result Name:\t${r.name}`, `Result Outcome:\t${r.outcome}`] : []),
+    `Test Duration:\t${r.durationMs} ms`,
+    ...(r.message ? ['', 'Result Message:', r.message.trim()] : []),
+    ...(r.stackTrace ? ['', 'Result StackTrace:', r.stackTrace.trim()] : []),
+  ]);
+  return [...head, ...body].join('\n');
+}

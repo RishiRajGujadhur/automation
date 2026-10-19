@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { groupTests, matchTest } from '../src/testing/grouping';
+import { groupTests, matchTest, testDetails } from '../src/testing/grouping';
 import type { DiscoveredTest, Outcome } from '../src/testing/store';
 
 const t = (id: string, o: Partial<DiscoveredTest> = {}): DiscoveredTest => ({ id, kind: 'test', project: 'App.Tests', className: 'App.Tests.MathTests', method: id, name: id, file: 'Tests/MathTests.cs', line: 1, filter: id, ...o });
@@ -24,5 +24,10 @@ describe('Test Explorer grouping (X71…)', () => {
     expect(m('class:MathTests -name:adds')).toEqual(['Divides']);
     expect(m('math passed')).toEqual([]);
     expect(m('"app.tests.math"')).toEqual(['Adds', 'Divides', 'Scenario']);
+  });
+  it('X73 Copy test details', () => {
+    expect(testDetails(tests[1], 'failed', [{ name: 'Divides', outcome: 'failed', durationMs: 1500, message: 'Expected: 3\n  But was: 2\n', stackTrace: 'at MathTests.Divides() in Tests/MathTests.cs:line 9' }])).toBe(
+      'Test Name:\tDivides\nTest FullName:\tApp.Tests.MathTests.Divides\nTest Source:\tTests/MathTests.cs : line 1\nTest Outcome:\tFailed\nTest Duration:\t1500 ms\n\nResult Message:\nExpected: 3\n  But was: 2\n\nResult StackTrace:\nat MathTests.Divides() in Tests/MathTests.cs:line 9');
+    expect(testDetails(tests[2], 'none', [])).toContain('Test Outcome:\tNot Run');
   });
 });

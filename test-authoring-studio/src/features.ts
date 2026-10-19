@@ -170,6 +170,7 @@ export const FEATURES: Feature[] = [
   { id: 'fade-usings', label: 'Fade unnecessary usings', group: 'Code intelligence', essential: true, vs: 'Fade out unused code', description: 'Unused using directives are greyed out (IDE0005).' },
   { id: 'test-group-by', label: 'Test Explorer: Group By', group: 'Tool windows', essential: true, vs: 'Test Explorer ▸ Group By', description: 'Group tests by project and class, class / feature, outcome or duration.' },
   { id: 'test-search-filters', label: 'Test Explorer: search filters', group: 'Tool windows', essential: true, vs: 'Test Explorer filter syntax', description: 'outcome:, class:, project:, feature:, name:, file: terms, "quoted phrases" and -exclusions.' },
+  { id: 'test-copy', label: 'Test Explorer: Copy details', group: 'Tool windows', essential: true, vs: 'Test Explorer ▸ Copy', description: 'A test\'s context menu copies its name, outcome, duration, message and stack trace.' },
 ];
 export const GROUPS: FeatureGroup[] = ['Editing', 'Navigation', 'Code intelligence', 'Tool windows', 'Files', 'Git', 'Gherkin', 'View', 'Debugging', 'Help and productivity'];
 

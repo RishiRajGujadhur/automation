@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState, type ReactNode } from 'react';
-import { ChevronDown, ChevronRight, Play, PlayCircle, Bug, RefreshCw, Square, CircleCheck, CircleX, CircleSlash, Circle, Loader, Search, X, FileText, FlaskConical, Boxes, RotateCcw, Navigation, ListPlus, ListMinus, Trash2, ShieldCheck } from 'lucide-react';
-import { RowMenu, useLocalState } from '../ui';
-import { groupTests, type Group, type GroupBy, matchTest } from './grouping';
+import { ChevronDown, ChevronRight, Play, PlayCircle, Bug, RefreshCw, Square, CircleCheck, CircleX, CircleSlash, Circle, Loader, Search, X, FileText, FlaskConical, Boxes, RotateCcw, Navigation, ListPlus, ListMinus, Trash2, ShieldCheck, Copy } from 'lucide-react';
+import { RowMenu, useLocalState, copyText } from '../ui';
+import { groupTests, type Group, type GroupBy, matchTest, testDetails } from './grouping';
 import { featureOn } from '../features';
 import { useTestRun, discoverTests, runTests, cancelTests, resultsOf, outcomeOf, combine, type DiscoveredTest, type Outcome } from './store';
 
@@ -74,6 +74,7 @@ export default function TestExplorer({ revision, onOpen, onDebug, onNotice }: { 
     { label: 'Run', icon: Play, disabled: running, onSelect: () => void start(ts) },
     { label: 'Debug', icon: Bug, disabled: running || ts.length !== 1, onSelect: () => onDebug(ts[0]) },
     ...(go ? ['separator' as const, { label: 'Go To Test', icon: Navigation, onSelect: () => onOpen(go.file, go.line) }] : []),
+    ...(featureOn('test-copy') ? [{ label: 'Copy', icon: Copy, onSelect: () => void copyText(ts.map((t) => testDetails(t, outcomeOf(t, run), resultsOf(t, run.results))).join('\n\n')).then((ok) => onNotice(ok ? `Copied ${ts.length === 1 ? ts[0].name : `${ts.length} tests`}.` : 'Clipboard unavailable.')) }] : []),
     'separator' as const,
     { label: 'Add to New Playlist…', icon: ListPlus, onSelect: () => setNaming(ts.map((t) => t.id)) },
     ...Object.keys(playlists).filter((n) => n !== playlist).map((n) => ({ label: `Add to Playlist ${n}`, icon: ListPlus, onSelect: () => addTo(n, ts.map((t) => t.id)) })),
