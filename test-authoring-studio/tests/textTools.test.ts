@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { EditorState, type TransactionSpec } from '@codemirror/state';
-import type { EditorView } from '@codemirror/view';
-import { sortLines, reverseLines, deleteHorizontalWhiteSpace, setCase, transposeLine, transposeChars, transposeWords, cursorMatchingBracket, selectMatchingBracket, findSelected } from '../src/editor/textTools';
+import { EditorView } from '@codemirror/view';
+import { sortLines, reverseLines, deleteHorizontalWhiteSpace, setCase, transposeLine, transposeChars, transposeWords, cursorMatchingBracket, selectMatchingBracket, findSelected, lastEditLocation, trackEdits } from '../src/editor/textTools';
 
 /** Runs an editor command on `doc` with the selection between the markers « and » (or a caret at |). */
 export function run(doc: string, cmd: (v: EditorView) => boolean) {
@@ -61,5 +61,14 @@ describe('text tools (IDE-FEATURES X1…)', () => {
     let at = -1;
     run('foo bar |foo baz foo', (v) => { const r = findSelected(-1)(v); at = v.state.selection.main.from; return r; });
     expect(at).toBe(0);
+  });
+  it('X13 Go to Last Edit Location: records the last typing position per file', () => {
+    let state = EditorState.create({ doc: 'abc\ndef', extensions: [trackEdits('A.cs')] });
+    const tr = state.update({ changes: { from: 5, insert: 'X' }, selection: { anchor: 6 }, userEvent: 'input.type' });
+    // The listener runs on views; call it the way a view would.
+    const listeners = tr.startState.facet(EditorView.updateListener);
+    for (const l of listeners) l({ docChanged: true, transactions: [tr], state: tr.state } as never);
+    state = tr.state;
+    expect(lastEditLocation()).toEqual({ file: 'A.cs', pos: 6, line: 2, column: 3 });
   });
 });

@@ -6,7 +6,7 @@ import { noteUsage, runRider, commandOn } from '../rider/commands';
 import { pushClipboard } from '../rider/clipboardRing';
 import { usageHighlights } from './usages';
 import { moveStatement } from './moveStatement';
-import { deleteHorizontalWhiteSpace, transposeLine, cursorMatchingBracket, selectMatchingBracket, findSelected } from './textTools';
+import { deleteHorizontalWhiteSpace, transposeLine, cursorMatchingBracket, selectMatchingBracket, findSelected, trackEdits } from './textTools';
 import { gotoChange, rollbackLines } from './changeGutter';
 import { completeStatement } from './completeStatement';
 import { collapseAll, collapseToDefinitions, expandAll } from './foldAll';
@@ -314,9 +314,10 @@ export function riderKeys(file = ''): Extension {
       return c[3](view);
     },
   });
-  return [selStack, recordCopies, usageHighlights(), Prec.highest(ctrlAlt), Prec.high(keymap.of([
+  return [selStack, recordCopies, usageHighlights(), trackEdits(file), Prec.highest(ctrlAlt), Prec.high(keymap.of([
     opens('Mod-Shift-v', 'paste-history'),
     opens('Mod-j', 'live-template'),
+    opens('Mod-Shift-Backspace', 'last-edit'),
     opens('Mod-k Mod-e', 'code-cleanup'),
     opens('Mod-Shift-Delete', 'unwrap'),
     opens('Mod-Shift-c', 'copy-path'),

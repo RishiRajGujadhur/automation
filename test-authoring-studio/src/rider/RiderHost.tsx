@@ -469,7 +469,7 @@ export default function RiderHost(props: RiderHostProps) {
       { id: 'caret-usages', label: 'Highlight Usages at Caret', menu: 'View', checked: () => !viewOptions().noCaretUsages, run: () => { setViewOptions({ noCaretUsages: !viewOptions().noCaretUsages }); riderChanged(); } },
       { id: 'carets-line-ends', label: 'Add Carets to Ends of Selected Lines', menu: 'Edit', shortcut: 'Alt Shift G', run: inEditor(caretsAtLineEnds) },
     ];
-    return registerRider([...list, ...moreCommands({ inEditor, notice: (m) => p.current.onNotice(m) })]);
+    return registerRider([...list, ...moreCommands({ inEditor, notice: (m) => p.current.onNotice(m), navigate: (l) => p.current.onNavigate(l) })]);
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
   const layout = useLayoutState();
   let body: ReactNode = null;

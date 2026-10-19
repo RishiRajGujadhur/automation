@@ -1,5 +1,5 @@
 import { EditorSelection, type EditorState } from '@codemirror/state';
-import type { EditorView } from '@codemirror/view';
+import { EditorView } from '@codemirror/view';
 
 /**
  * Text tools (Visual Studio's Edit ▸ Advanced and JetBrains Rider's editor actions) that rewrite the selected lines or
@@ -127,4 +127,17 @@ export function findSelected(dir: 1 | -1) {
     view.dispatch({ selection: EditorSelection.range(at, at + text.length), scrollIntoView: true, userEvent: 'select.search' });
     return true;
   };
+}
+
+/** Go to Last Edit Location (Visual Studio, Ctrl+Shift+Backspace): where the last edit was made, in any file. */
+export type EditLocation = { file: string; pos: number; line: number; column: number };
+let lastEdit: EditLocation | null = null;
+export const lastEditLocation = () => lastEdit;
+export function trackEdits(file: string) {
+  return EditorView.updateListener.of((u) => {
+    if (!u.docChanged || !u.transactions.some((t) => t.isUserEvent('input') || t.isUserEvent('delete'))) return;
+    const pos = u.state.selection.main.head;
+    const line = u.state.doc.lineAt(pos);
+    lastEdit = { file, pos, line: line.number, column: pos - line.from + 1 };
+  });
 }

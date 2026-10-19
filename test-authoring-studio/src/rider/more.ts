@@ -1,5 +1,6 @@
 import type { EditorView } from '@codemirror/view';
 import type { RiderCommand } from './commands';
+import { lastEditLocation } from '../editor/textTools';
 import { sortLines, reverseLines, deleteHorizontalWhiteSpace, setCase, transposeLine, transposeChars, transposeWords, cursorMatchingBracket, selectMatchingBracket, findSelected } from '../editor/textTools';
 
 /**
@@ -10,6 +11,8 @@ export type MoreHelpers = {
   /** Runs on the active editor (with a notice when there is none) and gives it focus back. */
   inEditor: (fn: (v: EditorView, file: string) => unknown) => () => void;
   notice: (m: string) => void;
+  /** Opens a file at a line / column. */
+  navigate: (loc: { file: string; line?: number; column?: number }) => void;
 };
 
 export function moreCommands(h: MoreHelpers): RiderCommand[] {
@@ -26,5 +29,6 @@ export function moreCommands(h: MoreHelpers): RiderCommand[] {
     { id: 'select-brace', label: 'Select to Matching Brace', menu: 'Navigate', shortcut: 'Ctrl Shift ]', run: h.inEditor(selectMatchingBracket) },
     { id: 'find-next-selected', label: 'Find Next Selected', menu: 'Edit', group: true, shortcut: 'Ctrl F3', run: h.inEditor(findSelected(1)) },
     { id: 'find-previous-selected', label: 'Find Previous Selected', menu: 'Edit', shortcut: 'Ctrl Shift F3', run: h.inEditor(findSelected(-1)) },
+    { id: 'last-edit', label: 'Go to Last Edit Location', menu: 'Navigate', shortcut: 'Ctrl Shift Backspace', run: () => { const l = lastEditLocation(); if (l) h.navigate({ file: l.file, line: l.line, column: l.column }); else h.notice('No edits yet in this session.'); } },
   ];
 }
