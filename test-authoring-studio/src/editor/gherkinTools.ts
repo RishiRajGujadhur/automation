@@ -195,3 +195,24 @@ export function extractExamplesParameter(name: string) {
     return true;
   };
 }
+
+/** Convert Outline to Scenario: an outline with one Examples row becomes a plain Scenario with the values filled in. */
+export function outlineToScenario(view: EditorView) {
+  const { state } = view;
+  const b = scenarioBlock(state, state.doc.lineAt(state.selection.main.head).number);
+  if (!b || !/^\s*Scenario (Outline|Template):/.test(state.doc.line(b.head).text)) return false;
+  const tables = examplesTables(state, b);
+  if (tables.length !== 1 || tables[0].length !== 2) return false;
+  const header = splitRow(state.doc.line(tables[0][0]).text), row = splitRow(state.doc.line(tables[0][1]).text);
+  const fill = (t: string) => t.replace(/<([^<>]+)>/g, (m, k: string) => { const i = header.indexOf(k); return i >= 0 ? (row[i] ?? '').replace(/\\\|/g, '|') : m; });
+  let last = b.end;
+  const lines: string[] = [];
+  for (let n = b.head; n <= b.end; n++) {
+    const t = state.doc.line(n).text;
+    if (/^\s*(Examples|Scenarios):/.test(t)) { last = n; break; }
+    lines.push(n === b.head ? fill(t.replace(/Scenario (Outline|Template):/, 'Scenario:')) : fill(t));
+  }
+  while (lines.length > 1 && !lines[lines.length - 1].trim()) lines.pop();
+  view.dispatch({ changes: { from: state.doc.line(b.head).from, to: state.doc.line(last === b.end ? b.end : b.end).to, insert: lines.join(state.lineBreak) }, userEvent: 'input' });
+  return true;
+}

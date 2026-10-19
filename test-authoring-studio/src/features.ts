@@ -184,6 +184,7 @@ export const FEATURES: Feature[] = [
   { id: 'block-start', label: 'Move Caret to Code Block Start', group: 'Navigation', essential: true, description: 'Goes to the enclosing { (again: the next block out).', commands: ['block-start'] },
   { id: 'block-end', label: 'Move Caret to Code Block End', group: 'Navigation', essential: true, description: 'Goes to the enclosing } (again: the next block out).', commands: ['block-end'] },
   { id: 'extract-examples-param', label: 'Extract Examples Parameter', group: 'Gherkin', essential: true, description: 'The selected step text becomes <name> with a column in every Examples table.', commands: ['extract-examples-param'] },
+  { id: 'outline-to-scenario', label: 'Convert Outline to Scenario', group: 'Gherkin', essential: true, description: 'An outline with one Examples row becomes a plain Scenario.', commands: ['outline-to-scenario'] },
 ];
 export const GROUPS: FeatureGroup[] = ['Editing', 'Navigation', 'Code intelligence', 'Tool windows', 'Files', 'Git', 'Gherkin', 'View', 'Debugging', 'Help and productivity'];
 

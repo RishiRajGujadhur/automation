@@ -148,6 +148,7 @@ const ROWS: Record<'edit' | 'view' | 'navigate' | 'code' | 'tools' | 'help', Row
     ['Rename File to Match Type', 'rename-file-to-type'],
     ['Split String', 'split-string'],
     ['Extract Examples Parameter…', 'extract-examples-param'],
+    ['Convert Outline to Scenario', 'outline-to-scenario'],
   ],
   tools: [
     ['Run Anything… (Ctrl twice)', 'run-anything'],
