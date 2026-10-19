@@ -250,6 +250,7 @@ test('X57 Bracket pair colorization: brackets coloured by depth; View toggles it
 test('X58 Editor zoom in the status bar: shows the zoom; a click resets it', async ({ page }) => {
   await page.addInitScript(() => localStorage.setItem('tas:rider:view', JSON.stringify({ fontSize: 26 })));
   await openFeature(page);
+  await caretAt(page, 'Feature:');
   const zoom = page.getByRole('button', { name: /^Editor zoom 200%/ });
   await expect(zoom).toBeVisible();
   await zoom.click();
