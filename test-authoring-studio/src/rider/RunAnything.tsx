@@ -58,7 +58,7 @@ export default function RunAnything({ onRun }: { onRun: (command: string) => voi
         {shown.map((s, i) => {
           const Icon = ICONS[s.kind];
           return (
-            <li key={`${s.kind}:${s.command}`} role="option" aria-selected={i === index} className={i === index ? 'active' : ''} onMouseEnter={() => setIndex(i)} onMouseDown={(e) => { e.preventDefault(); run(s.command); }}>
+            <li key={`${s.kind}:${s.command}`} role="option" aria-selected={i === index} className={i === index ? 'active' : ''} onMouseMove={() => { if (index !== i) setIndex(i); }} onMouseDown={(e) => { e.preventDefault(); run(s.command); }}>
               <Icon size={14} aria-hidden="true" />
               <span className="goto-label"><code>{s.command}</code></span>
               <small>{s.detail}</small>

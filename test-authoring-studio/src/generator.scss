@@ -683,6 +683,9 @@ mark {
 }
 .context-menu {
   min-width: 210px;
+  // Long menus (the editor's Code / Tools menus) scroll inside the space left in the window.
+  max-height: var(--radix-dropdown-menu-content-available-height, var(--radix-context-menu-content-available-height, 85vh));
+  overflow-y: auto;
   box-shadow: 0 16px 40px #0008;
   animation: menu-in 0.12s ease-out;
 }

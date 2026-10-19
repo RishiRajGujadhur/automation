@@ -27,7 +27,7 @@ export default function ListPopup({ label, placeholder, empty, items, onPick, in
       />
       <ul className="goto-results" role="listbox" aria-label={label}>
         {shown.map((it, i) => (
-          <li key={it.key} role="option" aria-selected={i === index} className={i === index ? 'active' : ''} style={it.indent ? { paddingLeft: 8 + it.indent * 14 } : undefined} onMouseEnter={() => setIndex(i)} onMouseDown={(e) => { e.preventDefault(); onPick(it.key); }} ref={i === index ? (el) => el?.scrollIntoView({ block: 'nearest' }) : undefined}>
+          <li key={it.key} role="option" aria-selected={i === index} className={i === index ? 'active' : ''} style={it.indent ? { paddingLeft: 8 + it.indent * 14 } : undefined} onMouseMove={() => { if (index !== i) setIndex(i); }} onMouseDown={(e) => { e.preventDefault(); onPick(it.key); }} ref={i === index ? (el) => el?.scrollIntoView({ block: 'nearest' }) : undefined}>
             {it.icon}
             <span className="goto-label">{it.label}</span>
             {it.detail && <small>{it.detail}</small>}

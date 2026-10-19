@@ -328,7 +328,7 @@ test('X76 Tags window: tags with their scenarios; a scenario opens', async ({ pa
   await openFeature(page, 'GoogleSearch.feature');
   await menuItem(page, 'View', /^Tags/);
   const panel = page.getByRole('region', { name: 'Tags' });
-  const tag = panel.getByRole('button', { name: /@authentication/ });
+  const tag = panel.getByRole('button', { name: /^@authentication/ });
   await expect(tag).toBeVisible();
   await tag.click();
   await panel.getByRole('button', { name: /^Sign in/ }).click();
@@ -363,4 +363,20 @@ test('X80 Rename File to Match Type', async ({ page, request }) => {
   await expect(page.getByRole('button', { name: 'Close RightName.cs' })).toBeVisible();
   await expect.poll(() => fs.access(path.join(root, 'Steps/RightName.cs')).then(() => true, () => false)).toBe(true);
   expect(await fs.access(path.join(root, 'Steps/Wrong.cs')).then(() => true, () => false)).toBe(false);
+});
+
+test('X81–X88 smoke: Duplicate Scenario and Split String from the menus', async ({ page, request }) => {
+  await openFeature(page);
+  await caretAt(page, 'Scenario: Sign in');
+  await menuItem(page, 'Code', /^Duplicate Scenario/);
+  await expect.poll(() => doc(page)).toContain('Scenario: Sign in (copy)');
+  await fs.writeFile(path.join(root, 'Steps/Greeting.cs'), ['namespace Demo;', 'public class Greeting { public string Text = "Hello world"; }', ''].join('\n'));
+  expect((await request.post('/api/workspace', { data: { repositoryRoot: root, targetProject: '.' } })).ok()).toBe(true);
+  await page.reload();
+  const src = await openCs(page, 'Steps/Greeting.cs', 'Hello world');
+  await src.locator('.cm-line', { hasText: 'Hello world' }).click();
+  await page.keyboard.press('End');
+  for (let i = 0; i < '"; }'.length + 'world'.length; i++) await page.keyboard.press('ArrowLeft');
+  await menuItem(page, 'Code', /^Split String/);
+  await expect.poll(() => doc(page)).toContain('"Hello " +');
 });

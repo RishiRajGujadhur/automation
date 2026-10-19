@@ -29,7 +29,7 @@ export default function PasteHistory({ onPaste }: { onPaste: (text: string) => v
       />
       <ul className="goto-results" role="listbox" aria-label="Clipboard history">
         {items.map((t, i) => (
-          <li key={t} role="option" aria-selected={i === index} className={i === index ? 'active' : ''} onMouseEnter={() => setIndex(i)} onMouseDown={(e) => { e.preventDefault(); onPaste(t); }}>
+          <li key={t} role="option" aria-selected={i === index} className={i === index ? 'active' : ''} onMouseMove={() => { if (index !== i) setIndex(i); }} onMouseDown={(e) => { e.preventDefault(); onPaste(t); }}>
             <span className="goto-label"><code>{t.trim().split('\n')[0].slice(0, 120)}</code></span>
             {t.includes('\n') && <small>{t.split('\n').length} lines</small>}
           </li>
