@@ -35,3 +35,27 @@ export const sortLines = (desc = false) => mapLines((lines) => {
 
 /** Reverse Lines (Rider): the selected lines (or the file) in reverse order. */
 export const reverseLines = mapLines((lines) => [...lines].reverse());
+
+/**
+ * Delete Horizontal White Space (Visual Studio, Ctrl+K, Ctrl+\): in a selection, runs of spaces and tabs collapse to one
+ * space (indentation stays); with no selection, the spaces and tabs around the caret go.
+ */
+export function deleteHorizontalWhiteSpace(view: EditorView) {
+  const st = view.state;
+  const changes: { from: number; to: number; insert: string }[] = [];
+  for (const r of st.selection.ranges) {
+    if (r.empty) {
+      const line = st.doc.lineAt(r.head);
+      const col = r.head - line.from;
+      const before = /[ \t]*$/.exec(line.text.slice(0, col))![0].length, after = /^[ \t]*/.exec(line.text.slice(col))![0].length;
+      if (before + after) changes.push({ from: r.head - before, to: r.head + after, insert: '' });
+      continue;
+    }
+    const text = st.sliceDoc(r.from, r.to);
+    const startsLine = st.doc.lineAt(r.from).from === r.from;
+    const next = text.split('\n').map((l, i) => { const lead = i > 0 || startsLine ? /^[ \t]*/.exec(l)![0] : ''; return lead + l.slice(lead.length).replace(/[ \t]{2,}/g, ' '); }).join('\n');
+    if (next !== text) changes.push({ from: r.from, to: r.to, insert: next });
+  }
+  if (changes.length) view.dispatch({ changes, userEvent: 'delete.whitespace' });
+  return true;
+}

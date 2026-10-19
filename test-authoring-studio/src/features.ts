@@ -100,6 +100,7 @@ export const FEATURES: Feature[] = [
   // ── Third batch (IDE-FEATURES.md) ──
   { id: 'sort-lines', label: 'Sort Lines', group: 'Editing', essential: false, description: 'Sort the selected lines (or the file): natural order, case-insensitive.', commands: ['sort-lines'] },
   { id: 'reverse-lines', label: 'Reverse Lines', group: 'Editing', essential: false, description: 'The selected lines (or the file) in reverse order.', commands: ['reverse-lines'] },
+  { id: 'delete-whitespace', label: 'Delete Horizontal White Space', group: 'Editing', essential: true, vs: 'Edit ▸ Advanced ▸ Delete Horizontal White Space', description: 'Ctrl+K, Ctrl+\\: collapse spaces in the selection, or delete those around the caret.', commands: ['delete-whitespace'] },
 ];
 export const GROUPS: FeatureGroup[] = ['Editing', 'Navigation', 'Code intelligence', 'Tool windows', 'Files', 'Git', 'View', 'Debugging', 'Help and productivity'];
 

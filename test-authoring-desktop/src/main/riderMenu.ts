@@ -36,6 +36,7 @@ const ROWS: Record<'edit' | 'view' | 'navigate' | 'code' | 'tools' | 'help', Row
     null,
     ['Sort Lines', 'sort-lines'],
     ['Reverse Lines', 'reverse-lines'],
+    ['Delete Horizontal White Space', 'delete-whitespace'],
   ],
   view: [
     null,
