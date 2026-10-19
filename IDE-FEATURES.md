@@ -68,6 +68,7 @@ has it on by default, so the desktop app starts with it on. The others start off
 | X58 | Editor zoom in the status bar | VS 2026 | yes | ✅ 2026-10-20 |
 | X59 | Strip Trailing Spaces | Rider | yes | ✅ 2026-10-20 |
 | X60 | Custom TODO patterns | Rider / VS Task List | no | ✅ 2026-10-20 |
+| X61 | Right margin guide | Rider / VS | no | ✅ 2026-10-20 |
 
 ## Progress log
 - 2026-10-20 X1: Sort Lines: the selected lines (or the whole file) in natural, case-insensitive order, blank lines last. Third-batch plumbing: src/rider/more.ts, src/editor/textTools.ts, IDE-FEATURES.md.
@@ -130,3 +131,4 @@ has it on by default, so the desktop app starts with it on. The others start off
 - 2026-10-20 X58: Zoom % with click to reset
 - 2026-10-20 X59: Selection or whole file
 - 2026-10-20 X60: Configurable highlighted keywords
+- 2026-10-20 X61: Guide after column 120, configurable

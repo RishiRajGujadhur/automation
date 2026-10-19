@@ -8,7 +8,7 @@ import { bracketColors } from './bracketColors';
 import { EditorView, ViewPlugin, highlightWhitespace, highlightTrailingWhitespace, rectangularSelection, keymap } from '@codemirror/view';
 
 /** View ▸ Active Editor options (Rider): soft wraps, …, shared by every editor and remembered. */
-export type ViewOptions = { softWrap: boolean; whitespace: boolean; fontSize: number | null; columnMode?: boolean; hideLineNumbers?: boolean; hideIndentGuides?: boolean; noCaretUsages?: boolean; overtype?: boolean; noActiveLine?: boolean; multiRowTabs?: boolean; noBracketColors?: boolean; todoTokens?: string[] };
+export type ViewOptions = { softWrap: boolean; whitespace: boolean; fontSize: number | null; columnMode?: boolean; hideLineNumbers?: boolean; hideIndentGuides?: boolean; noCaretUsages?: boolean; overtype?: boolean; noActiveLine?: boolean; multiRowTabs?: boolean; noBracketColors?: boolean; todoTokens?: string[]; rightMargin?: number };
 const KEY = 'tas:rider:view';
 const DEFAULTS: ViewOptions = { softWrap: false, whitespace: false, fontSize: null };
 let options: ViewOptions = (() => { try { return { ...DEFAULTS, ...JSON.parse(localStorage.getItem(KEY) ?? '{}') }; } catch { return DEFAULTS; } })();
@@ -93,9 +93,15 @@ const font = new Compartment();
 const fontTheme = (px: number | null) => (px ? EditorView.theme({ '&': { fontSize: `${px}px` }, '.cm-content, .cm-gutters': { fontSize: `${px}px` } }) : []);
 const extensionsFor = (o: ViewOptions) => ({ activeLine: o.noActiveLine && featureOn('current-line') ? noActiveLine : [], overtype: o.overtype && featureOn('overtype') ? overtype : [], todos: featureOn('todo-highlighting') ? todoHighlightFor(featureOn('todo-tokens') ? o.todoTokens : undefined) : [], caret: o.noCaretUsages || !featureOn('highlight-usages') ? [] : wordAtCaret, guides: o.hideIndentGuides || !featureOn('indent-guides') ? [] : indentGuides, numbers: o.hideLineNumbers ? hideNumbers : [], column: o.columnMode ? columnMode : [], font: fontTheme(o.fontSize), wrap: o.softWrap ? EditorView.lineWrapping : [], spaces: o.whitespace ? [highlightWhitespace(), highlightTrailingWhitespace()] : [] });
 
+/** Right margin guide (Rider's visual guide at column 120; Visual Studio's guidelines): a thin line after column n. */
+const marginGuide = (col: number) => [
+  EditorView.editorAttributes.of({ class: 'cm-right-margin' }),
+  EditorView.theme({ '.cm-content': { backgroundImage: `linear-gradient(to right, transparent calc(${col}ch + 6px), rgba(128, 128, 128, 0.35) calc(${col}ch + 6px), rgba(128, 128, 128, 0.35) calc(${col}ch + 7px), transparent calc(${col}ch + 7px))` } }),
+];
 /** More options (IDE-FEATURES.md): a compartment each, with the extension for the current options. */
 const EXTRA: [Compartment, (o: ViewOptions) => Extension][] = [
   [new Compartment(), (o) => (o.noBracketColors || !featureOn('bracket-colors') ? [] : bracketColors)],
+  [new Compartment(), (o) => (featureOn('right-margin') && (o.rightMargin ?? 120) > 0 ? marginGuide(o.rightMargin ?? 120) : [])],
   // extra view options
 ];
 

@@ -80,6 +80,7 @@ const ROWS: Record<'edit' | 'view' | 'navigate' | 'code' | 'tools' | 'help', Row
     ['Notifications', 'tool-notifications'],
     ['File Properties', 'file-props', 'Alt+Enter'],
     ['Bracket Pair Colorization', 'bracket-colors'],
+    ['Right Margin Guide…', 'right-margin'],
   ],
   navigate: [
     ['Select In…', 'select-in', 'Alt+F1'],

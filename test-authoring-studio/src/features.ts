@@ -158,6 +158,7 @@ export const FEATURES: Feature[] = [
   { id: 'zoom-indicator', label: 'Editor zoom in the status bar', group: 'View', essential: true, vs: 'Zoom level control', description: 'Shows the editor zoom; a click resets it.' },
   { id: 'strip-trailing', label: 'Strip Trailing Spaces', group: 'Editing', essential: true, description: 'Removes spaces and tabs at line ends (selection or file).', commands: ['strip-trailing'] },
   { id: 'todo-tokens', label: 'Custom TODO patterns', group: 'Editing', essential: false, vs: 'Task List ▸ Tokens', description: 'Choose which comment keywords (TODO, FIXME, NOTE…) are highlighted.', commands: ['todo-tokens'] },
+  { id: 'right-margin', label: 'Right margin guide', group: 'View', essential: false, vs: 'Guidelines', description: 'A thin vertical guide after column 120 (configurable).', commands: ['right-margin'] },
 ];
 export const GROUPS: FeatureGroup[] = ['Editing', 'Navigation', 'Code intelligence', 'Tool windows', 'Files', 'Git', 'Gherkin', 'View', 'Debugging', 'Help and productivity'];
 
