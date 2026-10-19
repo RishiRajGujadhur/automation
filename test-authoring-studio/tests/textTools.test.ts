@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { EditorState, type TransactionSpec } from '@codemirror/state';
 import type { EditorView } from '@codemirror/view';
-import { sortLines, reverseLines, deleteHorizontalWhiteSpace, setCase, transposeLine, transposeChars, transposeWords, cursorMatchingBracket, selectMatchingBracket } from '../src/editor/textTools';
+import { sortLines, reverseLines, deleteHorizontalWhiteSpace, setCase, transposeLine, transposeChars, transposeWords, cursorMatchingBracket, selectMatchingBracket, findSelected } from '../src/editor/textTools';
 
 /** Runs an editor command on `doc` with the selection between the markers « and » (or a caret at |). */
 export function run(doc: string, cmd: (v: EditorView) => boolean) {
@@ -51,5 +51,10 @@ describe('text tools (IDE-FEATURES X1…)', () => {
     let sel = '';
     run('x |{ a; } y', (v) => { const r = selectMatchingBracket(v); sel = v.state.sliceDoc(v.state.selection.main.from, v.state.selection.main.to); return r; });
     expect(sel).toBe('{ a; }');
+  });
+  it('X11 Find Next Selected (wraps)', () => {
+    let at = -1;
+    run('foo bar |foo baz foo', (v) => { const r = findSelected(1)(v); at = v.state.selection.main.from; return r; });
+    expect(at).toBe(16);
   });
 });

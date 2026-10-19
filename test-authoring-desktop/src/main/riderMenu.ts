@@ -42,6 +42,8 @@ const ROWS: Record<'edit' | 'view' | 'navigate' | 'code' | 'tools' | 'help', Row
     ['Transpose Line', 'transpose-line', 'Shift+Alt+T'],
     ['Transpose Characters', 'transpose-chars'],
     ['Transpose Words', 'transpose-words'],
+    null,
+    ['Find Next Selected', 'find-next-selected', 'CmdOrCtrl+F3'],
   ],
   view: [
     null,

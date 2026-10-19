@@ -108,3 +108,23 @@ export function transposeWords(view: EditorView) {
 }
 
 export { cursorMatchingBracket, selectMatchingBracket } from '@codemirror/commands';
+
+/**
+ * Find Next / Previous Selected (Visual Studio, Ctrl+F3 / Ctrl+Shift+F3): the next match of the selection (or the
+ * word at the caret) is selected, wrapping around the file.
+ */
+export function findSelected(dir: 1 | -1) {
+  return (view: EditorView) => {
+    const st = view.state;
+    const r = st.selection.main;
+    const span = r.empty ? st.wordAt(r.head) : r;
+    if (!span) return true;
+    const text = st.sliceDoc(span.from, span.to);
+    const doc = st.doc.toString();
+    let at = dir > 0 ? doc.indexOf(text, span.to) : doc.lastIndexOf(text, span.from - 1);
+    if (at < 0) at = dir > 0 ? doc.indexOf(text) : doc.lastIndexOf(text);
+    if (at < 0) return true;
+    view.dispatch({ selection: EditorSelection.range(at, at + text.length), scrollIntoView: true, userEvent: 'select.search' });
+    return true;
+  };
+}

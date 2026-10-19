@@ -1,6 +1,6 @@
 import type { EditorView } from '@codemirror/view';
 import type { RiderCommand } from './commands';
-import { sortLines, reverseLines, deleteHorizontalWhiteSpace, setCase, transposeLine, transposeChars, transposeWords, cursorMatchingBracket, selectMatchingBracket } from '../editor/textTools';
+import { sortLines, reverseLines, deleteHorizontalWhiteSpace, setCase, transposeLine, transposeChars, transposeWords, cursorMatchingBracket, selectMatchingBracket, findSelected } from '../editor/textTools';
 
 /**
  * Third batch of Visual Studio 2026 / JetBrains Rider commands (IDE-FEATURES.md, X1–X200). RiderHost registers them
@@ -24,5 +24,6 @@ export function moreCommands(h: MoreHelpers): RiderCommand[] {
     { id: 'transpose-words', label: 'Transpose Words', menu: 'Edit', run: h.inEditor(transposeWords) },
     { id: 'goto-brace', label: 'Go to Matching Brace', menu: 'Navigate', group: true, shortcut: 'Ctrl ]', run: h.inEditor(cursorMatchingBracket) },
     { id: 'select-brace', label: 'Select to Matching Brace', menu: 'Navigate', shortcut: 'Ctrl Shift ]', run: h.inEditor(selectMatchingBracket) },
+    { id: 'find-next-selected', label: 'Find Next Selected', menu: 'Edit', group: true, shortcut: 'Ctrl F3', run: h.inEditor(findSelected(1)) },
   ];
 }
