@@ -78,6 +78,7 @@ const ROWS: Record<'edit' | 'view' | 'navigate' | 'code' | 'tools' | 'help', Row
     ['Call Hierarchy', 'call-hierarchy', 'CmdOrCtrl+Alt+H'],
     null,
     ['Go to Matching Brace', 'goto-brace', 'CmdOrCtrl+]'],
+    ['Select to Matching Brace', 'select-brace', 'CmdOrCtrl+Shift+]'],
   ],
   code: [
     ['Insert Live Template…', 'live-template', 'CmdOrCtrl+J'],

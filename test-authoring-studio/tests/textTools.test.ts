@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { EditorState, type TransactionSpec } from '@codemirror/state';
 import type { EditorView } from '@codemirror/view';
-import { sortLines, reverseLines, deleteHorizontalWhiteSpace, setCase, transposeLine, transposeChars, transposeWords, cursorMatchingBracket } from '../src/editor/textTools';
+import { sortLines, reverseLines, deleteHorizontalWhiteSpace, setCase, transposeLine, transposeChars, transposeWords, cursorMatchingBracket, selectMatchingBracket } from '../src/editor/textTools';
 
 /** Runs an editor command on `doc` with the selection between the markers « and » (or a caret at |). */
 export function run(doc: string, cmd: (v: EditorView) => boolean) {
@@ -46,5 +46,10 @@ describe('text tools (IDE-FEATURES X1…)', () => {
     let at = -1;
     run('if (|(a) && b) { }', (v) => { const r = cursorMatchingBracket(v); at = v.state.selection.main.head; return r; });
     expect(at).toBe(7); // after the ) that matches the ( at the caret
+  });
+  it('X10 Select to Matching Brace', () => {
+    let sel = '';
+    run('x |{ a; } y', (v) => { const r = selectMatchingBracket(v); sel = v.state.sliceDoc(v.state.selection.main.from, v.state.selection.main.to); return r; });
+    expect(sel).toBe('{ a; }');
   });
 });

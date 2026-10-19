@@ -17,6 +17,7 @@ has it on by default, so the desktop app starts with it on. The others start off
 | X7 | Transpose Characters | VS 2026 | yes | ✅ 2026-10-20 |
 | X8 | Transpose Words | VS 2026 | yes | ✅ 2026-10-20 |
 | X9 | Go to Matching Brace (Ctrl+]) | VS 2026 | yes | ✅ 2026-10-20 |
+| X10 | Select to Matching Brace (Ctrl+Shift+]) | VS 2026 | yes | ✅ 2026-10-20 |
 
 ## Progress log
 - 2026-10-20 X1: Sort Lines: the selected lines (or the whole file) in natural, case-insensitive order, blank lines last. Third-batch plumbing: src/rider/more.ts, src/editor/textTools.ts, IDE-FEATURES.md.
@@ -28,3 +29,4 @@ has it on by default, so the desktop app starts with it on. The others start off
 - 2026-10-20 X7: Transpose Characters: the two characters around the caret swap (at a line end, the last two).
 - 2026-10-20 X8: Transpose Words: the word at the caret swaps with the next word.
 - 2026-10-20 X9: Go to Matching Brace: Ctrl+] jumps to the bracket matching the one at the caret.
+- 2026-10-20 X10: Select to Matching Brace: Ctrl+Shift+] selects through the matching bracket.

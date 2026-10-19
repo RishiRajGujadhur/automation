@@ -107,6 +107,7 @@ export const FEATURES: Feature[] = [
   { id: 'transpose-chars', label: 'Transpose Characters', group: 'Editing', essential: true, vs: 'Edit.CharTranspose', description: 'Swap the two characters around the caret (a typo fixer).', commands: ['transpose-chars'] },
   { id: 'transpose-words', label: 'Transpose Words', group: 'Editing', essential: true, vs: 'Edit.WordTranspose', description: 'Swap the word at the caret with the next word.', commands: ['transpose-words'] },
   { id: 'goto-brace', label: 'Go to Matching Brace', group: 'Navigation', essential: true, vs: 'Edit.GotoBrace (Ctrl+])', description: 'Ctrl+] moves the caret to the bracket that matches the one next to it.', commands: ['goto-brace'] },
+  { id: 'select-brace', label: 'Select to Matching Brace', group: 'Navigation', essential: true, vs: 'Edit.GotoBraceExtend (Ctrl+Shift+])', description: 'Ctrl+Shift+] selects up to the matching bracket.', commands: ['select-brace'] },
 ];
 export const GROUPS: FeatureGroup[] = ['Editing', 'Navigation', 'Code intelligence', 'Tool windows', 'Files', 'Git', 'View', 'Debugging', 'Help and productivity'];
 
