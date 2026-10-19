@@ -156,6 +156,7 @@ export const FEATURES: Feature[] = [
   { id: 'select-scenario', label: 'Select Scenario', group: 'Gherkin', essential: true, description: 'Selects the scenario at the caret with its tags and Examples.', commands: ['select-scenario'] },
   { id: 'bracket-colors', label: 'Bracket pair colorization', group: 'View', essential: true, vs: 'Text Editor ▸ Enable brace pair colorization', description: '(), [] and {} coloured by nesting depth.', commands: ['bracket-colors'] },
   { id: 'zoom-indicator', label: 'Editor zoom in the status bar', group: 'View', essential: true, vs: 'Zoom level control', description: 'Shows the editor zoom; a click resets it.' },
+  { id: 'strip-trailing', label: 'Strip Trailing Spaces', group: 'Editing', essential: true, description: 'Removes spaces and tabs at line ends (selection or file).', commands: ['strip-trailing'] },
 ];
 export const GROUPS: FeatureGroup[] = ['Editing', 'Navigation', 'Code intelligence', 'Tool windows', 'Files', 'Git', 'Gherkin', 'View', 'Debugging', 'Help and productivity'];
 

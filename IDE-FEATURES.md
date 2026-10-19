@@ -66,6 +66,7 @@ has it on by default, so the desktop app starts with it on. The others start off
 | X56 | Select Scenario | Rider | yes | ✅ 2026-10-20 |
 | X57 | Bracket pair colorization | VS 2026 / Rider | yes | ✅ 2026-10-20 |
 | X58 | Editor zoom in the status bar | VS 2026 | yes | ✅ 2026-10-20 |
+| X59 | Strip Trailing Spaces | Rider | yes | ✅ 2026-10-20 |
 
 ## Progress log
 - 2026-10-20 X1: Sort Lines: the selected lines (or the whole file) in natural, case-insensitive order, blank lines last. Third-batch plumbing: src/rider/more.ts, src/editor/textTools.ts, IDE-FEATURES.md.
@@ -126,3 +127,4 @@ has it on by default, so the desktop app starts with it on. The others start off
 - 2026-10-20 X56: Selects tags through Examples
 - 2026-10-20 X57: Depth colours, strings/comments skipped
 - 2026-10-20 X58: Zoom % with click to reset
+- 2026-10-20 X59: Selection or whole file

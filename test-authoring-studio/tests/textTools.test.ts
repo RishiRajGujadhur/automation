@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { EditorState, type TransactionSpec } from '@codemirror/state';
 import { EditorView } from '@codemirror/view';
-import { sortLines, reverseLines, deleteHorizontalWhiteSpace, setCase, transposeLine, transposeChars, transposeWords, cursorMatchingBracket, selectMatchingBracket, findSelected, lastEditLocation, trackEdits, insertGuid, cyclicExpandWord, gotoMember, toggleVerbatim, convertCase, reformatJson } from '../src/editor/textTools';
+import { sortLines, reverseLines, deleteHorizontalWhiteSpace, setCase, transposeLine, transposeChars, transposeWords, cursorMatchingBracket, selectMatchingBracket, findSelected, lastEditLocation, trackEdits, insertGuid, cyclicExpandWord, gotoMember, toggleVerbatim, convertCase, reformatJson, stripTrailingSpaces } from '../src/editor/textTools';
 
 /** Runs an editor command on `doc` with the selection between the markers « and » (or a caret at |). */
 export function run(doc: string, cmd: (v: EditorView) => boolean) {
@@ -114,5 +114,9 @@ describe('text tools (IDE-FEATURES X1…)', () => {
     expect(run('|{"a":1,"b":[1,2]}', reformatJson())).toBe('{\n  "a": 1,\n  "b": [\n    1,\n    2\n  ]\n}');
     expect(run('|{\n  "a": 1\n}\n', reformatJson(true))).toBe('{"a":1}');
     expect(run('|{nope', reformatJson())).toBe('{nope');
+  });
+  it('X59 Strip Trailing Spaces: the selected lines, else the whole file', () => {
+    expect(run('a  \n«b \t\nc »\nd  ', stripTrailingSpaces)).toBe('a  \nb\nc\nd  ');
+    expect(run('a |  \nb\t\n  ', stripTrailingSpaces)).toBe('a\nb\n');
   });
 });

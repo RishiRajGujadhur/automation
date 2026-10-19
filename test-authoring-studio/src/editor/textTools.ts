@@ -279,3 +279,19 @@ export function reformatJson(minify = false) {
     return true;
   };
 }
+
+/** Strip Trailing Spaces (Rider; Visual Studio's Delete Horizontal White Space at line ends): the selected lines, else the file. */
+export function stripTrailingSpaces(view: EditorView) {
+  const { state } = view;
+  const sel = state.selection.main;
+  const first = sel.empty ? 1 : state.doc.lineAt(sel.from).number, last = sel.empty ? state.doc.lines : state.doc.lineAt(sel.to).number;
+  const changes: { from: number; to: number }[] = [];
+  for (let n = first; n <= last; n++) {
+    const line = state.doc.line(n);
+    const m = /[ \t]+$/.exec(line.text);
+    if (m) changes.push({ from: line.from + m.index, to: line.to });
+  }
+  if (!changes.length) return false;
+  view.dispatch({ changes, userEvent: 'delete' });
+  return true;
+}
