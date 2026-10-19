@@ -3321,3 +3321,12 @@ html[data-features-off~='inlay-hints'] .cm-inlay {
     cursor: pointer;
   }
 }
+
+// Tabs in multiple rows (Visual Studio option)
+.editor-tabs.multi-row {
+  flex-wrap: wrap;
+  overflow: visible;
+  .editor-tab {
+    flex: none;
+  }
+}

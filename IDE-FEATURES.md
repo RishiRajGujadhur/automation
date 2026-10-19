@@ -44,6 +44,7 @@ has it on by default, so the desktop app starts with it on. The others start off
 | X34 | Reopen Closed Tab | Rider / VS 2026 | no | ✅ 2026-10-20 |
 | X35 | Close Unmodified Tabs | Rider | no | ✅ 2026-10-20 |
 | X36 | Switcher (Ctrl+Tab) | VS 2026 / Rider | yes | ✅ 2026-10-20 |
+| X37 | Tabs in multiple rows | VS 2026 | no | ✅ 2026-10-20 |
 
 ## Progress log
 - 2026-10-20 X1: Sort Lines: the selected lines (or the whole file) in natural, case-insensitive order, blank lines last. Third-batch plumbing: src/rider/more.ts, src/editor/textTools.ts, IDE-FEATURES.md.
@@ -82,3 +83,4 @@ has it on by default, so the desktop app starts with it on. The others start off
 - 2026-10-20 X34: Reopen Closed Tab: the last closed editors come back, newest first (single closes and bulk closes).
 - 2026-10-20 X35: Close Unmodified Tabs: closes tabs without unsaved changes; pinned and active stay. Fix: a feature load started by a tab switch no longer overrides a newer tab choice (Reopen Closed Tab could bounce back).
 - 2026-10-20 X36: Switcher: open editors most recent first plus tool windows; Ctrl+Tab on desktop (browsers keep Ctrl+Tab).
+- 2026-10-20 X37: Tabs in Multiple Rows: the editor tab strip wraps instead of scrolling (VS option, off by default).

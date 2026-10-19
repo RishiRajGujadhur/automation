@@ -1,3 +1,5 @@
+import { useViewOptions } from '../editor/viewOptions';
+import { featureOn } from '../features';
 import { createContext, useContext, useEffect, useLayoutEffect, useRef, useState, type ReactNode } from 'react';
 import { createPortal } from 'react-dom';
 import { ChevronLeft, ChevronRight, ChevronDown, X, Copy, XCircle, Pin, PinOff } from 'lucide-react';
@@ -22,6 +24,8 @@ export function EditorActions({ children, active = true }: { children: ReactNode
  * the hidden ones and ⌄ lists every open editor.
  */
 export default function EditorTabs({ onClose, onSplit, children }: { onClose: (file: string) => void; onSplit?: (file: string) => void; children?: ReactNode }) {
+  // Visual Studio's 'Show tabs in multiple rows': no scrolling strip, every tab visible.
+  const multiRow = !!useViewOptions().multiRowTabs && featureOn('multi-row-tabs');
   const { tabs, active } = useTabs();
   const strip = useRef<HTMLDivElement>(null);
   const [overflow, setOverflow] = useState({ left: false, right: false });
@@ -58,7 +62,7 @@ export default function EditorTabs({ onClose, onSplit, children }: { onClose: (f
 
   return (
     <ActionsSlot.Provider value={slot}>
-      <div className="editor-tabs">
+      <div className={`editor-tabs ${multiRow ? 'multi-row' : ''}`}>
         {overflow.left && <button className="tab-scroll" aria-label="Show previous tabs" onClick={() => reveal(-1)}><ChevronLeft size={14} /></button>}
         <div className="tab-strip" role="group" aria-label="Open editors" ref={strip} onScroll={measure} onWheel={(e) => { if (strip.current && e.deltaY) strip.current.scrollLeft += e.deltaY; }}>
           {tabs.map((t: EditorTab) => {
