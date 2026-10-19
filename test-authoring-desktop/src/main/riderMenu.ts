@@ -74,6 +74,7 @@ const ROWS: Record<'edit' | 'view' | 'navigate' | 'code' | 'tools' | 'help', Row
     ['Window Layouts…', 'window-layouts'],
     ['Reset Window Layout', 'reset-layout'],
     ['Reopen Closed Tab', 'reopen-tab', 'CmdOrCtrl+Shift+T'],
+    ['Close Unmodified Tabs', 'close-unmodified'],
   ],
   navigate: [
     ['Select In…', 'select-in', 'Alt+F1'],

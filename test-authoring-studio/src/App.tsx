@@ -711,7 +711,7 @@ export default function App() {
     if (t.kind === 'code') { if (tab === 'Features' && view === 'editor') setView('code'); return; }
     if (tab === 'Features' && view === 'code') setView('editor');
     if (feature?.file === t.file || (!feature && newFile === t.file)) return;
-    if (index?.features.some((f) => f.file === t.file)) loadFeature(t.file).catch((e) => setNotice((e as Error).message));
+    if (index?.features.some((f) => f.file === t.file)) loadFeature(t.file, true).catch((e) => setNotice((e as Error).message));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [openEditors.active, index?.revision]);
   // A new, not yet saved feature draft gets its own tab.
@@ -959,8 +959,10 @@ export default function App() {
       setSourceTitle(`${file}:${line}`);
       setModal('source');
     });
-  const loadFeature = async (file: string) => {
+  /** Loads a feature into the editor; `ifStillActive`: only when its tab is still the active one (a quick tab switch wins). */
+  const loadFeature = async (file: string, ifStillActive = false) => {
     const full = await api<Feature>(`/feature?file=${encodeURIComponent(file)}`);
+    if (ifStillActive && getTabs().active !== file) return;
     choose(full);
   };
   const select = async (f: Feature) => {

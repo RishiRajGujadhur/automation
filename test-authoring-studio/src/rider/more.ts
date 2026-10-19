@@ -1,5 +1,7 @@
 import type { EditorView } from '@codemirror/view';
 import type { RiderCommand } from './commands';
+import { unsavedFiles } from '../editor/autosave';
+import { getTabs, closeTab } from '../files/tabs';
 import { reopenClosed } from '../files/tabs';
 import { resetWindowLayout } from './layoutStore';
 import { exportBreakpoints, importBreakpoints } from '../debug/store';
@@ -60,5 +62,6 @@ export function moreCommands(h: MoreHelpers): RiderCommand[] {
     { id: 'import-breakpoints', label: 'Import Breakpoints…', menu: 'Tools', run: () => { const input = document.createElement('input'); input.type = 'file'; input.accept = '.json,application/json'; input.onchange = () => { const f = input.files?.[0]; if (!f) return; f.text().then((t) => { try { h.notice(`Imported ${importBreakpoints(t)} breakpoints.`); } catch (e) { h.notice((e as Error).message); } }); }; input.click(); } },
     { id: 'reset-layout', label: 'Reset Window Layout', menu: 'View', run: () => { if (window.confirm('Reset the panels, side bar and tool windows to their defaults?')) resetWindowLayout(); } },
     { id: 'reopen-tab', label: 'Reopen Closed Tab', menu: 'View', shortcut: 'Ctrl Shift T', run: () => { const f = reopenClosed(); if (f) h.navigate({ file: f }); else h.notice('No closed tabs to reopen.'); } },
+    { id: 'close-unmodified', label: 'Close Unmodified Tabs', menu: 'View', run: () => { const t = getTabs(); const dirty = new Set(unsavedFiles()); const close = t.tabs.filter((x) => !x.pinned && !dirty.has(x.file) && x.file !== t.active).map((x) => x.file); close.forEach(closeTab); h.notice(close.length ? `Closed ${close.length} unmodified tab${close.length === 1 ? '' : 's'}.` : 'No unmodified tabs to close.'); } },
   ];
 }

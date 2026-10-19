@@ -153,9 +153,14 @@ test('X34 Reopen Closed Tab brings back the last closed editor; X35 Close Unmodi
   await page.getByRole('navigation').getByRole('button', { name: 'GoogleSearch.feature', exact: true }).first().click();
   await page.getByRole('navigation').getByRole('button', { name: 'AuthSteps.cs', exact: true }).first().click();
   await expect(tabs).toHaveCount(3);
+  await expect(page.getByLabel('Source of Steps/AuthSteps.cs')).toBeVisible();
   await page.getByRole('button', { name: 'Close AuthSteps.cs' }).click();
   await expect(tabs).toHaveCount(2);
+  await expect(gherkin(page)).toBeVisible();
+  await page.waitForTimeout(1000);
   await menuItem(page, 'View', /Reopen Closed Tab/);
+  await expect(page.locator('.editor-tab-label[aria-current="true"]')).toHaveAttribute('title', 'Steps/AuthSteps.cs');
+  await page.waitForTimeout(1500);
   await expect(page.locator('.editor-tab-label[aria-current="true"]')).toHaveAttribute('title', 'Steps/AuthSteps.cs');
   // Edit AuthSteps.cs (unsaved), make Login.feature active: Close Unmodified closes only GoogleSearch.feature.
   await page.getByLabel('Source of Steps/AuthSteps.cs').locator('.cm-line').first().click();

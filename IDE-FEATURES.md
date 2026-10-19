@@ -42,6 +42,7 @@ has it on by default, so the desktop app starts with it on. The others start off
 | X32 | Save / Apply Window Layout | VS 2026 | yes | ✅ 2026-10-20 |
 | X33 | Reset Window Layout | VS 2026 | yes | ✅ 2026-10-20 |
 | X34 | Reopen Closed Tab | Rider / VS 2026 | no | ✅ 2026-10-20 |
+| X35 | Close Unmodified Tabs | Rider | no | ✅ 2026-10-20 |
 
 ## Progress log
 - 2026-10-20 X1: Sort Lines: the selected lines (or the whole file) in natural, case-insensitive order, blank lines last. Third-batch plumbing: src/rider/more.ts, src/editor/textTools.ts, IDE-FEATURES.md.
@@ -78,3 +79,4 @@ has it on by default, so the desktop app starts with it on. The others start off
 - 2026-10-20 X32: Window Layouts: save the panel / side bar / tool window arrangement under a name, apply or delete it.
 - 2026-10-20 X33: Reset Window Layout: default panel, side bar and tool windows (after a confirmation).
 - 2026-10-20 X34: Reopen Closed Tab: the last closed editors come back, newest first (single closes and bulk closes).
+- 2026-10-20 X35: Close Unmodified Tabs: closes tabs without unsaved changes; pinned and active stay. Fix: a feature load started by a tab switch no longer overrides a newer tab choice (Reopen Closed Tab could bounce back).
