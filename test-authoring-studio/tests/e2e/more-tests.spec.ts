@@ -74,3 +74,21 @@ test('X26 Debug Tests in Context, X29 Show Next Statement, X30 Copy Call Stack',
   await expect.poll(() => page.evaluate(() => navigator.clipboard.readText())).toContain('AddsTwoNumbers');
   await page.keyboard.press('Shift+F5');
 });
+
+test('X64 Run Until Failure: repeats the last run until a failure or N passing runs', async ({ page, request }) => {
+  await open(page, 'CalculatorTests.cs', 'AddsTwoNumbers');
+  await expect.poll(async () => ((await (await request.get('/api/tests')).json()).tests ?? []).length, { timeout: 240_000, intervals: [3000] }).toBeGreaterThan(0);
+  await page.locator('.code-editor:not([hidden]) .cm-line', { hasText: 'AddsTwoNumbers' }).first().click();
+  const runs: string[] = [];
+  page.on('request', (r) => { if (r.method() === 'POST' && r.url().endsWith('/api/tests/run')) runs.push(r.postData() ?? ''); });
+  await page.keyboard.press('Control+R');
+  await page.keyboard.press('t');
+  await expect.poll(() => runs.length, { timeout: 30_000 }).toBe(1);
+  await expect.poll(async () => (await (await request.get('/api/tests/run')).json()).status, { timeout: 240_000, intervals: [2000] }).toMatch(/done|failed/);
+  page.once('dialog', (d) => void d.accept('2'));
+  await page.getByRole('button', { name: 'Tools menu' }).click();
+  await page.getByRole('menuitem', { name: /Run Until Failure/ }).click();
+  await expect(page.getByText('All 2 runs passed.').first()).toBeVisible({ timeout: 240_000 });
+  expect(runs).toHaveLength(3);
+  expect(runs[2]).toBe(runs[0]);
+});

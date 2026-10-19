@@ -3391,3 +3391,19 @@ html[data-features-off~='inlay-hints'] .cm-inlay {
     font-size: 11.5px;
   }
 }
+
+.se-scope {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 2px 8px;
+  font-size: 11.5px;
+  color: var(--muted, #6b7280);
+  span {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+}

@@ -2,9 +2,10 @@ import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { keepTab } from './files/tabs';
 import {
   ChevronDown, ChevronRight, Folder, FolderOpen, FileCode2, FileText, FileCog, Braces, Plus, Search, X, Copy, ChevronsDownUp, ChevronsUpDown,
-  Eye, Package, Boxes, Link2, LocateFixed, PencilLine, Files, Layers, SquareStack, Scissors, ClipboardPaste, Trash2, TextCursorInput,
+  Eye, Package, Boxes, Link2, LocateFixed, PencilLine, Files, Layers, SquareStack, Scissors, ClipboardPaste, Trash2, TextCursorInput, Focus, House,
 } from 'lucide-react';
 import { fileType } from './files/fileTypes';
+import { featureOn } from './features';
 import { RowMenu, copyText } from './ui';
 import { api } from './api';
 import { normalizeFeaturePath, parentFolders } from './featureTree';
@@ -168,6 +169,8 @@ export default function SolutionExplorer({ features, revision, activeFile, query
   const [openNests, setOpenNests] = useState<Set<string>>(new Set());
   const [showAll, setShowAll] = useState(false);
   const [pendingOnly, setPendingOnly] = useState(false);
+  // Scope to This (Visual Studio): the tree shows one folder only, until Home.
+  const [scope, setScope] = useState('');
   const [pending, setPending] = useState<string[]>(unsavedFiles);
   const tree = useRef<HTMLElement>(null);
   // Only the latest request wins: an answer for an older revision can arrive after a newer one.
@@ -200,8 +203,9 @@ export default function SolutionExplorer({ features, revision, activeFile, query
       // Classic (.NET Framework) projects list their files: only those show, like Visual Studio (Show All Files: all).
       (showAll || listedByProject(x.file)) &&
       (!pendingOnly || pending.includes(x.file)) &&
+      (!scope || x.file.startsWith(`${scope}/`)) &&
       terms.every((t) => `${x.file} ${featureName.get(x.file) ?? ''}`.toLowerCase().includes(t)));
-  }, [solution, features, query, showAll, pendingOnly, pending, projectDirs, listed]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [solution, features, query, showAll, pendingOnly, pending, projectDirs, listed, scope]); // eslint-disable-line react-hooks/exhaustive-deps
   const searching = !!query.trim() || pendingOnly;
   // Files per project (deepest project folder wins); files outside every project are "Miscellaneous Files".
   const projects = useMemo(() => solution?.projects ?? [], [solution]);
@@ -302,6 +306,7 @@ export default function SolutionExplorer({ features, revision, activeFile, query
             { label: 'Expand all folders', icon: ChevronsUpDown, onSelect: () => setCollapsed(new Set()) },
             'separator' as const,
             { label: 'Copy folder path', icon: Copy, onSelect: () => copyText(n.path) },
+            ...(featureOn('explorer-scope') ? [{ label: 'Scope to This', icon: Focus, onSelect: () => setScope(n.path) }] : []),
             ...editItems(n.path, true),
           ]}>
             <li>
@@ -409,6 +414,7 @@ export default function SolutionExplorer({ features, revision, activeFile, query
         <input aria-label="Search Explorer" placeholder="Search Explorer (Ctrl+;)" value={query} onChange={(e) => onQuery(e.target.value)} onKeyDown={(e) => { if (e.key === 'Escape' && query) { e.stopPropagation(); onQuery(''); } }} />
         {query && <button className="icon-button" aria-label="Clear search" onClick={() => onQuery('')}><X size={13} /></button>}
       </label>
+      {scope && <div className="se-scope" aria-label="Explorer scope"><Focus size={12} aria-hidden="true" /><span title={scope}>Scoped to <strong>{scope}</strong></span><button className="icon-button" aria-label="Home (show the whole solution)" title="Home" onClick={() => setScope('')}><House size={13} /></button></div>}
       <div className="explorer-summary" role="status">
         {pendingOnly ? `${files.length} file${files.length === 1 ? '' : 's'} with unsaved changes` : query.trim() ? `${files.length} matching file${files.length === 1 ? '' : 's'}` : `${features.length} feature file${features.length === 1 ? '' : 's'} · ${files.length} file${files.length === 1 ? '' : 's'}`}
       </div>

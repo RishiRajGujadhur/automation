@@ -277,3 +277,26 @@ test('X61 Right margin guide: on at column 120, the column can change, 0 hides i
   await menuItem(page, 'View', /Right Margin Guide/);
   await expect(editor).not.toHaveClass(/cm-right-margin/);
 });
+
+test('X62 Explorer Scope to This: one folder only, Home shows everything', async ({ page }) => {
+  await openFeature(page);
+  const nav = page.getByRole('navigation', { name: 'Solution' });
+  await expect(nav.getByRole('button', { name: 'AuthSteps.cs', exact: true })).toBeVisible();
+  await nav.getByRole('button', { name: 'Collapse folder Features', exact: true }).click({ button: 'right' });
+  await page.getByRole('menuitem', { name: 'Scope to This' }).click();
+  await expect(page.getByLabel('Explorer scope')).toContainText('Features');
+  await expect(nav.getByRole('button', { name: 'AuthSteps.cs', exact: true })).toHaveCount(0);
+  await expect(nav.getByRole('button', { name: 'Login.feature', exact: true }).first()).toBeVisible();
+  await page.getByRole('button', { name: 'Home (show the whole solution)' }).click();
+  await expect(nav.getByRole('button', { name: 'AuthSteps.cs', exact: true })).toBeVisible();
+});
+
+test('X63 Explorer New File…: creates the file (sub-folders too) and opens it', async ({ page }) => {
+  await openFeature(page);
+  const nav = page.getByRole('navigation', { name: 'Solution' });
+  await nav.getByRole('button', { name: 'Collapse folder Steps', exact: true }).click({ button: 'right' });
+  page.once('dialog', (d) => void d.accept('Helpers/Clock.cs'));
+  await page.getByRole('menuitem', { name: 'New File…' }).click();
+  await expect(page.getByRole('button', { name: 'Close Clock.cs' })).toBeVisible();
+  expect(await fs.readFile(path.join(root, 'Steps/Helpers/Clock.cs'), 'utf8')).toBe('');
+});
