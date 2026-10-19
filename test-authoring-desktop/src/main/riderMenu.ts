@@ -166,6 +166,7 @@ const ROWS: Record<'edit' | 'view' | 'navigate' | 'code' | 'tools' | 'help', Row
     ['Analyze Stack Trace…', 'analyze-stack'],
     null,
     ['Branches…', 'branches'],
+    ['TODO Patterns…', 'todo-tokens'],
   ],
   help: [
     null,

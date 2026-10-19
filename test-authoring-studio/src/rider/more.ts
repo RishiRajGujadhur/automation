@@ -1,5 +1,6 @@
 import type { EditorView } from '@codemirror/view';
 import type { RiderCommand } from './commands';
+import { DEFAULT_TODO_TOKENS } from '../editor/todoHighlight';
 import { copyText as copyFilterText } from '../ui';
 import { cycleStepKeyword, scenarioToOutline, tableInsertRow, tableAddColumn, tableDeleteColumn, tableSortByColumn, testFilter, selectScenario } from '../editor/gherkinTools';
 import { unsavedFiles } from '../editor/autosave';
@@ -76,5 +77,6 @@ export function moreCommands(h: MoreHelpers): RiderCommand[] {
     { id: 'select-scenario', label: 'Select Scenario', menu: 'Code', run: h.inEditor(selectScenario) },
     { id: 'bracket-colors', label: 'Bracket Pair Colorization', menu: 'View', checked: () => !viewOptions().noBracketColors, run: () => setViewOptions({ noBracketColors: !viewOptions().noBracketColors }) },
     { id: 'strip-trailing', label: 'Strip Trailing Spaces', menu: 'Edit', run: h.inEditor((v) => stripTrailingSpaces(v) || h.notice('No trailing spaces.')) },
+    { id: 'todo-tokens', label: 'TODO Patterns…', menu: 'Tools', run: () => { const now = (viewOptions().todoTokens ?? DEFAULT_TODO_TOKENS).join(', '); const next = window.prompt('Comment keywords to highlight (comma-separated; empty restores the defaults):', now); if (next === null) return; const tokens = next.split(',').map((t) => t.trim()).filter((t) => /^\w+$/.test(t)); setViewOptions({ todoTokens: tokens.length ? tokens : undefined }); h.notice(`TODO patterns: ${(tokens.length ? tokens : DEFAULT_TODO_TOKENS).join(', ')}`); } },
   ];
 }
