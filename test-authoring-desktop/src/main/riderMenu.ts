@@ -35,6 +35,7 @@ const ROWS: Record<'edit' | 'view' | 'navigate' | 'code' | 'tools' | 'help', Row
     ['Rollback Lines', 'rollback-lines', 'CmdOrCtrl+Alt+Z'],
     null,
     ['Sort Lines', 'sort-lines'],
+    ['Reverse Lines', 'reverse-lines'],
   ],
   view: [
     null,

@@ -32,3 +32,6 @@ export const sortLines = (desc = false) => mapLines((lines) => {
   const rest = lines.filter((l) => l.trim()).sort((a, b) => collator.compare(a.trim(), b.trim()) || a.localeCompare(b));
   return [...(desc ? rest.reverse() : rest), ...blank];
 });
+
+/** Reverse Lines (Rider): the selected lines (or the file) in reverse order. */
+export const reverseLines = mapLines((lines) => [...lines].reverse());

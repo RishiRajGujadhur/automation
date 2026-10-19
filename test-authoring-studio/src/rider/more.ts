@@ -1,6 +1,6 @@
 import type { EditorView } from '@codemirror/view';
 import type { RiderCommand } from './commands';
-import { sortLines } from '../editor/textTools';
+import { sortLines, reverseLines } from '../editor/textTools';
 
 /**
  * Third batch of Visual Studio 2026 / JetBrains Rider commands (IDE-FEATURES.md, X1–X200). RiderHost registers them
@@ -15,5 +15,6 @@ export type MoreHelpers = {
 export function moreCommands(h: MoreHelpers): RiderCommand[] {
   return [
     { id: 'sort-lines', label: 'Sort Lines', menu: 'Edit', group: true, run: h.inEditor(sortLines()) },
+    { id: 'reverse-lines', label: 'Reverse Lines', menu: 'Edit', run: h.inEditor(reverseLines) },
   ];
 }

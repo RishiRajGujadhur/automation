@@ -9,6 +9,8 @@ has it on by default, so the desktop app starts with it on. The others start off
 | # | Feature | From | Essential | Status |
 | --- | --- | --- | --- | --- |
 | X1 | Sort Lines (Edit) | Rider | no | ✅ 2026-10-20 |
+| X2 | Reverse Lines (Edit) | Rider | no | ✅ 2026-10-20 |
 
 ## Progress log
 - 2026-10-20 X1: Sort Lines: the selected lines (or the whole file) in natural, case-insensitive order, blank lines last. Third-batch plumbing: src/rider/more.ts, src/editor/textTools.ts, IDE-FEATURES.md.
+- 2026-10-20 X2: Reverse Lines: the selected lines or the file, last first.

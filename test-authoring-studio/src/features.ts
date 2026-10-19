@@ -99,6 +99,7 @@ export const FEATURES: Feature[] = [
   { id: 'search-everywhere', label: 'Search Everywhere (Shift twice)', group: 'Help and productivity', essential: false, description: 'Double Shift opens Go to All (Ctrl+T always works).' },
   // ── Third batch (IDE-FEATURES.md) ──
   { id: 'sort-lines', label: 'Sort Lines', group: 'Editing', essential: false, description: 'Sort the selected lines (or the file): natural order, case-insensitive.', commands: ['sort-lines'] },
+  { id: 'reverse-lines', label: 'Reverse Lines', group: 'Editing', essential: false, description: 'The selected lines (or the file) in reverse order.', commands: ['reverse-lines'] },
 ];
 export const GROUPS: FeatureGroup[] = ['Editing', 'Navigation', 'Code intelligence', 'Tool windows', 'Files', 'Git', 'View', 'Debugging', 'Help and productivity'];
 

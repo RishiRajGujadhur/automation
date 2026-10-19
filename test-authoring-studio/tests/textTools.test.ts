@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { EditorState, type TransactionSpec } from '@codemirror/state';
 import type { EditorView } from '@codemirror/view';
-import { sortLines } from '../src/editor/textTools';
+import { sortLines, reverseLines } from '../src/editor/textTools';
 
 /** Runs an editor command on `doc` with the selection between the markers « and » (or a caret at |). */
 export function run(doc: string, cmd: (v: EditorView) => boolean) {
@@ -18,5 +18,8 @@ describe('text tools (IDE-FEATURES X1…)', () => {
   it('X1 Sort Lines: the selected lines, natural order; the whole file without a selection', () => {
     expect(run('b\n«item10\nItem2\nitem1»\na', sortLines())).toBe('b\nitem1\nItem2\nitem10\na');
     expect(run('|c\n\nb\na', sortLines())).toBe('a\nb\nc\n');
+  });
+  it('X2 Reverse Lines', () => {
+    expect(run('x\n«a\nb\nc»\ny', reverseLines)).toBe('x\nc\nb\na\ny');
   });
 });
