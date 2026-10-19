@@ -224,3 +224,17 @@ test('X40 Analyze Stack Trace: frames in the solution become links', async ({ pa
   await frames.getByRole('button', { name: /SignIn/ }).click();
   await expect(page.locator('.code-editor:not([hidden]) .cm-activeLine')).toContainText('SignIn');
 });
+
+test('X49–X56 Gherkin tools from the Code menu: cycle keyword, scenario to outline', async ({ page }) => {
+  await openFeature(page);
+  await caretAt(page, 'the user signs in');
+  await menuItem(page, 'Code', /^Cycle Step Keyword/);
+  await expect.poll(() => doc(page)).toContain('Then the user signs in');
+  await menuItem(page, 'Code', /^Convert Scenario to Outline/);
+  await expect.poll(() => doc(page)).toContain('Scenario Outline: Sign in');
+  expect(await doc(page)).toContain('Examples:');
+  await menuItem(page, 'Code', /^Select Scenario/);
+  await menuItem(page, 'Code', /^Cycle Step Keyword/);
+  await expect.poll(() => doc(page)).toContain('When the login page is open');
+  expect(await doc(page)).toContain('Given the browser is started');
+});
