@@ -201,3 +201,29 @@ export function gotoMember(file: string, dir: 1 | -1) {
     return true;
   };
 }
+
+/**
+ * To Verbatim / To Regular String (Rider's context action): the C# string literal at the caret switches between its
+ * regular form (backslash escapes) and its verbatim @ form (doubled quotes). Strings with other escapes (\n, \t…) stay regular.
+ */
+export function toggleVerbatim(view: EditorView) {
+  const st = view.state;
+  const line = st.doc.lineAt(st.selection.main.head);
+  const col = st.selection.main.head - line.from;
+  const re = /@"(?:[^"]|"")*"|"(?:[^"\\]|\\.)*"/g;
+  for (const m of line.text.matchAll(re)) {
+    const from = m.index!, to = from + m[0].length;
+    if (col < from || col > to) continue;
+    const lit = m[0];
+    let next: string;
+    if (lit.startsWith('@')) next = `"${lit.slice(2, -1).replace(/""/g, '"').replace(/\\/g, '\\\\').replace(/"/g, '\\"')}"`;
+    else {
+      const body = lit.slice(1, -1);
+      if (/\\[^\\"]/.test(body)) return false;
+      next = `@"${body.replace(/\\(["\\])/g, '$1').replace(/"/g, '""')}"`;
+    }
+    view.dispatch({ changes: { from: line.from + from, to: line.from + to, insert: next }, userEvent: 'input.verbatim' });
+    return true;
+  }
+  return false;
+}

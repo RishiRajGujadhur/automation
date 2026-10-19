@@ -108,6 +108,7 @@ const ROWS: Record<'edit' | 'view' | 'navigate' | 'code' | 'tools' | 'help', Row
     null,
     ['Insert GUID', 'insert-guid'],
     ['Cyclic Expand Word', 'expand-word', 'Alt+/'],
+    ['To Verbatim / Regular String', 'toggle-verbatim'],
   ],
   tools: [
     ['Run Anything… (Ctrl twice)', 'run-anything'],

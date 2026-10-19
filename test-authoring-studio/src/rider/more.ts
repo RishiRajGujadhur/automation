@@ -1,7 +1,7 @@
 import type { EditorView } from '@codemirror/view';
 import type { RiderCommand } from './commands';
 import { setViewOptions, viewOptions } from '../editor/viewOptions';
-import { lastEditLocation, insertGuid, cyclicExpandWord, gotoMember } from '../editor/textTools';
+import { lastEditLocation, insertGuid, cyclicExpandWord, gotoMember, toggleVerbatim } from '../editor/textTools';
 import { sortLines, reverseLines, deleteHorizontalWhiteSpace, setCase, transposeLine, transposeChars, transposeWords, cursorMatchingBracket, selectMatchingBracket, findSelected } from '../editor/textTools';
 
 /**
@@ -37,5 +37,6 @@ export function moreCommands(h: MoreHelpers): RiderCommand[] {
     { id: 'current-line', label: 'Highlight Current Line', menu: 'View', checked: () => !viewOptions().noActiveLine, run: () => setViewOptions({ noActiveLine: !viewOptions().noActiveLine }) },
     { id: 'next-member', label: 'Next Member', menu: 'Navigate', group: true, shortcut: 'Alt PageDown', run: h.inEditor((v, f) => gotoMember(f, 1)(v)) },
     { id: 'previous-member', label: 'Previous Member', menu: 'Navigate', shortcut: 'Alt PageUp', run: h.inEditor((v, f) => gotoMember(f, -1)(v)) },
+    { id: 'toggle-verbatim', label: 'To Verbatim / Regular String', menu: 'Code', run: h.inEditor((v) => { if (!toggleVerbatim(v)) h.notice('Put the caret in a C# string without \\n-style escapes.'); }) },
   ];
 }

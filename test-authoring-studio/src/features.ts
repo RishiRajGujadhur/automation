@@ -116,6 +116,7 @@ export const FEATURES: Feature[] = [
   { id: 'overtype', label: 'Overtype mode', group: 'Editing', essential: true, vs: 'Insert key (overtype)', description: 'Insert switches between inserting and overwriting characters; the status bar shows OVR.', commands: ['overtype'] },
   { id: 'current-line', label: 'Highlight current line toggle', group: 'View', essential: true, vs: 'Highlight current line', description: 'View ▸ Highlight Current Line turns the caret line\'s background on or off.', commands: ['current-line'] },
   { id: 'member-navigation', label: 'Next / Previous Member', group: 'Navigation', essential: false, description: 'Alt+PageDown / PageUp jump between methods and properties (scenarios in features).', commands: ['next-member', 'previous-member'] },
+  { id: 'toggle-verbatim', label: 'To Verbatim / Regular String', group: 'Editing', essential: false, description: 'Switch the C# string at the caret between "..." and @"..." (handy for step patterns).', commands: ['toggle-verbatim'] },
 ];
 export const GROUPS: FeatureGroup[] = ['Editing', 'Navigation', 'Code intelligence', 'Tool windows', 'Files', 'Git', 'View', 'Debugging', 'Help and productivity'];
 

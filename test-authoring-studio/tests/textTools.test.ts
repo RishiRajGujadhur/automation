@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { EditorState, type TransactionSpec } from '@codemirror/state';
 import { EditorView } from '@codemirror/view';
-import { sortLines, reverseLines, deleteHorizontalWhiteSpace, setCase, transposeLine, transposeChars, transposeWords, cursorMatchingBracket, selectMatchingBracket, findSelected, lastEditLocation, trackEdits, insertGuid, cyclicExpandWord, gotoMember } from '../src/editor/textTools';
+import { sortLines, reverseLines, deleteHorizontalWhiteSpace, setCase, transposeLine, transposeChars, transposeWords, cursorMatchingBracket, selectMatchingBracket, findSelected, lastEditLocation, trackEdits, insertGuid, cyclicExpandWord, gotoMember, toggleVerbatim } from '../src/editor/textTools';
 
 /** Runs an editor command on `doc` with the selection between the markers « and » (or a caret at |). */
 export function run(doc: string, cmd: (v: EditorView) => boolean) {
@@ -92,5 +92,14 @@ describe('text tools (IDE-FEATURES X1…)', () => {
     expect(line).toBe(7);
     run('Feature: F\n  Scenario: S\n    Given x\n  Scenario: |T', (v) => gotoMember('F.feature', -1)(v) && at(v));
     expect(line).toBe(2);
+  });
+  it('X19 To Verbatim / Regular String', () => {
+    const q = '"';
+    // Regular → verbatim: \\ becomes \, \" becomes "" (doubled).
+    expect(run(`[Given(${q}a \\\\d+ \\${q}x|\\${q}${q})]`, toggleVerbatim)).toBe(`[Given(@${q}a \\d+ ${q}${q}x${q}${q}${q})]`);
+    // And back.
+    expect(run(`[Given(@${q}a \\d+ ${q}${q}x|${q}${q}${q})]`, toggleVerbatim)).toBe(`[Given(${q}a \\\\d+ \\${q}x\\${q}${q})]`);
+    // Other escapes: left alone.
+    expect(run(`var s = ${q}a\\nb|${q};`, toggleVerbatim)).toBe(`var s = ${q}a\\nb${q};`);
   });
 });
