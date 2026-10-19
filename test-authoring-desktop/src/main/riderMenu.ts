@@ -47,6 +47,7 @@ const ROWS: Record<'edit' | 'view' | 'navigate' | 'code' | 'tools' | 'help', Row
     ['Find Previous Selected', 'find-previous-selected', 'CmdOrCtrl+Shift+F3'],
     ['Overtype Mode', 'overtype', 'Insert'],
     ['Convert Case…', 'convert-case'],
+    ['Paste JSON as Classes', 'paste-json-classes'],
   ],
   view: [
     null,

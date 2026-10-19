@@ -1,5 +1,6 @@
 import type { EditorView } from '@codemirror/view';
 import type { RiderCommand } from './commands';
+import { jsonToClasses } from '../editor/jsonClasses';
 import { generateConstructor } from '../editor/generateCtor';
 import { setViewOptions, viewOptions } from '../editor/viewOptions';
 import { lastEditLocation, insertGuid, cyclicExpandWord, gotoMember, toggleVerbatim } from '../editor/textTools';
@@ -40,5 +41,6 @@ export function moreCommands(h: MoreHelpers): RiderCommand[] {
     { id: 'previous-member', label: 'Previous Member', menu: 'Navigate', shortcut: 'Alt PageUp', run: h.inEditor((v, f) => gotoMember(f, -1)(v)) },
     { id: 'toggle-verbatim', label: 'To Verbatim / Regular String', menu: 'Code', run: h.inEditor((v) => { if (!toggleVerbatim(v)) h.notice('Put the caret in a C# string without \\n-style escapes.'); }) },
     { id: 'generate-ctor', label: 'Generate Constructor', menu: 'Code', run: h.inEditor((v) => { const err = generateConstructor(v); if (err) h.notice(err); }) },
+    { id: 'paste-json-classes', label: 'Paste JSON as Classes', menu: 'Edit', run: h.inEditor(async (v) => { let text = ''; try { text = await navigator.clipboard.readText(); } catch { h.notice('The clipboard cannot be read here.'); return; } try { const code = jsonToClasses(text); v.dispatch(v.state.replaceSelection(code), { scrollIntoView: true, userEvent: 'input.paste' }); } catch { h.notice('The clipboard does not hold JSON.'); } }) },
   ];
 }
