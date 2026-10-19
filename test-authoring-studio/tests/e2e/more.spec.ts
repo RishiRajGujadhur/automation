@@ -474,3 +474,13 @@ test('X96 Menu groups: Code ▸ Gherkin submenu; off in Settings ▸ Features pu
   await expect(page.getByRole('menuitem', { name: /^Duplicate Scenario/ })).toBeVisible();
   await expect(page.getByRole('menuitem', { name: 'Gherkin' })).toHaveCount(0);
 });
+
+test('X97–X101 smoke: Gherkin ▸ Toggle Tag and Add Examples Table', async ({ page }) => {
+  await openFeature(page);
+  await caretAt(page, 'Scenario: Sign in');
+  page.once('dialog', (d) => void d.accept('@wip'));
+  await gherkinItem(page, /^Toggle Tag/);
+  await expect.poll(() => doc(page)).toMatch(/@wip\r?\n\s*Scenario: Sign in/);
+  await gherkinItem(page, /^Move Scenario Up/);
+  await expect.poll(() => doc(page)).toMatch(/@wip\r?\n\s*Scenario: Sign in/);
+});
