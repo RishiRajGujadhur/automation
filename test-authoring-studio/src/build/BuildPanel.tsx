@@ -5,7 +5,8 @@ import { IconButton } from '../radix2';
 import { useLocalState } from '../ui';
 import { useBuild, startBuild, cancelBuild } from './store';
 import { api } from '../api';
-import { errorRows, type ErrorScope } from './errorList';
+import { errorRows, errorText, errorHelpUrl, type ErrorScope } from './errorList';
+import { copyText } from '../ui';
 import { useTabs } from '../files/tabs';
 import { featureOn } from '../features';
 
@@ -93,9 +94,9 @@ export default function BuildPanel({ onOpen, onNotice, onClose }: { onOpen: (fil
             <div className="dbg-grid error-grid" role="grid" aria-label="Error List">
               <div className="dbg-row dbg-head" role="row"><span role="columnheader" /><span role="columnheader">Code</span><span role="columnheader">Description</span><span role="columnheader">Project</span><span role="columnheader">File</span><span role="columnheader">Line</span></div>
               {rows.map((d, i) => (
-                <div key={i} className={`dbg-row error-row ${d.file ? 'navigable' : ''}`} role="row" tabIndex={0} onDoubleClick={() => go(i)} onKeyDown={(e) => { if (e.key === 'Enter') go(i); }} title={d.file ? 'Double-click to go to the line' : undefined}>
+                <div key={i} className={`dbg-row error-row ${d.file ? 'navigable' : ''}`} role="row" tabIndex={0} onDoubleClick={() => go(i)} onKeyDown={(e) => { if (e.key === 'Enter') go(i); else if (featureOn('error-list-copy') && (e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'c') { e.preventDefault(); void copyText(errorText(d)).then((ok) => onNotice(ok ? `Copied ${d.code}.` : 'Clipboard unavailable.')); } else if (featureOn('error-list-copy') && e.key === 'F1') { e.preventDefault(); window.open(errorHelpUrl(d.code), '_blank', 'noopener'); } }} title={d.file ? 'Double-click to go to the line' : undefined}>
                   <span role="gridcell">{d.severity === 'error' ? <CircleX size={13} className="sev-error" aria-label="Error" /> : <TriangleAlert size={13} className="sev-warning" aria-label="Warning" />}</span>
-                  <span role="gridcell">{d.code}</span>
+                  <span role="gridcell">{featureOn('error-list-copy') && d.code ? <a href={errorHelpUrl(d.code)} target="_blank" rel="noreferrer" title="Show Error Help (F1)">{d.code}</a> : d.code}</span>
                   <span role="gridcell" className="error-message" title={d.message}>{d.message}</span>
                   <span role="gridcell">{d.project ?? ''}</span>
                   <span role="gridcell" title={d.file}>{d.file?.split('/').pop() ?? ''}</span>

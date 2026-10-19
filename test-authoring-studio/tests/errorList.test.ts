@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { errorRows } from '../src/build/errorList';
+import { errorRows, errorText, errorHelpUrl } from '../src/build/errorList';
 import type { BuildDiagnostic } from '../src/build/store';
 
 const ds: BuildDiagnostic[] = [
@@ -16,5 +16,10 @@ describe('Error List (X65…)', () => {
     expect(errorRows(ds, { ...base, scope: 'current', current: 'src/App/Program.cs' }).map((d) => d.code)).toEqual(['CS1002']);
     expect(errorRows(ds, { ...base, scope: 'current' })).toEqual([]);
     expect(errorRows(ds, { ...base, warnings: false, query: 'app' }).map((d) => d.code)).toEqual(['CS1002']);
+  });
+  it('X66 copy and error help', () => {
+    expect(errorText(ds[0])).toBe('Error\tCS1002\t; expected\tApp\tsrc/App/Program.cs\t9');
+    expect(errorHelpUrl('CS1002')).toBe('https://learn.microsoft.com/en-us/dotnet/csharp/misc/cs1002');
+    expect(errorHelpUrl('NU1101')).toBe('https://learn.microsoft.com/en-us/search/?terms=NU1101');
   });
 });

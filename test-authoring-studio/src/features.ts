@@ -163,6 +163,7 @@ export const FEATURES: Feature[] = [
   { id: 'explorer-new-file', label: 'Explorer: New File…', group: 'Files', essential: true, vs: 'Add ▸ New Item', description: 'A folder\'s context menu creates a file (any type, sub-folders allowed) and opens it.' },
   { id: 'run-until-failure', label: 'Run Until Failure', group: 'Debugging', essential: false, vs: 'Test Explorer ▸ Run Until Failure', description: 'Repeats the last test run until a test fails (or N runs pass).', commands: ['run-until-failure'] },
   { id: 'error-list-scope', label: 'Error List scope', group: 'Tool windows', essential: true, vs: 'Error List ▸ scope filter', description: 'Entire Solution, Open Documents or Current Document.' },
+  { id: 'error-list-copy', label: 'Error List: Copy and Error Help', group: 'Tool windows', essential: true, vs: 'Error List ▸ Copy / Show Error Help', description: 'Ctrl+C copies a row; F1 or the code opens its Microsoft Learn page.' },
 ];
 export const GROUPS: FeatureGroup[] = ['Editing', 'Navigation', 'Code intelligence', 'Tool windows', 'Files', 'Git', 'Gherkin', 'View', 'Debugging', 'Help and productivity'];
 
