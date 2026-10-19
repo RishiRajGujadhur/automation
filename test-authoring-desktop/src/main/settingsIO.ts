@@ -4,6 +4,7 @@ import path from 'node:path';
 import { ctx } from './context';
 import { dataRoot } from './paths';
 import { read, reset, write, type Shape } from './store';
+import { validateSettingsExport } from './settingsValidation';
 
 const studioFile = (name: string) => path.join(dataRoot(), '.local', name);
 const readJson = (f: string) => { try { return JSON.parse(fs.readFileSync(f, 'utf8')); } catch { return undefined; } };
@@ -22,8 +23,9 @@ export async function importSettings() {
   if (!ctx.win) return;
   const r = await dialog.showOpenDialog(ctx.win, { title: 'Import settings', properties: ['openFile'], filters: [{ name: 'JSON', extensions: ['json'] }] });
   if (r.canceled || !r.filePaths[0]) return;
-  const data = readJson(r.filePaths[0]);
-  if (data?.format !== 'testauthoring-settings') { dialog.showErrorBox('Import settings', 'That file is not a TestAuthoring Studio settings export.'); return; }
+  const validated = validateSettingsExport(readJson(r.filePaths[0]));
+  if (!validated.data) { dialog.showErrorBox('Import settings', `No settings were changed.\n\n${validated.errors.join('\n')}`); return; }
+  const data = validated.data;
   const ok = await dialog.showMessageBox(ctx.win, { type: 'question', buttons: ['Import and restart', 'Cancel'], cancelId: 1, message: 'Replace your settings?', detail: 'Desktop settings, studio settings and the workspace configuration are replaced. The app restarts.' });
   if (ok.response !== 0) return;
   if (data.desktop && typeof data.desktop === 'object') write(data.desktop as Partial<Shape>);

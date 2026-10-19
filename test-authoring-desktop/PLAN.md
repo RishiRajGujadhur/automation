@@ -218,3 +218,7 @@ Legend: `[x]` done · `[ ]` to do. Every feature is committed and pushed when fi
 ## DQ27 — browser installation notifications (2026-10-19)
 - [x] Route browser-install notifications through Do Not Disturb; persist the outcome and show it in Help → Playwright Browsers.
 - [x] Three unit cases and packaged simulated-installer regression pass; desktop typecheck passes.
+
+## DQ19 — validate settings imports (2026-10-19)
+- [x] Validate all supplied desktop, studio and workspace fields and export version before changing settings; report field-specific errors.
+- [x] Schema regression and packaged invalid-import test pass, including unchanged file contents and a still-running app; desktop typecheck passes.
