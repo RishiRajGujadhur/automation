@@ -74,5 +74,6 @@ export function moreCommands(h: MoreHelpers): RiderCommand[] {
     { id: 'table-sort', label: 'Table: Sort by Column', menu: 'Code', run: h.inEditor(tableSortByColumn) },
     { id: 'copy-test-filter', label: 'Copy Test Filter', menu: 'Code', run: h.inEditor((v) => { const f = testFilter(v.state, v.state.doc.lineAt(v.state.selection.main.head).number); if (!f) { h.notice('Not a feature file.'); return; } void copyFilterText(f).then((ok) => h.notice(ok ? `Copied: ${f}` : 'Clipboard unavailable.')); }) },
     { id: 'select-scenario', label: 'Select Scenario', menu: 'Code', run: h.inEditor(selectScenario) },
+    { id: 'bracket-colors', label: 'Bracket Pair Colorization', menu: 'View', checked: () => !viewOptions().noBracketColors, run: () => setViewOptions({ noBracketColors: !viewOptions().noBracketColors }) },
   ];
 }

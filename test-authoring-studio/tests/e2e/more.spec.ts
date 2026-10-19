@@ -238,3 +238,41 @@ test('X49–X56 Gherkin tools from the Code menu: cycle keyword, scenario to out
   await expect.poll(() => doc(page)).toContain('When the login page is open');
   expect(await doc(page)).toContain('Given the browser is started');
 });
+
+test('X57 Bracket pair colorization: brackets coloured by depth; View toggles it', async ({ page }) => {
+  const src = await openCs(page, 'Steps/AuthSteps.cs', 'class');
+  await expect(src.locator('.cm-bracket-0').first()).toBeVisible();
+  await expect(src.locator('.cm-bracket-1').first()).toBeVisible();
+  await menuItem(page, 'View', /Bracket Pair Colorization/);
+  await expect(src.locator('.cm-bracket-0')).toHaveCount(0);
+});
+
+test('X58 Editor zoom in the status bar: shows the zoom; a click resets it', async ({ page }) => {
+  await page.addInitScript(() => localStorage.setItem('tas:rider:view', JSON.stringify({ fontSize: 26 })));
+  await openFeature(page);
+  const zoom = page.getByRole('button', { name: /^Editor zoom 200%/ });
+  await expect(zoom).toBeVisible();
+  await zoom.click();
+  await expect(page.getByRole('button', { name: /^Editor zoom 100%/ })).toBeVisible();
+});
+
+test('X60 TODO patterns: custom comment keywords are highlighted', async ({ page }) => {
+  await openFeature(page);
+  await caretAt(page, 'Feature:');
+  await page.keyboard.press('End');
+  await page.keyboard.press('Enter');
+  await page.keyboard.type('# NOTE check the admin path');
+  await expect(gherkin(page).locator('.cm-todo')).toHaveCount(0);
+  page.once('dialog', (d) => void d.accept('TODO, NOTE'));
+  await menuItem(page, 'Tools', /TODO Patterns/);
+  await expect(gherkin(page).locator('.cm-todo-note')).toContainText('NOTE check the admin path');
+});
+
+test('X61 Right margin guide: on at column 120, the column can change, 0 hides it', async ({ page }) => {
+  await openFeature(page);
+  const editor = page.locator('.gherkin-editor .cm-editor').first();
+  await expect(editor).toHaveClass(/cm-right-margin/);
+  page.once('dialog', (d) => void d.accept('0'));
+  await menuItem(page, 'View', /Right Margin Guide/);
+  await expect(editor).not.toHaveClass(/cm-right-margin/);
+});

@@ -4,10 +4,11 @@ import { indentationMarkers } from '@replit/codemirror-indentation-markers';
 import { highlightSelectionMatches } from '@codemirror/search';
 import { featureOn, onFeaturesChanged } from '../features';
 import { todoHighlight } from './todoHighlight';
+import { bracketColors } from './bracketColors';
 import { EditorView, ViewPlugin, highlightWhitespace, highlightTrailingWhitespace, rectangularSelection, keymap } from '@codemirror/view';
 
 /** View ▸ Active Editor options (Rider): soft wraps, …, shared by every editor and remembered. */
-export type ViewOptions = { softWrap: boolean; whitespace: boolean; fontSize: number | null; columnMode?: boolean; hideLineNumbers?: boolean; hideIndentGuides?: boolean; noCaretUsages?: boolean; overtype?: boolean; noActiveLine?: boolean; multiRowTabs?: boolean };
+export type ViewOptions = { softWrap: boolean; whitespace: boolean; fontSize: number | null; columnMode?: boolean; hideLineNumbers?: boolean; hideIndentGuides?: boolean; noCaretUsages?: boolean; overtype?: boolean; noActiveLine?: boolean; multiRowTabs?: boolean; noBracketColors?: boolean };
 const KEY = 'tas:rider:view';
 const DEFAULTS: ViewOptions = { softWrap: false, whitespace: false, fontSize: null };
 let options: ViewOptions = (() => { try { return { ...DEFAULTS, ...JSON.parse(localStorage.getItem(KEY) ?? '{}') }; } catch { return DEFAULTS; } })();
@@ -92,6 +93,12 @@ const font = new Compartment();
 const fontTheme = (px: number | null) => (px ? EditorView.theme({ '&': { fontSize: `${px}px` }, '.cm-content, .cm-gutters': { fontSize: `${px}px` } }) : []);
 const extensionsFor = (o: ViewOptions) => ({ activeLine: o.noActiveLine && featureOn('current-line') ? noActiveLine : [], overtype: o.overtype && featureOn('overtype') ? overtype : [], todos: featureOn('todo-highlighting') ? todoHighlight : [], caret: o.noCaretUsages || !featureOn('highlight-usages') ? [] : wordAtCaret, guides: o.hideIndentGuides || !featureOn('indent-guides') ? [] : indentGuides, numbers: o.hideLineNumbers ? hideNumbers : [], column: o.columnMode ? columnMode : [], font: fontTheme(o.fontSize), wrap: o.softWrap ? EditorView.lineWrapping : [], spaces: o.whitespace ? [highlightWhitespace(), highlightTrailingWhitespace()] : [] });
 
+/** More options (IDE-FEATURES.md): a compartment each, with the extension for the current options. */
+const EXTRA: [Compartment, (o: ViewOptions) => Extension][] = [
+  [new Compartment(), (o) => (o.noBracketColors || !featureOn('bracket-colors') ? [] : bracketColors)],
+  // extra view options
+];
+
 /** Applies the options to an editor and follows later changes. */
 export function viewOptionsExtension(): Extension {
   const now = extensionsFor(options);
@@ -106,10 +113,11 @@ export function viewOptionsExtension(): Extension {
     todos.of(now.todos),
     overtypeC.of(now.overtype),
     activeLine.of(now.activeLine),
+    ...EXTRA.map(([c, f]) => c.of(f(options))),
     ViewPlugin.fromClass(class {
       off: () => void;
       constructor(view: EditorView) {
-        const apply = () => { const e = extensionsFor(options); view.dispatch({ effects: [wrap.reconfigure(e.wrap), spaces.reconfigure(e.spaces), font.reconfigure(e.font), column.reconfigure(e.column), numbers.reconfigure(e.numbers), guides.reconfigure(e.guides), caretUsages.reconfigure(e.caret), todos.reconfigure(e.todos), overtypeC.reconfigure(e.overtype), activeLine.reconfigure(e.activeLine)] }); };
+        const apply = () => { const e = extensionsFor(options); view.dispatch({ effects: [wrap.reconfigure(e.wrap), spaces.reconfigure(e.spaces), font.reconfigure(e.font), column.reconfigure(e.column), numbers.reconfigure(e.numbers), guides.reconfigure(e.guides), caretUsages.reconfigure(e.caret), todos.reconfigure(e.todos), overtypeC.reconfigure(e.overtype), activeLine.reconfigure(e.activeLine), ...EXTRA.map(([c, f]) => c.reconfigure(f(options)))] }); };
         listeners.add(apply);
         // Ctrl+Mouse Wheel changes the font size of the editors (Rider's "Change font size with Ctrl+Mouse Wheel").
         const wheel = (e: WheelEvent) => {

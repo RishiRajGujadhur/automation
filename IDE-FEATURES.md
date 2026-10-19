@@ -64,6 +64,7 @@ has it on by default, so the desktop app starts with it on. The others start off
 | X54 | Table: Sort by Column | Rider | no | ✅ 2026-10-20 |
 | X55 | Copy Test Filter | Rider / VS Test Explorer | yes | ✅ 2026-10-20 |
 | X56 | Select Scenario | Rider | yes | ✅ 2026-10-20 |
+| X57 | Bracket pair colorization | VS 2026 / Rider | yes | ✅ 2026-10-20 |
 
 ## Progress log
 - 2026-10-20 X1: Sort Lines: the selected lines (or the whole file) in natural, case-insensitive order, blank lines last. Third-batch plumbing: src/rider/more.ts, src/editor/textTools.ts, IDE-FEATURES.md.
@@ -122,3 +123,4 @@ has it on by default, so the desktop app starts with it on. The others start off
 - 2026-10-20 X54: Natural sort, toggles descending
 - 2026-10-20 X55: dotnet test --filter for scenario/feature
 - 2026-10-20 X56: Selects tags through Examples
+- 2026-10-20 X57: Depth colours, strings/comments skipped
