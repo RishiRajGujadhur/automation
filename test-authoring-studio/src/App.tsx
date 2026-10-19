@@ -34,6 +34,7 @@ import OutputPanel, { type OutputSource } from './OutputPanel';
 import TodoPanel from './TodoPanel';
 import { eolOf, withEol, SET_EOL_EVENT, type Eol } from './editor/lineSeparator';
 import RiderHost from './rider/RiderHost';
+import { recordNotice } from './rider/notifications';
 import RiderMenubar from './rider/RiderMenubar';
 import RiderToolWindow, { RIDER_TOOLS, type RiderTool } from './rider/RiderToolWindow';
 import { menuEntries, runRider, useRiderCommands, commandOn } from './rider/commands';
@@ -245,6 +246,8 @@ export default function App() {
   const [modal, setModal] = useState<string>();
   const [error, setError] = useState('');
   const [notice, setNotice] = useState('');
+  // Notifications window: every notice is kept for the session.
+  useEffect(() => { recordNotice(notice); }, [notice]);
   // Every notice also goes to Output ▸ Studio.
   useEffect(() => { studioLog(notice); }, [notice]);
   const [busy, setBusy] = useState(false);

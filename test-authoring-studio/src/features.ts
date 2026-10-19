@@ -135,6 +135,7 @@ export const FEATURES: Feature[] = [
   { id: 'close-unmodified', label: 'Close Unmodified Tabs', group: 'View', essential: false, description: 'Closes every tab without unsaved changes (pinned and active tabs stay).', commands: ['close-unmodified'] },
   { id: 'switcher', label: 'Switcher (Ctrl+Tab)', group: 'Navigation', essential: true, vs: 'IDE Navigator (Ctrl+Tab)', description: 'Ctrl+Tab lists the open editors (most recent first) and tool windows; Enter switches.', commands: ['switcher'] },
   { id: 'multi-row-tabs', label: 'Tabs in multiple rows', group: 'View', essential: false, description: 'The editor tabs wrap onto more rows instead of scrolling.', commands: ['multi-row-tabs'] },
+  { id: 'notifications', label: 'Notifications window', group: 'Tool windows', essential: true, vs: 'Notifications (bell)', description: 'Every message of the session, newest first (View ▸ Notifications).', commands: ['tool-notifications'] },
 ];
 export const GROUPS: FeatureGroup[] = ['Editing', 'Navigation', 'Code intelligence', 'Tool windows', 'Files', 'Git', 'View', 'Debugging', 'Help and productivity'];
 

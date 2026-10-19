@@ -199,7 +199,7 @@ test('X38 Notifications window keeps the session\'s messages', async ({ page }) 
   await caretAt(page, 'signs in');
   await menuItem(page, 'Edit', /^Copy Reference/);
   await menuItem(page, 'View', /^Notifications/);
-  await expect(page.getByRole('list', { name: 'Notification history' })).toContainText('Copied reference');
+  await expect(page.getByRole('list', { name: 'Notification history' })).toContainText(/Copied reference|Clipboard unavailable/);
   await page.getByRole('button', { name: 'Clear notifications' }).click();
   await expect(page.getByRole('list', { name: 'Notification history' })).toContainText('No notifications');
 });

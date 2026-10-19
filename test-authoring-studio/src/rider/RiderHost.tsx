@@ -478,6 +478,7 @@ export default function RiderHost(props: RiderHostProps) {
       { id: 'convert-case', label: 'Convert Case…', menu: 'Edit', run: () => openPopup({ kind: 'convert-case' }) },
       { id: 'window-layouts', label: 'Window Layouts…', menu: 'View', group: true, run: () => openPopup({ kind: 'window-layouts' }, false) },
       { id: 'switcher', label: 'Switcher…', menu: 'Navigate', group: true, shortcut: 'Ctrl Tab', run: () => { const t = getTabs(); const order = [t.active, ...recentFiles()].filter((f, i, a) => f && a.indexOf(f) === i && t.tabs.some((x) => x.file === f)) as string[]; const rest = t.tabs.map((x) => x.file).filter((f) => !order.includes(f)); const tools = (Object.keys(RIDER_TOOLS) as RiderTool[]).map((k) => ({ file: `tool:${k}`, label: RIDER_TOOLS[k] })); setPopup({ kind: 'switcher', items: [...[...order, ...rest].map((f) => ({ file: f, label: f.split('/').pop()! })), ...tools] }); } },
+      { id: 'tool-notifications', label: 'Notifications', menu: 'View', run: () => p.current.onTool('notifications') },
       { id: 'carets-line-ends', label: 'Add Carets to Ends of Selected Lines', menu: 'Edit', shortcut: 'Alt Shift G', run: inEditor(caretsAtLineEnds) },
     ];
     return registerRider([...list, ...moreCommands({ inEditor, notice: (m) => p.current.onNotice(m), navigate: (l) => p.current.onNavigate(l) })]);
