@@ -5,7 +5,8 @@ import DiffApproval from '../DiffApproval';
 import type { FilePreview } from '../api';
 import { renameTag } from '../editor/gherkinTools';
 import { featureOn } from '../features';
-import { PencilLine } from 'lucide-react';
+import { PencilLine, Play } from 'lucide-react';
+import { discoverTests, runTests } from '../testing/store';
 
 export type TagRow = { tag: string; scenarios: { file: string; feature: string; scenario: string; line: number }[] };
 
@@ -35,6 +36,16 @@ export default function TagsPanel({ onOpen, onNotice, onClose }: { onOpen: (file
       if (!out.length) onNotice(`${row.tag} is not on any tag line.`);
     } catch (e) { onNotice((e as Error).message); }
   };
+  // Run the tag's scenarios (Test Explorer's Traits / Rider's run by category).
+  const runTagged = async (row: TagRow) => {
+    try {
+      const { tests } = await discoverTests();
+      const ts = tests.filter((t) => t.kind === 'scenario' && row.scenarios.some((s) => s.file === t.file && (s.line === t.line || s.scenario === t.name)));
+      if (!ts.length) { onNotice(`No runnable scenarios for ${row.tag} (build the test project first).`); return; }
+      onNotice(`Running ${ts.length} scenario${ts.length === 1 ? '' : 's'} tagged ${row.tag}…`);
+      await runTests(ts);
+    } catch (e) { onNotice((e as Error).message); }
+  };
   const q = query.trim().toLowerCase();
   const shown = tags.filter((t) => !q || t.tag.toLowerCase().includes(q));
   const toggle = (tag: string) => setOpen((prev) => { const n = new Set(prev); if (n.has(tag)) n.delete(tag); else n.add(tag); return n; });
@@ -55,6 +66,7 @@ export default function TagsPanel({ onOpen, onNotice, onClose }: { onOpen: (file
                 {open.has(t.tag) ? <ChevronDown size={12} /> : <ChevronRight size={12} />}<strong>{t.tag}</strong> <small>{t.scenarios.length} scenario{t.scenarios.length === 1 ? '' : 's'}</small>
               </button>
               {featureOn('rename-tag') && <button className="icon-button" aria-label={`Rename ${t.tag}`} title="Rename tag in every feature file…" onClick={() => void rename(t)}><PencilLine size={13} /></button>}
+              {featureOn('run-tagged') && <button className="icon-button" aria-label={`Run scenarios tagged ${t.tag}`} title="Run these scenarios" onClick={() => void runTagged(t)}><Play size={13} /></button>}
               {/* tag actions */}
             </div>
             {open.has(t.tag) && (
