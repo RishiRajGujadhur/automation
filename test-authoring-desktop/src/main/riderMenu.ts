@@ -106,6 +106,7 @@ const ROWS: Record<'edit' | 'view' | 'navigate' | 'code' | 'tools' | 'help', Row
     ['Previous Member', 'previous-member', 'Alt+PageUp'],
     null,
     ['Switcher…', 'switcher', 'Ctrl+Tab'],
+    ['Move Caret to Code Block Start', 'block-start'],
   ],
   code: [
     ['Insert Live Template…', 'live-template', 'CmdOrCtrl+J'],

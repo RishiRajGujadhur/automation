@@ -1,3 +1,4 @@
+import { bracketDepths } from './bracketColors';
 import { EditorSelection, type EditorState } from '@codemirror/state';
 import { EditorView } from '@codemirror/view';
 
@@ -345,3 +346,31 @@ function reindent(tabs: boolean) {
 export const tabify = reindent(true);
 /** Untabify Selected Lines (Visual Studio's Edit ▸ Advanced). */
 export const untabify = reindent(false);
+
+/** The innermost { … } block around a position (strings and comments skipped): the brace positions. */
+export function enclosingBlock(text: string, pos: number) {
+  const stack: number[] = [];
+  let best: { open: number; close: number } | undefined;
+  for (const b of bracketDepths(text)) {
+    if (text[b.pos] === '{') stack.push(b.pos);
+    else if (text[b.pos] === '}') { const open = stack.pop(); if (open !== undefined && open < pos && b.pos >= pos && (!best || open > best.open)) best = { open, close: b.pos }; }
+    else if ('([)]'.includes(text[b.pos])) continue;
+  }
+  return best;
+}
+/** Move Caret to Code Block Start / End (Rider: Ctrl+[ / Ctrl+]): the enclosing brace; again, the next block out. */
+export function codeBlockEdge(end: boolean) {
+  return (view: EditorView) => {
+    const { state } = view;
+    const head = state.selection.main.head;
+    const text = state.doc.toString();
+    let b = enclosingBlock(text, head);
+    // Already on this block's brace: the block around it.
+    if (b && (end ? b.close === head : b.open === head)) b = enclosingBlock(text, end ? head + 1 : head) ?? b;
+    if (b && !end && b.open === head) b = enclosingBlock(text, b.open) ?? b;
+    if (!b) return false;
+    view.dispatch({ selection: { anchor: end ? b.close : b.open }, scrollIntoView: true });
+    return true;
+  };
+}
+export const codeBlockStart = codeBlockEdge(false);

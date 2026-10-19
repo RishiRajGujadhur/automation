@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { EditorState, type TransactionSpec } from '@codemirror/state';
 import { EditorView } from '@codemirror/view';
-import { sortLines, reverseLines, deleteHorizontalWhiteSpace, setCase, transposeLine, transposeChars, transposeWords, cursorMatchingBracket, selectMatchingBracket, findSelected, lastEditLocation, trackEdits, insertGuid, cyclicExpandWord, gotoMember, toggleVerbatim, convertCase, reformatJson, stripTrailingSpaces, splitString, tabify, untabify } from '../src/editor/textTools';
+import { sortLines, reverseLines, deleteHorizontalWhiteSpace, setCase, transposeLine, transposeChars, transposeWords, cursorMatchingBracket, selectMatchingBracket, findSelected, lastEditLocation, trackEdits, insertGuid, cyclicExpandWord, gotoMember, toggleVerbatim, convertCase, reformatJson, stripTrailingSpaces, splitString, tabify, untabify, codeBlockStart } from '../src/editor/textTools';
 
 /** Runs an editor command on `doc` with the selection between the markers « and » (or a caret at |). */
 export function run(doc: string, cmd: (v: EditorView) => boolean) {
@@ -131,5 +131,13 @@ describe('text tools (IDE-FEATURES X1…)', () => {
   });
   it('X83 Untabify: leading tabs become spaces of the same width', () => {
     expect(run('«\t\ta\n  \tb»\nc', untabify)).toBe('        a\n    b\nc');
+  });
+  it('X84 Code Block Start: the enclosing {, then the next one out', () => {
+    const doc = 'class A {\n  void M() {\n    if (x) { y("{"); }\n    z|();\n  }\n}';
+    const caret = (d: string, cmd: (v: EditorView) => boolean) => { const a = d.indexOf('|'); let state = EditorState.create({ doc: d.replace('|', ''), selection: { anchor: a } }); const v = { get state() { return state; }, dispatch: (s: TransactionSpec) => { state = state.update(s).state; } }; cmd(v as unknown as EditorView); return state.selection.main.head; };
+    const plain = doc.replace('|', '');
+    expect(caret(doc, codeBlockStart)).toBe(plain.indexOf('{\n    if'));
+    const onBrace = plain.slice(0, plain.indexOf('{\n    if')) + '|' + plain.slice(plain.indexOf('{\n    if'));
+    expect(caret(onBrace, codeBlockStart)).toBe(plain.indexOf('{'));
   });
 });
