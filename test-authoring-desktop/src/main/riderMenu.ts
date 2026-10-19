@@ -194,6 +194,7 @@ const ROWS: Record<'edit' | 'view' | 'navigate' | 'code' | 'tools' | 'help', Row
     ['Calculate Code Metrics', 'code-metrics'],
     ['Run All Tests in File', 'run-file-tests'],
     ['Add Watch', 'add-watch'],
+    ['Undo Last Commit…', 'undo-commit'],
   ],
   help: [
     null,

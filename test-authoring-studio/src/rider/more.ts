@@ -1,5 +1,6 @@
 import type { EditorView } from '@codemirror/view';
 import type { RiderCommand } from './commands';
+import { GIT_CHANGED_EVENT } from '../editor/events';
 import { buildDiagnostics, stepError } from '../build/store';
 import { api } from '../api';
 import { expectedNamespace, setNamespace, firstTypeName } from '../editor/csharpTools';
@@ -107,5 +108,6 @@ export function moreCommands(h: MoreHelpers): RiderCommand[] {
     { id: 'next-error', label: 'Next Error', menu: 'Navigate', group: true, run: () => goError(1) },
     { id: 'previous-error', label: 'Previous Error', menu: 'Navigate', run: () => goError(-1) },
     { id: 'add-watch', label: 'Add Watch', menu: 'Tools', run: h.inEditor((v) => { const s = v.state.selection.main; const word = v.state.wordAt(s.head) ?? v.state.wordAt(Math.max(0, s.head - 1)); const expr = (s.empty ? (word ? v.state.sliceDoc(word.from, word.to) : '') : v.state.sliceDoc(s.from, s.to)).trim(); if (!expr) { h.notice('Select an expression (or put the caret on a name) first.'); return; } const now = getSnapshot().watches; if (!now.includes(expr)) setWatches([...now, expr]); h.notice(`Watching ${expr}.`); }) },
+    { id: 'undo-commit', label: 'Undo Last Commit…', menu: 'Tools', run: () => { if (!window.confirm('Undo the last commit? Its changes stay staged; nothing is lost. (Not for commits already pushed.)')) return; void api<{ output: string }>('/git/undo-commit', {}).then((r) => { window.dispatchEvent(new Event(GIT_CHANGED_EVENT)); h.notice(r.output); }, (e) => h.notice((e as Error).message)); } },
   ];
 }
