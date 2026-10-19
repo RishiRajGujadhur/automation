@@ -119,6 +119,7 @@ export const FEATURES: Feature[] = [
   { id: 'toggle-verbatim', label: 'To Verbatim / Regular String', group: 'Editing', essential: false, description: 'Switch the C# string at the caret between "..." and @"..." (handy for step patterns).', commands: ['toggle-verbatim'] },
   { id: 'convert-case', label: 'Convert Case', group: 'Editing', essential: false, description: 'camelCase, PascalCase, snake_case, kebab-case, CONSTANT_CASE, Title or Sentence case for the selection.', commands: ['convert-case'] },
   { id: 'xml-doc', label: 'XML documentation comments (///)', group: 'Code intelligence', essential: true, vs: 'Generate XML documentation comments for ///', description: 'Typing /// above a member writes the summary, param and returns tags.' },
+  { id: 'generate-ctor', label: 'Generate Constructor', group: 'Editing', essential: true, vs: 'Quick Actions ▸ Generate constructor', description: 'A constructor for the class at the caret, initializing its readonly fields and get-only properties.', commands: ['generate-ctor'] },
 ];
 export const GROUPS: FeatureGroup[] = ['Editing', 'Navigation', 'Code intelligence', 'Tool windows', 'Files', 'Git', 'View', 'Debugging', 'Help and productivity'];
 
