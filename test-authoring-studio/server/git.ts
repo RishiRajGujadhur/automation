@@ -266,6 +266,7 @@ export async function fileAt(root: string, ref: string, file: string) {
 const REF_NAME = /^(?!-)(?!.*\.\.)(?!.*[\s~^:?*\[\\])[\w./-]{1,100}(?<![./])$/;
 const refName = (n?: string) => { if (!n || !REF_NAME.test(n)) throw new Error('Use a branch / tag name without spaces or special characters.'); return n; };
 export const COMMIT_ACTIONS = {
+  branch: async (top, hash, o) => git(top, ['branch', refName(o.name), hash]).then(() => `Created branch ${o.name} at ${hash.slice(0, 7)}.`),
 } as Record<string, (top: string, hash: string, o: { name?: string; mode?: string }) => Promise<string>>;
 export async function commitAction(root: string, hash: string, action: string, o: { name?: string; mode?: string }) {
   if (!/^[0-9a-f]{7,40}$/i.test(hash)) throw new Error('Unknown commit.');
