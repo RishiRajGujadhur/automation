@@ -152,6 +152,8 @@ const ROWS: Record<'edit' | 'view' | 'navigate' | 'code' | 'tools' | 'help', Row
     ['Import Breakpoints…', 'import-breakpoints'],
     null,
     ['Analyze Stack Trace…', 'analyze-stack'],
+    null,
+    ['Branches…', 'branches'],
   ],
   help: [
     null,

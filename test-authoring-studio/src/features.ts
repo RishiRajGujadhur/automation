@@ -145,6 +145,7 @@ export const FEATURES: Feature[] = [
   { id: 'git-revert', label: 'Git Log: Revert Commit', group: 'Git', essential: true, vs: 'Git Repository ▸ Revert', description: 'A new commit that undoes the selected one.' },
   { id: 'git-checkout-revision', label: 'Git Log: Checkout Revision', group: 'Git', essential: true, vs: 'Git Repository ▸ Checkout (detached)', description: 'Checks the selected commit out (detached HEAD).' },
   { id: 'git-reset', label: 'Git Log: Reset Current Branch to Here', group: 'Git', essential: true, vs: 'Git Repository ▸ Reset', description: 'Soft, mixed or hard reset to the selected commit (hard asks again).' },
+  { id: 'branches', label: 'Branches popup', group: 'Git', essential: true, vs: 'Branch picker in the status bar', description: 'The status bar branch (or Tools ▸ Branches…) switches to or creates a branch.', commands: ['branches'] },
 ];
 export const GROUPS: FeatureGroup[] = ['Editing', 'Navigation', 'Code intelligence', 'Tool windows', 'Files', 'Git', 'View', 'Debugging', 'Help and productivity'];
 

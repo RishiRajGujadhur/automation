@@ -54,6 +54,7 @@ has it on by default, so the desktop app starts with it on. The others start off
 | X45 | Git Log: Revert Commit | VS 2026 / Rider | yes | ✅ 2026-10-20 |
 | X46 | Git Log: Checkout Revision | VS 2026 / Rider | yes | ✅ 2026-10-20 |
 | X47 | Git Log: Reset Current Branch to Here | VS 2026 / Rider | yes | ✅ 2026-10-20 |
+| X48 | Branches popup | VS 2026 / Rider | yes | ✅ 2026-10-20 |
 
 ## Progress log
 - 2026-10-20 X1: Sort Lines: the selected lines (or the whole file) in natural, case-insensitive order, blank lines last. Third-batch plumbing: src/rider/more.ts, src/editor/textTools.ts, IDE-FEATURES.md.
@@ -102,3 +103,4 @@ has it on by default, so the desktop app starts with it on. The others start off
 - 2026-10-20 X45: Revert with a new commit, aborted on conflicts
 - 2026-10-20 X46: Detached checkout of a commit
 - 2026-10-20 X47: Soft/mixed/hard reset; hard confirms
+- 2026-10-20 X48: Status bar branch opens a switch/create popup

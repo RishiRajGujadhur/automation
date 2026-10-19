@@ -7,6 +7,8 @@ import { GIT_CHANGED_EVENT } from './editor/events';
 import { Dropdown } from './radix';
 import { requestEol } from './editor/lineSeparator';
 import { setViewOptions, useViewOptions } from './editor/viewOptions';
+import { runRider } from './rider/commands';
+import { featureOn } from './features';
 
 /**
  * Right side of the status bar, like Visual Studio's: Git branch (with ↑/↓), errors and warnings of the last build,
@@ -51,7 +53,7 @@ export default function StatusBarItems({ repository, onGit, onErrors }: { reposi
         </button>
       )}
       {git?.repo && git.branch && (
-        <button className="status-item" aria-label={`Branch ${git.branch}: open Git Changes`} title={`${git.changes} pending change${git.changes === 1 ? '' : 's'} — Git Changes`} onClick={onGit}>
+        <button className="status-item" aria-label={`Branch ${git.branch}: open Git Changes`} title={`${git.changes} pending change${git.changes === 1 ? '' : 's'} — Git Changes`} onClick={() => { if (!featureOn('branches') || !runRider('branches', 'menu')) onGit(); }}>
           <GitBranch size={12} />{git.branch}{git.changes ? '*' : ''}
           {git.ahead > 0 && <><ArrowUp size={11} />{git.ahead}</>}
           {git.behind > 0 && <><ArrowDown size={11} />{git.behind}</>}
