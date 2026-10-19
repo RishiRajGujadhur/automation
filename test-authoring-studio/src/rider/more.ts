@@ -1,5 +1,6 @@
 import type { EditorView } from '@codemirror/view';
 import type { RiderCommand } from './commands';
+import { specAt, toggleBreakpoint, updateBreakpoint, currentFrame, getSnapshot } from '../debug/store';
 import { lastTestRun, runTests } from '../testing/store';
 import { jsonToClasses } from '../editor/jsonClasses';
 import { generateConstructor } from '../editor/generateCtor';
@@ -48,5 +49,6 @@ export function moreCommands(h: MoreHelpers): RiderCommand[] {
     { id: 'run-context', label: 'Run Tests in Context', menu: 'Tools', group: true, shortcut: 'Ctrl R, T', run: h.inEditor((v, file) => window.dispatchEvent(new CustomEvent('tas:run-context', { detail: { file, line: v.state.doc.lineAt(v.state.selection.main.head).number, debug: false } }))) },
     { id: 'debug-context', label: 'Debug Tests in Context', menu: 'Tools', shortcut: 'Ctrl R, Ctrl T', run: h.inEditor((v, file) => window.dispatchEvent(new CustomEvent('tas:run-context', { detail: { file, line: v.state.doc.lineAt(v.state.selection.main.head).number, debug: true } }))) },
     { id: 'repeat-run', label: 'Repeat Last Test Run', menu: 'Tools', shortcut: 'Ctrl R, L', run: () => { const l = lastTestRun(); if (!l) { h.notice('No test run yet in this session.'); return; } runTests(l.tests, l.configuration, l.coverage).then(() => h.notice('Running the last tests again.'), (e) => h.notice((e as Error).message)); } },
+    { id: 'toggle-bp-enabled', label: 'Enable / Disable Breakpoint', menu: 'Tools', group: true, shortcut: 'Ctrl F9', run: h.inEditor((v, file) => { const line = v.state.doc.lineAt(v.state.selection.main.head).number; const b = specAt(file, line); if (!b) { toggleBreakpoint(file, line); updateBreakpoint(file, line, { enabled: false }); h.notice('Disabled breakpoint set.'); return; } updateBreakpoint(file, line, { enabled: b.enabled === false }); h.notice(b.enabled === false ? 'Breakpoint enabled.' : 'Breakpoint disabled.'); }) },
   ];
 }

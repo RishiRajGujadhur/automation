@@ -49,3 +49,22 @@ test('X25 Run Tests in Context (Ctrl+R, T) and X27 Repeat Last Test Run (Ctrl+R,
   await expect.poll(() => runs.length, { timeout: 30_000 }).toBe(2);
   expect(runs[1]).toBe(runs[0]);
 });
+
+test('X26 Debug Tests in Context, X29 Show Next Statement, X30 Copy Call Stack', async ({ page, context }) => {
+  test.skip(!existsSync(debuggerExe), 'netcoredbg is not installed (npm run debugger:setup).');
+  await context.grantPermissions(['clipboard-read', 'clipboard-write']);
+  await open(page, 'CalculatorTests.cs', 'Assert.That(calculator.Add(), Is.EqualTo(5));');
+  await page.keyboard.press('F9');
+  await page.keyboard.press('Control+R');
+  await page.keyboard.press('Control+T');
+  const panel = page.getByRole('region', { name: 'Debugger' });
+  await expect(panel.getByRole('status')).toHaveText(/Paused · breakpoint/, { timeout: 300_000 });
+  // Elsewhere, then Alt+Num * comes back to the paused line.
+  await page.getByRole('button', { name: 'CalculatorSteps.cs', exact: true }).first().click();
+  await page.keyboard.press('Alt+NumpadMultiply');
+  await expect(page.locator('.editor-tab-label[aria-current="true"]')).toHaveAttribute('title', 'Tests/CalculatorTests.cs');
+  await page.getByRole('button', { name: 'Tools menu' }).click();
+  await page.getByRole('menuitem', { name: /Copy Call Stack/ }).click();
+  await expect.poll(() => page.evaluate(() => navigator.clipboard.readText())).toContain('AddsTwoNumbers');
+  await page.keyboard.press('Shift+F5');
+});

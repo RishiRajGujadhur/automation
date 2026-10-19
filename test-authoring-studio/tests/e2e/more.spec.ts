@@ -105,3 +105,16 @@ test('X1–X24 smoke: menu text tools, /// doc comments, Ctrl+F3, Convert Case',
   await menuItem(page, 'Edit', /^Sort Lines/);
   expect(await doc(page)).toContain('    Given the login page is open\n    Then the dashboard is displayed\n    When the user signs in');
 });
+
+test('X28 Enable / Disable Breakpoint (Ctrl+F9) keeps the breakpoint, toggles it on and off', async ({ page, request }) => {
+  await openFeature(page);
+  await caretAt(page, 'signs in');
+  await page.keyboard.press('F9');
+  const bp = async () => (await (await request.get('/api/debug')).json()).breakpoints['Features/Auth/Login.feature']?.map((b: { enabled?: boolean }) => b.enabled !== false);
+  await expect.poll(bp).toEqual([true]);
+  await page.keyboard.press('Control+F9');
+  await expect.poll(bp).toEqual([false]);
+  await page.keyboard.press('Control+F9');
+  await expect.poll(bp).toEqual([true]);
+  await page.keyboard.press('F9');
+});
