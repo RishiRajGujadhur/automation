@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { EditorState, type TransactionSpec } from '@codemirror/state';
 import type { EditorView } from '@codemirror/view';
-import { sortLines, reverseLines, deleteHorizontalWhiteSpace } from '../src/editor/textTools';
+import { sortLines, reverseLines, deleteHorizontalWhiteSpace, setCase } from '../src/editor/textTools';
 
 /** Runs an editor command on `doc` with the selection between the markers « and » (or a caret at |). */
 export function run(doc: string, cmd: (v: EditorView) => boolean) {
@@ -25,5 +25,8 @@ describe('text tools (IDE-FEATURES X1…)', () => {
   it('X3 Delete Horizontal White Space: around the caret; collapsed in a selection, indentation kept', () => {
     expect(run('a   |   b', deleteHorizontalWhiteSpace)).toBe('ab');
     expect(run('«    x   =    1;\n    y  = 2;»', deleteHorizontalWhiteSpace)).toBe('    x = 1;\n    y = 2;');
+  });
+  it('X4 Make Uppercase', () => {
+    expect(run('a Wo|rd b', setCase(true))).toBe('a WORD b');
   });
 });

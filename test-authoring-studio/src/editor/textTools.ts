@@ -59,3 +59,14 @@ export function deleteHorizontalWhiteSpace(view: EditorView) {
   if (changes.length) view.dispatch({ changes, userEvent: 'delete.whitespace' });
   return true;
 }
+
+/** Make Uppercase / Make Lowercase (Visual Studio, Edit ▸ Advanced): the selection, or the word at the caret. */
+export function setCase(upper: boolean) {
+  return (view: EditorView) => {
+    const st = view.state;
+    const spans = st.selection.ranges.map((r) => (r.empty ? st.wordAt(r.head) ?? r : r)).filter((r) => r.to > r.from);
+    if (!spans.length) return true;
+    view.dispatch({ changes: spans.map((r) => ({ from: r.from, to: r.to, insert: upper ? st.sliceDoc(r.from, r.to).toUpperCase() : st.sliceDoc(r.from, r.to).toLowerCase() })), userEvent: 'input.case' });
+    return true;
+  };
+}

@@ -37,6 +37,7 @@ const ROWS: Record<'edit' | 'view' | 'navigate' | 'code' | 'tools' | 'help', Row
     ['Sort Lines', 'sort-lines'],
     ['Reverse Lines', 'reverse-lines'],
     ['Delete Horizontal White Space', 'delete-whitespace'],
+    ['Make Uppercase', 'make-uppercase'],
   ],
   view: [
     null,
