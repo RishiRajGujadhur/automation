@@ -130,6 +130,8 @@ const ROWS: Record<'edit' | 'view' | 'navigate' | 'code' | 'tools' | 'help', Row
     ['Compare with Branch… (Git)', 'compare-branch'],
     null,
     ['Power Save Mode', 'power-save'],
+    null,
+    ['Run Tests in Context', 'run-context'],
   ],
   help: [
     null,

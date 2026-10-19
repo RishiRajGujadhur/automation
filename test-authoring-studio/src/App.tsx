@@ -539,6 +539,22 @@ export default function App() {
     window.addEventListener('keydown', h);
     return () => window.removeEventListener('keydown', h);
   }, []);
+  // Run / Debug Tests in Context (Visual Studio Ctrl+R, T / Ctrl+R, Ctrl+T): the test at (or above) the caret, else the file's.
+  const runLineRef = useRef(runLine);
+  runLineRef.current = runLine;
+  const discoveredRef = useRef(discovered);
+  discoveredRef.current = discovered;
+  useEffect(() => {
+    const h = (e: Event) => {
+      const { file, line, debug } = (e as CustomEvent<{ file: string; line: number; debug: boolean }>).detail;
+      const inFile = discoveredRef.current.filter((t) => t.file === file);
+      if (!inFile.length) { setNotice(`No tests in ${file}. Build the solution so Test Explorer can discover them.`); return; }
+      const at = [...inFile].sort((a, b) => b.line - a.line).find((t) => t.line <= line);
+      runLineRef.current(file, at?.line ?? inFile[0].line, debug);
+    };
+    window.addEventListener('tas:run-context', h);
+    return () => window.removeEventListener('tas:run-context', h);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
   // Notices from places without access to setNotice (e.g. a turned-off feature's command).
   useEffect(() => { const h = (e: Event) => setNotice((e as CustomEvent<string>).detail); window.addEventListener('tas:notice', h); return () => window.removeEventListener('tas:notice', h); }, []); // eslint-disable-line react-hooks/exhaustive-deps
   // The desktop app's native menus hide the commands of turned-off features.

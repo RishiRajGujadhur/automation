@@ -122,6 +122,7 @@ export const FEATURES: Feature[] = [
   { id: 'generate-ctor', label: 'Generate Constructor', group: 'Editing', essential: true, vs: 'Quick Actions ▸ Generate constructor', description: 'A constructor for the class at the caret, initializing its readonly fields and get-only properties.', commands: ['generate-ctor'] },
   { id: 'paste-json-classes', label: 'Paste JSON as Classes', group: 'Editing', essential: true, vs: 'Edit ▸ Paste Special ▸ Paste JSON as Classes', description: 'Edit ▸ Paste JSON as Classes: C# classes for the JSON on the clipboard.', commands: ['paste-json-classes'] },
   { id: 'reformat-json', label: 'Reformat / Minify JSON', group: 'Editing', essential: true, vs: 'Format Document (JSON)', description: 'Indent JSON with 2 spaces, or put it on one line.', commands: ['reformat-json', 'minify-json'] },
+  { id: 'run-context', label: 'Run Tests in Context', group: 'Code intelligence', essential: true, vs: 'Test ▸ Run Tests in Context (Ctrl+R, T)', description: 'Ctrl+R, T runs the test or scenario at the caret.', commands: ['run-context'] },
 ];
 export const GROUPS: FeatureGroup[] = ['Editing', 'Navigation', 'Code intelligence', 'Tool windows', 'Files', 'Git', 'View', 'Debugging', 'Help and productivity'];
 

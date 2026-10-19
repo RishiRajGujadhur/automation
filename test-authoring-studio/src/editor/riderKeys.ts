@@ -317,6 +317,7 @@ export function riderKeys(file = ''): Extension {
   return [selStack, recordCopies, usageHighlights(), trackEdits(file), Prec.highest(ctrlAlt), Prec.high(keymap.of([
     opens('Mod-Shift-v', 'paste-history'),
     opens('Mod-j', 'live-template'),
+    opens('Mod-r t', 'run-context'),
     opens('Mod-Shift-Backspace', 'last-edit'),
     opens('Mod-k Mod-e', 'code-cleanup'),
     opens('Mod-Shift-Delete', 'unwrap'),
