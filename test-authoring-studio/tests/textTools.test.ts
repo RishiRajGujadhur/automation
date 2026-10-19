@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { EditorState, type TransactionSpec } from '@codemirror/state';
 import { EditorView } from '@codemirror/view';
-import { sortLines, reverseLines, deleteHorizontalWhiteSpace, setCase, transposeLine, transposeChars, transposeWords, cursorMatchingBracket, selectMatchingBracket, findSelected, lastEditLocation, trackEdits, insertGuid, cyclicExpandWord, gotoMember, toggleVerbatim, convertCase, reformatJson, stripTrailingSpaces, splitString, tabify } from '../src/editor/textTools';
+import { sortLines, reverseLines, deleteHorizontalWhiteSpace, setCase, transposeLine, transposeChars, transposeWords, cursorMatchingBracket, selectMatchingBracket, findSelected, lastEditLocation, trackEdits, insertGuid, cyclicExpandWord, gotoMember, toggleVerbatim, convertCase, reformatJson, stripTrailingSpaces, splitString, tabify, untabify } from '../src/editor/textTools';
 
 /** Runs an editor command on `doc` with the selection between the markers « and » (or a caret at |). */
 export function run(doc: string, cmd: (v: EditorView) => boolean) {
@@ -128,5 +128,8 @@ describe('text tools (IDE-FEATURES X1…)', () => {
   it('X82 Tabify: leading spaces become tabs (selection, else the file)', () => {
     expect(run('«        a\n   b\n\t  c»\nd', tabify)).toBe('\t\ta\n   b\n\t  c\nd');
     expect(run('|    x\n      y', tabify)).toBe('\tx\n\t  y');
+  });
+  it('X83 Untabify: leading tabs become spaces of the same width', () => {
+    expect(run('«\t\ta\n  \tb»\nc', untabify)).toBe('        a\n    b\nc');
   });
 });

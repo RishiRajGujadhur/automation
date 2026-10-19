@@ -50,6 +50,7 @@ const ROWS: Record<'edit' | 'view' | 'navigate' | 'code' | 'tools' | 'help', Row
     ['Paste JSON as Classes', 'paste-json-classes'],
     ['Strip Trailing Spaces', 'strip-trailing'],
     ['Tabify Selected Lines', 'tabify'],
+    ['Untabify Selected Lines', 'untabify'],
   ],
   view: [
     null,

@@ -180,6 +180,7 @@ export const FEATURES: Feature[] = [
   { id: 'rename-file-to-type', label: 'Rename File to Match Type', group: 'Code intelligence', essential: true, vs: 'Quick Actions ▸ Rename file to match type', description: 'Renames Foo.cs after the type it declares.', commands: ['rename-file-to-type'] },
   { id: 'split-string', label: 'Split String', group: 'Code intelligence', essential: true, vs: 'Quick Actions ▸ Split string', description: 'Splits the C# string at the caret into "…" + "…".', commands: ['split-string'] },
   { id: 'tabify', label: 'Tabify Selected Lines', group: 'Editing', essential: false, vs: 'Edit ▸ Advanced ▸ Tabify Selected Lines', description: 'Leading spaces become tabs.', commands: ['tabify'] },
+  { id: 'untabify', label: 'Untabify Selected Lines', group: 'Editing', essential: false, vs: 'Edit ▸ Advanced ▸ Untabify Selected Lines', description: 'Leading tabs become spaces.', commands: ['untabify'] },
 ];
 export const GROUPS: FeatureGroup[] = ['Editing', 'Navigation', 'Code intelligence', 'Tool windows', 'Files', 'Git', 'Gherkin', 'View', 'Debugging', 'Help and productivity'];
 

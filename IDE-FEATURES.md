@@ -90,6 +90,7 @@ has it on by default, so the desktop app starts with it on. The others start off
 | X80 | Rename File to Match Type | VS 2026 / Rider | yes | ✅ 2026-10-20 |
 | X81 | Split String | Rider | yes | ✅ 2026-10-20 |
 | X82 | Tabify Selected Lines | VS 2026 | no | ✅ 2026-10-20 |
+| X83 | Untabify Selected Lines | VS 2026 | no | ✅ 2026-10-20 |
 
 ## Progress log
 - 2026-10-20 X1: Sort Lines: the selected lines (or the whole file) in natural, case-insensitive order, blank lines last. Third-batch plumbing: src/rider/more.ts, src/editor/textTools.ts, IDE-FEATURES.md.
@@ -174,3 +175,4 @@ has it on by default, so the desktop app starts with it on. The others start off
 - 2026-10-20 X80: File named after its first type
 - 2026-10-20 X81: String literal split at caret
 - 2026-10-20 X82: Leading spaces to tabs
+- 2026-10-20 X83: Leading tabs to spaces

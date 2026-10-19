@@ -343,3 +343,5 @@ function reindent(tabs: boolean) {
 }
 /** Tabify Selected Lines (Visual Studio's Edit ▸ Advanced). */
 export const tabify = reindent(true);
+/** Untabify Selected Lines (Visual Studio's Edit ▸ Advanced). */
+export const untabify = reindent(false);
