@@ -3350,3 +3350,34 @@ html[data-features-off~='inlay-hints'] .cm-inlay {
     word-break: break-all;
   }
 }
+
+// Analyze Stack Trace
+.stack-trace {
+  display: grid;
+  gap: 8px;
+  min-width: min(820px, 92vw);
+  textarea {
+    font-family: var(--font-mono, monospace);
+    font-size: 12px;
+  }
+  ol {
+    max-height: 40vh;
+    margin: 0;
+    overflow: auto;
+    font-size: 12.5px;
+  }
+  li.external {
+    color: var(--text-muted);
+  }
+  small {
+    margin-left: 6px;
+    color: var(--text-muted);
+  }
+  .link-button {
+    padding: 0;
+    border: 0;
+    background: none;
+    color: var(--accent);
+    cursor: pointer;
+  }
+}

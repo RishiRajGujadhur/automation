@@ -218,7 +218,7 @@ test('X39 File Properties (Alt+Enter): size, encoding, line endings, lines', asy
 test('X40 Analyze Stack Trace: frames in the solution become links', async ({ page }) => {
   await openFeature(page);
   await menuItem(page, 'Tools', /Analyze Stack Trace/);
-  await page.getByLabel('Stack trace').fill(['System.Exception: boom', '   at Demo.AuthSteps.SignIn(String userName) in D:\agent\_work\Steps\AuthSteps.cs:line 6', '   at System.RuntimeMethodHandle.InvokeMethod(Object target)'].join('\n'));
+  await page.getByLabel('Stack trace', { exact: true }).fill(['System.Exception: boom', '   at Demo.AuthSteps.SignIn(String userName) in D:\\agent\\_work\\Steps\\AuthSteps.cs:line 6', '   at System.RuntimeMethodHandle.InvokeMethod(Object target)'].join('\n'));
   const frames = page.getByRole('list', { name: 'Frames' });
   await expect(frames.getByRole('button')).toHaveCount(1);
   await frames.getByRole('button', { name: /SignIn/ }).click();

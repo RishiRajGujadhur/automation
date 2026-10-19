@@ -137,6 +137,7 @@ export const FEATURES: Feature[] = [
   { id: 'multi-row-tabs', label: 'Tabs in multiple rows', group: 'View', essential: false, description: 'The editor tabs wrap onto more rows instead of scrolling.', commands: ['multi-row-tabs'] },
   { id: 'notifications', label: 'Notifications window', group: 'Tool windows', essential: true, vs: 'Notifications (bell)', description: 'Every message of the session, newest first (View ▸ Notifications).', commands: ['tool-notifications'] },
   { id: 'file-props', label: 'File Properties (Alt+Enter)', group: 'Files', essential: true, vs: 'Properties window (Alt+Enter)', description: 'Size, dates, encoding, line endings and line count of the active file.', commands: ['file-props'] },
+  { id: 'analyze-stack', label: 'Analyze Stack Trace', group: 'Tool windows', essential: false, description: 'Paste a .NET stack trace; frames in the solution become links.', commands: ['analyze-stack'] },
 ];
 export const GROUPS: FeatureGroup[] = ['Editing', 'Navigation', 'Code intelligence', 'Tool windows', 'Files', 'Git', 'View', 'Debugging', 'Help and productivity'];
 

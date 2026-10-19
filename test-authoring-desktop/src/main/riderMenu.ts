@@ -150,6 +150,8 @@ const ROWS: Record<'edit' | 'view' | 'navigate' | 'code' | 'tools' | 'help', Row
     ['Copy Call Stack', 'copy-call-stack'],
     ['Export Breakpoints…', 'export-breakpoints'],
     ['Import Breakpoints…', 'import-breakpoints'],
+    null,
+    ['Analyze Stack Trace…', 'analyze-stack'],
   ],
   help: [
     null,
