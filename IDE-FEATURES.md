@@ -79,6 +79,7 @@ has it on by default, so the desktop app starts with it on. The others start off
 | X69 | Calculate Code Metrics | VS 2026 | no | ✅ 2026-10-20 |
 | X70 | Fade unnecessary usings | VS 2026 | yes | ✅ 2026-10-20 |
 | X71 | Test Explorer: Group By | VS 2026 | yes | ✅ 2026-10-20 |
+| X72 | Test Explorer: search filters | VS 2026 | yes | ✅ 2026-10-20 |
 
 ## Progress log
 - 2026-10-20 X1: Sort Lines: the selected lines (or the whole file) in natural, case-insensitive order, blank lines last. Third-batch plumbing: src/rider/more.ts, src/editor/textTools.ts, IDE-FEATURES.md.
@@ -152,3 +153,4 @@ has it on by default, so the desktop app starts with it on. The others start off
 - 2026-10-20 X69: Roslyn metrics op: MI, CC, coupling, LOC
 - 2026-10-20 X70: Roslyn unnecessary op; hint marks faded
 - 2026-10-20 X71: Project/Class/Outcome/Duration grouping
+- 2026-10-20 X72: outcome:/class:/project:… terms, quotes, -exclusions

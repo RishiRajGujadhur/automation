@@ -169,6 +169,7 @@ export const FEATURES: Feature[] = [
   { id: 'code-metrics', label: 'Calculate Code Metrics', group: 'Code intelligence', essential: false, vs: 'Analyze ▸ Calculate Code Metrics', description: 'Maintainability, complexity, coupling and lines per type and member of the C# file.', commands: ['code-metrics'] },
   { id: 'fade-usings', label: 'Fade unnecessary usings', group: 'Code intelligence', essential: true, vs: 'Fade out unused code', description: 'Unused using directives are greyed out (IDE0005).' },
   { id: 'test-group-by', label: 'Test Explorer: Group By', group: 'Tool windows', essential: true, vs: 'Test Explorer ▸ Group By', description: 'Group tests by project and class, class / feature, outcome or duration.' },
+  { id: 'test-search-filters', label: 'Test Explorer: search filters', group: 'Tool windows', essential: true, vs: 'Test Explorer filter syntax', description: 'outcome:, class:, project:, feature:, name:, file: terms, "quoted phrases" and -exclusions.' },
 ];
 export const GROUPS: FeatureGroup[] = ['Editing', 'Navigation', 'Code intelligence', 'Tool windows', 'Files', 'Git', 'Gherkin', 'View', 'Debugging', 'Help and productivity'];
 

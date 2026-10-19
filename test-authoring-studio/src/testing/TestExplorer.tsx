@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState, type ReactNode } from 'react';
 import { ChevronDown, ChevronRight, Play, PlayCircle, Bug, RefreshCw, Square, CircleCheck, CircleX, CircleSlash, Circle, Loader, Search, X, FileText, FlaskConical, Boxes, RotateCcw, Navigation, ListPlus, ListMinus, Trash2, ShieldCheck } from 'lucide-react';
 import { RowMenu, useLocalState } from '../ui';
-import { groupTests, type Group, type GroupBy } from './grouping';
+import { groupTests, type Group, type GroupBy, matchTest } from './grouping';
 import { featureOn } from '../features';
 import { useTestRun, discoverTests, runTests, cancelTests, resultsOf, outcomeOf, combine, type DiscoveredTest, type Outcome } from './store';
 
@@ -51,8 +51,9 @@ export default function TestExplorer({ revision, onOpen, onDebug, onNotice }: { 
     const q = query.trim().toLowerCase();
     const inList = playlist && playlists[playlist] ? new Set(playlists[playlist]) : null;
     const pool = inList ? tests.filter((t) => inList.has(t.id)) : tests;
-    return q ? pool.filter((t) => `${t.project} ${t.className} ${t.name} ${t.feature ?? ''}`.toLowerCase().includes(q)) : pool;
-  }, [tests, query, playlist, playlists]);
+    if (!q) return pool;
+    return featureOn('test-search-filters') ? pool.filter((t) => matchTest(t, q, outcomeOf(t, run))) : pool.filter((t) => `${t.project} ${t.className} ${t.name} ${t.feature ?? ''}`.toLowerCase().includes(q));
+  }, [tests, query, playlist, playlists, run]);
   const groups = useMemo(() => groupTests(visible, groupBy, (t) => outcomeOf(t, run), (t) => { const rs = resultsOf(t, run.results); return rs.length ? rs.reduce((n, r) => n + r.durationMs, 0) : undefined; }), [visible, groupBy, run]);
 
   const outcome = (t: DiscoveredTest) => outcomeOf(t, run);
@@ -155,7 +156,7 @@ export default function TestExplorer({ revision, onOpen, onDebug, onNotice }: { 
       )}
       <label className="search-box">
         <Search size={14} />
-        <input aria-label="Search Test Explorer" placeholder="Search Test Explorer" value={query} onChange={(e) => setQuery(e.target.value)} />
+        <input aria-label="Search Test Explorer" placeholder={featureOn('test-search-filters') ? 'Search (outcome:failed class:… -name:…)' : 'Search Test Explorer'} value={query} onChange={(e) => setQuery(e.target.value)} />
         {query && <button className="icon-button" aria-label="Clear test search" onClick={() => setQuery('')}><X size={13} /></button>}
       </label>
       {featureOn('test-group-by') && (

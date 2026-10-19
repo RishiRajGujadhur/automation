@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { groupTests } from '../src/testing/grouping';
+import { groupTests, matchTest } from '../src/testing/grouping';
 import type { DiscoveredTest, Outcome } from '../src/testing/store';
 
 const t = (id: string, o: Partial<DiscoveredTest> = {}): DiscoveredTest => ({ id, kind: 'test', project: 'App.Tests', className: 'App.Tests.MathTests', method: id, name: id, file: 'Tests/MathTests.cs', line: 1, filter: id, ...o });
@@ -15,5 +15,14 @@ describe('Test Explorer grouping (X71…)', () => {
     expect(shape(group('class'))).toEqual(['App.Tests.MathTests: Adds,Divides', 'Math: Scenario', 'Web.Tests.PageTests: Other']);
     expect(shape(group('outcome'))).toEqual(['Failed: Divides', 'Passed: Adds,Other', 'Not run: Scenario']);
     expect(shape(group('duration'))).toEqual(['Slow (> 1 s): Divides', 'Medium (100 ms – 1 s): Other', 'Fast (< 100 ms): Adds', 'Not run: Scenario']);
+  });
+  it('X72 search filters: fields, quotes, exclusions', () => {
+    const m = (q: string) => tests.filter((x) => matchTest(x, q, outcomes[x.id])).map((x) => x.id);
+    expect(m('outcome:failed')).toEqual(['Divides']);
+    expect(m('outcome:"not run"')).toEqual(['Scenario']);
+    expect(m('project:web')).toEqual(['Other']);
+    expect(m('class:MathTests -name:adds')).toEqual(['Divides']);
+    expect(m('math passed')).toEqual([]);
+    expect(m('"app.tests.math"')).toEqual(['Adds', 'Divides', 'Scenario']);
   });
 });
