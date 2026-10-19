@@ -165,6 +165,7 @@ export const FEATURES: Feature[] = [
   { id: 'error-list-scope', label: 'Error List scope', group: 'Tool windows', essential: true, vs: 'Error List ▸ scope filter', description: 'Entire Solution, Open Documents or Current Document.' },
   { id: 'error-list-copy', label: 'Error List: Copy and Error Help', group: 'Tool windows', essential: true, vs: 'Error List ▸ Copy / Show Error Help', description: 'Ctrl+C copies a row; F1 or the code opens its Microsoft Learn page.' },
   { id: 'error-list-sort', label: 'Error List: sort by column', group: 'Tool windows', essential: true, vs: 'Error List column sort', description: 'Click a column header to sort (again: descending, then build order).' },
+  { id: 'output-find', label: 'Output: Find', group: 'Tool windows', essential: true, vs: 'Output window ▸ Find', description: 'A search box above the build Output shows only the matching lines.' },
 ];
 export const GROUPS: FeatureGroup[] = ['Editing', 'Navigation', 'Code intelligence', 'Tool windows', 'Files', 'Git', 'Gherkin', 'View', 'Debugging', 'Help and productivity'];
 

@@ -3407,3 +3407,11 @@ html[data-features-off~='inlay-hints'] .cm-inlay {
     white-space: nowrap;
   }
 }
+
+.output-find {
+  margin: 4px 6px;
+  small {
+    color: var(--muted, #6b7280);
+    white-space: nowrap;
+  }
+}
