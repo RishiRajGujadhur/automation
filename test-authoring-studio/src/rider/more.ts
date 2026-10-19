@@ -96,5 +96,6 @@ export function moreCommands(h: MoreHelpers): RiderCommand[] {
     { id: 'outline-to-scenario', label: 'Convert Outline to Scenario', menu: 'Code', submenu: 'Gherkin', run: h.inEditor((v) => outlineToScenario(v) || h.notice('Put the caret in a Scenario Outline whose Examples have exactly one row.')) },
     { id: 'duplicate-scenario', label: 'Duplicate Scenario', menu: 'Code', submenu: 'Gherkin', run: h.inEditor((v) => duplicateScenario(v) || h.notice('Put the caret in a scenario.')) },
     { id: 'move-scenario-up', label: 'Move Scenario Up', menu: 'Code', submenu: 'Gherkin', run: h.inEditor(moveScenario(-1)) },
+    { id: 'move-scenario-down', label: 'Move Scenario Down', menu: 'Code', submenu: 'Gherkin', run: h.inEditor(moveScenario(1)) },
   ];
 }
