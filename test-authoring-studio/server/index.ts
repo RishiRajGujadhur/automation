@@ -822,6 +822,17 @@ app.post('/api/file/delete', async (req, res) => {
 app.get('/api/history', async (req, res) => { const file = z.string().min(1).max(400).parse(req.query.file); await confined(config.repositoryRoot, file, false); res.json(await historyOf(config.repositoryRoot, file)); });
 app.get('/api/history/recent', async (_req, res) => { res.json(await recentChanges(config.repositoryRoot)); });
 app.get('/api/history/item', async (req, res) => { const { file, id } = z.object({ file: z.string().min(1).max(400), id: z.string().max(80) }).parse(req.query); await confined(config.repositoryRoot, file, false); res.json({ source: await historyItem(config.repositoryRoot, file, id) }); });
+// File Properties (Visual Studio's Properties window, Alt+Enter): size, dates, encoding, line endings, lines.
+app.get('/api/file/info', async (req, res) => {
+  const file = z.string().min(1).max(400).parse(req.query.file);
+  const full = await confined(config.repositoryRoot, file, false);
+  const st = await fs.stat(full);
+  const buf = await fs.readFile(full);
+  const bom = buf[0] === 0xef && buf[1] === 0xbb && buf[2] === 0xbf;
+  const text = buf.toString('utf8');
+  const crlf = (text.match(/\r\n/g) ?? []).length, lf = (text.match(/(^|[^\r])\n/g) ?? []).length;
+  res.json({ file, path: full, size: st.size, created: st.birthtime, modified: st.mtime, encoding: bom ? 'UTF-8 with BOM' : 'UTF-8', lineEndings: crlf && lf ? 'Mixed' : crlf ? 'CRLF' : 'LF', lines: text ? text.split(/\r?\n/).length : 0, readOnly: !(st.mode & 0o200) });
+});
 app.get('/api/source', async (req, res) => {
   const file = await confined(config.repositoryRoot, String(req.query.file));
   if (!editable.test(file)) throw new Error('Unsupported source file');

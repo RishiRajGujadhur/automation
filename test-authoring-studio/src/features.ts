@@ -136,6 +136,7 @@ export const FEATURES: Feature[] = [
   { id: 'switcher', label: 'Switcher (Ctrl+Tab)', group: 'Navigation', essential: true, vs: 'IDE Navigator (Ctrl+Tab)', description: 'Ctrl+Tab lists the open editors (most recent first) and tool windows; Enter switches.', commands: ['switcher'] },
   { id: 'multi-row-tabs', label: 'Tabs in multiple rows', group: 'View', essential: false, description: 'The editor tabs wrap onto more rows instead of scrolling.', commands: ['multi-row-tabs'] },
   { id: 'notifications', label: 'Notifications window', group: 'Tool windows', essential: true, vs: 'Notifications (bell)', description: 'Every message of the session, newest first (View ▸ Notifications).', commands: ['tool-notifications'] },
+  { id: 'file-props', label: 'File Properties (Alt+Enter)', group: 'Files', essential: true, vs: 'Properties window (Alt+Enter)', description: 'Size, dates, encoding, line endings and line count of the active file.', commands: ['file-props'] },
 ];
 export const GROUPS: FeatureGroup[] = ['Editing', 'Navigation', 'Code intelligence', 'Tool windows', 'Files', 'Git', 'View', 'Debugging', 'Help and productivity'];
 

@@ -3330,3 +3330,23 @@ html[data-features-off~='inlay-hints'] .cm-inlay {
     flex: none;
   }
 }
+
+// File Properties
+.file-props {
+  display: grid;
+  gap: 4px;
+  min-width: min(560px, 90vw);
+  margin: 0;
+  div {
+    display: grid;
+    grid-template-columns: 120px 1fr;
+    gap: 8px;
+  }
+  dt {
+    color: var(--text-muted);
+  }
+  dd {
+    margin: 0;
+    word-break: break-all;
+  }
+}

@@ -77,6 +77,7 @@ const ROWS: Record<'edit' | 'view' | 'navigate' | 'code' | 'tools' | 'help', Row
     ['Close Unmodified Tabs', 'close-unmodified'],
     ['Tabs in Multiple Rows', 'multi-row-tabs'],
     ['Notifications', 'tool-notifications'],
+    ['File Properties', 'file-props', 'Alt+Enter'],
   ],
   navigate: [
     ['Select In…', 'select-in', 'Alt+F1'],
