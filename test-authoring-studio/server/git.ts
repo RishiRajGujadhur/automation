@@ -266,6 +266,7 @@ export async function fileAt(root: string, ref: string, file: string) {
 const REF_NAME = /^(?!-)(?!.*\.\.)(?!.*[\s~^:?*\[\\])[\w./-]{1,100}(?<![./])$/;
 const refName = (n?: string) => { if (!n || !REF_NAME.test(n)) throw new Error('Use a branch / tag name without spaces or special characters.'); return n; };
 export const COMMIT_ACTIONS = {
+  reset: async (top, hash, o) => git(top, ['reset', `--${o.mode ?? 'mixed'}`, hash]).then(() => `Reset the current branch to ${hash.slice(0, 7)} (${o.mode ?? 'mixed'}).`),
   checkout: async (top, hash) => git(top, ['checkout', '--detach', hash]).then(() => `Checked out ${hash.slice(0, 7)} (detached HEAD).`),
   revert: async (top, hash) => git(top, ['revert', '--no-edit', hash]).then(() => `Reverted ${hash.slice(0, 7)} with a new commit.`).catch(async (e: Error) => { await git(top, ['revert', '--abort']).catch(() => {}); throw new Error(`Revert stopped (conflicts?), so it was undone: ${e.message}`); }),
   'cherry-pick': async (top, hash) => git(top, ['cherry-pick', hash]).then(() => `Cherry-picked ${hash.slice(0, 7)}.`).catch(async (e: Error) => { await git(top, ['cherry-pick', '--abort']).catch(() => {}); throw new Error(`Cherry-pick stopped (conflicts?), so it was undone: ${e.message}`); }),
