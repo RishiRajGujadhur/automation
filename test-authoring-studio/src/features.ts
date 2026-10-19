@@ -176,6 +176,7 @@ export const FEATURES: Feature[] = [
   { id: 'tool-tags', label: 'Tags window', group: 'Gherkin', essential: true, description: 'Every Gherkin tag with its scenarios (View ▸ Tags).', commands: ['tool-tags'] },
   { id: 'rename-tag', label: 'Rename Tag', group: 'Gherkin', essential: true, description: 'Renames a tag in every feature file (diff preview and approval).' },
   { id: 'run-tagged', label: 'Run Tagged Scenarios', group: 'Gherkin', essential: true, vs: 'Test Explorer ▸ Traits', description: 'The Tags window runs every scenario with a tag.' },
+  { id: 'sync-namespace', label: 'Sync Namespace with Folder', group: 'Code intelligence', essential: true, vs: 'Quick Actions ▸ Change namespace to match folder structure', description: 'Sets the file\'s namespace to the project name plus its folders.', commands: ['sync-namespace'] },
 ];
 export const GROUPS: FeatureGroup[] = ['Editing', 'Navigation', 'Code intelligence', 'Tool windows', 'Files', 'Git', 'Gherkin', 'View', 'Debugging', 'Help and productivity'];
 
