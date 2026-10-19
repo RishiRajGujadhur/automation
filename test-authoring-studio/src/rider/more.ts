@@ -18,7 +18,7 @@ import { lastTestRun, runTests, runUntilFailure, discoverTests } from '../testin
 import { jsonToClasses } from '../editor/jsonClasses';
 import { generateConstructor } from '../editor/generateCtor';
 import { setViewOptions, viewOptions } from '../editor/viewOptions';
-import { lastEditLocation, insertGuid, cyclicExpandWord, gotoMember, toggleVerbatim, reformatJson, stripTrailingSpaces, splitString, tabify, untabify, codeBlockStart } from '../editor/textTools';
+import { lastEditLocation, insertGuid, cyclicExpandWord, gotoMember, toggleVerbatim, reformatJson, stripTrailingSpaces, splitString, tabify, untabify, codeBlockStart, codeBlockEnd } from '../editor/textTools';
 import { sortLines, reverseLines, deleteHorizontalWhiteSpace, setCase, transposeLine, transposeChars, transposeWords, cursorMatchingBracket, selectMatchingBracket, findSelected } from '../editor/textTools';
 
 /**
@@ -91,5 +91,6 @@ export function moreCommands(h: MoreHelpers): RiderCommand[] {
     { id: 'tabify', label: 'Tabify Selected Lines', menu: 'Edit', run: h.inEditor((v) => tabify(v) || h.notice('Nothing to tabify.')) },
     { id: 'untabify', label: 'Untabify Selected Lines', menu: 'Edit', run: h.inEditor((v) => untabify(v) || h.notice('Nothing to untabify.')) },
     { id: 'block-start', label: 'Move Caret to Code Block Start', menu: 'Navigate', run: h.inEditor(codeBlockStart) },
+    { id: 'block-end', label: 'Move Caret to Code Block End', menu: 'Navigate', run: h.inEditor(codeBlockEnd) },
   ];
 }

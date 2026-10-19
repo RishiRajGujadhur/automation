@@ -107,6 +107,7 @@ const ROWS: Record<'edit' | 'view' | 'navigate' | 'code' | 'tools' | 'help', Row
     null,
     ['Switcher…', 'switcher', 'Ctrl+Tab'],
     ['Move Caret to Code Block Start', 'block-start'],
+    ['Move Caret to Code Block End', 'block-end'],
   ],
   code: [
     ['Insert Live Template…', 'live-template', 'CmdOrCtrl+J'],

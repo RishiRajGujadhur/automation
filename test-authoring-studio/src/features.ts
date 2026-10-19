@@ -182,6 +182,7 @@ export const FEATURES: Feature[] = [
   { id: 'tabify', label: 'Tabify Selected Lines', group: 'Editing', essential: false, vs: 'Edit ▸ Advanced ▸ Tabify Selected Lines', description: 'Leading spaces become tabs.', commands: ['tabify'] },
   { id: 'untabify', label: 'Untabify Selected Lines', group: 'Editing', essential: false, vs: 'Edit ▸ Advanced ▸ Untabify Selected Lines', description: 'Leading tabs become spaces.', commands: ['untabify'] },
   { id: 'block-start', label: 'Move Caret to Code Block Start', group: 'Navigation', essential: true, description: 'Goes to the enclosing { (again: the next block out).', commands: ['block-start'] },
+  { id: 'block-end', label: 'Move Caret to Code Block End', group: 'Navigation', essential: true, description: 'Goes to the enclosing } (again: the next block out).', commands: ['block-end'] },
 ];
 export const GROUPS: FeatureGroup[] = ['Editing', 'Navigation', 'Code intelligence', 'Tool windows', 'Files', 'Git', 'Gherkin', 'View', 'Debugging', 'Help and productivity'];
 

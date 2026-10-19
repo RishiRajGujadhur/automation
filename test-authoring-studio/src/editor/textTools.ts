@@ -374,3 +374,4 @@ export function codeBlockEdge(end: boolean) {
   };
 }
 export const codeBlockStart = codeBlockEdge(false);
+export const codeBlockEnd = codeBlockEdge(true);
