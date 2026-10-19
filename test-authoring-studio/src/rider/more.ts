@@ -1,7 +1,9 @@
 import type { EditorView } from '@codemirror/view';
 import type { RiderCommand } from './commands';
 import { api } from '../api';
-import { expectedNamespace, setNamespace } from '../editor/csharpTools';
+import { expectedNamespace, setNamespace, firstTypeName } from '../editor/csharpTools';
+import { renamePath } from '../files/provider';
+import { movedPath } from '../files/tabs';
 import { DEFAULT_TODO_TOKENS } from '../editor/todoHighlight';
 import { copyText as copyFilterText } from '../ui';
 import { cycleStepKeyword, scenarioToOutline, tableInsertRow, tableAddColumn, tableDeleteColumn, tableSortByColumn, testFilter, selectScenario } from '../editor/gherkinTools';
@@ -84,5 +86,6 @@ export function moreCommands(h: MoreHelpers): RiderCommand[] {
     { id: 'run-until-failure', label: 'Run Until Failure…', menu: 'Tools', run: () => { if (!lastTestRun()) { h.notice('Run some tests first: Run Until Failure repeats the last test run.'); return; } const v = window.prompt('Repeat the last test run until a test fails, at most this many times:', '10'); const max = Number(v); if (!v || !Number.isInteger(max) || max < 1 || max > 500) return; void runUntilFailure(max, (i) => h.notice(`Run Until Failure: run ${i} of ${max}…`)).then((r) => { if (r) h.notice(r.failed ? `A test failed on run ${r.runs}.` : `All ${r.runs} runs passed.`); }, (e) => h.notice((e as Error).message)); } },
     { id: 'run-file-tests', label: 'Run All Tests in File', menu: 'Tools', run: () => { const f = getTabs().active; if (!f) { h.notice('Open a test file first.'); return; } void discoverTests().then(({ tests }) => { const ts = tests.filter((t) => t.file === f); if (!ts.length) { h.notice(`No tests in ${f.split('/').pop()}.`); return; } h.notice(`Running ${ts.length} test${ts.length === 1 ? '' : 's'} in ${f.split('/').pop()}…`); return runTests(ts); }).catch((e) => h.notice((e as Error).message)); } },
     { id: 'sync-namespace', label: 'Sync Namespace with Folder', menu: 'Code', run: h.inEditor((v, file) => { if (!file.endsWith('.cs')) { h.notice('Open a C# file first.'); return; } void api<{ projects: { file: string; name: string; dir: string }[] }>('/solution').then((s) => { const owner = s.projects.filter((p) => p.file.endsWith('.csproj') && (p.dir === '' || file.startsWith(`${p.dir}/`))).sort((a, b) => b.dir.length - a.dir.length)[0]; if (!owner) { h.notice('This file belongs to no project.'); return; } const ns = expectedNamespace(file, owner.dir, owner.name); h.notice(setNamespace(v, ns) ? `Namespace changed to ${ns}.` : `The namespace already is ${ns} (or there is no namespace declaration).`); }, (e) => h.notice((e as Error).message)); }) },
+    { id: 'rename-file-to-type', label: 'Rename File to Match Type', menu: 'Code', run: h.inEditor((v, file) => { const type = file.endsWith('.cs') ? firstTypeName(v.state.doc.toString()) : undefined; if (!type) { h.notice('Open a C# file that declares a type.'); return; } const to = `${file.includes('/') ? file.slice(0, file.lastIndexOf('/') + 1) : ''}${type}.cs`; if (to === file) { h.notice(`${file.split('/').pop()} already matches ${type}.`); return; } if (unsavedFiles().includes(file)) { h.notice('Save the file first.'); return; } void renamePath(file, to).then(() => { movedPath(file, to); h.notice(`Renamed to ${to.split('/').pop()}.`); }, (e) => h.notice((e as Error).message)); }) },
   ];
 }

@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { EditorState, type TransactionSpec } from '@codemirror/state';
 import type { EditorView } from '@codemirror/view';
-import { expectedNamespace, setNamespace } from '../src/editor/csharpTools';
+import { expectedNamespace, setNamespace, firstTypeName } from '../src/editor/csharpTools';
 
 const apply = (doc: string, cmd: (v: EditorView) => boolean) => {
   let state = EditorState.create({ doc });
@@ -18,5 +18,10 @@ describe('C# file tools (X79…)', () => {
     expect(apply('using X;\nnamespace Wrong.Name;\nclass A {}', (v) => setNamespace(v, 'Right.Ns'))).toEqual({ ok: true, doc: 'using X;\nnamespace Right.Ns;\nclass A {}' });
     expect(apply('namespace Right.Ns\n{\n}', (v) => setNamespace(v, 'Right.Ns')).ok).toBe(false);
     expect(apply('class A {}', (v) => setNamespace(v, 'X')).ok).toBe(false);
+  });
+  it('X80 Rename File to Match Type: the first type', () => {
+    expect(firstTypeName('// class Old\nnamespace N;\n/* struct X */ var s = "class Y";\npublic sealed partial class Clock<T> : IClock {}\nclass Second {}')).toBe('Clock');
+    expect(firstTypeName('public record Point(int X, int Y);')).toBe('Point');
+    expect(firstTypeName('var x = 1;')).toBeUndefined();
   });
 });

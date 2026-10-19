@@ -18,3 +18,9 @@ export function setNamespace(view: EditorView, ns: string) {
   view.dispatch({ changes: { from, to: from + m[2].length, insert: ns }, userEvent: 'input' });
   return true;
 }
+
+/** The first type declared in a C# file (comments and strings aside). */
+export function firstTypeName(source: string) {
+  const code = source.replace(/\/\*[\s\S]*?\*\/|\/\/.*$|@?"(?:[^"\\]|\\.|"")*"/gm, '');
+  return /\b(?:class|interface|struct|record|enum)\s+(@?\w+)/.exec(code)?.[1].replace(/^@/, '');
+}

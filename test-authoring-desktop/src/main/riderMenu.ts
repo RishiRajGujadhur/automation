@@ -141,6 +141,7 @@ const ROWS: Record<'edit' | 'view' | 'navigate' | 'code' | 'tools' | 'help', Row
     ['Select Scenario', 'select-scenario'],
     null,
     ['Sync Namespace with Folder', 'sync-namespace'],
+    ['Rename File to Match Type', 'rename-file-to-type'],
   ],
   tools: [
     ['Run Anything… (Ctrl twice)', 'run-anything'],
