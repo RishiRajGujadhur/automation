@@ -93,6 +93,7 @@ sealed class LanguageService
             "signature" => await Signature(doc, Math.Min(Pos(text), text.Length)),
             "format" => await Format(doc, req),
             "actions" => await Actions(doc, Math.Min(Pos(text), text.Length), req["endLine"] is null ? null : text.Lines[Math.Clamp((int)req["endLine"]! - 1, 0, text.Lines.Count - 1)].Start + (int)req["endColumn"]! - 1),
+            "metrics" => await Metrics(doc),
             "applyAction" => await ApplyAction((string)req["actionId"]!),
             _ => throw new InvalidOperationException($"Unknown operation {op}."),
         };
@@ -831,5 +832,73 @@ sealed class LanguageService
         var newRoot = root.WithUsings(SyntaxFactory.List(sorted));
         var text = newRoot.ToFullString().Replace("\r\n", (await doc.GetTextAsync()).ToString().Contains("\r\n") ? "\r\n" : "\n");
         return new { text, removed };
+    }
+    /// <summary>
+    /// Code Metrics (Visual Studio's Analyze ▸ Calculate Code Metrics) per type and member: maintainability index,
+    /// cyclomatic complexity, class coupling and lines of (non-blank, non-brace) code.
+    /// </summary>
+    async Task<object> Metrics(Document doc)
+    {
+        var root = (await doc.GetSyntaxRootAsync())!;
+        var model = (await doc.GetSemanticModelAsync())!;
+        var text = await doc.GetTextAsync();
+        int Line(int pos) => text.Lines.GetLinePosition(pos).Line + 1;
+        static int Complexity(SyntaxNode n) => 1 + n.DescendantNodesAndTokens().Count(x =>
+            x.IsKind(SyntaxKind.IfStatement) || x.IsKind(SyntaxKind.WhileStatement) || x.IsKind(SyntaxKind.ForStatement) || x.IsKind(SyntaxKind.ForEachStatement) ||
+            x.IsKind(SyntaxKind.DoStatement) || x.IsKind(SyntaxKind.CaseSwitchLabel) || x.IsKind(SyntaxKind.CasePatternSwitchLabel) || x.IsKind(SyntaxKind.SwitchExpressionArm) ||
+            x.IsKind(SyntaxKind.CatchClause) || x.IsKind(SyntaxKind.ConditionalExpression) || x.IsKind(SyntaxKind.AmpersandAmpersandToken) || x.IsKind(SyntaxKind.BarBarToken) ||
+            x.IsKind(SyntaxKind.QuestionQuestionToken) || x.IsKind(SyntaxKind.QuestionQuestionEqualsToken) || x.IsKind(SyntaxKind.ConditionalAccessExpression));
+        int Loc(SyntaxNode n)
+        {
+            var c = 0;
+            for (var i = text.Lines.GetLinePosition(n.SpanStart).Line; i <= text.Lines.GetLinePosition(n.Span.End).Line; i++)
+            {
+                var t = text.Lines[i].ToString().Trim();
+                if (t.Length > 0 && t != "{" && t != "}" && t != "};" && !t.StartsWith("//") && !t.StartsWith("[")) c++;
+            }
+            return c;
+        }
+        int Coupling(SyntaxNode n, ISymbol? self)
+        {
+            var set = new HashSet<string>();
+            foreach (var x in n.DescendantNodes().OfType<SimpleNameSyntax>())
+            {
+                var sym = model.GetSymbolInfo(x).Symbol;
+                var t = sym as INamedTypeSymbol ?? sym?.ContainingType;
+                if (t == null || t.SpecialType != SpecialType.None || SymbolEqualityComparer.Default.Equals(t.OriginalDefinition, self)) continue;
+                set.Add(t.OriginalDefinition.ToDisplayString());
+            }
+            return set.Count;
+        }
+        int Index(SyntaxNode n, int cc, int loc)
+        {
+            var tokens = n.DescendantTokens().Where(t => !t.IsKind(SyntaxKind.OpenBraceToken) && !t.IsKind(SyntaxKind.CloseBraceToken) && !t.IsKind(SyntaxKind.SemicolonToken)).Select(t => t.Text).ToList();
+            var volume = Math.Max(1, tokens.Count * Math.Log2(Math.Max(2, tokens.Distinct().Count())));
+            return (int)Math.Round(Math.Clamp((171 - 5.2 * Math.Log(volume) - 0.23 * cc - 16.2 * Math.Log(Math.Max(1, loc))) * 100 / 171, 0, 100));
+        }
+        var types = root.DescendantNodes().OfType<TypeDeclarationSyntax>().Select(t =>
+        {
+            var self = model.GetDeclaredSymbol(t);
+            var members = t.Members.Where(m => m is BaseMethodDeclarationSyntax or BasePropertyDeclarationSyntax).Select(m =>
+            {
+                var (name, at) = m switch
+                {
+                    MethodDeclarationSyntax x => ($"{x.Identifier.Text}({string.Join(", ", x.ParameterList.Parameters.Select(p => p.Type?.ToString()))})", x.Identifier.SpanStart),
+                    ConstructorDeclarationSyntax x => ($"{x.Identifier.Text}({string.Join(", ", x.ParameterList.Parameters.Select(p => p.Type?.ToString()))})", x.Identifier.SpanStart),
+                    PropertyDeclarationSyntax x => (x.Identifier.Text, x.Identifier.SpanStart),
+                    IndexerDeclarationSyntax x => ("this[]", x.ThisKeyword.SpanStart),
+                    EventDeclarationSyntax x => (x.Identifier.Text, x.Identifier.SpanStart),
+                    _ => (m.ToString().Split('(')[0].Trim().Split(' ').Last(), m.SpanStart),
+                };
+                var cc = Complexity(m);
+                var loc = Loc(m);
+                return new { name, kind = m is BasePropertyDeclarationSyntax ? "property" : "method", line = Line(at), mi = Index(m, cc, loc), cc, coupling = Coupling(m, self), loc };
+            }).ToList();
+            var tcc = members.Sum(m => m.cc);
+            var tloc = members.Sum(m => m.loc);
+            var name = string.Join(".", t.AncestorsAndSelf().OfType<BaseTypeDeclarationSyntax>().Select(x => x.Identifier.Text).Reverse());
+            return new { name, line = Line(t.Identifier.SpanStart), mi = members.Count > 0 ? (int)Math.Round(members.Average(m => m.mi)) : Index(t, 1, Loc(t)), cc = Math.Max(1, tcc), coupling = Coupling(t, self), loc = tloc, members };
+        }).ToList();
+        return new { project = doc.Project.Name, types };
     }
 }

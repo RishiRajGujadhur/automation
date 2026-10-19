@@ -300,3 +300,26 @@ test('X63 Explorer New File…: creates the file (sub-folders too) and opens it'
   await expect(page.getByRole('button', { name: 'Close Clock.cs' })).toBeVisible();
   expect(await fs.readFile(path.join(root, 'Steps/Helpers/Clock.cs'), 'utf8')).toBe('');
 });
+
+test('X69 Calculate Code Metrics: maintainability, complexity, coupling and lines per member', async ({ page, request }) => {
+  await fs.writeFile(path.join(root, 'Steps/Calc.cs'), ['namespace Demo;', 'public class Calc', '{', '    public int Sign(int x)', '    {', '        if (x > 0 && x < 100) return 1;', '        return x == 0 ? 0 : -1;', '    }', '    public int Add(int a, int b) => a + b;', '}', ''].join('\n'));
+  expect((await request.post('/api/workspace', { data: { repositoryRoot: root, targetProject: '.' } })).ok()).toBe(true);
+  await openCs(page, 'Steps/Calc.cs', 'public class Calc');
+  await menuItem(page, 'Tools', /Calculate Code Metrics/);
+  const table = page.getByRole('table', { name: 'Code metrics' });
+  await expect(table).toBeVisible({ timeout: 90_000 });
+  const cells = async (name: string) => (await table.getByRole('row', { name: new RegExp(`^${name}`) }).getByRole('cell').allTextContents()).map(Number);
+  expect((await cells('Sign'))[1]).toBe(4); // 1 + if + && + ?:
+  expect((await cells('Add'))[1]).toBe(1);
+  expect((await cells('Calc'))[1]).toBe(5);
+  await table.getByRole('row', { name: /^Add/ }).click();
+  await expect(table).toHaveCount(0);
+  await expect(page.getByLabel('Cursor position')).toContainText('Ln 9');
+});
+
+test('X70 Fade unnecessary usings: unused usings are greyed out', async ({ page, request }) => {
+  await fs.writeFile(path.join(root, 'Steps/Clock.cs'), ['using System;', 'using System.Text;', 'namespace Demo;', 'public class Clock { public DateTime Now() => DateTime.Now; }', ''].join('\n'));
+  expect((await request.post('/api/workspace', { data: { repositoryRoot: root, targetProject: '.' } })).ok()).toBe(true);
+  const src = await openCs(page, 'Steps/Clock.cs', 'public class Clock');
+  await expect(src.locator('.cm-unnecessary')).toHaveText('using System.Text;', { timeout: 90_000 });
+});

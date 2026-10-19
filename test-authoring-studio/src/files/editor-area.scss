@@ -3415,3 +3415,43 @@ html[data-features-off~='inlay-hints'] .cm-inlay {
     white-space: nowrap;
   }
 }
+
+.code-metrics {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12px;
+  th, td {
+    padding: 3px 6px;
+    text-align: right;
+    white-space: nowrap;
+  }
+  th:first-child {
+    text-align: left;
+    font-weight: normal;
+    font-family: var(--code-font, monospace);
+  }
+  thead th {
+    font-weight: 600;
+    border-bottom: 1px solid var(--border, #d0d7de);
+  }
+  tbody tr {
+    cursor: pointer;
+    &:hover, &:focus {
+      background: var(--hover, rgba(127, 127, 127, 0.12));
+      outline: none;
+    }
+  }
+  .metrics-type th {
+    font-weight: 600;
+  }
+  .mi {
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+    border-radius: 2px;
+    margin-right: 6px;
+  }
+  .mi-good { background: #2da44e; }
+  .mi-fair { background: #d4a72c; }
+  .mi-poor { background: #cf222e; }
+}
