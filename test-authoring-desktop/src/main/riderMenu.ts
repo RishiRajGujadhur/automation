@@ -85,6 +85,9 @@ const ROWS: Record<'edit' | 'view' | 'navigate' | 'code' | 'tools' | 'help', Row
     ['Go to Matching Brace', 'goto-brace', 'CmdOrCtrl+]'],
     ['Select to Matching Brace', 'select-brace', 'CmdOrCtrl+Shift+]'],
     ['Go to Last Edit Location', 'last-edit', 'CmdOrCtrl+Shift+Backspace'],
+    null,
+    ['Next Member', 'next-member', 'Alt+PageDown'],
+    ['Previous Member', 'previous-member', 'Alt+PageUp'],
   ],
   code: [
     ['Insert Live Template…', 'live-template', 'CmdOrCtrl+J'],

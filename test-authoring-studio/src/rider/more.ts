@@ -1,7 +1,7 @@
 import type { EditorView } from '@codemirror/view';
 import type { RiderCommand } from './commands';
 import { setViewOptions, viewOptions } from '../editor/viewOptions';
-import { lastEditLocation, insertGuid, cyclicExpandWord } from '../editor/textTools';
+import { lastEditLocation, insertGuid, cyclicExpandWord, gotoMember } from '../editor/textTools';
 import { sortLines, reverseLines, deleteHorizontalWhiteSpace, setCase, transposeLine, transposeChars, transposeWords, cursorMatchingBracket, selectMatchingBracket, findSelected } from '../editor/textTools';
 
 /**
@@ -35,5 +35,7 @@ export function moreCommands(h: MoreHelpers): RiderCommand[] {
     { id: 'expand-word', label: 'Cyclic Expand Word', menu: 'Code', shortcut: 'Alt /', run: h.inEditor(cyclicExpandWord) },
     { id: 'overtype', label: 'Overtype Mode', menu: 'Edit', shortcut: 'Insert', checked: () => !!viewOptions().overtype, run: () => { setViewOptions({ overtype: !viewOptions().overtype }); h.notice(viewOptions().overtype ? 'Overtype: typing replaces characters (Insert to switch back).' : 'Insert mode.'); } },
     { id: 'current-line', label: 'Highlight Current Line', menu: 'View', checked: () => !viewOptions().noActiveLine, run: () => setViewOptions({ noActiveLine: !viewOptions().noActiveLine }) },
+    { id: 'next-member', label: 'Next Member', menu: 'Navigate', group: true, shortcut: 'Alt PageDown', run: h.inEditor((v, f) => gotoMember(f, 1)(v)) },
+    { id: 'previous-member', label: 'Previous Member', menu: 'Navigate', shortcut: 'Alt PageUp', run: h.inEditor((v, f) => gotoMember(f, -1)(v)) },
   ];
 }

@@ -115,6 +115,7 @@ export const FEATURES: Feature[] = [
   { id: 'expand-word', label: 'Cyclic Expand Word', group: 'Editing', essential: false, description: 'Alt+/ completes the word from other words of the file; again for the next one.', commands: ['expand-word'] },
   { id: 'overtype', label: 'Overtype mode', group: 'Editing', essential: true, vs: 'Insert key (overtype)', description: 'Insert switches between inserting and overwriting characters; the status bar shows OVR.', commands: ['overtype'] },
   { id: 'current-line', label: 'Highlight current line toggle', group: 'View', essential: true, vs: 'Highlight current line', description: 'View ▸ Highlight Current Line turns the caret line\'s background on or off.', commands: ['current-line'] },
+  { id: 'member-navigation', label: 'Next / Previous Member', group: 'Navigation', essential: false, description: 'Alt+PageDown / PageUp jump between methods and properties (scenarios in features).', commands: ['next-member', 'previous-member'] },
 ];
 export const GROUPS: FeatureGroup[] = ['Editing', 'Navigation', 'Code intelligence', 'Tool windows', 'Files', 'Git', 'View', 'Debugging', 'Help and productivity'];
 

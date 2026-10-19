@@ -6,7 +6,7 @@ import { noteUsage, runRider, commandOn } from '../rider/commands';
 import { pushClipboard } from '../rider/clipboardRing';
 import { usageHighlights } from './usages';
 import { moveStatement } from './moveStatement';
-import { deleteHorizontalWhiteSpace, transposeLine, cursorMatchingBracket, selectMatchingBracket, findSelected, trackEdits, cyclicExpandWord } from './textTools';
+import { deleteHorizontalWhiteSpace, transposeLine, cursorMatchingBracket, selectMatchingBracket, findSelected, trackEdits, cyclicExpandWord, gotoMember } from './textTools';
 import { gotoChange, rollbackLines } from './changeGutter';
 import { completeStatement } from './completeStatement';
 import { collapseAll, collapseToDefinitions, expandAll } from './foldAll';
@@ -322,6 +322,8 @@ export function riderKeys(file = ''): Extension {
     opens('Mod-Shift-Delete', 'unwrap'),
     opens('Mod-Shift-c', 'copy-path'),
     keyed('Alt-F5', 'next-change', gotoChange(1)),
+    keyed('Alt-PageUp', 'previous-member', (v) => gotoMember(file, -1)(v)),
+    keyed('Alt-PageDown', 'next-member', (v) => gotoMember(file, 1)(v)),
     keyed('Alt-/', 'expand-word', cyclicExpandWord),
     keyed('Mod-Shift-F3', 'find-previous-selected', findSelected(-1)),
     keyed('Mod-F3', 'find-next-selected', findSelected(1)),

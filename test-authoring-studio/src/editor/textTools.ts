@@ -178,3 +178,26 @@ export function cyclicExpandWord(view: EditorView) {
   view.dispatch({ changes: { from: start, to: head, insert: next.w }, selection: { anchor: start + next.w.length }, userEvent: 'input.complete' });
   return true;
 }
+
+/** Lines that start a member: C# methods, constructors and properties; Gherkin scenarios and backgrounds. */
+export function memberLines(state: EditorState, file: string) {
+  const out: number[] = [];
+  const cs = /^\s*(?:\[[^\]]*\]\s*)*(?:(?:public|private|protected|internal|static|async|override|virtual|abstract|sealed|partial|readonly|new)\s+)+[\w<>\[\],.? ]+\s+\w+\s*(?:\(|\{|=>)/;
+  const gh = /^\s*(Background|Scenario|Scenario Outline|Scenario Template|Example|Rule|Examples):/;
+  for (let n = 1; n <= state.doc.lines; n++) if ((file.endsWith('.feature') ? gh : cs).test(state.doc.line(n).text)) out.push(n);
+  return out;
+}
+/** Next / Previous Member (Rider, Alt+↓ / Alt+↑ there; Alt+PageDown / PageUp here, Alt+↑/↓ move lines). */
+export function gotoMember(file: string, dir: 1 | -1) {
+  return (view: EditorView) => {
+    const st = view.state;
+    const here = st.doc.lineAt(st.selection.main.head).number;
+    const lines = memberLines(st, file);
+    const target = dir > 0 ? lines.find((l) => l > here) : [...lines].reverse().find((l) => l < here);
+    if (!target) return true;
+    const line = st.doc.line(target);
+    const at = line.from + /^\s*/.exec(line.text)![0].length;
+    view.dispatch({ selection: { anchor: at }, effects: EditorView.scrollIntoView(at, { y: 'center' }) });
+    return true;
+  };
+}

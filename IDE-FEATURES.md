@@ -25,6 +25,7 @@ has it on by default, so the desktop app starts with it on. The others start off
 | X15 | Cyclic Expand Word (Alt+/) | Rider | no | ✅ 2026-10-20 |
 | X16 | Overtype mode (Insert) | VS 2026 | yes | ✅ 2026-10-20 |
 | X17 | Highlight Current Line toggle (View) | VS 2026 | yes | ✅ 2026-10-20 |
+| X18 | Next / Previous Member (Alt+PageDown / PageUp) | Rider | no | ✅ 2026-10-20 |
 
 ## Progress log
 - 2026-10-20 X1: Sort Lines: the selected lines (or the whole file) in natural, case-insensitive order, blank lines last. Third-batch plumbing: src/rider/more.ts, src/editor/textTools.ts, IDE-FEATURES.md.
@@ -44,3 +45,4 @@ has it on by default, so the desktop app starts with it on. The others start off
 - 2026-10-20 X15: Cyclic Expand Word: completes the word from other words of the file, nearest first; again cycles.
 - 2026-10-20 X16: Overtype mode: Insert toggles overwriting characters in every editor; OVR in the status bar (click to leave).
 - 2026-10-20 X17: Highlight Current Line: View toggle for the caret line's background in every editor.
+- 2026-10-20 X18: Next / Previous Member: jump between C# methods and properties, or scenarios in features.

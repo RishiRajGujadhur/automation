@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { EditorState, type TransactionSpec } from '@codemirror/state';
 import { EditorView } from '@codemirror/view';
-import { sortLines, reverseLines, deleteHorizontalWhiteSpace, setCase, transposeLine, transposeChars, transposeWords, cursorMatchingBracket, selectMatchingBracket, findSelected, lastEditLocation, trackEdits, insertGuid, cyclicExpandWord } from '../src/editor/textTools';
+import { sortLines, reverseLines, deleteHorizontalWhiteSpace, setCase, transposeLine, transposeChars, transposeWords, cursorMatchingBracket, selectMatchingBracket, findSelected, lastEditLocation, trackEdits, insertGuid, cyclicExpandWord, gotoMember } from '../src/editor/textTools';
 
 /** Runs an editor command on `doc` with the selection between the markers « and » (or a caret at |). */
 export function run(doc: string, cmd: (v: EditorView) => boolean) {
@@ -81,5 +81,16 @@ describe('text tools (IDE-FEATURES X1…)', () => {
     expect(state.doc.toString()).toBe('calculator calcResult calcResult');
     cyclicExpandWord(view);
     expect(state.doc.toString()).toBe('calculator calcResult calculator');
+  });
+  it('X18 Next / Previous Member', () => {
+    const cs = ['class A', '{', '    public int X { get; set; }', '    public void M()', '    {', '    }', '    private static string N(int a) => "";', '}'].join('\n');
+    let line = 0;
+    const at = (v: EditorView) => { line = v.state.doc.lineAt(v.state.selection.main.head).number; return true; };
+    run('|' + cs, (v) => gotoMember('A.cs', 1)(v) && at(v));
+    expect(line).toBe(3);
+    run(cs.replace('void M()', 'void M()|'), (v) => gotoMember('A.cs', 1)(v) && at(v));
+    expect(line).toBe(7);
+    run('Feature: F\n  Scenario: S\n    Given x\n  Scenario: |T', (v) => gotoMember('F.feature', -1)(v) && at(v));
+    expect(line).toBe(2);
   });
 });
