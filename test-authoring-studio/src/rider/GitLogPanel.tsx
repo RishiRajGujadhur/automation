@@ -69,6 +69,8 @@ export default function GitLogPanel({ onOpen, onClose, onNotice }: { onOpen: (fi
               {commit.message.includes('\n') && <pre className="git-commit-body">{commit.message.split('\n').slice(1).join('\n').trim()}</pre>}
               <div className="git-commit-actions" role="toolbar" aria-label="Commit actions">
               {/* commit actions */}
+              {featureOn('git-revert') && <button className="button" onClick={() => void act('revert')}>Revert Commit</button>}
+              {featureOn('git-cherry-pick') && <button className="button" onClick={() => void act('cherry-pick')}>Cherry-Pick</button>}
               {featureOn('git-new-tag') && <button className="button" onClick={() => { const name = window.prompt('New tag at this commit:', ''); if (name) void act('tag', { name: name.trim() }); }}>New Tag…</button>}
               {featureOn('git-new-branch') && <button className="button" onClick={() => { const name = window.prompt('New branch at this commit:', ''); if (name) void act('branch', { name: name.trim() }); }}>New Branch…</button>}
               {featureOn('git-copy-revision') && <button className="button" onClick={() => void copyText(commit.hash).then((ok) => onNotice(ok ? `Copied ${commit.hash.slice(0, 10)}.` : 'Clipboard unavailable.'))}>Copy Revision</button>}

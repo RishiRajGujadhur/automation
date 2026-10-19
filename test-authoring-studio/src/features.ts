@@ -141,6 +141,8 @@ export const FEATURES: Feature[] = [
   { id: 'git-copy-revision', label: 'Git Log: Copy Revision Number', group: 'Git', essential: true, vs: 'Git Repository ▸ Copy Commit ID', description: 'Copies the selected commit\'s full hash.' },
   { id: 'git-new-branch', label: 'Git Log: New Branch from Commit', group: 'Git', essential: true, vs: 'Git Repository ▸ New Branch', description: 'Creates a branch at the selected commit.' },
   { id: 'git-new-tag', label: 'Git Log: New Tag', group: 'Git', essential: true, vs: 'Git Repository ▸ New Tag', description: 'Tags the selected commit.' },
+  { id: 'git-cherry-pick', label: 'Git Log: Cherry-Pick', group: 'Git', essential: true, vs: 'Git Repository ▸ Cherry-Pick', description: 'Applies the selected commit onto the current branch (undone when it conflicts).' },
+  { id: 'git-revert', label: 'Git Log: Revert Commit', group: 'Git', essential: true, vs: 'Git Repository ▸ Revert', description: 'A new commit that undoes the selected one.' },
 ];
 export const GROUPS: FeatureGroup[] = ['Editing', 'Navigation', 'Code intelligence', 'Tool windows', 'Files', 'Git', 'View', 'Debugging', 'Help and productivity'];
 

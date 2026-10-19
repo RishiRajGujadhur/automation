@@ -266,6 +266,8 @@ export async function fileAt(root: string, ref: string, file: string) {
 const REF_NAME = /^(?!-)(?!.*\.\.)(?!.*[\s~^:?*\[\\])[\w./-]{1,100}(?<![./])$/;
 const refName = (n?: string) => { if (!n || !REF_NAME.test(n)) throw new Error('Use a branch / tag name without spaces or special characters.'); return n; };
 export const COMMIT_ACTIONS = {
+  revert: async (top, hash) => git(top, ['revert', '--no-edit', hash]).then(() => `Reverted ${hash.slice(0, 7)} with a new commit.`).catch(async (e: Error) => { await git(top, ['revert', '--abort']).catch(() => {}); throw new Error(`Revert stopped (conflicts?), so it was undone: ${e.message}`); }),
+  'cherry-pick': async (top, hash) => git(top, ['cherry-pick', hash]).then(() => `Cherry-picked ${hash.slice(0, 7)}.`).catch(async (e: Error) => { await git(top, ['cherry-pick', '--abort']).catch(() => {}); throw new Error(`Cherry-pick stopped (conflicts?), so it was undone: ${e.message}`); }),
   tag: async (top, hash, o) => git(top, ['tag', refName(o.name), hash]).then(() => `Created tag ${o.name} at ${hash.slice(0, 7)}.`),
   branch: async (top, hash, o) => git(top, ['branch', refName(o.name), hash]).then(() => `Created branch ${o.name} at ${hash.slice(0, 7)}.`),
 } as Record<string, (top: string, hash: string, o: { name?: string; mode?: string }) => Promise<string>>;
