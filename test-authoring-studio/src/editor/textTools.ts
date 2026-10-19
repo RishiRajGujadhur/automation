@@ -295,3 +295,27 @@ export function stripTrailingSpaces(view: EditorView) {
   view.dispatch({ changes, userEvent: 'delete' });
   return true;
 }
+
+/** Split String (Rider): the C# string literal at the caret becomes "…" +⏎ "…" (an interpolated string stays interpolated). */
+export function splitString(view: EditorView) {
+  const { state } = view;
+  const head = state.selection.main.head;
+  const line = state.doc.lineAt(head);
+  const text = line.text, at = head - line.from;
+  for (let i = 0; i < text.length; i++) {
+    if (text[i] === '/' && text[i + 1] === '/') return false;
+    if (text[i] !== '"') continue;
+    const verbatim = text[i - 1] === '@' || text[i - 2] === '@';
+    const interpolated = text[i - 1] === '$' || text[i - 2] === '$';
+    let j = i + 1;
+    for (; j < text.length && text[j] !== '"'; j++) if (!verbatim && text[j] === '\\') j++;
+    if (at > i && at <= j && !verbatim) {
+      const indent = /^\s*/.exec(text)![0];
+      const insert = `" +${state.lineBreak}${indent}    ${interpolated ? '$' : ''}"`;
+      view.dispatch({ changes: { from: head, insert }, selection: { anchor: head + insert.length }, userEvent: 'input' });
+      return true;
+    }
+    i = j;
+  }
+  return false;
+}

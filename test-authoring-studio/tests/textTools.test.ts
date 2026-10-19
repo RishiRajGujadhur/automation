@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { EditorState, type TransactionSpec } from '@codemirror/state';
 import { EditorView } from '@codemirror/view';
-import { sortLines, reverseLines, deleteHorizontalWhiteSpace, setCase, transposeLine, transposeChars, transposeWords, cursorMatchingBracket, selectMatchingBracket, findSelected, lastEditLocation, trackEdits, insertGuid, cyclicExpandWord, gotoMember, toggleVerbatim, convertCase, reformatJson, stripTrailingSpaces } from '../src/editor/textTools';
+import { sortLines, reverseLines, deleteHorizontalWhiteSpace, setCase, transposeLine, transposeChars, transposeWords, cursorMatchingBracket, selectMatchingBracket, findSelected, lastEditLocation, trackEdits, insertGuid, cyclicExpandWord, gotoMember, toggleVerbatim, convertCase, reformatJson, stripTrailingSpaces, splitString } from '../src/editor/textTools';
 
 /** Runs an editor command on `doc` with the selection between the markers « and » (or a caret at |). */
 export function run(doc: string, cmd: (v: EditorView) => boolean) {
@@ -118,5 +118,11 @@ describe('text tools (IDE-FEATURES X1…)', () => {
   it('X59 Strip Trailing Spaces: the selected lines, else the whole file', () => {
     expect(run('a  \n«b \t\nc »\nd  ', stripTrailingSpaces)).toBe('a  \nb\nc\nd  ');
     expect(run('a |  \nb\t\n  ', stripTrailingSpaces)).toBe('a\nb\n');
+  });
+  it('X81 Split String: "…" + "…" at the caret, interpolation kept', () => {
+    expect(run('    var s = "Hello |world";', splitString)).toBe('    var s = "Hello " +\n        "world";');
+    expect(run('var s = $"Hi {name}|, bye";', splitString)).toBe('var s = $"Hi {name}" +\n    $", bye";');
+    expect(run('var s = "a\\"b|c";', splitString)).toBe('var s = "a\\"b" +\n    "c";');
+    expect(run('var |s = "abc";', splitString)).toBe('var s = "abc";');
   });
 });

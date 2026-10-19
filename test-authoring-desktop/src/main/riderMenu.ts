@@ -142,6 +142,7 @@ const ROWS: Record<'edit' | 'view' | 'navigate' | 'code' | 'tools' | 'help', Row
     null,
     ['Sync Namespace with Folder', 'sync-namespace'],
     ['Rename File to Match Type', 'rename-file-to-type'],
+    ['Split String', 'split-string'],
   ],
   tools: [
     ['Run Anything… (Ctrl twice)', 'run-anything'],
