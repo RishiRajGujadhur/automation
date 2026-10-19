@@ -230,3 +230,36 @@ export function duplicateScenario(view: EditorView) {
   view.dispatch({ changes: { from: at, insert }, selection: { anchor: title + /^\s*/.exec(lines[b.head - b.first])![0].length }, scrollIntoView: true, userEvent: 'input' });
   return true;
 }
+
+/** Move Scenario Up / Down (Rider's Move Statement for Gherkin): swaps the scenario (tags, Examples) with its neighbour. */
+export function moveScenario(dir: 1 | -1) {
+  return (view: EditorView) => {
+    const { state } = view;
+    const doc = state.doc;
+    const head = state.selection.main.head;
+    const cur = scenarioBlock(state, doc.lineAt(head).number);
+    if (!cur) return false;
+    let other: ReturnType<typeof scenarioBlock>;
+    if (dir < 0) {
+      let k = cur.first - 1;
+      while (k >= 1 && !doc.line(k).text.trim()) k--;
+      other = k >= 1 ? scenarioBlock(state, k) : undefined;
+      if (!other || other.end >= cur.first) return false;
+    } else {
+      let k = cur.end + 1;
+      while (k <= doc.lines && (!doc.line(k).text.trim() || /^\s*@/.test(doc.line(k).text))) k++;
+      if (k > doc.lines || !SCENARIO.test(doc.line(k).text)) return false;
+      other = scenarioBlock(state, k);
+      if (!other) return false;
+    }
+    const [a, b] = dir < 0 ? [other, cur] : [cur, other];
+    const from = doc.line(a.first).from, to = doc.line(b.end).to;
+    const textA = doc.sliceString(from, doc.line(a.end).to);
+    const gap = doc.sliceString(doc.line(a.end).to, doc.line(b.first).from);
+    const textB = doc.sliceString(doc.line(b.first).from, to);
+    const offset = head - doc.line(cur.first).from;
+    const start = dir < 0 ? from : from + textB.length + gap.length;
+    view.dispatch({ changes: { from, to, insert: textB + gap + textA }, selection: { anchor: start + offset }, scrollIntoView: true, userEvent: 'move.line' });
+    return true;
+  };
+}

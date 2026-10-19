@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { EditorState, type TransactionSpec } from '@codemirror/state';
 import { EditorView } from '@codemirror/view';
-import { cycleStepKeyword, scenarioToOutline, tableInsertRow, tableAddColumn, tableDeleteColumn, tableSortByColumn, testFilter, selectScenario, renameTag, extractExamplesParameter, outlineToScenario, duplicateScenario } from '../src/editor/gherkinTools';
+import { cycleStepKeyword, scenarioToOutline, tableInsertRow, tableAddColumn, tableDeleteColumn, tableSortByColumn, testFilter, selectScenario, renameTag, extractExamplesParameter, outlineToScenario, duplicateScenario, moveScenario } from '../src/editor/gherkinTools';
 
 /** Runs an editor command on `doc` with the selection between « and » (or a caret at ‸); with `caret`, the result marks the caret with ¦. */
 function run(doc: string, cmd: (v: EditorView) => boolean, caret = false) {
@@ -72,5 +72,13 @@ describe('Gherkin tools (IDE-FEATURES X49…)', () => {
   it('X88 Duplicate Scenario: tags through Examples, "(copy)" title, caret on it', () => {
     const doc = 'Feature: F\n  @a\n  Scenario: S‸\n    Given x\n\n  Scenario: T';
     expect(run(doc, duplicateScenario, true)).toBe('Feature: F\n  @a\n  Scenario: S\n    Given x\n\n  @a\n  ¦Scenario: S (copy)\n    Given x\n\n  Scenario: T');
+  });
+  it('X97 / X98 Move Scenario Up / Down: whole blocks with tags', () => {
+    const doc = 'Feature: F\n  Background:\n    Given b\n\n  Scenario: A\n    Given a\n\n  @t\n  Scenario: B\n    Given ‸x\n';
+    expect(run(doc, moveScenario(-1), true)).toBe('Feature: F\n  Background:\n    Given b\n\n  @t\n  Scenario: B\n    Given ¦x\n\n  Scenario: A\n    Given a\n');
+    expect(run(doc, moveScenario(1))).toBe(doc.replace('‸', ''));
+    const top = 'Feature: F\n  Scenario: A‸\n    Given a\n  @t\n  Scenario: B\n    Given x';
+    expect(run(top, moveScenario(1))).toBe('Feature: F\n  @t\n  Scenario: B\n    Given x\n  Scenario: A\n    Given a');
+    expect(run(top, moveScenario(-1))).toBe(top.replace('‸', ''));
   });
 });

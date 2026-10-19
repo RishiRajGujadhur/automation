@@ -104,6 +104,7 @@ has it on by default, so the desktop app starts with it on. The others start off
 | X94 | Search Only in Open Editors | VS Code / VS 2026 | yes | ✅ 2026-10-20 |
 | X95 | Indentation (status bar) | VS Code / VS 2026 | yes | ✅ 2026-10-20 |
 | X96 | Menu groups (Code ▸ Gherkin) | VS 2026 / Rider | yes | ✅ 2026-10-20 |
+| X97 | Move Scenario Up | Rider | yes | ✅ 2026-10-20 |
 
 ## Progress log
 - 2026-10-20 X1: Sort Lines: the selected lines (or the whole file) in natural, case-insensitive order, blank lines last. Third-batch plumbing: src/rider/more.ts, src/editor/textTools.ts, IDE-FEATURES.md.
@@ -202,3 +203,4 @@ has it on by default, so the desktop app starts with it on. The others start off
 - 2026-10-20 X94: Limit to open tabs
 - 2026-10-20 X95: Spaces/tabs and size, convert
 - 2026-10-20 X96: Gherkin commands in a submenu (web + desktop)
+- 2026-10-20 X97: Swap with the scenario above
