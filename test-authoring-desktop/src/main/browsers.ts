@@ -1,4 +1,4 @@
-import { app, dialog, Notification } from 'electron';
+import { app, dialog } from 'electron';
 import { spawn } from 'node:child_process';
 import fs from 'node:fs';
 import { createRequire } from 'node:module';
@@ -6,6 +6,7 @@ import path from 'node:path';
 import { ctx } from './context';
 import { resourcesRoot } from './paths';
 import { read, write } from './store';
+import { notify } from './notify';
 
 /** Playwright as bundled beside the API (resources/studio/node_modules). */
 const playwrightDir = () => path.join(resourcesRoot(), 'node_modules/playwright');
@@ -42,7 +43,10 @@ export function installChromium(): Promise<boolean> {
       installing = false;
       ctx.win?.setProgressBar(-1);
       const ok = code === 0;
-      if (Notification.isSupported()) new Notification({ title: ok ? 'Playwright Chromium installed' : 'Playwright install failed', body: ok ? 'Recording and browser verification are ready.' : 'See Help → Open Log File.' }).show();
+      const title = ok ? 'Playwright Chromium installed' : 'Playwright install failed';
+      const body = ok ? 'Recording and browser verification are ready.' : 'See Help → Open Log File.';
+      write({ lastBrowserInstall: { ok, completedAt: new Date().toISOString(), message: `${title}. ${body}` } });
+      notify(title, body, { always: true });
       if (!ok) console.error('playwright install chromium failed:\n' + log);
       resolve(ok);
     });
@@ -65,10 +69,11 @@ export async function offerChromium() {
 export async function browsersMenu() {
   if (!ctx.win) return;
   const installed = chromiumInstalled();
+  const last = read().lastBrowserInstall;
   const r = await dialog.showMessageBox(ctx.win, {
     type: 'info', title: 'Playwright browsers', buttons: installed ? ['Reinstall', 'Close'] : ['Install Chromium', 'Close'], defaultId: installed ? 1 : 0, cancelId: 1,
     message: installed ? 'Playwright Chromium is installed.' : 'Playwright Chromium is not installed.',
-    detail: `Used by the recorder and selector verification. Playwright ${app.isPackaged ? '(bundled)' : '(development)'}.`,
+    detail: `Used by the recorder and selector verification. Playwright ${app.isPackaged ? '(bundled)' : '(development)'}.${last ? `\n\nLast installation (${new Date(last.completedAt).toLocaleString()}):\n${last.message}` : ''}`,
   });
   if (r.response === 0) installChromium();
 }

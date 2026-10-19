@@ -6,6 +6,7 @@ Reviewed 2026-10-18 against source revision `f61994c`. Implementation started 20
 
 | Item | Status | Implementation and verification |
 | --- | --- | --- |
+| DQ27 | Done — 2026-10-19 | Chromium installation uses the shared notification policy. Its timestamped success/failure result is saved and shown in Help → Playwright Browsers even with DND enabled. Verified: three unit cases and a packaged test with a simulated installer subprocess (no download), confirming zero OS notifications and a retained Help result. |
 | DQ29 | Done — 2026-10-19 | Status polling schedules the next cycle only after completion, aborts both requests after 10 seconds, rejects HTTP/JSON failures and cancels requests on shutdown. Offline notification is emitted once per outage and successful polling clears it. Verified: three unit regressions, both typechecks and packaged outage/recovery test (maximum two concurrent requests). |
 | DQ22 | Done — 2026-10-19 | Desktop state is flushed to a temporary file and atomically renamed, retaining a valid `.bak`. Startup recovers from malformed primary JSON; reset also clears the fallback. Verified: interrupted replacement/corruption regression, packaged recovery of zoom and watcher preferences, both TypeScript checks. |
 | DQ33 | Done — 2026-10-19 | Pending rescan timers are cancelled on workspace replacement, stop, disable and watcher errors. Generation checks ignore late callbacks/errors from old watchers. Verified: four deterministic unit regressions, desktop typecheck, rebuilt packaged app and a real-filesystem disable/re-enable test. |

@@ -26,6 +26,7 @@ export type Shape = {
   editor?: Editor;
   firstRunDone?: boolean;
   apiPort?: number;
+  lastBrowserInstall?: { ok: boolean; completedAt: string; message: string };
 };
 const file = () => path.join(dataRoot(), 'desktop.json');
 let cache: Shape | undefined;

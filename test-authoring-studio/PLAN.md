@@ -300,3 +300,7 @@ Reference: Visual Studio debugger (breakpoints, Step Into/Over/Out, Locals, Watc
 ## DQ29 — bounded status polling (2026-10-19)
 - [x] Serialize status cycles, abort requests after 10 seconds, cancel siblings on failure and suppress stale results after stop/restart.
 - [x] Three unit regressions and a packaged outage/recovery test pass; no overlapping request pairs. Both typechecks pass.
+
+## DQ27 — browser installation notifications (2026-10-19)
+- [x] Route browser-install notifications through Do Not Disturb; persist the outcome and show it in Help → Playwright Browsers.
+- [x] Three unit cases and packaged simulated-installer regression pass; desktop typecheck passes.
