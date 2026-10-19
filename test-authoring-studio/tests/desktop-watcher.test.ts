@@ -15,7 +15,7 @@ beforeEach(() => {
     const events = new EventEmitter(); const close = vi.fn();
     watches.push({ events, change, close });
     return Object.assign(events, { close });
-  }) as typeof fs.watch);
+  }) as unknown as typeof fs.watch);
 });
 afterEach(() => { stopWatching(); vi.restoreAllMocks(); vi.useRealTimers(); });
 
