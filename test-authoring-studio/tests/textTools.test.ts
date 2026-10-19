@@ -29,4 +29,7 @@ describe('text tools (IDE-FEATURES X1…)', () => {
   it('X4 Make Uppercase', () => {
     expect(run('a Wo|rd b', setCase(true))).toBe('a WORD b');
   });
+  it('X5 Make Lowercase', () => {
+    expect(run('a WO|RD b', setCase(false))).toBe('a word b');
+  });
 });

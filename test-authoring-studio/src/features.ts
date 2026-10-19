@@ -102,6 +102,7 @@ export const FEATURES: Feature[] = [
   { id: 'reverse-lines', label: 'Reverse Lines', group: 'Editing', essential: false, description: 'The selected lines (or the file) in reverse order.', commands: ['reverse-lines'] },
   { id: 'delete-whitespace', label: 'Delete Horizontal White Space', group: 'Editing', essential: true, vs: 'Edit ▸ Advanced ▸ Delete Horizontal White Space', description: 'Ctrl+K, Ctrl+\\: collapse spaces in the selection, or delete those around the caret.', commands: ['delete-whitespace'] },
   { id: 'make-uppercase', label: 'Make Uppercase', group: 'Editing', essential: true, vs: 'Edit ▸ Advanced ▸ Make Uppercase', description: 'The selection or the word at the caret in upper case.', commands: ['make-uppercase'] },
+  { id: 'make-lowercase', label: 'Make Lowercase', group: 'Editing', essential: true, vs: 'Edit ▸ Advanced ▸ Make Lowercase', description: 'The selection or the word at the caret in lower case.', commands: ['make-lowercase'] },
 ];
 export const GROUPS: FeatureGroup[] = ['Editing', 'Navigation', 'Code intelligence', 'Tool windows', 'Files', 'Git', 'View', 'Debugging', 'Help and productivity'];
 

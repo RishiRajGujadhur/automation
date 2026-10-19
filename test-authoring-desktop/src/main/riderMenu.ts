@@ -38,6 +38,7 @@ const ROWS: Record<'edit' | 'view' | 'navigate' | 'code' | 'tools' | 'help', Row
     ['Reverse Lines', 'reverse-lines'],
     ['Delete Horizontal White Space', 'delete-whitespace'],
     ['Make Uppercase', 'make-uppercase'],
+    ['Make Lowercase', 'make-lowercase'],
   ],
   view: [
     null,
