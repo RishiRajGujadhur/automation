@@ -72,6 +72,7 @@ const ROWS: Record<'edit' | 'view' | 'navigate' | 'code' | 'tools' | 'help', Row
     ['Highlight Current Line', 'current-line'],
     null,
     ['Window Layouts…', 'window-layouts'],
+    ['Reset Window Layout', 'reset-layout'],
   ],
   navigate: [
     ['Select In…', 'select-in', 'Alt+F1'],

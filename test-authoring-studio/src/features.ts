@@ -130,6 +130,7 @@ export const FEATURES: Feature[] = [
   { id: 'copy-call-stack', label: 'Copy Call Stack', group: 'Debugging', essential: true, vs: 'Call Stack ▸ Copy All', description: 'The paused call stack as text, one frame per line.', commands: ['copy-call-stack'] },
   { id: 'export-breakpoints', label: 'Export / Import Breakpoints', group: 'Debugging', essential: true, vs: 'Breakpoints ▸ Export / Import', description: 'Save every breakpoint (with conditions and hit counts) to a file, and load them again.', commands: ['export-breakpoints', 'import-breakpoints'] },
   { id: 'window-layouts', label: 'Save / Apply Window Layout', group: 'View', essential: true, vs: 'Window ▸ Save / Apply Window Layout', description: 'Name the current arrangement of panels and tool windows, and switch back to it.', commands: ['window-layouts'] },
+  { id: 'reset-layout', label: 'Reset Window Layout', group: 'View', essential: true, vs: 'Window ▸ Reset Window Layout', description: 'The default panel, side bar and tool windows.', commands: ['reset-layout'] },
 ];
 export const GROUPS: FeatureGroup[] = ['Editing', 'Navigation', 'Code intelligence', 'Tool windows', 'Files', 'Git', 'View', 'Debugging', 'Help and productivity'];
 

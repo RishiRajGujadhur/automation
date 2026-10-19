@@ -40,6 +40,7 @@ has it on by default, so the desktop app starts with it on. The others start off
 | X30 | Copy Call Stack | VS 2026 | yes | ✅ 2026-10-20 |
 | X31 | Export / Import Breakpoints | VS 2026 | yes | ✅ 2026-10-20 |
 | X32 | Save / Apply Window Layout | VS 2026 | yes | ✅ 2026-10-20 |
+| X33 | Reset Window Layout | VS 2026 | yes | ✅ 2026-10-20 |
 
 ## Progress log
 - 2026-10-20 X1: Sort Lines: the selected lines (or the whole file) in natural, case-insensitive order, blank lines last. Third-batch plumbing: src/rider/more.ts, src/editor/textTools.ts, IDE-FEATURES.md.
@@ -74,3 +75,4 @@ has it on by default, so the desktop app starts with it on. The others start off
 - 2026-10-20 X30: Copy Call Stack: the paused frames as text. Verified with Debug Tests in Context and Show Next Statement on the Calculator sample. Fix: app shortcuts no longer also fire on the second key of an editor chord (Ctrl+R, Ctrl+T opened Go to All).
 - 2026-10-20 X31: Export / Import Breakpoints: every breakpoint with its condition, hit count and log message, to and from a JSON file.
 - 2026-10-20 X32: Window Layouts: save the panel / side bar / tool window arrangement under a name, apply or delete it.
+- 2026-10-20 X33: Reset Window Layout: default panel, side bar and tool windows (after a confirmation).
