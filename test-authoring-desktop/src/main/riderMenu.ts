@@ -81,6 +81,7 @@ const ROWS: Record<'edit' | 'view' | 'navigate' | 'code' | 'tools' | 'help', Row
     ['File Properties', 'file-props', 'Alt+Enter'],
     ['Bracket Pair Colorization', 'bracket-colors'],
     ['Right Margin Guide…', 'right-margin'],
+    ['Tags', 'tool-tags'],
   ],
   navigate: [
     ['Select In…', 'select-in', 'Alt+F1'],

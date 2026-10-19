@@ -4,6 +4,7 @@ import ProblemsPanel from './ProblemsPanel';
 import ShelfPanel from './ShelfPanel';
 import GitLogPanel from './GitLogPanel';
 import NotificationsPanel from './NotificationsPanel';
+import TagsPanel from './TagsPanel';
 import { lazy, Suspense } from 'react';
 
 const TerminalPanel = lazy(() => import('./TerminalPanel'));
@@ -17,6 +18,7 @@ export const RIDER_TOOLS = {
   shelf: 'Shelf',
   gitlog: 'Git Log',
   notifications: 'Notifications',
+  tags: 'Tags',
 } as const;
 export type RiderTool = keyof typeof RIDER_TOOLS;
 
@@ -28,5 +30,6 @@ export default function RiderToolWindow({ tool, onOpen, onNotice, onClose }: { t
   if (tool === 'shelf') return <ShelfPanel onOpen={(f) => onOpen(f, 1, 1)} onNotice={onNotice} onClose={onClose} />;
   if (tool === 'gitlog') return <GitLogPanel onOpen={(f) => onOpen(f, 1, 1)} onNotice={onNotice} onClose={onClose} />;
   if (tool === 'notifications') return <NotificationsPanel onClose={onClose} />;
+  if (tool === 'tags') return <TagsPanel onOpen={onOpen} onNotice={onNotice} onClose={onClose} />;
   return null;
 }

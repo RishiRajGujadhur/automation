@@ -487,6 +487,7 @@ export default function RiderHost(props: RiderHostProps) {
       { id: 'analyze-stack', label: 'Analyze Stack Trace…', menu: 'Tools', group: true, run: () => { void (async () => { let text = ''; try { const c = await navigator.clipboard.readText(); if (/\bat\s+\S+/.test(c)) text = c; } catch { /* paste it */ } setPopup({ kind: 'stack-trace', text }); })(); } },
       { id: 'branches', label: 'Branches…', menu: 'Tools', group: true, run: () => { if (isBrowser()) { p.current.onNotice('Git needs a folder indexed by the studio server.'); return; } openPopup({ kind: 'branches' }, false); } },
       { id: 'code-metrics', label: 'Calculate Code Metrics', menu: 'Tools', group: true, run: () => { const a = activeEditor(); if (!a || !a.file.endsWith('.cs') || isBrowser()) { p.current.onNotice('Open a C# file of a studio-indexed folder first.'); return; } p.current.onNotice('Calculating code metrics…'); api<{ types: TypeMetrics[] }>('/csharp/metrics', { file: a.file, source: a.view.state.doc.toString() }).then((r) => setPopup({ kind: 'metrics', file: a.file, types: r.types }), (e) => p.current.onNotice((e as Error).message)); } },
+      { id: 'tool-tags', label: 'Tags', menu: 'View', run: () => p.current.onTool('tags') },
       { id: 'carets-line-ends', label: 'Add Carets to Ends of Selected Lines', menu: 'Edit', shortcut: 'Alt Shift G', run: inEditor(caretsAtLineEnds) },
     ];
     return registerRider([...list, ...moreCommands({ inEditor, notice: (m) => p.current.onNotice(m), navigate: (l) => p.current.onNavigate(l) })]);

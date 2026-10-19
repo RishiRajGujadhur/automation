@@ -323,3 +323,44 @@ test('X70 Fade unnecessary usings: unused usings are greyed out', async ({ page,
   const src = await openCs(page, 'Steps/Clock.cs', 'public class Clock');
   await expect(src.locator('.cm-unnecessary')).toHaveText('using System.Text;', { timeout: 90_000 });
 });
+
+test('X76 Tags window: tags with their scenarios; a scenario opens', async ({ page }) => {
+  await openFeature(page, 'GoogleSearch.feature');
+  await menuItem(page, 'View', /^Tags/);
+  const panel = page.getByRole('region', { name: 'Tags' });
+  const tag = panel.getByRole('button', { name: /@authentication/ });
+  await expect(tag).toBeVisible();
+  await tag.click();
+  await panel.getByRole('button', { name: /^Sign in/ }).click();
+  await expect(page.getByRole('button', { name: 'Close Login.feature' })).toBeVisible();
+});
+
+test('X77 Rename Tag: every feature file, through diff approval', async ({ page }) => {
+  await openFeature(page);
+  await menuItem(page, 'View', /^Tags/);
+  const panel = page.getByRole('region', { name: 'Tags' });
+  page.once('dialog', (d) => void d.accept('auth'));
+  await panel.getByRole('button', { name: 'Rename @authentication' }).click();
+  await page.getByRole('button', { name: 'Approve and write Login.feature' }).click();
+  await expect.poll(async () => fs.readFile(path.join(root, 'Features/Auth/Login.feature'), 'utf8')).toContain('@auth\n');
+  await expect(panel.getByRole('button', { name: /@auth\b/ }).first()).toBeVisible();
+});
+
+test('X79 Sync Namespace with Folder: project name plus folders', async ({ page, request }) => {
+  await fs.mkdir(path.join(root, 'Steps/Sub'), { recursive: true });
+  await fs.writeFile(path.join(root, 'Steps/Sub/Ns.cs'), ['namespace Wrong.Place;', 'public class Ns { }', ''].join('\n'));
+  expect((await request.post('/api/workspace', { data: { repositoryRoot: root, targetProject: '.' } })).ok()).toBe(true);
+  await openCs(page, 'Steps/Sub/Ns.cs', 'public class Ns');
+  await menuItem(page, 'Code', /Sync Namespace with Folder/);
+  await expect.poll(() => doc(page)).toContain('namespace Fixtures.Steps.Sub;');
+});
+
+test('X80 Rename File to Match Type', async ({ page, request }) => {
+  await fs.writeFile(path.join(root, 'Steps/Wrong.cs'), ['namespace Demo;', 'public class RightName { }', ''].join('\n'));
+  expect((await request.post('/api/workspace', { data: { repositoryRoot: root, targetProject: '.' } })).ok()).toBe(true);
+  await openCs(page, 'Steps/Wrong.cs', 'public class RightName');
+  await menuItem(page, 'Code', /Rename File to Match Type/);
+  await expect(page.getByRole('button', { name: 'Close RightName.cs' })).toBeVisible();
+  await expect.poll(() => fs.access(path.join(root, 'Steps/RightName.cs')).then(() => true, () => false)).toBe(true);
+  expect(await fs.access(path.join(root, 'Steps/Wrong.cs')).then(() => true, () => false)).toBe(false);
+});

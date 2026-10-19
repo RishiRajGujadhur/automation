@@ -173,6 +173,7 @@ export const FEATURES: Feature[] = [
   { id: 'test-copy', label: 'Test Explorer: Copy details', group: 'Tool windows', essential: true, vs: 'Test Explorer ▸ Copy', description: 'A test\'s context menu copies its name, outcome, duration, message and stack trace.' },
   { id: 'test-collapse-all', label: 'Test Explorer: Collapse / Expand All', group: 'Tool windows', essential: true, vs: 'Test Explorer ▸ Collapse All', description: 'A toolbar button collapses or expands every group.' },
   { id: 'run-file-tests', label: 'Run All Tests in File', group: 'Debugging', essential: true, vs: 'Run Tests (file context)', description: 'Runs every test (or scenario) of the active file.', commands: ['run-file-tests'] },
+  { id: 'tool-tags', label: 'Tags window', group: 'Gherkin', essential: true, description: 'Every Gherkin tag with its scenarios (View ▸ Tags).', commands: ['tool-tags'] },
 ];
 export const GROUPS: FeatureGroup[] = ['Editing', 'Navigation', 'Code intelligence', 'Tool windows', 'Files', 'Git', 'Gherkin', 'View', 'Debugging', 'Help and productivity'];
 

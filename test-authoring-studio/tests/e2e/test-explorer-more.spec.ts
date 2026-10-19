@@ -78,3 +78,21 @@ test('X71 X72 X73 X75 Test Explorer: group by outcome, search filters, Copy, Col
   await expect.poll(() => page.evaluate(() => navigator.clipboard.readText())).toContain('Test Outcome:\tPassed');
   expect(await page.evaluate(() => navigator.clipboard.readText())).toContain('Test FullName:\tCalculator.Tests.CalculatorTests.AddsTwoNumbers');
 });
+
+test('X78 Run Tagged Scenarios: the Tags window runs a tag\'s scenarios', async ({ page }) => {
+  const feature = (await fs.readdir(path.join(root, 'Features'))).find((f) => f.endsWith('.feature'))!;
+  const file = path.join(root, 'Features', feature);
+  await fs.writeFile(file, (await fs.readFile(file, 'utf8')).replace('  Scenario:', '  @smoke\n  Scenario:'));
+  await page.request.post('/api/scan', { data: {} });
+  await start(page);
+  const runs: string[] = [];
+  page.on('request', (r) => { if (r.method() === 'POST' && r.url().endsWith('/api/tests/run')) runs.push(r.postData() ?? ''); });
+  await page.getByRole('button', { name: 'View menu' }).click();
+  await page.getByRole('menuitem', { name: /^Tags/ }).click();
+  await page.getByRole('region', { name: 'Tags' }).getByRole('button', { name: 'Run scenarios tagged @smoke' }).click();
+  await expect.poll(() => runs.length, { timeout: 30_000 }).toBe(1);
+  const ids = JSON.parse(runs[0]).ids as string[];
+  const all = (await (await page.request.get('/api/tests')).json()).tests as { id: string; kind: string }[];
+  expect(ids).toEqual(all.filter((t) => t.kind === 'scenario').map((t) => t.id));
+  await expect.poll(() => status(page), { timeout: 240_000, intervals: [2000] }).toMatch(/done|failed/);
+});

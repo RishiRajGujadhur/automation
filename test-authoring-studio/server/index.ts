@@ -94,6 +94,19 @@ const paging=z.object({q:z.string().max(200).default(''),offset:z.coerce.number(
 app.get('/api/workspace', async (_req, res) => res.json({ config, index: publicIndex(await ensure()) }));
 app.get('/api/steps',async(req,res)=>{await ensure();const {q,offset,limit,keyword}=paging.parse(req.query);res.json(await search!.search(q,offset,limit,keyword));});
 app.get('/api/step',async(req,res)=>{const i=await ensure();const binding=search!.byId.get(z.string().parse(req.query.id));if(!binding){res.status(404).json({error:'Binding not found. Refresh the catalogue.'});return;}const visited=new Set<string>();const edges:Index['callEdges']=[];const walk=(id:string)=>{if(visited.has(id)||visited.size>100)return;visited.add(id);for(const e of i.callEdges.filter(e=>e.from===id).slice(0,50)){edges.push(e);if(e.resolution==='Resolved')walk(e.to);}};walk(binding.method);res.json({binding,edges:edges.slice(0,100)});});
+// Tags window (Gherkin tags, as Rider's and SpecFlow's tag views): every tag with the scenarios it applies to.
+app.get('/api/tags', async (_req, res) => {
+  const tags = new Map<string, { file: string; feature: string; scenario: string; line: number }[]>();
+  for (const f of (await ensure()).features) {
+    for (const s of f.scenarios) {
+      for (const t of new Set([...(f.tags ?? []), ...(s.tags ?? [])])) {
+        const tag = t.startsWith('@') ? t : `@${t}`;
+        tags.set(tag, [...(tags.get(tag) ?? []), { file: f.file, feature: f.name, scenario: s.name, line: s.line }]);
+      }
+    }
+  }
+  res.json([...tags].map(([tag, scenarios]) => ({ tag, scenarios })).sort((a, b) => a.tag.localeCompare(b.tag)));
+});
 app.get('/api/feature',async(req,res)=>{const f=(await ensure()).features.find(f=>f.file===req.query.file);if(!f){res.status(404).json({error:'Feature not found'});return;}res.json(f);});
 app.get('/api/dictionaries',async(req,res)=>{await ensure();const {q,offset,limit}=paging.parse(req.query);res.json(await search!.query('dictionaries',q,offset,limit));});
 app.get('/api/dictionary/files',async(_req,res)=>{const i=await ensure();res.json([...new Set((i.dictionaryEntries??[]).map(e=>e.file))].sort());});
