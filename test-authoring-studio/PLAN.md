@@ -296,3 +296,7 @@ Reference: Visual Studio debugger (breakpoints, Step Into/Over/Out, Locals, Watc
 ## DQ22 — desktop state recovery (2026-10-19)
 - [x] Atomic preference writes with a last-known-good backup; malformed primary files recover without discarding the profile.
 - [x] Regression covers failed replacement, invalid JSON and temporary-file cleanup; packaged launch restores zoom and auto-rescan from backup. Typechecks pass.
+
+## DQ29 — bounded status polling (2026-10-19)
+- [x] Serialize status cycles, abort requests after 10 seconds, cancel siblings on failure and suppress stale results after stop/restart.
+- [x] Three unit regressions and a packaged outage/recovery test pass; no overlapping request pairs. Both typechecks pass.
