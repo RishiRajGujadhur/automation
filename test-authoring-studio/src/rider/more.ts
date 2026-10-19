@@ -1,5 +1,6 @@
 import type { EditorView } from '@codemirror/view';
 import type { RiderCommand } from './commands';
+import { buildDiagnostics, stepError } from '../build/store';
 import { api } from '../api';
 import { expectedNamespace, setNamespace, firstTypeName } from '../editor/csharpTools';
 import { renamePath } from '../files/provider';
@@ -33,7 +34,10 @@ export type MoreHelpers = {
   navigate: (loc: { file: string; line?: number; column?: number }) => void;
 };
 
+/** The Error List row Next / Previous Error last went to. */
+let errorAt = -1;
 export function moreCommands(h: MoreHelpers): RiderCommand[] {
+  const goError = (step: 1 | -1) => { const list = buildDiagnostics(); errorAt = stepError(list, errorAt, step); const e = list[errorAt]; if (!e?.file) { h.notice('No build errors or warnings with a location (build first: Ctrl+Shift+B).'); return; } h.navigate({ file: e.file, line: e.line, column: e.column ?? 1 }); h.notice(`${e.code}: ${e.message}`); };
   return [
     { id: 'sort-lines', label: 'Sort Lines', menu: 'Edit', group: true, run: h.inEditor(sortLines()) },
     { id: 'reverse-lines', label: 'Reverse Lines', menu: 'Edit', run: h.inEditor(reverseLines) },
@@ -100,5 +104,7 @@ export function moreCommands(h: MoreHelpers): RiderCommand[] {
     { id: 'extract-background', label: 'Extract Background', menu: 'Code', submenu: 'Gherkin', run: h.inEditor(extractBackground) },
     { id: 'add-examples', label: 'Add Examples Table', menu: 'Code', submenu: 'Gherkin', run: h.inEditor(addExamplesTable) },
     { id: 'toggle-tag', label: 'Toggle Tag…', menu: 'Code', submenu: 'Gherkin', run: h.inEditor((v) => { const tag = window.prompt('Tag to add to (or remove from) the scenario:', '@wip')?.trim(); if (!tag) return; if (!toggleTag(tag)(v)) h.notice('Put the caret in a scenario (a tag is @ and a word without spaces).'); }) },
+    { id: 'next-error', label: 'Next Error', menu: 'Navigate', group: true, run: () => goError(1) },
+    { id: 'previous-error', label: 'Previous Error', menu: 'Navigate', run: () => goError(-1) },
   ];
 }

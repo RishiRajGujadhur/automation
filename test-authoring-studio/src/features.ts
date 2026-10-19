@@ -201,6 +201,7 @@ export const FEATURES: Feature[] = [
   { id: 'toggle-tag', label: 'Toggle Tag', group: 'Gherkin', essential: true, description: 'Adds a tag to the scenario at the caret, or removes it.', commands: ['toggle-tag'] },
   { id: 'output-clear', label: 'Output: Clear All', group: 'Tool windows', essential: true, vs: 'Output ▸ Clear All', description: 'Clears the build Output window.' },
   { id: 'output-wrap', label: 'Output: Word Wrap', group: 'Tool windows', essential: true, vs: 'Output ▸ Toggle Word Wrap', description: 'Wraps long lines in the build Output window.' },
+  { id: 'next-error', label: 'Next / Previous Error', group: 'Navigation', essential: true, vs: 'View.NextError', description: 'Goes to the next (or previous) build error or warning in the editor.', commands: ['next-error', 'previous-error'] },
 ];
 export const GROUPS: FeatureGroup[] = ['Editing', 'Navigation', 'Code intelligence', 'Tool windows', 'Files', 'Git', 'Gherkin', 'View', 'Debugging', 'Help and productivity'];
 

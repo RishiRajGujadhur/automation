@@ -33,3 +33,14 @@ export function useBuild() {
 export const getBuild = () => state;
 export const startBuild = (action: 'build' | 'rebuild' | 'clean', configuration: string, project?: string) => api<BuildState>('/build', { action, configuration, project });
 export const cancelBuild = () => api<BuildState>('/build/cancel', {});
+
+/** The build's diagnostics (connecting to the build stream when nothing else has). */
+export const buildDiagnostics = () => { connect(); return state.diagnostics; };
+/** Next / Previous Error (Visual Studio's View.NextError): the next diagnostic with a location, wrapping around. */
+export function stepError(list: BuildDiagnostic[], current: number, step: 1 | -1) {
+  const located = list.map((d, i) => (d.file && d.line ? i : -1)).filter((i) => i >= 0);
+  if (!located.length) return -1;
+  const pos = located.indexOf(current);
+  if (pos < 0) return step > 0 ? located.find((i) => i > current) ?? located[0] : [...located].reverse().find((i) => i < current) ?? located[located.length - 1];
+  return located[(pos + step + located.length) % located.length];
+}
