@@ -6,6 +6,7 @@ Reviewed 2026-10-18 against source revision `f61994c`. Implementation started 20
 
 | Item | Status | Implementation and verification |
 | --- | --- | --- |
+| DQ22 | Done — 2026-10-19 | Desktop state is flushed to a temporary file and atomically renamed, retaining a valid `.bak`. Startup recovers from malformed primary JSON; reset also clears the fallback. Verified: interrupted replacement/corruption regression, packaged recovery of zoom and watcher preferences, both TypeScript checks. |
 | DQ33 | Done — 2026-10-19 | Pending rescan timers are cancelled on workspace replacement, stop, disable and watcher errors. Generation checks ignore late callbacks/errors from old watchers. Verified: four deterministic unit regressions, desktop typecheck, rebuilt packaged app and a real-filesystem disable/re-enable test. |
 | Settings interface (additional user request) | Done — 2026-10-19 | VS Code-style settings workbench with a full-width search header, categories, User scope, Workspace shortcut, vertically arranged controls, multi-keyword search, results count, clear action and Ctrl+F. Escape clears a search before closing. Verified: four web settings scenarios, production build and 31 packaged desktop tests (two opt-in screenshot tests skipped); desktop screenshot visually inspected. This does not complete DQ24's desktop-only preference controls. |
 

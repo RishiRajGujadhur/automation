@@ -206,3 +206,7 @@ Legend: `[x]` done · `[ ]` to do. Every feature is committed and pushed when fi
 ## DQ33 — watcher lifecycle (2026-10-19)
 - [x] Cancel pending rescans and reject stale watcher callbacks on workspace replacement, disable, stop and errors.
 - [x] Four unit regressions, desktop typecheck and packaged real-filesystem disable/re-enable test passed.
+
+## DQ22 — desktop state recovery (2026-10-19)
+- [x] Atomic preference writes with a last-known-good backup; malformed primary files recover without discarding the profile.
+- [x] Regression covers failed replacement, invalid JSON and temporary-file cleanup; packaged launch restores zoom and auto-rescan from backup. Typechecks pass.

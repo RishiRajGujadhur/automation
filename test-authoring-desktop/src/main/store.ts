@@ -1,6 +1,6 @@
-import fs from 'node:fs';
 import path from 'node:path';
 import { dataRoot } from './paths';
+import { readObject, writeObject } from './atomicJson';
 
 export type Editor = 'system' | 'vscode' | 'visualstudio' | 'rider' | 'notepadpp';
 /** Tiny JSON store in the user-data folder (window state, zoom, recent repositories, desktop toggles). */
@@ -30,15 +30,22 @@ export type Shape = {
 const file = () => path.join(dataRoot(), 'desktop.json');
 let cache: Shape | undefined;
 export function read(): Shape {
-  if (!cache) { try { cache = JSON.parse(fs.readFileSync(file(), 'utf8')) as Shape; } catch { cache = {}; } }
+  if (!cache) cache = (readObject(file()) ?? readObject(`${file()}.bak`) ?? {}) as Shape;
   return cache;
 }
 export function write(patch: Partial<Shape>) {
   cache = { ...read(), ...patch };
-  try { fs.mkdirSync(path.dirname(file()), { recursive: true }); fs.writeFileSync(file(), JSON.stringify(cache, null, 2)); } catch { /* read-only profile: keep in memory */ }
+  try { writeObject(file(), cache); } catch (error) { console.error('Could not persist desktop settings; keeping the in-memory preferences.', error); }
 }
 /** S5: forget every desktop setting. */
-export function reset() { cache = {}; try { fs.rmSync(file(), { force: true }); } catch { /* ignore */ } }
+export function reset() {
+  cache = {};
+  try {
+    writeObject(file(), {});
+    // The backup must also contain defaults, so recovery cannot undo a deliberate reset.
+    writeObject(file(), {});
+  } catch (error) { console.error('Could not reset desktop settings.', error); }
+}
 export const storeFile = file;
 const same = (a: string, b: string) => a.toLowerCase() === b.toLowerCase();
 export function addRecent(folder: string) {
