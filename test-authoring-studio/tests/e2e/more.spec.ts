@@ -411,10 +411,11 @@ test('X91–X94 Search: history, Collapse All, Copy All, only open editors', asy
   await page.keyboard.press('Control+Shift+F');
   const view = page.getByRole('region', { name: 'Search' });
   const box = view.getByLabel('Search in files');
+  const found = view.getByRole('navigation', { name: 'Search results' });
   await box.fill('browser');
-  await expect(view.getByRole('status')).toHaveText(/\d+ results? in/);
+  await expect(found.locator('.search-match').first()).toContainText(/browser/i);
   await box.fill('dashboard');
-  await expect(view.getByRole('status')).toHaveText(/\d+ results? in/);
+  await expect(found.locator('.search-match').first()).toContainText(/dashboard/i);
   // X91 history.
   await box.fill('');
   await box.press('ArrowUp');
@@ -436,11 +437,12 @@ test('X91–X94 Search: history, Collapse All, Copy All, only open editors', asy
   await expect.poll(() => page.evaluate(() => navigator.clipboard.readText())).toContain('Login.feature');
   // X94 Only in open editors: Login.feature is open, other files are not searched.
   await box.fill('Given');
-  await expect(view.getByRole('status')).toHaveText(/in [2-9]\d* files/);
+  await expect(view.getByRole('status')).toHaveText(/in ([4-9]|\d\d+) files/);
   await view.getByRole('button', { name: 'Toggle search details' }).click();
   await view.getByRole('button', { name: 'Search only in open editors' }).click();
-  await expect(view.getByRole('status')).toHaveText(/in 1 file/);
-  await expect(results).toContainText('Login.feature');
+  const open = await page.locator('.editor-tab-label').allTextContents();
+  await expect(view.getByRole('status')).toHaveText(new RegExp(`in ${open.length} files?$`));
+  for (const name of open) await expect(results).toContainText(name);
 });
 
 test('X95 Indentation from the status bar: tabs, size, conversion', async ({ page }) => {
