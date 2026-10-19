@@ -131,6 +131,7 @@ export const FEATURES: Feature[] = [
   { id: 'export-breakpoints', label: 'Export / Import Breakpoints', group: 'Debugging', essential: true, vs: 'Breakpoints ▸ Export / Import', description: 'Save every breakpoint (with conditions and hit counts) to a file, and load them again.', commands: ['export-breakpoints', 'import-breakpoints'] },
   { id: 'window-layouts', label: 'Save / Apply Window Layout', group: 'View', essential: true, vs: 'Window ▸ Save / Apply Window Layout', description: 'Name the current arrangement of panels and tool windows, and switch back to it.', commands: ['window-layouts'] },
   { id: 'reset-layout', label: 'Reset Window Layout', group: 'View', essential: true, vs: 'Window ▸ Reset Window Layout', description: 'The default panel, side bar and tool windows.', commands: ['reset-layout'] },
+  { id: 'reopen-tab', label: 'Reopen Closed Tab', group: 'View', essential: false, description: 'Ctrl+Shift+T (desktop) brings back the tabs you closed, newest first.', commands: ['reopen-tab'] },
 ];
 export const GROUPS: FeatureGroup[] = ['Editing', 'Navigation', 'Code intelligence', 'Tool windows', 'Files', 'Git', 'View', 'Debugging', 'Help and productivity'];
 

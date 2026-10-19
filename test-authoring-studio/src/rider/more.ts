@@ -1,5 +1,6 @@
 import type { EditorView } from '@codemirror/view';
 import type { RiderCommand } from './commands';
+import { reopenClosed } from '../files/tabs';
 import { resetWindowLayout } from './layoutStore';
 import { exportBreakpoints, importBreakpoints } from '../debug/store';
 import { copyText } from '../ui';
@@ -58,5 +59,6 @@ export function moreCommands(h: MoreHelpers): RiderCommand[] {
     { id: 'export-breakpoints', label: 'Export Breakpoints…', menu: 'Tools', run: () => { const blob = new Blob([exportBreakpoints()], { type: 'application/json' }); const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'breakpoints.json'; a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 1000); h.notice('Breakpoints exported to breakpoints.json.'); } },
     { id: 'import-breakpoints', label: 'Import Breakpoints…', menu: 'Tools', run: () => { const input = document.createElement('input'); input.type = 'file'; input.accept = '.json,application/json'; input.onchange = () => { const f = input.files?.[0]; if (!f) return; f.text().then((t) => { try { h.notice(`Imported ${importBreakpoints(t)} breakpoints.`); } catch (e) { h.notice((e as Error).message); } }); }; input.click(); } },
     { id: 'reset-layout', label: 'Reset Window Layout', menu: 'View', run: () => { if (window.confirm('Reset the panels, side bar and tool windows to their defaults?')) resetWindowLayout(); } },
+    { id: 'reopen-tab', label: 'Reopen Closed Tab', menu: 'View', shortcut: 'Ctrl Shift T', run: () => { const f = reopenClosed(); if (f) h.navigate({ file: f }); else h.notice('No closed tabs to reopen.'); } },
   ];
 }

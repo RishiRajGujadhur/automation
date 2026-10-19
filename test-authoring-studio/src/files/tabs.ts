@@ -39,18 +39,23 @@ export function openTab(file: string, kind = kindOf(file), preview = false) {
 /** The preview tab stays open (no longer replaced by the next preview). */
 export function keepTab(file: string) { if (state.tabs.some((t) => t.file === file && t.preview)) set({ ...state, tabs: state.tabs.map((t) => (t.file === file ? { ...t, preview: false } : t)) }); }
 export function activateTab(file: string) { if (state.tabs.some((t) => t.file === file)) set({ ...state, active: file }); }
+// Reopen Closed Tab (Rider / Visual Studio 2026): the files closed most recently, newest last.
+const closed: string[] = [];
+const remember = (files: string[]) => { for (const f of files) { const i = closed.indexOf(f); if (i >= 0) closed.splice(i, 1); closed.push(f); } closed.splice(0, Math.max(0, closed.length - 30)); };
+export const reopenClosed = () => { while (closed.length) { const f = closed.pop()!; if (!state.tabs.some((t) => t.file === f)) return f; } return undefined; };
 /** Closes a tab; the neighbour to its right (else left) becomes active, as in VS Code. */
 export function closeTab(file: string) {
   const i = state.tabs.findIndex((t) => t.file === file);
   if (i < 0) return;
+  remember([file]);
   const tabs = state.tabs.filter((t) => t.file !== file);
   const active = state.active === file ? (tabs[i] ?? tabs[i - 1])?.file : state.active;
   set({ tabs, active });
 }
 // Bulk closes keep pinned tabs, as in VS Code / Visual Studio.
-export function closeOthers(file: string) { set({ tabs: state.tabs.filter((t) => t.file === file || t.pinned), active: file }); }
+export function closeOthers(file: string) { remember(state.tabs.filter((t) => t.file !== file && !t.pinned).map((t) => t.file)); set({ tabs: state.tabs.filter((t) => t.file === file || t.pinned), active: file }); }
 export function closeToRight(file: string) { const i = state.tabs.findIndex((t) => t.file === file); const tabs = state.tabs.filter((t, j) => j <= i || t.pinned); set({ tabs, active: tabs.some((t) => t.file === state.active) ? state.active : file }); }
-export function closeAll() { const tabs = state.tabs.filter((t) => t.pinned); set({ tabs, active: tabs.some((t) => t.file === state.active) ? state.active : tabs[0]?.file }); }
+export function closeAll() { remember(state.tabs.filter((t) => !t.pinned).map((t) => t.file)); const tabs = state.tabs.filter((t) => t.pinned); set({ tabs, active: tabs.some((t) => t.file === state.active) ? state.active : tabs[0]?.file }); }
 /** Pinned tabs move to the front (in pin order) and survive Close Others / Close All. */
 export function setPinned(file: string, pinned: boolean) {
   const tabs = state.tabs.map((t) => (t.file === file ? { ...t, pinned } : t));
