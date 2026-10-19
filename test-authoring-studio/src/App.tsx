@@ -365,6 +365,8 @@ export default function App() {
     if (!e.altKey && !e.shiftKey && e.key.toLowerCase() === 'k') chordK.current = Date.now();
     // Ctrl+K Ctrl+W as in Visual Studio (desktop: a browser closes the tab on Ctrl+W), Ctrl+K Ctrl+B everywhere.
     else if (!e.altKey && !e.shiftKey && (e.key.toLowerCase() === 'b' || (desktop && e.key.toLowerCase() === 'w')) && Date.now() - chordK.current < 1500) { e.preventDefault(); chordK.current = 0; setModal('bookmarks'); return; }
+    // A key the editor already handled (the second key of a chord such as Ctrl+R, Ctrl+T) is not an app shortcut too.
+    if (e.defaultPrevented) return;
     // Recent Files (Ctrl+E) / Recent Locations (Ctrl+Shift+E), as in Rider.
     if (!e.altKey && e.key.toLowerCase() === 'e' && Date.now() - chordK.current > 1500) { e.preventDefault(); setRecentMode(e.shiftKey ? 'locations' : 'files'); setModal('recent'); return; }
     if (!desktop && e.shiftKey && !e.altKey && e.key.toLowerCase() === 'o') { e.preventDefault(); setModal('solution'); return; }

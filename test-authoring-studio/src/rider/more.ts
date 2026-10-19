@@ -1,5 +1,6 @@
 import type { EditorView } from '@codemirror/view';
 import type { RiderCommand } from './commands';
+import { copyText } from '../ui';
 import { specAt, toggleBreakpoint, updateBreakpoint, currentFrame, getSnapshot } from '../debug/store';
 import { lastTestRun, runTests } from '../testing/store';
 import { jsonToClasses } from '../editor/jsonClasses';
@@ -51,5 +52,6 @@ export function moreCommands(h: MoreHelpers): RiderCommand[] {
     { id: 'repeat-run', label: 'Repeat Last Test Run', menu: 'Tools', shortcut: 'Ctrl R, L', run: () => { const l = lastTestRun(); if (!l) { h.notice('No test run yet in this session.'); return; } runTests(l.tests, l.configuration, l.coverage).then(() => h.notice('Running the last tests again.'), (e) => h.notice((e as Error).message)); } },
     { id: 'toggle-bp-enabled', label: 'Enable / Disable Breakpoint', menu: 'Tools', group: true, shortcut: 'Ctrl F9', run: h.inEditor((v, file) => { const line = v.state.doc.lineAt(v.state.selection.main.head).number; const b = specAt(file, line); if (!b) { toggleBreakpoint(file, line); updateBreakpoint(file, line, { enabled: false }); h.notice('Disabled breakpoint set.'); return; } updateBreakpoint(file, line, { enabled: b.enabled === false }); h.notice(b.enabled === false ? 'Breakpoint enabled.' : 'Breakpoint disabled.'); }) },
     { id: 'show-next-statement', label: 'Show Next Statement', menu: 'Tools', shortcut: 'Alt Num *', run: () => { const f = currentFrame(); if (!f?.file) { h.notice('The debugger is not paused in your code.'); return; } h.navigate({ file: f.file, line: f.line, column: f.column }); } },
+    { id: 'copy-call-stack', label: 'Copy Call Stack', menu: 'Tools', run: () => { const s = getSnapshot().state; if (s.status !== 'paused' || !s.frames.length) { h.notice('The call stack is shown while the debugger is paused.'); return; } const text = s.frames.map((f) => `${f.name}${f.file ? ` in ${f.file}:line ${f.line}` : ''}`).join('\n'); void copyText(text).then((ok) => h.notice(ok ? `Copied ${s.frames.length} frames.` : 'Clipboard unavailable.')); } },
   ];
 }

@@ -50,10 +50,14 @@ test('X25 Run Tests in Context (Ctrl+R, T) and X27 Repeat Last Test Run (Ctrl+R,
   expect(runs[1]).toBe(runs[0]);
 });
 
-test('X26 Debug Tests in Context, X29 Show Next Statement, X30 Copy Call Stack', async ({ page, context }) => {
+test('X26 Debug Tests in Context, X29 Show Next Statement, X30 Copy Call Stack', async ({ page, context, request }) => {
   test.skip(!existsSync(debuggerExe), 'netcoredbg is not installed (npm run debugger:setup).');
   await context.grantPermissions(['clipboard-read', 'clipboard-write']);
   await open(page, 'CalculatorTests.cs', 'Assert.That(calculator.Add(), Is.EqualTo(5));');
+  await expect.poll(async () => ((await (await request.get('/api/tests')).json()).tests ?? []).length, { timeout: 240_000, intervals: [3000] }).toBeGreaterThan(0);
+  await page.waitForTimeout(1500); // the editor's run glyphs (and the context lookup) use the same discovery
+  // The caret is still on the Assert line (from open()); focus the editor without moving it.
+  await page.locator('.code-editor:not([hidden]) .cm-content').focus();
   await page.keyboard.press('F9');
   await page.keyboard.press('Control+R');
   await page.keyboard.press('Control+T');
@@ -63,8 +67,10 @@ test('X26 Debug Tests in Context, X29 Show Next Statement, X30 Copy Call Stack',
   await page.getByRole('button', { name: 'CalculatorSteps.cs', exact: true }).first().click();
   await page.keyboard.press('Alt+NumpadMultiply');
   await expect(page.locator('.editor-tab-label[aria-current="true"]')).toHaveAttribute('title', 'Tests/CalculatorTests.cs');
-  await page.getByRole('button', { name: 'Tools menu' }).click();
-  await page.getByRole('menuitem', { name: /Copy Call Stack/ }).click();
+  // From the command palette (the menus re-render while the debugger streams its state).
+  await page.keyboard.press('Control+Shift+P');
+  await page.keyboard.type('Copy Call Stack');
+  await page.getByRole('option', { name: /Copy Call Stack/ }).first().click();
   await expect.poll(() => page.evaluate(() => navigator.clipboard.readText())).toContain('AddsTwoNumbers');
   await page.keyboard.press('Shift+F5');
 });

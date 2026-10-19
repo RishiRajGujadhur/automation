@@ -137,6 +137,7 @@ const ROWS: Record<'edit' | 'view' | 'navigate' | 'code' | 'tools' | 'help', Row
     null,
     ['Enable / Disable Breakpoint', 'toggle-bp-enabled', 'CmdOrCtrl+F9'],
     ['Show Next Statement', 'show-next-statement'],
+    ['Copy Call Stack', 'copy-call-stack'],
   ],
   help: [
     null,

@@ -127,6 +127,7 @@ export const FEATURES: Feature[] = [
   { id: 'repeat-run', label: 'Repeat Last Test Run', group: 'Code intelligence', essential: true, vs: 'Test ▸ Repeat Last Run (Ctrl+R, L)', description: 'Ctrl+R, L runs the same tests as last time.', commands: ['repeat-run'] },
   { id: 'toggle-bp-enabled', label: 'Enable / Disable Breakpoint (Ctrl+F9)', group: 'Debugging', essential: true, vs: 'Debug ▸ Enable / Disable Breakpoint (Ctrl+F9)', description: 'Ctrl+F9 turns the breakpoint on the caret line off or on, keeping its settings.', commands: ['toggle-bp-enabled'] },
   { id: 'show-next-statement', label: 'Show Next Statement', group: 'Debugging', essential: true, vs: 'Debug ▸ Show Next Statement (Alt+Num *)', description: 'Alt+Num * goes back to where the debugger is paused.', commands: ['show-next-statement'] },
+  { id: 'copy-call-stack', label: 'Copy Call Stack', group: 'Debugging', essential: true, vs: 'Call Stack ▸ Copy All', description: 'The paused call stack as text, one frame per line.', commands: ['copy-call-stack'] },
 ];
 export const GROUPS: FeatureGroup[] = ['Editing', 'Navigation', 'Code intelligence', 'Tool windows', 'Files', 'Git', 'View', 'Debugging', 'Help and productivity'];
 

@@ -37,6 +37,7 @@ has it on by default, so the desktop app starts with it on. The others start off
 | X27 | Repeat Last Test Run (Ctrl+R, L) | VS 2026 | yes | ✅ 2026-10-20 |
 | X28 | Enable / Disable Breakpoint (Ctrl+F9) | VS 2026 | yes | ✅ 2026-10-20 |
 | X29 | Show Next Statement (Alt+Num *) | VS 2026 | yes | ✅ 2026-10-20 |
+| X30 | Copy Call Stack | VS 2026 | yes | ✅ 2026-10-20 |
 
 ## Progress log
 - 2026-10-20 X1: Sort Lines: the selected lines (or the whole file) in natural, case-insensitive order, blank lines last. Third-batch plumbing: src/rider/more.ts, src/editor/textTools.ts, IDE-FEATURES.md.
@@ -68,3 +69,4 @@ has it on by default, so the desktop app starts with it on. The others start off
 - 2026-10-20 X27: Repeat Last Test Run: the last selection of tests runs again (same configuration and coverage).
 - 2026-10-20 X28: Enable / Disable Breakpoint: Ctrl+F9 turns the caret line's breakpoint off or on (a disabled one when there is none).
 - 2026-10-20 X29: Show Next Statement: Alt+Num * opens the file and line where the debugger is paused.
+- 2026-10-20 X30: Copy Call Stack: the paused frames as text. Verified with Debug Tests in Context and Show Next Statement on the Calculator sample. Fix: app shortcuts no longer also fire on the second key of an editor chord (Ctrl+R, Ctrl+T opened Go to All).
