@@ -41,6 +41,7 @@ const ROWS: Record<'edit' | 'view' | 'navigate' | 'code' | 'tools' | 'help', Row
     ['Make Lowercase', 'make-lowercase'],
     ['Transpose Line', 'transpose-line', 'Shift+Alt+T'],
     ['Transpose Characters', 'transpose-chars'],
+    ['Transpose Words', 'transpose-words'],
   ],
   view: [
     null,

@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { EditorState, type TransactionSpec } from '@codemirror/state';
 import type { EditorView } from '@codemirror/view';
-import { sortLines, reverseLines, deleteHorizontalWhiteSpace, setCase, transposeLine, transposeChars } from '../src/editor/textTools';
+import { sortLines, reverseLines, deleteHorizontalWhiteSpace, setCase, transposeLine, transposeChars, transposeWords } from '../src/editor/textTools';
 
 /** Runs an editor command on `doc` with the selection between the markers « and » (or a caret at |). */
 export function run(doc: string, cmd: (v: EditorView) => boolean) {
@@ -38,5 +38,8 @@ describe('text tools (IDE-FEATURES X1…)', () => {
   it('X7 Transpose Characters', () => {
     expect(run('te|h x', transposeChars)).toBe('the x');
     expect(run('ab|cd', transposeChars)).toBe('acbd');
+  });
+  it('X8 Transpose Words', () => {
+    expect(run('Given us|er the logs in', transposeWords)).toBe('Given the user logs in');
   });
 });
