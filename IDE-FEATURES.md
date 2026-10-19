@@ -19,6 +19,7 @@ has it on by default, so the desktop app starts with it on. The others start off
 | X9 | Go to Matching Brace (Ctrl+]) | VS 2026 | yes | ✅ 2026-10-20 |
 | X10 | Select to Matching Brace (Ctrl+Shift+]) | VS 2026 | yes | ✅ 2026-10-20 |
 | X11 | Find Next Selected (Ctrl+F3) | VS 2026 | yes | ✅ 2026-10-20 |
+| X12 | Find Previous Selected (Ctrl+Shift+F3) | VS 2026 | yes | ✅ 2026-10-20 |
 
 ## Progress log
 - 2026-10-20 X1: Sort Lines: the selected lines (or the whole file) in natural, case-insensitive order, blank lines last. Third-batch plumbing: src/rider/more.ts, src/editor/textTools.ts, IDE-FEATURES.md.
@@ -32,3 +33,4 @@ has it on by default, so the desktop app starts with it on. The others start off
 - 2026-10-20 X9: Go to Matching Brace: Ctrl+] jumps to the bracket matching the one at the caret.
 - 2026-10-20 X10: Select to Matching Brace: Ctrl+Shift+] selects through the matching bracket.
 - 2026-10-20 X11: Find Next Selected: the next match of the selection or word, wrapping.
+- 2026-10-20 X12: Find Previous Selected: the previous match, wrapping.

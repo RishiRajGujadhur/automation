@@ -57,4 +57,9 @@ describe('text tools (IDE-FEATURES X1…)', () => {
     run('foo bar |foo baz foo', (v) => { const r = findSelected(1)(v); at = v.state.selection.main.from; return r; });
     expect(at).toBe(16);
   });
+  it('X12 Find Previous Selected', () => {
+    let at = -1;
+    run('foo bar |foo baz foo', (v) => { const r = findSelected(-1)(v); at = v.state.selection.main.from; return r; });
+    expect(at).toBe(0);
+  });
 });

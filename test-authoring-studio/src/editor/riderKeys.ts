@@ -321,6 +321,7 @@ export function riderKeys(file = ''): Extension {
     opens('Mod-Shift-Delete', 'unwrap'),
     opens('Mod-Shift-c', 'copy-path'),
     keyed('Alt-F5', 'next-change', gotoChange(1)),
+    keyed('Mod-Shift-F3', 'find-previous-selected', findSelected(-1)),
     keyed('Mod-F3', 'find-next-selected', findSelected(1)),
     keyed('Mod-}', 'select-brace', selectMatchingBracket),
     keyed('Mod-Shift-]', 'select-brace', selectMatchingBracket),
