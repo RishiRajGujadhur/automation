@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { EditorState, type TransactionSpec } from '@codemirror/state';
 import { EditorView } from '@codemirror/view';
-import { sortLines, reverseLines, deleteHorizontalWhiteSpace, setCase, transposeLine, transposeChars, transposeWords, cursorMatchingBracket, selectMatchingBracket, findSelected, lastEditLocation, trackEdits, insertGuid, cyclicExpandWord, gotoMember, toggleVerbatim } from '../src/editor/textTools';
+import { sortLines, reverseLines, deleteHorizontalWhiteSpace, setCase, transposeLine, transposeChars, transposeWords, cursorMatchingBracket, selectMatchingBracket, findSelected, lastEditLocation, trackEdits, insertGuid, cyclicExpandWord, gotoMember, toggleVerbatim, convertCase } from '../src/editor/textTools';
 
 /** Runs an editor command on `doc` with the selection between the markers « and » (or a caret at |). */
 export function run(doc: string, cmd: (v: EditorView) => boolean) {
@@ -101,5 +101,13 @@ describe('text tools (IDE-FEATURES X1…)', () => {
     expect(run(`[Given(@${q}a \\d+ ${q}${q}x|${q}${q}${q})]`, toggleVerbatim)).toBe(`[Given(${q}a \\\\d+ \\${q}x\\${q}${q})]`);
     // Other escapes: left alone.
     expect(run(`var s = ${q}a\\nb|${q};`, toggleVerbatim)).toBe(`var s = ${q}a\\nb${q};`);
+  });
+  it('X20 Convert Case', () => {
+    expect(convertCase('get user name', 'camel')).toBe('getUserName');
+    expect(convertCase('getUserName', 'snake')).toBe('get_user_name');
+    expect(convertCase('XMLHttpRequest', 'kebab')).toBe('xml-http-request');
+    expect(convertCase('the_user_signs_in', 'sentence')).toBe('The user signs in');
+    expect(convertCase('user-name', 'constant')).toBe('USER_NAME');
+    expect(convertCase('UserName', 'title')).toBe('User Name');
   });
 });

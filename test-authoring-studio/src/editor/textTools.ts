@@ -228,3 +228,39 @@ export function toggleVerbatim(view: EditorView) {
   }
   return false;
 }
+
+/** The words of an identifier or phrase: "getUserName", "get_user_name", "Get user name" → get, user, name. */
+export const wordsOf = (s: string) => s.replace(/([a-z0-9])([A-Z])/g, '$1 $2').replace(/([A-Z]+)([A-Z][a-z])/g, '$1 $2').split(/[^A-Za-z0-9]+/).filter(Boolean).map((w) => w.toLowerCase());
+export type CaseStyle = 'camel' | 'pascal' | 'snake' | 'kebab' | 'constant' | 'title' | 'sentence';
+export const CASE_STYLES: { id: CaseStyle; label: string; example: string }[] = [
+  { id: 'camel', label: 'camelCase', example: 'userName' },
+  { id: 'pascal', label: 'PascalCase', example: 'UserName' },
+  { id: 'snake', label: 'snake_case', example: 'user_name' },
+  { id: 'kebab', label: 'kebab-case', example: 'user-name' },
+  { id: 'constant', label: 'CONSTANT_CASE', example: 'USER_NAME' },
+  { id: 'title', label: 'Title Case', example: 'User Name' },
+  { id: 'sentence', label: 'Sentence case', example: 'User name' },
+];
+const cap = (w: string) => w.charAt(0).toUpperCase() + w.slice(1);
+export function convertCase(s: string, style: CaseStyle) {
+  const w = wordsOf(s);
+  if (!w.length) return s;
+  switch (style) {
+    case 'camel': return w[0] + w.slice(1).map(cap).join('');
+    case 'pascal': return w.map(cap).join('');
+    case 'snake': return w.join('_');
+    case 'kebab': return w.join('-');
+    case 'constant': return w.join('_').toUpperCase();
+    case 'title': return w.map(cap).join(' ');
+    case 'sentence': return cap(w.join(' '));
+  }
+}
+/** Convert Case (Rider's String Manipulation): the selection or the identifier at the caret, in another style. */
+export function applyCase(style: CaseStyle) {
+  return (view: EditorView) => {
+    const st = view.state;
+    const spans = st.selection.ranges.map((r) => (r.empty ? st.wordAt(r.head) ?? r : r)).filter((r) => r.to > r.from);
+    if (spans.length) view.dispatch({ changes: spans.map((r) => ({ from: r.from, to: r.to, insert: convertCase(st.sliceDoc(r.from, r.to), style) })), userEvent: 'input.case' });
+    return true;
+  };
+}
