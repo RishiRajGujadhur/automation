@@ -202,3 +202,7 @@ Legend: `[x]` done · `[ ]` to do. Every feature is committed and pushed when fi
 ## Settings workbench (2026-10-19)
 - [x] VS Code-style settings layout, full-width multi-keyword search, category navigation, User scope and workspace shortcut; Ctrl+F search and Escape clear-before-close.
 - [x] Verification: four web settings tests, production build, 31 packaged desktop checks; fresh desktop settings screenshot. See `../DESKTOP-QOL.md`.
+
+## DQ33 — watcher lifecycle (2026-10-19)
+- [x] Cancel pending rescans and reject stale watcher callbacks on workspace replacement, disable, stop and errors.
+- [x] Four unit regressions, desktop typecheck and packaged real-filesystem disable/re-enable test passed.
