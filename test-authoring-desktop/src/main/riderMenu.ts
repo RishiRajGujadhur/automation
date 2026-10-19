@@ -168,6 +168,7 @@ const ROWS: Record<'edit' | 'view' | 'navigate' | 'code' | 'tools' | 'help', Row
     null,
     ['Branches…', 'branches'],
     ['TODO Patterns…', 'todo-tokens'],
+    ['Run Until Failure…', 'run-until-failure'],
   ],
   help: [
     null,

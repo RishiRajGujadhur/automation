@@ -61,3 +61,24 @@ export const lastTestRun = () => lastRun;
 export const runTests = (tests: DiscoveredTest[] | 'all', configuration = 'Debug', coverage = false) =>
   (lastRun = { tests, configuration, coverage }, api<TestRunState>('/tests/run', tests === 'all' ? { configuration, coverage } : { ids: tests.map((t) => t.id), filters: tests.map((t) => t.filter), configuration, coverage }));
 export const cancelTests = () => api<TestRunState>('/tests/cancel', {});
+
+/** Resolves when the run that `started` belongs to has finished. */
+function finished(started: TestRunState) {
+  connect();
+  return new Promise<TestRunState>((resolve) => {
+    const check = () => { if (state.version >= started.version && state.status !== 'running') { listeners.delete(check); resolve(state); } };
+    listeners.add(check);
+    check();
+  });
+}
+/** Run Until Failure (Visual Studio's Test Explorer): the last run again and again, until a test fails or `max` runs pass. */
+export async function runUntilFailure(max: number, progress: (run: number) => void) {
+  const last = lastRun;
+  if (!last) return undefined;
+  for (let i = 1; i <= max; i++) {
+    progress(i);
+    const done = await finished(await runTests(last.tests, last.configuration, false));
+    if (done.status !== 'done' || (done.summary?.failed ?? 0) > 0 || done.results.some((r) => r.outcome === 'failed')) return { runs: i, failed: true };
+  }
+  return { runs: max, failed: false };
+}
