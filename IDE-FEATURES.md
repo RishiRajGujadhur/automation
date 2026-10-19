@@ -28,6 +28,7 @@ has it on by default, so the desktop app starts with it on. The others start off
 | X18 | Next / Previous Member (Alt+PageDown / PageUp) | Rider | no | ✅ 2026-10-20 |
 | X19 | To Verbatim / Regular String | Rider | no | ✅ 2026-10-20 |
 | X20 | Convert Case (camel, Pascal, snake, kebab, CONSTANT, Title, Sentence) | Rider | no | ✅ 2026-10-20 |
+| X21 | XML documentation comments (///) | VS 2026 | yes | ✅ 2026-10-20 |
 
 ## Progress log
 - 2026-10-20 X1: Sort Lines: the selected lines (or the whole file) in natural, case-insensitive order, blank lines last. Third-batch plumbing: src/rider/more.ts, src/editor/textTools.ts, IDE-FEATURES.md.
@@ -50,3 +51,4 @@ has it on by default, so the desktop app starts with it on. The others start off
 - 2026-10-20 X18: Next / Previous Member: jump between C# methods and properties, or scenarios in features.
 - 2026-10-20 X19: To Verbatim / Regular String: the C# string at the caret switches between regular and @ form (other escapes left alone).
 - 2026-10-20 X20: Convert Case: a popup of seven styles for the selection or identifier at the caret.
+- 2026-10-20 X21: XML doc comments: typing /// above a C# member writes summary, param and returns tags.

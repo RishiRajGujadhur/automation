@@ -28,6 +28,7 @@ import { trackActive } from './activeEditor';
 import { viewOptionsExtension } from './viewOptions';
 import { pushClipboard } from '../rider/clipboardRing';
 import { eolOf, toLF, withEol, SET_EOL_EVENT, type Eol } from './lineSeparator';
+import { xmlDocComments } from './xmlDoc';
 import { powerSave } from '../rider/powerSave';
 import { featureOn, useFeature } from '../features';
 import { httpClient, isHttpFile, parseHttp } from './httpClient';
@@ -419,6 +420,7 @@ export default function CodeEditor({ file, reveal, active = true, onNotice, onIn
       ...(isCs && !browser ? [{ key: 'Mod-r Mod-g', preventDefault: true, run: () => { void organizeRef.current(); return true; } }] : []),
     ]),
     ...(isHttpFile(file) && !browser ? [httpClient((l) => void sendHttpRef.current(l))] : []),
+    ...(isCs && featureOn('xml-doc') ? [xmlDocComments] : []),
     ...(isCs && !browser ? [...csharpLanguage(file, csHandlers), stepLenses((l) => showUsagesRef.current(l), (l) => openRefLensRef.current(l)), runGutter((l, d) => runRef.current?.(l, d))] : []),
     // Stable per file: rebuilding extensions on every keystroke would reset the linter before it reports.
   ], [file, browser]);
