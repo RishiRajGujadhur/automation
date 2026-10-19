@@ -27,7 +27,7 @@ export function alignTable(rows: string[], partial = -1): string[] {
   return cells.map((r, i) => `${indent}| ${widths.slice(0, i === partial ? Math.max(1, r.length) : cols).map((w, k) => (r[k] ?? '').padEnd(w)).join(' | ')} |`);
 }
 
-function block(state: EditorState, lineNo: number) {
+export function block(state: EditorState, lineNo: number) {
   const doc = state.doc;
   let from = lineNo, to = lineNo;
   while (from > 1 && isRow(doc.line(from - 1).text)) from--;
@@ -36,13 +36,13 @@ function block(state: EditorState, lineNo: number) {
 }
 
 /** Which cell the position is in: index of the pipe before it on its line, and the offset inside the cell text. */
-function cellAt(text: string, col: number) {
+export function cellAt(text: string, col: number) {
   let pipes = 0;
   for (let i = 0; i < col && i < text.length; i++) { if (text[i] === '\\') { i++; continue; } if (text[i] === '|') pipes++; }
   return pipes;
 }
 /** Position just after the n-th pipe's following space (start of cell n), or the line end. */
-function cellStart(text: string, n: number) {
+export function cellStart(text: string, n: number) {
   let pipes = 0;
   for (let i = 0; i < text.length; i++) {
     if (text[i] === '\\') { i++; continue; }

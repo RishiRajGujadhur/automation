@@ -1,5 +1,6 @@
 import type { EditorView } from '@codemirror/view';
 import type { RiderCommand } from './commands';
+import { cycleStepKeyword } from '../editor/gherkinTools';
 import { unsavedFiles } from '../editor/autosave';
 import { getTabs, closeTab } from '../files/tabs';
 import { reopenClosed } from '../files/tabs';
@@ -64,5 +65,6 @@ export function moreCommands(h: MoreHelpers): RiderCommand[] {
     { id: 'reopen-tab', label: 'Reopen Closed Tab', menu: 'View', shortcut: 'Ctrl Shift T', run: () => { const f = reopenClosed(); if (f) h.navigate({ file: f }); else h.notice('No closed tabs to reopen.'); } },
     { id: 'close-unmodified', label: 'Close Unmodified Tabs', menu: 'View', run: () => { const t = getTabs(); const dirty = new Set(unsavedFiles()); const close = t.tabs.filter((x) => !x.pinned && !dirty.has(x.file) && x.file !== t.active).map((x) => x.file); close.forEach(closeTab); h.notice(close.length ? `Closed ${close.length} unmodified tab${close.length === 1 ? '' : 's'}.` : 'No unmodified tabs to close.'); } },
     { id: 'multi-row-tabs', label: 'Tabs in Multiple Rows', menu: 'View', checked: () => !!viewOptions().multiRowTabs, run: () => setViewOptions({ multiRowTabs: !viewOptions().multiRowTabs }) },
+    { id: 'cycle-step-keyword', label: 'Cycle Step Keyword', menu: 'Code', group: true, run: h.inEditor(cycleStepKeyword) },
   ];
 }

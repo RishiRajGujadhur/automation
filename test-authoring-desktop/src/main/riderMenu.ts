@@ -125,6 +125,8 @@ const ROWS: Record<'edit' | 'view' | 'navigate' | 'code' | 'tools' | 'help', Row
     null,
     ['Reformat JSON', 'reformat-json'],
     ['Minify JSON', 'minify-json'],
+    null,
+    ['Cycle Step Keyword', 'cycle-step-keyword'],
   ],
   tools: [
     ['Run Anything… (Ctrl twice)', 'run-anything'],

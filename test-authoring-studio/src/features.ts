@@ -7,7 +7,7 @@ import { isDesktop } from './desktop';
  * starts with only those, the web app with everything. Turning a feature off hides its commands (menus, palette,
  * native desktop menus), its keys and anything it draws.
  */
-export type FeatureGroup = 'Editing' | 'Navigation' | 'Code intelligence' | 'Tool windows' | 'Files' | 'Git' | 'View' | 'Debugging' | 'Help and productivity';
+export type FeatureGroup = 'Editing' | 'Navigation' | 'Code intelligence' | 'Tool windows' | 'Files' | 'Git' | 'Gherkin' | 'View' | 'Debugging' | 'Help and productivity';
 export type Feature = {
   id: string;
   label: string;
@@ -146,8 +146,9 @@ export const FEATURES: Feature[] = [
   { id: 'git-checkout-revision', label: 'Git Log: Checkout Revision', group: 'Git', essential: true, vs: 'Git Repository ▸ Checkout (detached)', description: 'Checks the selected commit out (detached HEAD).' },
   { id: 'git-reset', label: 'Git Log: Reset Current Branch to Here', group: 'Git', essential: true, vs: 'Git Repository ▸ Reset', description: 'Soft, mixed or hard reset to the selected commit (hard asks again).' },
   { id: 'branches', label: 'Branches popup', group: 'Git', essential: true, vs: 'Branch picker in the status bar', description: 'The status bar branch (or Tools ▸ Branches…) switches to or creates a branch.', commands: ['branches'] },
+  { id: 'cycle-step-keyword', label: 'Cycle Step Keyword', group: 'Gherkin', essential: true, description: 'Given → When → Then → And → But on the step line(s).', commands: ['cycle-step-keyword'] },
 ];
-export const GROUPS: FeatureGroup[] = ['Editing', 'Navigation', 'Code intelligence', 'Tool windows', 'Files', 'Git', 'View', 'Debugging', 'Help and productivity'];
+export const GROUPS: FeatureGroup[] = ['Editing', 'Navigation', 'Code intelligence', 'Tool windows', 'Files', 'Git', 'Gherkin', 'View', 'Debugging', 'Help and productivity'];
 
 const KEY = 'tas:features';
 type Saved = { preset?: 'essentials' | 'all'; overrides?: Record<string, boolean> };
