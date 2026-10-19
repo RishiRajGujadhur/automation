@@ -6,6 +6,7 @@ import { useCursor } from './editor/cursor';
 import { GIT_CHANGED_EVENT } from './editor/events';
 import { Dropdown } from './radix';
 import { requestEol } from './editor/lineSeparator';
+import { setViewOptions, useViewOptions } from './editor/viewOptions';
 
 /**
  * Right side of the status bar, like Visual Studio's: Git branch (with ↑/↓), errors and warnings of the last build,
@@ -14,6 +15,7 @@ import { requestEol } from './editor/lineSeparator';
 export default function StatusBarItems({ repository, onGit, onErrors }: { repository?: string; onGit: () => void; onErrors: () => void }) {
   const build = useBuild();
   const cursor = useCursor();
+  const view = useViewOptions();
   const [git, setGit] = useState<{ repo: boolean; branch?: string; ahead: number; behind: number; changes: number }>();
   useEffect(() => {
     let live = true;
@@ -40,6 +42,7 @@ export default function StatusBarItems({ repository, onGit, onErrors }: { reposi
             ]}
           />
           <span className="status-item" title="Encoding">UTF-8</span>
+          {view.overtype && <button className="status-item" aria-label="Overtype mode: on" title="Overtype: typing replaces characters (Insert)" onClick={() => setViewOptions({ overtype: false })}>OVR</button>}
         </>
       )}
       {build.status !== 'idle' && (

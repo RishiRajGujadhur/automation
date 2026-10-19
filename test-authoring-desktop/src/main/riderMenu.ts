@@ -45,6 +45,7 @@ const ROWS: Record<'edit' | 'view' | 'navigate' | 'code' | 'tools' | 'help', Row
     null,
     ['Find Next Selected', 'find-next-selected', 'CmdOrCtrl+F3'],
     ['Find Previous Selected', 'find-previous-selected', 'CmdOrCtrl+Shift+F3'],
+    ['Overtype Mode', 'overtype', 'Insert'],
   ],
   view: [
     null,

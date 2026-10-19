@@ -1,5 +1,6 @@
 import type { EditorView } from '@codemirror/view';
 import type { RiderCommand } from './commands';
+import { setViewOptions, viewOptions } from '../editor/viewOptions';
 import { lastEditLocation, insertGuid, cyclicExpandWord } from '../editor/textTools';
 import { sortLines, reverseLines, deleteHorizontalWhiteSpace, setCase, transposeLine, transposeChars, transposeWords, cursorMatchingBracket, selectMatchingBracket, findSelected } from '../editor/textTools';
 
@@ -32,5 +33,6 @@ export function moreCommands(h: MoreHelpers): RiderCommand[] {
     { id: 'last-edit', label: 'Go to Last Edit Location', menu: 'Navigate', shortcut: 'Ctrl Shift Backspace', run: () => { const l = lastEditLocation(); if (l) h.navigate({ file: l.file, line: l.line, column: l.column }); else h.notice('No edits yet in this session.'); } },
     { id: 'insert-guid', label: 'Insert GUID', menu: 'Code', group: true, run: h.inEditor(insertGuid) },
     { id: 'expand-word', label: 'Cyclic Expand Word', menu: 'Code', shortcut: 'Alt /', run: h.inEditor(cyclicExpandWord) },
+    { id: 'overtype', label: 'Overtype Mode', menu: 'Edit', shortcut: 'Insert', checked: () => !!viewOptions().overtype, run: () => { setViewOptions({ overtype: !viewOptions().overtype }); h.notice(viewOptions().overtype ? 'Overtype: typing replaces characters (Insert to switch back).' : 'Insert mode.'); } },
   ];
 }

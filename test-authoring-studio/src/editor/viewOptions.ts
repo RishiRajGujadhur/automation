@@ -1,3 +1,4 @@
+import { useSyncExternalStore } from 'react';
 import { Compartment, EditorSelection, Prec, type Extension } from '@codemirror/state';
 import { indentationMarkers } from '@replit/codemirror-indentation-markers';
 import { highlightSelectionMatches } from '@codemirror/search';
@@ -6,7 +7,7 @@ import { todoHighlight } from './todoHighlight';
 import { EditorView, ViewPlugin, highlightWhitespace, highlightTrailingWhitespace, rectangularSelection, keymap } from '@codemirror/view';
 
 /** View ▸ Active Editor options (Rider): soft wraps, …, shared by every editor and remembered. */
-export type ViewOptions = { softWrap: boolean; whitespace: boolean; fontSize: number | null; columnMode?: boolean; hideLineNumbers?: boolean; hideIndentGuides?: boolean; noCaretUsages?: boolean };
+export type ViewOptions = { softWrap: boolean; whitespace: boolean; fontSize: number | null; columnMode?: boolean; hideLineNumbers?: boolean; hideIndentGuides?: boolean; noCaretUsages?: boolean; overtype?: boolean; noActiveLine?: boolean };
 const KEY = 'tas:rider:view';
 const DEFAULTS: ViewOptions = { softWrap: false, whitespace: false, fontSize: null };
 let options: ViewOptions = (() => { try { return { ...DEFAULTS, ...JSON.parse(localStorage.getItem(KEY) ?? '{}') }; } catch { return DEFAULTS; } })();
@@ -14,10 +15,16 @@ const listeners = new Set<() => void>();
 // Settings ▸ Features turn some of these on and off too.
 onFeaturesChanged(() => { for (const l of listeners) l(); });
 export const viewOptions = () => options;
+/** Re-renders a component when the options change (the status bar's OVR). */
+const subs = new Set<() => void>();
+let vVersion = 0;
+export const useViewOptions = () => { useSyncExternalStore((l) => { subs.add(l); return () => subs.delete(l); }, () => vVersion); return options; };
 export function setViewOptions(next: Partial<ViewOptions>) {
   options = { ...options, ...next };
   try { localStorage.setItem(KEY, JSON.stringify(options)); } catch { /* storage blocked */ }
   for (const l of listeners) l();
+  vVersion++;
+  for (const l of subs) l();
 }
 
 /** The current editor font size in pixels (the theme's when none was set). */
@@ -59,6 +66,19 @@ const numbers = new Compartment();
 const guides = new Compartment();
 const caretUsages = new Compartment();
 const todos = new Compartment();
+const overtypeC = new Compartment();
+/** Overtype mode (Visual Studio, Insert): a typed character replaces the one after the caret instead of pushing it. */
+const overtype = [
+  EditorView.inputHandler.of((view, from, to, text) => {
+    if (from !== to || text.length !== 1 || text === '\n') return false;
+    const line = view.state.doc.lineAt(from);
+    if (from >= line.to) return false;
+    view.dispatch({ changes: { from, to: from + 1, insert: text }, selection: { anchor: from + 1 }, userEvent: 'input.type' });
+    return true;
+  }),
+  EditorView.editorAttributes.of({ class: 'cm-overtype' }),
+  EditorView.baseTheme({ '&.cm-overtype .cm-cursor': { borderLeftWidth: '0.6em', opacity: '0.45' } }),
+];
 // Highlight usages of the identifier at the caret (Rider's default): whole-word matches of the word under the caret.
 const wordAtCaret = [highlightSelectionMatches({ highlightWordAroundCursor: true, minSelectionLength: 2, wholeWords: true }), EditorView.baseTheme({ '.cm-selectionMatch': { backgroundColor: 'rgba(98, 166, 255, 0.18)' } })];
 // Indent guides (Rider shows them by default): a thin line per indentation level, the active block's brighter.
@@ -68,7 +88,7 @@ const hideNumbers = [EditorView.editorAttributes.of({ class: 'cm-no-line-numbers
 const spaces = new Compartment();
 const font = new Compartment();
 const fontTheme = (px: number | null) => (px ? EditorView.theme({ '&': { fontSize: `${px}px` }, '.cm-content, .cm-gutters': { fontSize: `${px}px` } }) : []);
-const extensionsFor = (o: ViewOptions) => ({ todos: featureOn('todo-highlighting') ? todoHighlight : [], caret: o.noCaretUsages || !featureOn('highlight-usages') ? [] : wordAtCaret, guides: o.hideIndentGuides || !featureOn('indent-guides') ? [] : indentGuides, numbers: o.hideLineNumbers ? hideNumbers : [], column: o.columnMode ? columnMode : [], font: fontTheme(o.fontSize), wrap: o.softWrap ? EditorView.lineWrapping : [], spaces: o.whitespace ? [highlightWhitespace(), highlightTrailingWhitespace()] : [] });
+const extensionsFor = (o: ViewOptions) => ({ overtype: o.overtype && featureOn('overtype') ? overtype : [], todos: featureOn('todo-highlighting') ? todoHighlight : [], caret: o.noCaretUsages || !featureOn('highlight-usages') ? [] : wordAtCaret, guides: o.hideIndentGuides || !featureOn('indent-guides') ? [] : indentGuides, numbers: o.hideLineNumbers ? hideNumbers : [], column: o.columnMode ? columnMode : [], font: fontTheme(o.fontSize), wrap: o.softWrap ? EditorView.lineWrapping : [], spaces: o.whitespace ? [highlightWhitespace(), highlightTrailingWhitespace()] : [] });
 
 /** Applies the options to an editor and follows later changes. */
 export function viewOptionsExtension(): Extension {
@@ -82,10 +102,11 @@ export function viewOptionsExtension(): Extension {
     guides.of(now.guides),
     caretUsages.of(now.caret),
     todos.of(now.todos),
+    overtypeC.of(now.overtype),
     ViewPlugin.fromClass(class {
       off: () => void;
       constructor(view: EditorView) {
-        const apply = () => { const e = extensionsFor(options); view.dispatch({ effects: [wrap.reconfigure(e.wrap), spaces.reconfigure(e.spaces), font.reconfigure(e.font), column.reconfigure(e.column), numbers.reconfigure(e.numbers), guides.reconfigure(e.guides), caretUsages.reconfigure(e.caret), todos.reconfigure(e.todos)] }); };
+        const apply = () => { const e = extensionsFor(options); view.dispatch({ effects: [wrap.reconfigure(e.wrap), spaces.reconfigure(e.spaces), font.reconfigure(e.font), column.reconfigure(e.column), numbers.reconfigure(e.numbers), guides.reconfigure(e.guides), caretUsages.reconfigure(e.caret), todos.reconfigure(e.todos), overtypeC.reconfigure(e.overtype)] }); };
         listeners.add(apply);
         // Ctrl+Mouse Wheel changes the font size of the editors (Rider's "Change font size with Ctrl+Mouse Wheel").
         const wheel = (e: WheelEvent) => {

@@ -113,6 +113,7 @@ export const FEATURES: Feature[] = [
   { id: 'last-edit', label: 'Go to Last Edit Location', group: 'Navigation', essential: true, vs: 'Edit.GoToLastEditLocation (Ctrl+Shift+Backspace)', description: 'Ctrl+Shift+Backspace returns to where you last typed, in any file.', commands: ['last-edit'] },
   { id: 'insert-guid', label: 'Insert GUID', group: 'Editing', essential: true, vs: 'Tools ▸ Create GUID', description: 'A new GUID at the caret (or every caret).', commands: ['insert-guid'] },
   { id: 'expand-word', label: 'Cyclic Expand Word', group: 'Editing', essential: false, description: 'Alt+/ completes the word from other words of the file; again for the next one.', commands: ['expand-word'] },
+  { id: 'overtype', label: 'Overtype mode', group: 'Editing', essential: true, vs: 'Insert key (overtype)', description: 'Insert switches between inserting and overwriting characters; the status bar shows OVR.', commands: ['overtype'] },
 ];
 export const GROUPS: FeatureGroup[] = ['Editing', 'Navigation', 'Code intelligence', 'Tool windows', 'Files', 'Git', 'View', 'Debugging', 'Help and productivity'];
 
