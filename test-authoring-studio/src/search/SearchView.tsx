@@ -1,6 +1,8 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { ChevronDown, ChevronRight, CaseSensitive, WholeWord, Regex, Replace, MoreHorizontal, RefreshCw, X } from 'lucide-react';
 import { api } from '../api';
+import { useLocalState } from '../ui';
+import { featureOn } from '../features';
 import { useConfirm } from '../radix2';
 import { fileType } from '../files/fileTypes';
 import { FILES_CHANGED_EVENT } from '../editor/events';
@@ -28,13 +30,24 @@ export default function SearchView({ initialReplace, onOpen, onNotice, onChanged
   const [busy, setBusy] = useState(false);
   const [closed, setClosed] = useState<Set<string>>(new Set());
   const input = useRef<HTMLInputElement>(null);
+  // Search history (VS Code: ↑ / ↓ in the search box): the last 20 searches that found something.
+  const [history, setHistory] = useLocalState<string[]>('searchHistory', []);
+  const back = useRef(-1);
+  const recalled = useRef('');
+  const recall = (step: 1 | -1) => {
+    if (!featureOn('search-history') || !history.length) return false;
+    back.current = Math.max(-1, Math.min(history.length - 1, back.current + step));
+    recalled.current = back.current < 0 ? '' : history[back.current];
+    setQuery(recalled.current);
+    return true;
+  };
   useEffect(() => { if (initialReplace) setShowReplace(true); input.current?.focus(); input.current?.select(); }, [initialReplace]);
 
   const options = useMemo(() => ({ query, regex, matchCase, wholeWord, include: include || undefined, exclude: exclude || undefined }), [query, regex, matchCase, wholeWord, include, exclude]);
   const search = () => {
     if (!query) { setResult(undefined); setError(''); return; }
     setBusy(true);
-    api<Result>('/search/text', options).then((r) => { setResult(r); setError(''); }, (e) => setError((e as Error).message)).finally(() => setBusy(false));
+    api<Result>('/search/text', options).then((r) => { setResult(r); setError(''); if (r.total && featureOn('search-history') && options.query !== recalled.current) { setHistory((h) => [options.query, ...h.filter((q) => q !== options.query)].slice(0, 20)); back.current = -1; } }, (e) => setError((e as Error).message)).finally(() => setBusy(false));
   };
   // Search as you type (debounced), like VS Code.
   useEffect(() => { const t = setTimeout(search, 300); return () => clearTimeout(t); }, [options]); // eslint-disable-line react-hooks/exhaustive-deps
@@ -74,7 +87,7 @@ export default function SearchView({ initialReplace, onOpen, onNotice, onChanged
         <button className="search-expand" aria-label={showReplace ? 'Hide replace' : 'Toggle replace'} aria-expanded={showReplace} title="Toggle Replace (Ctrl+Shift+H)" onClick={() => setShowReplace(!showReplace)}>{showReplace ? <ChevronDown size={14} /> : <ChevronRight size={14} />}</button>
         <div className="search-fields">
           <div className="search-input">
-            <input ref={input} aria-label="Search in files" placeholder="Search" value={query} onChange={(e) => setQuery(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter') search(); }} spellCheck={false} />
+            <input ref={input} aria-label="Search in files" placeholder="Search" value={query} onChange={(e) => setQuery(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter') search(); else if ((e.key === 'ArrowUp' || e.key === 'ArrowDown') && recall(e.key === 'ArrowUp' ? 1 : -1)) e.preventDefault(); }} title={featureOn('search-history') ? 'Search (↑ / ↓: history)' : undefined} spellCheck={false} />
             {toggle(matchCase, setMatchCase, 'Match Case', CaseSensitive, 'Alt+C')}
             {toggle(wholeWord, setWholeWord, 'Match Whole Word', WholeWord, 'Alt+W')}
             {toggle(regex, setRegex, 'Use Regular Expression', Regex, 'Alt+R')}

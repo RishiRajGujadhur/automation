@@ -188,6 +188,7 @@ export const FEATURES: Feature[] = [
   { id: 'duplicate-scenario', label: 'Duplicate Scenario', group: 'Gherkin', essential: true, description: 'Copies the scenario at the caret (tags and Examples too) below it.', commands: ['duplicate-scenario'] },
   { id: 'close-left', label: 'Close Tabs to the Left', group: 'Files', essential: true, vs: 'Close Tabs to the Left', description: 'The tab menu closes every unpinned tab before it.' },
   { id: 'tab-reveal', label: 'Tab: Reveal in Explorer', group: 'Files', essential: true, vs: 'Tab ▸ Reveal in Solution Explorer', description: 'The tab menu shows the file in the Explorer.' },
+  { id: 'search-history', label: 'Search history', group: 'Navigation', essential: true, vs: 'Find in Files ▸ recent searches', description: '↑ / ↓ in the search box recall earlier searches.' },
 ];
 export const GROUPS: FeatureGroup[] = ['Editing', 'Navigation', 'Code intelligence', 'Tool windows', 'Files', 'Git', 'Gherkin', 'View', 'Debugging', 'Help and productivity'];
 
