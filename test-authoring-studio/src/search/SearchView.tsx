@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { ChevronDown, ChevronRight, CaseSensitive, WholeWord, Regex, Replace, MoreHorizontal, RefreshCw, X, ChevronsDownUp, ChevronsUpDown, ClipboardCopy } from 'lucide-react';
+import { ChevronDown, ChevronRight, CaseSensitive, WholeWord, Regex, Replace, MoreHorizontal, RefreshCw, X, ChevronsDownUp, ChevronsUpDown, ClipboardCopy, BookOpen } from 'lucide-react';
 import { api } from '../api';
+import { useTabs } from '../files/tabs';
 import { useLocalState, copyText } from '../ui';
 import { featureOn } from '../features';
 import { useConfirm } from '../radix2';
@@ -25,6 +26,10 @@ export default function SearchView({ initialReplace, onOpen, onNotice, onChanged
   const [matchCase, setMatchCase] = useState(false);
   const [wholeWord, setWholeWord] = useState(false);
   const [regex, setRegex] = useState(false);
+  // Search Only in Open Editors (VS Code's book toggle; Visual Studio's 'All open documents' scope).
+  const [openOnly, setOpenOnly] = useState(false);
+  const tabs = useTabs();
+  const openFiles = tabs.tabs.map((t) => t.file).join(',');
   const [result, setResult] = useState<Result>();
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
@@ -43,7 +48,7 @@ export default function SearchView({ initialReplace, onOpen, onNotice, onChanged
   };
   useEffect(() => { if (initialReplace) setShowReplace(true); input.current?.focus(); input.current?.select(); }, [initialReplace]);
 
-  const options = useMemo(() => ({ query, regex, matchCase, wholeWord, include: include || undefined, exclude: exclude || undefined }), [query, regex, matchCase, wholeWord, include, exclude]);
+  const options = useMemo(() => ({ query, regex, matchCase, wholeWord, include: (openOnly && featureOn('search-open-only') ? openFiles || '\u0000none' : include) || undefined, exclude: exclude || undefined }), [query, regex, matchCase, wholeWord, include, exclude, openOnly, openFiles]);
   const search = () => {
     if (!query) { setResult(undefined); setError(''); return; }
     setBusy(true);
@@ -103,7 +108,7 @@ export default function SearchView({ initialReplace, onOpen, onNotice, onChanged
           <button className="search-more" aria-label="Toggle search details" aria-expanded={showFilters} title="Files to include / exclude" onClick={() => setShowFilters(!showFilters)}><MoreHorizontal size={14} /></button>
           {showFilters && (
             <>
-              <label className="search-glob">files to include<input aria-label="Files to include" placeholder="e.g. *.cs, Steps/**" value={include} onChange={(e) => setInclude(e.target.value)} /></label>
+              <label className="search-glob">files to include<span className="search-glob-row"><input aria-label="Files to include" placeholder="e.g. *.cs, Steps/**" value={include} disabled={openOnly && featureOn('search-open-only')} onChange={(e) => setInclude(e.target.value)} />{featureOn('search-open-only') && <button className={`search-toggle ${openOnly ? 'on' : ''}`} aria-label="Search only in open editors" aria-pressed={openOnly} title="Search Only in Open Editors" onClick={() => setOpenOnly(!openOnly)}><BookOpen size={14} /></button>}</span></label>
               <label className="search-glob">files to exclude<input aria-label="Files to exclude" placeholder="e.g. *.feature.cs" value={exclude} onChange={(e) => setExclude(e.target.value)} /></label>
             </>
           )}
