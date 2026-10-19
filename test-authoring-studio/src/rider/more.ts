@@ -34,5 +34,6 @@ export function moreCommands(h: MoreHelpers): RiderCommand[] {
     { id: 'insert-guid', label: 'Insert GUID', menu: 'Code', group: true, run: h.inEditor(insertGuid) },
     { id: 'expand-word', label: 'Cyclic Expand Word', menu: 'Code', shortcut: 'Alt /', run: h.inEditor(cyclicExpandWord) },
     { id: 'overtype', label: 'Overtype Mode', menu: 'Edit', shortcut: 'Insert', checked: () => !!viewOptions().overtype, run: () => { setViewOptions({ overtype: !viewOptions().overtype }); h.notice(viewOptions().overtype ? 'Overtype: typing replaces characters (Insert to switch back).' : 'Insert mode.'); } },
+    { id: 'current-line', label: 'Highlight Current Line', menu: 'View', checked: () => !viewOptions().noActiveLine, run: () => setViewOptions({ noActiveLine: !viewOptions().noActiveLine }) },
   ];
 }

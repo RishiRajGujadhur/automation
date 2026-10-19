@@ -67,6 +67,8 @@ const guides = new Compartment();
 const caretUsages = new Compartment();
 const todos = new Compartment();
 const overtypeC = new Compartment();
+const activeLine = new Compartment();
+const noActiveLine = [EditorView.editorAttributes.of({ class: 'cm-no-active-line' }), EditorView.theme({ '.cm-activeLine, .cm-activeLineGutter': { backgroundColor: 'transparent !important' } })];
 /** Overtype mode (Visual Studio, Insert): a typed character replaces the one after the caret instead of pushing it. */
 const overtype = [
   EditorView.inputHandler.of((view, from, to, text) => {
@@ -88,7 +90,7 @@ const hideNumbers = [EditorView.editorAttributes.of({ class: 'cm-no-line-numbers
 const spaces = new Compartment();
 const font = new Compartment();
 const fontTheme = (px: number | null) => (px ? EditorView.theme({ '&': { fontSize: `${px}px` }, '.cm-content, .cm-gutters': { fontSize: `${px}px` } }) : []);
-const extensionsFor = (o: ViewOptions) => ({ overtype: o.overtype && featureOn('overtype') ? overtype : [], todos: featureOn('todo-highlighting') ? todoHighlight : [], caret: o.noCaretUsages || !featureOn('highlight-usages') ? [] : wordAtCaret, guides: o.hideIndentGuides || !featureOn('indent-guides') ? [] : indentGuides, numbers: o.hideLineNumbers ? hideNumbers : [], column: o.columnMode ? columnMode : [], font: fontTheme(o.fontSize), wrap: o.softWrap ? EditorView.lineWrapping : [], spaces: o.whitespace ? [highlightWhitespace(), highlightTrailingWhitespace()] : [] });
+const extensionsFor = (o: ViewOptions) => ({ activeLine: o.noActiveLine && featureOn('current-line') ? noActiveLine : [], overtype: o.overtype && featureOn('overtype') ? overtype : [], todos: featureOn('todo-highlighting') ? todoHighlight : [], caret: o.noCaretUsages || !featureOn('highlight-usages') ? [] : wordAtCaret, guides: o.hideIndentGuides || !featureOn('indent-guides') ? [] : indentGuides, numbers: o.hideLineNumbers ? hideNumbers : [], column: o.columnMode ? columnMode : [], font: fontTheme(o.fontSize), wrap: o.softWrap ? EditorView.lineWrapping : [], spaces: o.whitespace ? [highlightWhitespace(), highlightTrailingWhitespace()] : [] });
 
 /** Applies the options to an editor and follows later changes. */
 export function viewOptionsExtension(): Extension {
@@ -103,10 +105,11 @@ export function viewOptionsExtension(): Extension {
     caretUsages.of(now.caret),
     todos.of(now.todos),
     overtypeC.of(now.overtype),
+    activeLine.of(now.activeLine),
     ViewPlugin.fromClass(class {
       off: () => void;
       constructor(view: EditorView) {
-        const apply = () => { const e = extensionsFor(options); view.dispatch({ effects: [wrap.reconfigure(e.wrap), spaces.reconfigure(e.spaces), font.reconfigure(e.font), column.reconfigure(e.column), numbers.reconfigure(e.numbers), guides.reconfigure(e.guides), caretUsages.reconfigure(e.caret), todos.reconfigure(e.todos), overtypeC.reconfigure(e.overtype)] }); };
+        const apply = () => { const e = extensionsFor(options); view.dispatch({ effects: [wrap.reconfigure(e.wrap), spaces.reconfigure(e.spaces), font.reconfigure(e.font), column.reconfigure(e.column), numbers.reconfigure(e.numbers), guides.reconfigure(e.guides), caretUsages.reconfigure(e.caret), todos.reconfigure(e.todos), overtypeC.reconfigure(e.overtype), activeLine.reconfigure(e.activeLine)] }); };
         listeners.add(apply);
         // Ctrl+Mouse Wheel changes the font size of the editors (Rider's "Change font size with Ctrl+Mouse Wheel").
         const wheel = (e: WheelEvent) => {
