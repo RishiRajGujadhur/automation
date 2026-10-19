@@ -102,6 +102,7 @@ const ROWS: Record<'edit' | 'view' | 'navigate' | 'code' | 'tools' | 'help', Row
     ['Move Statement Down', 'statement-down', 'CmdOrCtrl+Shift+Alt+Down'],
     null,
     ['Insert GUID', 'insert-guid'],
+    ['Cyclic Expand Word', 'expand-word', 'Alt+/'],
   ],
   tools: [
     ['Run Anything… (Ctrl twice)', 'run-anything'],

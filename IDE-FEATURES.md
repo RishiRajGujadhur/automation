@@ -22,6 +22,7 @@ has it on by default, so the desktop app starts with it on. The others start off
 | X12 | Find Previous Selected (Ctrl+Shift+F3) | VS 2026 | yes | ✅ 2026-10-20 |
 | X13 | Go to Last Edit Location (Ctrl+Shift+Backspace) | VS 2026 | yes | ✅ 2026-10-20 |
 | X14 | Insert GUID | VS 2026 | yes | ✅ 2026-10-20 |
+| X15 | Cyclic Expand Word (Alt+/) | Rider | no | ✅ 2026-10-20 |
 
 ## Progress log
 - 2026-10-20 X1: Sort Lines: the selected lines (or the whole file) in natural, case-insensitive order, blank lines last. Third-batch plumbing: src/rider/more.ts, src/editor/textTools.ts, IDE-FEATURES.md.
@@ -38,3 +39,4 @@ has it on by default, so the desktop app starts with it on. The others start off
 - 2026-10-20 X12: Find Previous Selected: the previous match, wrapping.
 - 2026-10-20 X13: Go to Last Edit Location: back to where you last typed, in any file.
 - 2026-10-20 X14: Insert GUID: a new GUID at every caret (VS Create GUID tool, Rider nguid).
+- 2026-10-20 X15: Cyclic Expand Word: completes the word from other words of the file, nearest first; again cycles.

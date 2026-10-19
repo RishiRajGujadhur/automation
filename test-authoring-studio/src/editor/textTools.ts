@@ -147,3 +147,34 @@ export function insertGuid(view: EditorView) {
   view.dispatch(view.state.changeByRange((r) => { const g = crypto.randomUUID(); return { changes: { from: r.from, to: r.to, insert: g }, range: EditorSelection.cursor(r.from + g.length) }; }), { userEvent: 'input.guid' });
   return true;
 }
+
+/**
+ * Cyclic Expand Word (Rider, Alt+/): completes the word before the caret from the other words of the file, nearest
+ * first; pressing again cycles through the candidates.
+ */
+let cycle: { at: number; prefix: string; tried: string[] } | null = null;
+export function cyclicExpandWord(view: EditorView) {
+  const st = view.state;
+  const head = st.selection.main.head;
+  const line = st.doc.lineAt(head);
+  const before = line.text.slice(0, head - line.from);
+  const word = /\w+$/.exec(before)?.[0] ?? '';
+  // Again right after an expansion: the inserted word is replaced by the next candidate.
+  const again = cycle && cycle.at === head - word.length && cycle.tried.includes(word);
+  const prefix = again ? cycle!.prefix : word;
+  if (!prefix) return true;
+  const start = head - word.length;
+  const text = st.doc.toString();
+  const found: { w: string; d: number }[] = [];
+  for (const m of text.matchAll(/\w+/g)) {
+    const w = m[0];
+    if (w.length > prefix.length && w.startsWith(prefix) && m.index !== start && !found.some((f) => f.w === w)) found.push({ w, d: Math.abs(m.index! - start) + (m.index! > start ? 0.5 : 0) });
+  }
+  found.sort((a, b) => a.d - b.d);
+  const tried = again ? cycle!.tried : [];
+  const next = found.find((f) => !tried.includes(f.w));
+  if (!next) { if (again) view.dispatch({ changes: { from: start, to: head, insert: prefix } }); cycle = null; return true; }
+  cycle = { at: start, prefix, tried: [...tried, next.w] };
+  view.dispatch({ changes: { from: start, to: head, insert: next.w }, selection: { anchor: start + next.w.length }, userEvent: 'input.complete' });
+  return true;
+}
