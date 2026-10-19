@@ -10,7 +10,7 @@ import { resetWindowLayout } from './layoutStore';
 import { exportBreakpoints, importBreakpoints } from '../debug/store';
 import { copyText } from '../ui';
 import { specAt, toggleBreakpoint, updateBreakpoint, currentFrame, getSnapshot } from '../debug/store';
-import { lastTestRun, runTests, runUntilFailure } from '../testing/store';
+import { lastTestRun, runTests, runUntilFailure, discoverTests } from '../testing/store';
 import { jsonToClasses } from '../editor/jsonClasses';
 import { generateConstructor } from '../editor/generateCtor';
 import { setViewOptions, viewOptions } from '../editor/viewOptions';
@@ -80,5 +80,6 @@ export function moreCommands(h: MoreHelpers): RiderCommand[] {
     { id: 'todo-tokens', label: 'TODO Patterns…', menu: 'Tools', run: () => { const now = (viewOptions().todoTokens ?? DEFAULT_TODO_TOKENS).join(', '); const next = window.prompt('Comment keywords to highlight (comma-separated; empty restores the defaults):', now); if (next === null) return; const tokens = next.split(',').map((t) => t.trim()).filter((t) => /^\w+$/.test(t)); setViewOptions({ todoTokens: tokens.length ? tokens : undefined }); h.notice(`TODO patterns: ${(tokens.length ? tokens : DEFAULT_TODO_TOKENS).join(', ')}`); } },
     { id: 'right-margin', label: 'Right Margin Guide…', menu: 'View', run: () => { const v = window.prompt('Show a guide after column (0 hides it):', String(viewOptions().rightMargin ?? 120)); if (v === null) return; const n = Number(v); if (!Number.isInteger(n) || n < 0 || n > 400) { h.notice('Enter a column between 0 and 400.'); return; } setViewOptions({ rightMargin: n }); } },
     { id: 'run-until-failure', label: 'Run Until Failure…', menu: 'Tools', run: () => { if (!lastTestRun()) { h.notice('Run some tests first: Run Until Failure repeats the last test run.'); return; } const v = window.prompt('Repeat the last test run until a test fails, at most this many times:', '10'); const max = Number(v); if (!v || !Number.isInteger(max) || max < 1 || max > 500) return; void runUntilFailure(max, (i) => h.notice(`Run Until Failure: run ${i} of ${max}…`)).then((r) => { if (r) h.notice(r.failed ? `A test failed on run ${r.runs}.` : `All ${r.runs} runs passed.`); }, (e) => h.notice((e as Error).message)); } },
+    { id: 'run-file-tests', label: 'Run All Tests in File', menu: 'Tools', run: () => { const f = getTabs().active; if (!f) { h.notice('Open a test file first.'); return; } void discoverTests().then(({ tests }) => { const ts = tests.filter((t) => t.file === f); if (!ts.length) { h.notice(`No tests in ${f.split('/').pop()}.`); return; } h.notice(`Running ${ts.length} test${ts.length === 1 ? '' : 's'} in ${f.split('/').pop()}…`); return runTests(ts); }).catch((e) => h.notice((e as Error).message)); } },
   ];
 }

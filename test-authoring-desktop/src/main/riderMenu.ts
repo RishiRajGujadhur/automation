@@ -171,6 +171,7 @@ const ROWS: Record<'edit' | 'view' | 'navigate' | 'code' | 'tools' | 'help', Row
     ['Run Until Failure…', 'run-until-failure'],
     null,
     ['Calculate Code Metrics', 'code-metrics'],
+    ['Run All Tests in File', 'run-file-tests'],
   ],
   help: [
     null,
