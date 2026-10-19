@@ -1,5 +1,6 @@
 import type { EditorView } from '@codemirror/view';
 import type { RiderCommand } from './commands';
+import { lastTestRun, runTests } from '../testing/store';
 import { jsonToClasses } from '../editor/jsonClasses';
 import { generateConstructor } from '../editor/generateCtor';
 import { setViewOptions, viewOptions } from '../editor/viewOptions';
@@ -46,5 +47,6 @@ export function moreCommands(h: MoreHelpers): RiderCommand[] {
     { id: 'minify-json', label: 'Minify JSON', menu: 'Code', run: h.inEditor((v) => { if (!reformatJson(true)(v)) h.notice('The file (or selection) is not valid JSON.'); }) },
     { id: 'run-context', label: 'Run Tests in Context', menu: 'Tools', group: true, shortcut: 'Ctrl R, T', run: h.inEditor((v, file) => window.dispatchEvent(new CustomEvent('tas:run-context', { detail: { file, line: v.state.doc.lineAt(v.state.selection.main.head).number, debug: false } }))) },
     { id: 'debug-context', label: 'Debug Tests in Context', menu: 'Tools', shortcut: 'Ctrl R, Ctrl T', run: h.inEditor((v, file) => window.dispatchEvent(new CustomEvent('tas:run-context', { detail: { file, line: v.state.doc.lineAt(v.state.selection.main.head).number, debug: true } }))) },
+    { id: 'repeat-run', label: 'Repeat Last Test Run', menu: 'Tools', shortcut: 'Ctrl R, L', run: () => { const l = lastTestRun(); if (!l) { h.notice('No test run yet in this session.'); return; } runTests(l.tests, l.configuration, l.coverage).then(() => h.notice('Running the last tests again.'), (e) => h.notice((e as Error).message)); } },
   ];
 }

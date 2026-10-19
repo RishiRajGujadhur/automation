@@ -55,6 +55,9 @@ export function combine(outcomes: Outcome[]): Outcome {
 }
 
 export const discoverTests = () => api<{ tests: DiscoveredTest[]; warning?: string }>('/tests');
+// Repeat Last Test Run (Visual Studio Ctrl+R, L): the last selection run again.
+let lastRun: { tests: DiscoveredTest[] | 'all'; configuration: string; coverage: boolean } | null = null;
+export const lastTestRun = () => lastRun;
 export const runTests = (tests: DiscoveredTest[] | 'all', configuration = 'Debug', coverage = false) =>
-  api<TestRunState>('/tests/run', tests === 'all' ? { configuration, coverage } : { ids: tests.map((t) => t.id), filters: tests.map((t) => t.filter), configuration, coverage });
+  (lastRun = { tests, configuration, coverage }, api<TestRunState>('/tests/run', tests === 'all' ? { configuration, coverage } : { ids: tests.map((t) => t.id), filters: tests.map((t) => t.filter), configuration, coverage }));
 export const cancelTests = () => api<TestRunState>('/tests/cancel', {});

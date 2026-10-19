@@ -133,6 +133,7 @@ const ROWS: Record<'edit' | 'view' | 'navigate' | 'code' | 'tools' | 'help', Row
     null,
     ['Run Tests in Context', 'run-context'],
     ['Debug Tests in Context', 'debug-context'],
+    ['Repeat Last Test Run', 'repeat-run'],
   ],
   help: [
     null,
