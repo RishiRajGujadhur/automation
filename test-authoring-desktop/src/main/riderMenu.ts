@@ -193,6 +193,7 @@ const ROWS: Record<'edit' | 'view' | 'navigate' | 'code' | 'tools' | 'help', Row
     null,
     ['Calculate Code Metrics', 'code-metrics'],
     ['Run All Tests in File', 'run-file-tests'],
+    ['Add Watch', 'add-watch'],
   ],
   help: [
     null,

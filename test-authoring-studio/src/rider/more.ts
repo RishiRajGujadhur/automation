@@ -14,7 +14,7 @@ import { reopenClosed } from '../files/tabs';
 import { resetWindowLayout } from './layoutStore';
 import { exportBreakpoints, importBreakpoints } from '../debug/store';
 import { copyText } from '../ui';
-import { specAt, toggleBreakpoint, updateBreakpoint, currentFrame, getSnapshot } from '../debug/store';
+import { specAt, toggleBreakpoint, updateBreakpoint, currentFrame, getSnapshot, setWatches } from '../debug/store';
 import { lastTestRun, runTests, runUntilFailure, discoverTests } from '../testing/store';
 import { jsonToClasses } from '../editor/jsonClasses';
 import { generateConstructor } from '../editor/generateCtor';
@@ -106,5 +106,6 @@ export function moreCommands(h: MoreHelpers): RiderCommand[] {
     { id: 'toggle-tag', label: 'Toggle Tag…', menu: 'Code', submenu: 'Gherkin', run: h.inEditor((v) => { const tag = window.prompt('Tag to add to (or remove from) the scenario:', '@wip')?.trim(); if (!tag) return; if (!toggleTag(tag)(v)) h.notice('Put the caret in a scenario (a tag is @ and a word without spaces).'); }) },
     { id: 'next-error', label: 'Next Error', menu: 'Navigate', group: true, run: () => goError(1) },
     { id: 'previous-error', label: 'Previous Error', menu: 'Navigate', run: () => goError(-1) },
+    { id: 'add-watch', label: 'Add Watch', menu: 'Tools', run: h.inEditor((v) => { const s = v.state.selection.main; const word = v.state.wordAt(s.head) ?? v.state.wordAt(Math.max(0, s.head - 1)); const expr = (s.empty ? (word ? v.state.sliceDoc(word.from, word.to) : '') : v.state.sliceDoc(s.from, s.to)).trim(); if (!expr) { h.notice('Select an expression (or put the caret on a name) first.'); return; } const now = getSnapshot().watches; if (!now.includes(expr)) setWatches([...now, expr]); h.notice(`Watching ${expr}.`); }) },
   ];
 }

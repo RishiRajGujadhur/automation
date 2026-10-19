@@ -499,8 +499,10 @@ test('X105 Explorer Select for Compare / Compare with…', async ({ page }) => {
 test('X106 Add Watch: the name at the caret goes to the Watch window', async ({ page }) => {
   const src = await openCs(page, 'Steps/AuthSteps.cs', 'class');
   await src.locator('.cm-line', { hasText: 'class' }).first().click();
-  await page.keyboard.press('End');
-  await page.keyboard.press('Control+ArrowLeft');
+  await page.keyboard.press('Home');
+  await page.keyboard.press('Control+ArrowRight');
+  await page.keyboard.press('Control+ArrowRight');
+  await page.keyboard.press('ArrowRight');
   await menuItem(page, 'Tools', /^Add Watch/);
   await expect.poll(() => page.evaluate(() => JSON.parse(localStorage.getItem('tas:watches') ?? '[]') as string[])).toHaveLength(1);
 });
@@ -546,8 +548,10 @@ test('X112 Comment / Uncomment Scenario from Code ▸ Gherkin', async ({ page })
 test('X113 Quick Info (Ctrl+K, Ctrl+I): the hover information at the caret', async ({ page }) => {
   const src = await openCs(page, 'Steps/AuthSteps.cs', 'class');
   await src.locator('.cm-line', { hasText: 'class' }).first().click();
-  await page.keyboard.press('End');
-  await page.keyboard.press('Control+ArrowLeft');
+  await page.keyboard.press('Home');
+  await page.keyboard.press('Control+ArrowRight');
+  await page.keyboard.press('Control+ArrowRight');
+  await page.keyboard.press('ArrowRight');
   await page.keyboard.press('Control+K');
   await page.keyboard.press('Control+I');
   await expect(page.locator('.cm-tooltip .cm-quickinfo')).toBeVisible({ timeout: 90_000 });
