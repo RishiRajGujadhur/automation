@@ -5,6 +5,9 @@ import { IconButton } from '../radix2';
 import { useLocalState } from '../ui';
 import { useBuild, startBuild, cancelBuild } from './store';
 import { api } from '../api';
+import { errorRows, type ErrorScope } from './errorList';
+import { useTabs } from '../files/tabs';
+import { featureOn } from '../features';
 
 /**
  * Visual Studio's Error List and Output (Build) windows, docked under the editor: Build / Rebuild / Clean with the
@@ -17,6 +20,9 @@ export default function BuildPanel({ onOpen, onNotice, onClose }: { onOpen: (fil
   const [showErrors, setShowErrors] = useState(true);
   const [showWarnings, setShowWarnings] = useState(true);
   const [query, setQuery] = useState('');
+  // Entire Solution / Open Documents / Current Document (Visual Studio's Error List scope).
+  const [scope, setScope] = useLocalState<ErrorScope>('errorScope', 'solution');
+  const tabs = useTabs();
   const output = useRef<HTMLPreElement>(null);
   // The solution's configurations (Debug, Release, …) for the configuration box.
   const [configurations, setConfigurations] = useState<string[]>([]);
@@ -29,7 +35,7 @@ export default function BuildPanel({ onOpen, onNotice, onClose }: { onOpen: (fil
   const configs = useMemo(() => [...new Set(configurations.map((c) => c.split('|')[0].trim()).concat(['Debug', 'Release']))], [configurations]);
   const errors = b.diagnostics.filter((d) => d.severity === 'error').length;
   const warnings = b.diagnostics.length - errors;
-  const rows = b.diagnostics.filter((d) => (d.severity === 'error' ? showErrors : showWarnings) && (!query || `${d.code} ${d.message} ${d.file ?? ''} ${d.project ?? ''}`.toLowerCase().includes(query.toLowerCase())));
+  const rows = errorRows(b.diagnostics, { errors: showErrors, warnings: showWarnings, query, scope: featureOn('error-list-scope') ? scope : 'solution', open: tabs.tabs.map((t) => t.file), current: tabs.active });
   // Output follows the build like Visual Studio's, unless scrolled up.
   useEffect(() => { const el = output.current; if (el && el.scrollHeight - el.scrollTop - el.clientHeight < 60) el.scrollTop = el.scrollHeight; }, [b.output]);
   // A failed build brings the Error List forward.
@@ -74,6 +80,13 @@ export default function BuildPanel({ onOpen, onNotice, onClose }: { onOpen: (fil
           <div className="error-list-tools">
             <button className={`chip ${showErrors ? 'on' : ''}`} aria-pressed={showErrors} onClick={() => setShowErrors(!showErrors)}><CircleX size={12} className="sev-error" />{errors} Error{errors === 1 ? '' : 's'}</button>
             <button className={`chip ${showWarnings ? 'on' : ''}`} aria-pressed={showWarnings} onClick={() => setShowWarnings(!showWarnings)}><TriangleAlert size={12} className="sev-warning" />{warnings} Warning{warnings === 1 ? '' : 's'}</button>
+            {featureOn('error-list-scope') && (
+              <select className="build-config" aria-label="Error List scope" value={scope} onChange={(e) => setScope(e.target.value as ErrorScope)}>
+                <option value="solution">Entire Solution</option>
+                <option value="open">Open Documents</option>
+                <option value="current">Current Document</option>
+              </select>
+            )}
             <label className="error-search"><Search size={12} /><input aria-label="Search Error List" placeholder="Search Error List" value={query} onChange={(e) => setQuery(e.target.value)} /></label>
           </div>
           {rows.length ? (

@@ -72,6 +72,7 @@ has it on by default, so the desktop app starts with it on. The others start off
 | X62 | Explorer: Scope to This | VS 2026 | yes | ✅ 2026-10-20 |
 | X63 | Explorer: New File… | VS 2026 / Rider | yes | ✅ 2026-10-20 |
 | X64 | Run Until Failure | VS 2026 | no | ✅ 2026-10-20 |
+| X65 | Error List scope | VS 2026 | yes | ✅ 2026-10-20 |
 
 ## Progress log
 - 2026-10-20 X1: Sort Lines: the selected lines (or the whole file) in natural, case-insensitive order, blank lines last. Third-batch plumbing: src/rider/more.ts, src/editor/textTools.ts, IDE-FEATURES.md.
@@ -138,3 +139,4 @@ has it on by default, so the desktop app starts with it on. The others start off
 - 2026-10-20 X62: Folder-scoped Explorer with Home
 - 2026-10-20 X63: Create any file (sub-folders too) and open it
 - 2026-10-20 X64: Repeats the last run until failure or N passes
+- 2026-10-20 X65: Entire Solution / Open Documents / Current Document
