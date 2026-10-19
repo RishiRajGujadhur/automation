@@ -143,6 +143,7 @@ export const FEATURES: Feature[] = [
   { id: 'git-new-tag', label: 'Git Log: New Tag', group: 'Git', essential: true, vs: 'Git Repository ▸ New Tag', description: 'Tags the selected commit.' },
   { id: 'git-cherry-pick', label: 'Git Log: Cherry-Pick', group: 'Git', essential: true, vs: 'Git Repository ▸ Cherry-Pick', description: 'Applies the selected commit onto the current branch (undone when it conflicts).' },
   { id: 'git-revert', label: 'Git Log: Revert Commit', group: 'Git', essential: true, vs: 'Git Repository ▸ Revert', description: 'A new commit that undoes the selected one.' },
+  { id: 'git-checkout-revision', label: 'Git Log: Checkout Revision', group: 'Git', essential: true, vs: 'Git Repository ▸ Checkout (detached)', description: 'Checks the selected commit out (detached HEAD).' },
 ];
 export const GROUPS: FeatureGroup[] = ['Editing', 'Navigation', 'Code intelligence', 'Tool windows', 'Files', 'Git', 'View', 'Debugging', 'Help and productivity'];
 
