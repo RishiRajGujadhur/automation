@@ -333,6 +333,7 @@ export default function RiderHost(props: RiderHostProps) {
       [(e) => e.altKey && e.shiftKey && !e.ctrlKey && !e.metaKey && e.code === 'KeyC', 'recent-changes'],
       [(e) => (e.ctrlKey || e.metaKey) && e.altKey && e.shiftKey && e.key === 'Insert', 'new-scratch'],
       [(e) => e.altKey && !e.ctrlKey && !e.shiftKey && !e.metaKey && e.key === 'F1', 'select-in'],
+      [(e) => e.altKey && !e.ctrlKey && !e.metaKey && e.code === 'NumpadMultiply', 'show-next-statement'],
       [(e) => !e.altKey && !e.ctrlKey && !e.shiftKey && !e.metaKey && e.key === 'Insert' && !!(e.target as HTMLElement | null)?.closest?.('.cm-editor'), 'overtype'],
       [(e) => e.altKey && e.shiftKey && !e.ctrlKey && !e.metaKey && e.key === 'Insert', 'column-mode'],
       [(e) => e.altKey && !e.shiftKey && !e.ctrlKey && !e.metaKey && e.key === 'Insert', 'new-from-template'],

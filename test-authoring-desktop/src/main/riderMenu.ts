@@ -136,6 +136,7 @@ const ROWS: Record<'edit' | 'view' | 'navigate' | 'code' | 'tools' | 'help', Row
     ['Repeat Last Test Run', 'repeat-run'],
     null,
     ['Enable / Disable Breakpoint', 'toggle-bp-enabled', 'CmdOrCtrl+F9'],
+    ['Show Next Statement', 'show-next-statement'],
   ],
   help: [
     null,
