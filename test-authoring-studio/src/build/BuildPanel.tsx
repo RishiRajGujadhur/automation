@@ -5,7 +5,7 @@ import { IconButton } from '../radix2';
 import { useLocalState } from '../ui';
 import { useBuild, startBuild, cancelBuild } from './store';
 import { api } from '../api';
-import { errorRows, errorText, errorHelpUrl, type ErrorScope } from './errorList';
+import { errorRows, errorText, errorHelpUrl, sortErrors, nextSort, type ErrorScope, type ErrorSort } from './errorList';
 import { copyText } from '../ui';
 import { useTabs } from '../files/tabs';
 import { featureOn } from '../features';
@@ -24,6 +24,7 @@ export default function BuildPanel({ onOpen, onNotice, onClose }: { onOpen: (fil
   // Entire Solution / Open Documents / Current Document (Visual Studio's Error List scope).
   const [scope, setScope] = useLocalState<ErrorScope>('errorScope', 'solution');
   const tabs = useTabs();
+  const [sort, setSort] = useState<ErrorSort>(null);
   const output = useRef<HTMLPreElement>(null);
   // The solution's configurations (Debug, Release, …) for the configuration box.
   const [configurations, setConfigurations] = useState<string[]>([]);
@@ -36,7 +37,7 @@ export default function BuildPanel({ onOpen, onNotice, onClose }: { onOpen: (fil
   const configs = useMemo(() => [...new Set(configurations.map((c) => c.split('|')[0].trim()).concat(['Debug', 'Release']))], [configurations]);
   const errors = b.diagnostics.filter((d) => d.severity === 'error').length;
   const warnings = b.diagnostics.length - errors;
-  const rows = errorRows(b.diagnostics, { errors: showErrors, warnings: showWarnings, query, scope: featureOn('error-list-scope') ? scope : 'solution', open: tabs.tabs.map((t) => t.file), current: tabs.active });
+  const rows = sortErrors(errorRows(b.diagnostics, { errors: showErrors, warnings: showWarnings, query, scope: featureOn('error-list-scope') ? scope : 'solution', open: tabs.tabs.map((t) => t.file), current: tabs.active }), featureOn('error-list-sort') ? sort : null);
   // Output follows the build like Visual Studio's, unless scrolled up.
   useEffect(() => { const el = output.current; if (el && el.scrollHeight - el.scrollTop - el.clientHeight < 60) el.scrollTop = el.scrollHeight; }, [b.output]);
   // A failed build brings the Error List forward.
@@ -92,7 +93,7 @@ export default function BuildPanel({ onOpen, onNotice, onClose }: { onOpen: (fil
           </div>
           {rows.length ? (
             <div className="dbg-grid error-grid" role="grid" aria-label="Error List">
-              <div className="dbg-row dbg-head" role="row"><span role="columnheader" /><span role="columnheader">Code</span><span role="columnheader">Description</span><span role="columnheader">Project</span><span role="columnheader">File</span><span role="columnheader">Line</span></div>
+              <div className="dbg-row dbg-head" role="row"><span role="columnheader" />{([['code', 'Code'], ['message', 'Description'], ['project', 'Project'], ['file', 'File'], ['line', 'Line']] as const).map(([key, label]) => <span key={key} role="columnheader" aria-sort={sort?.key === key ? (sort.desc ? 'descending' : 'ascending') : undefined}>{featureOn('error-list-sort') ? <button className="link-button col-sort" onClick={() => setSort(nextSort(sort, key))}>{label}{sort?.key === key ? (sort.desc ? ' ▼' : ' ▲') : ''}</button> : label}</span>)}</div>
               {rows.map((d, i) => (
                 <div key={i} className={`dbg-row error-row ${d.file ? 'navigable' : ''}`} role="row" tabIndex={0} onDoubleClick={() => go(i)} onKeyDown={(e) => { if (e.key === 'Enter') go(i); else if (featureOn('error-list-copy') && (e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'c') { e.preventDefault(); void copyText(errorText(d)).then((ok) => onNotice(ok ? `Copied ${d.code}.` : 'Clipboard unavailable.')); } else if (featureOn('error-list-copy') && e.key === 'F1') { e.preventDefault(); window.open(errorHelpUrl(d.code), '_blank', 'noopener'); } }} title={d.file ? 'Double-click to go to the line' : undefined}>
                   <span role="gridcell">{d.severity === 'error' ? <CircleX size={13} className="sev-error" aria-label="Error" /> : <TriangleAlert size={13} className="sev-warning" aria-label="Warning" />}</span>

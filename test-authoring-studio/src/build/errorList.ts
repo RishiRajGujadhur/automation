@@ -16,3 +16,13 @@ export function errorRows(ds: BuildDiagnostic[], o: ErrorListOptions) {
 export const errorText = (d: BuildDiagnostic) => [d.severity === 'error' ? 'Error' : 'Warning', d.code, d.message, d.project ?? '', d.file ?? '', d.line ?? ''].join('\t');
 /** Show Error Help (F1): the compiler error's page on Microsoft Learn; other codes are searched. */
 export const errorHelpUrl = (code: string) => (/^CS\d{4}$/i.test(code) ? `https://learn.microsoft.com/en-us/dotnet/csharp/misc/${code.toLowerCase()}` : `https://learn.microsoft.com/en-us/search/?terms=${encodeURIComponent(code)}`);
+
+/** Sorting by a column header (Visual Studio): again on the same column reverses; a third time restores the build order. */
+export type ErrorSort = { key: 'code' | 'message' | 'project' | 'file' | 'line'; desc: boolean } | null;
+export function sortErrors(ds: BuildDiagnostic[], sort: ErrorSort) {
+  if (!sort) return ds;
+  const value = (d: BuildDiagnostic) => (sort.key === 'line' ? d.line ?? 0 : sort.key === 'file' ? d.file?.split('/').pop() ?? '' : d[sort.key] ?? '');
+  const c = new Intl.Collator(undefined, { numeric: true, sensitivity: 'base' });
+  return [...ds].sort((a, b) => { const x = value(a), y = value(b); const r = typeof x === 'number' && typeof y === 'number' ? x - y : c.compare(String(x), String(y)); return sort.desc ? -r : r; });
+}
+export const nextSort = (sort: ErrorSort, key: NonNullable<ErrorSort>['key']): ErrorSort => (sort?.key !== key ? { key, desc: false } : !sort.desc ? { key, desc: true } : null);
