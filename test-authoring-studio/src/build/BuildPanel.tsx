@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import * as Tabs from '@radix-ui/react-tabs';
-import { CircleX, TriangleAlert, Hammer, RotateCw, Eraser, Square, X, Loader, Search } from 'lucide-react';
+import { CircleX, TriangleAlert, Hammer, RotateCw, Eraser, Square, X, Loader, Search, WrapText } from 'lucide-react';
 import { IconButton } from '../radix2';
 import { useLocalState } from '../ui';
 import { useBuild, startBuild, cancelBuild } from './store';
@@ -29,6 +29,7 @@ export default function BuildPanel({ onOpen, onNotice, onClose }: { onOpen: (fil
   const [outFind, setOutFind] = useState('');
   // Output ▸ Clear All (Visual Studio): hides what is there; the next build starts a fresh log anyway.
   const [cleared, setCleared] = useState(0);
+  const [outWrap, setOutWrap] = useLocalState('outputWrap', false);
   useEffect(() => { if (b.status === 'running') setCleared(0); }, [b.status]);
   const outText = featureOn('output-clear') && cleared <= b.output.length ? b.output.slice(cleared) : b.output;
   const output = useRef<HTMLPreElement>(null);
@@ -117,9 +118,10 @@ export default function BuildPanel({ onOpen, onNotice, onClose }: { onOpen: (fil
           <div className="output-tools">
           {featureOn('output-find') && <label className="error-search output-find"><Search size={12} /><input aria-label="Find in Output" placeholder="Find in Output (matching lines)" value={outFind} onChange={(e) => setOutFind(e.target.value)} onKeyDown={(e) => { if (e.key === 'Escape' && outFind) { e.stopPropagation(); setOutFind(''); } }} />{outFind && <small>{outText.split('\n').filter((l) => l.toLowerCase().includes(outFind.toLowerCase())).length} lines</small>}</label>}
           {featureOn('output-clear') && <button className="icon-button" aria-label="Clear All" title="Clear All" disabled={!outText} onClick={() => setCleared(b.output.length)}><Eraser size={13} /></button>}
+          {featureOn('output-wrap') && <button className={`icon-button ${outWrap ? 'pressed' : ''}`} aria-label="Toggle Word Wrap" aria-pressed={outWrap} title="Toggle Word Wrap" onClick={() => setOutWrap(!outWrap)}><WrapText size={13} /></button>}
           {/* output tools */}
           </div>
-          <pre className="debug-output" ref={output} aria-label="Build output">{(outFind && featureOn('output-find') ? outText.split('\n').filter((l) => l.toLowerCase().includes(outFind.toLowerCase())).join('\n') : outText) || 'No build output yet.'}</pre>
+          <pre className={`debug-output ${outWrap && featureOn('output-wrap') ? 'wrap' : ''}`} ref={output} aria-label="Build output">{(outFind && featureOn('output-find') ? outText.split('\n').filter((l) => l.toLowerCase().includes(outFind.toLowerCase())).join('\n') : outText) || 'No build output yet.'}</pre>
         </Tabs.Content>
       </Tabs.Root>
     </section>

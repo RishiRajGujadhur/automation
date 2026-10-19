@@ -3508,3 +3508,8 @@ html[data-features-off~='inlay-hints'] .cm-inlay {
     flex: 1;
   }
 }
+
+.debug-output.wrap {
+  white-space: pre-wrap;
+  word-break: break-word;
+}
