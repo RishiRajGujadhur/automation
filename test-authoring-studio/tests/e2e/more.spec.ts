@@ -61,3 +61,47 @@ test('X17 View ▸ Highlight Current Line turns the caret line background off an
   await menuItem(page, 'View', /Highlight Current Line/);
   await expect(editor).not.toHaveClass(/cm-no-active-line/);
 });
+
+async function openCs(page: Page, file: string, text: string) {
+  await page.addInitScript(() => { if (!sessionStorage.getItem('seeded')) { localStorage.setItem('tas:prefs', JSON.stringify({ mode: 'advanced', autoSave: 'off' })); sessionStorage.setItem('seeded', '1'); } });
+  await page.goto('/#/features/editor');
+  await expect(page.getByText('Repository indexed')).toBeVisible();
+  await page.getByRole('navigation').getByRole('button', { name: file.split('/').pop(), exact: true }).first().click();
+  const src = page.getByLabel(`Source of ${file}`);
+  await src.locator('.cm-line', { hasText: text }).first().click();
+  return src;
+}
+
+test('X1–X24 smoke: menu text tools, /// doc comments, Ctrl+F3, Convert Case', async ({ page, request }) => {
+  await fs.writeFile(path.join(root, 'Steps/Doc.cs'), ['namespace Demo;', 'public class Doc', '{', '', '    public int Add(int first, int second) => first + second;', '}', ''].join('\n'));
+  expect((await request.post('/api/workspace', { data: { repositoryRoot: root, targetProject: '.' } })).ok()).toBe(true);
+  const src = await openCs(page, 'Steps/Doc.cs', 'public class Doc');
+  // X21: /// above a member.
+  await src.locator('.cm-line').nth(3).click();
+  await page.keyboard.type('    ///');
+  await page.keyboard.type('Adds two numbers.');
+  expect(await doc(page)).toContain('    /// <summary>\n    /// Adds two numbers.\n    /// </summary>\n    /// <param name="first"></param>\n    /// <param name="second"></param>\n    /// <returns></returns>');
+  // X11: Ctrl+F3 finds the next "first".
+  await src.locator('.cm-line', { hasText: 'public int Add' }).click();
+  await page.keyboard.press('End');
+  for (let i = 0; i < 'first + second;'.length - 2; i++) await page.keyboard.press('ArrowLeft');
+  await page.keyboard.press('Control+F3');
+  const sel = await page.evaluate(() => { const v = (window as unknown as { __activeEditor: () => { view: { state: { selection: { main: { from: number; to: number } }; sliceDoc(a: number, b: number): string } } } }).__activeEditor().view; return v.state.sliceDoc(v.state.selection.main.from, v.state.selection.main.to); });
+  expect(sel).toBe('first');
+  // X20: Convert Case on the class name.
+  await src.locator('.cm-line', { hasText: 'public class Doc' }).click();
+  await page.keyboard.press('End');
+  await menuItem(page, 'Edit', /Convert Case/);
+  await page.getByLabel('Filter case styles').fill('CONSTANT');
+  await page.keyboard.press('Enter');
+  expect(await doc(page)).toContain('public class DOC');
+  // X1: Sort Lines from the Edit menu on a selection.
+  await page.getByRole('navigation').getByRole('button', { name: 'Login.feature', exact: true }).first().click();
+  await caretAt(page, 'Given the login page');
+  await page.keyboard.press('Home');
+  await page.keyboard.press('Shift+ArrowDown');
+  await page.keyboard.press('Shift+ArrowDown');
+  await page.keyboard.press('Shift+End');
+  await menuItem(page, 'Edit', /^Sort Lines/);
+  expect(await doc(page)).toContain('    Given the login page is open\n    Then the dashboard is displayed\n    When the user signs in');
+});
