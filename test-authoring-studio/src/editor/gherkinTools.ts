@@ -307,3 +307,21 @@ export function extractBackground(view: EditorView) {
   view.dispatch({ changes, userEvent: 'input' });
   return true;
 }
+
+/** Add Examples Table: a Scenario Outline without Examples gets one with a column per <parameter> and an empty row. */
+export function addExamplesTable(view: EditorView) {
+  const { state } = view;
+  const doc = state.doc;
+  const b = scenarioBlock(state, doc.lineAt(state.selection.main.head).number);
+  if (!b || !/^\s*Scenario (Outline|Template):/.test(doc.line(b.head).text) || examplesTables(state, b).length) return false;
+  const params: string[] = [];
+  for (let n = b.head; n <= b.end; n++) for (const m of doc.line(n).text.matchAll(/<([^<>\s][^<>]*)>/g)) if (!params.includes(m[1])) params.push(m[1]);
+  if (!params.length) return false;
+  const stepLine = Array.from({ length: b.end - b.head }, (_, i) => doc.line(b.head + 1 + i).text).find((t) => STEP.test(t));
+  const indent = stepLine ? /^\s*/.exec(stepLine)![0] : `${/^\s*/.exec(doc.line(b.head).text)![0]}  `;
+  const rows = alignTable([`${indent}  | ${params.join(' | ')} |`, `${indent}  | ${params.map(() => '').join(' | ')} |`]);
+  const insert = `${state.lineBreak}${state.lineBreak}${indent}Examples:${state.lineBreak}${rows.join(state.lineBreak)}`;
+  const at = doc.line(b.end).to;
+  view.dispatch({ changes: { from: at, insert }, selection: { anchor: at + insert.length - rows[1].length + cellStart(rows[1], 1) }, scrollIntoView: true, userEvent: 'input' });
+  return true;
+}

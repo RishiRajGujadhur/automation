@@ -153,6 +153,7 @@ const ROWS: Record<'edit' | 'view' | 'navigate' | 'code' | 'tools' | 'help', Row
       ['Move Scenario Up', 'move-scenario-up'],
       ['Move Scenario Down', 'move-scenario-down'],
       ['Extract Background', 'extract-background'],
+      ['Add Examples Table', 'add-examples'],
     ] },
   ],
   tools: [
