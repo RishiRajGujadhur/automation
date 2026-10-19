@@ -133,6 +133,7 @@ const ROWS: Record<'edit' | 'view' | 'navigate' | 'code' | 'tools' | 'help', Row
     ['Table: Add Column', 'table-add-column'],
     ['Table: Delete Column', 'table-delete-column'],
     ['Table: Sort by Column', 'table-sort'],
+    ['Copy Test Filter', 'copy-test-filter'],
   ],
   tools: [
     ['Run Anything… (Ctrl twice)', 'run-anything'],

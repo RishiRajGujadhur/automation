@@ -128,3 +128,14 @@ export function tableSortByColumn(view: EditorView) {
   const sorted = asc.every((r, i) => r === body[i]) ? asc.reverse() : asc;
   return writeTable(view, t, [t.rows[0], ...sorted], 0, t.col);
 }
+
+/** SpecFlow / Reqnroll's generated identifiers: words in PascalCase, other characters dropped. */
+export const toIdentifier = (title: string) => { const id = title.split(/[^A-Za-z0-9]+/).filter(Boolean).map((w) => w[0].toUpperCase() + w.slice(1)).join(''); return /^\d/.test(id) ? `_${id}` : id; };
+/** A `dotnet test --filter` for the scenario at a line (the feature's tests above the first scenario). */
+export function testFilter(state: EditorState, lineNo: number) {
+  const feature = /^\s*Feature:\s*(.*)$/m.exec(state.doc.toString())?.[1].trim();
+  if (!feature) return undefined;
+  const b = scenarioBlock(state, lineNo);
+  const title = b && /:\s*(.*)$/.exec(state.doc.line(b.head).text)![1].trim();
+  return `dotnet test --filter "FullyQualifiedName~${toIdentifier(feature)}Feature${title ? `.${toIdentifier(title)}` : ''}"`;
+}

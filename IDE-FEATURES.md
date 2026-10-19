@@ -62,6 +62,7 @@ has it on by default, so the desktop app starts with it on. The others start off
 | X52 | Table: Add Column | Rider | yes | ✅ 2026-10-20 |
 | X53 | Table: Delete Column | Rider | yes | ✅ 2026-10-20 |
 | X54 | Table: Sort by Column | Rider | no | ✅ 2026-10-20 |
+| X55 | Copy Test Filter | Rider / VS Test Explorer | yes | ✅ 2026-10-20 |
 
 ## Progress log
 - 2026-10-20 X1: Sort Lines: the selected lines (or the whole file) in natural, case-insensitive order, blank lines last. Third-batch plumbing: src/rider/more.ts, src/editor/textTools.ts, IDE-FEATURES.md.
@@ -118,3 +119,4 @@ has it on by default, so the desktop app starts with it on. The others start off
 - 2026-10-20 X52: Empty column after the caret's
 - 2026-10-20 X53: Removes the caret's column
 - 2026-10-20 X54: Natural sort, toggles descending
+- 2026-10-20 X55: dotnet test --filter for scenario/feature

@@ -152,6 +152,7 @@ export const FEATURES: Feature[] = [
   { id: 'table-add-column', label: 'Table: Add Column', group: 'Gherkin', essential: true, description: 'An empty column after the caret\'s column.', commands: ['table-add-column'] },
   { id: 'table-delete-column', label: 'Table: Delete Column', group: 'Gherkin', essential: true, description: 'Removes the caret\'s column from every row.', commands: ['table-delete-column'] },
   { id: 'table-sort', label: 'Table: Sort by Column', group: 'Gherkin', essential: false, description: 'Sorts the rows under the header by the caret\'s column (again: descending).', commands: ['table-sort'] },
+  { id: 'copy-test-filter', label: 'Copy Test Filter', group: 'Gherkin', essential: true, description: 'Copies a dotnet test --filter for the scenario (or feature) at the caret.', commands: ['copy-test-filter'] },
 ];
 export const GROUPS: FeatureGroup[] = ['Editing', 'Navigation', 'Code intelligence', 'Tool windows', 'Files', 'Git', 'Gherkin', 'View', 'Debugging', 'Help and productivity'];
 
