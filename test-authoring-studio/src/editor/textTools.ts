@@ -219,7 +219,8 @@ export function toggleVerbatim(view: EditorView) {
     if (lit.startsWith('@')) next = `"${lit.slice(2, -1).replace(/""/g, '"').replace(/\\/g, '\\\\').replace(/"/g, '\\"')}"`;
     else {
       const body = lit.slice(1, -1);
-      if (/\\[^\\"]/.test(body)) return false;
+      // Only \\ and \" have a verbatim form: any other escape (\n, \t…) keeps the string regular.
+      if (/\\/.test(body.replace(/\\[\\"]/g, ''))) return false;
       next = `@"${body.replace(/\\(["\\])/g, '$1').replace(/"/g, '""')}"`;
     }
     view.dispatch({ changes: { from: line.from + from, to: line.from + to, insert: next }, userEvent: 'input.verbatim' });
