@@ -147,6 +147,7 @@ export const FEATURES: Feature[] = [
   { id: 'git-reset', label: 'Git Log: Reset Current Branch to Here', group: 'Git', essential: true, vs: 'Git Repository ▸ Reset', description: 'Soft, mixed or hard reset to the selected commit (hard asks again).' },
   { id: 'branches', label: 'Branches popup', group: 'Git', essential: true, vs: 'Branch picker in the status bar', description: 'The status bar branch (or Tools ▸ Branches…) switches to or creates a branch.', commands: ['branches'] },
   { id: 'cycle-step-keyword', label: 'Cycle Step Keyword', group: 'Gherkin', essential: true, description: 'Given → When → Then → And → But on the step line(s).', commands: ['cycle-step-keyword'] },
+  { id: 'scenario-to-outline', label: 'Convert Scenario to Outline', group: 'Gherkin', essential: true, description: 'Quoted step values become <parameters> with an Examples table.', commands: ['scenario-to-outline'] },
 ];
 export const GROUPS: FeatureGroup[] = ['Editing', 'Navigation', 'Code intelligence', 'Tool windows', 'Files', 'Git', 'Gherkin', 'View', 'Debugging', 'Help and productivity'];
 

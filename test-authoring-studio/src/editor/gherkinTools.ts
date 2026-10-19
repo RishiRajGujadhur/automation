@@ -26,3 +26,47 @@ export function cycleStepKeyword(view: EditorView) {
   view.dispatch({ changes, userEvent: 'input' });
   return true;
 }
+
+const SCENARIO = /^\s*(Scenario|Scenario Outline|Scenario Template|Example):/;
+const BLOCK_START = /^\s*(@|(Scenario|Scenario Outline|Scenario Template|Example|Background|Rule|Feature):)/;
+/** The scenario around a line: its keyword line and its last non-blank line (Examples included). */
+export function scenarioBlock(state: EditorState, lineNo: number) {
+  const doc = state.doc;
+  let n = lineNo;
+  for (; n >= 1; n--) {
+    const t = doc.line(n).text;
+    if (SCENARIO.test(t)) break;
+    if (/^\s*(Background|Rule|Feature):/.test(t)) return undefined;
+  }
+  if (n < 1) return undefined;
+  let end = n;
+  for (let k = n + 1; k <= doc.lines && !BLOCK_START.test(doc.line(k).text); k++) end = k;
+  while (end > n && !doc.line(end).text.trim()) end--;
+  let first = n;
+  while (first > 1 && /^\s*@/.test(doc.line(first - 1).text)) first--;
+  return { head: n, first, end };
+}
+
+/**
+ * Convert Scenario to Outline (Rider's Gherkin intention): the quoted values of the steps become <p1>, <p2>… and an
+ * Examples table keeps them. Repeated values share a parameter.
+ */
+export function scenarioToOutline(view: EditorView) {
+  const { state } = view;
+  const doc = state.doc;
+  const b = scenarioBlock(state, doc.lineAt(state.selection.main.head).number);
+  if (!b || !/^\s*(Scenario|Example):/.test(doc.line(b.head).text)) return false;
+  const values: string[] = [];
+  const lines: string[] = [];
+  for (let k = b.head + 1; k <= b.end; k++) {
+    const t = doc.line(k).text;
+    lines.push(STEP.test(t) ? t.replace(/"([^"]*)"/g, (_, v: string) => { if (!values.includes(v)) values.push(v); return `"<p${values.indexOf(v) + 1}>"`; }) : t);
+  }
+  if (!values.length) return false;
+  const head = doc.line(b.head);
+  const stepIndent = lines.find((l) => STEP.test(l))?.match(/^\s*/)![0] ?? `${/^\s*/.exec(head.text)![0]}  `;
+  const table = alignTable([`${stepIndent}  | ${values.map((_, i) => `p${i + 1}`).join(' | ')} |`, `${stepIndent}  | ${values.map((v) => v.replace(/\|/g, '\\|')).join(' | ')} |`]);
+  const text = [head.text.replace(/(Scenario|Example):/, 'Scenario Outline:'), ...lines, '', `${stepIndent}Examples:`, ...table].join(state.lineBreak);
+  view.dispatch({ changes: { from: head.from, to: doc.line(b.end).to, insert: text }, selection: EditorSelection.cursor(head.from + /^\s*/.exec(head.text)![0].length), userEvent: 'input' });
+  return true;
+}

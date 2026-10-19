@@ -127,6 +127,7 @@ const ROWS: Record<'edit' | 'view' | 'navigate' | 'code' | 'tools' | 'help', Row
     ['Minify JSON', 'minify-json'],
     null,
     ['Cycle Step Keyword', 'cycle-step-keyword'],
+    ['Convert Scenario to Outline', 'scenario-to-outline'],
   ],
   tools: [
     ['Run Anything… (Ctrl twice)', 'run-anything'],

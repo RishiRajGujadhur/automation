@@ -57,6 +57,7 @@ has it on by default, so the desktop app starts with it on. The others start off
 | X48 | Branches popup | VS 2026 / Rider | yes | ✅ 2026-10-20 |
 | X44 | Git Log: Cherry-Pick | VS 2026 / Rider | yes | ✅ 2026-10-20 |
 | X49 | Cycle Step Keyword | Rider | yes | ✅ 2026-10-20 |
+| X50 | Convert Scenario to Outline | Rider | yes | ✅ 2026-10-20 |
 
 ## Progress log
 - 2026-10-20 X1: Sort Lines: the selected lines (or the whole file) in natural, case-insensitive order, blank lines last. Third-batch plumbing: src/rider/more.ts, src/editor/textTools.ts, IDE-FEATURES.md.
@@ -108,3 +109,4 @@ has it on by default, so the desktop app starts with it on. The others start off
 - 2026-10-20 X48: Status bar branch opens a switch/create popup
 - 2026-10-20 X44: Cherry-pick, aborted on conflicts (code landed with X45; tests fixed)
 - 2026-10-20 X49: Given/When/Then/And/But cycling
+- 2026-10-20 X50: Quoted values to <params> + Examples
