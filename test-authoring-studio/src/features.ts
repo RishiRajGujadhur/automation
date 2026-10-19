@@ -140,6 +140,7 @@ export const FEATURES: Feature[] = [
   { id: 'analyze-stack', label: 'Analyze Stack Trace', group: 'Tool windows', essential: false, description: 'Paste a .NET stack trace; frames in the solution become links.', commands: ['analyze-stack'] },
   { id: 'git-copy-revision', label: 'Git Log: Copy Revision Number', group: 'Git', essential: true, vs: 'Git Repository ▸ Copy Commit ID', description: 'Copies the selected commit\'s full hash.' },
   { id: 'git-new-branch', label: 'Git Log: New Branch from Commit', group: 'Git', essential: true, vs: 'Git Repository ▸ New Branch', description: 'Creates a branch at the selected commit.' },
+  { id: 'git-new-tag', label: 'Git Log: New Tag', group: 'Git', essential: true, vs: 'Git Repository ▸ New Tag', description: 'Tags the selected commit.' },
 ];
 export const GROUPS: FeatureGroup[] = ['Editing', 'Navigation', 'Code intelligence', 'Tool windows', 'Files', 'Git', 'View', 'Debugging', 'Help and productivity'];
 
