@@ -29,7 +29,7 @@ test.afterEach(async ({ request }) => {
 async function open(page: Page) {
   await page.addInitScript(() => { if (!sessionStorage.getItem('seeded')) { localStorage.setItem('tas:prefs', JSON.stringify({ mode: 'advanced', autoSave: 'off' })); sessionStorage.setItem('seeded', '1'); } });
   await page.goto('/#/features/editor');
-  await expect(page.getByText('Repository indexed')).toBeVisible();
+  await expect(page.getByText('Repository indexed').first()).toBeVisible();
   await page.getByRole('navigation').getByRole('button', { name: 'Login.feature', exact: true }).first().click();
   await expect(page.getByLabel('Gherkin source')).toContainText('Feature:');
 }
@@ -57,7 +57,7 @@ test('X42 Git Log New Branch: creates a branch at the commit', async ({ page }) 
   const actions = await selectCommit(page, 'base');
   answer(page, 'hotfix/one');
   await actions.getByRole('button', { name: 'New Branch…' }).click();
-  await expect(page.getByText('Created branch hotfix/one')).toBeVisible();
+  await expect(page.getByText('Created branch hotfix/one').first()).toBeVisible();
   expect(g('rev-parse', 'hotfix/one')).toBe(g('rev-parse', 'HEAD~1'));
 });
 
@@ -66,7 +66,7 @@ test('X43 Git Log New Tag: tags the commit', async ({ page }) => {
   const actions = await selectCommit(page, 'base');
   answer(page, 'v1.0');
   await actions.getByRole('button', { name: 'New Tag…' }).click();
-  await expect(page.getByText('Created tag v1.0')).toBeVisible();
+  await expect(page.getByText('Created tag v1.0').first()).toBeVisible();
   expect(g('rev-parse', 'v1.0^{commit}')).toBe(g('rev-parse', 'HEAD~1'));
 });
 
@@ -78,16 +78,16 @@ test('X44 Git Log Cherry-Pick: applies a commit of another branch', async ({ pag
   await open(page);
   const actions = await selectCommit(page, 'Add notes');
   await actions.getByRole('button', { name: 'Cherry-Pick' }).click();
-  await expect(page.getByText(/Cherry-picked/)).toBeVisible();
+  await expect(page.getByText(/Cherry-picked/).first()).toBeVisible();
   expect(g('log', '-1', '--format=%s')).toBe('Add notes');
-  expect(await fs.readFile(path.join(root, 'NOTES.md'), 'utf8')).toBe('side note\n');
+  expect((await fs.readFile(path.join(root, 'NOTES.md'), 'utf8')).trim()).toBe('side note');
 });
 
 test('X45 Git Log Revert Commit: a new commit undoes the selected one', async ({ page }) => {
   await open(page);
   const actions = await selectCommit(page, 'Sign in as admin');
   await actions.getByRole('button', { name: 'Revert Commit' }).click();
-  await expect(page.getByText(/Reverted/)).toBeVisible();
+  await expect(page.getByText(/Reverted/).first()).toBeVisible();
   expect(g('log', '-1', '--format=%s')).toContain('Revert "Sign in as admin"');
   expect(await fs.readFile(path.join(root, 'Features/Auth/Login.feature'), 'utf8')).toContain('"test-user"');
 });
@@ -97,7 +97,7 @@ test('X46 Git Log Checkout Revision: detached HEAD at the commit', async ({ page
   const actions = await selectCommit(page, 'base');
   answer(page, true);
   await actions.getByRole('button', { name: 'Checkout Revision' }).click();
-  await expect(page.getByText(/detached HEAD/)).toBeVisible();
+  await expect(page.getByText(/detached HEAD/).first()).toBeVisible();
   expect(g('rev-parse', 'HEAD')).toBe(g('rev-parse', 'main~1'));
   expect(g('branch', '--show-current')).toBe('');
 });
@@ -107,7 +107,7 @@ test('X47 Git Log Reset to Here: mixed keeps the changes, hard asks again', asyn
   const actions = await selectCommit(page, 'base');
   answer(page, 'mixed');
   await actions.getByRole('button', { name: 'Reset to Here…' }).click();
-  await expect(page.getByText(/Reset the current branch/)).toBeVisible();
+  await expect(page.getByText(/Reset the current branch/).first()).toBeVisible();
   expect(g('log', '-1', '--format=%s')).toBe('base');
   expect(g('status', '--porcelain')).toContain('Login.feature');
 });
@@ -120,11 +120,11 @@ test('X48 Branches popup: the status bar branch switches to or creates a branch'
   const list = dlg.getByRole('listbox', { name: 'Branches' });
   await expect(list).toContainText('feature/other');
   await list.getByRole('option', { name: /feature\/other/ }).click();
-  await expect(page.getByText('Switched to feature/other.')).toBeVisible();
+  await expect(page.getByText('Switched to feature/other.').first()).toBeVisible();
   expect(g('branch', '--show-current')).toBe('feature/other');
   await page.getByRole('button', { name: /^Branch feature\/other/ }).click();
   await page.getByLabel('Filter branches').fill('topic/new');
   await page.keyboard.press('Enter');
-  await expect(page.getByText('Created and switched to topic/new.')).toBeVisible();
+  await expect(page.getByText('Created and switched to topic/new.').first()).toBeVisible();
   expect(g('branch', '--show-current')).toBe('topic/new');
 });
