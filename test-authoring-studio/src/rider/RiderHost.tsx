@@ -24,6 +24,7 @@ import ListPopup from './ListPopup';
 import { insertTemplate, liveTemplates } from '../editor/snippets';
 import { surroundTemplates, surroundWith } from '../editor/surround';
 import { setUsages, wordUsages } from '../editor/usages';
+import { moreCommands } from './more';
 import { bookmarkByDigit } from '../editor/bookmarks';
 import { requestEol } from '../editor/lineSeparator';
 import { SELECT_IN_EXPLORER } from '../SolutionExplorer';
@@ -468,7 +469,7 @@ export default function RiderHost(props: RiderHostProps) {
       { id: 'caret-usages', label: 'Highlight Usages at Caret', menu: 'View', checked: () => !viewOptions().noCaretUsages, run: () => { setViewOptions({ noCaretUsages: !viewOptions().noCaretUsages }); riderChanged(); } },
       { id: 'carets-line-ends', label: 'Add Carets to Ends of Selected Lines', menu: 'Edit', shortcut: 'Alt Shift G', run: inEditor(caretsAtLineEnds) },
     ];
-    return registerRider(list);
+    return registerRider([...list, ...moreCommands({ inEditor, notice: (m) => p.current.onNotice(m) })]);
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
   const layout = useLayoutState();
   let body: ReactNode = null;

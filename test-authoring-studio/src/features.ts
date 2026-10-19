@@ -97,6 +97,8 @@ export const FEATURES: Feature[] = [
   { id: 'tip-of-the-day', label: 'Tip of the Day', group: 'Help and productivity', essential: false, description: 'A tip at a time, optionally at startup.', commands: ['tip-of-the-day'] },
   { id: 'power-save', label: 'Power Save Mode', group: 'Help and productivity', essential: false, description: 'Pause background analysis.', commands: ['power-save'] },
   { id: 'search-everywhere', label: 'Search Everywhere (Shift twice)', group: 'Help and productivity', essential: false, description: 'Double Shift opens Go to All (Ctrl+T always works).' },
+  // ── Third batch (IDE-FEATURES.md) ──
+  { id: 'sort-lines', label: 'Sort Lines', group: 'Editing', essential: false, description: 'Sort the selected lines (or the file): natural order, case-insensitive.', commands: ['sort-lines'] },
 ];
 export const GROUPS: FeatureGroup[] = ['Editing', 'Navigation', 'Code intelligence', 'Tool windows', 'Files', 'Git', 'View', 'Debugging', 'Help and productivity'];
 

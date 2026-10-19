@@ -33,6 +33,8 @@ const ROWS: Record<'edit' | 'view' | 'navigate' | 'code' | 'tools' | 'help', Row
     ['Line Separators: CRLF (Windows)', 'eol-crlf'],
     ['Line Separators: LF (Unix)', 'eol-lf'],
     ['Rollback Lines', 'rollback-lines', 'CmdOrCtrl+Alt+Z'],
+    null,
+    ['Sort Lines', 'sort-lines'],
   ],
   view: [
     null,
