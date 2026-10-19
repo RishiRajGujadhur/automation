@@ -3455,3 +3455,8 @@ html[data-features-off~='inlay-hints'] .cm-inlay {
   .mi-fair { background: #d4a72c; }
   .mi-poor { background: #cf222e; }
 }
+
+.cm-lintRange-hint.cm-unnecessary {
+  background-image: none !important;
+  opacity: 0.5;
+}

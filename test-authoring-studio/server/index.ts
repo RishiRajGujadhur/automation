@@ -548,6 +548,11 @@ app.post('/api/csharp/metrics', async (req, res) => {
   await confined(config.repositoryRoot, body.file, false);
   res.json(await lang.request(config.repositoryRoot, { op: 'metrics', ...body, line: 1, column: 1 }, 60_000));
 });
+app.post('/api/csharp/unnecessary', async (req, res) => {
+  const body = z.object({ file: z.string().max(400).regex(/\.cs$/), source: z.string().max(1_000_000).optional() }).parse(req.body);
+  await confined(config.repositoryRoot, body.file, false);
+  res.json(await lang.request(config.repositoryRoot, { op: 'unnecessary', ...body, line: 1, column: 1 }, 30_000));
+});
 app.post('/api/csharp/outline', async (req, res) => {
   const body = z.object({ file: z.string().max(400).regex(/\.cs$/), source: z.string().max(1_000_000).optional() }).parse(req.body);
   await confined(config.repositoryRoot, body.file, false);

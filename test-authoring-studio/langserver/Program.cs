@@ -94,6 +94,7 @@ sealed class LanguageService
             "format" => await Format(doc, req),
             "actions" => await Actions(doc, Math.Min(Pos(text), text.Length), req["endLine"] is null ? null : text.Lines[Math.Clamp((int)req["endLine"]! - 1, 0, text.Lines.Count - 1)].Start + (int)req["endColumn"]! - 1),
             "metrics" => await Metrics(doc),
+            "unnecessary" => await Unnecessary(doc),
             "applyAction" => await ApplyAction((string)req["actionId"]!),
             _ => throw new InvalidOperationException($"Unknown operation {op}."),
         };
@@ -815,15 +816,7 @@ sealed class LanguageService
     {
         var model = (await doc.GetSemanticModelAsync())!;
         var root = (CompilationUnitSyntax)(await doc.GetSyntaxRootAsync())!;
-        var unused = model.GetDiagnostics().Where(d => d.Id == "CS8019").Select(d => d.Location.SourceSpan).ToHashSet();
-        // Only usings whose namespace resolves can be called unnecessary: when a package is missing (not restored),
-        // its usings look unused because nothing in them resolves, and removing them would break the build.
-        bool Resolves(UsingDirectiveSyntax u) => u.Alias != null || u.StaticKeyword.IsKind(SyntaxKind.StaticKeyword) || model.GetSymbolInfo(u.NamespaceOrType).Symbol is INamespaceSymbol { ConstituentNamespaces.Length: > 0 } ns && ns.ConstituentNamespaces.Any(c => c.ContainingAssembly != null || c.GetMembers().Any());
-        // If names in the file do not resolve (a package not restored or not found), only System usings are removed:
-        // any other "unused" using might be the one that would supply the missing names.
-        var unresolved = model.GetDiagnostics().Any(d => d.Id is "CS0246" or "CS0103" or "CS0234" or "CS0305" or "CS0616" or "CS1061");
-        static bool IsSystem(UsingDirectiveSyntax u) => u.Name?.ToString() is { } n && (n == "System" || n.StartsWith("System."));
-        var keep = root.Usings.Where(u => !Resolves(u) || (unresolved && !IsSystem(u)) || !unused.Any(s => s.Contains(u.Span) || u.Span.Contains(s))).ToList();
+        var keep = KeptUsings(model, root);
         var removed = root.Usings.Count - keep.Count;
         var leading = root.Usings.FirstOrDefault()?.GetLeadingTrivia() ?? default;
         static int Group(UsingDirectiveSyntax u) => u.GlobalKeyword.IsKind(SyntaxKind.GlobalKeyword) ? 0 : u.Alias != null ? 4 : u.StaticKeyword.IsKind(SyntaxKind.StaticKeyword) ? 3 : u.Name!.ToString() is var n && (n == "System" || n.StartsWith("System.")) ? 1 : 2;
@@ -900,5 +893,28 @@ sealed class LanguageService
             return new { name, line = Line(t.Identifier.SpanStart), mi = members.Count > 0 ? (int)Math.Round(members.Average(m => m.mi)) : Index(t, 1, Loc(t)), cc = Math.Max(1, tcc), coupling = Coupling(t, self), loc = tloc, members };
         }).ToList();
         return new { project = doc.Project.Name, types };
+    }
+    /// <summary>The usings Organize Usings keeps (see Organize: only resolvable, really unused ones go).</summary>
+    static List<UsingDirectiveSyntax> KeptUsings(SemanticModel model, CompilationUnitSyntax root)
+    {
+        var unused = model.GetDiagnostics().Where(d => d.Id == "CS8019").Select(d => d.Location.SourceSpan).ToHashSet();
+        // Only usings whose namespace resolves can be called unnecessary: when a package is missing (not restored),
+        // its usings look unused because nothing in them resolves, and removing them would break the build.
+        bool Resolves(UsingDirectiveSyntax u) => u.Alias != null || u.StaticKeyword.IsKind(SyntaxKind.StaticKeyword) || model.GetSymbolInfo(u.NamespaceOrType).Symbol is INamespaceSymbol { ConstituentNamespaces.Length: > 0 } ns && ns.ConstituentNamespaces.Any(c => c.ContainingAssembly != null || c.GetMembers().Any());
+        // If names in the file do not resolve (a package not restored or not found), only System usings are removed:
+        // any other "unused" using might be the one that would supply the missing names.
+        var unresolved = model.GetDiagnostics().Any(d => d.Id is "CS0246" or "CS0103" or "CS0234" or "CS0305" or "CS0616" or "CS1061");
+        static bool IsSystem(UsingDirectiveSyntax u) => u.Name?.ToString() is { } n && (n == "System" || n.StartsWith("System."));
+        var keep = root.Usings.Where(u => !Resolves(u) || (unresolved && !IsSystem(u)) || !unused.Any(s => s.Contains(u.Span) || u.Span.Contains(s))).ToList();
+        return keep;
+    }
+    /// <summary>Unnecessary usings (Visual Studio fades them, IDE0005): the ranges Organize Usings would remove.</summary>
+    async Task<object> Unnecessary(Document doc)
+    {
+        var model = (await doc.GetSemanticModelAsync())!;
+        var root = (CompilationUnitSyntax)(await doc.GetSyntaxRootAsync())!;
+        var text = await doc.GetTextAsync();
+        var keep = KeptUsings(model, root).Select(u => u.Span).ToHashSet();
+        return root.Usings.Where(u => !keep.Contains(u.Span)).Select(u => { var s = text.Lines.GetLinePosition(u.SpanStart); var e = text.Lines.GetLinePosition(u.Span.End); return new { line = s.Line + 1, column = s.Character + 1, endLine = e.Line + 1, endColumn = e.Character + 1 }; }).ToList();
     }
 }

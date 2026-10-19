@@ -67,7 +67,9 @@ const csharpLinter = (file: string) => linter(async (view) => {
   const doc = view.state.doc;
   if (powerSave()) return [];
   try {
-    const items = await api<CsDiagnostic[]>('/csharp/diagnostics', { source: doc.toString(), path: file });
+    // Unnecessary usings fade (Visual Studio's IDE0005) when the language server is running.
+    const [items, unused] = await Promise.all([api<CsDiagnostic[]>('/csharp/diagnostics', { source: doc.toString(), path: file }), featureOn('fade-usings') && !isBrowser() ? api<Omit<CsDiagnostic, 'severity' | 'id' | 'message'>[]>('/csharp/unnecessary', { file, source: doc.toString() }).catch(() => []) : Promise.resolve([])]);
+    const faded = unused.map((d): Diagnostic => { const from = doc.line(Math.min(doc.lines, d.line)).from + d.column - 1; const to = Math.min(doc.length, doc.line(Math.min(doc.lines, d.endLine)).from + d.endColumn - 1); return { from, to: Math.max(from + 1, to), severity: 'hint', markClass: 'cm-unnecessary', source: 'Roslyn', message: 'IDE0005: Using directive is unnecessary.' }; });
     return items.map((d): Diagnostic => {
       const from = doc.line(Math.min(doc.lines, d.line)).from + d.column - 1;
       const toLine = doc.line(Math.min(doc.lines, d.endLine));
@@ -75,7 +77,7 @@ const csharpLinter = (file: string) => linter(async (view) => {
       // Errors at the very end of a file (e.g. a missing brace) still get a visible one-character range.
       const start = Math.max(0, Math.min(from, doc.length - 1));
       return { from: start, to: Math.max(start + 1, Math.min(to, doc.length)), severity: d.severity, source: d.id.startsWith('TAS') ? 'Bindings' : 'Roslyn', message: `${d.id}: ${d.message}` };
-    });
+    }).concat(faded);
   } catch {
     return [];
   }

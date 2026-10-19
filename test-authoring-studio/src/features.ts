@@ -167,6 +167,7 @@ export const FEATURES: Feature[] = [
   { id: 'error-list-sort', label: 'Error List: sort by column', group: 'Tool windows', essential: true, vs: 'Error List column sort', description: 'Click a column header to sort (again: descending, then build order).' },
   { id: 'output-find', label: 'Output: Find', group: 'Tool windows', essential: true, vs: 'Output window ▸ Find', description: 'A search box above the build Output shows only the matching lines.' },
   { id: 'code-metrics', label: 'Calculate Code Metrics', group: 'Code intelligence', essential: false, vs: 'Analyze ▸ Calculate Code Metrics', description: 'Maintainability, complexity, coupling and lines per type and member of the C# file.', commands: ['code-metrics'] },
+  { id: 'fade-usings', label: 'Fade unnecessary usings', group: 'Code intelligence', essential: true, vs: 'Fade out unused code', description: 'Unused using directives are greyed out (IDE0005).' },
 ];
 export const GROUPS: FeatureGroup[] = ['Editing', 'Navigation', 'Code intelligence', 'Tool windows', 'Files', 'Git', 'Gherkin', 'View', 'Debugging', 'Help and productivity'];
 

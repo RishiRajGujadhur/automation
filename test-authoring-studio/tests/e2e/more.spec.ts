@@ -318,7 +318,7 @@ test('X69 Calculate Code Metrics: maintainability, complexity, coupling and line
 });
 
 test('X70 Fade unnecessary usings: unused usings are greyed out', async ({ page, request }) => {
-  await fs.writeFile(path.join(root, 'Steps/Clock.cs'), ['using System;', 'using System.Text;', 'namespace Demo;', 'public class Clock { public DateTime Now() => DateTime.Now; }', ''].join('\n'));
+  await fs.writeFile(path.join(root, 'Steps/Clock.cs'), ['using System.Globalization;', 'using System.Text;', 'namespace Demo;', 'public class Clock { public CultureInfo Culture() => CultureInfo.InvariantCulture; }', ''].join('\n'));
   expect((await request.post('/api/workspace', { data: { repositoryRoot: root, targetProject: '.' } })).ok()).toBe(true);
   const src = await openCs(page, 'Steps/Clock.cs', 'public class Clock');
   await expect(src.locator('.cm-unnecessary')).toHaveText('using System.Text;', { timeout: 90_000 });
