@@ -141,3 +141,9 @@ export function trackEdits(file: string) {
     lastEdit = { file, pos, line: line.number, column: pos - line.from + 1 };
   });
 }
+
+/** Insert GUID (Visual Studio's Create GUID tool; Rider's nguid): a new GUID at each caret. */
+export function insertGuid(view: EditorView) {
+  view.dispatch(view.state.changeByRange((r) => { const g = crypto.randomUUID(); return { changes: { from: r.from, to: r.to, insert: g }, range: EditorSelection.cursor(r.from + g.length) }; }), { userEvent: 'input.guid' });
+  return true;
+}

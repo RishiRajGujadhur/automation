@@ -100,6 +100,8 @@ const ROWS: Record<'edit' | 'view' | 'navigate' | 'code' | 'tools' | 'help', Row
     ['Collapse to Definitions (Ctrl+K, Ctrl+2)', 'collapse-definitions'],
     ['Move Statement Up', 'statement-up', 'CmdOrCtrl+Shift+Alt+Up'],
     ['Move Statement Down', 'statement-down', 'CmdOrCtrl+Shift+Alt+Down'],
+    null,
+    ['Insert GUID', 'insert-guid'],
   ],
   tools: [
     ['Run Anything… (Ctrl twice)', 'run-anything'],

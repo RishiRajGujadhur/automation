@@ -111,6 +111,7 @@ export const FEATURES: Feature[] = [
   { id: 'find-next-selected', label: 'Find Next Selected', group: 'Navigation', essential: true, vs: 'Edit.FindNextSelected (Ctrl+F3)', description: 'Ctrl+F3 selects the next match of the selection or word.', commands: ['find-next-selected'] },
   { id: 'find-previous-selected', label: 'Find Previous Selected', group: 'Navigation', essential: true, vs: 'Edit.FindPreviousSelected (Ctrl+Shift+F3)', description: 'Ctrl+Shift+F3 selects the previous match.', commands: ['find-previous-selected'] },
   { id: 'last-edit', label: 'Go to Last Edit Location', group: 'Navigation', essential: true, vs: 'Edit.GoToLastEditLocation (Ctrl+Shift+Backspace)', description: 'Ctrl+Shift+Backspace returns to where you last typed, in any file.', commands: ['last-edit'] },
+  { id: 'insert-guid', label: 'Insert GUID', group: 'Editing', essential: true, vs: 'Tools ▸ Create GUID', description: 'A new GUID at the caret (or every caret).', commands: ['insert-guid'] },
 ];
 export const GROUPS: FeatureGroup[] = ['Editing', 'Navigation', 'Code intelligence', 'Tool windows', 'Files', 'Git', 'View', 'Debugging', 'Help and productivity'];
 
