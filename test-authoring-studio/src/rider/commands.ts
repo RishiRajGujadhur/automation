@@ -15,6 +15,8 @@ export type RiderCommand = {
   shortcut?: string;
   /** Starts a new group (separator) in its menu. */
   group?: boolean;
+  /** Shown in a submenu of its menu (e.g. Code ▸ Gherkin), when Settings ▸ Features keeps menu groups on. */
+  submenu?: string;
   /** For checkable commands (soft wraps, distraction-free mode…). */
   checked?: () => boolean;
   run: () => void;
@@ -74,10 +76,22 @@ export function runRider(id: string, via: Via = 'menu') {
 
 /** Entries for a web menu bar dropdown. */
 export function menuEntries(menu: RiderMenu, list = commands) {
-  const out: ({ label: string; shortcut?: string; onSelect: () => void } | 'separator')[] = [];
+  type Item = { label: string; shortcut?: string; onSelect: () => void };
+  const out: (Item | 'separator' | { submenu: string; items: (Item | 'separator')[] })[] = [];
+  const subs = new Map<string, (Item | 'separator')[]>();
+  const nested = commandOn('menu-submenus');
   for (const c of list.filter((x) => x.menu === menu && commandOn(x.id))) {
+    const item: Item = { label: `${c.checked ? (c.checked() ? '✓ ' : ' ') : ''}${c.label}`, shortcut: c.shortcut, onSelect: () => runRider(c.id, 'menu') };
+    // Long menus keep related commands together in a submenu, placed where its first command would be.
+    if (c.submenu && nested) {
+      let items = subs.get(c.submenu);
+      if (!items) { items = []; subs.set(c.submenu, items); if (out.length && out.at(-1) !== 'separator') out.push('separator'); out.push({ submenu: c.submenu, items }); }
+      if (c.group && items.length && items.at(-1) !== 'separator') items.push('separator');
+      items.push(item);
+      continue;
+    }
     if (c.group && out.length && out.at(-1) !== 'separator') out.push('separator');
-    out.push({ label: `${c.checked ? (c.checked() ? '✓ ' : ' ') : ''}${c.label}`, shortcut: c.shortcut, onSelect: () => runRider(c.id, 'menu') });
+    out.push(item);
   }
   return out;
 }

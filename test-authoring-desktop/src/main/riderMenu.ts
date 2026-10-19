@@ -5,7 +5,7 @@ import type { MenuItemConstructorOptions } from 'electron';
  * commands (test-authoring-studio/src/rider) and handles their keys, so accelerators are shown, not registered.
  * Keep the ids in sync with RiderHost.tsx.
  */
-type Row = [label: string, id: string, accelerator?: string] | null;
+type Row = [label: string, id: string, accelerator?: string] | null | { submenu: string; rows: Row[] };
 const ROWS: Record<'edit' | 'view' | 'navigate' | 'code' | 'tools' | 'help', Row[]> = {
   edit: [
     null,
@@ -134,22 +134,23 @@ const ROWS: Record<'edit' | 'view' | 'navigate' | 'code' | 'tools' | 'help', Row
     ['Reformat JSON', 'reformat-json'],
     ['Minify JSON', 'minify-json'],
     null,
-    ['Cycle Step Keyword', 'cycle-step-keyword'],
-    ['Convert Scenario to Outline', 'scenario-to-outline'],
-    null,
-    ['Table: Insert Row', 'table-insert-row'],
-    ['Table: Add Column', 'table-add-column'],
-    ['Table: Delete Column', 'table-delete-column'],
-    ['Table: Sort by Column', 'table-sort'],
-    ['Copy Test Filter', 'copy-test-filter'],
-    ['Select Scenario', 'select-scenario'],
-    null,
     ['Sync Namespace with Folder', 'sync-namespace'],
     ['Rename File to Match Type', 'rename-file-to-type'],
     ['Split String', 'split-string'],
-    ['Extract Examples Parameter…', 'extract-examples-param'],
-    ['Convert Outline to Scenario', 'outline-to-scenario'],
-    ['Duplicate Scenario', 'duplicate-scenario'],
+    null,
+    { submenu: 'Gherkin', rows: [
+      ['Cycle Step Keyword', 'cycle-step-keyword'],
+      ['Convert Scenario to Outline', 'scenario-to-outline'],
+      ['Table: Insert Row', 'table-insert-row'],
+      ['Table: Add Column', 'table-add-column'],
+      ['Table: Delete Column', 'table-delete-column'],
+      ['Table: Sort by Column', 'table-sort'],
+      ['Copy Test Filter', 'copy-test-filter'],
+      ['Select Scenario', 'select-scenario'],
+      ['Extract Examples Parameter…', 'extract-examples-param'],
+      ['Convert Outline to Scenario', 'outline-to-scenario'],
+      ['Duplicate Scenario', 'duplicate-scenario'],
+    ] },
   ],
   tools: [
     ['Run Anything… (Ctrl twice)', 'run-anything'],
@@ -195,13 +196,18 @@ const ROWS: Record<'edit' | 'view' | 'navigate' | 'code' | 'tools' | 'help', Row
 
 export function riderMenus(send: (id: string) => void, disabled: string[] = []) {
   // Commands of features turned off in Settings ▸ Features are left out (Electron drops the extra separators).
-  const items = (rows: Row[]): MenuItemConstructorOptions[] => rows.filter((r) => !r || !disabled.includes(r[1])).map((r) => (r ? { label: r[0], ...(r[2] ? { accelerator: r[2], registerAccelerator: false } : {}), click: () => send(r[1]) } : { type: 'separator' }));
+  const items = (rows: Row[]): MenuItemConstructorOptions[] => rows.flatMap((r): MenuItemConstructorOptions[] => {
+    if (!r) return [{ type: 'separator' }];
+    // A submenu (Code ▸ Gherkin) unless menu groups are off, then its rows inline.
+    if ('submenu' in r) { const sub = items(r.rows); return !sub.some((x) => x.type !== 'separator') ? [] : disabled.includes('menu-submenus') ? sub : [{ label: r.submenu, submenu: sub }]; }
+    return disabled.includes(r[1]) ? [] : [{ label: r[0], ...(r[2] ? { accelerator: r[2], registerAccelerator: false } : {}), click: () => send(r[1]) }];
+  });
   return {
     edit: items(ROWS.edit),
     view: items(ROWS.view),
     help: items(ROWS.help),
     menus: ([['&Navigate', ROWS.navigate], ['&Code', ROWS.code], ['T&ools', ROWS.tools]] as const)
-      .filter(([, rows]) => rows.some((r) => r && !disabled.includes(r[1])))
+      .filter(([, rows]) => items(rows as Row[]).some((x) => x.type !== 'separator'))
       .map(([label, rows]): MenuItemConstructorOptions => ({ label, submenu: items(rows as Row[]) })),
   };
 }

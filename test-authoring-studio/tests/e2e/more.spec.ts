@@ -36,6 +36,8 @@ async function caretAt(page: Page, text: string) {
 }
 const doc = (page: Page) => page.evaluate(() => (window as unknown as { __activeEditor: () => { view: { state: { doc: { toString(): string } } } } }).__activeEditor().view.state.doc.toString());
 const menuItem = async (page: Page, menu: string, item: RegExp) => { await page.getByRole('button', { name: `${menu} menu` }).click(); await page.getByRole('menuitem', { name: item }).click(); };
+/** A command of Code ▸ Gherkin (X96 menu groups). */
+const gherkinItem = async (page: Page, item: RegExp) => { await page.getByRole('button', { name: 'Code menu' }).click(); await page.getByRole('menuitem', { name: 'Gherkin' }).click(); await page.getByRole('menuitem', { name: item }).click(); };
 
 test('X16 Overtype mode (Insert): typing replaces characters; OVR in the status bar', async ({ page }) => {
   await openFeature(page);
@@ -228,13 +230,13 @@ test('X40 Analyze Stack Trace: frames in the solution become links', async ({ pa
 test('X49–X56 Gherkin tools from the Code menu: cycle keyword, scenario to outline', async ({ page }) => {
   await openFeature(page);
   await caretAt(page, 'the user signs in');
-  await menuItem(page, 'Code', /^Cycle Step Keyword/);
+  await gherkinItem(page, /^Cycle Step Keyword/);
   await expect.poll(() => doc(page)).toContain('Then the user signs in');
-  await menuItem(page, 'Code', /^Convert Scenario to Outline/);
+  await gherkinItem(page, /^Convert Scenario to Outline/);
   await expect.poll(() => doc(page)).toContain('Scenario Outline: Sign in');
   expect(await doc(page)).toContain('Examples:');
-  await menuItem(page, 'Code', /^Select Scenario/);
-  await menuItem(page, 'Code', /^Cycle Step Keyword/);
+  await gherkinItem(page, /^Select Scenario/);
+  await gherkinItem(page, /^Cycle Step Keyword/);
   await expect.poll(() => doc(page)).toContain('When the login page is open');
   expect(await doc(page)).toContain('Given the browser is started');
 });
@@ -368,7 +370,7 @@ test('X80 Rename File to Match Type', async ({ page, request }) => {
 test('X81–X88 smoke: Duplicate Scenario and Split String from the menus', async ({ page, request }) => {
   await openFeature(page);
   await caretAt(page, 'Scenario: Sign in');
-  await menuItem(page, 'Code', /^Duplicate Scenario/);
+  await gherkinItem(page, /^Duplicate Scenario/);
   await expect.poll(() => doc(page)).toContain('Scenario: Sign in (copy)');
   await fs.writeFile(path.join(root, 'Steps/Greeting.cs'), ['namespace Demo;', 'public class Greeting { public string Text = "Hello world"; }', ''].join('\n'));
   expect((await request.post('/api/workspace', { data: { repositoryRoot: root, targetProject: '.' } })).ok()).toBe(true);
@@ -457,4 +459,18 @@ test('X95 Indentation from the status bar: tabs, size, conversion', async ({ pag
   await page.keyboard.press('Home');
   await page.keyboard.press('Tab');
   await expect.poll(() => doc(page)).toMatch(/\tFeature:/);
+});
+
+test('X96 Menu groups: Code ▸ Gherkin submenu; off in Settings ▸ Features puts the commands back inline', async ({ page }) => {
+  await openFeature(page);
+  await page.getByRole('button', { name: 'Code menu' }).click();
+  await expect(page.getByRole('menuitem', { name: 'Gherkin' })).toBeVisible();
+  await expect(page.getByRole('menuitem', { name: /^Duplicate Scenario/ })).toHaveCount(0);
+  await page.keyboard.press('Escape');
+  await page.evaluate(() => { const k = 'tas:features'; const v = JSON.parse(localStorage.getItem(k) ?? '{}'); localStorage.setItem(k, JSON.stringify({ ...v, overrides: { ...(v.overrides ?? {}), 'menu-submenus': false } })); });
+  await page.reload();
+  await expect(gherkin(page)).toBeVisible();
+  await page.getByRole('button', { name: 'Code menu' }).click();
+  await expect(page.getByRole('menuitem', { name: /^Duplicate Scenario/ })).toBeVisible();
+  await expect(page.getByRole('menuitem', { name: 'Gherkin' })).toHaveCount(0);
 });
