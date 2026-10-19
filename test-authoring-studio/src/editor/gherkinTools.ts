@@ -101,3 +101,11 @@ export function tableInsertRow(view: EditorView) {
   rows.splice(t.row + 1, 0, Array<string>(t.cols).fill(''));
   return writeTable(view, t, rows, t.row + 1, 0);
 }
+
+/** Table ▸ Add Column: an empty column after the caret's column, the caret in its header cell. */
+export function tableAddColumn(view: EditorView) {
+  const t = tableAt(view.state);
+  if (!t) return false;
+  const rows = t.rows.map((r) => { const c = [...r, ...Array<string>(Math.max(0, t.cols - r.length)).fill('')]; c.splice(t.col + 1, 0, ''); return c; });
+  return writeTable(view, t, rows, 0, t.col + 1);
+}

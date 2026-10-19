@@ -59,6 +59,7 @@ has it on by default, so the desktop app starts with it on. The others start off
 | X49 | Cycle Step Keyword | Rider | yes | ✅ 2026-10-20 |
 | X50 | Convert Scenario to Outline | Rider | yes | ✅ 2026-10-20 |
 | X51 | Table: Insert Row | Rider | yes | ✅ 2026-10-20 |
+| X52 | Table: Add Column | Rider | yes | ✅ 2026-10-20 |
 
 ## Progress log
 - 2026-10-20 X1: Sort Lines: the selected lines (or the whole file) in natural, case-insensitive order, blank lines last. Third-batch plumbing: src/rider/more.ts, src/editor/textTools.ts, IDE-FEATURES.md.
@@ -112,3 +113,4 @@ has it on by default, so the desktop app starts with it on. The others start off
 - 2026-10-20 X49: Given/When/Then/And/But cycling
 - 2026-10-20 X50: Quoted values to <params> + Examples
 - 2026-10-20 X51: Empty aligned row below
+- 2026-10-20 X52: Empty column after the caret's

@@ -130,6 +130,7 @@ const ROWS: Record<'edit' | 'view' | 'navigate' | 'code' | 'tools' | 'help', Row
     ['Convert Scenario to Outline', 'scenario-to-outline'],
     null,
     ['Table: Insert Row', 'table-insert-row'],
+    ['Table: Add Column', 'table-add-column'],
   ],
   tools: [
     ['Run Anything… (Ctrl twice)', 'run-anything'],
