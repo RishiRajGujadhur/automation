@@ -45,5 +45,6 @@ export function moreCommands(h: MoreHelpers): RiderCommand[] {
     { id: 'reformat-json', label: 'Reformat JSON', menu: 'Code', group: true, run: h.inEditor((v) => { if (!reformatJson()(v)) h.notice('The file (or selection) is not valid JSON.'); }) },
     { id: 'minify-json', label: 'Minify JSON', menu: 'Code', run: h.inEditor((v) => { if (!reformatJson(true)(v)) h.notice('The file (or selection) is not valid JSON.'); }) },
     { id: 'run-context', label: 'Run Tests in Context', menu: 'Tools', group: true, shortcut: 'Ctrl R, T', run: h.inEditor((v, file) => window.dispatchEvent(new CustomEvent('tas:run-context', { detail: { file, line: v.state.doc.lineAt(v.state.selection.main.head).number, debug: false } }))) },
+    { id: 'debug-context', label: 'Debug Tests in Context', menu: 'Tools', shortcut: 'Ctrl R, Ctrl T', run: h.inEditor((v, file) => window.dispatchEvent(new CustomEvent('tas:run-context', { detail: { file, line: v.state.doc.lineAt(v.state.selection.main.head).number, debug: true } }))) },
   ];
 }

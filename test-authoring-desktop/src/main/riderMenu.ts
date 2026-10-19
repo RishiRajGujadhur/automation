@@ -132,6 +132,7 @@ const ROWS: Record<'edit' | 'view' | 'navigate' | 'code' | 'tools' | 'help', Row
     ['Power Save Mode', 'power-save'],
     null,
     ['Run Tests in Context', 'run-context'],
+    ['Debug Tests in Context', 'debug-context'],
   ],
   help: [
     null,

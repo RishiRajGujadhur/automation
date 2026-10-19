@@ -318,6 +318,7 @@ export function riderKeys(file = ''): Extension {
     opens('Mod-Shift-v', 'paste-history'),
     opens('Mod-j', 'live-template'),
     opens('Mod-r t', 'run-context'),
+    opens('Mod-r Mod-t', 'debug-context'),
     opens('Mod-Shift-Backspace', 'last-edit'),
     opens('Mod-k Mod-e', 'code-cleanup'),
     opens('Mod-Shift-Delete', 'unwrap'),

@@ -123,6 +123,7 @@ export const FEATURES: Feature[] = [
   { id: 'paste-json-classes', label: 'Paste JSON as Classes', group: 'Editing', essential: true, vs: 'Edit ▸ Paste Special ▸ Paste JSON as Classes', description: 'Edit ▸ Paste JSON as Classes: C# classes for the JSON on the clipboard.', commands: ['paste-json-classes'] },
   { id: 'reformat-json', label: 'Reformat / Minify JSON', group: 'Editing', essential: true, vs: 'Format Document (JSON)', description: 'Indent JSON with 2 spaces, or put it on one line.', commands: ['reformat-json', 'minify-json'] },
   { id: 'run-context', label: 'Run Tests in Context', group: 'Code intelligence', essential: true, vs: 'Test ▸ Run Tests in Context (Ctrl+R, T)', description: 'Ctrl+R, T runs the test or scenario at the caret.', commands: ['run-context'] },
+  { id: 'debug-context', label: 'Debug Tests in Context', group: 'Debugging', essential: true, vs: 'Test ▸ Debug Tests in Context (Ctrl+R, Ctrl+T)', description: 'Ctrl+R, Ctrl+T debugs the test or scenario at the caret.', commands: ['debug-context'] },
 ];
 export const GROUPS: FeatureGroup[] = ['Editing', 'Navigation', 'Code intelligence', 'Tool windows', 'Files', 'Git', 'View', 'Debugging', 'Help and productivity'];
 
