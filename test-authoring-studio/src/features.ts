@@ -183,6 +183,7 @@ export const FEATURES: Feature[] = [
   { id: 'untabify', label: 'Untabify Selected Lines', group: 'Editing', essential: false, vs: 'Edit ▸ Advanced ▸ Untabify Selected Lines', description: 'Leading tabs become spaces.', commands: ['untabify'] },
   { id: 'block-start', label: 'Move Caret to Code Block Start', group: 'Navigation', essential: true, description: 'Goes to the enclosing { (again: the next block out).', commands: ['block-start'] },
   { id: 'block-end', label: 'Move Caret to Code Block End', group: 'Navigation', essential: true, description: 'Goes to the enclosing } (again: the next block out).', commands: ['block-end'] },
+  { id: 'extract-examples-param', label: 'Extract Examples Parameter', group: 'Gherkin', essential: true, description: 'The selected step text becomes <name> with a column in every Examples table.', commands: ['extract-examples-param'] },
 ];
 export const GROUPS: FeatureGroup[] = ['Editing', 'Navigation', 'Code intelligence', 'Tool windows', 'Files', 'Git', 'Gherkin', 'View', 'Debugging', 'Help and productivity'];
 

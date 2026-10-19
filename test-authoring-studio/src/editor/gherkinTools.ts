@@ -155,3 +155,43 @@ export function renameTag(source: string, from: string, to: string) {
   const re = new RegExp(`(^|\\s)${esc}(?=\\s|$)`, 'g');
   return source.split(/(\r?\n)/).map((part) => (/^\s*@/.test(part) ? part.replace(re, `$1${to}`) : part)).join('');
 }
+
+/** The Examples tables of a scenario block: line numbers of each table's rows (header first). */
+function examplesTables(state: EditorState, b: { head: number; end: number }) {
+  const tables: number[][] = [];
+  for (let n = b.head + 1; n <= b.end; n++) {
+    if (!/^\s*(Examples|Scenarios):/.test(state.doc.line(n).text)) continue;
+    const rows: number[] = [];
+    let k = n + 1;
+    while (k <= b.end && !state.doc.line(k).text.trim()) k++;
+    for (; k <= b.end && state.doc.line(k).text.trim().startsWith('|'); k++) rows.push(k);
+    if (rows.length) tables.push(rows);
+  }
+  return tables;
+}
+/**
+ * Extract Examples Parameter: the selected text of a Scenario Outline step becomes <name>, and every Examples table
+ * gets a `name` column holding that text.
+ */
+export function extractExamplesParameter(name: string) {
+  return (view: EditorView) => {
+    const { state } = view;
+    const sel = state.selection.main;
+    const line = state.doc.lineAt(sel.from);
+    if (sel.empty || state.doc.lineAt(sel.to).number !== line.number || !STEP.test(line.text) || !/^[\w-]+$/.test(name)) return false;
+    const b = scenarioBlock(state, line.number);
+    if (!b || !/^\s*Scenario (Outline|Template):/.test(state.doc.line(b.head).text)) return false;
+    const tables = examplesTables(state, b);
+    if (!tables.length) return false;
+    const value = state.sliceDoc(sel.from, sel.to).replace(/\|/g, '\\|');
+    const changes: ChangeSpec[] = [{ from: sel.from, to: sel.to, insert: `<${name}>` }];
+    for (const rows of tables) {
+      const cells = rows.map((n, i) => [...splitRow(state.doc.line(n).text), i === 0 ? name : value]);
+      const indent = /^\s*/.exec(state.doc.line(rows[0]).text)![0];
+      const aligned = alignTable(cells.map((r) => `${indent}| ${r.join(' | ')} |`));
+      changes.push({ from: state.doc.line(rows[0]).from, to: state.doc.line(rows[rows.length - 1]).to, insert: aligned.join(state.lineBreak) });
+    }
+    view.dispatch({ changes, selection: { anchor: sel.from + 1, head: sel.from + 1 + name.length }, userEvent: 'input' });
+    return true;
+  };
+}

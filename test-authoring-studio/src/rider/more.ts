@@ -6,7 +6,7 @@ import { renamePath } from '../files/provider';
 import { movedPath } from '../files/tabs';
 import { DEFAULT_TODO_TOKENS } from '../editor/todoHighlight';
 import { copyText as copyFilterText } from '../ui';
-import { cycleStepKeyword, scenarioToOutline, tableInsertRow, tableAddColumn, tableDeleteColumn, tableSortByColumn, testFilter, selectScenario } from '../editor/gherkinTools';
+import { cycleStepKeyword, scenarioToOutline, tableInsertRow, tableAddColumn, tableDeleteColumn, tableSortByColumn, testFilter, selectScenario, extractExamplesParameter } from '../editor/gherkinTools';
 import { unsavedFiles } from '../editor/autosave';
 import { getTabs, closeTab } from '../files/tabs';
 import { reopenClosed } from '../files/tabs';
@@ -92,5 +92,6 @@ export function moreCommands(h: MoreHelpers): RiderCommand[] {
     { id: 'untabify', label: 'Untabify Selected Lines', menu: 'Edit', run: h.inEditor((v) => untabify(v) || h.notice('Nothing to untabify.')) },
     { id: 'block-start', label: 'Move Caret to Code Block Start', menu: 'Navigate', run: h.inEditor(codeBlockStart) },
     { id: 'block-end', label: 'Move Caret to Code Block End', menu: 'Navigate', run: h.inEditor(codeBlockEnd) },
+    { id: 'extract-examples-param', label: 'Extract Examples Parameter…', menu: 'Code', run: h.inEditor((v) => { if (v.state.selection.main.empty) { h.notice('Select the value in a Scenario Outline step first.'); return; } const name = window.prompt('Parameter name:', 'value')?.trim(); if (!name) return; if (!extractExamplesParameter(name)(v)) h.notice('Select a value on one step of a Scenario Outline with Examples (the name: letters, digits, - or _).'); }) },
   ];
 }

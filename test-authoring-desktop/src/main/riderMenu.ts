@@ -147,6 +147,7 @@ const ROWS: Record<'edit' | 'view' | 'navigate' | 'code' | 'tools' | 'help', Row
     ['Sync Namespace with Folder', 'sync-namespace'],
     ['Rename File to Match Type', 'rename-file-to-type'],
     ['Split String', 'split-string'],
+    ['Extract Examples Parameter…', 'extract-examples-param'],
   ],
   tools: [
     ['Run Anything… (Ctrl twice)', 'run-anything'],

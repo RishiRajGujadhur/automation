@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { EditorState, type TransactionSpec } from '@codemirror/state';
 import { EditorView } from '@codemirror/view';
-import { cycleStepKeyword, scenarioToOutline, tableInsertRow, tableAddColumn, tableDeleteColumn, tableSortByColumn, testFilter, selectScenario, renameTag } from '../src/editor/gherkinTools';
+import { cycleStepKeyword, scenarioToOutline, tableInsertRow, tableAddColumn, tableDeleteColumn, tableSortByColumn, testFilter, selectScenario, renameTag, extractExamplesParameter } from '../src/editor/gherkinTools';
 
 /** Runs an editor command on `doc` with the selection between « and » (or a caret at ‸); with `caret`, the result marks the caret with ¦. */
 function run(doc: string, cmd: (v: EditorView) => boolean, caret = false) {
@@ -58,5 +58,10 @@ describe('Gherkin tools (IDE-FEATURES X49…)', () => {
   });
   it('X77 Rename Tag: on tag lines only', () => {
     expect(renameTag('@smoke @slow\r\nFeature: F\r\n  The @smoke text stays\r\n  @smoke-test @smoke\r\n  Scenario: S', '@smoke', '@quick')).toBe('@quick @slow\r\nFeature: F\r\n  The @smoke text stays\r\n  @smoke-test @quick\r\n  Scenario: S');
+  });
+  it('X86 Extract Examples Parameter: <name> in the step, a column in every Examples table', () => {
+    const doc = 'Scenario Outline: S\n  Given the user «admin» signs in as <role>\n\n  Examples:\n    | role  |\n    | owner |\n    | guest |';
+    expect(run(doc, extractExamplesParameter('user'))).toBe('Scenario Outline: S\n  Given the user <user> signs in as <role>\n\n  Examples:\n    | role  | user  |\n    | owner | admin |\n    | guest | admin |');
+    expect(run('Scenario: S\n  Given «x»', extractExamplesParameter('p'))).toBe('Scenario: S\n  Given x');
   });
 });
