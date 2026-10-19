@@ -32,7 +32,9 @@ import { requestEol } from '../editor/lineSeparator';
 import { SELECT_IN_EXPLORER } from '../SolutionExplorer';
 import { desktop } from '../desktop';
 import { fileOutline, itemAt, type OutlineItem } from './outline';
-import type { RiderTool } from './RiderToolWindow';
+import { RIDER_TOOLS, type RiderTool } from './RiderToolWindow';
+import { getTabs } from '../files/tabs';
+import { recentFiles } from '../navHistory';
 import RunAnything from './RunAnything';
 import ProductivityGuide from './ProductivityGuide';
 import EvaluateExpression from './EvaluateExpression';
@@ -67,8 +69,8 @@ export type RiderHostProps = {
  * JetBrains Rider features: registers their commands (menus, palette, desktop menus) and hosts their popups, dialogs
  * and global keys. Editor keys live in editor/riderKeys.ts.
  */
-type Popup = { kind: 'window-layouts' } | { kind: 'convert-case' } | { kind: 'new-from-template'; folder: string } | { kind: 'new-file-name'; folder: string; template: string } | { kind: 'external-tools' } | { kind: 'compare-branch'; branches: string[] } | { kind: 'line-history'; file: string; start: number; end: number } | { kind: 'copy-path'; items: { label: string; value: string }[] } | { kind: 'unwrap'; items: Unwrappable[] } | { kind: 'compare-with'; files: string[] } | { kind: 'compare-file'; patch: string; other: string } | { kind: 'select-in'; file: string } | { kind: 'scratch' } | { kind: 'scratches'; items: { file: string; modified: number }[] } | { kind: 'related'; items: { file: string; line: number; reason: string }[] } | { kind: 'recent-changes'; items: { file: string; id: string; at: string; reason: string }[] } | { kind: 'file-history'; file: string; current: string } | { kind: 'compare'; patch: string; what: string } | { kind: 'regexp'; initial: string } | { kind: 'evaluate'; initial: string } | { kind: 'tip' } | { kind: 'productivity' } | { kind: 'run' } | { kind: 'paste' } | { kind: 'template' } | { kind: 'surround' } | { kind: 'structure'; items: OutlineItem[]; current: number };
-const TITLES: Record<Popup['kind'], string> = { 'window-layouts': 'Window Layouts', 'convert-case': 'Convert Case', 'new-from-template': 'New from Template', 'new-file-name': 'New File', 'external-tools': 'External Tools', 'compare-branch': 'Compare with Branch', 'line-history': 'History for Selection', 'copy-path': 'Copy Path / Reference', unwrap: 'Unwrap / Remove', 'compare-with': 'Compare With…', 'compare-file': 'Compare Files', 'select-in': 'Select In', scratch: 'New Scratch File', scratches: 'Scratch Files', related: 'Related Files', 'recent-changes': 'Recent Changes', 'file-history': 'Local History', compare: 'Compare with Clipboard', regexp: 'Check RegExp', evaluate: 'Evaluate Expression', tip: 'Tip of the Day', productivity: 'Productivity Guide', run: 'Run Anything', paste: 'Paste from History', template: 'Insert Live Template', surround: 'Surround With', structure: 'File Structure' };
+type Popup = { kind: 'switcher'; items: { file: string; label: string }[] } | { kind: 'window-layouts' } | { kind: 'convert-case' } | { kind: 'new-from-template'; folder: string } | { kind: 'new-file-name'; folder: string; template: string } | { kind: 'external-tools' } | { kind: 'compare-branch'; branches: string[] } | { kind: 'line-history'; file: string; start: number; end: number } | { kind: 'copy-path'; items: { label: string; value: string }[] } | { kind: 'unwrap'; items: Unwrappable[] } | { kind: 'compare-with'; files: string[] } | { kind: 'compare-file'; patch: string; other: string } | { kind: 'select-in'; file: string } | { kind: 'scratch' } | { kind: 'scratches'; items: { file: string; modified: number }[] } | { kind: 'related'; items: { file: string; line: number; reason: string }[] } | { kind: 'recent-changes'; items: { file: string; id: string; at: string; reason: string }[] } | { kind: 'file-history'; file: string; current: string } | { kind: 'compare'; patch: string; what: string } | { kind: 'regexp'; initial: string } | { kind: 'evaluate'; initial: string } | { kind: 'tip' } | { kind: 'productivity' } | { kind: 'run' } | { kind: 'paste' } | { kind: 'template' } | { kind: 'surround' } | { kind: 'structure'; items: OutlineItem[]; current: number };
+const TITLES: Record<Popup['kind'], string> = { 'switcher': 'Switcher', 'window-layouts': 'Window Layouts', 'convert-case': 'Convert Case', 'new-from-template': 'New from Template', 'new-file-name': 'New File', 'external-tools': 'External Tools', 'compare-branch': 'Compare with Branch', 'line-history': 'History for Selection', 'copy-path': 'Copy Path / Reference', unwrap: 'Unwrap / Remove', 'compare-with': 'Compare With…', 'compare-file': 'Compare Files', 'select-in': 'Select In', scratch: 'New Scratch File', scratches: 'Scratch Files', related: 'Related Files', 'recent-changes': 'Recent Changes', 'file-history': 'Local History', compare: 'Compare with Clipboard', regexp: 'Check RegExp', evaluate: 'Evaluate Expression', tip: 'Tip of the Day', productivity: 'Productivity Guide', run: 'Run Anything', paste: 'Paste from History', template: 'Insert Live Template', surround: 'Surround With', structure: 'File Structure' };
 
 function PowerSaveBadge() {
   useRiderCommands();
@@ -334,6 +336,8 @@ export default function RiderHost(props: RiderHostProps) {
       [(e) => e.altKey && e.shiftKey && !e.ctrlKey && !e.metaKey && e.code === 'KeyC', 'recent-changes'],
       [(e) => (e.ctrlKey || e.metaKey) && e.altKey && e.shiftKey && e.key === 'Insert', 'new-scratch'],
       [(e) => e.altKey && !e.ctrlKey && !e.shiftKey && !e.metaKey && e.key === 'F1', 'select-in'],
+      // Ctrl+Tab (Visual Studio's IDE Navigator; browsers keep it for themselves, the desktop app gets it).
+      [(e) => e.ctrlKey && !e.altKey && !e.metaKey && e.key === 'Tab', 'switcher'],
       [(e) => e.altKey && !e.ctrlKey && !e.metaKey && e.code === 'NumpadMultiply', 'show-next-statement'],
       [(e) => !e.altKey && !e.ctrlKey && !e.shiftKey && !e.metaKey && e.key === 'Insert' && !!(e.target as HTMLElement | null)?.closest?.('.cm-editor'), 'overtype'],
       [(e) => e.altKey && e.shiftKey && !e.ctrlKey && !e.metaKey && e.key === 'Insert', 'column-mode'],
@@ -473,6 +477,7 @@ export default function RiderHost(props: RiderHostProps) {
       { id: 'caret-usages', label: 'Highlight Usages at Caret', menu: 'View', checked: () => !viewOptions().noCaretUsages, run: () => { setViewOptions({ noCaretUsages: !viewOptions().noCaretUsages }); riderChanged(); } },
       { id: 'convert-case', label: 'Convert Case…', menu: 'Edit', run: () => openPopup({ kind: 'convert-case' }) },
       { id: 'window-layouts', label: 'Window Layouts…', menu: 'View', group: true, run: () => openPopup({ kind: 'window-layouts' }, false) },
+      { id: 'switcher', label: 'Switcher…', menu: 'Navigate', group: true, shortcut: 'Ctrl Tab', run: () => { const t = getTabs(); const order = [t.active, ...recentFiles()].filter((f, i, a) => f && a.indexOf(f) === i && t.tabs.some((x) => x.file === f)) as string[]; const rest = t.tabs.map((x) => x.file).filter((f) => !order.includes(f)); const tools = (Object.keys(RIDER_TOOLS) as RiderTool[]).map((k) => ({ file: `tool:${k}`, label: RIDER_TOOLS[k] })); setPopup({ kind: 'switcher', items: [...[...order, ...rest].map((f) => ({ file: f, label: f.split('/').pop()! })), ...tools] }); } },
       { id: 'carets-line-ends', label: 'Add Carets to Ends of Selected Lines', menu: 'Edit', shortcut: 'Alt Shift G', run: inEditor(caretsAtLineEnds) },
     ];
     return registerRider([...list, ...moreCommands({ inEditor, notice: (m) => p.current.onNotice(m), navigate: (l) => p.current.onNavigate(l) })]);
@@ -492,6 +497,10 @@ export default function RiderHost(props: RiderHostProps) {
     const { view } = target.current;
     const items = popup.items;
     body = <ListPopup label="File structure" placeholder="File structure: type to filter" empty="No matches." initial={popup.current} items={items.map((it, i) => ({ key: String(i), label: it.label, detail: `${it.kind} · line ${it.line}`, indent: it.depth }))} onPick={(k) => { const it = items[Number(k)]; goTo(view, it.line, it.column); closeAndFocus(); }} />;
+  }
+  if (popup?.kind === 'switcher') {
+    const items = popup.items;
+    body = <ListPopup label="Open editors and tool windows" placeholder="Switch to… (Ctrl+Tab)" empty="Nothing open." initial={items.length > 1 ? 1 : 0} items={items.map((it) => ({ key: it.file, label: it.label, detail: it.file.startsWith('tool:') ? 'tool window' : it.file }))} onPick={(k) => { setPopup(null); if (k.startsWith('tool:')) p.current.onTool(k.slice(5) as RiderTool); else p.current.onNavigate({ file: k }); }} />;
   }
   if (popup?.kind === 'window-layouts') body = <WindowLayouts onNotice={(m) => p.current.onNotice(m)} />;
   if (popup?.kind === 'convert-case' && target.current) {

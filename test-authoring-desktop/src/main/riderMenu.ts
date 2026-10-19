@@ -95,6 +95,8 @@ const ROWS: Record<'edit' | 'view' | 'navigate' | 'code' | 'tools' | 'help', Row
     null,
     ['Next Member', 'next-member', 'Alt+PageDown'],
     ['Previous Member', 'previous-member', 'Alt+PageUp'],
+    null,
+    ['Switcher…', 'switcher', 'Ctrl+Tab'],
   ],
   code: [
     ['Insert Live Template…', 'live-template', 'CmdOrCtrl+J'],

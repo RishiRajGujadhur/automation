@@ -172,3 +172,55 @@ test('X34 Reopen Closed Tab brings back the last closed editor; X35 Close Unmodi
   await expect(tabs).toHaveCount(2);
   await expect(page.locator('.editor-tab-label[title="Features/GoogleSearch.feature"]')).toHaveCount(0);
 });
+
+test('X36 Switcher (View ▸ Navigate): open editors most recent first, and tool windows', async ({ page }) => {
+  await openFeature(page);
+  await page.getByRole('navigation').getByRole('button', { name: 'AuthSteps.cs', exact: true }).first().click();
+  await expect(page.getByLabel('Source of Steps/AuthSteps.cs')).toBeVisible();
+  await menuItem(page, 'Navigate', /^Switcher/);
+  const list = page.getByRole('listbox', { name: 'Open editors and tool windows' });
+  await expect(list.getByRole('option').first()).toContainText('AuthSteps.cs');
+  await expect(list.getByRole('option', { selected: true })).toContainText('Login.feature');
+  await expect(list).toContainText('Structure');
+  await page.keyboard.press('Enter');
+  await expect(gherkin(page)).toBeVisible();
+});
+
+test('X37 Tabs in Multiple Rows: the tab strip wraps', async ({ page }) => {
+  await openFeature(page);
+  await menuItem(page, 'View', /Tabs in Multiple Rows/);
+  await expect(page.locator('.editor-tabs')).toHaveClass(/multi-row/);
+  await expect(page.locator('.editor-tabs')).toHaveCSS('flex-wrap', 'wrap');
+});
+
+test('X38 Notifications window keeps the session\'s messages', async ({ page }) => {
+  await openFeature(page);
+  await menuItem(page, 'View', /Show Whitespaces/); // any command
+  await caretAt(page, 'signs in');
+  await menuItem(page, 'Edit', /^Copy Reference/);
+  await menuItem(page, 'View', /^Notifications/);
+  await expect(page.getByRole('list', { name: 'Notification history' })).toContainText('Copied reference');
+  await page.getByRole('button', { name: 'Clear notifications' }).click();
+  await expect(page.getByRole('list', { name: 'Notification history' })).toContainText('No notifications');
+});
+
+test('X39 File Properties (Alt+Enter): size, encoding, line endings, lines', async ({ page }) => {
+  await openFeature(page);
+  await caretAt(page, 'signs in');
+  await page.keyboard.press('Alt+Enter');
+  const props = page.getByRole('dialog', { name: 'Properties' });
+  await expect(props).toContainText('Features/Auth/Login.feature');
+  await expect(props).toContainText('UTF-8');
+  await expect(props).toContainText(/Line endings\s*(LF|CRLF)/);
+  await expect(props).toContainText(/Lines\s*\d+/);
+});
+
+test('X40 Analyze Stack Trace: frames in the solution become links', async ({ page }) => {
+  await openFeature(page);
+  await menuItem(page, 'Tools', /Analyze Stack Trace/);
+  await page.getByLabel('Stack trace').fill(['System.Exception: boom', '   at Demo.AuthSteps.SignIn(String userName) in D:\agent\_work\Steps\AuthSteps.cs:line 6', '   at System.RuntimeMethodHandle.InvokeMethod(Object target)'].join('\n'));
+  const frames = page.getByRole('list', { name: 'Frames' });
+  await expect(frames.getByRole('button')).toHaveCount(1);
+  await frames.getByRole('button', { name: /SignIn/ }).click();
+  await expect(page.locator('.code-editor:not([hidden]) .cm-activeLine')).toContainText('SignIn');
+});

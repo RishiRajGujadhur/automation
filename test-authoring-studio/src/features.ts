@@ -133,6 +133,7 @@ export const FEATURES: Feature[] = [
   { id: 'reset-layout', label: 'Reset Window Layout', group: 'View', essential: true, vs: 'Window ▸ Reset Window Layout', description: 'The default panel, side bar and tool windows.', commands: ['reset-layout'] },
   { id: 'reopen-tab', label: 'Reopen Closed Tab', group: 'View', essential: false, description: 'Ctrl+Shift+T (desktop) brings back the tabs you closed, newest first.', commands: ['reopen-tab'] },
   { id: 'close-unmodified', label: 'Close Unmodified Tabs', group: 'View', essential: false, description: 'Closes every tab without unsaved changes (pinned and active tabs stay).', commands: ['close-unmodified'] },
+  { id: 'switcher', label: 'Switcher (Ctrl+Tab)', group: 'Navigation', essential: true, vs: 'IDE Navigator (Ctrl+Tab)', description: 'Ctrl+Tab lists the open editors (most recent first) and tool windows; Enter switches.', commands: ['switcher'] },
 ];
 export const GROUPS: FeatureGroup[] = ['Editing', 'Navigation', 'Code intelligence', 'Tool windows', 'Files', 'Git', 'View', 'Debugging', 'Help and productivity'];
 
