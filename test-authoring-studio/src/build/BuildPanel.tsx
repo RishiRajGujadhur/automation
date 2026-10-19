@@ -27,6 +27,10 @@ export default function BuildPanel({ onOpen, onNotice, onClose }: { onOpen: (fil
   const [sort, setSort] = useState<ErrorSort>(null);
   // Output ▸ Find (Visual Studio's Ctrl+F in the Output window): only the lines that match.
   const [outFind, setOutFind] = useState('');
+  // Output ▸ Clear All (Visual Studio): hides what is there; the next build starts a fresh log anyway.
+  const [cleared, setCleared] = useState(0);
+  useEffect(() => { if (b.status === 'running') setCleared(0); }, [b.status]);
+  const outText = featureOn('output-clear') && cleared <= b.output.length ? b.output.slice(cleared) : b.output;
   const output = useRef<HTMLPreElement>(null);
   // The solution's configurations (Debug, Release, …) for the configuration box.
   const [configurations, setConfigurations] = useState<string[]>([]);
@@ -110,8 +114,12 @@ export default function BuildPanel({ onOpen, onNotice, onClose }: { onOpen: (fil
           ) : <p className="subtle debug-empty">{b.status === 'idle' ? 'Build the solution (Ctrl+Shift+B) to see errors and warnings.' : running ? 'Building…' : 'No errors or warnings.'}</p>}
         </Tabs.Content>
         <Tabs.Content value="output" className="debug-body">
-          {featureOn('output-find') && <label className="error-search output-find"><Search size={12} /><input aria-label="Find in Output" placeholder="Find in Output (matching lines)" value={outFind} onChange={(e) => setOutFind(e.target.value)} onKeyDown={(e) => { if (e.key === 'Escape' && outFind) { e.stopPropagation(); setOutFind(''); } }} />{outFind && <small>{b.output.split('\n').filter((l) => l.toLowerCase().includes(outFind.toLowerCase())).length} lines</small>}</label>}
-          <pre className="debug-output" ref={output} aria-label="Build output">{(outFind && featureOn('output-find') ? b.output.split('\n').filter((l) => l.toLowerCase().includes(outFind.toLowerCase())).join('\n') : b.output) || 'No build output yet.'}</pre>
+          <div className="output-tools">
+          {featureOn('output-find') && <label className="error-search output-find"><Search size={12} /><input aria-label="Find in Output" placeholder="Find in Output (matching lines)" value={outFind} onChange={(e) => setOutFind(e.target.value)} onKeyDown={(e) => { if (e.key === 'Escape' && outFind) { e.stopPropagation(); setOutFind(''); } }} />{outFind && <small>{outText.split('\n').filter((l) => l.toLowerCase().includes(outFind.toLowerCase())).length} lines</small>}</label>}
+          {featureOn('output-clear') && <button className="icon-button" aria-label="Clear All" title="Clear All" disabled={!outText} onClick={() => setCleared(b.output.length)}><Eraser size={13} /></button>}
+          {/* output tools */}
+          </div>
+          <pre className="debug-output" ref={output} aria-label="Build output">{(outFind && featureOn('output-find') ? outText.split('\n').filter((l) => l.toLowerCase().includes(outFind.toLowerCase())).join('\n') : outText) || 'No build output yet.'}</pre>
         </Tabs.Content>
       </Tabs.Root>
     </section>
