@@ -106,3 +106,5 @@ export function transposeWords(view: EditorView) {
   view.dispatch({ changes: { from: line.from + a.from, to: line.from + b.to, insert: b.text + between + a.text }, selection: { anchor: line.from + b.to }, userEvent: 'input.transpose' });
   return true;
 }
+
+export { cursorMatchingBracket, selectMatchingBracket } from '@codemirror/commands';

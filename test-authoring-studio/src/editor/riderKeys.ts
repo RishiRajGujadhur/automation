@@ -6,7 +6,7 @@ import { noteUsage, runRider, commandOn } from '../rider/commands';
 import { pushClipboard } from '../rider/clipboardRing';
 import { usageHighlights } from './usages';
 import { moveStatement } from './moveStatement';
-import { deleteHorizontalWhiteSpace, transposeLine } from './textTools';
+import { deleteHorizontalWhiteSpace, transposeLine, cursorMatchingBracket } from './textTools';
 import { gotoChange, rollbackLines } from './changeGutter';
 import { completeStatement } from './completeStatement';
 import { collapseAll, collapseToDefinitions, expandAll } from './foldAll';
@@ -321,6 +321,7 @@ export function riderKeys(file = ''): Extension {
     opens('Mod-Shift-Delete', 'unwrap'),
     opens('Mod-Shift-c', 'copy-path'),
     keyed('Alt-F5', 'next-change', gotoChange(1)),
+    keyed('Mod-]', 'goto-brace', cursorMatchingBracket),
     keyed('Shift-Alt-t', 'transpose-line', transposeLine),
     keyed('Mod-k Mod-\\', 'delete-whitespace', deleteHorizontalWhiteSpace),
     keyed('Mod-Shift-NumpadAdd', 'expand-all', expandAll),
