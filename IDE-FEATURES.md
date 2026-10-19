@@ -100,6 +100,7 @@ has it on by default, so the desktop app starts with it on. The others start off
 | X90 | Tab: Reveal in Explorer | VS 2026 | yes | ✅ 2026-10-20 |
 | X91 | Search history | VS Code / VS 2026 | yes | ✅ 2026-10-20 |
 | X92 | Search: Collapse / Expand All | VS Code / VS 2026 | yes | ✅ 2026-10-20 |
+| X93 | Search: Copy All Results | VS Code | yes | ✅ 2026-10-20 |
 
 ## Progress log
 - 2026-10-20 X1: Sort Lines: the selected lines (or the whole file) in natural, case-insensitive order, blank lines last. Third-batch plumbing: src/rider/more.ts, src/editor/textTools.ts, IDE-FEATURES.md.
@@ -194,3 +195,4 @@ has it on by default, so the desktop app starts with it on. The others start off
 - 2026-10-20 X90: Tab menu shows the file in the Explorer
 - 2026-10-20 X91: Up/Down recall earlier searches
 - 2026-10-20 X92: Toggle every result file
+- 2026-10-20 X93: file / line / text to the clipboard

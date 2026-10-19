@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { ChevronDown, ChevronRight, CaseSensitive, WholeWord, Regex, Replace, MoreHorizontal, RefreshCw, X, ChevronsDownUp, ChevronsUpDown } from 'lucide-react';
+import { ChevronDown, ChevronRight, CaseSensitive, WholeWord, Regex, Replace, MoreHorizontal, RefreshCw, X, ChevronsDownUp, ChevronsUpDown, ClipboardCopy } from 'lucide-react';
 import { api } from '../api';
-import { useLocalState } from '../ui';
+import { useLocalState, copyText } from '../ui';
 import { featureOn } from '../features';
 import { useConfirm } from '../radix2';
 import { fileType } from '../files/fileTypes';
@@ -81,6 +81,7 @@ export default function SearchView({ initialReplace, onOpen, onNotice, onChanged
         <div className="se-tools">
           <button className="icon-button" aria-label="Refresh search" title="Refresh" onClick={search}><RefreshCw size={14} className={busy ? 'spin' : ''} /></button>
           {featureOn('search-collapse') && result && result.files.length > 0 && <button className="icon-button" aria-label={closed.size === result.files.length ? 'Expand All' : 'Collapse All'} title={closed.size === result.files.length ? 'Expand All' : 'Collapse All'} onClick={() => setClosed(closed.size === result.files.length ? new Set() : new Set(result.files.map((f) => f.file)))}>{closed.size === result.files.length ? <ChevronsUpDown size={14} /> : <ChevronsDownUp size={14} />}</button>}
+          {featureOn('search-copy') && result && result.total > 0 && <button className="icon-button" aria-label="Copy All Results" title="Copy All (file:line: text)" onClick={() => void copyText(result.files.map((f) => [f.file, ...f.matches.map((m) => `  ${m.line}: ${m.preview.trim()}`)].join('\n')).join('\n\n')).then((ok) => onNotice(ok ? `Copied ${result.total} result${result.total === 1 ? '' : 's'}.` : 'Clipboard unavailable.'))}><ClipboardCopy size={14} /></button>}
           <button className="icon-button" aria-label="Clear search results" title="Clear" onClick={() => { setQuery(''); setReplace(''); setResult(undefined); }}><X size={14} /></button>
         </div>
       </div>
