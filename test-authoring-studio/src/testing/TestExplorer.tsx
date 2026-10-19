@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState, type ReactNode } from 'react';
-import { ChevronDown, ChevronRight, Play, PlayCircle, Bug, RefreshCw, Square, CircleCheck, CircleX, CircleSlash, Circle, Loader, Search, X, FileText, FlaskConical, Boxes, RotateCcw, Navigation, ListPlus, ListMinus, Trash2, ShieldCheck, Copy } from 'lucide-react';
+import { ChevronDown, ChevronRight, Play, PlayCircle, Bug, RefreshCw, Square, CircleCheck, CircleX, CircleSlash, Circle, Loader, Search, X, FileText, FlaskConical, Boxes, RotateCcw, Navigation, ListPlus, ListMinus, Trash2, ShieldCheck, Copy, ChevronsDownUp, ChevronsUpDown } from 'lucide-react';
 import { RowMenu, useLocalState, copyText } from '../ui';
 import { groupTests, type Group, type GroupBy, matchTest, testDetails } from './grouping';
 import { featureOn } from '../features';
@@ -80,6 +80,9 @@ export default function TestExplorer({ revision, onOpen, onDebug, onNotice }: { 
     ...Object.keys(playlists).filter((n) => n !== playlist).map((n) => ({ label: `Add to Playlist ${n}`, icon: ListPlus, onSelect: () => addTo(n, ts.map((t) => t.id)) })),
     ...(playlist && playlists[playlist] ? [{ label: `Remove from Playlist ${playlist}`, icon: ListMinus, onSelect: () => removeFrom(playlist, ts.map((t) => t.id)) }] : []),
   ];
+  // Collapse All / Expand All (Visual Studio's Test Explorer toolbar).
+  const groupKeys = (gs: Group[]): string[] => gs.flatMap((g) => [g.key, ...groupKeys(g.children)]);
+  const allCollapsed = groups.length > 0 && groupKeys(groups).every((k) => collapsed.has(k));
   const toggle = (k: string) => setCollapsed((prev) => { const n = new Set(prev); if (n.has(k)) n.delete(k); else n.add(k); return n; });
   const groupRow = (g: Group, depth: number): ReactNode => {
     const open = !!query || !collapsed.has(g.key);
@@ -134,6 +137,7 @@ export default function TestExplorer({ revision, onOpen, onDebug, onNotice }: { 
           <button className="icon-button" aria-label="Debug selected test" title="Debug" disabled={running || selectedTests.length !== 1} onClick={() => selectedTests[0] && onDebug(selectedTests[0])}><Bug size={14} /></button>
           <button className="icon-button" aria-label="Analyze Code Coverage for All Tests" title="Analyze Code Coverage for All Tests" disabled={running || !tests.length} onClick={() => void runTests('all', configuration, true).catch((e) => onNotice((e as Error).message))}><ShieldCheck size={14} /></button>
           <button className="icon-button" aria-label="Run Failed Tests" title="Run Failed Tests" disabled={running || !failed.length} onClick={() => void start(failed)}><RotateCcw size={14} /></button>
+          {featureOn('test-collapse-all') && <button className="icon-button" aria-label={allCollapsed ? 'Expand All' : 'Collapse All'} title={allCollapsed ? 'Expand All' : 'Collapse All'} disabled={!groups.length} onClick={() => setCollapsed(allCollapsed ? new Set() : new Set(groupKeys(groups)))}>{allCollapsed ? <ChevronsUpDown size={14} /> : <ChevronsDownUp size={14} />}</button>}
           {running ? <button className="icon-button" aria-label="Cancel test run" title="Cancel" onClick={() => void cancelTests()}><Square size={13} /></button>
             : <button className="icon-button" aria-label="Refresh tests" title="Refresh (rediscover)" onClick={refresh}><RefreshCw size={14} className={loading ? 'spin' : ''} /></button>}
         </div>

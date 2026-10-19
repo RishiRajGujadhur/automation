@@ -81,6 +81,7 @@ has it on by default, so the desktop app starts with it on. The others start off
 | X71 | Test Explorer: Group By | VS 2026 | yes | ✅ 2026-10-20 |
 | X72 | Test Explorer: search filters | VS 2026 | yes | ✅ 2026-10-20 |
 | X73 | Test Explorer: Copy details | VS 2026 | yes | ✅ 2026-10-20 |
+| X75 | Test Explorer: Collapse / Expand All | VS 2026 | yes | ✅ 2026-10-20 |
 
 ## Progress log
 - 2026-10-20 X1: Sort Lines: the selected lines (or the whole file) in natural, case-insensitive order, blank lines last. Third-batch plumbing: src/rider/more.ts, src/editor/textTools.ts, IDE-FEATURES.md.
@@ -156,3 +157,4 @@ has it on by default, so the desktop app starts with it on. The others start off
 - 2026-10-20 X71: Project/Class/Outcome/Duration grouping
 - 2026-10-20 X72: outcome:/class:/project:… terms, quotes, -exclusions
 - 2026-10-20 X73: Copy test detail summary
+- 2026-10-20 X75: Toolbar toggle for all groups

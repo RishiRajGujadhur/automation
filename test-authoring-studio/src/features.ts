@@ -171,6 +171,7 @@ export const FEATURES: Feature[] = [
   { id: 'test-group-by', label: 'Test Explorer: Group By', group: 'Tool windows', essential: true, vs: 'Test Explorer ▸ Group By', description: 'Group tests by project and class, class / feature, outcome or duration.' },
   { id: 'test-search-filters', label: 'Test Explorer: search filters', group: 'Tool windows', essential: true, vs: 'Test Explorer filter syntax', description: 'outcome:, class:, project:, feature:, name:, file: terms, "quoted phrases" and -exclusions.' },
   { id: 'test-copy', label: 'Test Explorer: Copy details', group: 'Tool windows', essential: true, vs: 'Test Explorer ▸ Copy', description: 'A test\'s context menu copies its name, outcome, duration, message and stack trace.' },
+  { id: 'test-collapse-all', label: 'Test Explorer: Collapse / Expand All', group: 'Tool windows', essential: true, vs: 'Test Explorer ▸ Collapse All', description: 'A toolbar button collapses or expands every group.' },
 ];
 export const GROUPS: FeatureGroup[] = ['Editing', 'Navigation', 'Code intelligence', 'Tool windows', 'Files', 'Git', 'Gherkin', 'View', 'Debugging', 'Help and productivity'];
 
