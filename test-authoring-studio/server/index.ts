@@ -39,7 +39,7 @@ import { Builder } from './build.js';
 import { findInFiles, replaceInFiles } from './search.js';
 import { values, render, parameterCount, replaceAttributePattern } from './stepRename.js';
 import { installed as nugetInstalled, updates as nugetUpdates, search as nugetSearch, versions as nugetVersions, install as nugetInstall, uninstall as nugetUninstall } from './nuget.js';
-import { status as gitStatus, stage as gitStage, unstage as gitUnstage, discard as gitDiscard, commit as gitCommit, headInfo, log as gitLog, branches as gitBranches, checkout as gitCheckout, createBranch as gitCreateBranch, sync as gitSync, merge as gitMerge, blame as gitBlame, clone as gitClone, shelves, shelve, unshelve, deleteShelf, lineHistory, commitDetails, graphLog, fileAt } from './git.js';
+import { status as gitStatus, stage as gitStage, unstage as gitUnstage, discard as gitDiscard, commit as gitCommit, headInfo, log as gitLog, branches as gitBranches, checkout as gitCheckout, createBranch as gitCreateBranch, sync as gitSync, merge as gitMerge, blame as gitBlame, clone as gitClone, shelves, shelve, unshelve, deleteShelf, lineHistory, commitDetails, graphLog, fileAt, commitAction } from './git.js';
 import { LanguageService } from './langService.js';
 import type { Index } from '../src/types.js';
 import { readSettings, writeSettings, settingsSchema, tracesDir, spySnapshotsDir } from './settings.js';
@@ -601,6 +601,12 @@ app.get('/api/git/lines', async (req, res) => {
   res.json(await lineHistory(config.repositoryRoot, q.file, q.start, Math.max(q.start, q.end)));
 });
 app.get('/api/git/commit', async (req, res) => res.json(await commitDetails(config.repositoryRoot, z.string().max(40).parse(req.query.hash))));
+app.post('/api/git/commit-action', async (req, res) => {
+  const b = z.object({ hash: z.string().regex(/^[0-9a-f]{7,40}$/i), action: z.string().max(40), name: z.string().max(100).optional(), mode: z.enum(['soft', 'mixed', 'hard']).optional() }).parse(req.body);
+  const output = await commitAction(config.repositoryRoot, b.hash, b.action, b);
+  rescanSoon(300);
+  res.json({ output });
+});
 app.get('/api/git/graph', async (_req, res) => res.json(await graphLog(config.repositoryRoot)));
 app.get('/api/git/at', async (req, res) => {
   const q = z.object({ file: z.string().min(1).max(400), ref: z.string().min(1).max(200) }).parse(req.query);

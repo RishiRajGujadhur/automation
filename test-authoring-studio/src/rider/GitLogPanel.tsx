@@ -4,6 +4,9 @@ import CodeMirror from '@uiw/react-codemirror';
 import { StreamLanguage } from '@codemirror/language';
 import { diff as diffMode } from '@codemirror/legacy-modes/mode/diff';
 import { api } from '../api';
+import { copyText } from '../ui';
+import { featureOn } from '../features';
+import { GIT_CHANGED_EVENT, FILES_CHANGED_EVENT } from '../editor/events';
 import { useEditorTheme } from '../themes';
 
 type Row = { graph: string; hash?: string; author?: string; when?: string; refs?: string; subject?: string };
@@ -12,13 +15,24 @@ const SETUP = { foldGutter: false, autocompletion: false };
 const DIFF = [StreamLanguage.define(diffMode)];
 
 /** Git Log tool window (Rider, Alt+9): every branch's commits with the graph; select one for its message, files and patch. */
-export default function GitLogPanel({ onOpen, onClose }: { onOpen: (file: string) => void; onClose: () => void }) {
+export default function GitLogPanel({ onOpen, onClose, onNotice }: { onOpen: (file: string) => void; onClose: () => void; onNotice: (m: string) => void }) {
   const theme = useEditorTheme();
   const [rows, setRows] = useState<Row[]>();
   const [error, setError] = useState('');
   const [query, setQuery] = useState('');
   const [selected, setSelected] = useState<string>();
   const [commit, setCommit] = useState<Commit>();
+  /** Runs a commit action on the server, then refreshes the log (and editors / Git views when files changed). */
+  const act = async (action: string, extra: Record<string, string> = {}, done = '') => {
+    if (!commit) return;
+    try {
+      const r = await api<{ output: string }>('/git/commit-action', { hash: commit.hash, action, ...extra });
+      onNotice(done || r.output || 'Done.');
+      window.dispatchEvent(new Event(GIT_CHANGED_EVENT));
+      window.dispatchEvent(new CustomEvent(FILES_CHANGED_EVENT, { detail: commit.files.map((f) => f.file) }));
+      void load();
+    } catch (e) { onNotice((e as Error).message); }
+  };
   const load = () => api<Row[]>('/git/graph').then((r) => { setRows(r); setError(''); }, (e) => setError((e as Error).message));
   useEffect(() => { void load(); }, []);
   useEffect(() => { setCommit(undefined); if (selected) api<Commit>(`/git/commit?hash=${selected}`).then(setCommit, (e) => setError((e as Error).message)); }, [selected]);
@@ -53,6 +67,10 @@ export default function GitLogPanel({ onOpen, onClose }: { onOpen: (file: string
             <>
               <p className="git-commit-head"><strong>{commit.message.split('\n')[0]}</strong><br /><small>{commit.hash.slice(0, 10)} · {commit.author} &lt;{commit.email}&gt; · {new Date(commit.date).toLocaleString()}</small></p>
               {commit.message.includes('\n') && <pre className="git-commit-body">{commit.message.split('\n').slice(1).join('\n').trim()}</pre>}
+              <div className="git-commit-actions" role="toolbar" aria-label="Commit actions">
+              {/* commit actions */}
+              {featureOn('git-copy-revision') && <button className="button" onClick={() => void copyText(commit.hash).then((ok) => onNotice(ok ? `Copied ${commit.hash.slice(0, 10)}.` : 'Clipboard unavailable.'))}>Copy Revision</button>}
+              </div>
               <ul className="git-commit-files" aria-label="Changed files">
                 {commit.files.map((f) => <li key={f.file}><span className={`git-status s-${f.status}`}>{f.status}</span> <button className="link-button" onClick={() => onOpen(f.file)}>{f.file}</button></li>)}
               </ul>

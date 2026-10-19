@@ -258,3 +258,20 @@ export async function fileAt(root: string, ref: string, file: string) {
   const { top, prefix } = await locate(root);
   try { return await git(top, ['show', `${ref}:${toRepo(prefix, file)}`]); } catch { return null; }
 }
+
+/**
+ * Git Log commit actions (Rider's Log context menu; Visual Studio's Git Repository window): each runs one git command
+ * on a commit of the log. Names are checked like git's own rules; destructive ones are confirmed by the client.
+ */
+const REF_NAME = /^(?!-)(?!.*\.\.)(?!.*[\s~^:?*\[\\])[\w./-]{1,100}(?<![./])$/;
+const refName = (n?: string) => { if (!n || !REF_NAME.test(n)) throw new Error('Use a branch / tag name without spaces or special characters.'); return n; };
+export const COMMIT_ACTIONS = {
+} as Record<string, (top: string, hash: string, o: { name?: string; mode?: string }) => Promise<string>>;
+export async function commitAction(root: string, hash: string, action: string, o: { name?: string; mode?: string }) {
+  if (!/^[0-9a-f]{7,40}$/i.test(hash)) throw new Error('Unknown commit.');
+  const run = COMMIT_ACTIONS[action];
+  if (!run) throw new Error('Unknown action.');
+  const { top } = await locate(root);
+  return (await run(top, hash, o)).trim();
+}
+void refName;

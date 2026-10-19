@@ -26,7 +26,7 @@ export default function RiderToolWindow({ tool, onOpen, onNotice, onClose }: { t
   if (tool === 'problems') return <ProblemsPanel onOpen={onOpen} onClose={onClose} />;
   if (tool === 'terminal') return <Suspense fallback={null}><TerminalPanel onClose={onClose} /></Suspense>;
   if (tool === 'shelf') return <ShelfPanel onOpen={(f) => onOpen(f, 1, 1)} onNotice={onNotice} onClose={onClose} />;
-  if (tool === 'gitlog') return <GitLogPanel onOpen={(f) => onOpen(f, 1, 1)} onClose={onClose} />;
+  if (tool === 'gitlog') return <GitLogPanel onOpen={(f) => onOpen(f, 1, 1)} onNotice={onNotice} onClose={onClose} />;
   if (tool === 'notifications') return <NotificationsPanel onClose={onClose} />;
   return null;
 }
