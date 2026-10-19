@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { keepTab } from './files/tabs';
 import {
   ChevronDown, ChevronRight, Folder, FolderOpen, FileCode2, FileText, FileCog, Braces, Plus, Search, X, Copy, ChevronsDownUp, ChevronsUpDown,
-  Eye, Package, Boxes, Link2, LocateFixed, PencilLine, Files, Layers, SquareStack, Scissors, ClipboardPaste, Trash2, TextCursorInput, Focus, House,
+  Eye, Package, Boxes, Link2, LocateFixed, PencilLine, Files, Layers, SquareStack, Scissors, ClipboardPaste, Trash2, TextCursorInput, Focus, House, FilePlus,
 } from 'lucide-react';
 import { fileType } from './files/fileTypes';
 import { featureOn } from './features';
@@ -119,6 +119,14 @@ export default function SolutionExplorer({ features, revision, activeFile, query
       onBlur={(e) => void commitRename(path, e.currentTarget.value, folder)}
     />
   );
+  /** Add ▸ New File… (Visual Studio's Add New Item; Rider's New ▸ File): a name, or a sub/path, in the folder. */
+  const newFile = async (folder: string) => {
+    const name = window.prompt(`New file in ${folder || 'the repository root'} (a name, or sub/folder/name):`, '')?.trim().replace(/\\/g, '/');
+    if (!name) return;
+    const file = join(folder, name);
+    try { await api('/file/create', { file, source: '' }); loadSolution(); onOpenFile(file); }
+    catch (e) { onNotice?.((e as Error).message); }
+  };
   /** Edit entries shared by file and folder context menus. */
   const editItems = (path: string, folder: boolean) => onFileOp ? [
     'separator' as const,
@@ -306,6 +314,7 @@ export default function SolutionExplorer({ features, revision, activeFile, query
             { label: 'Expand all folders', icon: ChevronsUpDown, onSelect: () => setCollapsed(new Set()) },
             'separator' as const,
             { label: 'Copy folder path', icon: Copy, onSelect: () => copyText(n.path) },
+            ...(featureOn('explorer-new-file') && !browserSolution ? [{ label: 'New File…', icon: FilePlus, onSelect: () => void newFile(n.path) }] : []),
             ...(featureOn('explorer-scope') ? [{ label: 'Scope to This', icon: Focus, onSelect: () => setScope(n.path) }] : []),
             ...editItems(n.path, true),
           ]}>

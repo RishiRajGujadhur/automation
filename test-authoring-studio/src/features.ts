@@ -160,6 +160,7 @@ export const FEATURES: Feature[] = [
   { id: 'todo-tokens', label: 'Custom TODO patterns', group: 'Editing', essential: false, vs: 'Task List ▸ Tokens', description: 'Choose which comment keywords (TODO, FIXME, NOTE…) are highlighted.', commands: ['todo-tokens'] },
   { id: 'right-margin', label: 'Right margin guide', group: 'View', essential: false, vs: 'Guidelines', description: 'A thin vertical guide after column 120 (configurable).', commands: ['right-margin'] },
   { id: 'explorer-scope', label: 'Explorer: Scope to This', group: 'Files', essential: true, vs: 'Solution Explorer ▸ Scope to This', description: 'A folder\'s context menu narrows the Explorer to it; Home shows everything again.' },
+  { id: 'explorer-new-file', label: 'Explorer: New File…', group: 'Files', essential: true, vs: 'Add ▸ New Item', description: 'A folder\'s context menu creates a file (any type, sub-folders allowed) and opens it.' },
 ];
 export const GROUPS: FeatureGroup[] = ['Editing', 'Navigation', 'Code intelligence', 'Tool windows', 'Files', 'Git', 'Gherkin', 'View', 'Debugging', 'Help and productivity'];
 
