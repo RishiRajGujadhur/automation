@@ -325,3 +325,27 @@ export function addExamplesTable(view: EditorView) {
   view.dispatch({ changes: { from: at, insert }, selection: { anchor: at + insert.length - rows[1].length + cellStart(rows[1], 1) }, scrollIntoView: true, userEvent: 'input' });
   return true;
 }
+
+/** Toggle Tag: adds the tag to the scenario at the caret, or removes it when it is there. */
+export function toggleTag(tag: string) {
+  return (view: EditorView) => {
+    const { state } = view;
+    const doc = state.doc;
+    const t = tag.startsWith('@') ? tag : `@${tag}`;
+    if (!/^@[^\s@]+$/.test(t)) return false;
+    const b = scenarioBlock(state, doc.lineAt(state.selection.main.head).number);
+    if (!b) return false;
+    const esc = t.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    for (let n = b.first; n < b.head; n++) {
+      const line = doc.line(n);
+      const m = new RegExp(`(^|\\s)${esc}(?=\\s|$)`).exec(line.text);
+      if (!m) continue;
+      const rest = (line.text.slice(0, m.index) + line.text.slice(m.index + m[0].length)).trimEnd();
+      view.dispatch(rest.trim() ? { changes: { from: line.from, to: line.to, insert: rest }, userEvent: 'delete' } : { changes: { from: line.from, to: Math.min(doc.length, line.to + state.lineBreak.length) }, userEvent: 'delete' });
+      return true;
+    }
+    if (b.first < b.head) { const last = doc.line(b.head - 1); view.dispatch({ changes: { from: last.to, insert: ` ${t}` }, userEvent: 'input' }); }
+    else { const head = doc.line(b.head); view.dispatch({ changes: { from: head.from, insert: `${/^\s*/.exec(head.text)![0]}${t}${state.lineBreak}` }, userEvent: 'input' }); }
+    return true;
+  };
+}

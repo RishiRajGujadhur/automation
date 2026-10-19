@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { EditorState, type TransactionSpec } from '@codemirror/state';
 import { EditorView } from '@codemirror/view';
-import { cycleStepKeyword, scenarioToOutline, tableInsertRow, tableAddColumn, tableDeleteColumn, tableSortByColumn, testFilter, selectScenario, renameTag, extractExamplesParameter, outlineToScenario, duplicateScenario, moveScenario, extractBackground, addExamplesTable } from '../src/editor/gherkinTools';
+import { cycleStepKeyword, scenarioToOutline, tableInsertRow, tableAddColumn, tableDeleteColumn, tableSortByColumn, testFilter, selectScenario, renameTag, extractExamplesParameter, outlineToScenario, duplicateScenario, moveScenario, extractBackground, addExamplesTable, toggleTag } from '../src/editor/gherkinTools';
 
 /** Runs an editor command on `doc` with the selection between « and » (or a caret at ‸); with `caret`, the result marks the caret with ¦. */
 function run(doc: string, cmd: (v: EditorView) => boolean, caret = false) {
@@ -91,5 +91,11 @@ describe('Gherkin tools (IDE-FEATURES X49…)', () => {
   it('X100 Add Examples Table: a column per parameter, caret in the first cell', () => {
     expect(run('Scenario Outline: Sign in as <role>‸\n  Given "<user>" with <role>', addExamplesTable, true)).toBe('Scenario Outline: Sign in as <role>\n  Given "<user>" with <role>\n\n  Examples:\n    | role | user |\n    | ¦     |      |');
     expect(run('Scenario: S‸\n  Given <x>', addExamplesTable)).toBe('Scenario: S\n  Given <x>');
+  });
+  it('X101 Toggle Tag: add on the tag line or above the title; again removes it', () => {
+    expect(run('  Scenario: S‸', toggleTag('wip'))).toBe('  @wip\n  Scenario: S');
+    expect(run('  @a\n  Scenario: S‸', toggleTag('@b'))).toBe('  @a @b\n  Scenario: S');
+    expect(run('  @a @wip\n  Scenario: S‸', toggleTag('wip'))).toBe('  @a\n  Scenario: S');
+    expect(run('  @wip\n  Scenario: S‸\n    Given x', toggleTag('wip'))).toBe('  Scenario: S\n    Given x');
   });
 });

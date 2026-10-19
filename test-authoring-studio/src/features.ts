@@ -198,6 +198,7 @@ export const FEATURES: Feature[] = [
   { id: 'move-scenario-down', label: 'Move Scenario Down', group: 'Gherkin', essential: true, description: 'Swaps the scenario at the caret with the one below.', commands: ['move-scenario-down'] },
   { id: 'extract-background', label: 'Extract Background', group: 'Gherkin', essential: true, description: 'The Given steps every scenario starts with move into the Background.', commands: ['extract-background'] },
   { id: 'add-examples', label: 'Add Examples Table', group: 'Gherkin', essential: true, description: 'A Scenario Outline gets an Examples table with a column per <parameter>.', commands: ['add-examples'] },
+  { id: 'toggle-tag', label: 'Toggle Tag', group: 'Gherkin', essential: true, description: 'Adds a tag to the scenario at the caret, or removes it.', commands: ['toggle-tag'] },
 ];
 export const GROUPS: FeatureGroup[] = ['Editing', 'Navigation', 'Code intelligence', 'Tool windows', 'Files', 'Git', 'Gherkin', 'View', 'Debugging', 'Help and productivity'];
 
