@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { EditorState, type TransactionSpec } from '@codemirror/state';
 import { EditorView } from '@codemirror/view';
-import { cycleStepKeyword, scenarioToOutline, tableInsertRow, tableAddColumn, tableDeleteColumn, tableSortByColumn, testFilter } from '../src/editor/gherkinTools';
+import { cycleStepKeyword, scenarioToOutline, tableInsertRow, tableAddColumn, tableDeleteColumn, tableSortByColumn, testFilter, selectScenario } from '../src/editor/gherkinTools';
 
 /** Runs an editor command on `doc` with the selection between « and » (or a caret at ‸); with `caret`, the result marks the caret with ¦. */
 function run(doc: string, cmd: (v: EditorView) => boolean, caret = false) {
@@ -48,5 +48,12 @@ describe('Gherkin tools (IDE-FEATURES X49…)', () => {
     const state = EditorState.create({ doc: 'Feature: User login\n\n  Scenario: Sign in with valid credentials (happy path)\n    Given x' });
     expect(testFilter(state, 4)).toBe('dotnet test --filter "FullyQualifiedName~UserLoginFeature.SignInWithValidCredentialsHappyPath"');
     expect(testFilter(state, 1)).toBe('dotnet test --filter "FullyQualifiedName~UserLoginFeature"');
+  });
+  it('X56 Select Scenario: tags through Examples', () => {
+    const doc = 'Feature: F\n  @a\n  Scenario Outline: S\n    Given "<x>"‸\n    Examples:\n      | x |\n      | 1 |\n\n  Scenario: T\n    Given y';
+    let state = EditorState.create({ doc: doc.replace('‸', ''), selection: { anchor: doc.indexOf('‸') } });
+    const view = { get state() { return state; }, dispatch: (spec: TransactionSpec) => { state = state.update(spec).state; } };
+    selectScenario(view as unknown as EditorView);
+    expect(state.sliceDoc(state.selection.main.from, state.selection.main.to)).toBe('  @a\n  Scenario Outline: S\n    Given "<x>"\n    Examples:\n      | x |\n      | 1 |');
   });
 });

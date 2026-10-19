@@ -139,3 +139,12 @@ export function testFilter(state: EditorState, lineNo: number) {
   const title = b && /:\s*(.*)$/.exec(state.doc.line(b.head).text)![1].trim();
   return `dotnet test --filter "FullyQualifiedName~${toIdentifier(feature)}Feature${title ? `.${toIdentifier(title)}` : ''}"`;
 }
+
+/** Select Scenario: its tags, keyword line, steps and Examples. */
+export function selectScenario(view: EditorView) {
+  const { state } = view;
+  const b = scenarioBlock(state, state.doc.lineAt(state.selection.main.head).number);
+  if (!b) return false;
+  view.dispatch({ selection: EditorSelection.range(state.doc.line(b.first).from, state.doc.line(b.end).to), scrollIntoView: true });
+  return true;
+}

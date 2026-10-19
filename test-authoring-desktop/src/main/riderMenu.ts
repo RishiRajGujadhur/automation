@@ -134,6 +134,7 @@ const ROWS: Record<'edit' | 'view' | 'navigate' | 'code' | 'tools' | 'help', Row
     ['Table: Delete Column', 'table-delete-column'],
     ['Table: Sort by Column', 'table-sort'],
     ['Copy Test Filter', 'copy-test-filter'],
+    ['Select Scenario', 'select-scenario'],
   ],
   tools: [
     ['Run Anything… (Ctrl twice)', 'run-anything'],
