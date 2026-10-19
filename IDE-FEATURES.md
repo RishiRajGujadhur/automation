@@ -106,6 +106,7 @@ has it on by default, so the desktop app starts with it on. The others start off
 | X96 | Menu groups (Code ▸ Gherkin) | VS 2026 / Rider | yes | ✅ 2026-10-20 |
 | X97 | Move Scenario Up | Rider | yes | ✅ 2026-10-20 |
 | X98 | Move Scenario Down | Rider | yes | ✅ 2026-10-20 |
+| X99 | Extract Background | Rider / SpecFlow | yes | ✅ 2026-10-20 |
 
 ## Progress log
 - 2026-10-20 X1: Sort Lines: the selected lines (or the whole file) in natural, case-insensitive order, blank lines last. Third-batch plumbing: src/rider/more.ts, src/editor/textTools.ts, IDE-FEATURES.md.
@@ -206,3 +207,4 @@ has it on by default, so the desktop app starts with it on. The others start off
 - 2026-10-20 X96: Gherkin commands in a submenu (web + desktop)
 - 2026-10-20 X97: Swap with the scenario above
 - 2026-10-20 X98: Swap with the scenario below
+- 2026-10-20 X99: Common leading Givens into Background

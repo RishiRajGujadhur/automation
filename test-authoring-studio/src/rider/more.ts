@@ -6,7 +6,7 @@ import { renamePath } from '../files/provider';
 import { movedPath } from '../files/tabs';
 import { DEFAULT_TODO_TOKENS } from '../editor/todoHighlight';
 import { copyText as copyFilterText } from '../ui';
-import { cycleStepKeyword, scenarioToOutline, tableInsertRow, tableAddColumn, tableDeleteColumn, tableSortByColumn, testFilter, selectScenario, extractExamplesParameter, outlineToScenario, duplicateScenario, moveScenario } from '../editor/gherkinTools';
+import { cycleStepKeyword, scenarioToOutline, tableInsertRow, tableAddColumn, tableDeleteColumn, tableSortByColumn, testFilter, selectScenario, extractExamplesParameter, outlineToScenario, duplicateScenario, moveScenario, extractBackground } from '../editor/gherkinTools';
 import { unsavedFiles } from '../editor/autosave';
 import { getTabs, closeTab } from '../files/tabs';
 import { reopenClosed } from '../files/tabs';
@@ -97,5 +97,6 @@ export function moreCommands(h: MoreHelpers): RiderCommand[] {
     { id: 'duplicate-scenario', label: 'Duplicate Scenario', menu: 'Code', submenu: 'Gherkin', run: h.inEditor((v) => duplicateScenario(v) || h.notice('Put the caret in a scenario.')) },
     { id: 'move-scenario-up', label: 'Move Scenario Up', menu: 'Code', submenu: 'Gherkin', run: h.inEditor(moveScenario(-1)) },
     { id: 'move-scenario-down', label: 'Move Scenario Down', menu: 'Code', submenu: 'Gherkin', run: h.inEditor(moveScenario(1)) },
+    { id: 'extract-background', label: 'Extract Background', menu: 'Code', submenu: 'Gherkin', run: h.inEditor(extractBackground) },
   ];
 }

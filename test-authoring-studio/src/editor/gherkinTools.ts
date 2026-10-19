@@ -263,3 +263,47 @@ export function moveScenario(dir: 1 | -1) {
     return true;
   };
 }
+
+/**
+ * Extract Background: the Given steps every scenario starts with move into the Background (created when there is
+ * none). A scenario left starting with And / But gets Given.
+ */
+export function extractBackground(view: EditorView) {
+  const { state } = view;
+  const doc = state.doc;
+  const heads: number[] = [];
+  for (let n = 1; n <= doc.lines; n++) if (SCENARIO.test(doc.line(n).text)) heads.push(n);
+  if (heads.length < 2) return false;
+  const stepsOf = (head: number) => { const out: number[] = []; for (let k = head + 1; k <= doc.lines; k++) { const t = doc.line(k).text; if (!t.trim()) continue; if (!STEP.test(t)) break; out.push(k); } return out; };
+  const lists = heads.map(stepsOf);
+  const text = (n: number) => doc.line(n).text.trim();
+  let n = 0;
+  for (;;) {
+    if (!lists.every((l) => l.length > n && text(l[n]) === text(lists[0][n]))) break;
+    const kw = STEP.exec(doc.line(lists[0][n]).text)![2];
+    if (n === 0 ? kw !== 'Given' : !['Given', 'And', 'But'].includes(kw)) break;
+    n++;
+  }
+  if (!n) return false;
+  const changes: ChangeSpec[] = [];
+  for (const l of lists) {
+    for (const k of l.slice(0, n)) changes.push({ from: doc.line(k).from, to: Math.min(doc.length, doc.line(k).to + state.lineBreak.length) });
+    const next = l[n];
+    if (next !== undefined) { const m = /^(\s*)(And|But)(?=\s)/.exec(doc.line(next).text); if (m) changes.push({ from: doc.line(next).from + m[1].length, to: doc.line(next).from + m[0].length, insert: 'Given' }); }
+  }
+  const moved = lists[0].slice(0, n).map((k) => doc.line(k).text);
+  let bg = 0;
+  for (let k = 1; k < heads[0]; k++) if (/^\s*Background:/.test(doc.line(k).text)) bg = k;
+  if (bg) {
+    const own = stepsOf(bg);
+    const last = own.length ? own[own.length - 1] : bg;
+    if (own.length) moved[0] = moved[0].replace(/^(\s*)Given/, '$1And');
+    changes.push({ from: doc.line(last).to, insert: state.lineBreak + moved.join(state.lineBreak) });
+  } else {
+    const first = scenarioBlock(state, heads[0])!.first;
+    const indent = /^\s*/.exec(doc.line(heads[0]).text)![0];
+    changes.push({ from: doc.line(first).from, insert: `${indent}Background:${state.lineBreak}${moved.join(state.lineBreak)}${state.lineBreak}${state.lineBreak}` });
+  }
+  view.dispatch({ changes, userEvent: 'input' });
+  return true;
+}

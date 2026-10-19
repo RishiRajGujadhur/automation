@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { EditorState, type TransactionSpec } from '@codemirror/state';
 import { EditorView } from '@codemirror/view';
-import { cycleStepKeyword, scenarioToOutline, tableInsertRow, tableAddColumn, tableDeleteColumn, tableSortByColumn, testFilter, selectScenario, renameTag, extractExamplesParameter, outlineToScenario, duplicateScenario, moveScenario } from '../src/editor/gherkinTools';
+import { cycleStepKeyword, scenarioToOutline, tableInsertRow, tableAddColumn, tableDeleteColumn, tableSortByColumn, testFilter, selectScenario, renameTag, extractExamplesParameter, outlineToScenario, duplicateScenario, moveScenario, extractBackground } from '../src/editor/gherkinTools';
 
 /** Runs an editor command on `doc` with the selection between « and » (or a caret at ‸); with `caret`, the result marks the caret with ¦. */
 function run(doc: string, cmd: (v: EditorView) => boolean, caret = false) {
@@ -80,5 +80,12 @@ describe('Gherkin tools (IDE-FEATURES X49…)', () => {
     const top = 'Feature: F\n  Scenario: A‸\n    Given a\n  @t\n  Scenario: B\n    Given x';
     expect(run(top, moveScenario(1))).toBe('Feature: F\n  @t\n  Scenario: B\n    Given x\n  Scenario: A\n    Given a');
     expect(run(top, moveScenario(-1))).toBe(top.replace('‸', ''));
+  });
+  it('X99 Extract Background: common leading Given steps', () => {
+    const doc = 'Feature: F\n\n  Scenario: A\n    Given the app is open\n    And the user is admin\n    When a\n\n  @t\n  Scenario: B\n    Given the app is open\n    And the user is guest\n    Then b';
+    expect(run(doc, extractBackground)).toBe('Feature: F\n\n  Background:\n    Given the app is open\n\n  Scenario: A\n    Given the user is admin\n    When a\n\n  @t\n  Scenario: B\n    Given the user is guest\n    Then b');
+    const withBg = 'Feature: F\n  Background:\n    Given x\n  Scenario: A\n    Given y\n    When a\n  Scenario: B\n    Given y\n    When b';
+    expect(run(withBg, extractBackground)).toBe('Feature: F\n  Background:\n    Given x\n    And y\n  Scenario: A\n    When a\n  Scenario: B\n    When b');
+    expect(run('Feature: F\n  Scenario: A\n    When a\n  Scenario: B\n    When a', extractBackground)).toBe('Feature: F\n  Scenario: A\n    When a\n  Scenario: B\n    When a');
   });
 });

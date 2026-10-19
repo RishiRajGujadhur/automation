@@ -196,6 +196,7 @@ export const FEATURES: Feature[] = [
   { id: 'menu-submenus', label: 'Menu groups (submenus)', group: 'View', essential: true, description: 'Related commands share a submenu (Code ▸ Gherkin) instead of one long menu.', commands: ['menu-submenus'] },
   { id: 'move-scenario-up', label: 'Move Scenario Up', group: 'Gherkin', essential: true, description: 'Swaps the scenario at the caret with the one above.', commands: ['move-scenario-up'] },
   { id: 'move-scenario-down', label: 'Move Scenario Down', group: 'Gherkin', essential: true, description: 'Swaps the scenario at the caret with the one below.', commands: ['move-scenario-down'] },
+  { id: 'extract-background', label: 'Extract Background', group: 'Gherkin', essential: true, description: 'The Given steps every scenario starts with move into the Background.', commands: ['extract-background'] },
 ];
 export const GROUPS: FeatureGroup[] = ['Editing', 'Navigation', 'Code intelligence', 'Tool windows', 'Files', 'Git', 'Gherkin', 'View', 'Debugging', 'Help and productivity'];
 
