@@ -14,6 +14,7 @@ has it on by default, so the desktop app starts with it on. The others start off
 | X4 | Make Uppercase | VS 2026 | yes | ✅ 2026-10-20 |
 | X5 | Make Lowercase | VS 2026 | yes | ✅ 2026-10-20 |
 | X6 | Transpose Line (Shift+Alt+T) | VS 2026 | yes | ✅ 2026-10-20 |
+| X7 | Transpose Characters | VS 2026 | yes | ✅ 2026-10-20 |
 
 ## Progress log
 - 2026-10-20 X1: Sort Lines: the selected lines (or the whole file) in natural, case-insensitive order, blank lines last. Third-batch plumbing: src/rider/more.ts, src/editor/textTools.ts, IDE-FEATURES.md.
@@ -22,3 +23,4 @@ has it on by default, so the desktop app starts with it on. The others start off
 - 2026-10-20 X4: Make Uppercase: the selection or the word at the caret.
 - 2026-10-20 X5: Make Lowercase: the selection or the word at the caret.
 - 2026-10-20 X6: Transpose Line: the caret's line swaps with the next, the caret follows.
+- 2026-10-20 X7: Transpose Characters: the two characters around the caret swap (at a line end, the last two).

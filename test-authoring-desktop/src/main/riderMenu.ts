@@ -40,6 +40,7 @@ const ROWS: Record<'edit' | 'view' | 'navigate' | 'code' | 'tools' | 'help', Row
     ['Make Uppercase', 'make-uppercase'],
     ['Make Lowercase', 'make-lowercase'],
     ['Transpose Line', 'transpose-line', 'Shift+Alt+T'],
+    ['Transpose Characters', 'transpose-chars'],
   ],
   view: [
     null,
