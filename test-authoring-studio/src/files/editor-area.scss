@@ -3292,3 +3292,32 @@ html[data-features-off~='inlay-hints'] .cm-inlay {
   gap: 8px;
   align-items: center;
 }
+
+// Window layouts
+.window-layouts {
+  display: grid;
+  gap: 10px;
+  min-width: min(520px, 90vw);
+  ul {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+  li {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    padding: 2px 0;
+    small {
+      flex: 1;
+      color: var(--text-muted);
+    }
+  }
+  .link-button {
+    padding: 0;
+    border: 0;
+    background: none;
+    color: var(--accent);
+    cursor: pointer;
+  }
+}

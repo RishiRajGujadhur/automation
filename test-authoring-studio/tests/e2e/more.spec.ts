@@ -127,11 +127,11 @@ test('X32 Window Layouts: save the arrangement under a name and apply it later',
   await page.getByLabel('Layout name').fill('Outline');
   await page.getByRole('button', { name: 'Save', exact: true }).click();
   await expect(page.getByRole('list', { name: 'Saved layouts' })).toContainText('Outline');
-  await page.keyboard.press('Escape');
+  await page.getByRole('dialog').getByRole('button', { name: 'Close dialog' }).click();
   await page.getByRole('button', { name: 'Close Structure', exact: true }).click();
   await expect(page.getByRole('region', { name: 'Structure' })).toHaveCount(0);
   await menuItem(page, 'View', /Window Layouts/);
-  await page.getByRole('list', { name: 'Saved layouts' }).getByRole('button', { name: 'Outline' }).click();
+  await page.getByRole('list', { name: 'Saved layouts' }).getByRole('button', { name: 'Outline', exact: true }).click();
   await page.waitForLoadState('load');
   await expect(page.getByRole('region', { name: 'Structure' })).toBeVisible({ timeout: 20_000 });
 });

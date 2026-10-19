@@ -70,6 +70,8 @@ const ROWS: Record<'edit' | 'view' | 'navigate' | 'code' | 'tools' | 'help', Row
     ['Presentation Mode', 'presentation-mode'],
     ['Hide All Tool Windows', 'hide-tools', 'CmdOrCtrl+Shift+F12'],
     ['Highlight Current Line', 'current-line'],
+    null,
+    ['Window Layouts…', 'window-layouts'],
   ],
   navigate: [
     ['Select In…', 'select-in', 'Alt+F1'],
