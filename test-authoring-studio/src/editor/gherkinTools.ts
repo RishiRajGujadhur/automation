@@ -148,3 +148,10 @@ export function selectScenario(view: EditorView) {
   view.dispatch({ selection: EditorSelection.range(state.doc.line(b.first).from, state.doc.line(b.end).to), scrollIntoView: true });
   return true;
 }
+
+/** Rename Tag: the tag on tag lines only (descriptions and steps keep the text), line endings kept. */
+export function renameTag(source: string, from: string, to: string) {
+  const esc = from.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  const re = new RegExp(`(^|\\s)${esc}(?=\\s|$)`, 'g');
+  return source.split(/(\r?\n)/).map((part) => (/^\s*@/.test(part) ? part.replace(re, `$1${to}`) : part)).join('');
+}

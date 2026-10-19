@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { EditorState, type TransactionSpec } from '@codemirror/state';
 import { EditorView } from '@codemirror/view';
-import { cycleStepKeyword, scenarioToOutline, tableInsertRow, tableAddColumn, tableDeleteColumn, tableSortByColumn, testFilter, selectScenario } from '../src/editor/gherkinTools';
+import { cycleStepKeyword, scenarioToOutline, tableInsertRow, tableAddColumn, tableDeleteColumn, tableSortByColumn, testFilter, selectScenario, renameTag } from '../src/editor/gherkinTools';
 
 /** Runs an editor command on `doc` with the selection between « and » (or a caret at ‸); with `caret`, the result marks the caret with ¦. */
 function run(doc: string, cmd: (v: EditorView) => boolean, caret = false) {
@@ -55,5 +55,8 @@ describe('Gherkin tools (IDE-FEATURES X49…)', () => {
     const view = { get state() { return state; }, dispatch: (spec: TransactionSpec) => { state = state.update(spec).state; } };
     selectScenario(view as unknown as EditorView);
     expect(state.sliceDoc(state.selection.main.from, state.selection.main.to)).toBe('  @a\n  Scenario Outline: S\n    Given "<x>"\n    Examples:\n      | x |\n      | 1 |');
+  });
+  it('X77 Rename Tag: on tag lines only', () => {
+    expect(renameTag('@smoke @slow\r\nFeature: F\r\n  The @smoke text stays\r\n  @smoke-test @smoke\r\n  Scenario: S', '@smoke', '@quick')).toBe('@quick @slow\r\nFeature: F\r\n  The @smoke text stays\r\n  @smoke-test @quick\r\n  Scenario: S');
   });
 });

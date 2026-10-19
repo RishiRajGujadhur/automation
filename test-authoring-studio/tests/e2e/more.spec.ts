@@ -342,7 +342,7 @@ test('X77 Rename Tag: every feature file, through diff approval', async ({ page 
   page.once('dialog', (d) => void d.accept('auth'));
   await panel.getByRole('button', { name: 'Rename @authentication' }).click();
   await page.getByRole('button', { name: 'Approve and write Login.feature' }).click();
-  await expect.poll(async () => fs.readFile(path.join(root, 'Features/Auth/Login.feature'), 'utf8')).toContain('@auth\n');
+  await expect.poll(async () => fs.readFile(path.join(root, 'Features/Auth/Login.feature'), 'utf8')).toMatch(/@auth\r?\n/);
   await expect(panel.getByRole('button', { name: /@auth\b/ }).first()).toBeVisible();
 });
 
