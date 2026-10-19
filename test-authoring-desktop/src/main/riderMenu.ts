@@ -49,6 +49,7 @@ const ROWS: Record<'edit' | 'view' | 'navigate' | 'code' | 'tools' | 'help', Row
     ['Convert Case…', 'convert-case'],
     ['Paste JSON as Classes', 'paste-json-classes'],
     ['Strip Trailing Spaces', 'strip-trailing'],
+    ['Tabify Selected Lines', 'tabify'],
   ],
   view: [
     null,

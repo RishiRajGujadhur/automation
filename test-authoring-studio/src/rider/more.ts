@@ -18,7 +18,7 @@ import { lastTestRun, runTests, runUntilFailure, discoverTests } from '../testin
 import { jsonToClasses } from '../editor/jsonClasses';
 import { generateConstructor } from '../editor/generateCtor';
 import { setViewOptions, viewOptions } from '../editor/viewOptions';
-import { lastEditLocation, insertGuid, cyclicExpandWord, gotoMember, toggleVerbatim, reformatJson, stripTrailingSpaces, splitString } from '../editor/textTools';
+import { lastEditLocation, insertGuid, cyclicExpandWord, gotoMember, toggleVerbatim, reformatJson, stripTrailingSpaces, splitString, tabify } from '../editor/textTools';
 import { sortLines, reverseLines, deleteHorizontalWhiteSpace, setCase, transposeLine, transposeChars, transposeWords, cursorMatchingBracket, selectMatchingBracket, findSelected } from '../editor/textTools';
 
 /**
@@ -88,5 +88,6 @@ export function moreCommands(h: MoreHelpers): RiderCommand[] {
     { id: 'sync-namespace', label: 'Sync Namespace with Folder', menu: 'Code', run: h.inEditor((v, file) => { if (!file.endsWith('.cs')) { h.notice('Open a C# file first.'); return; } void api<{ projects: { file: string; name: string; dir: string }[] }>('/solution').then((s) => { const owner = s.projects.filter((p) => p.file.endsWith('.csproj') && (p.dir === '' || file.startsWith(`${p.dir}/`))).sort((a, b) => b.dir.length - a.dir.length)[0]; if (!owner) { h.notice('This file belongs to no project.'); return; } const ns = expectedNamespace(file, owner.dir, owner.name); h.notice(setNamespace(v, ns) ? `Namespace changed to ${ns}.` : `The namespace already is ${ns} (or there is no namespace declaration).`); }, (e) => h.notice((e as Error).message)); }) },
     { id: 'rename-file-to-type', label: 'Rename File to Match Type', menu: 'Code', run: h.inEditor((v, file) => { const type = file.endsWith('.cs') ? firstTypeName(v.state.doc.toString()) : undefined; if (!type) { h.notice('Open a C# file that declares a type.'); return; } const to = `${file.includes('/') ? file.slice(0, file.lastIndexOf('/') + 1) : ''}${type}.cs`; if (to === file) { h.notice(`${file.split('/').pop()} already matches ${type}.`); return; } if (unsavedFiles().includes(file)) { h.notice('Save the file first.'); return; } void renamePath(file, to).then(() => { movedPath(file, to); h.notice(`Renamed to ${to.split('/').pop()}.`); }, (e) => h.notice((e as Error).message)); }) },
     { id: 'split-string', label: 'Split String', menu: 'Code', run: h.inEditor((v) => splitString(v) || h.notice('Put the caret inside a string literal.')) },
+    { id: 'tabify', label: 'Tabify Selected Lines', menu: 'Edit', run: h.inEditor((v) => tabify(v) || h.notice('Nothing to tabify.')) },
   ];
 }

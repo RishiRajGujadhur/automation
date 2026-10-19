@@ -319,3 +319,27 @@ export function splitString(view: EditorView) {
   }
   return false;
 }
+
+/** Leading white space of the selected lines (else every line) rewritten with tabs or spaces, keeping its width. */
+function reindent(tabs: boolean) {
+  return (view: EditorView) => {
+    const { state } = view;
+    const size = state.tabSize;
+    const sel = state.selection.main;
+    const first = sel.empty ? 1 : state.doc.lineAt(sel.from).number, last = sel.empty ? state.doc.lines : state.doc.lineAt(sel.to).number;
+    const changes: { from: number; to: number; insert: string }[] = [];
+    for (let n = first; n <= last; n++) {
+      const line = state.doc.line(n);
+      const ws = /^[ \t]*/.exec(line.text)![0];
+      let width = 0;
+      for (const c of ws) width = c === '\t' ? width + size - (width % size) : width + 1;
+      const next = tabs ? '\t'.repeat(Math.floor(width / size)) + ' '.repeat(width % size) : ' '.repeat(width);
+      if (next !== ws) changes.push({ from: line.from, to: line.from + ws.length, insert: next });
+    }
+    if (!changes.length) return false;
+    view.dispatch({ changes, userEvent: 'input.indent' });
+    return true;
+  };
+}
+/** Tabify Selected Lines (Visual Studio's Edit ▸ Advanced). */
+export const tabify = reindent(true);
