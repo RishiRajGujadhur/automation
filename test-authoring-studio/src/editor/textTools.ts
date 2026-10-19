@@ -70,3 +70,39 @@ export function setCase(upper: boolean) {
     return true;
   };
 }
+
+/** Transpose Line (Visual Studio, Shift+Alt+T): the caret's line swaps with the line below; the caret moves down with it. */
+export function transposeLine(view: EditorView) {
+  const st = view.state;
+  const line = st.doc.lineAt(st.selection.main.head);
+  if (line.number >= st.doc.lines) return true;
+  const next = st.doc.line(line.number + 1);
+  const col = st.selection.main.head - line.from;
+  view.dispatch({ changes: { from: line.from, to: next.to, insert: `${next.text}\n${line.text}` }, selection: { anchor: line.from + next.text.length + 1 + col }, userEvent: 'move.line' });
+  return true;
+}
+/** Transpose Characters (Visual Studio): the characters on either side of the caret swap. */
+export function transposeChars(view: EditorView) {
+  const st = view.state;
+  const pos = st.selection.main.head;
+  const line = st.doc.lineAt(pos);
+  // At the end of a line, the last two characters swap.
+  const at = pos >= line.to ? pos - 1 : pos;
+  if (at <= line.from || at >= line.to) return true;
+  const a = st.sliceDoc(at - 1, at), b = st.sliceDoc(at, at + 1);
+  view.dispatch({ changes: { from: at - 1, to: at + 1, insert: b + a }, selection: { anchor: at + 1 }, userEvent: 'input.transpose' });
+  return true;
+}
+/** Transpose Words (Visual Studio): the word at (or before) the caret swaps with the next word. */
+export function transposeWords(view: EditorView) {
+  const st = view.state;
+  const line = st.doc.lineAt(st.selection.main.head);
+  const col = st.selection.main.head - line.from;
+  const words = [...line.text.matchAll(/\w+/g)].map((m) => ({ from: m.index!, to: m.index! + m[0].length, text: m[0] }));
+  const i = words.findIndex((w) => col >= w.from && col <= w.to) >= 0 ? words.findIndex((w) => col >= w.from && col <= w.to) : words.findIndex((w) => w.from >= col) - 1;
+  if (i < 0 || i + 1 >= words.length) return true;
+  const a = words[i], b = words[i + 1];
+  const between = line.text.slice(a.to, b.from);
+  view.dispatch({ changes: { from: line.from + a.from, to: line.from + b.to, insert: b.text + between + a.text }, selection: { anchor: line.from + b.to }, userEvent: 'input.transpose' });
+  return true;
+}

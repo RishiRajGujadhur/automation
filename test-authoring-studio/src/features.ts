@@ -103,6 +103,7 @@ export const FEATURES: Feature[] = [
   { id: 'delete-whitespace', label: 'Delete Horizontal White Space', group: 'Editing', essential: true, vs: 'Edit ▸ Advanced ▸ Delete Horizontal White Space', description: 'Ctrl+K, Ctrl+\\: collapse spaces in the selection, or delete those around the caret.', commands: ['delete-whitespace'] },
   { id: 'make-uppercase', label: 'Make Uppercase', group: 'Editing', essential: true, vs: 'Edit ▸ Advanced ▸ Make Uppercase', description: 'The selection or the word at the caret in upper case.', commands: ['make-uppercase'] },
   { id: 'make-lowercase', label: 'Make Lowercase', group: 'Editing', essential: true, vs: 'Edit ▸ Advanced ▸ Make Lowercase', description: 'The selection or the word at the caret in lower case.', commands: ['make-lowercase'] },
+  { id: 'transpose-line', label: 'Transpose Line', group: 'Editing', essential: true, vs: 'Edit.LineTranspose (Shift+Alt+T)', description: 'Shift+Alt+T swaps the caret\'s line with the next one.', commands: ['transpose-line'] },
 ];
 export const GROUPS: FeatureGroup[] = ['Editing', 'Navigation', 'Code intelligence', 'Tool windows', 'Files', 'Git', 'View', 'Debugging', 'Help and productivity'];
 

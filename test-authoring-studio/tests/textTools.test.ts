@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { EditorState, type TransactionSpec } from '@codemirror/state';
 import type { EditorView } from '@codemirror/view';
-import { sortLines, reverseLines, deleteHorizontalWhiteSpace, setCase } from '../src/editor/textTools';
+import { sortLines, reverseLines, deleteHorizontalWhiteSpace, setCase, transposeLine } from '../src/editor/textTools';
 
 /** Runs an editor command on `doc` with the selection between the markers « and » (or a caret at |). */
 export function run(doc: string, cmd: (v: EditorView) => boolean) {
@@ -31,5 +31,8 @@ describe('text tools (IDE-FEATURES X1…)', () => {
   });
   it('X5 Make Lowercase', () => {
     expect(run('a WO|RD b', setCase(false))).toBe('a word b');
+  });
+  it('X6 Transpose Line', () => {
+    expect(run('a|1\nb2\nc3', transposeLine)).toBe('b2\na1\nc3');
   });
 });

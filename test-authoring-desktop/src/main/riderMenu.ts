@@ -39,6 +39,7 @@ const ROWS: Record<'edit' | 'view' | 'navigate' | 'code' | 'tools' | 'help', Row
     ['Delete Horizontal White Space', 'delete-whitespace'],
     ['Make Uppercase', 'make-uppercase'],
     ['Make Lowercase', 'make-lowercase'],
+    ['Transpose Line', 'transpose-line', 'Shift+Alt+T'],
   ],
   view: [
     null,
