@@ -1,6 +1,8 @@
 import { useEffect, useMemo, useState, type ReactNode } from 'react';
 import { ChevronDown, ChevronRight, Play, PlayCircle, Bug, RefreshCw, Square, CircleCheck, CircleX, CircleSlash, Circle, Loader, Search, X, FileText, FlaskConical, Boxes, RotateCcw, Navigation, ListPlus, ListMinus, Trash2, ShieldCheck } from 'lucide-react';
 import { RowMenu, useLocalState } from '../ui';
+import { groupTests, type Group, type GroupBy } from './grouping';
+import { featureOn } from '../features';
 import { useTestRun, discoverTests, runTests, cancelTests, resultsOf, outcomeOf, combine, type DiscoveredTest, type Outcome } from './store';
 
 const icon = (o: Outcome) =>
@@ -11,7 +13,6 @@ const icon = (o: Outcome) =>
   <Circle size={14} className="t-none" aria-label="Not run" />;
 const ms = (n: number) => (n < 1000 ? `${n} ms` : `${(n / 1000).toFixed(1)} s`);
 
-type Group = { key: string; label: string; kind: 'project' | 'class' | 'feature'; tests: DiscoveredTest[]; children: Group[] };
 
 /**
  * Visual Studio's Test Explorer: tests by project → class / feature → test, with outcome icons and durations.
@@ -30,6 +31,8 @@ export default function TestExplorer({ revision, onOpen, onDebug, onNotice }: { 
   // Playlists (Visual Studio): named sets of tests to show and run together.
   const [playlists, setPlaylists] = useLocalState<Record<string, string[]>>('testPlaylists', {});
   const [playlist, setPlaylist] = useLocalState('testPlaylist', '');
+  const [groupByPref, setGroupBy] = useLocalState<GroupBy>('testGroupBy', 'project');
+  const groupBy: GroupBy = featureOn('test-group-by') ? groupByPref : 'project';
   const [naming, setNaming] = useState<string[] | null>(null);
   const addTo = (name: string, ids: string[]) => setPlaylists({ ...playlists, [name]: [...new Set([...(playlists[name] ?? []), ...ids])] });
   const removeFrom = (name: string, ids: string[]) => setPlaylists({ ...playlists, [name]: (playlists[name] ?? []).filter((id) => !ids.includes(id)) });
@@ -50,19 +53,7 @@ export default function TestExplorer({ revision, onOpen, onDebug, onNotice }: { 
     const pool = inList ? tests.filter((t) => inList.has(t.id)) : tests;
     return q ? pool.filter((t) => `${t.project} ${t.className} ${t.name} ${t.feature ?? ''}`.toLowerCase().includes(q)) : pool;
   }, [tests, query, playlist, playlists]);
-  const groups = useMemo(() => {
-    const projects = new Map<string, Group>();
-    for (const t of visible) {
-      const p = projects.get(t.project) ?? { key: `p:${t.project}`, label: t.project, kind: 'project' as const, tests: [], children: [] };
-      projects.set(t.project, p);
-      const key = t.kind === 'scenario' ? `f:${t.file}` : `c:${t.className}`;
-      let g = p.children.find((c) => c.key === key);
-      if (!g) { g = { key, label: t.kind === 'scenario' ? (t.feature ?? t.file) : t.className, kind: t.kind === 'scenario' ? 'feature' : 'class', tests: [], children: [] }; p.children.push(g); }
-      g.tests.push(t);
-      p.tests.push(t);
-    }
-    return [...projects.values()].sort((a, b) => a.label.localeCompare(b.label));
-  }, [visible]);
+  const groups = useMemo(() => groupTests(visible, groupBy, (t) => outcomeOf(t, run), (t) => { const rs = resultsOf(t, run.results); return rs.length ? rs.reduce((n, r) => n + r.durationMs, 0) : undefined; }), [visible, groupBy, run]);
 
   const outcome = (t: DiscoveredTest) => outcomeOf(t, run);
   const counts = useMemo(() => {
@@ -167,6 +158,16 @@ export default function TestExplorer({ revision, onOpen, onDebug, onNotice }: { 
         <input aria-label="Search Test Explorer" placeholder="Search Test Explorer" value={query} onChange={(e) => setQuery(e.target.value)} />
         {query && <button className="icon-button" aria-label="Clear test search" onClick={() => setQuery('')}><X size={13} /></button>}
       </label>
+      {featureOn('test-group-by') && (
+        <label className="t-group-by">Group by
+          <select aria-label="Group by" value={groupBy} onChange={(e) => setGroupBy(e.target.value as GroupBy)}>
+            <option value="project">Project, Class</option>
+            <option value="class">Class / Feature</option>
+            <option value="outcome">Outcome</option>
+            <option value="duration">Duration</option>
+          </select>
+        </label>
+      )}
       <div className="t-summary" role="status">
         <span title="Passed"><CircleCheck size={12} className="t-pass" />{counts.passed}</span>
         <span title="Failed"><CircleX size={12} className="t-fail" />{counts.failed}</span>

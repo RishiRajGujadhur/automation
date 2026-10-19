@@ -3460,3 +3460,16 @@ html[data-features-off~='inlay-hints'] .cm-inlay {
   background-image: none !important;
   opacity: 0.5;
 }
+
+.t-group-by {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0 8px 4px;
+  font-size: 11.5px;
+  color: var(--muted, #6b7280);
+  select {
+    flex: 1;
+    font-size: 11.5px;
+  }
+}
