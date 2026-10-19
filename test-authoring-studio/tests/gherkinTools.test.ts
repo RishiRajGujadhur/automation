@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { EditorState, type TransactionSpec } from '@codemirror/state';
 import { EditorView } from '@codemirror/view';
-import { cycleStepKeyword, scenarioToOutline, tableInsertRow, tableAddColumn, tableDeleteColumn } from '../src/editor/gherkinTools';
+import { cycleStepKeyword, scenarioToOutline, tableInsertRow, tableAddColumn, tableDeleteColumn, tableSortByColumn } from '../src/editor/gherkinTools';
 
 /** Runs an editor command on `doc` with the selection between « and » (or a caret at ‸); with `caret`, the result marks the caret with ¦. */
 function run(doc: string, cmd: (v: EditorView) => boolean, caret = false) {
@@ -38,5 +38,10 @@ describe('Gherkin tools (IDE-FEATURES X49…)', () => {
   it('X53 Table Delete Column: the caret\'s column goes from every row', () => {
     expect(run('| name | age | city |\n| ada  | 3‸6  | Oslo |', tableDeleteColumn, true)).toBe('| name | city |\n| ada  | ¦Oslo |');
     expect(run('| a |\n| ‸1 |', tableDeleteColumn)).toBe('| a |\n| 1 |');
+  });
+  it('X54 Table Sort by Column: rows under the header, natural order; again reverses', () => {
+    const doc = '| name  | n  |\n| bob   | 10 |\n| ada   | 9  |\n| Cy    | 2  |';
+    expect(run(doc.replace('| n ', '| ‸n '), tableSortByColumn)).toBe('| name | n  |\n| Cy   | 2  |\n| ada  | 9  |\n| bob  | 10 |');
+    expect(run('| name | n  |\n| Cy   | 2  |\n| ada  | 9  |\n| bob  | 10 |'.replace('| n ', '| ‸n '), tableSortByColumn)).toBe('| name | n  |\n| bob  | 10 |\n| ada  | 9  |\n| Cy   | 2  |');
   });
 });

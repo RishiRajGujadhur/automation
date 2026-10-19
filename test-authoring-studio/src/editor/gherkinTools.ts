@@ -117,3 +117,14 @@ export function tableDeleteColumn(view: EditorView) {
   const rows = t.rows.map((r) => r.filter((_, k) => k !== t.col));
   return writeTable(view, t, rows, t.row, Math.min(t.col, t.cols - 2));
 }
+
+const collator = new Intl.Collator(undefined, { numeric: true, sensitivity: 'base' });
+/** Table ▸ Sort by Column: the rows under the header, by the caret's column (natural order); again for descending. */
+export function tableSortByColumn(view: EditorView) {
+  const t = tableAt(view.state);
+  if (!t || t.rows.length < 3) return false;
+  const body = t.rows.slice(1);
+  const asc = [...body].sort((a, b) => collator.compare(a[t.col] ?? '', b[t.col] ?? ''));
+  const sorted = asc.every((r, i) => r === body[i]) ? asc.reverse() : asc;
+  return writeTable(view, t, [t.rows[0], ...sorted], 0, t.col);
+}
