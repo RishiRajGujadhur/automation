@@ -820,6 +820,8 @@ test('X162–X164 JSON and XML tools: Sort JSON Keys, Copy JSON Pointer, Copy XP
   await expect.poll(() => page.evaluate(() => navigator.clipboard.readText())).toBe('/a/name');
   const xml = await openCs(page, 'Selectors/Pages.xml', '#user');
   await xml.locator('.cm-line', { hasText: '#user' }).click();
+  await page.keyboard.press('End');
+  for (let i = 0; i < 10; i++) await page.keyboard.press('ArrowLeft'); // inside "#user"
   await menuItem(page, 'Code', /^Copy XPath/);
   await expect.poll(() => page.evaluate(() => navigator.clipboard.readText())).toBe("/Dictionary/Page[@name='Login']/Field[@id='user']");
 });

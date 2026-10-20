@@ -190,6 +190,7 @@ const ROWS: Record<'edit' | 'view' | 'navigate' | 'code' | 'tools' | 'help', Row
     ['Collapse Using Directives', 'fold-usings'],
     ['Sort JSON Keys', 'sort-json'],
     ['Copy JSON Pointer', 'copy-json-pointer'],
+    ['Copy XPath', 'copy-xpath'],
   ],
   tools: [
     ['Run Anything… (Ctrl twice)', 'run-anything'],

@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { EditorState, type TransactionSpec } from '@codemirror/state';
 import type { EditorView } from '@codemirror/view';
-import { sortJsonKeys, jsonPointerAt } from '../src/editor/docTools';
+import { sortJsonKeys, jsonPointerAt, xpathAt } from '../src/editor/docTools';
 
 const apply = (doc: string, cmd: (v: EditorView) => boolean) => {
   let state = EditorState.create({ doc });
@@ -20,5 +20,12 @@ describe('document tools (X162…)', () => {
     expect(jsonPointerAt(text, text.indexOf('"a/b"') + 1)).toBe('/users/0/a~1b');
     expect(jsonPointerAt(text, text.indexOf('"users"') + 2)).toBe('/users');
     expect(jsonPointerAt(text, 0)).toBe('');
+  });
+  it('X164 XPath at a position', () => {
+    const xml = '<?xml version="1.0"?>\n<!-- c <x> -->\n<Dictionary>\n  <Page name="Login">\n    <Field id="user" />\n    <Field id="pass">#p</Field>\n  </Page>\n  <Page>\n    <Item/>\n    <Item>here</Item>\n  </Page>\n</Dictionary>';
+    expect(xpathAt(xml, xml.indexOf('#p'))).toBe("/Dictionary/Page[@name='Login']/Field[@id='pass']");
+    expect(xpathAt(xml, xml.indexOf('"user"'))).toBe("/Dictionary/Page[@name='Login']/Field[@id='user']");
+    expect(xpathAt(xml, xml.indexOf('here'))).toBe('/Dictionary/Page[2]/Item[2]');
+    expect(xpathAt(xml, 0)).toBeUndefined();
   });
 });
