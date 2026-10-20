@@ -172,7 +172,7 @@ Legend: `[x]` done · `[ ]` to do.
 
 ## Git & Version Control
 
-- [ ] 146. Interactive rebase
+- [x] 146. Interactive rebase — Git Log: Interactively Rebase from Here… (pick, reword, squash, fixup, drop, reorder; a conflict is undone) (2026-10-21)
 - [ ] 147. Commit squashing
 - [x] 148. Commit cherry-picking — Git Log: Cherry-Pick
 - [x] 149. Partial staging — Stage Selected Lines
@@ -371,3 +371,4 @@ Legend: `[x]` done · `[ ]` to do.
 - 2026-10-21 397: The editor group with focus (tab group or split editor) fills the editor area until toggled back.
 - 2026-10-21 165: The commit message box starts with the repository's commit template; comment lines are stripped on commit and an untouched template cannot be committed.
 - 2026-10-21 162: Two commits compare in Git Log: the files that differ between them and the full patch.
+- 2026-10-21 146: Interactive rebase from a Git Log commit: each commit up to HEAD can be picked, reworded, squashed, fixed up, dropped or moved; the studio writes the todo list, uncommitted work is stashed around it and a conflict aborts the rebase.

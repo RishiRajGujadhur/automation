@@ -71,3 +71,37 @@ test('162 Compare commits', async ({ page }) => {
   await cmp.getByRole('button', { name: 'Stop comparing' }).click();
   await expect(cmp).toHaveCount(0);
 });
+
+const logOf = () => git('log', '--format=%s').trim().split('\n');
+async function commitsAB(page: Page) {
+  for (const n of ['A', 'B', 'C']) { await fs.appendFile(path.join(root, 'Steps/AuthSteps.cs'), `// ${n}\n`); git('commit', '-q', '-am', `Change ${n}`); }
+  await open(page);
+  await page.keyboard.press('Alt+9');
+  const log = page.getByRole('region', { name: 'Git Log' });
+  return { log, commits: log.getByRole('listbox', { name: 'Commits' }) };
+}
+test('146 Interactive rebase: reword, squash, drop, reorder', async ({ page }) => {
+  const { log, commits } = await commitsAB(page);
+  await commits.getByRole('option', { name: /Change A/ }).click();
+  await log.getByRole('button', { name: 'Interactively Rebase from Here…' }).click();
+  const ed = log.getByLabel('Interactive Rebase');
+  await expect(ed.locator('.git-rebase-row')).toHaveCount(3);
+  await ed.getByLabel('Action for Change A').selectOption('reword');
+  await ed.getByLabel('Message for Change A').fill('Change A, reworded');
+  await ed.getByLabel('Action for Change B').selectOption('fixup');
+  await ed.getByRole('button', { name: 'Move Change C up' }).click();
+  await ed.getByLabel('Action for Change C').selectOption('drop');
+  await ed.getByRole('button', { name: 'Start Rebasing' }).click();
+  await expect(ed.getByRole('alert')).toHaveCount(0);
+  await expect.poll(logOf, { timeout: 30_000 }).toEqual(['Change A, reworded', 'Initial']);
+  const text = await fs.readFile(path.join(root, 'Steps/AuthSteps.cs'), 'utf8');
+  expect(text).toContain('// A\n// B\n');
+  expect(text).not.toContain('// C');
+});
+test('147 Commit squashing', async ({ page }) => {
+  const { log, commits } = await commitsAB(page);
+  await commits.getByRole('option', { name: /Change B/ }).click();
+  page.once('dialog', (d) => void d.accept('B and C'));
+  await log.getByRole('button', { name: 'Squash to HEAD…' }).click();
+  await expect.poll(logOf).toEqual(['B and C', 'Change A', 'Initial']);
+});

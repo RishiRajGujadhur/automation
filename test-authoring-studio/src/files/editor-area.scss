@@ -3860,3 +3860,22 @@ html[data-rider-mode='vszen'] {
 }
 .editor-split[data-maximized='main'] > .split-pane,
 .editor-split[data-maximized='split'] > .editor-area:not(.split-pane) { display: none !important; }
+
+/* Git Log: Interactive Rebase (RIDER-VSCODE-FEATURES.md 146). */
+.git-rebase-rows {
+  margin: 4px 0 8px;
+  padding: 0;
+  list-style: none;
+  .git-rebase-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px;
+    padding: 3px 0;
+    border-bottom: 1px solid var(--border);
+    select { height: 24px; }
+    textarea { flex-basis: 100%; font-family: var(--font-mono, monospace); font-size: 12px; }
+    &.a-drop .git-subject { text-decoration: line-through; opacity: 0.6; }
+    &.a-squash, &.a-fixup { padding-left: 18px; }
+  }
+}

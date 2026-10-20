@@ -114,3 +114,34 @@ describe('218 changed line ranges', () => {
     expect(changedLineRanges('same', 'same')).toEqual([]);
   });
 });
+import { rebaseCommits, interactiveRebase, squashCommits, rebaseTodo } from '../server/git2';
+import { execFileSync } from 'node:child_process';
+describe('146 / 147 interactive rebase and squash', () => {
+  const repo = async () => {
+    const dir = await fsp.mkdtemp(nodePath.join(os.tmpdir(), 'tas-rebase-test-'));
+    const g = (...a: string[]) => execFileSync('git', a, { cwd: dir, encoding: 'utf8' });
+    g('init', '-q', '-b', 'main'); g('config', 'user.email', 't@e.com'); g('config', 'user.name', 'T'); g('config', 'core.autocrlf', 'false');
+    for (const n of ['a', 'b', 'c', 'd']) { await fsp.writeFile(nodePath.join(dir, `${n}.txt`), n); g('add', '-A'); g('commit', '-q', '-m', `Add ${n}`); }
+    return { dir, g };
+  };
+  it('todo lines', async () => {
+    const dir = await fsp.mkdtemp(nodePath.join(os.tmpdir(), 'tas-todo-'));
+    const t = await rebaseTodo([{ hash: 'a1', action: 'pick' }, { hash: 'b2', action: 'reword', message: 'New' }, { hash: 'c3', action: 'fixup' }, { hash: 'd4', action: 'drop' }], dir);
+    expect(t.split('\n')[0]).toBe('pick a1');
+    expect(t.split('\n')[1]).toBe('pick b2');
+    expect(t.split('\n')[2]).toMatch(/^exec git commit --amend --allow-empty -F ".*message-0\.txt"$/);
+    expect(t.split('\n').slice(3, 5)).toEqual(['fixup c3', 'drop d4']);
+  }, 30_000);
+  it('reorders, rewords, drops; squashes', async () => {
+    const { dir, g } = await repo();
+    const list = await rebaseCommits(dir, g('rev-parse', 'HEAD~2').trim());
+    expect(list.map((c) => c.subject)).toEqual(['Add b', 'Add c', 'Add d']);
+    await interactiveRebase(dir, list[0].hash, [{ hash: list[2].hash, action: 'reword', message: 'Add d first' }, { hash: list[0].hash, action: 'pick' }, { hash: list[1].hash, action: 'drop' }]);
+    expect(g('log', '--format=%s').trim().split('\n')).toEqual(['Add b', 'Add d first', 'Add a']);
+    expect(await fsp.readFile(nodePath.join(dir, 'c.txt'), 'utf8').catch(() => null)).toBeNull();
+    await squashCommits(dir, g('rev-parse', 'HEAD~1').trim(), 'B and D');
+    expect(g('log', '--format=%s').trim().split('\n')).toEqual(['B and D', 'Add a']);
+    expect(g('show', '--name-only', '--format=', 'HEAD').trim().split('\n').sort()).toEqual(['b.txt', 'd.txt']);
+    await fsp.rm(dir, { recursive: true, force: true });
+  }, 60_000);
+});

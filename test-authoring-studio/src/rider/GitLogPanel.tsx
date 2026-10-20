@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
+import RebaseEditor from './RebaseEditor';
 import { RefreshCw, X } from 'lucide-react';
 import CodeMirror from '@uiw/react-codemirror';
 import { StreamLanguage } from '@codemirror/language';
@@ -36,6 +37,8 @@ export default function GitLogPanel({ onOpen, onClose, onNotice }: { onOpen: (fi
   const [selected, setSelected] = useState<string>();
   // Compare commits: Ctrl+click a second commit (Rider's Compare Versions).
   const [other, setOther] = useState<string>();
+  // Interactive Rebase from the selected commit.
+  const [rebaseFrom, setRebaseFrom] = useState<string>();
   const [comparison, setComparison] = useState<{ files: { file: string; status: string }[]; patch: string }>();
   useEffect(() => { setComparison(undefined); if (selected && other) api<{ files: { file: string; status: string }[]; patch: string }>(`/git/compare?from=${other}&to=${selected}`).then(setComparison, (e) => setError((e as Error).message)); }, [selected, other]);
   const [commit, setCommit] = useState<Commit>();
@@ -96,12 +99,15 @@ export default function GitLogPanel({ onOpen, onClose, onNotice }: { onOpen: (fi
               {comparison && comparison.files.length > 0 && <CodeMirror value={comparison.patch} theme={theme} editable={false} basicSetup={SETUP} extensions={DIFF} height="260px" aria-label="Comparison patch" />}
             </div>
           )}
-          {commit && !other && (
+          {rebaseFrom && <RebaseEditor base={rebaseFrom} onNotice={onNotice} onCancel={() => setRebaseFrom(undefined)} onDone={() => { setRebaseFrom(undefined); setSelected(undefined); window.dispatchEvent(new Event(GIT_CHANGED_EVENT)); void load(); }} />}
+          {commit && !other && !rebaseFrom && (
             <>
               <p className="git-commit-head"><strong>{commit.message.split('\n')[0]}</strong><br /><small>{commit.hash.slice(0, 10)} · {commit.author} &lt;{commit.email}&gt; · {new Date(commit.date).toLocaleString()}</small></p>
               {commit.message.includes('\n') && <pre className="git-commit-body">{commit.message.split('\n').slice(1).join('\n').trim()}</pre>}
               <div className="git-commit-actions" role="toolbar" aria-label="Commit actions">
               {/* commit actions */}
+              {featureOn('git-interactive-rebase') && <button className="button" onClick={() => setRebaseFrom(commit.hash)}>Interactively Rebase from Here…</button>}
+              {featureOn('git-squash') && <button className="button" onClick={() => { void api<{ subject: string }[]>(`/git/rebase?base=${commit.hash}`).then((list) => { const message = window.prompt(`Squash ${list.length} commit${list.length === 1 ? '' : 's'} (this one up to HEAD) into one. Message:`, list.map((c) => c.subject).join('\n')); if (!message?.trim()) return; return api<{ head: string }>('/git/squash', { base: commit.hash, message }).then((r) => { onNotice(`Squashed: ${r.head}`); setSelected(undefined); window.dispatchEvent(new Event(GIT_CHANGED_EVENT)); void load(); }); }).catch((e) => onNotice((e as Error).message)); }}>Squash to HEAD…</button>}
               {featureOn('git-copy-message') && <button className="button" onClick={() => void copyText(commit.message.trim()).then((ok) => onNotice(ok ? 'Copied the commit message.' : 'Clipboard unavailable.'))}>Copy Message</button>}
               {featureOn('git-reset') && <button className="button" onClick={() => { const mode = window.prompt('Reset the current branch here. Mode: soft (keep changes staged), mixed (keep changes), hard (discard changes)', 'mixed')?.trim().toLowerCase(); if (!mode) return; if (!['soft', 'mixed', 'hard'].includes(mode)) { onNotice('Use soft, mixed or hard.'); return; } if (mode === 'hard' && !window.confirm('Hard reset discards every uncommitted change. Continue?')) return; void act('reset', { mode }); }}>Reset to Here…</button>}
               {featureOn('git-checkout-revision') && <button className="button" onClick={() => { if (window.confirm('Check out this commit (detached HEAD)? Uncommitted changes stay.')) void act('checkout'); }}>Checkout Revision</button>}

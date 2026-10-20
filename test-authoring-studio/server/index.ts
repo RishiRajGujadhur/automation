@@ -40,7 +40,7 @@ import { Builder } from './build.js';
 import { findInFiles, replaceInFiles, searchEditorText, parseSearchEditor, searchEditorName, SEARCH_EDITOR_DIR } from './search.js';
 import { values, render, parameterCount, replaceAttributePattern } from './stepRename.js';
 import { installed as nugetInstalled, updates as nugetUpdates, search as nugetSearch, versions as nugetVersions, install as nugetInstall, uninstall as nugetUninstall } from './nuget.js';
-import { commitTemplate, compareCommits } from './git2.js';
+import { commitTemplate, compareCommits, rebaseCommits, interactiveRebase, squashCommits } from './git2.js';
 import { status as gitStatus, stage as gitStage, unstage as gitUnstage, discard as gitDiscard, commit as gitCommit, headInfo, log as gitLog, branches as gitBranches, checkout as gitCheckout, createBranch as gitCreateBranch, sync as gitSync, merge as gitMerge, blame as gitBlame, clone as gitClone, shelves, shelve, unshelve, deleteShelf, lineHistory, commitDetails, graphLog, fileAt, commitAction, git, stageLines } from './git.js';
 import { readProperties, setProperties, evaluate, readEvents, setEvent, readUsings, setUsings, readReferences, setReferences, readFileItem, setFileItem, isExcluded, setExcluded } from './projectProps.js';
 import { findPattern, replacePattern } from '../src/search/ssr.js';
@@ -774,6 +774,21 @@ app.get('/api/git/graph', async (req, res) => {
   const file = z.string().max(400).optional().parse(req.query.file);
   if (file) await confined(config.repositoryRoot, file, false);
   res.json(await graphLog(config.repositoryRoot, 200, req.query.scope !== 'current', file || undefined));
+});
+// Interactive rebase from a commit (Git Log) and squash up to HEAD; the working copy is stashed around it.
+const hashRef = z.string().regex(/^[0-9a-f]{4,40}$/i);
+app.get('/api/git/rebase', async (req, res) => res.json(await rebaseCommits(config.repositoryRoot, hashRef.parse(req.query.base))));
+app.post('/api/git/rebase', async (req, res) => {
+  const { base, steps } = z.object({ base: hashRef, steps: z.array(z.object({ hash: hashRef, action: z.enum(['pick', 'reword', 'squash', 'fixup', 'drop']), message: z.string().max(20000).optional() })).min(1).max(500) }).parse(req.body);
+  const head = await interactiveRebase(config.repositoryRoot, base, steps);
+  rescanSoon(500);
+  res.json({ head });
+});
+app.post('/api/git/squash', async (req, res) => {
+  const { base, message } = z.object({ base: hashRef, message: z.string().trim().min(1, 'Enter a commit message.').max(20000) }).parse(req.body);
+  const head = await squashCommits(config.repositoryRoot, base, message);
+  rescanSoon(500);
+  res.json({ head });
 });
 // Compare two commits (Git Log: Ctrl+click a second commit).
 app.get('/api/git/compare', async (req, res) => {
