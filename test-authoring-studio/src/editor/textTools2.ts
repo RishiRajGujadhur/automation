@@ -796,3 +796,18 @@ export function extractInterface(state: EditorState) {
   const header = hm[2] ? `${hm[1]}${hm[2].trimEnd()}, ${name}${hm[3]}` : `${hm[1]} : ${name}${hm[3]}`;
   return { name, iface, classText: c.text.slice(0, hm.index) + header + c.text.slice(hm.index + hm[0].length) };
 }
+
+/** Create Unit Tests (Visual Studio / Rider): a test class with one test per public method of the class at the caret. */
+export function unitTestsFor(state: EditorState, framework: 'nunit' | 'xunit' | 'mstest') {
+  const c = classBody(state);
+  if (!c) return null;
+  const methods = publicMethods(c.body);
+  if (!methods.length) return null;
+  const ns = namespaceOf(c.text);
+  const attr = framework === 'xunit' ? '[Fact]' : framework === 'mstest' ? '[TestMethod]' : '[Test]';
+  const using = framework === 'xunit' ? 'using Xunit;' : framework === 'mstest' ? 'using Microsoft.VisualStudio.TestTools.UnitTesting;' : 'using NUnit.Framework;';
+  const fail = framework === 'xunit' ? 'Assert.Fail' : 'Assert.Fail';
+  const classAttr = framework === 'mstest' ? '[TestClass]\n' : framework === 'nunit' ? '[TestFixture]\n' : '';
+  const tests = [...new Set(methods.map((m) => m.name))].map((n) => `    ${attr}\n    public void ${n}_Works()\n    {\n        // Arrange\n        var sut = new ${c.name}();\n\n        // Act\n        // sut.${n}(…);\n\n        // Assert\n        ${fail}("Write the test for ${c.name}.${n}.");\n    }`).join('\n\n');
+  return { name: `${c.name}Tests`, text: `${using}\n\nnamespace ${ns ? `${ns}.` : ''}Tests;\n\n${classAttr}public class ${c.name}Tests\n{\n${tests}\n}\n` };
+}

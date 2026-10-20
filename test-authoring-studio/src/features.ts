@@ -564,6 +564,7 @@ export const FEATURES: Feature[] = [
   { id: 'generate-code', label: 'Generate (C#)', group: 'Code intelligence', essential: true, vs: 'Quick Actions ▸ Generate', description: 'Ctrl+Alt+G lists what Roslyn can generate at the caret: constructors, Equals / GetHashCode, interface members, DebuggerDisplay… (Rider\'s Generate menu).', commands: ['generate-code'] },
   { id: 'move-type-to-file', label: 'Move Type to Matching File', group: 'Code intelligence', essential: true, vs: 'Move type to TypeName.cs', description: 'With the caret on a type name in a file with several types, the type moves to its own TypeName.cs.', commands: ['move-type-to-file'] },
   { id: 'extract-interface', label: 'Extract Interface', group: 'Code intelligence', essential: true, vs: 'Extract Interface', description: 'Code ▸ Refactor ▸ Extract Interface writes IClassName.cs with the public methods and properties (previewed) and makes the class implement it.', commands: ['extract-interface'] },
+  { id: 'create-unit-tests', label: 'Create Unit Tests', group: 'Code intelligence', essential: true, vs: 'Create Unit Tests', description: 'Code ▸ Refactor ▸ Create Unit Tests previews a test class (NUnit, xUnit or MSTest, from the solution\'s packages) with a test per public method.', commands: ['create-unit-tests'] },
 ];
 export const GROUPS: FeatureGroup[] = ['Editing', 'Navigation', 'Code intelligence', 'Tool windows', 'Files', 'Git', 'Gherkin', 'View', 'Debugging', 'Help and productivity'];
 

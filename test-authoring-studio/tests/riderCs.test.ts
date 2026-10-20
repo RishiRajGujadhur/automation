@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { EditorState } from '@codemirror/state';
-import { extractInterface } from '../src/editor/textTools2';
+import { extractInterface, unitTestsFor } from '../src/editor/textTools2';
 
 describe('Rider C# features (RIDER-CS-15)', () => {
   it('runs', () => { expect(true).toBe(true); });
@@ -9,5 +9,12 @@ describe('Rider C# features (RIDER-CS-15)', () => {
     const r = extractInterface(EditorState.create({ doc: src, selection: { anchor: 30 } }))!;
     expect(r.iface).toBe('namespace Demo;\n\npublic interface IShop\n{\n    string Name { get; set; }\n    int Count { get; }\n    Task<int> Buy(string item, int n = 1);\n}\n');
     expect(r.classText).toContain('public class Shop : Base, IShop\n{');
+  });
+  it('RC9 Create Unit Tests', () => {
+    const src = 'namespace Demo;\npublic class Calc\n{\n    public int Add(int a, int b) => a + b;\n    public int Add(int a) => a;\n    public void Reset() { }\n}\n';
+    const r = unitTestsFor(EditorState.create({ doc: src, selection: { anchor: 30 } }), 'xunit')!;
+    expect(r.name).toBe('CalcTests');
+    expect(r.text).toContain('using Xunit;\n\nnamespace Demo.Tests;\n\npublic class CalcTests\n{\n    [Fact]\n    public void Add_Works()');
+    expect(r.text.match(/\[Fact\]/g)).toHaveLength(2);
   });
 });

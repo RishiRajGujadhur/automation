@@ -14,6 +14,7 @@ Each is pushed on its own with a Settings ▸ Features switch, a native menu row
 | RC6 | Generate (Ctrl+Alt+G) | Rider | yes | ✅ 2026-10-20 |
 | RC7 | Move Type to Matching File | Rider | yes | ✅ 2026-10-20 |
 | RC8 | Extract Interface | VS 2026 | yes | ✅ 2026-10-20 |
+| RC9 | Create Unit Tests | VS 2026 | yes | ✅ 2026-10-20 |
 
 ## Progress log
 - 2026-10-20 RC1: Ctrl+Alt+Shift+T: only the refactorings at the caret or selection.
@@ -24,3 +25,4 @@ Each is pushed on its own with a Settings ▸ Features switch, a native menu row
 - 2026-10-20 RC6: Roslyn's generators at the caret, without the dialog-only ones.
 - 2026-10-20 RC7: A type moves to its own TypeName.cs.
 - 2026-10-20 RC8: IClassName.cs with the public members (previewed); the class implements it.
+- 2026-10-20 RC9: A previewed NUnit / xUnit / MSTest class with a test per public method.

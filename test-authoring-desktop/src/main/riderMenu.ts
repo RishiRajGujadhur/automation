@@ -333,6 +333,7 @@ const ROWS: Record<'edit' | 'view' | 'navigate' | 'code' | 'tools' | 'help', Row
       ['Generate…', 'generate-code'],
       ['Move Type to Matching File', 'move-type-to-file'],
       ['Extract Interface…', 'extract-interface'],
+      ['Create Unit Tests…', 'create-unit-tests'],
     ] },
   ],
   tools: [
