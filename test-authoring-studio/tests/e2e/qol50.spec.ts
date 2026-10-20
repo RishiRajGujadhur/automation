@@ -265,7 +265,7 @@ test('QL33 Notifications: file:line references open the file', async ({ page }) 
   await openFeature(page);
   await page.evaluate(() => window.dispatchEvent(new CustomEvent('tas:notice', { detail: 'Check Steps/AuthSteps.cs:5 please' })));
   await menuItem(page, 'View', /^Notifications/);
-  await page.getByRole('list', { name: 'Notification history' }).getByRole('button', { name: 'Steps/AuthSteps.cs:5' }).click();
+  await page.getByRole('list', { name: 'Notification history' }).getByRole('button', { name: 'Steps/AuthSteps.cs:5', exact: true }).click();
   await expect(page.locator('.editor-tab-label[aria-current="true"]')).toHaveAttribute('title', 'Steps/AuthSteps.cs');
 });
 
@@ -505,4 +505,22 @@ test('QL74 Settings: changed feature switches are marked; @modified lists them',
   await dialog.getByRole('switch', { name: 'Copy XPath', exact: true }).click();
   await dialog.getByRole('searchbox').or(dialog.getByRole('textbox').first()).fill('@modified');
   await expect(dialog.getByText('Copy XPath (changed)')).toBeVisible();
+});
+
+test('QL75 / QL76 / QL77 Notifications: filter, relative times, dismiss one', async ({ page }) => {
+  await openFeature(page);
+  await menuItem(page, 'View', /^Notifications/);
+  const list = page.getByRole('list', { name: 'Notification history' });
+  for (const t of ['Alpha notice', 'Beta notice']) {
+    await page.evaluate((d) => window.dispatchEvent(new CustomEvent('tas:notice', { detail: d })), t);
+    await expect(list).toContainText(t);
+  }
+  await expect(list).toContainText('just now');
+  await page.getByLabel('Filter notifications').fill('beta');
+  await expect(list).toContainText('Beta notice');
+  await expect(list).not.toContainText('Alpha notice');
+  await page.getByLabel('Filter notifications').fill('');
+  await list.getByRole('button', { name: 'Dismiss Beta notice' }).click();
+  await expect(list).not.toContainText('Beta notice');
+  await expect(list).toContainText('Alpha notice');
 });
