@@ -67,6 +67,7 @@ has it on by default, so the desktop app starts with it on. The others start off
 | Y56 | Problems in the file (status bar) | VS 2026 | yes | ✅ 2026-10-20 |
 | Y57 | Locals: Copy All as JSON | Rider | no | ✅ 2026-10-20 |
 | Y58 | Test Explorer: Copy Test Name | VS 2026 | no | ✅ 2026-10-20 |
+| Y59 | Test Explorer: Export Results (CSV) | VS 2026 | no | ✅ 2026-10-20 |
 
 ## Progress log
 - 2026-10-20 Y1: Percent-encodes the selection (or line) and decodes it.
@@ -127,3 +128,4 @@ has it on by default, so the desktop app starts with it on. The others start off
 - 2026-10-20 Y56: Errors and warnings of the active file; click for the next one.
 - 2026-10-20 Y57: Every local and its value copied as a JSON object.
 - 2026-10-20 Y58: Copies Class.Method of the selected tests.
+- 2026-10-20 Y59: Saves test, project, outcome, duration and message as CSV.
