@@ -184,6 +184,7 @@ has it on by default, so the desktop app starts with it on. The others start off
 | X174 | Clear All Bookmarks | VS 2026 | yes | ✅ 2026-10-20 |
 | X175 | Save as Live Template | Rider | yes | ✅ 2026-10-20 |
 | X176 | Toggle Ignore Test | Rider | yes | ✅ 2026-10-20 |
+| X177 | Ignore / Unignore Scenario | Rider / SpecFlow | yes | ✅ 2026-10-20 |
 
 ## Progress log
 - 2026-10-20 X1: Sort Lines: the selected lines (or the whole file) in natural, case-insensitive order, blank lines last. Third-batch plumbing: src/rider/more.ts, src/editor/textTools.ts, IDE-FEATURES.md.
@@ -362,3 +363,4 @@ has it on by default, so the desktop app starts with it on. The others start off
 - 2026-10-20 X174: Delete every bookmark
 - 2026-10-20 X175: Selection as your own template
 - 2026-10-20 X176: [Ignore] on the test at caret
+- 2026-10-20 X177: @ignore toggle

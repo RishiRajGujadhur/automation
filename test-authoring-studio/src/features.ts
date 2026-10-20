@@ -274,6 +274,7 @@ export const FEATURES: Feature[] = [
   { id: 'clear-bookmarks', label: 'Clear All Bookmarks', group: 'Navigation', essential: true, vs: 'Bookmarks ▸ Delete All Bookmarks', description: 'Deletes every bookmark of the workspace.', commands: ['clear-bookmarks'] },
   { id: 'save-live-template', label: 'Save as Live Template', group: 'Editing', essential: true, vs: 'Tools ▸ Save as Live Template (Rider)', description: 'Saves the selection as your own live template (Insert Live Template lists it).', commands: ['save-live-template'] },
   { id: 'toggle-ignore', label: 'Toggle Ignore Test', group: 'Debugging', essential: true, vs: 'Unit Tests ▸ Ignore (Rider)', description: 'Adds or removes [Ignore("…")] on the test method at the caret.', commands: ['toggle-ignore'] },
+  { id: 'ignore-scenario', label: 'Ignore / Unignore Scenario', group: 'Gherkin', essential: true, description: 'Toggles the @ignore tag (SpecFlow / Reqnroll skip the scenario).', commands: ['ignore-scenario'] },
 ];
 export const GROUPS: FeatureGroup[] = ['Editing', 'Navigation', 'Code intelligence', 'Tool windows', 'Files', 'Git', 'Gherkin', 'View', 'Debugging', 'Help and productivity'];
 

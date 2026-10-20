@@ -196,6 +196,7 @@ const ROWS: Record<'edit' | 'view' | 'navigate' | 'code' | 'tools' | 'help', Row
       ['Table: Move Column Left', 'table-column-left'],
       ['Table: Move Column Right', 'table-column-right'],
       ['Table: Select Column', 'table-select-column'],
+      ['Ignore / Unignore Scenario', 'ignore-scenario'],
     ] },
     ['Collapse Using Directives', 'fold-usings'],
     ['Sort JSON Keys', 'sort-json'],
