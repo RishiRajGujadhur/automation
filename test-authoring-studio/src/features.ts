@@ -296,6 +296,7 @@ export const FEATURES: Feature[] = [
   { id: 'quick-theme', label: 'Quick Switch Theme', group: 'View', essential: true, vs: 'Quick Switch Scheme (Rider)', description: 'A list of the app themes to switch to (View ▸ Quick Switch Theme).', commands: ['quick-theme'] },
   { id: 'close-type', label: 'Close All Tabs of This Type', group: 'Files', essential: true, description: 'The tab menu closes every tab with the same extension (pinned ones stay).' },
   { id: 'copy-outline', label: 'Copy Feature Outline', group: 'Gherkin', essential: true, description: 'Copies the feature and its scenarios as a Markdown checklist.', commands: ['copy-outline'] },
+  { id: 'test-summary', label: 'Test Explorer: Copy Results Summary', group: 'Tool windows', essential: true, vs: 'Test Explorer ▸ Copy summary', description: 'Copies the passed / failed / skipped counts and the failed tests.' },
 ];
 export const GROUPS: FeatureGroup[] = ['Editing', 'Navigation', 'Code intelligence', 'Tool windows', 'Files', 'Git', 'Gherkin', 'View', 'Debugging', 'Help and productivity'];
 
