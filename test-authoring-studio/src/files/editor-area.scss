@@ -3632,3 +3632,15 @@ html[data-features-off~='inlay-hints'] .cm-inlay {
   font-size: 11.5px;
   color: var(--warning, #b58105);
 }
+
+.toast-copy {
+  background: none;
+  border: 0;
+  color: inherit;
+  opacity: 0.7;
+  cursor: pointer;
+  padding: 2px;
+  &:hover {
+    opacity: 1;
+  }
+}

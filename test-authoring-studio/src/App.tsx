@@ -2283,6 +2283,7 @@ export default function App() {
               </Button>
             </Toast.Action>
           )}
+          {featureOn('toast-copy') && <Toast.Action asChild altText="Copy the message"><button className="toast-copy" aria-label="Copy the message" title="Copy" onClick={() => void copyText(notice)}><Copy size={13} /></button></Toast.Action>}
           <Toast.Close className="toast-close" aria-label="Dismiss notification"><X size={14} /></Toast.Close>
         </Toast.Root>
         <Toast.Viewport className="toast-viewport" />
