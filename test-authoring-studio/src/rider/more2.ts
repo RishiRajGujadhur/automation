@@ -1,6 +1,6 @@
 import type { RiderCommand } from './commands';
 import type { MoreHelpers } from './more';
-import { urlEncode, urlDecode, base64Encode, base64Decode, escapeString, unescapeString, htmlEncode, htmlDecode, stepNumber, insertSequence, toggleQuotes, joinWith, splitAt, alignAssignments, swapSelections, countOccurrences, trimLines, stamp, insertText, LOREM, shuffleLines, reformatXml, minifyXml, jsonEscape, jsonUnescape, numberLines, mapDoc, toFileScopedNamespace, toBlockScopedNamespace, removeRegions } from '../editor/textTools2';
+import { urlEncode, urlDecode, base64Encode, base64Decode, escapeString, unescapeString, htmlEncode, htmlDecode, stepNumber, insertSequence, toggleQuotes, joinWith, splitAt, alignAssignments, swapSelections, countOccurrences, trimLines, stamp, insertText, LOREM, shuffleLines, reformatXml, minifyXml, jsonEscape, jsonUnescape, numberLines, mapDoc, toFileScopedNamespace, toBlockScopedNamespace, removeRegions, toRawString } from '../editor/textTools2';
 
 /**
  * Fourth batch of Visual Studio 2026 / JetBrains Rider commands (IDE-FEATURES-4.md, Y1–Y100). RiderHost registers
@@ -37,5 +37,6 @@ export function moreCommands2(h: MoreHelpers): RiderCommand[] {
     { id: 'file-scoped-namespace', label: 'Convert to File-Scoped Namespace', menu: 'Code', submenu: 'C#', run: h.inEditor((v) => mapDoc(toFileScopedNamespace)(v) || h.notice('The file needs exactly one block-scoped namespace.')) },
     { id: 'block-scoped-namespace', label: 'Convert to Block-Scoped Namespace', menu: 'Code', submenu: 'C#', run: h.inEditor((v) => mapDoc(toBlockScopedNamespace)(v) || h.notice('The file has no file-scoped namespace (namespace X;).')) },
     { id: 'remove-regions', label: 'Remove #region Directives', menu: 'Code', submenu: 'C#', run: h.inEditor((v) => mapDoc(removeRegions)(v) || h.notice('The file has no #region directives.')) },
+    { id: 'raw-string', label: 'Convert to Raw String Literal', menu: 'Code', submenu: 'C#', run: h.inEditor((v) => toRawString(v) || h.notice('Put the caret in a regular "…" string (one that does not start or end with a quote).')) },
   ];
 }

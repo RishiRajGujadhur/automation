@@ -266,3 +266,27 @@ export function toBlockScopedNamespace(text: string) {
 
 /** Remove #region Directives (Rider): every #region / #endregion line goes, the code between stays. */
 export const removeRegions = (text: string) => { const next = text.replace(/^[ \t]*#(?:end)?region\b.*(?:\r?\n|$)/gm, ''); return next === text ? null : next; };
+
+/** Convert to Raw String Literal (Visual Studio quick action, C# 11): the "…" string at the caret becomes \"\"\"…\"\"\". */
+export function toRawString(view: EditorView) {
+  const { state } = view;
+  const head = state.selection.main.head;
+  const line = state.doc.lineAt(head);
+  for (const m of line.text.matchAll(/(?<![@$\w"])"((?:[^"\\]|\\.)*)"/g)) {
+    const from = line.from + m.index!, to = from + m[0].length;
+    if (head < from || head > to) continue;
+    const body = m[1].replace(/\\(u[0-9a-fA-F]{4}|.)/g, (_, c: string) => (c.length > 1 ? String.fromCharCode(parseInt(c.slice(1), 16)) : ({ n: '\n', t: '\t', r: '', '0': '\0' } as Record<string, string>)[c] ?? c));
+    if (body.includes('"""')) return false;
+    let insert: string;
+    if (body.includes('\n')) {
+      const indent = /^\s*/.exec(line.text)![0] + '    ';
+      insert = `"""\n${body.split('\n').map((l) => (l ? indent + l : '')).join('\n')}\n${indent}"""`;
+    } else {
+      if (body.startsWith('"') || body.endsWith('"')) return false;
+      insert = `"""${body}"""`;
+    }
+    view.dispatch({ changes: { from, to, insert }, userEvent: 'input.convert' });
+    return true;
+  }
+  return false;
+}

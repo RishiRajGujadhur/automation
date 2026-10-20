@@ -252,6 +252,7 @@ const ROWS: Record<'edit' | 'view' | 'navigate' | 'code' | 'tools' | 'help', Row
       ['Convert to File-Scoped Namespace', 'file-scoped-namespace'],
       ['Convert to Block-Scoped Namespace', 'block-scoped-namespace'],
       ['Remove #region Directives', 'remove-regions'],
+      ['Convert to Raw String Literal', 'raw-string'],
     ] },
   ],
   tools: [
