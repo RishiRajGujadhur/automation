@@ -15,7 +15,7 @@ export const queueTerminalCommand = (command: string) => { queued = command; };
 // Clears the active terminal (its toolbar button) (QOL-50).
 const TERMINAL_CLEAR_EVENT = 'tas:terminal-clear';
 
-type Tab = { key: number; title: string };
+type Tab = { key: number; title: string; named?: boolean };
 type TermEvent = { kind: 'output'; text: string } | { kind: 'done'; cwd: string } | { kind: 'exit'; code: number | null };
 
 const termFont = () => { try { return Number(localStorage.getItem('tas:terminalFont')) || 13; } catch { return 13; } };
@@ -128,7 +128,7 @@ export default function TerminalPanel({ onClose }: { onClose: () => void }) {
         <div className="terminal-tabs" role="tablist" aria-label="Terminals">
           {tabs.map((t, i) => (
             <span key={t.key} className={`terminal-tab ${t.key === active ? 'on' : ''}`}>
-              <button role="tab" aria-selected={t.key === active} onClick={() => setActive(t.key)}><SquareTerminal size={12} /> {t.title}{tabs.length > 1 ? ` ${i + 1}` : ''}</button>
+              <button role="tab" aria-selected={t.key === active} onClick={() => setActive(t.key)} title={featureOn('terminal-rename') ? 'Double-click to rename' : undefined} onDoubleClick={() => { if (!featureOn('terminal-rename')) return; const name = window.prompt('Rename terminal', t.title)?.trim(); if (name !== undefined) setTabs((l) => l.map((x) => (x.key === t.key ? { ...x, title: name || 'Local', named: !!name } : x))); }}><SquareTerminal size={12} /> {t.title}{tabs.length > 1 ? ` ${i + 1}` : ''}</button>
               <button className="icon-button" aria-label={`Close terminal ${i + 1}`} onClick={() => close(t.key)}><X size={11} /></button>
             </span>
           ))}
@@ -139,7 +139,7 @@ export default function TerminalPanel({ onClose }: { onClose: () => void }) {
         <button className="icon-button" aria-label="Close Terminal" title="Close" onClick={onClose}><X size={14} /></button>
       </div>
       {tabs.map((t) => (
-        <Shell key={t.key} active={t.key === active} takeCommand={take} onTitle={(title) => setTabs((l) => l.map((x) => (x.key === t.key ? { ...x, title } : x)))} onExit={() => {}} />
+        <Shell key={t.key} active={t.key === active} takeCommand={take} onTitle={(title) => setTabs((l) => l.map((x) => (x.key === t.key && !x.named ? { ...x, title } : x)))} onExit={() => {}} />
       ))}
     </section>
   );
