@@ -105,6 +105,7 @@ Every improvement is verified by a unit or Playwright test (`tests/e2e/qol50.spe
 | QL96 | Build Output Copy All | Tool windows | ✅ 2026-10-20 |
 | QL97 | Escape clears Find in Files | Navigation | ✅ 2026-10-20 |
 | QL98 | Debugging in the window title | Debugging | ✅ 2026-10-20 |
+| QL99 | Test run result message | Tool windows | ✅ 2026-10-20 |
 
 ## Progress log
 - 2026-10-20 QL1: Title names the file and workspace folder
@@ -205,3 +206,4 @@ Every improvement is verified by a unit or Playwright test (`tests/e2e/qol50.spe
 - 2026-10-20 QL96: A button copies the whole build output.
 - 2026-10-20 QL97: Escape in the Find in Files box clears the query.
 - 2026-10-20 QL98: The title shows Debugging / Debugging (paused) during a debug session.
+- 2026-10-20 QL99: A finished run says how many passed and failed and how long it took.

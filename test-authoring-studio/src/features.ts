@@ -392,6 +392,7 @@ export const FEATURES: Feature[] = [
   { id: 'tab-copy-full', label: 'Tab menu: Copy Full Path', group: 'Files', essential: true, description: 'The editor tab menu copies the file\'s absolute path.' },
   { id: 'output-copy', label: 'Build Output: Copy All', group: 'Tool windows', essential: true, description: 'A button copies the whole build output.' },
   { id: 'debug-title', label: 'Debugging in the window title', group: 'Debugging', essential: true, description: 'The window title says "Debugging" (or "paused") while a debug session runs.' },
+  { id: 'test-summary-notice', label: 'Test run result message', group: 'Tool windows', essential: true, description: 'When a test run ends a message says how many passed and failed, and how long it took.' },
 ];
 export const GROUPS: FeatureGroup[] = ['Editing', 'Navigation', 'Code intelligence', 'Tool windows', 'Files', 'Git', 'Gherkin', 'View', 'Debugging', 'Help and productivity'];
 

@@ -26,5 +26,17 @@ export default function BusyTitle() {
     const text = build.status === 'cancelled' ? `${what} cancelled.` : `${what} ${build.status === 'succeeded' ? 'succeeded' : 'failed'}${time}: ${errors} error${errors === 1 ? '' : 's'}, ${warnings} warning${warnings === 1 ? '' : 's'}.`;
     window.dispatchEvent(new CustomEvent('tas:notice', { detail: text }));
   }, [build.status]); // eslint-disable-line react-hooks/exhaustive-deps
+  // A finished test run says how it went (QOL-50).
+  const testsWas = useRef(tests.status);
+  useEffect(() => {
+    const before = testsWas.current;
+    testsWas.current = tests.status;
+    if (before !== 'running' || tests.status === 'running' || !featureOn('test-summary-notice')) return;
+    if (tests.status === 'cancelled') { window.dispatchEvent(new CustomEvent('tas:notice', { detail: 'Test run cancelled.' })); return; }
+    const s = tests.summary ?? { passed: tests.results.filter((r) => r.outcome === 'passed').length, failed: tests.results.filter((r) => r.outcome === 'failed').length, skipped: tests.results.filter((r) => r.outcome === 'skipped').length, durationMs: undefined as number | undefined };
+    const time = s.durationMs !== undefined ? ` in ${(s.durationMs / 1000).toFixed(1)} s` : '';
+    const text = tests.status === 'failed' && !s.passed && !s.failed ? `Test run failed${tests.error ? `: ${tests.error}` : '.'}` : `Tests ${s.failed ? 'failed' : 'passed'}${time}: ${s.passed} passed, ${s.failed} failed${s.skipped ? `, ${s.skipped} skipped` : ''}.`;
+    window.dispatchEvent(new CustomEvent('tas:notice', { detail: text }));
+  }, [tests.status]); // eslint-disable-line react-hooks/exhaustive-deps
   return null;
 }
