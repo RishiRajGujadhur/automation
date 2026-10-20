@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { relativeDay, conflictsIn, resolveConflict } from '../src/editor/advanced';
+import { selectHunks } from '../server/git';
 
 describe('advanced features (ADVANCED-20)', () => {
   it('registry starts empty', () => { expect(true).toBe(true); });
@@ -19,5 +20,14 @@ describe('advanced features (ADVANCED-20)', () => {
     expect(resolveConflict(lines, c, 'incoming')).toEqual(['theirs']);
     expect(resolveConflict(lines, c, 'both')).toEqual(['mine', 'theirs']);
     expect(conflictsIn('<<<<<<< a\nx\n||||||| base\ny\n=======\nz\n>>>>>>> b')[0]).toEqual({ start: 1, base: 3, mid: 5, end: 7 });
+  });
+  it('Z3 hunks touching the selected lines', () => {
+    const diff = 'diff --git a/f.txt b/f.txt\nindex 1..2 100644\n--- a/f.txt\n+++ b/f.txt\n@@ -2 +2 @@\n-b\n+B\n@@ -5,0 +6,2 @@\n+x\n+y\n';
+    const one = selectHunks(diff, 2, 2);
+    expect(one.hunks).toBe(1);
+    expect(one.patch).toBe('diff --git a/f.txt b/f.txt\nindex 1..2 100644\n--- a/f.txt\n+++ b/f.txt\n@@ -2 +2 @@\n-b\n+B\n');
+    expect(selectHunks(diff, 7, 7).hunks).toBe(1);
+    expect(selectHunks(diff, 3, 4).hunks).toBe(0);
+    expect(selectHunks(diff, 1, 9).hunks).toBe(2);
   });
 });

@@ -1,5 +1,6 @@
 import type { RiderCommand } from './commands';
 import type { MoreHelpers } from './more';
+import { GIT_CHANGED_EVENT } from '../editor/events';
 import { nextConflict } from '../editor/advanced';
 import { getSnapshot, setBreakpoints } from '../debug/store';
 import { unsavedFiles } from '../editor/autosave';
@@ -121,5 +122,6 @@ export function moreCommands2(h: MoreHelpers): RiderCommand[] {
     { id: 'char-info', label: 'Character Info at Caret', menu: 'Tools', run: h.inEditor((v) => h.notice(charInfo(v.state) ?? 'The caret is at the end of the file.')) },
     { id: 'close-lru-tabs', label: 'Close Least Recently Used Tabs', menu: 'View', run: () => { const n = closeLeastRecent(5, unsavedFiles()); h.notice(n ? `Closed ${n} tab${n === 1 ? '' : 's'}; the 5 used last stay open.` : 'Nothing to close: at most 5 tabs (plus pinned and unsaved ones) are open.'); } },
     { id: 'next-conflict', label: 'Next Merge Conflict', menu: 'Navigate', run: h.inEditor((v) => nextConflict(v) || h.notice('This file has no merge conflicts.')) },
+    { id: 'stage-lines', label: 'Stage Selected Lines', menu: 'Tools', run: h.inEditor((v, file) => { if (unsavedFiles().includes(file)) { h.notice('Save the file first: staging uses the file on disk.'); return; } const s = v.state.selection.main; const from = v.state.doc.lineAt(s.from).number, to = v.state.doc.lineAt(s.to).number; void api<{ hunks: number }>('/git/stage-lines', { file, from, to }).then((r) => { window.dispatchEvent(new Event(GIT_CHANGED_EVENT)); h.notice(r.hunks ? `Staged ${r.hunks} change${r.hunks === 1 ? '' : 's'} of lines ${from}–${to}.` : 'No unstaged changes on the selected lines.'); }, (e) => h.notice((e as Error).message)); }) },
   ];
 }

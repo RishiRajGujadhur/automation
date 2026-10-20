@@ -498,6 +498,7 @@ export const FEATURES: Feature[] = [
   // ── Advanced (ADVANCED-20.md) ──
   { id: 'inline-blame', label: 'Inline Git blame (caret line)', group: 'Git', essential: true, vs: 'Git ▸ Line blame', description: 'The line with the caret shows who last changed it, when and the commit summary, at its end.' },
   { id: 'merge-conflicts', label: 'Merge conflict actions', group: 'Git', essential: true, vs: 'Merge Editor', description: 'Conflict blocks (<<<<<<< ======= >>>>>>>) are coloured with Accept Current / Incoming / Both above them; Navigate ▸ Next Merge Conflict.', commands: ['next-conflict'] },
+  { id: 'stage-lines', label: 'Stage Selected Lines', group: 'Git', essential: true, vs: 'Git Changes ▸ Stage selected ranges', description: 'Tools ▸ Stage Selected Lines stages only the changes on the selected lines (the rest of the file stays unstaged).', commands: ['stage-lines'] },
 ];
 export const GROUPS: FeatureGroup[] = ['Editing', 'Navigation', 'Code intelligence', 'Tool windows', 'Files', 'Git', 'Gherkin', 'View', 'Debugging', 'Help and productivity'];
 

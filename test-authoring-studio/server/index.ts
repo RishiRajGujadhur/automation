@@ -39,7 +39,7 @@ import { Builder } from './build.js';
 import { findInFiles, replaceInFiles } from './search.js';
 import { values, render, parameterCount, replaceAttributePattern } from './stepRename.js';
 import { installed as nugetInstalled, updates as nugetUpdates, search as nugetSearch, versions as nugetVersions, install as nugetInstall, uninstall as nugetUninstall } from './nuget.js';
-import { status as gitStatus, stage as gitStage, unstage as gitUnstage, discard as gitDiscard, commit as gitCommit, headInfo, log as gitLog, branches as gitBranches, checkout as gitCheckout, createBranch as gitCreateBranch, sync as gitSync, merge as gitMerge, blame as gitBlame, clone as gitClone, shelves, shelve, unshelve, deleteShelf, lineHistory, commitDetails, graphLog, fileAt, commitAction, git } from './git.js';
+import { status as gitStatus, stage as gitStage, unstage as gitUnstage, discard as gitDiscard, commit as gitCommit, headInfo, log as gitLog, branches as gitBranches, checkout as gitCheckout, createBranch as gitCreateBranch, sync as gitSync, merge as gitMerge, blame as gitBlame, clone as gitClone, shelves, shelve, unshelve, deleteShelf, lineHistory, commitDetails, graphLog, fileAt, commitAction, git, stageLines } from './git.js';
 import { LanguageService } from './langService.js';
 import type { Index } from '../src/types.js';
 import { readSettings, writeSettings, settingsSchema, tracesDir, spySnapshotsDir } from './settings.js';
@@ -606,6 +606,12 @@ app.get('/api/git/blame', async (req, res) => {
   const file = z.string().min(1).max(400).parse(req.query.file);
   await confined(config.repositoryRoot, file, false);
   res.json(await gitBlame(config.repositoryRoot, file));
+});
+app.post('/api/git/stage-lines', async (req, res) => {
+  const { file, from, to } = z.object({ file: z.string().min(1).max(400), from: z.number().int().min(1), to: z.number().int().min(1) }).parse(req.body);
+  await confined(config.repositoryRoot, file, false);
+  const hunks = await stageLines(config.repositoryRoot, file, from, Math.max(from, to));
+  res.json({ hunks, status: await gitStatus(config.repositoryRoot) });
 });
 app.post('/api/git/stage', async (req, res) => { await gitStage(config.repositoryRoot, gitFiles.parse(req.body).files); res.json(await gitStatus(config.repositoryRoot)); });
 app.post('/api/git/unstage', async (req, res) => { await gitUnstage(config.repositoryRoot, gitFiles.parse(req.body).files); res.json(await gitStatus(config.repositoryRoot)); });

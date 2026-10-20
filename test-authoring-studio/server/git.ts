@@ -284,3 +284,36 @@ export async function commitAction(root: string, hash: string, action: string, o
   return (await run(top, hash, o)).trim();
 }
 void refName;
+
+/** The hunks of a `git diff -U0` whose new-file lines touch [from, to] (1-based), as a patch for `git apply --cached`. */
+export function selectHunks(diff: string, from: number, to: number) {
+  const lines = diff.split('\n');
+  const first = lines.findIndex((l) => l.startsWith('@@'));
+  if (first < 0) return { patch: '', hunks: 0 };
+  const header = lines.slice(0, first);
+  const picked: string[] = [];
+  let hunks = 0;
+  for (let i = first; i < lines.length;) {
+    const m = /^@@ -\d+(?:,\d+)? \+(\d+)(?:,(\d+))? @@/.exec(lines[i]);
+    let j = i + 1;
+    while (j < lines.length && !lines[j].startsWith('@@')) j++;
+    if (m) {
+      const start = Number(m[1]), count = m[2] === undefined ? 1 : Number(m[2]);
+      const end = count === 0 ? start : start + count - 1;
+      if (start <= to && end >= from) { picked.push(...lines.slice(i, j)); hunks++; }
+    }
+    i = j;
+  }
+  const body = picked.filter((l, k) => !(l === '' && k === picked.length - 1));
+  return { patch: hunks ? `${[...header, ...body].join('\n')}\n` : '', hunks };
+}
+/** Stage Selected Lines (Visual Studio 2026 / Rider partial staging): the changed hunks touching the lines go to the index. */
+export async function stageLines(root: string, file: string, from: number, to: number) {
+  const { top, prefix } = await locate(root);
+  const rel = toRepo(prefix, file);
+  const diff = await git(top, ['diff', '-U0', '--no-color', '--no-ext-diff', '--', rel]);
+  const { patch, hunks } = selectHunks(diff, from, to);
+  if (!hunks) return 0;
+  await git(top, ['apply', '--cached', '--unidiff-zero', '--whitespace=nowarn', '-'], patch);
+  return hunks;
+}
