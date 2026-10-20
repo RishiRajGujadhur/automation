@@ -73,6 +73,7 @@ export default function TestExplorer({ revision, onOpen, onDebug, onNotice }: { 
   const menu = (ts: DiscoveredTest[], go?: DiscoveredTest) => [
     { label: 'Run', icon: Play, disabled: running, onSelect: () => void start(ts) },
     { label: 'Debug', icon: Bug, disabled: running || ts.length !== 1, onSelect: () => onDebug(ts[0]) },
+    ...(featureOn('coverage-selected') ? [{ label: 'Analyze Code Coverage', icon: ShieldCheck, disabled: running, onSelect: () => void runTests(ts, configuration, true).catch((e) => onNotice((e as Error).message)) }] : []),
     ...(go ? ['separator' as const, { label: 'Go To Test', icon: Navigation, onSelect: () => onOpen(go.file, go.line) }] : []),
     ...(featureOn('test-copy') ? [{ label: 'Copy', icon: Copy, onSelect: () => void copyText(ts.map((t) => testDetails(t, outcomeOf(t, run), resultsOf(t, run.results))).join('\n\n')).then((ok) => onNotice(ok ? `Copied ${ts.length === 1 ? ts[0].name : `${ts.length} tests`}.` : 'Clipboard unavailable.')) }] : []),
     'separator' as const,
