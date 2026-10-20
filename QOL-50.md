@@ -99,6 +99,7 @@ Every improvement is verified by a unit or Playwright test (`tests/e2e/qol50.spe
 | QL90 | Terminal right-click copies or pastes | Tool windows | ✅ 2026-10-20 |
 | QL91 | Explorer: Open in Terminal | Files | ✅ 2026-10-20 |
 | QL92 | Terminal Ctrl+Shift+C / Ctrl+Shift+V | Tool windows | ✅ 2026-10-20 |
+| QL93 | Folder tooltips show a file count | Files | ✅ 2026-10-20 |
 
 ## Progress log
 - 2026-10-20 QL1: Title names the file and workspace folder
@@ -193,3 +194,4 @@ Every improvement is verified by a unit or Playwright test (`tests/e2e/qol50.spe
 - 2026-10-20 QL90: Right-click copies the terminal selection, or pastes when nothing is selected.
 - 2026-10-20 QL91: A folder's menu opens a terminal in that folder.
 - 2026-10-20 QL92: Ctrl+Shift+C copies the terminal selection; Ctrl+Shift+V pastes.
+- 2026-10-20 QL93: Hovering an Explorer folder shows how many files it holds.

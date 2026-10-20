@@ -387,6 +387,7 @@ export const FEATURES: Feature[] = [
   { id: 'terminal-right-click', label: 'Terminal: right-click copies or pastes', group: 'Tool windows', essential: true, description: 'Right-click in a terminal copies the selected text, or pastes when nothing is selected.' },
   { id: 'open-in-terminal', label: 'Explorer: Open in Terminal', group: 'Files', essential: true, vs: 'Open in Terminal', description: 'A folder\'s menu opens a terminal in that folder.' },
   { id: 'terminal-copy-keys', label: 'Terminal: Ctrl+Shift+C / Ctrl+Shift+V', group: 'Tool windows', essential: true, description: 'Ctrl+Shift+C copies the terminal selection and Ctrl+Shift+V pastes.' },
+  { id: 'folder-count', label: 'Explorer: file count in folder tooltips', group: 'Files', essential: true, description: 'Hovering a folder shows how many files it holds.' },
 ];
 export const GROUPS: FeatureGroup[] = ['Editing', 'Navigation', 'Code intelligence', 'Tool windows', 'Files', 'Git', 'Gherkin', 'View', 'Debugging', 'Help and productivity'];
 
