@@ -50,6 +50,7 @@ Every improvement is verified by a unit or Playwright test (`tests/e2e/qol50.spe
 | QL41 | Unsaved files in the status bar | Status bar | ✅ 2026-10-20 |
 | QL42 | Auto Save in the status bar | Status bar | ✅ 2026-10-20 |
 | QL43 | Explorer search: matches marked | Explorer | ✅ 2026-10-20 |
+| QL44 | Tag hover: scenario count | Gherkin | ✅ 2026-10-20 |
 
 ## Progress log
 - 2026-10-20 QL1: Title names the file and workspace folder
@@ -95,3 +96,4 @@ Every improvement is verified by a unit or Playwright test (`tests/e2e/qol50.spe
 - 2026-10-20 QL41: Count; click saves all
 - 2026-10-20 QL42: Mode shown; click switches
 - 2026-10-20 QL43: Matching part of names marked
+- 2026-10-20 QL44: Hover a tag for its scenario count

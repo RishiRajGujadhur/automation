@@ -1,4 +1,5 @@
-import { EditorView, keymap } from '@codemirror/view';
+import { EditorView, hoverTooltip, keymap } from '@codemirror/view';
+import { api } from '../api';
 import { Prec, type Extension } from '@codemirror/state';
 import { indentService } from '@codemirror/language';
 import { featureOn } from '../features';
@@ -67,5 +68,19 @@ export const alignOnPaste = EditorView.updateListener.of((u) => {
     if (changes.length) view.dispatch({ changes, userEvent: 'input.format' });
   });
 });
+/** Hovering a tag shows how many scenarios use it (Tags window data, fetched once a minute at most). */
+let tagCache: { at: number; rows: Promise<{ tag: string; scenarios: unknown[] }[]> } | undefined;
+const tagRows = () => { if (!tagCache || Date.now() - tagCache.at > 60_000) tagCache = { at: Date.now(), rows: api<{ tag: string; scenarios: unknown[] }[]>('/tags').catch(() => []) }; return tagCache.rows; };
+export const tagHover = hoverTooltip(async (view, pos) => {
+  if (!featureOn('tag-hover')) return null;
+  const line = view.state.doc.lineAt(pos);
+  if (!line.text.trim().startsWith('@')) return null;
+  const col = pos - line.from;
+  const m = [...line.text.matchAll(/@[^\s@]+/g)].find((x) => col >= x.index! && col <= x.index! + x[0].length);
+  if (!m) return null;
+  const row = (await tagRows()).find((r) => r.tag === m[0]);
+  const n = row?.scenarios.length ?? 0;
+  return { pos: line.from + m.index!, end: line.from + m.index! + m[0].length, above: true, create: () => { const dom = document.createElement('div'); dom.className = 'cm-tag-info'; dom.textContent = `${m[0]}: ${n} scenario${n === 1 ? '' : 's'} in the repository${row ? '' : ' (save to count this file)'}`; return { dom }; } };
+});
 // gherkin qol
-export const gherkinQol: Extension[] = [alignOnPaste, tableEnter, pipeInEmptyRow, gherkinIndent];
+export const gherkinQol: Extension[] = [tagHover, alignOnPaste, tableEnter, pipeInEmptyRow, gherkinIndent];
