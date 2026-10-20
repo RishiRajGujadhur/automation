@@ -11,6 +11,7 @@ import { currentScenario as currentScenarioFor } from './currentScenario';
 import { scrollPastEnd } from '@codemirror/view';
 import { searchCount } from './searchCount';
 import { findMemory } from './findMemory';
+import { findInSelectionExtension } from './findInSelection';
 import { lineFlash } from './lineFlash';
 import { editorLinks } from './links';
 import '../vscode';
@@ -134,6 +135,8 @@ const EXTRA: [Compartment, (o: ViewOptions) => Extension][] = [
   [new Compartment(), () => (featureOn('editor-links') ? editorLinks : [])],
   // Find starts with the last search (QOL-50).
   [new Compartment(), () => findMemory],
+  // Find in Selection (Alt+L in the find panel).
+  [new Compartment(), () => findInSelectionExtension],
   // A short highlight on the line you were taken to (QOL-50).
   [new Compartment(), () => lineFlash],
   // extra view options

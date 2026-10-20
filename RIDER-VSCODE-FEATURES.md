@@ -279,7 +279,7 @@ Legend: `[x]` done · `[ ]` to do.
 - [x] 333. Navigate to next code inspection — Next Problem in File
 - [x] 334. Navigate to next compiler warning — Navigate ▸ Next / Previous Warning; the C# editor now shows the compiler's semantic warnings and errors (2026-10-21)
 - [x] 335. Navigate to next test failure — Navigate ▸ Next Test Failure (each failed test of the last run, with its message) (2026-10-21)
-- [ ] 336. Search within selected text
+- [x] 336. Search within selected text — Edit ▸ Find in Selection; Alt+L / 'in selection' in the find panel (2026-10-21)
 - [x] 337. Search within open editors
 - [x] 338. Search within ignored files — Search: 'Use Exclude Settings and Ignore Files' toggle (2026-10-21)
 - [x] 339. Search using glob patterns
@@ -362,3 +362,4 @@ Legend: `[x]` done · `[ ]` to do.
 - 2026-10-21 211: Bracket pairs over several lines get a vertical guide at the closing bracket's column, coloured by depth; the pair around the caret is brighter; 'active' shows only that one.
 - 2026-10-21 177: Comment-marked regions fold (nested too); the start and end patterns are settings.
 - 2026-10-21 175: Typing in an opening or closing tag name renames its partner (comments, CDATA and self-closing tags skipped).
+- 2026-10-21 336: Find in Selection limits Enter, Shift+Enter, Select All and Replace All of the find panel to the selected text, shaded while it is the scope.

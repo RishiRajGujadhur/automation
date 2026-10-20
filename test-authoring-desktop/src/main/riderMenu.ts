@@ -8,6 +8,7 @@ import type { MenuItemConstructorOptions } from 'electron';
 type Row = [label: string, id: string, accelerator?: string] | null | { submenu: string; rows: Row[] };
 const ROWS: Record<'edit' | 'view' | 'navigate' | 'code' | 'tools' | 'help', Row[]> = {
   edit: [
+    ['Find in Selection', 'find-in-selection'],
     null,
     ['Extend Selection', 'extend-selection', 'Shift+Alt+Right'],
     ['Shrink Selection', 'shrink-selection', 'Shift+Alt+Left'],

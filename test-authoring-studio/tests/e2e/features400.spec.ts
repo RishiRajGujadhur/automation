@@ -401,3 +401,33 @@ test('175 Linked editing (XML tags)', async ({ page }) => {
   await page.keyboard.press('Backspace');
   await expect.poll(() => docText(page)).toContain('<item>x</item>');
 });
+
+test('336 Search within selected text', async ({ page }) => {
+  await open(page, CS);
+  const text = 'namespace Demo;\nclass A { int x = 1; }\nclass B { int x = 2; int x2 = x; }\nclass C { int x = 3; }\n';
+  await setDoc(page, text);
+  // Select class B's line, then Find in Selection.
+  await page.evaluate(([a, b]) => { const v = (window as unknown as { __activeEditor: () => { view: { dispatch(x: unknown): void; focus(): void } } }).__activeEditor().view; v.dispatch({ selection: { anchor: a, head: b } }); v.focus(); }, [text.indexOf('class B'), text.indexOf('class C')] as const);
+  await menuItem(page, 'Edit', /^Find in Selection$/);
+  const panel = page.locator('.cm-search');
+  await expect(panel.getByRole('button', { name: 'Find in Selection' })).toHaveAttribute('aria-pressed', 'true');
+  await panel.locator('input[name="search"]').fill('x');
+  // Enter goes to the next match inside the selection only (class B's first x, then the next one).
+  const head = () => page.evaluate(() => (window as unknown as { __activeEditor: () => { view: { state: { selection: { main: { from: number } } } } } }).__activeEditor().view.state.selection.main.from);
+  await panel.locator('input[name="search"]').press('Enter');
+  expect(await head()).toBe(text.indexOf('x = 2'));
+  // "all" selects every match in the selection.
+  await panel.getByRole('button', { name: 'all', exact: true }).click();
+  // Three x in class B only (x, x2's x, and the x read): every caret is inside class B's line.
+  const sel = await page.evaluate(() => (window as unknown as { __activeEditor: () => { view: { state: { selection: { ranges: { from: number }[] } } } } }).__activeEditor().view.state.selection.ranges.map((r) => r.from));
+  expect(sel.length).toBe(3);
+  expect(sel.every((f) => f > text.indexOf('class B') && f < text.indexOf('class C'))).toBe(true);
+  // Replace All inside the selection only.
+  await setDoc(page, text);
+  await page.evaluate(([a, b]) => { const v = (window as unknown as { __activeEditor: () => { view: { dispatch(x: unknown): void; focus(): void } } }).__activeEditor().view; v.dispatch({ selection: { anchor: a, head: b } }); v.focus(); }, [text.indexOf('class B'), text.indexOf('class C')] as const);
+  await menuItem(page, 'Edit', /^Find in Selection$/);
+  await panel.locator('input[name="search"]').fill('x');
+  await panel.locator('input[name="replace"]').fill('y');
+  await panel.getByRole('button', { name: 'replace all', exact: true }).click();
+  await expect.poll(() => docText(page)).toBe(text.replace('int x = 2; int x2 = x;', 'int y = 2; int y2 = y;'));
+});
