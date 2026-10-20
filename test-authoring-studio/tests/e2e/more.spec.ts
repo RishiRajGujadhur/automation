@@ -806,3 +806,36 @@ test('X160 / X161 Find Step Usages and Copy Step Text', async ({ page, context }
   const dlg = page.getByRole('dialog', { name: 'Step Usages' });
   await expect(dlg.getByRole('option').first()).toContainText('When the user signs in as "test-user"');
 });
+
+test('X162–X164 JSON and XML tools: Sort JSON Keys, Copy JSON Pointer, Copy XPath', async ({ page, request, context }) => {
+  await context.grantPermissions(['clipboard-read', 'clipboard-write']);
+  await fs.writeFile(path.join(root, 'settings.json'), '{"b": 1, "a": {"name": "ada"}}\n');
+  await fs.writeFile(path.join(root, 'Selectors/Pages.xml'), '<Dictionary>\n  <Page name="Login">\n    <Field id="user">#user</Field>\n  </Page>\n</Dictionary>\n');
+  expect((await request.post('/api/workspace', { data: { repositoryRoot: root, targetProject: '.' } })).ok()).toBe(true);
+  const json = await openCs(page, 'settings.json', '"b"');
+  await menuItem(page, 'Code', /^Sort JSON Keys/);
+  await expect.poll(() => doc(page)).toBe('{\n  "a": {\n    "name": "ada"\n  },\n  "b": 1\n}\n');
+  await json.locator('.cm-line', { hasText: 'ada' }).click();
+  await menuItem(page, 'Code', /^Copy JSON Pointer/);
+  await expect.poll(() => page.evaluate(() => navigator.clipboard.readText())).toBe('/a/name');
+  const xml = await openCs(page, 'Selectors/Pages.xml', '#user');
+  await xml.locator('.cm-line', { hasText: '#user' }).click();
+  await menuItem(page, 'Code', /^Copy XPath/);
+  await expect.poll(() => page.evaluate(() => navigator.clipboard.readText())).toBe("/Dictionary/Page[@name='Login']/Field[@id='user']");
+});
+
+test('X165–X168 Word count, Status Bar / Activity Bar toggles, What\'s New', async ({ page, request }) => {
+  await fs.writeFile(path.join(root, 'Notes2.md'), '# Notes\n\nThree more words.\n');
+  expect((await request.post('/api/workspace', { data: { repositoryRoot: root, targetProject: '.' } })).ok()).toBe(true);
+  await openCs(page, 'Notes2.md', 'Three more words');
+  await expect(page.getByLabel('Word count')).toHaveText('4 words');
+  await menuItem(page, 'View', /Status Bar/);
+  await expect(page.locator('footer.status-bar')).toBeHidden();
+  await menuItem(page, 'View', /Status Bar/);
+  await expect(page.locator('footer.status-bar')).toBeVisible();
+  await menuItem(page, 'Help', /^What's New/);
+  const dlg = page.getByRole('dialog', { name: "What's New" });
+  await dlg.getByLabel('Filter new features').fill('Copy XPath');
+  await expect(dlg.getByRole('list', { name: 'New features' }).getByRole('listitem')).toHaveCount(1);
+  await expect(dlg.getByRole('checkbox', { name: 'Copy XPath' })).toBeChecked();
+});

@@ -259,6 +259,7 @@ export const FEATURES: Feature[] = [
   { id: 'fold-usings', label: 'Collapse Using Directives', group: 'Code intelligence', essential: true, vs: 'Outlining ▸ Collapse usings', description: 'Folds the using block at the top of a C# file.', commands: ['fold-usings'] },
   { id: 'find-step-usages', label: 'Find Step Usages (feature step)', group: 'Gherkin', essential: true, vs: 'Find Usages on a Gherkin step', description: 'Every feature step bound to the same step definition as the step at the caret.', commands: ['find-step-usages'] },
   { id: 'copy-step-text', label: 'Copy Step Text', group: 'Gherkin', essential: true, description: 'Copies the step at the caret without its keyword (for the step catalogue or a binding).', commands: ['copy-step-text'] },
+  { id: 'sort-json', label: 'Sort JSON Keys', group: 'Editing', essential: true, vs: 'JSON ▸ Sort keys', description: 'Orders every object\'s keys alphabetically.', commands: ['sort-json'] },
 ];
 export const GROUPS: FeatureGroup[] = ['Editing', 'Navigation', 'Code intelligence', 'Tool windows', 'Files', 'Git', 'Gherkin', 'View', 'Debugging', 'Help and productivity'];
 

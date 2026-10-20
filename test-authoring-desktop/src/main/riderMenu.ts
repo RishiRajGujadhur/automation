@@ -188,6 +188,7 @@ const ROWS: Record<'edit' | 'view' | 'navigate' | 'code' | 'tools' | 'help', Row
       ['Copy Step Text', 'copy-step-text'],
     ] },
     ['Collapse Using Directives', 'fold-usings'],
+    ['Sort JSON Keys', 'sort-json'],
   ],
   tools: [
     ['Run Anything… (Ctrl twice)', 'run-anything'],
