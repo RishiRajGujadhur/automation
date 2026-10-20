@@ -1,11 +1,12 @@
 import type { RiderCommand } from './commands';
 import type { MoreHelpers } from './more';
+import { unsavedFiles } from '../editor/autosave';
 import { createTwoFilesPatch } from 'diff';
-import { readFile, isBrowser } from '../files/provider';
+import { readFile, isBrowser, renamePath } from '../files/provider';
 import { discoverTests, runTests } from '../testing/store';
 import { forEachDiagnostic } from '@codemirror/lint';
 import { api } from '../api';
-import { getTabs, setPinned } from '../files/tabs';
+import { getTabs, setPinned, movedPath } from '../files/tabs';
 import { copyText } from '../ui';
 import { tableDeleteEmptyRows, tableRemoveDuplicateRows, tableMarkdown, tagAllScenarios, removeTagEverywhere, sortTags, promoteCommonTags, insertDocString, expandOutline, wrapInRule, setLanguageHeader, scenarioName, tableInsertRowAbove, addScenarioOutline, tableColumnStats, tableColumnValues, tableFillSeries, mergeExamples, scenarioSteps, renameScenario, splitScenario, insertDataTable, tagAt, tagFilter } from '../editor/gherkinTools';
 import { urlEncode, urlDecode, base64Encode, base64Decode, escapeString, unescapeString, htmlEncode, htmlDecode, stepNumber, insertSequence, toggleQuotes, joinWith, splitAt, alignAssignments, swapSelections, countOccurrences, trimLines, stamp, insertText, LOREM, shuffleLines, reformatXml, minifyXml, jsonEscape, jsonUnescape, numberLines, mapDoc, toFileScopedNamespace, toBlockScopedNamespace, removeRegions, toRawString, toggleTask, formatMarkdownTable, tableOfContents, MARKDOWN_TABLE, removeComments, concatToInterpolationCmd, gotoOffset, timestampCmd, sha256Hex, decodeJwt, jwtAt, sortTokens, markdownCodeBlock, fileStatistics, todoComment, generateEquality, generateToString, addNullChecks, validateJson, requestAsCurl, curlToRequestCmd, jsonToCsv, toExpressionBody, toBlockBody, addBindingAttribute, unicodeEscape, unicodeUnescape, hexDecimal, testData } from '../editor/textTools2';
@@ -110,5 +111,6 @@ export function moreCommands2(h: MoreHelpers): RiderCommand[] {
     { id: 'test-data-number', label: 'Number', menu: 'Code', submenu: 'Test Data', run: h.inEditor(insertText(() => testData('number'))) },
     { id: 'test-data-date', label: 'Date', menu: 'Code', submenu: 'Test Data', run: h.inEditor(insertText(() => testData('date'))) },
     { id: 'new-file-here', label: 'New File Next to Active…', menu: 'Code', run: h.inEditor((_v, file) => { if (isBrowser()) { h.notice('Use the Explorer\'s New File in a browser folder.'); return; } const dir = file.includes('/') ? file.slice(0, file.lastIndexOf('/') + 1) : ''; const name = window.prompt(`New file in ${dir || 'the workspace root'}:`, file.split('.').length > 1 ? `New.${file.split('.').pop()}` : 'New.txt')?.trim(); if (!name) return; if (/[\\/:*?"<>|]/.test(name)) { h.notice('A file name cannot contain \\ / : * ? " < > |.'); return; } const target = dir + name; void api('/file/create', { file: target, source: '' }).then(() => { window.dispatchEvent(new CustomEvent('tas:rescan')); h.navigate({ file: target }); }, (e) => h.notice((e as Error).message)); }) },
+    { id: 'rename-active-file', label: 'Rename Active File…', menu: 'Code', run: h.inEditor((_v, file) => { if (unsavedFiles().includes(file)) { h.notice('Save the file first.'); return; } const base = file.split('/').pop()!; const name = window.prompt('New file name:', base)?.trim(); if (!name || name === base) return; if (/[\\/:*?"<>|]/.test(name)) { h.notice('A file name cannot contain \\ / : * ? " < > |.'); return; } const to = `${file.slice(0, file.length - base.length)}${name}`; void renamePath(file, to).then(() => { movedPath(file, to); window.dispatchEvent(new CustomEvent('tas:rescan')); h.notice(`Renamed to ${name}.`); }, (e) => h.notice((e as Error).message)); }) },
   ];
 }
