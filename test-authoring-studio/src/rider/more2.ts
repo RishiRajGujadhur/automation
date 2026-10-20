@@ -2,7 +2,7 @@ import type { RiderCommand } from './commands';
 import type { MoreHelpers } from './more';
 import { GIT_CHANGED_EVENT } from '../editor/events';
 import { nextConflict } from '../editor/advanced';
-import { getSnapshot, setBreakpoints } from '../debug/store';
+import { getSnapshot, setBreakpoints, specAt, breakpointsOf, updateBreakpoint } from '../debug/store';
 import { unsavedFiles } from '../editor/autosave';
 import { createTwoFilesPatch } from 'diff';
 import { readFile, isBrowser, renamePath } from '../files/provider';
@@ -124,5 +124,6 @@ export function moreCommands2(h: MoreHelpers): RiderCommand[] {
     { id: 'next-conflict', label: 'Next Merge Conflict', menu: 'Navigate', run: h.inEditor((v) => nextConflict(v) || h.notice('This file has no merge conflicts.')) },
     { id: 'stage-lines', label: 'Stage Selected Lines', menu: 'Tools', run: h.inEditor((v, file) => { if (unsavedFiles().includes(file)) { h.notice('Save the file first: staging uses the file on disk.'); return; } const s = v.state.selection.main; const from = v.state.doc.lineAt(s.from).number, to = v.state.doc.lineAt(s.to).number; void api<{ hunks: number }>('/git/stage-lines', { file, from, to }).then((r) => { window.dispatchEvent(new Event(GIT_CHANGED_EVENT)); h.notice(r.hunks ? `Staged ${r.hunks} change${r.hunks === 1 ? '' : 's'} of lines ${from}–${to}.` : 'No unstaged changes on the selected lines.'); }, (e) => h.notice((e as Error).message)); }) },
     { id: 'outline-preview', label: 'Preview Expanded Outline', menu: 'Code', submenu: 'Gherkin', run: h.inEditor((v) => { const text = outlinePreview(v.state); if (!text) { h.notice('Put the caret in a Scenario Outline with Examples.'); return; } window.dispatchEvent(new CustomEvent('tas:text-preview', { detail: text })); }) },
+    { id: 'temporary-breakpoint', label: 'Toggle Temporary Breakpoint', menu: 'Tools', shortcut: 'Ctrl Alt Shift F8', run: h.inEditor((v, file) => { const line = v.state.doc.lineAt(v.state.selection.main.head).number; const lines = breakpointsOf(file); if (lines.includes(line)) { setBreakpoints(file, lines.filter((l) => l !== line)); h.notice('Breakpoint removed.'); return; } setBreakpoints(file, [...lines, line]); updateBreakpoint(file, line, { temporary: true }); h.notice(`Temporary breakpoint on line ${line}: removed once hit.`); }) },
   ];
 }

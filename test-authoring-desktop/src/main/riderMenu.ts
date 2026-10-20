@@ -378,6 +378,7 @@ const ROWS: Record<'edit' | 'view' | 'navigate' | 'code' | 'tools' | 'help', Row
     ['Delete Disabled Breakpoints', 'delete-disabled-breakpoints'],
     ['Character Info at Caret', 'char-info'],
     ['Stage Selected Lines', 'stage-lines'],
+    ['Toggle Temporary Breakpoint', 'temporary-breakpoint', 'CmdOrCtrl+Alt+Shift+F8'],
   ],
   help: [
     null,

@@ -507,6 +507,7 @@ export const FEATURES: Feature[] = [
   { id: 'inline-values', label: 'Inline values while debugging', group: 'Debugging', essential: true, vs: 'Debugger inline values', description: 'When the debugger pauses, the lines of the current method show the values of the locals they use.' },
   { id: 'unused-steps', label: 'Fade unused step definitions', group: 'Code intelligence', essential: true, vs: 'Reqnroll: unused step definition', description: 'In C# step files, step definitions no feature uses are faded, with a tooltip saying so (Rider\'s Reqnroll support).' },
   { id: 'same-binding', label: 'Highlight steps with the same definition', group: 'Gherkin', essential: true, vs: 'Highlight references', description: 'With the caret on a step, the other steps of the file bound to the same step definition are highlighted.' },
+  { id: 'temporary-breakpoint', label: 'Temporary breakpoints', group: 'Debugging', essential: false, description: 'Tools ▸ Toggle Temporary Breakpoint sets a breakpoint that removes itself once the debugger stops on it (Rider\'s "Remove once hit").', commands: ['temporary-breakpoint'] },
 ];
 export const GROUPS: FeatureGroup[] = ['Editing', 'Navigation', 'Code intelligence', 'Tool windows', 'Files', 'Git', 'Gherkin', 'View', 'Debugging', 'Help and productivity'];
 

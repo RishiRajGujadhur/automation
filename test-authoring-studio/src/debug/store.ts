@@ -2,7 +2,7 @@ import { useSyncExternalStore } from 'react';
 import { api } from '../api';
 
 /** Breakpoint settings (Visual Studio's Breakpoint Settings): condition, hit count, log message (tracepoint), enabled. */
-export type BreakpointSpec = { line: number; condition?: string; hitCondition?: string; logMessage?: string; enabled?: boolean };
+export type BreakpointSpec = { line: number; condition?: string; hitCondition?: string; logMessage?: string; enabled?: boolean; temporary?: boolean };
 export type DebugFrame = { id: number; name: string; file?: string; line: number; column: number; external: boolean };
 export type DebugStatus = 'idle' | 'building' | 'starting' | 'running' | 'paused' | 'ended';
 export type DebugState = {
@@ -54,6 +54,9 @@ function connect() {
     const state = JSON.parse(e.data) as DebugState;
     const resetFrame = state.status !== 'paused' || snapshot.state.status !== 'paused' || state.frames[0]?.id !== snapshot.state.frames[0]?.id;
     set({ state, frameIndex: resetFrame ? firstUserFrame(state.frames) : snapshot.frameIndex });
+    // Temporary breakpoints (Rider: "Remove once hit") go once the debugger stops on them.
+    const top = state.status === 'paused' ? state.frames.find((f) => !f.external) : undefined;
+    if (top?.file && specAt(top.file, top.line)?.temporary) setBreakpoints(top.file, breakpointsOf(top.file).filter((l) => l !== top.line));
     // The server forgets breakpoints when it restarts: push this browser's set once per connection.
     if (!synced) { synced = true; void pushAll(); }
   };
