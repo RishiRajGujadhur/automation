@@ -105,6 +105,7 @@ has it on by default, so the desktop app starts with it on. The others start off
 | Y94 | Continuous testing (failed tests on save) | Rider | no | ✅ 2026-10-20 |
 | Y95 | Reverse Text | Rider | no | ✅ 2026-10-20 |
 | Y96 | Fill Paragraph | Rider | no | ✅ 2026-10-20 |
+| Y97 | Fix Keyword Case | Rider | no | ✅ 2026-10-20 |
 
 ## Progress log
 - 2026-10-20 Y1: Percent-encodes the selection (or line) and decodes it.
@@ -203,3 +204,4 @@ has it on by default, so the desktop app starts with it on. The others start off
 - 2026-10-20 Y94: After each save the failed tests run again.
 - 2026-10-20 Y95: The characters of the selection reversed.
 - 2026-10-20 Y96: Re-wraps the paragraph or comment at 80 columns, prefix kept.
+- 2026-10-20 Y97: Gherkin keywords in the wrong case corrected in the whole file.

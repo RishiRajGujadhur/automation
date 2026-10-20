@@ -274,6 +274,7 @@ const ROWS: Record<'edit' | 'view' | 'navigate' | 'code' | 'tools' | 'help', Row
       ['Split Scenario Here', 'split-scenario'],
       ['Insert Data Table', 'insert-data-table'],
       ['Copy Test Filter for Tag', 'copy-tag-filter'],
+      ['Fix Keyword Case', 'fix-keyword-case'],
     ] },
     ['Collapse Using Directives', 'fold-usings'],
     ['Sort JSON Keys', 'sort-json'],

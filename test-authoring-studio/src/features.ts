@@ -491,6 +491,7 @@ export const FEATURES: Feature[] = [
   { id: 'continuous-testing', label: 'Continuous testing (failed tests on save)', group: 'Tool windows', essential: false, vs: 'Live Unit Testing', description: 'A Test Explorer toggle runs the failed tests again after each save (Rider\'s continuous testing).' },
   { id: 'reverse-text', label: 'Reverse Text', group: 'Editing', essential: false, description: 'Edit ▸ Convert reverses the characters of the selection.', commands: ['reverse-text'] },
   { id: 'fill-paragraph', label: 'Fill Paragraph', group: 'Editing', essential: false, description: 'Edit ▸ Fill Paragraph re-wraps the paragraph or comment at the caret at 80 columns, keeping its // or # prefix.', commands: ['fill-paragraph'] },
+  { id: 'fix-keyword-case', label: 'Fix Keyword Case', group: 'Gherkin', essential: false, description: 'Code ▸ Gherkin corrects the case of keywords in the whole file ("given" → "Given", "SCENARIO:" → "Scenario:").', commands: ['fix-keyword-case'] },
 ];
 export const GROUPS: FeatureGroup[] = ['Editing', 'Navigation', 'Code intelligence', 'Tool windows', 'Files', 'Git', 'Gherkin', 'View', 'Debugging', 'Help and productivity'];
 

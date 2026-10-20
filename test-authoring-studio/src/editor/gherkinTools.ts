@@ -1077,3 +1077,15 @@ export function tagAt(state: EditorState) {
 }
 /** The dotnet test filter of a tag (Reqnroll turns tags into NUnit / MSTest categories and xUnit traits). */
 export const tagFilter = (tag: string) => `dotnet test --filter "Category=${tag.replace(/^@/, '')}"`;
+
+/** Fix Keyword Case: Gherkin keywords at the start of lines in the wrong case ("given", "SCENARIO:") are corrected. */
+export function fixKeywordCase(text: string) {
+  const words = ['Feature', 'Rule', 'Background', 'Scenario Outline', 'Scenario Template', 'Scenario', 'Example', 'Examples', 'Scenarios'];
+  const next = text.split('\n').map((l) => {
+    const step = /^(\s*)(given|when|then|and|but)(?=\s)/i.exec(l);
+    if (step) { const k = step[2][0].toUpperCase() + step[2].slice(1).toLowerCase(); return step[1] + k + l.slice(step[0].length); }
+    for (const w of words) { const m = new RegExp(`^(\\s*)(${w}):`, 'i').exec(l); if (m) return m[1] + w + ':' + l.slice(m[0].length); }
+    return l;
+  }).join('\n');
+  return next === text ? null : next;
+}
