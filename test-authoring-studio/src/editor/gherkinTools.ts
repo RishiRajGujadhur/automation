@@ -349,3 +349,27 @@ export function toggleTag(tag: string) {
     return true;
   };
 }
+
+/** Comment / Uncomment Scenario: `# ` before every line of the scenario (tags and Examples too), or off again. */
+export function toggleScenarioComment(view: EditorView) {
+  const { state } = view;
+  const doc = state.doc;
+  const head = doc.lineAt(state.selection.main.head).number;
+  // An already commented scenario: the commented lines around the caret.
+  const commented = (n: number) => /^\s*#/.test(doc.line(n).text);
+  if (commented(head)) {
+    let a = head, b = head;
+    while (a > 1 && commented(a - 1)) a--;
+    while (b < doc.lines && commented(b + 1)) b++;
+    const changes: ChangeSpec[] = [];
+    for (let n = a; n <= b; n++) { const line = doc.line(n); const m = /^(\s*)# ?/.exec(line.text)!; changes.push({ from: line.from + m[1].length, to: line.from + m[0].length }); }
+    view.dispatch({ changes, userEvent: 'input' });
+    return true;
+  }
+  const blk = scenarioBlock(state, head);
+  if (!blk) return false;
+  const changes: ChangeSpec[] = [];
+  for (let n = blk.first; n <= blk.end; n++) { const line = doc.line(n); if (!line.text.trim()) continue; changes.push({ from: line.from + /^\s*/.exec(line.text)![0].length, insert: '# ' }); }
+  view.dispatch({ changes, userEvent: 'input' });
+  return true;
+}

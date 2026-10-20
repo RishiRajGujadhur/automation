@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { EditorState, type TransactionSpec } from '@codemirror/state';
 import { EditorView } from '@codemirror/view';
-import { cycleStepKeyword, scenarioToOutline, tableInsertRow, tableAddColumn, tableDeleteColumn, tableSortByColumn, testFilter, selectScenario, renameTag, extractExamplesParameter, outlineToScenario, duplicateScenario, moveScenario, extractBackground, addExamplesTable, toggleTag } from '../src/editor/gherkinTools';
+import { cycleStepKeyword, scenarioToOutline, tableInsertRow, tableAddColumn, tableDeleteColumn, tableSortByColumn, testFilter, selectScenario, renameTag, extractExamplesParameter, outlineToScenario, duplicateScenario, moveScenario, extractBackground, addExamplesTable, toggleTag, toggleScenarioComment } from '../src/editor/gherkinTools';
 
 /** Runs an editor command on `doc` with the selection between « and » (or a caret at ‸); with `caret`, the result marks the caret with ¦. */
 function run(doc: string, cmd: (v: EditorView) => boolean, caret = false) {
@@ -97,5 +97,11 @@ describe('Gherkin tools (IDE-FEATURES X49…)', () => {
     expect(run('  @a\n  Scenario: S‸', toggleTag('@b'))).toBe('  @a @b\n  Scenario: S');
     expect(run('  @a @wip\n  Scenario: S‸', toggleTag('wip'))).toBe('  @a\n  Scenario: S');
     expect(run('  @wip\n  Scenario: S‸\n    Given x', toggleTag('wip'))).toBe('  Scenario: S\n    Given x');
+  });
+  it('X112 Comment / Uncomment Scenario', () => {
+    const doc = 'Feature: F\n  @a\n  Scenario: S‸\n    Given x\n\n    Examples:\n\n  Scenario: T';
+    const once = run(doc, toggleScenarioComment);
+    expect(once).toBe('Feature: F\n  # @a\n  # Scenario: S\n    # Given x\n\n    # Examples:\n\n  Scenario: T');
+    expect(run(once.replace('# Given x', '# Given ‸x'), toggleScenarioComment)).toBe('Feature: F\n  @a\n  Scenario: S\n    Given x\n\n    Examples:\n\n  Scenario: T'.replace('\n\n    Examples:', '\n\n    # Examples:'));
   });
 });

@@ -9,7 +9,7 @@ import { renamePath } from '../files/provider';
 import { movedPath } from '../files/tabs';
 import { DEFAULT_TODO_TOKENS } from '../editor/todoHighlight';
 import { copyText as copyFilterText } from '../ui';
-import { cycleStepKeyword, scenarioToOutline, tableInsertRow, tableAddColumn, tableDeleteColumn, tableSortByColumn, testFilter, selectScenario, extractExamplesParameter, outlineToScenario, duplicateScenario, moveScenario, extractBackground, addExamplesTable, toggleTag } from '../editor/gherkinTools';
+import { cycleStepKeyword, scenarioToOutline, tableInsertRow, tableAddColumn, tableDeleteColumn, tableSortByColumn, testFilter, selectScenario, extractExamplesParameter, outlineToScenario, duplicateScenario, moveScenario, extractBackground, addExamplesTable, toggleTag, toggleScenarioComment } from '../editor/gherkinTools';
 import { unsavedFiles } from '../editor/autosave';
 import { getTabs, closeTab } from '../files/tabs';
 import { reopenClosed } from '../files/tabs';
@@ -111,5 +111,6 @@ export function moreCommands(h: MoreHelpers): RiderCommand[] {
     { id: 'add-watch', label: 'Add Watch', menu: 'Tools', run: h.inEditor((v) => { const s = v.state.selection.main; const word = v.state.wordAt(s.head) ?? v.state.wordAt(Math.max(0, s.head - 1)); const expr = (s.empty ? (word ? v.state.sliceDoc(word.from, word.to) : '') : v.state.sliceDoc(s.from, s.to)).trim(); if (!expr) { h.notice('Select an expression (or put the caret on a name) first.'); return; } const now = getSnapshot().watches; if (!now.includes(expr)) setWatches([...now, expr]); h.notice(`Watching ${expr}.`); }) },
     { id: 'undo-commit', label: 'Undo Last Commit…', menu: 'Tools', run: () => { if (!window.confirm('Undo the last commit? Its changes stay staged; nothing is lost. (Not for commits already pushed.)')) return; void api<{ output: string }>('/git/undo-commit', {}).then((r) => { window.dispatchEvent(new Event(GIT_CHANGED_EVENT)); h.notice(r.output); }, (e) => h.notice((e as Error).message)); } },
     { id: 'save-as', label: 'Save As…', menu: 'Edit', group: true, run: h.inEditor((v, file) => { if (isBrowser()) { h.notice('Save As needs a folder indexed by the studio server.'); return; } const to = window.prompt('Save a copy as (repository path):', file)?.trim().replace(/\\/g, '/'); if (!to || to === file) return; void api('/file/create', { file: to, source: v.state.doc.toString() }).then(() => { h.notice(`Saved as ${to}.`); window.dispatchEvent(new CustomEvent('tas:rescan', { detail: () => h.navigate({ file: to }) })); }, (e) => h.notice((e as Error).message)); }) },
+    { id: 'comment-scenario', label: 'Comment / Uncomment Scenario', menu: 'Code', submenu: 'Gherkin', run: h.inEditor((v) => toggleScenarioComment(v) || h.notice('Put the caret in a scenario.')) },
   ];
 }

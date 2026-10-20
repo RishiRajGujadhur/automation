@@ -160,6 +160,7 @@ const ROWS: Record<'edit' | 'view' | 'navigate' | 'code' | 'tools' | 'help', Row
       ['Extract Background', 'extract-background'],
       ['Add Examples Table', 'add-examples'],
       ['Toggle Tag…', 'toggle-tag'],
+      ['Comment / Uncomment Scenario', 'comment-scenario'],
     ] },
   ],
   tools: [
