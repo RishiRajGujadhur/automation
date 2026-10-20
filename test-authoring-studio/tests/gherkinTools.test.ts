@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { EditorState, type TransactionSpec } from '@codemirror/state';
 import { EditorView } from '@codemirror/view';
-import { cycleStepKeyword, scenarioToOutline, tableInsertRow, tableAddColumn, tableDeleteColumn, tableSortByColumn, testFilter, selectScenario, renameTag, extractExamplesParameter, outlineToScenario, duplicateScenario, moveScenario, extractBackground, addExamplesTable, toggleTag, toggleScenarioComment, pasteAsTable, tableCsv, featureStats, renameExamplesParameter } from '../src/editor/gherkinTools';
+import { cycleStepKeyword, scenarioToOutline, tableInsertRow, tableAddColumn, tableDeleteColumn, tableSortByColumn, testFilter, selectScenario, renameTag, extractExamplesParameter, outlineToScenario, duplicateScenario, moveScenario, extractBackground, addExamplesTable, toggleTag, toggleScenarioComment, pasteAsTable, tableCsv, featureStats, renameExamplesParameter, removeUnusedColumns } from '../src/editor/gherkinTools';
 
 /** Runs an editor command on `doc` with the selection between « and » (or a caret at ‸); with `caret`, the result marks the caret with ¦. */
 function run(doc: string, cmd: (v: EditorView) => boolean, caret = false) {
@@ -122,5 +122,10 @@ describe('Gherkin tools (IDE-FEATURES X49…)', () => {
     expect(run(doc, renameExamplesParameter('permission'))).toBe('Scenario Outline: As <permission>\n  Given "<user>" is a <permission>\n  Examples:\n    | user | permission |\n    | ada  | admin      |');
     expect(run('Scenario Outline: S\n  Given <a>\n  Examples:\n    | a‸ |\n    | 1 |', renameExamplesParameter('<b>'))).toBe('Scenario Outline: S\n  Given <b>\n  Examples:\n    | b |\n    | 1 |');
     expect(run('Scenario: S\n  Given <a‸>', renameExamplesParameter('b'))).toBe('Scenario: S\n  Given <a>');
+  });
+  it('X131 Remove Unused Examples Columns', () => {
+    const doc = 'Scenario Outline: S‸\n  Given <user> signs in\n  Examples:\n    | user | old | note |\n    | ada  | x   | y    |';
+    expect(run(doc, removeUnusedColumns)).toBe('Scenario Outline: S\n  Given <user> signs in\n  Examples:\n    | user |\n    | ada  |');
+    expect(run('Scenario Outline: S‸\n  Given <a>\n  Examples:\n    | a |\n    | 1 |', removeUnusedColumns)).toBe('Scenario Outline: S\n  Given <a>\n  Examples:\n    | a |\n    | 1 |');
   });
 });

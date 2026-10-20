@@ -472,3 +472,26 @@ export function renameExamplesParameter(to: string) {
     return true;
   };
 }
+
+/** Remove Unused Examples Columns: columns no <parameter> of the outline uses go from every Examples table. */
+export function removeUnusedColumns(view: EditorView) {
+  const { state } = view;
+  const doc = state.doc;
+  const b = scenarioBlock(state, doc.lineAt(state.selection.main.head).number);
+  if (!b || !/^\s*Scenario (Outline|Template):/.test(doc.line(b.head).text)) return false;
+  const tables = examplesTables(state, b);
+  const inTable = new Set(tables.flat());
+  const used = new Set<string>();
+  for (let n = b.head; n <= b.end; n++) if (!inTable.has(n)) for (const m of doc.line(n).text.matchAll(/<([^<>\s][^<>]*)>/g)) used.add(m[1]);
+  const changes: ChangeSpec[] = [];
+  for (const rows of tables) {
+    const cells = rows.map((n) => splitRow(doc.line(n).text));
+    const keep = cells[0].map((c, k) => (used.has(c) ? k : -1)).filter((k) => k >= 0);
+    if (keep.length === cells[0].length || !keep.length) continue;
+    const indent = /^\s*/.exec(doc.line(rows[0]).text)![0];
+    changes.push({ from: doc.line(rows[0]).from, to: doc.line(rows[rows.length - 1]).to, insert: alignTable(cells.map((r) => `${indent}| ${keep.map((k) => r[k] ?? '').join(' | ')} |`)).join(state.lineBreak) });
+  }
+  if (!changes.length) return false;
+  view.dispatch({ changes, userEvent: 'delete' });
+  return true;
+}

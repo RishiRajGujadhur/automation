@@ -138,6 +138,7 @@ has it on by default, so the desktop app starts with it on. The others start off
 | X128 | Git Log: Current Branch Only | Rider | yes | ✅ 2026-10-20 |
 | X129 | Feature statistics (status bar) | Rider | yes | ✅ 2026-10-20 |
 | X130 | Rename Examples Parameter | Rider | yes | ✅ 2026-10-20 |
+| X131 | Remove Unused Examples Columns | Rider | yes | ✅ 2026-10-20 |
 
 ## Progress log
 - 2026-10-20 X1: Sort Lines: the selected lines (or the whole file) in natural, case-insensitive order, blank lines last. Third-batch plumbing: src/rider/more.ts, src/editor/textTools.ts, IDE-FEATURES.md.
@@ -270,3 +271,4 @@ has it on by default, so the desktop app starts with it on. The others start off
 - 2026-10-20 X128: HEAD-only log toggle
 - 2026-10-20 X129: Scenarios and steps of the feature
 - 2026-10-20 X130: <param> and column renamed together
+- 2026-10-20 X131: Columns no parameter uses

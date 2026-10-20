@@ -168,6 +168,7 @@ const ROWS: Record<'edit' | 'view' | 'navigate' | 'code' | 'tools' | 'help', Row
       ['Paste as Gherkin Table', 'paste-table'],
       ['Copy Table as CSV', 'copy-table-csv'],
       ['Rename Examples Parameter…', 'rename-param'],
+      ['Remove Unused Examples Columns', 'remove-unused-columns'],
     ] },
   ],
   tools: [
