@@ -17,6 +17,7 @@ Every improvement is verified by a unit or Playwright test (`tests/e2e/qol50.spe
 | QL8 | Reopen files where you left them | Editor | ✅ 2026-10-20 |
 | QL9 | Gherkin smart indent | Gherkin | ✅ 2026-10-20 |
 | QL10 | Enter adds a table row | Gherkin | ✅ 2026-10-20 |
+| QL11 | Align pasted table rows | Gherkin | ✅ 2026-10-20 |
 
 ## Progress log
 - 2026-10-20 QL1: Title names the file and workspace folder
@@ -29,3 +30,4 @@ Every improvement is verified by a unit or Playwright test (`tests/e2e/qol50.spe
 - 2026-10-20 QL8: Caret restored per file, also after reload
 - 2026-10-20 QL9: Indent after Scenario:/Examples:/step ending in :
 - 2026-10-20 QL10: Enter at row end adds an aligned row
+- 2026-10-20 QL11: Pasted rows aligned

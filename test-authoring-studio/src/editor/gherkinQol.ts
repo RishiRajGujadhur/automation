@@ -30,5 +30,29 @@ export const tableEnter = Prec.high(keymap.of([{
     return tableInsertRow(view);
   },
 }]));
+/** Pasted table rows are aligned with the table they land in. */
+export const alignOnPaste = EditorView.updateListener.of((u) => {
+  if (!featureOn('paste-align') || !u.docChanged || !u.transactions.some((t) => t.isUserEvent('input.paste'))) return;
+  const lines = new Set<number>();
+  u.changes.iterChangedRanges((_a, _b, from, to) => { for (let n = u.state.doc.lineAt(from).number; n <= u.state.doc.lineAt(to).number; n++) lines.add(n); });
+  const view = u.view;
+  setTimeout(() => {
+    const st = view.state;
+    const seen = new Set<number>();
+    const changes: { from: number; to: number; insert: string }[] = [];
+    for (const n of lines) {
+      if (n > st.doc.lines || !st.doc.line(n).text.trim().startsWith('|')) continue;
+      const b = block(st, n);
+      if (seen.has(b.from)) continue;
+      seen.add(b.from);
+      const rows: string[] = [];
+      for (let k = b.from; k <= b.to; k++) rows.push(st.doc.line(k).text);
+      const text = alignTable(rows).join(st.lineBreak);
+      const from = st.doc.line(b.from).from, to = st.doc.line(b.to).to;
+      if (text !== st.sliceDoc(from, to)) changes.push({ from, to, insert: text });
+    }
+    if (changes.length) view.dispatch({ changes, userEvent: 'input.format' });
+  });
+});
 // gherkin qol
-export const gherkinQol: Extension[] = [tableEnter, gherkinIndent, ];
+export const gherkinQol: Extension[] = [alignOnPaste, tableEnter, gherkinIndent, ];
