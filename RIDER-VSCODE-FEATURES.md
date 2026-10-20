@@ -315,7 +315,7 @@ Legend: `[x]` done · `[ ]` to do.
 - [x] 383. Editor tab grouping — The side editor group has its own tab strip (several files, switch, close) (2026-10-21)
 - [x] 384. Split editor horizontally — View ▸ Split Editor Down / Right (workbench.editor.openSideBySideDirection) (2026-10-21)
 - [x] 385. Split editor vertically — Split Right / Open to the Side
-- [ ] 386. Move editors between groups
+- [x] 386. Move editors between groups — View ▸ Move Editor into Next / Previous Group (2026-10-21)
 - [ ] 387. Open files in a floating editor window
 - [x] 388. Zen Mode — View ▸ Zen Mode (Ctrl+K Z), Workbench ▸ Zen Mode settings (full screen, center, line numbers, status bar, tabs, silent notifications) (2026-10-21)
 - [x] 389. Distraction Free Mode
@@ -382,3 +382,4 @@ Legend: `[x]` done · `[ ]` to do.
 - 2026-10-21 393: A second side bar on the right of the editors shows Structure, Problems, Git Log, Terminal or another tool window; the choice is remembered.
 - 2026-10-21 400: Differences can be shown side by side with aligned rows; both panes scroll together unless Synchronized scrolling is unticked.
 - 2026-10-21 383: The split editor became an editor group with its own tabs.
+- 2026-10-21 386: The active editor moves between the main tab group and the side group.
