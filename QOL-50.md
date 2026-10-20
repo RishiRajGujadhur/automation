@@ -54,6 +54,7 @@ Every improvement is verified by a unit or Playwright test (`tests/e2e/qol50.spe
 | QL45 | Notifications badge | Status bar | ✅ 2026-10-20 |
 | QL46 | Notifications kept after a reload | Notifications | ✅ 2026-10-20 |
 | QL47 | Explorer: Git status | Explorer / Git | ✅ 2026-10-20 |
+| QL48 | Explorer: folders with changes | Explorer / Git | ✅ 2026-10-20 |
 
 ## Progress log
 - 2026-10-20 QL1: Title names the file and workspace folder
@@ -103,3 +104,4 @@ Every improvement is verified by a unit or Playwright test (`tests/e2e/qol50.spe
 - 2026-10-20 QL45: New messages counted; click opens
 - 2026-10-20 QL46: Session history survives reload; badge clears when seen
 - 2026-10-20 QL47: M / A / U / D on changed files
+- 2026-10-20 QL48: Dot on folders with changes

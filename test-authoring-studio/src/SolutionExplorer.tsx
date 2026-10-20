@@ -415,6 +415,7 @@ export default function SolutionExplorer({ features, revision, activeFile, query
                   {expanded ? <ChevronDown size={12} /> : <ChevronRight size={12} />}
                   {expanded ? <FolderOpen size={14} /> : <Folder size={14} />}
                   <span>{n.name}</span>
+                  {featureOn('explorer-git') && [...gitFiles.keys()].some((f) => f.startsWith(`${n.path}/`)) && <span className="se-git-dot" title="Contains changed files" aria-label="Contains changed files">●</span>}
                   <small>{n.count}</small>
                 </button>}
                 {isFeatureFolder && <button className="folder-add icon-button" aria-label={`New feature in ${n.path}`} title={`New feature in ${n.path}`} onClick={() => onNew(n.path)}><Plus size={13} /></button>}

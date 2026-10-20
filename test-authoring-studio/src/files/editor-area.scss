@@ -3667,3 +3667,9 @@ html[data-features-off~='inlay-hints'] .cm-inlay {
   &.se-git-a, &.se-git-u { color: #3fb950; }
   &.se-git-d { color: #f85149; }
 }
+
+.se-git-dot {
+  color: #d29922;
+  font-size: 9px;
+  margin-left: 4px;
+}

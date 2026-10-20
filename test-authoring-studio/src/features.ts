@@ -344,6 +344,7 @@ export const FEATURES: Feature[] = [
   { id: 'notification-badge', label: 'Notifications badge', group: 'Help and productivity', essential: true, description: 'The status bar shows how many messages are new; a click opens Notifications.' },
   { id: 'notifications-kept', label: 'Notifications kept after a reload', group: 'Help and productivity', essential: true, description: 'The Notifications window still lists this session\'s messages after a reload.' },
   { id: 'explorer-git', label: 'Explorer: Git status', group: 'Git', essential: true, description: 'Changed files show M / A / U / D in the Explorer, coloured like VS Code.' },
+  { id: 'explorer-git-folders', label: 'Explorer: folders with changes', group: 'Git', essential: true, description: 'Folders that contain changed files show a dot.' },
 ];
 export const GROUPS: FeatureGroup[] = ['Editing', 'Navigation', 'Code intelligence', 'Tool windows', 'Files', 'Git', 'Gherkin', 'View', 'Debugging', 'Help and productivity'];
 
