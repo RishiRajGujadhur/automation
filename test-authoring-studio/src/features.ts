@@ -217,6 +217,7 @@ export const FEATURES: Feature[] = [
   { id: 'paste-table', label: 'Paste as Gherkin Table', group: 'Gherkin', essential: true, description: 'Spreadsheet cells (TSV) or CSV from the clipboard become an aligned table.', commands: ['paste-table'] },
   { id: 'copy-table-csv', label: 'Copy Table as CSV', group: 'Gherkin', essential: true, description: 'Copies the table at the caret as CSV (for spreadsheets).', commands: ['copy-table-csv'] },
   { id: 'scroll-marks', label: 'Scroll bar annotations', group: 'View', essential: true, vs: 'Scroll Bars ▸ Show annotations', description: 'Errors, warnings and the caret line marked over the scroll bar.', commands: ['scroll-marks'] },
+  { id: 'report-problem', label: 'Report a Problem', group: 'Help and productivity', essential: true, vs: 'Help ▸ Send Feedback ▸ Report a Problem', description: 'Opens a new GitHub issue with a short template (nothing about your files is sent).', commands: ['report-problem'] },
 ];
 export const GROUPS: FeatureGroup[] = ['Editing', 'Navigation', 'Code intelligence', 'Tool windows', 'Files', 'Git', 'Gherkin', 'View', 'Debugging', 'Help and productivity'];
 

@@ -208,6 +208,8 @@ const ROWS: Record<'edit' | 'view' | 'navigate' | 'code' | 'tools' | 'help', Row
     ['Key Promoter (shortcut hints)', 'key-promoter'],
     ['Productivity Guide', 'productivity-guide'],
     ['Tip of the Day', 'tip-of-the-day'],
+    null,
+    ['Report a Problem…', 'report-problem'],
   ],
 };
 
