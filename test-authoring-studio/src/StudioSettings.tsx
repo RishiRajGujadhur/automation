@@ -10,7 +10,7 @@ import { TextField } from './forms';
 import { Switch as SwitchPrimitive, Segmented, usePrefs, useConfirm, useAlgorithms, Tip } from './radix2';
 import { algorithms, categories, presetById, presets } from './algorithms/registry';
 import { Button, Select } from './radix';
-import { Highlight } from './ui';
+import { Highlight, useLocalState } from './ui';
 import { appThemes, editorThemes, resolveEditorTheme, type AppThemeId, type EditorThemeId } from './themes';
 import { labelled } from './editor/a11y';
 import { accents, contrast } from './accents';
@@ -54,7 +54,8 @@ export default function StudioSettings({ onNotice, onWorkspace, shortcuts, onClo
   const { prefs, setPrefs } = usePrefs();
   const algo = useAlgorithms();
   const confirm = useConfirm();
-  const [section, setSection] = useState('General');
+  // The last section comes back the next time Settings opens (QOL-50).
+  const [section, setSection] = useLocalState('settingsSection', 'General');
   const [query, setQuery] = useState('');
   const [settings, setSettings] = useState<Settings & { running?: { webPort: number; apiPort: number } }>();
   const [traces, setTraces] = useState<Trace[]>([]);
