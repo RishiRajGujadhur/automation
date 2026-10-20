@@ -136,6 +136,7 @@ const ROWS: Record<'edit' | 'view' | 'navigate' | 'code' | 'tools' | 'help', Row
     ['Breadcrumbs', 'toggle-breadcrumbs'],
     ['Scroll Past End', 'scroll-past-end'],
     ['Caret Blinking', 'caret-blink'],
+    ['Pin / Unpin Active Tab', 'pin-active-tab'],
   ],
   navigate: [
     ['Select In…', 'select-in', 'Alt+F1'],
