@@ -654,3 +654,15 @@ export function toExpressionBody(view: EditorView) {
   }
   return false;
 }
+
+/** Convert to Block Body (Visual Studio / Rider): `=> …;` becomes a braced body (with return unless the method is void). */
+export function toBlockBody(view: EditorView) {
+  const doc = view.state.doc;
+  const line = doc.lineAt(view.state.selection.main.head);
+  const m = /^(\s*)(.*\w+\s*\([^)]*\))\s*=>\s*(.+);\s*$/.exec(line.text);
+  if (!m) return false;
+  const ind = m[1];
+  const isVoid = /\bvoid\b/.test(m[2]) || /\bTask\s+\w+\s*\(/.test(m[2]) && /\basync\b/.test(m[2]);
+  view.dispatch({ changes: { from: line.from, to: line.to, insert: `${ind}${m[2]}\n${ind}{\n${ind}    ${isVoid ? '' : 'return '}${m[3]};\n${ind}}` }, userEvent: 'input' });
+  return true;
+}

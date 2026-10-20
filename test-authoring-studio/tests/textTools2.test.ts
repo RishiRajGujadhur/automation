@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { EditorSelection, EditorState, type TransactionSpec } from '@codemirror/state';
 import type { EditorView } from '@codemirror/view';
-import { mapSelections, urlEncode, urlDecode, base64Encode, base64Decode, escapeString, unescapeString, htmlEncode, htmlDecode, stepNumber, insertSequence, toggleQuotes, joinWith, splitAt, alignAssignments, swapSelections, countOccurrences, trimLines, stamp, insertText, LOREM, shuffleLines, formatXml, minifyXml, jsonEscape, jsonUnescape, numberLines, toFileScopedNamespace, toBlockScopedNamespace, removeRegions, toRawString, toggleTask, formatMarkdownTable, tableOfContents, MARKDOWN_TABLE, removeComments, concatToInterpolation, concatToInterpolationCmd, gotoOffset, convertTimestamp, timestampCmd, sha256Hex, decodeJwt, jwtAt, sortTokens, markdownCodeBlock, fileStatistics, todoComment, generateEquality, generateToString, addNullChecks, validateJson, requestAsCurl, curlToRequest, jsonToCsv, toExpressionBody } from '../src/editor/textTools2';
+import { mapSelections, urlEncode, urlDecode, base64Encode, base64Decode, escapeString, unescapeString, htmlEncode, htmlDecode, stepNumber, insertSequence, toggleQuotes, joinWith, splitAt, alignAssignments, swapSelections, countOccurrences, trimLines, stamp, insertText, LOREM, shuffleLines, formatXml, minifyXml, jsonEscape, jsonUnescape, numberLines, toFileScopedNamespace, toBlockScopedNamespace, removeRegions, toRawString, toggleTask, formatMarkdownTable, tableOfContents, MARKDOWN_TABLE, removeComments, concatToInterpolation, concatToInterpolationCmd, gotoOffset, convertTimestamp, timestampCmd, sha256Hex, decodeJwt, jwtAt, sortTokens, markdownCodeBlock, fileStatistics, todoComment, generateEquality, generateToString, addNullChecks, validateJson, requestAsCurl, curlToRequest, jsonToCsv, toExpressionBody, toBlockBody } from '../src/editor/textTools2';
 
 /** Runs an editor command on `doc` with the selection between « and » (or a caret at |). */
 function run(doc: string, cmd: (v: EditorView) => boolean) {
@@ -216,5 +216,9 @@ describe('text tools, fourth batch (IDE-FEATURES-4 Y1…)', () => {
   it('Y83 Convert to Expression Body', () => {
     expect(run('    public int Twice(int x)\n    {\n        return x| * 2;\n    }', toExpressionBody)).toBe('    public int Twice(int x) => x * 2;');
     expect(run('    void A()\n    {\n        a();\n        b();|\n    }', toExpressionBody)).toBe('    void A()\n    {\n        a();\n        b();\n    }');
+  });
+  it('Y84 Convert to Block Body', () => {
+    expect(run('    public int Twice(int x) => x| * 2;', toBlockBody)).toBe('    public int Twice(int x)\n    {\n        return x * 2;\n    }');
+    expect(run('    void Log(string m) => Console.WriteLine(m);|', toBlockBody)).toBe('    void Log(string m)\n    {\n        Console.WriteLine(m);\n    }');
   });
 });
