@@ -280,6 +280,7 @@ export default function SolutionExplorer({ features, revision, activeFile, query
         { label: 'Open', icon: FileCode2, onSelect: () => open(path) },
         ...(onSource ? [{ label: 'View source', icon: Eye, onSelect: () => onSource(path, 1) }] : []),
         { label: 'Copy path', icon: Copy, onSelect: () => copyText(path) },
+        ...(featureOn('explorer-copy-name') ? [{ label: 'Copy file name', icon: Copy, onSelect: () => void copyText(path.split('/').pop()!) }] : []),
         ...(featureOn('copy-full-path') && !browserSolution ? [{ label: 'Copy Full Path', icon: Copy, onSelect: () => copyFull(path) }] : []),
         ...(featureOn('explorer-compare') ? [{ label: 'Select for Compare', icon: GitCompare, onSelect: () => { compareLeft = path; setCmpLeft(path); onNotice?.(`Selected ${path.split('/').pop()} for compare.`); } }, ...(cmpLeft && cmpLeft !== path ? [{ label: `Compare with ${cmpLeft.split('/').pop()}`, icon: GitCompare, onSelect: () => window.dispatchEvent(new CustomEvent(COMPARE_FILES_EVENT, { detail: { left: cmpLeft, right: path } })) }] : [])] : []),
         ...(path.endsWith('.feature') ? ['separator' as const, { label: 'New feature beside this', icon: Plus, onSelect: () => onNew(path.split('/').slice(0, -1).join('/')) }] : []),

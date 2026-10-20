@@ -284,6 +284,7 @@ export const FEATURES: Feature[] = [
   { id: 'table-transpose', label: 'Table: Transpose', group: 'Gherkin', essential: true, description: 'Turns the table\'s rows into columns (vertical tables and back).', commands: ['table-transpose'] },
   { id: 'table-fill-down', label: 'Table: Fill Down', group: 'Gherkin', essential: true, description: 'Copies the cell above into the caret\'s cell (or every selected row).', commands: ['table-fill-down'] },
   { id: 'table-clear-column', label: 'Table: Clear Column', group: 'Gherkin', essential: true, description: 'Empties the caret\'s column (the header stays).', commands: ['table-clear-column'] },
+  { id: 'explorer-copy-name', label: 'Explorer: Copy File Name', group: 'Files', essential: true, vs: 'Copy File Name', description: 'A file\'s context menu copies its name.' },
 ];
 export const GROUPS: FeatureGroup[] = ['Editing', 'Navigation', 'Code intelligence', 'Tool windows', 'Files', 'Git', 'Gherkin', 'View', 'Debugging', 'Help and productivity'];
 
