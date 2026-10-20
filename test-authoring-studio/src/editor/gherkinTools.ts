@@ -1023,3 +1023,13 @@ export function scenarioSteps(state: EditorState) {
   }
   return out.length ? out.join('\n') : null;
 }
+
+/** Rename Scenario: a new title for the scenario at the caret (its keyword kept). */
+export const renameScenario = (title: string) => (view: EditorView) => {
+  const b = scenarioBlock(view.state, view.state.doc.lineAt(view.state.selection.main.head).number);
+  if (!b || !title.trim()) return false;
+  const line = view.state.doc.line(b.head);
+  const m = /^(\s*[^:]+:\s*)/.exec(line.text)!;
+  view.dispatch({ changes: { from: line.from + m[1].length, to: line.to, insert: title.trim() }, userEvent: 'input' });
+  return true;
+};

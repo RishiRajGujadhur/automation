@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { EditorState, type TransactionSpec } from '@codemirror/state';
 import { EditorView } from '@codemirror/view';
-import { cycleStepKeyword, scenarioToOutline, tableInsertRow, tableAddColumn, tableDeleteColumn, tableSortByColumn, testFilter, selectScenario, renameTag, extractExamplesParameter, outlineToScenario, duplicateScenario, moveScenario, extractBackground, addExamplesTable, toggleTag, toggleScenarioComment, pasteAsTable, tableCsv, featureStats, renameExamplesParameter, removeUnusedColumns, inlineBackground, normalizeStepKeywords, addScenario, scenarioMarkdown, tableDuplicateRow, tableDeleteRow, tableMoveColumn, tableSelectColumn, tableTranspose, tableFillDown, tableClearColumn, sortScenarios, featureOutline, tableDeleteEmptyRows, tableRemoveDuplicateRows, tableMarkdown, tagAllScenarios, removeTagEverywhere, sortTags, promoteCommonTags, insertDocString, expandOutline, wrapInRule, setLanguageHeader, scenarioName, tableInsertRowAbove, addScenarioOutline, tableColumnStats, tableColumnValues, tableFillSeries, mergeExamples, scenarioSteps } from '../src/editor/gherkinTools';
+import { cycleStepKeyword, scenarioToOutline, tableInsertRow, tableAddColumn, tableDeleteColumn, tableSortByColumn, testFilter, selectScenario, renameTag, extractExamplesParameter, outlineToScenario, duplicateScenario, moveScenario, extractBackground, addExamplesTable, toggleTag, toggleScenarioComment, pasteAsTable, tableCsv, featureStats, renameExamplesParameter, removeUnusedColumns, inlineBackground, normalizeStepKeywords, addScenario, scenarioMarkdown, tableDuplicateRow, tableDeleteRow, tableMoveColumn, tableSelectColumn, tableTranspose, tableFillDown, tableClearColumn, sortScenarios, featureOutline, tableDeleteEmptyRows, tableRemoveDuplicateRows, tableMarkdown, tagAllScenarios, removeTagEverywhere, sortTags, promoteCommonTags, insertDocString, expandOutline, wrapInRule, setLanguageHeader, scenarioName, tableInsertRowAbove, addScenarioOutline, tableColumnStats, tableColumnValues, tableFillSeries, mergeExamples, scenarioSteps, renameScenario } from '../src/editor/gherkinTools';
 
 /** Runs an editor command on `doc` with the selection between « and » (or a caret at ‸); with `caret`, the result marks the caret with ¦. */
 function run(doc: string, cmd: (v: EditorView) => boolean, caret = false) {
@@ -251,5 +251,8 @@ describe('Gherkin tools (IDE-FEATURES X49…)', () => {
   });
   it('Y69 Copy Scenario Steps', () => {
     expect(scenarioSteps(EditorState.create({ doc: 'Feature: F\n  Scenario: S\n    Given a\n      | x |\n    Then b\n', selection: { anchor: 25 } }))).toBe('Given a\n  | x |\nThen b');
+  });
+  it('Y72 Rename Scenario', () => {
+    expect(run('Feature: F\n  Scenario Outline: Old name\n    Given ‸x', renameScenario(' New name '))).toBe('Feature: F\n  Scenario Outline: New name\n    Given x');
   });
 });
