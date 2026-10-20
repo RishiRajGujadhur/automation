@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState, type ReactNode } from 'react';
-import { ChevronDown, ChevronRight, Play, PlayCircle, Bug, RefreshCw, Square, CircleCheck, CircleX, CircleSlash, Circle, Loader, Search, X, FileText, FlaskConical, Boxes, RotateCcw, Navigation, ListPlus, ListMinus, Trash2, ShieldCheck, Copy, ChevronsDownUp, ChevronsUpDown } from 'lucide-react';
+import { ChevronDown, ChevronRight, Play, PlayCircle, Bug, RefreshCw, Square, CircleCheck, CircleX, CircleSlash, Circle, Loader, Search, X, FileText, FlaskConical, Boxes, RotateCcw, Navigation, ListPlus, ListMinus, Trash2, ShieldCheck, Copy, ChevronsDownUp, ChevronsUpDown, Hash } from 'lucide-react';
 import { RowMenu, useLocalState, copyText } from '../ui';
+import { api } from '../api';
 import { Dropdown, type MenuEntry } from '../radix';
 import { groupTests, type Group, type GroupBy, matchTest, testDetails } from './grouping';
 import { featureOn } from '../features';
@@ -55,7 +56,11 @@ export default function TestExplorer({ revision, onOpen, onDebug, onNotice }: { 
     if (!q) return pool;
     return featureOn('test-search-filters') ? pool.filter((t) => matchTest(t, q, outcomeOf(t, run))) : pool.filter((t) => `${t.project} ${t.className} ${t.name} ${t.feature ?? ''}`.toLowerCase().includes(q));
   }, [tests, query, playlist, playlists, run]);
-  const groups = useMemo(() => groupTests(visible, groupBy, (t) => outcomeOf(t, run), (t) => { const rs = resultsOf(t, run.results); return rs.length ? rs.reduce((n, r) => n + r.durationMs, 0) : undefined; }), [visible, groupBy, run]);
+  // Scenario tags (Gherkin) as test traits: Group by Tag and the tag: search filter.
+  const [tagRows, setTagRows] = useState<{ tag: string; scenarios: { file: string; line: number; scenario: string }[] }[]>([]);
+  useEffect(() => { api<typeof tagRows>('/tags').then(setTagRows, () => setTagRows([])); }, [revision]);
+  const tagsOf = useMemo(() => { const m = new Map<string, string[]>(); for (const r of tagRows) for (const s of r.scenarios) for (const k of [`${s.file}:${s.line}`, `${s.file}#${s.scenario}`]) m.set(k, [...(m.get(k) ?? []), r.tag]); return (t: DiscoveredTest) => (t.kind === 'scenario' ? [...new Set([...(m.get(`${t.file}:${t.line}`) ?? []), ...(m.get(`${t.file}#${t.name}`) ?? [])])] : []); }, [tagRows]);
+  const groups = useMemo(() => groupTests(visible, groupBy, (t) => outcomeOf(t, run), (t) => { const rs = resultsOf(t, run.results); return rs.length ? rs.reduce((n, r) => n + r.durationMs, 0) : undefined; }, tagsOf), [visible, groupBy, run, tagsOf]);
 
   const outcome = (t: DiscoveredTest) => outcomeOf(t, run);
   const counts = useMemo(() => {
@@ -96,7 +101,7 @@ export default function TestExplorer({ revision, onOpen, onDebug, onNotice }: { 
     const open = !!query || !collapsed.has(g.key);
     const ids = g.tests.map((t) => t.id);
     const isSel = ids.length > 0 && ids.every((id) => selected.includes(id));
-    const GroupIcon = g.kind === 'project' ? Boxes : g.kind === 'feature' ? FileText : FlaskConical;
+    const GroupIcon = g.kind === 'project' ? Boxes : g.kind === 'feature' ? FileText : g.kind === 'tag' ? Hash : FlaskConical;
     const durations = g.tests.flatMap((t) => resultsOf(t, run.results)).reduce((n, r) => n + r.durationMs, 0);
     return (
       <li key={g.key}>
@@ -180,6 +185,7 @@ export default function TestExplorer({ revision, onOpen, onDebug, onNotice }: { 
             <option value="class">Class / Feature</option>
             <option value="outcome">Outcome</option>
             <option value="duration">Duration</option>
+            {featureOn('test-group-tag') && <option value="tag">Tag (traits)</option>}
           </select>
         </label>
       )}

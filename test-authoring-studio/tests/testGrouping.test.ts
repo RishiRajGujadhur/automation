@@ -30,4 +30,8 @@ describe('Test Explorer grouping (X71…)', () => {
       'Test Name:\tDivides\nTest FullName:\tApp.Tests.MathTests.Divides\nTest Source:\tTests/MathTests.cs : line 1\nTest Outcome:\tFailed\nTest Duration:\t1500 ms\n\nResult Message:\nExpected: 3\n  But was: 2\n\nResult StackTrace:\nat MathTests.Divides() in Tests/MathTests.cs:line 9');
     expect(testDetails(tests[2], 'none', [])).toContain('Test Outcome:\tNot Run');
   });
+  it('X144 Group by tag (traits)', () => {
+    const tags: Record<string, string[]> = { Scenario: ['@smoke', '@login'], Adds: ['@smoke'] };
+    expect(shape(groupTests(tests, 'tag', (x) => outcomes[x.id], (x) => durations[x.id], (x) => tags[x.id] ?? []))).toEqual(['@login: Scenario', '@smoke: Adds,Scenario', 'No tags: Divides,Other']);
+  });
 });

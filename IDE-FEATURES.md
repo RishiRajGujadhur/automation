@@ -151,6 +151,7 @@ has it on by default, so the desktop app starts with it on. The others start off
 | X141 | Command palette: recently used first | VS Code | yes | ✅ 2026-10-20 |
 | X142 | Run Selected Text in Terminal | VS Code / Rider | yes | ✅ 2026-10-20 |
 | X143 | Selected lines in the status bar | VS 2026 | yes | ✅ 2026-10-20 |
+| X144 | Test Explorer: Group by Tag | VS 2026 | yes | ✅ 2026-10-20 |
 
 ## Progress log
 - 2026-10-20 X1: Sort Lines: the selected lines (or the whole file) in natural, case-insensitive order, blank lines last. Third-batch plumbing: src/rider/more.ts, src/editor/textTools.ts, IDE-FEATURES.md.
@@ -296,3 +297,4 @@ has it on by default, so the desktop app starts with it on. The others start off
 - 2026-10-20 X141: Recency ordering in the palette
 - 2026-10-20 X142: Selection or line to the terminal
 - 2026-10-20 X143: Selection line count
+- 2026-10-20 X144: Traits grouping by Gherkin tags
