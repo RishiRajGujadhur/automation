@@ -126,5 +126,6 @@ export function moreCommands(h: MoreHelpers): RiderCommand[] {
     { id: 'normalize-keywords', label: 'Normalize Step Keywords', menu: 'Code', submenu: 'Gherkin', run: h.inEditor((v) => normalizeStepKeywords(v) || h.notice('The step keywords are already consistent.')) },
     { id: 'remove-duplicate-lines', label: 'Remove Duplicate Lines', menu: 'Edit', run: h.inEditor(removeDuplicateLines) },
     { id: 'remove-blank-lines', label: 'Remove Blank Lines', menu: 'Edit', run: h.inEditor(removeBlankLines) },
+    { id: 'sort-lines-desc', label: 'Sort Lines Descending', menu: 'Edit', run: h.inEditor(sortLines(true)) },
   ];
 }

@@ -155,4 +155,7 @@ describe('text tools (IDE-FEATURES X1…)', () => {
   it('X135 Remove Blank Lines', () => {
     expect(run('x\n«a\n\n  \nb»\n\ny', removeBlankLines)).toBe('x\na\nb\n\ny');
   });
+  it('X136 Sort Lines Descending', () => {
+    expect(run('«item2\nitem10\nItem1»', sortLines(true))).toBe('item10\nitem2\nItem1');
+  });
 });

@@ -56,6 +56,7 @@ const ROWS: Record<'edit' | 'view' | 'navigate' | 'code' | 'tools' | 'help', Row
     ['Quick Info (Ctrl+K, Ctrl+I)', 'quick-info'],
     ['Remove Duplicate Lines', 'remove-duplicate-lines'],
     ['Remove Blank Lines', 'remove-blank-lines'],
+    ['Sort Lines Descending', 'sort-lines-desc'],
   ],
   view: [
     null,
