@@ -321,7 +321,7 @@ Legend: `[x]` done · `[ ]` to do.
 - [x] 389. Distraction Free Mode
 - [x] 390. Centered editor layout
 - [x] 391. Custom activity bar positioning — workbench.activityBar.location: left (default), right, hidden (2026-10-21)
-- [ ] 392. Custom panel positioning
+- [x] 392. Custom panel positioning — workbench.panel.defaultLocation: bottom, left, right; the panel's move button cycles them (2026-10-21)
 - [ ] 393. Secondary sidebar
 - [x] 394. Hide or reveal individual tool windows
 - [x] 395. Save custom window layouts
@@ -378,3 +378,4 @@ Legend: `[x]` done · `[ ]` to do.
 - 2026-10-21 159: Changed files can be grouped in named changelists (kept per repository); each changelist commits on its own, leaving the other changes uncommitted.
 - 2026-10-21 154: A three-way merge editor for conflicted files: both sides read-only over the editable result; Complete Merge refuses while conflict markers remain.
 - 2026-10-21 391: The activity bar can sit on the right edge of the window or be hidden (Workbench, Appearance).
+- 2026-10-21 392: The panel (Build, Debug, Output…) docks below, left or right of the editors; the place is a setting.
