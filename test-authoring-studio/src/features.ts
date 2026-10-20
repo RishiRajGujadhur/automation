@@ -207,6 +207,7 @@ export const FEATURES: Feature[] = [
   { id: 'copy-value', label: 'Locals / Watch: Copy Value', group: 'Debugging', essential: true, vs: 'Locals ▸ Copy Value', description: 'A variable\'s context menu copies its value or expression, or adds a watch.' },
   { id: 'undo-commit', label: 'Undo Last Commit', group: 'Git', essential: true, vs: 'Git ▸ Undo Commit', description: 'Soft-resets the last commit: its changes stay staged.', commands: ['undo-commit'] },
   { id: 'save-as', label: 'Save As…', group: 'Files', essential: true, vs: 'File ▸ Save As', description: 'Writes the editor text to a new file and opens it (the original stays as it is on disk).', commands: ['save-as'] },
+  { id: 'find-in-folder', label: 'Explorer: Find in Folder…', group: 'Navigation', essential: true, vs: 'Find in Files ▸ Look in: folder', description: 'A folder\'s context menu opens Search limited to that folder.' },
 ];
 export const GROUPS: FeatureGroup[] = ['Editing', 'Navigation', 'Code intelligence', 'Tool windows', 'Files', 'Git', 'Gherkin', 'View', 'Debugging', 'Help and productivity'];
 

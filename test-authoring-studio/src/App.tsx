@@ -470,8 +470,12 @@ export default function App() {
   const [sidebarView, setSidebarView] = useLocalState<'explorer' | 'tests' | 'search' | 'git'>('sidebarView', 'explorer');
   const showGit = () => { setTab('Features'); if (view !== 'code' && view !== 'editor') setView('editor'); setSidebarView('git'); setPrefs({ sidebar: true }); };
   // Find in Files (Ctrl+Shift+F) / Replace in Files (Ctrl+Shift+H): the Search view; the key re-focuses it.
-  const [searchKey, setSearchKey] = useState({ n: 0, replace: false });
-  const showSearch = (replace = false) => { setTab('Features'); if (view !== 'code' && view !== 'editor') setView('editor'); setSidebarView('search'); setPrefs({ sidebar: true }); setSearchKey((k) => ({ n: k.n + 1, replace })); };
+  const [searchKey, setSearchKey] = useState<{ n: number; replace: boolean; include?: string }>({ n: 0, replace: false });
+  const showSearch = (replace = false, include?: string) => { setTab('Features'); if (view !== 'code' && view !== 'editor') setView('editor'); setSidebarView('search'); setPrefs({ sidebar: true }); setSearchKey((k) => ({ n: k.n + 1, replace, include })); };
+  // Explorer ▸ Find in Folder… (VS Code): the Search view with "files to include" set to the folder.
+  const showSearchRef = useRef(showSearch);
+  showSearchRef.current = showSearch;
+  useEffect(() => { const h = (e: Event) => showSearchRef.current(false, `${(e as CustomEvent<string>).detail}/**`); window.addEventListener('tas:find-in-folder', h); return () => window.removeEventListener('tas:find-in-folder', h); }, []);
   const showTests = () => { setTab('Features'); if (view !== 'code' && view !== 'editor') setView('editor'); setSidebarView('tests'); setPrefs({ sidebar: true }); };
   // Run / debug glyphs in the editors: discovered tests (refreshed with the index and after each run) and outcomes.
   const testRun = useTestRun();
@@ -1389,7 +1393,7 @@ export default function App() {
           {tab === 'Features' && sidebarView === 'git' ? (
             <GitView onOpen={(file) => editFile(file)} onNotice={setNotice} onChanged={() => { api('/scan', {}).then(setIndex, () => {}); }} />
           ) : tab === 'Features' && sidebarView === 'search' ? (
-            <SearchView key={searchKey.n} initialReplace={searchKey.replace} onOpen={(file, line, column) => editFile(file, line, column)} onNotice={setNotice} onChanged={() => { api('/scan', {}).then(setIndex, () => {}); }} />
+            <SearchView key={searchKey.n} initialReplace={searchKey.replace} initialInclude={searchKey.include} onOpen={(file, line, column) => editFile(file, line, column)} onNotice={setNotice} onChanged={() => { api('/scan', {}).then(setIndex, () => {}); }} />
           ) : tab === 'Features' && sidebarView === 'tests' ? (
             <TestExplorer revision={revision} onOpen={(file, line) => editFile(file, line)} onDebug={debugTest} onNotice={setNotice} />
           ) : <SolutionExplorer

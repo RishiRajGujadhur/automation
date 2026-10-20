@@ -15,13 +15,13 @@ type Result = { files: { file: string; matches: Match[] }[]; total: number; trun
  * Find and Replace in Files (Ctrl+Shift+F / Ctrl+Shift+H), like VS Code's Search view and Visual Studio's Find in
  * Files: match case, whole word, regular expressions, files to include / exclude, results by file, Replace All.
  */
-export default function SearchView({ initialReplace, onOpen, onNotice, onChanged }: { initialReplace?: boolean; onOpen: (file: string, line: number, column: number) => void; onNotice: (m: string) => void; onChanged: () => void }) {
+export default function SearchView({ initialReplace, initialInclude, onOpen, onNotice, onChanged }: { initialReplace?: boolean; initialInclude?: string; onOpen: (file: string, line: number, column: number) => void; onNotice: (m: string) => void; onChanged: () => void }) {
   const confirm = useConfirm();
   const [query, setQuery] = useState('');
   const [replace, setReplace] = useState('');
   const [showReplace, setShowReplace] = useState(!!initialReplace);
-  const [showFilters, setShowFilters] = useState(false);
-  const [include, setInclude] = useState('');
+  const [showFilters, setShowFilters] = useState(!!initialInclude);
+  const [include, setInclude] = useState(initialInclude ?? '');
   const [exclude, setExclude] = useState('');
   const [matchCase, setMatchCase] = useState(false);
   const [wholeWord, setWholeWord] = useState(false);
