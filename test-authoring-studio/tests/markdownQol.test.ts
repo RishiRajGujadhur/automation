@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { EditorState, type TransactionSpec } from '@codemirror/state';
 import type { EditorView } from '@codemirror/view';
-import { pasteLink } from '../src/editor/markdownQol';
+import { pasteLink, toggleWrap } from '../src/editor/markdownQol';
 
 /** Runs a command on `doc` with the selection between « and » (or a caret at ‸); the result marks the caret with ¦. */
 function run(doc: string, cmd: (v: EditorView) => boolean, caret = false) {
@@ -19,5 +19,10 @@ describe('Markdown editing (QL51…)', () => {
     expect(run('see «the docs» here', (v) => pasteLink(v, 'https://example.com/a'))).toBe('see [the docs](https://example.com/a) here');
     expect(run('see «the docs» here', (v) => pasteLink(v, 'not a url'))).toBe('see the docs here');
     expect(run('caret‸ only', (v) => pasteLink(v, 'https://example.com'))).toBe('caret only');
+  });
+  it('QL55 bold / italic toggles', () => {
+    expect(run('a «word» b', toggleWrap('**'))).toBe('a **word** b');
+    expect(run('a **«word»** b', toggleWrap('**'))).toBe('a word b');
+    expect(run('a wo‸rd b', toggleWrap('*'))).toBe('a *word* b');
   });
 });

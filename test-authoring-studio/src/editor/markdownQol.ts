@@ -16,5 +16,22 @@ export function pasteLink(view: EditorView, text: string) {
   return true;
 }
 const linkOnPaste = EditorView.domEventHandlers({ paste: (e, view) => (featureOn('md-paste-link') && pasteLink(view, e.clipboardData?.getData('text/plain') ?? '') ? (e.preventDefault(), true) : false) });
+/** Ctrl+B / Ctrl+I: **bold** / *italic* around the selection (or the word at the caret), and off again. */
+export function toggleWrap(mark: string) {
+  return (view: EditorView) => {
+    if (!featureOn('md-format-keys')) return false;
+    const { state } = view;
+    const changes = state.changeByRange((r) => {
+      let { from, to } = r;
+      if (r.empty) { const w = state.wordAt(r.head); if (w) ({ from, to } = w); }
+      const before = state.sliceDoc(from - mark.length, from), after = state.sliceDoc(to, to + mark.length);
+      if (before === mark && after === mark) return { changes: [{ from: from - mark.length, to: from }, { from: to, to: to + mark.length }], range: EditorSelection.range(from - mark.length, to - mark.length) };
+      return { changes: [{ from, insert: mark }, { from: to, insert: mark }], range: EditorSelection.range(from + mark.length, to + mark.length) };
+    });
+    view.dispatch(changes, { userEvent: 'input' });
+    return true;
+  };
+}
+const formatKeys = Prec.high(keymap.of([{ key: 'Mod-b', run: toggleWrap('**') }, { key: 'Mod-i', run: toggleWrap('*') }]));
 // markdown qol
-export const markdownQol: Extension[] = [linkOnPaste, ...(featureOn('md-wrap') ? [EditorView.lineWrapping] : []), ];
+export const markdownQol: Extension[] = [formatKeys, linkOnPaste, ...(featureOn('md-wrap') ? [EditorView.lineWrapping] : []), ];

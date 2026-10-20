@@ -61,6 +61,7 @@ Every improvement is verified by a unit or Playwright test (`tests/e2e/qol50.spe
 | QL52 | Find remembers the last search | Editor | ✅ 2026-10-20 |
 | QL53 | Highlight the line you jump to | Editor | ✅ 2026-10-20 |
 | QL54 | Markdown: paste a link over text | Markdown | ✅ 2026-10-20 |
+| QL55 | Markdown: Ctrl+B / Ctrl+I | Markdown | ✅ 2026-10-20 |
 
 ## Progress log
 - 2026-10-20 QL1: Title names the file and workspace folder
@@ -117,3 +118,4 @@ Every improvement is verified by a unit or Playwright test (`tests/e2e/qol50.spe
 - 2026-10-20 QL52: Ctrl+F starts with the last search
 - 2026-10-20 QL53: Target line flashes after a jump
 - 2026-10-20 QL54: [text](url) on paste
+- 2026-10-20 QL55: Bold / italic toggles
