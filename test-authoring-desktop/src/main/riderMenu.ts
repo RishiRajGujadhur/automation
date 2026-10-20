@@ -335,6 +335,7 @@ const ROWS: Record<'edit' | 'view' | 'navigate' | 'code' | 'tools' | 'help', Row
       ['Extract Interface…', 'extract-interface'],
       ['Create Unit Tests…', 'create-unit-tests'],
       ['Configure Severity…', 'configure-severity'],
+      ['Find NuGet Package for Missing Type', 'nuget-for-type'],
     ] },
   ],
   tools: [
