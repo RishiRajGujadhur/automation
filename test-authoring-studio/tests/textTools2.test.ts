@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { EditorSelection, EditorState, type TransactionSpec } from '@codemirror/state';
 import type { EditorView } from '@codemirror/view';
-import { mapSelections, urlEncode, urlDecode, base64Encode, base64Decode, escapeString, unescapeString, htmlEncode, htmlDecode, stepNumber, insertSequence, toggleQuotes, joinWith, splitAt, alignAssignments, swapSelections, countOccurrences, trimLines, stamp, insertText, LOREM, shuffleLines, formatXml, minifyXml, jsonEscape, jsonUnescape, numberLines, toFileScopedNamespace, toBlockScopedNamespace, removeRegions, toRawString, toggleTask, formatMarkdownTable, tableOfContents, MARKDOWN_TABLE, removeComments, concatToInterpolation, concatToInterpolationCmd, gotoOffset, convertTimestamp, timestampCmd, sha256Hex, decodeJwt, jwtAt, sortTokens, markdownCodeBlock, fileStatistics, todoComment } from '../src/editor/textTools2';
+import { mapSelections, urlEncode, urlDecode, base64Encode, base64Decode, escapeString, unescapeString, htmlEncode, htmlDecode, stepNumber, insertSequence, toggleQuotes, joinWith, splitAt, alignAssignments, swapSelections, countOccurrences, trimLines, stamp, insertText, LOREM, shuffleLines, formatXml, minifyXml, jsonEscape, jsonUnescape, numberLines, toFileScopedNamespace, toBlockScopedNamespace, removeRegions, toRawString, toggleTask, formatMarkdownTable, tableOfContents, MARKDOWN_TABLE, removeComments, concatToInterpolation, concatToInterpolationCmd, gotoOffset, convertTimestamp, timestampCmd, sha256Hex, decodeJwt, jwtAt, sortTokens, markdownCodeBlock, fileStatistics, todoComment, generateEquality } from '../src/editor/textTools2';
 
 /** Runs an editor command on `doc` with the selection between « and » (or a caret at |). */
 function run(doc: string, cmd: (v: EditorView) => boolean) {
@@ -182,5 +182,9 @@ describe('text tools, fourth batch (IDE-FEATURES-4 Y1…)', () => {
   it('Y74 TODO comment', () => {
     expect(todoComment('A.cs', new Date(2026, 9, 20))).toBe('// TODO (2026-10-20): ');
     expect(todoComment('a.feature', new Date(2026, 9, 20))).toBe('# TODO (2026-10-20): ');
+  });
+  it('Y75 Generate Equality Members', () => {
+    const src = 'public class User\n{\n    public string Name { get; set; } = "";\n    public int Age { get; init; }\n    private int x;\n    public void M() { }|\n}\n';
+    expect(run(src, generateEquality)).toBe('public class User\n{\n    public string Name { get; set; } = "";\n    public int Age { get; init; }\n    private int x;\n    public void M() { }\n\n    public override bool Equals(object? obj) => obj is User other && Equals(Name, other.Name) && Equals(Age, other.Age);\n\n    public override int GetHashCode() => HashCode.Combine(Name, Age);\n}\n');
   });
 });

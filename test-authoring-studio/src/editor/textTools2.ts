@@ -480,3 +480,52 @@ export function fileStatistics(text: string, file: string) {
 
 /** Insert TODO Comment (Rider live template "todo"): `// TODO (yyyy-MM-dd): ` with the file's comment token. */
 export const todoComment = (file: string, date = new Date()) => `${/\.(feature|ya?ml|ps1|sh|py|toml|ini)$/i.test(file) ? '#' : /\.(xml|csproj|props|targets|html?|config)$/i.test(file) ? '<!--' : '//'} TODO (${stamp(date).slice(0, 10)}): `;
+
+/** The class / record / struct around the caret: its header line, member indent, properties and closing brace. */
+export function classAt(state: EditorState) {
+  const doc = state.doc;
+  const here = doc.lineAt(state.selection.main.head).number;
+  for (let n = here; n >= 1; n--) {
+    const m = /^(\s*)(?:[\w]+\s+)*(class|record|struct)\s+(\w+)/.exec(doc.line(n).text);
+    if (!m) continue;
+    const text = doc.toString();
+    let i = text.indexOf('{', doc.line(n).from);
+    if (i < 0) return undefined;
+    const open = i;
+    let depth = 0;
+    for (; i < text.length; i++) { if (text[i] === '{') depth++; else if (text[i] === '}' && --depth === 0) break; }
+    if (i >= text.length || i < state.selection.main.head) continue;
+    const body = text.slice(open + 1, i);
+    const props: { type: string; name: string }[] = [];
+    let d = 0;
+    for (const line of body.split('\n')) {
+      const pm = d === 0 && /^\s*public\s+(?!static\b|const\b)(?:required\s+|virtual\s+|override\s+)*([\w<>[\],.?]+(?:\s*<[^>]*>)?\??)\s+(\w+)\s*\{\s*(?:get|init)/.exec(line);
+      if (pm) props.push({ type: pm[1], name: pm[2] });
+      d += (line.match(/\{/g) ?? []).length - (line.match(/\}/g) ?? []).length;
+      if (pm) d = Math.max(0, d);
+    }
+    return { name: m[3], indent: `${m[1]}    `, close: i, props };
+  }
+  return undefined;
+}
+/** Inserts members before the class's closing brace (after a blank line). */
+function addMembers(view: EditorView, close: number, lines: string[]) {
+  const doc = view.state.doc;
+  const line = doc.lineAt(close);
+  const at = line.from;
+  const before = doc.lineAt(Math.max(0, at - 1)).text.trim() && !doc.lineAt(Math.max(0, at - 1)).text.trim().endsWith('{') ? '\n' : '';
+  view.dispatch({ changes: { from: at, insert: `${before}${lines.join('\n')}\n` }, userEvent: 'input' });
+  return true;
+}
+
+/** Generate Equality Members (Visual Studio / Rider): Equals and GetHashCode from the public properties. */
+export function generateEquality(view: EditorView) {
+  const c = classAt(view.state);
+  if (!c || !c.props.length || /override\s+bool\s+Equals\s*\(/.test(view.state.doc.toString())) return false;
+  const i = c.indent;
+  const eq = c.props.map((p) => `Equals(${p.name}, other.${p.name})`).join(' && ');
+  const hash = c.props.length <= 8
+    ? [`${i}public override int GetHashCode() => HashCode.Combine(${c.props.map((p) => p.name).join(', ')});`]
+    : [`${i}public override int GetHashCode()`, `${i}{`, `${i}    var hash = new HashCode();`, ...c.props.map((p) => `${i}    hash.Add(${p.name});`), `${i}    return hash.ToHashCode();`, `${i}}`];
+  return addMembers(view, c.close, [`${i}public override bool Equals(object? obj) => obj is ${c.name} other && ${eq};`, '', ...hash]);
+}
