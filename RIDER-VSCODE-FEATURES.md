@@ -234,7 +234,7 @@ Legend: `[x]` done · `[ ]` to do.
 - [ ] 214. Import alias generation
 - [x] 215. Namespace import optimization — Organize Usings, Code Cleanup
 - [x] 216. Code formatting on save — editor.formatOnSave: C# (Roslyn + .editorconfig), feature files, JSON (2026-10-21)
-- [ ] 217. Code actions on save
+- [x] 217. Code actions on save — editor.codeActionsOnSave.organizeImports: sort and remove unnecessary usings on save (2026-10-21)
 - [x] 218. Format modified lines only — editor.formatOnSaveMode = modifications: only the lines changed since the last save (C#) (2026-10-21)
 - [x] 219. Language-specific formatting rules — .editorconfig
 - [ ] 220. Custom language injection
@@ -365,3 +365,4 @@ Legend: `[x]` done · `[ ]` to do.
 - 2026-10-21 336: Find in Selection limits Enter, Shift+Enter, Select All and Replace All of the find panel to the selected text, shaded while it is the scope.
 - 2026-10-21 216: Saving formats the file first (C# with Roslyn and .editorconfig, Gherkin, JSON); the editor takes the formatted text.
 - 2026-10-21 218: Format on save can format only the lines changed since the file was last saved, leaving the rest as it is.
+- 2026-10-21 217: Saving a C# file can organize its usings first.
