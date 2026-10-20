@@ -38,7 +38,7 @@ import { useViewOptions } from './editor/viewOptions';
 import { recordNotice } from './rider/notifications';
 import RiderMenubar from './rider/RiderMenubar';
 import RiderToolWindow, { RIDER_TOOLS, type RiderTool } from './rider/RiderToolWindow';
-import { menuEntries, runRider, useRiderCommands, commandOn } from './rider/commands';
+import { menuEntries, runRider, useRiderCommands, commandOn, readUsage } from './rider/commands';
 import { featureOn, disabledCommands, onFeaturesChanged } from './features';
 import { studioLog } from './outputLog';
 import RecentPopup from './RecentPopup';
@@ -1156,7 +1156,8 @@ export default function App() {
           { label: 'Preferences', run: () => setModal('preferences') },
           { label: 'Toggle focus mode', run: () => setPrefs({ focus: !prefs.focus }), shortcut: 'Ctrl .' },
           { label: 'Copy link to this page', run: () => copyText(location.href).then((ok) => setNotice(ok ? 'Link copied.' : 'Clipboard unavailable.')) },
-          ...riderList.filter((c) => commandOn(c.id)).map((c) => ({ label: `${c.menu}: ${c.label}`, shortcut: c.shortcut, run: () => { runRider(c.id, 'palette'); } })),
+          // Recently used commands first (VS Code's command palette): the palette orders by `recent`.
+          ...(() => { const u = featureOn('palette-recent') ? readUsage() : {}; return riderList.filter((c) => commandOn(c.id)).map((c) => { const last = u[c.id]?.last ?? 0; return { label: `${c.menu}: ${c.label}`, shortcut: last ? `recent${c.shortcut ? ` · ${c.shortcut}` : ''}` : c.shortcut, recent: last, run: () => { runRider(c.id, 'palette'); } }; }); })(),
           ...designTools.map((d) => ({ label: `Test Design: ${d.label}`, run: () => { try { localStorage.setItem('tas:design:tool', JSON.stringify(d.id)); } catch { /* storage blocked */ } setDesignKey((k) => k + 1); setTab('Test Design'); } })),
         ]}
       />

@@ -4,7 +4,7 @@ import { Search, History } from 'lucide-react';
 import { useStepSearch } from './useStepSearch';
 import type { Binding } from './types';
 
-export type PaletteCommand = { label: string; run: () => void; shortcut?: string };
+export type PaletteCommand = { label: string; run: () => void; shortcut?: string; /** Last use (ms): recently used commands come first. */ recent?: number };
 const pages = ['Dashboard', 'Test Generator', 'Project Explorer', 'Dictionary Inspector', 'Test Design', 'Config', 'Step Catalog', 'Backgrounds', 'Selectors', 'Scenario Builder', 'Playwright Recorder', 'Feature Editor'];
 
 export default function SearchPalette({ open, onOpenChange, onNavigate, onAdd, revision, commands = [], recentPages = [] }: { open: boolean; onOpenChange: (open: boolean) => void; onNavigate: (name: string) => void; onAdd: (binding: Binding) => void; revision?: string; commands?: PaletteCommand[]; recentPages?: string[] }) {
@@ -13,7 +13,7 @@ export default function SearchPalette({ open, onOpenChange, onNavigate, onAdd, r
   const q = query.toLowerCase();
   const recent = recentPages.filter((p) => pages.includes(p)).slice(0, 3);
   const ordered = [...recent, ...pages.filter((p) => !recent.includes(p))].filter((p) => p.toLowerCase().includes(q));
-  const cmds = commands.filter((c) => c.label.toLowerCase().includes(q));
+  const cmds = commands.filter((c) => c.label.toLowerCase().includes(q)).map((c, i) => ({ c, i })).sort((a, b) => (b.c.recent ?? 0) - (a.c.recent ?? 0) || a.i - b.i).map((x) => x.c);
   const close = () => { onOpenChange(false); setQuery(''); };
   return (
     <Command.Dialog open={open} onOpenChange={(o) => { onOpenChange(o); if (!o) setQuery(''); }} label="Search commands and steps" shouldFilter={false} className="command-palette">
