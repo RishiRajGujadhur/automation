@@ -52,6 +52,15 @@ export default function TestExplorer({ revision, onOpen, onDebug, onNotice }: { 
   // After a run the code-behind exists (the run built the project): rediscover so scenarios get their real names.
   const finished = run.status === 'done' || run.status === 'failed' ? run.version : 0;
   useEffect(() => { if (finished) refresh(); }, [finished]); // eslint-disable-line react-hooks/exhaustive-deps
+  // After a run with failures the first failed test is selected (its details show) and scrolled into view (QOL-50).
+  useEffect(() => {
+    if (!finished || !featureOn('reveal-failure')) return;
+    const f = tests.find((t) => outcomeOf(t, run) === 'failed');
+    if (!f) return;
+    setSelected([f.id]);
+    setCollapsed((prev) => { const n = new Set(prev); n.delete(`p:${f.project}`); n.delete(f.kind === 'scenario' ? `f:${f.file}` : `c:${f.className}`); return n; });
+    requestAnimationFrame(() => document.querySelector('.t-tree .t-row.selected')?.scrollIntoView({ block: 'nearest' }));
+  }, [finished]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Scenario tags (Gherkin) as test traits: Group by Tag and the tag: search filter.
   const [tagRows, setTagRows] = useState<{ tag: string; scenarios: { file: string; line: number; scenario: string }[] }[]>([]);

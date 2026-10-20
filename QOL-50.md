@@ -31,6 +31,7 @@ Every improvement is verified by a unit or Playwright test (`tests/e2e/qol50.spe
 | QL22 | Search results by keyboard | Search | ✅ 2026-10-20 |
 | QL23 | Search: the found text is selected | Search | ✅ 2026-10-20 |
 | QL24 | Test Explorer remembers its view | Test Explorer | ✅ 2026-10-20 |
+| QL25 | Test Explorer shows the first failure | Test Explorer | ✅ 2026-10-20 |
 
 ## Progress log
 - 2026-10-20 QL1: Title names the file and workspace folder
@@ -57,3 +58,4 @@ Every improvement is verified by a unit or Playwright test (`tests/e2e/qol50.spe
 - 2026-10-20 QL22: Down into results, Up/Down, Enter
 - 2026-10-20 QL23: Opening a result selects the match
 - 2026-10-20 QL24: Collapsed groups and search kept
+- 2026-10-20 QL25: First failed test selected after a run
