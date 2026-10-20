@@ -170,6 +170,7 @@ has it on by default, so the desktop app starts with it on. The others start off
 | X160 | Find Step Usages (feature step) | Rider | yes | ✅ 2026-10-20 |
 | X161 | Copy Step Text | Rider | yes | ✅ 2026-10-20 |
 | X162 | Sort JSON Keys | VS Code / Rider | yes | ✅ 2026-10-20 |
+| X163 | Copy JSON Pointer | Rider | yes | ✅ 2026-10-20 |
 
 ## Progress log
 - 2026-10-20 X1: Sort Lines: the selected lines (or the whole file) in natural, case-insensitive order, blank lines last. Third-batch plumbing: src/rider/more.ts, src/editor/textTools.ts, IDE-FEATURES.md.
@@ -334,3 +335,4 @@ has it on by default, so the desktop app starts with it on. The others start off
 - 2026-10-20 X160: Steps bound to the same definition
 - 2026-10-20 X161: Step text without keyword
 - 2026-10-20 X162: Alphabetical keys, deep
+- 2026-10-20 X163: RFC 6901 pointer at caret

@@ -1,6 +1,6 @@
 import type { EditorView } from '@codemirror/view';
 import type { RiderCommand } from './commands';
-import { sortJsonKeys } from '../editor/docTools';
+import { sortJsonKeys, jsonPointerAt } from '../editor/docTools';
 import { foldEffect, foldedRanges } from '@codemirror/language';
 import { sortTabs } from '../files/tabs';
 import { requestFileHistory } from './GitLogPanel';
@@ -156,5 +156,6 @@ export function moreCommands(h: MoreHelpers): RiderCommand[] {
     { id: 'fold-usings', label: 'Collapse Using Directives', menu: 'Code', run: h.inEditor((v, file) => { if (!file.endsWith('.cs')) { h.notice('Open a C# file first.'); return; } const doc = v.state.doc; let first = 0, last = 0; for (let n = 1; n <= doc.lines; n++) { const t = doc.line(n).text.trim(); if (/^(global\s+)?using\s+[^(=]*;$|^using\s+\w+\s*=/.test(t)) { if (!first) first = n; last = n; } else if (t && !t.startsWith('//') && !t.startsWith('#')) { if (first) break; } } if (!first || first === last) { h.notice('Fewer than two using directives at the top of the file.'); return; } const from = doc.line(first).to, to = doc.line(last).to; let folded = false; foldedRanges(v.state).between(from, to, (a, b) => { if (a === from && b === to) folded = true; }); if (!folded) v.dispatch({ effects: foldEffect.of({ from, to }) }); }) },
     { id: 'copy-step-text', label: 'Copy Step Text', menu: 'Code', submenu: 'Gherkin', run: h.inEditor((v) => { const m = /^\s*(?:Given|When|Then|And|But)\s+(.*)$/.exec(v.state.doc.lineAt(v.state.selection.main.head).text); if (!m) { h.notice('Put the caret on a step.'); return; } void copyText(m[1].trim()).then((ok) => h.notice(ok ? 'Copied the step text.' : 'Clipboard unavailable.')); }) },
     { id: 'sort-json', label: 'Sort JSON Keys', menu: 'Code', run: h.inEditor((v) => { if (!sortJsonKeys(v)) h.notice('The file (or selection) is not valid JSON.'); }) },
+    { id: 'copy-json-pointer', label: 'Copy JSON Pointer', menu: 'Code', run: h.inEditor((v) => { const p = jsonPointerAt(v.state.doc.toString(), v.state.selection.main.head); if (p === undefined) { h.notice('The file is not valid JSON.'); return; } void copyText(p || '/').then((ok) => h.notice(ok ? `Copied ${p || '/'}` : 'Clipboard unavailable.')); }) },
   ];
 }

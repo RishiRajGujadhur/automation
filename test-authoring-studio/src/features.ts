@@ -260,6 +260,7 @@ export const FEATURES: Feature[] = [
   { id: 'find-step-usages', label: 'Find Step Usages (feature step)', group: 'Gherkin', essential: true, vs: 'Find Usages on a Gherkin step', description: 'Every feature step bound to the same step definition as the step at the caret.', commands: ['find-step-usages'] },
   { id: 'copy-step-text', label: 'Copy Step Text', group: 'Gherkin', essential: true, description: 'Copies the step at the caret without its keyword (for the step catalogue or a binding).', commands: ['copy-step-text'] },
   { id: 'sort-json', label: 'Sort JSON Keys', group: 'Editing', essential: true, vs: 'JSON ▸ Sort keys', description: 'Orders every object\'s keys alphabetically.', commands: ['sort-json'] },
+  { id: 'copy-json-pointer', label: 'Copy JSON Pointer', group: 'Editing', essential: true, vs: 'JSON ▸ Copy JSON Pointer (Rider)', description: 'Copies the JSON Pointer (/a/0/b) of the value at the caret.', commands: ['copy-json-pointer'] },
 ];
 export const GROUPS: FeatureGroup[] = ['Editing', 'Navigation', 'Code intelligence', 'Tool windows', 'Files', 'Git', 'Gherkin', 'View', 'Debugging', 'Help and productivity'];
 

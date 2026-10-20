@@ -14,3 +14,40 @@ export function sortJsonKeys(view: EditorView) {
   if (next !== text) view.dispatch({ changes: { from, to, insert: next }, userEvent: 'input.format' });
   return true;
 }
+
+/**
+ * The JSON Pointer (RFC 6901) of the value at a position (Rider's Copy JSON Pointer): the innermost value whose text
+ * contains it, a key counting as its value.
+ */
+export function jsonPointerAt(text: string, pos: number) {
+  let i = 0;
+  let best: { path: string[]; size: number } | undefined;
+  const note = (path: string[], from: number, to: number) => { if (pos >= from && pos <= to && (!best || to - from <= best.size)) best = { path, size: to - from }; };
+  const ws = () => { while (i < text.length && /\s/.test(text[i])) i++; };
+  const str = () => { const from = i; i++; while (i < text.length && text[i] !== '"') i += text[i] === '\\' ? 2 : 1; i++; return JSON.parse(text.slice(from, i)) as string; };
+  const value = (path: string[]): void => {
+    ws();
+    const from = i;
+    if (text[i] === '{') {
+      i++; ws();
+      while (i < text.length && text[i] !== '}') {
+        const kFrom = i; const key = str(); const kTo = i;
+        ws(); i++; // :
+        const sub = [...path, key];
+        note(sub, kFrom, kTo);
+        value(sub);
+        ws(); if (text[i] === ',') { i++; ws(); }
+      }
+      i++;
+    } else if (text[i] === '[') {
+      i++; ws();
+      let n = 0;
+      while (i < text.length && text[i] !== ']') { value([...path, String(n++)]); ws(); if (text[i] === ',') { i++; ws(); } }
+      i++;
+    } else if (text[i] === '"') str();
+    else { while (i < text.length && /[^\s,\]}]/.test(text[i])) i++; }
+    note(path, from, i);
+  };
+  try { value([]); } catch { return undefined; }
+  return best && best.path.map((p) => `/${p.replace(/~/g, '~0').replace(/\//g, '~1')}`).join('');
+}
