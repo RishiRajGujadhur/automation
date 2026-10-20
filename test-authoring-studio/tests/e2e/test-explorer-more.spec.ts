@@ -50,7 +50,7 @@ test('X74 / QL99 / QL100 Run All Tests in File: every test of the active file; r
   await expect(page.getByRole('region', { name: 'Test Explorer' })).toBeVisible();
 });
 
-test('X71 X72 X73 X75 Test Explorer: group by outcome, search filters, Copy, Collapse / Expand All', async ({ page, context }) => {
+test('X71 X72 X73 X75 Y58 Y59 Test Explorer: group by outcome, search filters, Copy, Collapse / Expand All, Copy Test Name, Export', async ({ page, context }) => {
   await context.grantPermissions(['clipboard-read', 'clipboard-write']);
   await start(page);
   await page.getByRole('button', { name: 'Test Explorer' }).click();
@@ -81,6 +81,15 @@ test('X71 X72 X73 X75 Test Explorer: group by outcome, search filters, Copy, Col
   await page.getByRole('menuitem', { name: 'Copy', exact: true }).click();
   await expect.poll(() => page.evaluate(() => navigator.clipboard.readText())).toContain('Test Outcome:\tPassed');
   expect(await page.evaluate(() => navigator.clipboard.readText())).toContain('Test FullName:\tCalculator.Tests.CalculatorTests.AddsTwoNumbers');
+  // Y58 Copy Test Name; Y59 Export results as CSV.
+  await tree.locator('.t-label', { hasText: /AddsTwoNumbers/ }).click({ button: 'right' });
+  await page.getByRole('menuitem', { name: 'Copy Test Name' }).click();
+  await expect.poll(() => page.evaluate(() => navigator.clipboard.readText())).toBe('Calculator.Tests.CalculatorTests.AddsTwoNumbers');
+  const download = page.waitForEvent('download');
+  await te.getByRole('button', { name: 'Export results as CSV' }).click();
+  const csv = await fs.readFile((await (await download).path())!, 'utf8');
+  expect(csv).toMatch(/^Test,Project,Outcome,Duration \(ms\),Message\r\n/);
+  expect(csv).toMatch(/Calculator\.Tests\.CalculatorTests\.AddsTwoNumbers,[^,]*,passed,\d+,/);
 });
 
 test('X78 Run Tagged Scenarios: the Tags window runs a tag\'s scenarios', async ({ page }) => {

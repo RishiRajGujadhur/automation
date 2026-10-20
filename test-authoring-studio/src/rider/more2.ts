@@ -1,5 +1,6 @@
 import type { RiderCommand } from './commands';
 import type { MoreHelpers } from './more';
+import { api } from '../api';
 import { getTabs, setPinned } from '../files/tabs';
 import { copyText } from '../ui';
 import { tableDeleteEmptyRows, tableRemoveDuplicateRows, tableMarkdown, tagAllScenarios, removeTagEverywhere, sortTags, promoteCommonTags, insertDocString, expandOutline, wrapInRule, setLanguageHeader, scenarioName, tableInsertRowAbove, addScenarioOutline, tableColumnStats, tableColumnValues, tableFillSeries, mergeExamples } from '../editor/gherkinTools';
@@ -71,5 +72,6 @@ export function moreCommands2(h: MoreHelpers): RiderCommand[] {
     { id: 'goto-offset', label: 'Go to Offset…', menu: 'Navigate', run: h.inEditor((v) => { const t = window.prompt(`Character offset (0–${v.state.doc.length}):`, String(v.state.selection.main.head)); if (t === null) return; if (!gotoOffset(Number(t.trim()))(v)) h.notice('Type a whole number.'); }) },
     { id: 'caret-blink', label: 'Caret Blinking', menu: 'View', checked: () => document.documentElement.dataset.noBlink === undefined, run: () => { const off = document.documentElement.dataset.noBlink === undefined; if (off) document.documentElement.dataset.noBlink = ''; else delete document.documentElement.dataset.noBlink; try { localStorage.setItem('tas:noBlink', off ? '1' : ''); } catch { /* storage blocked */ } } },
     { id: 'pin-active-tab', label: 'Pin / Unpin Active Tab', menu: 'View', shortcut: 'Ctrl K, Shift Enter', run: () => { const { tabs, active } = getTabs(); const t = tabs.find((x) => x.file === active); if (!t) { h.notice('No editor tab is active.'); return; } setPinned(t.file, !t.pinned); h.notice(`${t.pinned ? 'Unpinned' : 'Pinned'} ${t.file.split('/').pop()}.`); } },
+    { id: 'copy-branch-name', label: 'Copy Current Branch Name', menu: 'Tools', run: () => { void api<{ repo: boolean; branch?: string }>('/git/status').then((s) => { if (!s.repo || !s.branch) { h.notice('The workspace is not on a Git branch.'); return; } void copyText(s.branch).then((ok) => h.notice(ok ? `Copied ${s.branch}` : 'Clipboard unavailable.')); }, (e) => h.notice((e as Error).message)); } },
   ];
 }

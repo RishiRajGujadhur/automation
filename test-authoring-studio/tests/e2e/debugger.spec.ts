@@ -63,6 +63,7 @@ test('breakpoint on a feature line, step into the C# step, watch, step out, call
     await panel.getByRole('tab', { name: 'Locals' }).click();
     await panel.getByRole('button', { name: 'Expand this' }).click();
     await expect(panel.getByRole('treegrid', { name: 'Locals' })).toContainText('calculator');
+    await expect(panel.getByRole('button', { name: 'Copy All as JSON' })).toBeVisible(); // Y57
     await page.screenshot({ path: 'test-results/debugger-step-out.png' });
 
     // Autos: variables of the current and previous line.

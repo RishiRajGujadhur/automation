@@ -331,6 +331,7 @@ const ROWS: Record<'edit' | 'view' | 'navigate' | 'code' | 'tools' | 'help', Row
     ['Export Feature Settings', 'export-features'],
     ['Import Feature Settings…', 'import-features'],
     ['Reset Feature Settings…', 'reset-features'],
+    ['Copy Current Branch Name', 'copy-branch-name'],
   ],
   help: [
     null,

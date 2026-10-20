@@ -244,3 +244,11 @@ test('QL83 Git Log remembers its filter; Escape clears it', async ({ page }) => 
   await page.getByRole('region', { name: 'Git Log' }).getByLabel('Filter commits').press('Escape');
   await expect(page.getByRole('region', { name: 'Git Log' }).getByLabel('Filter commits')).toHaveValue('');
 });
+
+test('Y60 Copy Current Branch Name', async ({ page, context }) => {
+  await context.grantPermissions(['clipboard-read', 'clipboard-write']);
+  await open(page);
+  await page.getByRole('button', { name: 'Tools menu' }).click();
+  await page.getByRole('menuitem', { name: /^Copy Current Branch Name/ }).click();
+  await expect.poll(() => page.evaluate(() => navigator.clipboard.readText())).toBe('main');
+});

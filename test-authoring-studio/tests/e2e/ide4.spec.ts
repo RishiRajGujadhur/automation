@@ -138,3 +138,34 @@ test('Y41–Y50 Gherkin: language header, column statistics, fill series, duplic
   await gherkinItem(page, /^Set Language Header/);
   await expect.poll(() => doc(page)).toMatch(/^# language: fr\nFeature: F/);
 });
+
+test('Y51–Y56 Move tab, memory indicator, Go to Offset, Caret Blinking, Pin Active Tab, problems in the file', async ({ page }) => {
+  await open(page);
+  await expect(page.getByLabel('Gherkin source')).toContainText('Feature:');
+  const nav = page.getByRole('navigation', { name: 'Solution' });
+  await nav.getByRole('button', { name: 'AuthSteps.cs', exact: true }).first().dblclick();
+  // Y51
+  await page.locator('.editor-tab-label', { hasText: 'Login.feature' }).click({ button: 'right' });
+  await page.getByRole('menuitem', { name: 'Move Tab to End' }).click();
+  await expect(page.locator('.editor-tab-label').last()).toHaveText(/Login\.feature/);
+  // Y52
+  await expect(page.getByLabel(/^Memory: \d+ MB$/)).toBeVisible();
+  // Y53
+  await page.locator('.editor-tab-label', { hasText: 'Login.feature' }).click();
+  page.once('dialog', (d) => void d.accept('12'));
+  await menuItem(page, 'Navigate', /^Go to Offset/);
+  await expect.poll(() => page.evaluate(() => (window as unknown as { __activeEditor: () => { view: { state: { selection: { main: { head: number } } } } } }).__activeEditor().view.state.selection.main.head)).toBe(12);
+  // Y54
+  await menuItem(page, 'View', /Caret Blinking/);
+  await expect(page.locator('html')).toHaveAttribute('data-no-blink', '');
+  await menuItem(page, 'View', /Caret Blinking/);
+  await expect(page.locator('html')).not.toHaveAttribute('data-no-blink', '');
+  // Y55
+  await page.getByLabel('Gherkin source').click();
+  await page.keyboard.press('Control+K');
+  await page.keyboard.press('Shift+Enter');
+  await expect(page.locator('.editor-tab.pinned .editor-tab-label', { hasText: 'Login.feature' })).toBeVisible();
+  // Y56
+  await setDoc(page, 'Feature: F\n  Scenario: A\n    Given x\n  Scenario: a\n    Given y\n', 0);
+  await expect(page.getByRole('button', { name: /^Problems in this file: \d+ errors, [1-9]\d* warnings$/ })).toBeVisible({ timeout: 10_000 });
+});
