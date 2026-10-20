@@ -189,6 +189,7 @@ const ROWS: Record<'edit' | 'view' | 'navigate' | 'code' | 'tools' | 'help', Row
       ['Copy Scenario as Markdown', 'copy-scenario-md'],
       ['Find Step Usages', 'find-step-usages'],
       ['Copy Step Text', 'copy-step-text'],
+      ['Table: Duplicate Row', 'table-duplicate-row'],
     ] },
     ['Collapse Using Directives', 'fold-usings'],
     ['Sort JSON Keys', 'sort-json'],

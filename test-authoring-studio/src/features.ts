@@ -266,6 +266,7 @@ export const FEATURES: Feature[] = [
   { id: 'toggle-status-bar', label: 'Toggle Status Bar', group: 'View', essential: true, vs: 'View ▸ Status Bar', description: 'Hides or shows the status bar.', commands: ['toggle-status-bar'] },
   { id: 'toggle-activity-bar', label: 'Toggle Activity Bar', group: 'View', essential: true, vs: 'View ▸ Appearance ▸ Activity Bar', description: 'Hides or shows the activity bar (VS Code layout).', commands: ['toggle-activity-bar'] },
   { id: 'whats-new', label: 'What\'s New', group: 'Help and productivity', essential: true, vs: 'Help ▸ What\'s New', description: 'Lists the latest IDE features with their switches (Help ▸ What\'s New).', commands: ['whats-new'] },
+  { id: 'table-duplicate-row', label: 'Table: Duplicate Row', group: 'Gherkin', essential: true, description: 'Copies the caret\'s table row below it.', commands: ['table-duplicate-row'] },
 ];
 export const GROUPS: FeatureGroup[] = ['Editing', 'Navigation', 'Code intelligence', 'Tool windows', 'Files', 'Git', 'Gherkin', 'View', 'Debugging', 'Help and productivity'];
 

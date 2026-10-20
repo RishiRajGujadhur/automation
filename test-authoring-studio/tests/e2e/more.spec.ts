@@ -841,3 +841,50 @@ test('X165–X168 Word count, Status Bar / Activity Bar toggles, What\'s New', a
   await expect(dlg.getByRole('list', { name: 'New features' }).getByRole('listitem')).toHaveCount(1);
   await expect(dlg.getByRole('checkbox', { name: 'Copy XPath' })).toBeChecked();
 });
+
+test('X169–X172 Table rows and columns from Code ▸ Gherkin', async ({ page, request }) => {
+  await fs.writeFile(path.join(root, 'Features/Table.feature'), ['Feature: Table', '  Scenario: T', '    Given the users:', '      | name | role  |', '      | ada  | admin |', ''].join('\n'));
+  expect((await request.post('/api/workspace', { data: { repositoryRoot: root, targetProject: '.' } })).ok()).toBe(true);
+  await openFeature(page, 'Table.feature');
+  await caretAt(page, 'admin');
+  await gherkinItem(page, /^Table: Duplicate Row/);
+  await expect.poll(async () => (await doc(page)).match(/\| ada {2}\| admin \|/g)?.length).toBe(2);
+  await gherkinItem(page, /^Table: Delete Row/);
+  await expect.poll(async () => (await doc(page)).match(/\| ada {2}\| admin \|/g)?.length).toBe(1);
+  await caretAt(page, 'admin');
+  await gherkinItem(page, /^Table: Move Column Left/);
+  await expect.poll(() => doc(page)).toContain('| role  | name |');
+  await gherkinItem(page, /^Table: Select Column/);
+  await page.keyboard.type('x');
+  await expect.poll(() => doc(page)).toMatch(/\| x\s*\| name \|[\s\S]*\| x\s*\| ada/);
+});
+
+test('X173 / X174 Clear Recent Files and Clear All Bookmarks', async ({ page }) => {
+  await openFeature(page);
+  await caretAt(page, 'Feature:');
+  await page.keyboard.press('Control+K');
+  await page.keyboard.press('Control+K');
+  await expect(page.locator('.gherkin-editor .cm-bookmark:visible')).toHaveCount(1);
+  page.once('dialog', (d) => void d.accept());
+  await menuItem(page, 'Navigate', /^Clear All Bookmarks/);
+  await expect(page.locator('.gherkin-editor .cm-bookmark:visible')).toHaveCount(0);
+  await menuItem(page, 'Navigate', /^Clear Recent Files/);
+  await expect(page.getByText(/Cleared \d+ recent file/).first()).toBeVisible();
+});
+
+test('X175 Save as Live Template, then insert it', async ({ page }) => {
+  await openFeature(page);
+  await caretAt(page, 'Given the browser is started');
+  await page.keyboard.press('Home');
+  await page.keyboard.press('Shift+End');
+  page.once('dialog', (d) => void d.accept('browser'));
+  await menuItem(page, 'Tools', /^Save as Live Template/);
+  await expect.poll(() => page.evaluate(() => localStorage.getItem('tas:userTemplates') ?? '')).toContain('browser');
+  await caretAt(page, 'Feature:');
+  await page.keyboard.press('End');
+  await page.keyboard.press('Enter');
+  await menuItem(page, 'Edit', /^Insert Live Template/);
+  await page.keyboard.type('browser');
+  await page.keyboard.press('Enter');
+  await expect.poll(async () => ((await doc(page)).match(/Given the browser is started/g) ?? []).length).toBe(2);
+});

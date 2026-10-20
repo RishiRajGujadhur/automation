@@ -20,7 +20,7 @@ import { renamePath } from '../files/provider';
 import { movedPath } from '../files/tabs';
 import { DEFAULT_TODO_TOKENS } from '../editor/todoHighlight';
 import { copyText as copyFilterText } from '../ui';
-import { cycleStepKeyword, scenarioToOutline, tableInsertRow, tableAddColumn, tableDeleteColumn, tableSortByColumn, testFilter, selectScenario, extractExamplesParameter, outlineToScenario, duplicateScenario, moveScenario, extractBackground, addExamplesTable, toggleTag, toggleScenarioComment, pasteAsTable, tableCsv, renameExamplesParameter, paramAt, removeUnusedColumns, inlineBackground, normalizeStepKeywords, addScenario, scenarioMarkdown } from '../editor/gherkinTools';
+import { cycleStepKeyword, scenarioToOutline, tableInsertRow, tableAddColumn, tableDeleteColumn, tableSortByColumn, testFilter, selectScenario, extractExamplesParameter, outlineToScenario, duplicateScenario, moveScenario, extractBackground, addExamplesTable, toggleTag, toggleScenarioComment, pasteAsTable, tableCsv, renameExamplesParameter, paramAt, removeUnusedColumns, inlineBackground, normalizeStepKeywords, addScenario, scenarioMarkdown, tableDuplicateRow } from '../editor/gherkinTools';
 import { unsavedFiles } from '../editor/autosave';
 import { getTabs, closeTab } from '../files/tabs';
 import { reopenClosed } from '../files/tabs';
@@ -160,5 +160,6 @@ export function moreCommands(h: MoreHelpers): RiderCommand[] {
     { id: 'copy-xpath', label: 'Copy XPath', menu: 'Code', run: h.inEditor((v) => { const p = xpathAt(v.state.doc.toString(), v.state.selection.main.head); if (!p) { h.notice('Put the caret inside an XML element.'); return; } void copyText(p).then((ok) => h.notice(ok ? `Copied ${p}` : 'Clipboard unavailable.')); }) },
     { id: 'toggle-status-bar', label: 'Status Bar', menu: 'View', group: true, checked: () => !viewOptions().hideStatusBar, run: () => setViewOptions({ hideStatusBar: !viewOptions().hideStatusBar }) },
     { id: 'toggle-activity-bar', label: 'Activity Bar', menu: 'View', checked: () => !viewOptions().hideActivityBar, run: () => setViewOptions({ hideActivityBar: !viewOptions().hideActivityBar }) },
+    { id: 'table-duplicate-row', label: 'Table: Duplicate Row', menu: 'Code', submenu: 'Gherkin', run: h.inEditor((v) => tableDuplicateRow(v) || h.notice('Put the caret in a table row.')) },
   ];
 }

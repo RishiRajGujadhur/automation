@@ -598,3 +598,12 @@ export function scenarioMarkdown(state: EditorState, lineNo: number) {
   flush();
   return out.join('\n').replace(/\n{3,}/g, '\n\n').trim();
 }
+
+/** Table ▸ Duplicate Row: a copy of the caret's row below it. */
+export function tableDuplicateRow(view: EditorView) {
+  const t = tableAt(view.state);
+  if (!t) return false;
+  const rows = [...t.rows];
+  rows.splice(t.row + 1, 0, [...t.rows[t.row]]);
+  return writeTable(view, t, rows, t.row + 1, t.col);
+}
