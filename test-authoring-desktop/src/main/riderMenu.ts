@@ -329,6 +329,7 @@ const ROWS: Record<'edit' | 'view' | 'navigate' | 'code' | 'tools' | 'help', Row
       ['Extract Method', 'extract-method'],
       ['Introduce Variable', 'introduce-variable'],
       ['Inline', 'inline-symbol'],
+      ['Introduce Parameter', 'introduce-parameter'],
     ] },
   ],
   tools: [

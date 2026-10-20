@@ -386,10 +386,12 @@ sealed class LanguageService
     }
     readonly Dictionary<string, CodeAction> actions = [];
 
-    static IEnumerable<CodeAction> Flatten(CodeAction a)
+    /// <summary>Nested actions with their titles; a fragment ("and update call sites directly") keeps its parent's title in front.</summary>
+    static IEnumerable<(CodeAction Action, string Title)> Flatten(CodeAction a, string? parent = null)
     {
+        var title = parent != null && System.Text.RegularExpressions.Regex.IsMatch(a.Title, "^(and|into|in|for|with|as|to) ") ? $"{parent} {a.Title}" : a.Title;
         var nested = (ImmutableArray<CodeAction>?)typeof(CodeAction).GetProperty("NestedActions", BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance)?.GetValue(a);
-        return nested is { IsDefaultOrEmpty: false } n ? n.SelectMany(Flatten) : [a];
+        return nested is { IsDefaultOrEmpty: false } n ? n.SelectMany(c => Flatten(c, title)) : [(a, title)];
     }
 
     /// <summary>Quick Actions and Refactorings (Ctrl+.): fixes for diagnostics at the cursor, then refactorings for the selection.</summary>
@@ -414,12 +416,12 @@ sealed class LanguageService
         }
         var list = new List<object>();
         foreach (var (action, kind) in found)
-            foreach (var a in Flatten(action))
+            foreach (var (a, title) in Flatten(action))
             {
-                if (list.Count >= 60 || string.IsNullOrWhiteSpace(a.Title)) continue;
+                if (list.Count >= 60 || string.IsNullOrWhiteSpace(title)) continue;
                 var id = $"a{actions.Count}";
                 actions[id] = a;
-                list.Add(new { id, title = a.Title, kind });
+                list.Add(new { id, title, kind });
             }
         // Same titles from several providers: keep the first.
         return list.GroupBy(x => ((dynamic)x).title as string).Select(g => g.First()).ToList();

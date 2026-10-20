@@ -10,9 +10,11 @@ Each is pushed on its own with a Settings ▸ Features switch, a native menu row
 | RC2 | Extract Method (Ctrl+Alt+M) | Rider | yes | ✅ 2026-10-20 |
 | RC3 | Introduce Variable (Ctrl+Alt+V) | Rider | yes | ✅ 2026-10-20 |
 | RC4 | Inline (Ctrl+Alt+N) | Rider | yes | ✅ 2026-10-20 |
+| RC5 | Introduce Parameter (Ctrl+Alt+P) | Rider | yes | ✅ 2026-10-20 |
 
 ## Progress log
 - 2026-10-20 RC1: Ctrl+Alt+Shift+T: only the refactorings at the caret or selection.
 - 2026-10-20 RC2: Roslyn's Extract Method on the selection, applied directly.
 - 2026-10-20 RC3: The selected expression into a new local.
 - 2026-10-20 RC4: A local (or method) replaced by its value or body.
+- 2026-10-20 RC5: The expression becomes a parameter, callers updated; nested Quick Actions keep their parent title.
