@@ -275,6 +275,7 @@ export const FEATURES: Feature[] = [
   { id: 'save-live-template', label: 'Save as Live Template', group: 'Editing', essential: true, vs: 'Tools ▸ Save as Live Template (Rider)', description: 'Saves the selection as your own live template (Insert Live Template lists it).', commands: ['save-live-template'] },
   { id: 'toggle-ignore', label: 'Toggle Ignore Test', group: 'Debugging', essential: true, vs: 'Unit Tests ▸ Ignore (Rider)', description: 'Adds or removes [Ignore("…")] on the test method at the caret.', commands: ['toggle-ignore'] },
   { id: 'ignore-scenario', label: 'Ignore / Unignore Scenario', group: 'Gherkin', essential: true, description: 'Toggles the @ignore tag (SpecFlow / Reqnroll skip the scenario).', commands: ['ignore-scenario'] },
+  { id: 'copy-step-stub', label: 'Copy Step Definition Stub', group: 'Gherkin', essential: true, vs: 'Create Step (copy to clipboard)', description: 'Copies a C# binding method for the step at the caret.', commands: ['copy-step-stub'] },
 ];
 export const GROUPS: FeatureGroup[] = ['Editing', 'Navigation', 'Code intelligence', 'Tool windows', 'Files', 'Git', 'Gherkin', 'View', 'Debugging', 'Help and productivity'];
 

@@ -28,7 +28,7 @@ import { startTerminal, stopTerminal, terminal, type TerminalEvent } from './ter
 import { Recorder } from './recorder.js';
 import { Spy } from './spy.js';
 import { proposeCode, proposeDictionaryPageObject } from './proposals.js';
-import { insertMethod, newStepFile } from './stepScaffold.js';
+import { insertMethod, newStepFile, bindingMethod } from './stepScaffold.js';
 import { validate } from './validation.js';
 import { projectModel } from './projectModel.js';
 import { command, dotnet } from './core.js';
@@ -269,6 +269,13 @@ app.post('/api/steps/define',async(req,res)=>{
  const r=defineSteps(chosen,style,{className:b.className,existing:before||undefined,sample,reqnroll});
  const id=randomUUID();previews.set(id,{file:b.file,source:r.source,hash:hash(before),root:config.repositoryRoot});
  res.json({id,file:b.file,created:!before,changed:true,count:r.count,methods:r.methods,style,diff:createPatch(b.file,before,r.source,'repository','proposed')});
+});
+// Copy Step Definition Stub: the binding method for one step, in the repository's pattern style.
+app.post('/api/steps/stub', async (req, res) => {
+  const { keyword, text } = z.object({ keyword: z.enum(['Given', 'When', 'Then']), text: z.string().min(1).max(500) }).parse(req.body);
+  const i = await ensure();
+  const cucumber = i.stepDefinitions.filter((b) => b.expression === 'Cucumber').length;
+  res.json({ code: bindingMethod(keyword, text, cucumber > i.stepDefinitions.length / 2 ? 'cucumber' : 'regex', '').code });
 });
 app.post('/api/steps/scaffold',async(req,res)=>{
   const {keyword,text,file}=z.object({keyword:z.enum(['Given','When','Then']),text:z.string().min(1).max(500),file:z.string().max(400).regex(/.cs$/i)}).parse(req.body);

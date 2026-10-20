@@ -896,7 +896,8 @@ test('X176–X178 Toggle Ignore Test, Ignore Scenario, Copy Step Definition Stub
   await openCs(page, 'Steps/MathTests.cs', 'var sum');
   await menuItem(page, 'Code', /^Toggle Ignore Test/);
   await expect.poll(() => doc(page)).toContain('    [Ignore("Ignored")]\n    public void Adds()');
-  await page.locator('.editor-tab-label', { hasText: 'Login.feature' }).click();
+  await page.getByRole('navigation').getByRole('button', { name: 'Login.feature', exact: true }).first().click();
+  await expect(gherkin(page)).toContainText('Feature:');
   await caretAt(page, 'the user signs in');
   await gherkinItem(page, /^Copy Step Definition Stub/);
   await expect.poll(() => page.evaluate(() => navigator.clipboard.readText())).toMatch(/\[When\(/);
