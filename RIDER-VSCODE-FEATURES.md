@@ -223,7 +223,7 @@ Legend: `[x]` done · `[ ]` to do.
 - [ ] 203. Search result editor
 - [ ] 204. Search editor result persistence
 - [x] 205. Search exclusion patterns — files to include / exclude
-- [ ] 206. Case-preserving replacement
+- [x] 206. Case-preserving replacement — Search ▸ Replace: Preserve Case (AB) (2026-10-21)
 - [ ] 207. Unicode character highlighting
 - [x] 208. Invisible character rendering — editor.renderWhitespace (VSCODE-20.md V9)
 - [x] 209. Indentation guides
@@ -353,3 +353,4 @@ Legend: `[x]` done · `[ ]` to do.
 - 2026-10-21 330: Previous Merge Conflict added next to the existing Next Merge Conflict.
 - 2026-10-21 334: The C# editor shows the compiler's semantic diagnostics (unused variables, unknown names) live from the language server; Next / Previous Warning visits them.
 - 2026-10-21 335: Next Test Failure opens the failed tests of the last run one after another and shows the first line of the failure.
+- 2026-10-21 206: Replace All keeps each match's case (foo → bar, Foo → Bar, FOO → BAR, camelCase / PascalCase).

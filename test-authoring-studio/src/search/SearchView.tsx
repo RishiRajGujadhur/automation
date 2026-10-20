@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { ChevronDown, ChevronRight, CaseSensitive, WholeWord, Regex, Replace, MoreHorizontal, RefreshCw, X, ChevronsDownUp, ChevronsUpDown, ClipboardCopy, BookOpen } from 'lucide-react';
+import { ChevronDown, ChevronRight, CaseSensitive, WholeWord, Regex, Replace, MoreHorizontal, RefreshCw, X, ChevronsDownUp, ChevronsUpDown, ClipboardCopy, BookOpen, FolderX } from 'lucide-react';
 import { api } from '../api';
 import { activeEditor } from '../editor/activeEditor';
 import { useTabs } from '../files/tabs';
@@ -39,6 +39,9 @@ export default function SearchView({ initialReplace, initialInclude, initialQuer
   const [matchCase, setMatchCase] = useState(!!last.matchCase);
   const [wholeWord, setWholeWord] = useState(!!last.wholeWord);
   const [regex, setRegex] = useState(!!last.regex);
+  // Preserve Case (VS Code's AB in the replace box) and "Use Exclude Settings and Ignore Files" (off: bin, obj… too).
+  const [keepCase, setKeepCase] = useState(false);
+  const [useIgnores, setUseIgnores] = useState(true);
   // Search Only in Open Editors (VS Code's book toggle; Visual Studio's 'All open documents' scope).
   const [openOnly, setOpenOnly] = useState(false);
   const tabs = useTabs();
@@ -61,7 +64,7 @@ export default function SearchView({ initialReplace, initialInclude, initialQuer
   };
   useEffect(() => { if (initialReplace) setShowReplace(true); input.current?.focus(); input.current?.select(); }, [initialReplace]);
 
-  const options = useMemo(() => ({ query, regex, matchCase, wholeWord, include: (openOnly && featureOn('search-open-only') ? openFiles || '\u0000none' : include) || undefined, exclude: exclude || undefined }), [query, regex, matchCase, wholeWord, include, exclude, openOnly, openFiles]);
+  const options = useMemo(() => ({ query, regex, matchCase, wholeWord, include: (openOnly && featureOn('search-open-only') ? openFiles || '\u0000none' : include) || undefined, exclude: exclude || undefined, ...(keepCase && featureOn('search-preserve-case') ? { preserveCase: true } : {}), ...(!useIgnores && featureOn('search-ignored') ? { ignored: true } : {}) }), [query, regex, matchCase, wholeWord, include, exclude, openOnly, openFiles, keepCase, useIgnores]);
   useEffect(() => { if (featureOn('search-remember')) try { sessionStorage.setItem('tas:lastSearch', JSON.stringify({ query, include, exclude, matchCase, wholeWord, regex })); } catch { /* storage blocked */ } }, [query, include, exclude, matchCase, wholeWord, regex]);
   const search = () => {
     if (!query) { setResult(undefined); setError(''); return; }
@@ -116,6 +119,7 @@ export default function SearchView({ initialReplace, initialInclude, initialQuer
           {showReplace && (
             <div className="search-input">
               <input aria-label="Replace with" placeholder="Replace" value={replace} onChange={(e) => setReplace(e.target.value)} spellCheck={false} />
+              {featureOn('search-preserve-case') && <button className={`search-toggle ${keepCase ? 'on' : ''}`} aria-label="Preserve Case" title="Preserve Case (Alt+P)" aria-pressed={keepCase} onClick={() => setKeepCase(!keepCase)}><span className="search-ab" aria-hidden="true">AB</span></button>}
               <button className="search-toggle" aria-label="Replace All" title="Replace All (Ctrl+Alt+Enter)" disabled={!result?.total} onClick={() => void replaceAll()}><Replace size={14} /></button>
             </div>
           )}
@@ -123,7 +127,7 @@ export default function SearchView({ initialReplace, initialInclude, initialQuer
           {showFilters && (
             <>
               <label className="search-glob">files to include<span className="search-glob-row"><input aria-label="Files to include" placeholder="e.g. *.cs, Steps/**" value={include} disabled={openOnly && featureOn('search-open-only')} onChange={(e) => setInclude(e.target.value)} />{featureOn('search-open-only') && <button className={`search-toggle ${openOnly ? 'on' : ''}`} aria-label="Search only in open editors" aria-pressed={openOnly} title="Search Only in Open Editors" onClick={() => setOpenOnly(!openOnly)}><BookOpen size={14} /></button>}</span></label>
-              <label className="search-glob">files to exclude<input aria-label="Files to exclude" placeholder="e.g. *.feature.cs" value={exclude} onChange={(e) => setExclude(e.target.value)} /></label>
+              <label className="search-glob">files to exclude<span className="search-glob-row"><input aria-label="Files to exclude" placeholder="e.g. *.feature.cs" value={exclude} onChange={(e) => setExclude(e.target.value)} />{featureOn('search-ignored') && <button className={`search-toggle ${useIgnores ? 'on' : ''}`} aria-label="Use Exclude Settings and Ignore Files" aria-pressed={useIgnores} title="Use Exclude Settings and Ignore Files (off: bin, obj, node_modules… are searched too)" onClick={() => setUseIgnores(!useIgnores)}><FolderX size={14} /></button>}</span></label>
             </>
           )}
         </div>

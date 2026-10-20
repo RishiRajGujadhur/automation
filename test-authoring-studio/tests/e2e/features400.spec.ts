@@ -275,3 +275,43 @@ test('335 Navigate to next test failure', async ({ page, request }) => {
     await fs.rm(root, { recursive: true, force: true, maxRetries: 5 }).catch(() => {});
   }
 });
+
+/** Opens Find in Files (Ctrl+Shift+F) and runs `query`. */
+async function findInFiles(page: Page, query: string, opts: { regex?: boolean } = {}) {
+  await page.keyboard.press('Control+Shift+F');
+  const view = page.getByRole('region', { name: 'Search' });
+  await view.getByLabel('Search in files').fill(query);
+  if (opts.regex && (await view.getByRole('button', { name: 'Use Regular Expression' }).getAttribute('aria-pressed')) !== 'true') await view.getByRole('button', { name: 'Use Regular Expression' }).click();
+  await view.getByLabel('Search in files').press('Enter');
+  return view;
+}
+test('206 Case-preserving replacement', async ({ page }) => {
+  await fs.writeFile(path.join(temp, 'Steps/Names.cs'), '// widget Widget WIDGET\n');
+  await open(page);
+  const view = await findInFiles(page, 'widget');
+  await expect(view.getByRole('status')).toContainText('3 results');
+  await view.getByRole('button', { name: 'Toggle replace' }).click();
+  await view.getByLabel('Replace with').fill('gadget');
+  await view.getByRole('button', { name: 'Preserve Case' }).click();
+  await view.getByRole('button', { name: 'Replace All', exact: true }).click();
+  await page.getByRole('button', { name: 'Replace', exact: true }).click();
+  await expect.poll(() => fs.readFile(path.join(temp, 'Steps/Names.cs'), 'utf8')).toBe('// gadget Gadget GADGET\n');
+});
+test('340 Search with multiline regular expressions', async ({ page }) => {
+  await fs.writeFile(path.join(temp, 'Steps/Multi.cs'), 'public void A()\n{\n    // marker\n}\n');
+  await open(page);
+  const view = await findInFiles(page, String.raw`\{\n\s+// marker`, { regex: true });
+  await expect(view.getByRole('status')).toContainText('1 result in 1 file');
+  await expect(view.getByRole('navigation', { name: 'Search results' })).toContainText('Multi.cs');
+});
+test('338 Search within ignored files', async ({ page }) => {
+  await fs.mkdir(path.join(temp, 'bin'), { recursive: true });
+  await fs.writeFile(path.join(temp, 'bin/Generated.cs'), '// zebra-token\n');
+  await open(page);
+  const view = await findInFiles(page, 'zebra-token');
+  await expect(view.getByRole('status')).toContainText('No results found.');
+  await view.getByRole('button', { name: 'Toggle search details' }).click();
+  await view.getByRole('button', { name: 'Use Exclude Settings and Ignore Files' }).click();
+  await view.getByLabel('Search in files').press('Enter');
+  await expect(view.getByRole('status')).toContainText('1 result in 1 file');
+});

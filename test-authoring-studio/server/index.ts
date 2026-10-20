@@ -910,15 +910,16 @@ app.get('/api/steps/lenses', async (req, res) => {
   res.json(lenses);
 });
 // Find in Files (Ctrl+Shift+F) and Replace All; Go to All (Ctrl+T) symbols from the language service.
-const searchOptions = z.object({ query: z.string().min(1).max(500), regex: z.boolean().optional(), matchCase: z.boolean().optional(), wholeWord: z.boolean().optional(), include: z.string().max(500).optional(), exclude: z.string().max(500).optional() });
+const searchOptions = z.object({ query: z.string().min(1).max(500), regex: z.boolean().optional(), matchCase: z.boolean().optional(), wholeWord: z.boolean().optional(), include: z.string().max(500).optional(), exclude: z.string().max(500).optional(), preserveCase: z.boolean().optional(), ignored: z.boolean().optional() });
 app.post('/api/search/text', async (req, res) => {
   const options = searchOptions.parse(req.body);
   if (options.regex) { try { new RegExp(options.query); } catch (e) { throw new Error(`Invalid regular expression: ${(e as Error).message}`); } }
-  res.json(await findInFiles(config.repositoryRoot, ignoredDirsFor(config), options));
+  // "Use exclude settings and ignore files" off: the ignored folders (bin, obj, node_modules…) are searched too.
+  res.json(await findInFiles(config.repositoryRoot, options.ignored ? ['.git'] : ignoredDirsFor(config), options));
 });
 app.post('/api/search/replace', async (req, res) => {
   const { replacement, files, approved: _approved, ...options } = searchOptions.extend({ replacement: z.string().max(5000), files: z.array(z.string().max(400)).max(5000).optional(), approved: z.literal(true) }).parse(req.body);
-  const changed = await replaceInFiles(config.repositoryRoot, ignoredDirsFor(config), options, replacement, files);
+  const changed = await replaceInFiles(config.repositoryRoot, options.ignored ? ['.git'] : ignoredDirsFor(config), options, replacement, files);
   if (changed.length) { lang.notify(config.repositoryRoot, changed.map((c) => c.file)); rescanSoon(500); }
   res.json({ changed });
 });
