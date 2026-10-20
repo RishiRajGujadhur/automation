@@ -428,6 +428,7 @@ export const FEATURES: Feature[] = [
   { id: 'table-delete-empty', label: 'Table: Delete Empty Rows', group: 'Gherkin', essential: false, description: 'Code ▸ Gherkin removes the table rows whose cells are all empty.', commands: ['table-delete-empty'] },
   { id: 'table-dedupe', label: 'Table: Remove Duplicate Rows', group: 'Gherkin', essential: false, description: 'Code ▸ Gherkin removes repeated rows of the table, keeping the first.', commands: ['table-dedupe'] },
   { id: 'table-copy-markdown', label: 'Table: Copy as Markdown', group: 'Gherkin', essential: false, description: 'Code ▸ Gherkin copies the table at the caret as a Markdown table (for wikis and pull requests).', commands: ['table-copy-markdown'] },
+  { id: 'tag-all-scenarios', label: 'Tag All Scenarios', group: 'Gherkin', essential: false, description: 'Code ▸ Gherkin adds a tag to every scenario of the file that lacks it.', commands: ['tag-all-scenarios'] },
 ];
 export const GROUPS: FeatureGroup[] = ['Editing', 'Navigation', 'Code intelligence', 'Tool windows', 'Files', 'Git', 'Gherkin', 'View', 'Debugging', 'Help and productivity'];
 

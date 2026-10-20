@@ -742,3 +742,26 @@ export function tableMarkdown(state: EditorState) {
   const line = (r: string[]) => `| ${r.map((c, k) => c.padEnd(w[k])).join(' | ')} |`;
   return [line(rows[0]), `| ${w.map((n) => '-'.repeat(n)).join(' | ')} |`, ...rows.slice(1).map(line)].join('\n');
 }
+
+const tagToken = (tag: string) => (tag.startsWith('@') ? tag : `@${tag}`);
+const hasTag = (line: string, tag: string) => line.split(/\s+/).includes(tag);
+/** Tag All Scenarios: adds a tag to every scenario of the file that does not have it. */
+export const tagAllScenarios = (raw: string) => (view: EditorView) => {
+  const tag = tagToken(raw.trim());
+  if (!/^@\S+$/.test(tag)) return false;
+  const doc = view.state.doc;
+  const changes: ChangeSpec[] = [];
+  for (let n = 1; n <= doc.lines; n++) {
+    const line = doc.line(n);
+    if (!SCENARIO.test(line.text)) continue;
+    let k = n - 1;
+    const tags: number[] = [];
+    while (k >= 1 && /^\s*@/.test(doc.line(k).text)) tags.unshift(k--);
+    if (tags.some((t) => hasTag(doc.line(t).text, tag))) continue;
+    if (tags.length) { const last = doc.line(tags.at(-1)!); changes.push({ from: last.to, insert: ` ${tag}` }); }
+    else changes.push({ from: line.from, insert: `${/^\s*/.exec(line.text)![0]}${tag}${view.state.lineBreak}` });
+  }
+  if (!changes.length) return false;
+  view.dispatch({ changes, userEvent: 'input' });
+  return true;
+};
