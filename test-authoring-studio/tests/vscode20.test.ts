@@ -87,3 +87,13 @@ describe('V9 render whitespace', () => {
     expect(whitespaceToDraw(t, 'selection', [[2, 7]])).toEqual([3, 5, 6]);
   });
 });
+import { hangingIndent } from '../src/vscode/wordWrap';
+describe('V10 wrapping indent', () => {
+  it('none, same, indent, deepIndent', () => {
+    expect(hangingIndent('    x', 'none', 4, 4)).toBe(0);
+    expect(hangingIndent('    x', 'same', 4, 4)).toBe(4);
+    expect(hangingIndent('\t  x', 'same', 4, 4)).toBe(6);
+    expect(hangingIndent('  x', 'indent', 4, 4)).toBe(6);
+    expect(hangingIndent('x', 'deepIndent', 4, 2)).toBe(4);
+  });
+});

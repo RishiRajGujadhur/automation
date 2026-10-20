@@ -231,3 +231,26 @@ test('V9 Render whitespace: selection (default), boundary, trailing, all', async
   await setDoc(page, 'int  a = 1;   \n');
   await expect(view(page).locator('.cm-line').first().locator('.cm-highlightSpace')).toHaveCount(7);
 });
+
+test('V10 Word wrap: on, column, bounded; wrapping indent', async ({ page }) => {
+  const long = `        var message = "${'word '.repeat(60)}";\nshort();\n`;
+  await open(page, 'Steps/AuthSteps.cs', { 'editor.wordWrap': 'on' });
+  await setDoc(page, long);
+  const first = view(page).locator('.cm-line').first();
+  const lineH = await view(page).locator('.cm-line').nth(1).evaluate((e) => e.getBoundingClientRect().height);
+  expect((await first.boundingBox())!.height).toBeGreaterThan(lineH * 1.5);
+  // Same indent: wrapped rows start 8 columns in.
+  expect(await first.evaluate((e) => e.style.textIndent)).toBe('-8ch');
+  // Column 40: the text is 40 columns wide.
+  await setSettings(page, { 'editor.wordWrap': 'wordWrapColumn', 'editor.wordWrapColumn': 40, 'editor.wrappingIndent': 'indent' });
+  await setDoc(page, long);
+  const ch = await view(page).locator('.cm-content').evaluate((e) => { const s = document.createElement('span'); s.textContent = 'x'.repeat(10); e.appendChild(s); const w = s.getBoundingClientRect().width / 10; s.remove(); return w; });
+  const w = (await view(page).locator('.cm-content').boundingBox())!.width;
+  expect(Math.abs(w - (40 * ch + 8))).toBeLessThan(ch * 2);
+  expect(await view(page).locator('.cm-line').first().evaluate((e) => e.style.textIndent)).toMatch(/^-1[02]ch$/); // + one indent unit (2 or 4)
+  // Off: one row per line.
+  await setSettings(page, {});
+  await setDoc(page, long);
+  const l2 = await view(page).locator('.cm-line').nth(1).evaluate((e) => e.getBoundingClientRect().height);
+  expect((await view(page).locator('.cm-line').first().boundingBox())!.height).toBeLessThan(l2 * 1.5);
+});

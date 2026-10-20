@@ -5,4 +5,5 @@ import './sectionHeaders';
 import './cursor';
 import './font';
 import './whitespace';
+import './wordWrap';
 export { SETTINGS } from './settings';
