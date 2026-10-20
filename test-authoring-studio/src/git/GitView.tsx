@@ -2,6 +2,7 @@ import { useEffect, useState, type ReactNode } from 'react';
 import { GitBranch, Plus, Minus, Undo2, RefreshCw, ChevronDown, ChevronRight, ArrowUp, ArrowDown, Check, History, CloudDownload, GitBranchPlus, Cloud, GitMerge } from 'lucide-react';
 import { Dropdown } from '../radix';
 import { api } from '../api';
+import { featureOn } from '../features';
 import { useLocalState } from '../ui';
 import { useConfirm } from '../radix2';
 import { fileType } from '../files/fileTypes';
@@ -150,6 +151,7 @@ export default function GitView({ onOpen, onNotice, onChanged }: { onOpen: (file
       <div className="git-commit">
         <textarea aria-label="Commit message" placeholder={`Message (Ctrl+Enter to commit${st?.branch ? ` on "${st.branch}"` : ''})`} value={message} onChange={(e) => setMessage(e.target.value)}
           onKeyDown={(e) => { if ((e.ctrlKey || e.metaKey) && e.key === 'Enter' && message.trim()) { e.preventDefault(); void doCommit(!staged.length); } }} rows={3} />
+        {featureOn('commit-length') && (message.split('\n')[0].length > 72 || (message.includes('\n') && message.split('\n')[1].trim() !== '')) && <p className="git-commit-hint" role="note">{message.split('\n')[0].length > 72 ? `The summary line has ${message.split('\n')[0].length} characters; keep it under 72.` : 'Leave the second line empty between the summary and the description.'}</p>}
         <div className="git-commit-row">
           <button className="button primary" disabled={busy || !message.trim() || (!staged.length && !changes.length && !amend)} onClick={() => void doCommit(!staged.length)}>
             <Check size={14} />{staged.length ? 'Commit Staged' : 'Commit All'}

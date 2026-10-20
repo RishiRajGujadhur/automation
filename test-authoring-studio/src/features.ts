@@ -325,6 +325,7 @@ export const FEATURES: Feature[] = [
   { id: 'test-elapsed', label: 'Test run elapsed time', group: 'Tool windows', essential: true, description: 'While tests run, the Test Explorer shows for how long.' },
   { id: 'test-empty-help', label: 'Test Explorer explains an empty tree', group: 'Tool windows', essential: true, description: 'With no tests, the Test Explorer says why and offers Refresh.' },
   { id: 'commit-draft', label: 'Commit message draft kept', group: 'Git', essential: true, description: 'The Git Changes commit message stays after a reload until you commit.' },
+  { id: 'commit-length', label: 'Commit message hints', group: 'Git', essential: true, description: 'Warns about a summary line over 72 characters or a missing blank second line.' },
 ];
 export const GROUPS: FeatureGroup[] = ['Editing', 'Navigation', 'Code intelligence', 'Tool windows', 'Files', 'Git', 'Gherkin', 'View', 'Debugging', 'Help and productivity'];
 

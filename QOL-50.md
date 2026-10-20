@@ -35,6 +35,7 @@ Every improvement is verified by a unit or Playwright test (`tests/e2e/qol50.spe
 | QL26 | Test run elapsed time | Test Explorer | ✅ 2026-10-20 |
 | QL27 | Test Explorer explains an empty tree | Test Explorer | ✅ 2026-10-20 |
 | QL28 | Commit message draft kept | Git | ✅ 2026-10-20 |
+| QL29 | Commit message hints | Git | ✅ 2026-10-20 |
 
 ## Progress log
 - 2026-10-20 QL1: Title names the file and workspace folder
@@ -65,3 +66,4 @@ Every improvement is verified by a unit or Playwright test (`tests/e2e/qol50.spe
 - 2026-10-20 QL26: running N s while tests run
 - 2026-10-20 QL27: Why no tests + Refresh
 - 2026-10-20 QL28: Draft survives reload
+- 2026-10-20 QL29: 72-char summary, blank second line
