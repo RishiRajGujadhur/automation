@@ -325,7 +325,8 @@ test('QL40 Recent Files kept after a reload', async ({ page }) => {
 test('QL41 / QL42 / QL49 Status bar: unsaved count saves all; Auto Save mode; Save All reports', async ({ page }) => {
   await openFeature(page);
   await caretAt(page, 'Feature:');
-  await page.keyboard.type('x');
+  await page.keyboard.press('End');
+  await page.keyboard.type(' x');
   const unsaved = page.getByRole('button', { name: /^1 unsaved file: Save All/ });
   await expect(unsaved).toBeVisible();
   await unsaved.click();
@@ -337,7 +338,7 @@ test('QL41 / QL42 / QL49 Status bar: unsaved count saves all; Auto Save mode; Sa
   await page.getByRole('button', { name: /^Auto Save: on focus change/ }).click();
   await expect(page.getByRole('button', { name: /^Auto Save: off/ })).toBeVisible();
   await menuItem(page, 'Navigate', /^Clear Recent Files/);
-  await page.locator('body').press('Alt+S');
+  await page.locator('body').press('Control+Alt+S');
   await expect(page.getByText(/^(Nothing to save\.|Saved \d+ files?\.)$/).first()).toBeVisible();
 });
 
@@ -383,7 +384,9 @@ test('QL47 / QL48 Explorer: Git status of files and folders', async ({ page }) =
 test('QL50 Unsaved editors are saved before a build', async ({ page }) => {
   await openFeature(page);
   await caretAt(page, 'Feature:');
-  await page.keyboard.type('# saved by the build ');
+  await page.keyboard.press('End');
+  await page.keyboard.press('Enter');
+  await page.keyboard.type('# saved by the build');
   await expect(page.getByRole('button', { name: /unsaved file/ })).toBeVisible();
   await page.getByRole('button', { name: 'Build menu' }).click();
   await page.getByRole('menuitem', { name: /^Build Solution/ }).click();

@@ -366,6 +366,8 @@ export default function App() {
   const closeFolder = async () => { await leaveBrowserFolder(); setFileSource({ kind: 'server', root: config?.repositoryRoot }); reloadTabs(); setNotice('Folder closed. Showing the indexed repository.'); };
   /** Save All: every open editor with unsaved edits writes itself (editors listen for this event). */
   const saveAll = () => window.dispatchEvent(new Event(SAVE_ALL_EVENT));
+  // Save All says how many files it wrote (QOL-50).
+  const saveAllCounted = () => { const n = new Set([...unsavedFiles(), ...(feature && featureAuto.dirty ? [feature.file] : [])]).size; saveAll(); if (featureOn('save-all-count')) setNotice(n ? `Saved ${n} file${n === 1 ? '' : 's'}.` : 'Nothing to save.'); };
   useEffect(() => { const h = () => { if (feature && featureAuto.dirty) void featureAuto.save(); }; window.addEventListener(SAVE_ALL_EVENT, h); return () => window.removeEventListener(SAVE_ALL_EVENT, h); });
   // Editor keys (VS Code): Ctrl+F4 / Ctrl+W (desktop) close, Ctrl+PageDown/PageUp switch tabs, Ctrl+Alt+S save all,
   // Ctrl+S outside an editor saves the active one.
@@ -392,7 +394,7 @@ export default function App() {
     const active = getTabs().active;
     if (e.key === 'F4' || (desktop && e.key.toLowerCase() === 'w' && !e.shiftKey)) { if (active) { e.preventDefault(); void closeEditor(active); } }
     else if (e.key === 'PageDown' || e.key === 'PageUp') { e.preventDefault(); cycleTab(e.key === 'PageDown' ? 1 : -1); }
-    else if (e.altKey && e.key.toLowerCase() === 's') { e.preventDefault(); saveAll(); }
+    else if (e.altKey && e.key.toLowerCase() === 's') { e.preventDefault(); saveAllCounted(); }
     else if (e.key.toLowerCase() === 's' && !e.altKey && !e.shiftKey && !(e.target as HTMLElement | null)?.closest?.('.cm-editor') && tab === 'Features' && active) { e.preventDefault(); if (featureTabActive) saveFeature(); else saveAll(); }
   };
   useEffect(() => { const h = (e: KeyboardEvent) => editorKeys.current(e); window.addEventListener('keydown', h); return () => window.removeEventListener('keydown', h); }, []);
@@ -943,7 +945,7 @@ export default function App() {
     if (c === 'run-all-tests') { showTests(); runTests('all').catch((e) => setNotice((e as Error).message)); return; }
     if (c === 'build-windows') { setTab('Features'); if (view !== 'code' && view !== 'editor') setView('editor'); setBuildOpen(true); return; }
     if (c === 'save') { if (featureTabActive) saveFeature(); else saveAll(); return; }
-    if (c === 'save-all') { saveAll(); return; }
+    if (c === 'save-all') { saveAllCounted(); return; }
     if (c === 'close-editor') { const a = getTabs().active; if (a) void closeEditor(a); return; }
     if (c === 'close-all-editors') { closeAllTabs(); return; }
     if (c === 'diagnostics') { setModal('diagnostics'); return; }
