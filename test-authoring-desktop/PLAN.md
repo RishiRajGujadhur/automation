@@ -240,3 +240,12 @@ Tracked one by one in [QOL-50.md](../QOL-50.md) (QL1–QL100; one commit and pus
 - [x] QL51–QL100 (Error List group / Copy All, build and test result messages, commit message history, changed-settings marks, Notifications filter / relative times / dismiss, Gherkin keyword capitalisation, `<>` and Examples header, Terminal clear / zoom / rename / copy-paste / Open in Terminal, Close Saved Tabs, Ctrl+1…9, Copy Full Path, Debugging title, status bar test results)
 - [x] Fixes found on the way: Close to the Right now feeds Reopen Closed Tab; terminal listeners are removed on remount (no double zoom / paste)
 - [x] Regression: 333 passed, 1 skipped, 1 intermittent (X106 passes on rerun); desktop `npm run dist` and `npm run test:packaged` (38 passed, 2 skipped)
+
+## IDE features, fourth batch — Visual Studio 2026 / Rider (2026-10-20)
+
+Tracked one by one in [IDE-FEATURES-4.md](../IDE-FEATURES-4.md) (Y1–Y100; one commit and push each, each with a Settings ▸ Features switch, a desktop native menu row where it is a command, unit and Playwright tests).
+
+- [x] Y1–Y20 Edit ▸ Convert (URL / Base64 / HTML / C# / JSON / Unicode escapes, numbers, quotes, join / split, sort / number / trim lines), Align Assignments, XML reformat / minify
+- [x] Y21–Y30 and Y75–Y85 C# (file- / block-scoped namespace, raw strings, interpolation, regions, equality / ToString / null checks, expression / block bodies, [Binding]) and Markdown tools
+- [x] Y31–Y50, Y69–Y73, Y86–Y87, Y97 Gherkin (tags, tables, Expand Outline, Rule, doc strings, data tables, duplicate warnings, unbound steps, rename / split scenario)
+- [x] Tabs, status bar (memory, file problems), Git commit helpers, Test Explorer (Copy Name, CSV export, slowest tests, continuous testing), debugger (Copy Locals, Delete Disabled Breakpoints), tools (JWT, SHA-256, cURL, test data, file statistics, character info)
