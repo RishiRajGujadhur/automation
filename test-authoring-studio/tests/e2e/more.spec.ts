@@ -37,7 +37,7 @@ async function caretAt(page: Page, text: string) {
 const doc = (page: Page) => page.evaluate(() => (window as unknown as { __activeEditor: () => { view: { state: { doc: { toString(): string } } } } }).__activeEditor().view.state.doc.toString());
 const menuItem = async (page: Page, menu: string, item: RegExp) => { await page.getByRole('button', { name: `${menu} menu` }).click(); await page.getByRole('menuitem', { name: item }).click(); };
 /** A command of Code ▸ Gherkin (X96 menu groups). */
-const gherkinItem = async (page: Page, item: RegExp) => { await page.getByRole('button', { name: 'Code menu' }).click(); await page.getByRole('menuitem', { name: 'Gherkin' }).click(); await page.getByRole('menuitem', { name: item }).click(); };
+const gherkinItem = async (page: Page, item: RegExp) => { await page.getByRole('button', { name: 'Code menu' }).click(); await page.getByRole('menuitem', { name: 'Gherkin', exact: true }).click(); await page.getByRole('menuitem', { name: item }).click(); };
 
 test('X16 Overtype mode (Insert): typing replaces characters; OVR in the status bar', async ({ page }) => {
   await openFeature(page);
@@ -104,7 +104,7 @@ test('X1–X24 smoke: menu text tools, /// doc comments, Ctrl+F3, Convert Case',
   await page.keyboard.press('Shift+ArrowDown');
   await page.keyboard.press('Shift+ArrowDown');
   await page.keyboard.press('Shift+End');
-  await menuItem(page, 'Edit', /^Sort Lines/);
+  await menuItem(page, 'Edit', /^Sort Lines(?! Descending)/);
   expect(await doc(page)).toContain('    Given the login page is open\n    Then the dashboard is displayed\n    When the user signs in');
 });
 
@@ -464,7 +464,7 @@ test('X95 Indentation from the status bar: tabs, size, conversion', async ({ pag
 test('X96 Menu groups: Code ▸ Gherkin submenu; off in Settings ▸ Features puts the commands back inline', async ({ page }) => {
   await openFeature(page);
   await page.getByRole('button', { name: 'Code menu' }).click();
-  await expect(page.getByRole('menuitem', { name: 'Gherkin' })).toBeVisible();
+  await expect(page.getByRole('menuitem', { name: 'Gherkin', exact: true })).toBeVisible();
   await expect(page.getByRole('menuitem', { name: /^Duplicate Scenario/ })).toHaveCount(0);
   await page.keyboard.press('Escape');
   await page.evaluate(() => { const k = 'tas:features'; const v = JSON.parse(localStorage.getItem(k) ?? '{}'); localStorage.setItem(k, JSON.stringify({ ...v, overrides: { ...(v.overrides ?? {}), 'menu-submenus': false } })); });
@@ -472,7 +472,7 @@ test('X96 Menu groups: Code ▸ Gherkin submenu; off in Settings ▸ Features pu
   await expect(gherkin(page)).toBeVisible();
   await page.getByRole('button', { name: 'Code menu' }).click();
   await expect(page.getByRole('menuitem', { name: /^Duplicate Scenario/ })).toBeVisible();
-  await expect(page.getByRole('menuitem', { name: 'Gherkin' })).toHaveCount(0);
+  await expect(page.getByRole('menuitem', { name: 'Gherkin', exact: true })).toHaveCount(0);
 });
 
 test('X97–X101 smoke: Gherkin ▸ Toggle Tag and Add Examples Table', async ({ page }) => {
@@ -747,4 +747,62 @@ test('X151 Full Screen', async ({ page }) => {
   await expect.poll(() => page.evaluate(() => !!document.fullscreenElement)).toBe(true);
   await menuItem(page, 'View', /^Full Screen/);
   await expect.poll(() => page.evaluate(() => !!document.fullscreenElement)).toBe(false);
+});
+
+test('X155 / X156 Explorer: Open Files filter and Track Active Item toggle', async ({ page }) => {
+  await openFeature(page);
+  const nav = page.getByRole('navigation', { name: 'Solution' });
+  await page.getByRole('button', { name: 'Open files filter', exact: true }).click();
+  await expect(nav.getByRole('button', { name: 'AuthSteps.cs', exact: true })).toHaveCount(0);
+  await expect(nav.getByRole('button', { name: 'Login.feature', exact: true }).first()).toBeVisible();
+  await page.getByRole('button', { name: 'Open files filter off' }).click();
+  // Track Active Item off: opening a file no longer expands its folder.
+  await page.getByRole('button', { name: 'Track Active Item: on' }).click();
+  await nav.getByRole('button', { name: 'AuthSteps.cs', exact: true }).first().dblclick();
+  await nav.getByRole('button', { name: 'Collapse folder Features', exact: true }).click();
+  await page.locator('.editor-tab-label', { hasText: 'Login.feature' }).click();
+  await expect(nav.getByRole('button', { name: 'Expand folder Features', exact: true })).toBeVisible();
+  await page.getByRole('button', { name: 'Track Active Item: off' }).click();
+  await page.locator('.editor-tab-label', { hasText: 'AuthSteps.cs' }).click();
+  await page.locator('.editor-tab-label', { hasText: 'Login.feature' }).click();
+  await expect(nav.getByRole('button', { name: 'Collapse folder Features', exact: true })).toBeVisible();
+});
+
+test('X157 / X158 Tabs: Unpin All and Sort Tabs by Name', async ({ page }) => {
+  await openFeature(page);
+  const nav = page.getByRole('navigation', { name: 'Solution' });
+  await nav.getByRole('button', { name: 'SearchSteps.cs', exact: true }).first().dblclick();
+  await nav.getByRole('button', { name: 'AuthSteps.cs', exact: true }).first().dblclick();
+  const labels = page.locator('.editor-tab-label');
+  await expect.poll(() => labels.count()).toBeGreaterThan(2);
+  await labels.last().click({ button: 'right' });
+  await page.getByRole('menuitem', { name: 'Sort Tabs by Name' }).click();
+  const names = await labels.allTextContents();
+  expect(names).toEqual([...names].sort((a, b) => a.toLowerCase().localeCompare(b.toLowerCase())));
+  await labels.first().click({ button: 'right' });
+  await page.getByRole('menuitem', { name: 'Pin', exact: true }).click();
+  await expect(page.locator('.editor-tab.pinned')).toHaveCount(1);
+  await labels.last().click({ button: 'right' });
+  await page.getByRole('menuitem', { name: 'Unpin All' }).click();
+  await expect(page.locator('.editor-tab.pinned')).toHaveCount(0);
+});
+
+test('X159 Collapse Using Directives', async ({ page, request }) => {
+  await fs.writeFile(path.join(root, 'Steps/Usings.cs'), ['using System;', 'using System.Text;', 'using System.Linq;', 'namespace Demo;', 'public class Usings { }', ''].join('\n'));
+  expect((await request.post('/api/workspace', { data: { repositoryRoot: root, targetProject: '.' } })).ok()).toBe(true);
+  await openCs(page, 'Steps/Usings.cs', 'public class Usings');
+  await menuItem(page, 'Code', /^Collapse Using Directives/);
+  await expect(page.locator('.code-editor:not([hidden]) .cm-foldPlaceholder')).toHaveCount(1);
+  await expect(page.locator('.code-editor:not([hidden]) .cm-line', { hasText: 'using System.Linq' })).toHaveCount(0);
+});
+
+test('X160 / X161 Find Step Usages and Copy Step Text', async ({ page, context }) => {
+  await context.grantPermissions(['clipboard-read', 'clipboard-write']);
+  await openFeature(page);
+  await caretAt(page, 'the user signs in');
+  await gherkinItem(page, /^Copy Step Text/);
+  await expect.poll(() => page.evaluate(() => navigator.clipboard.readText())).toBe('the user signs in as "test-user"');
+  await gherkinItem(page, /^Find Step Usages/);
+  const dlg = page.getByRole('dialog', { name: 'Step Usages' });
+  await expect(dlg.getByRole('option').first()).toContainText('When the user signs in as "test-user"');
 });

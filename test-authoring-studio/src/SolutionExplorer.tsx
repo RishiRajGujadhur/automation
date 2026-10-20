@@ -1,8 +1,8 @@
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
-import { keepTab } from './files/tabs';
+import { keepTab, useTabs } from './files/tabs';
 import {
   ChevronDown, ChevronRight, Folder, FolderOpen, FileCode2, FileText, FileCog, Braces, Plus, Search, X, Copy, ChevronsDownUp, ChevronsUpDown,
-  Eye, Package, Boxes, Link2, LocateFixed, PencilLine, Files, Layers, SquareStack, Scissors, ClipboardPaste, Trash2, TextCursorInput, Focus, House, FilePlus, GitCompare,
+  Eye, Package, Boxes, Link2, LocateFixed, PencilLine, Files, Layers, SquareStack, Scissors, ClipboardPaste, Trash2, TextCursorInput, Focus, House, FilePlus, GitCompare, BookOpen,
 } from 'lucide-react';
 import { fileType } from './files/fileTypes';
 import { featureOn } from './features';
@@ -184,6 +184,10 @@ export default function SolutionExplorer({ features, revision, activeFile, query
   const [openNests, setOpenNests] = useState<Set<string>>(new Set());
   const [showAll, setShowAll] = useState(false);
   const [pendingOnly, setPendingOnly] = useState(false);
+  // Open Files filter (Visual Studio's Solution Explorer filter): only the files open in editor tabs.
+  const [openOnly, setOpenOnly] = useState(false);
+  const openTabs = useTabs();
+  const openSet = useMemo(() => new Set(openTabs.tabs.map((t) => normalizeFeaturePath(t.file))), [openTabs]);
   // Scope to This (Visual Studio): the tree shows one folder only, until Home.
   const [scope, setScope] = useState('');
   const [pending, setPending] = useState<string[]>(unsavedFiles);
@@ -218,10 +222,11 @@ export default function SolutionExplorer({ features, revision, activeFile, query
       // Classic (.NET Framework) projects list their files: only those show, like Visual Studio (Show All Files: all).
       (showAll || listedByProject(x.file)) &&
       (!pendingOnly || pending.includes(x.file)) &&
+      (!openOnly || openSet.has(x.file)) &&
       (!scope || x.file.startsWith(`${scope}/`)) &&
       terms.every((t) => `${x.file} ${featureName.get(x.file) ?? ''}`.toLowerCase().includes(t)));
-  }, [solution, features, query, showAll, pendingOnly, pending, projectDirs, listed, scope]); // eslint-disable-line react-hooks/exhaustive-deps
-  const searching = !!query.trim() || pendingOnly;
+  }, [solution, features, query, showAll, pendingOnly, pending, projectDirs, listed, scope, openOnly, openSet]); // eslint-disable-line react-hooks/exhaustive-deps
+  const searching = !!query.trim() || pendingOnly || openOnly;
   // Files per project (deepest project folder wins); files outside every project are "Miscellaneous Files".
   const projects = useMemo(() => solution?.projects ?? [], [solution]);
   const byProject = useMemo(() => {
@@ -424,6 +429,7 @@ export default function SolutionExplorer({ features, revision, activeFile, query
         <div className="se-tools">
           {tool('Sync with Active Document', LocateFixed, sync)}
           {tool(pendingOnly ? 'Show all changes filter off' : 'Pending changes filter', PencilLine, () => setPendingOnly(!pendingOnly), pendingOnly)}
+          {featureOn('explorer-open-filter') && tool(openOnly ? 'Open files filter off' : 'Open files filter', BookOpen, () => setOpenOnly(!openOnly), openOnly)}
           {tool('Collapse all folders', ChevronsDownUp, collapseAll)}
           {tool('Show all files', showAll ? Files : SquareStack, () => setShowAll(!showAll), showAll)}
           {tool('New feature', Plus, () => onNew(), undefined, { 'data-tour': 'new-feature' })}
