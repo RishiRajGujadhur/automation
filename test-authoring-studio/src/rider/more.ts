@@ -159,5 +159,6 @@ export function moreCommands(h: MoreHelpers): RiderCommand[] {
     { id: 'copy-json-pointer', label: 'Copy JSON Pointer', menu: 'Code', run: h.inEditor((v) => { const p = jsonPointerAt(v.state.doc.toString(), v.state.selection.main.head); if (p === undefined) { h.notice('The file is not valid JSON.'); return; } void copyText(p || '/').then((ok) => h.notice(ok ? `Copied ${p || '/'}` : 'Clipboard unavailable.')); }) },
     { id: 'copy-xpath', label: 'Copy XPath', menu: 'Code', run: h.inEditor((v) => { const p = xpathAt(v.state.doc.toString(), v.state.selection.main.head); if (!p) { h.notice('Put the caret inside an XML element.'); return; } void copyText(p).then((ok) => h.notice(ok ? `Copied ${p}` : 'Clipboard unavailable.')); }) },
     { id: 'toggle-status-bar', label: 'Status Bar', menu: 'View', group: true, checked: () => !viewOptions().hideStatusBar, run: () => setViewOptions({ hideStatusBar: !viewOptions().hideStatusBar }) },
+    { id: 'toggle-activity-bar', label: 'Activity Bar', menu: 'View', checked: () => !viewOptions().hideActivityBar, run: () => setViewOptions({ hideActivityBar: !viewOptions().hideActivityBar }) },
   ];
 }

@@ -100,6 +100,7 @@ const ROWS: Record<'edit' | 'view' | 'navigate' | 'code' | 'tools' | 'help', Row
     ['Sort Tabs by Name', 'sort-tabs'],
     null,
     ['Status Bar', 'toggle-status-bar'],
+    ['Activity Bar', 'toggle-activity-bar'],
   ],
   navigate: [
     ['Select In…', 'select-in', 'Alt+F1'],

@@ -1374,7 +1374,7 @@ export default function App() {
         </div>
       </nav>}
       <div className="app-body">
-        {vscode && (
+        {vscode && !(viewOpts.hideActivityBar && featureOn('toggle-activity-bar')) && (
           <ActivityBar
             active={tab === 'Features' && view === 'recorder' ? 'Recorder' : tab === 'Features' && sidebarView === 'tests' ? 'Testing' : tab === 'Features' && sidebarView === 'search' ? 'Search' : tab === 'Features' && sidebarView === 'git' ? 'Git' : tab}
             basic={basic}
