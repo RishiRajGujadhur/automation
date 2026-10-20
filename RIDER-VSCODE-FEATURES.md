@@ -140,7 +140,7 @@ Legend: `[x]` done · `[ ]` to do.
 - [x] 115. Suppression of individual inspections — Error List: Suppress in Project File
 - [x] 116. Inspection exclusion scopes — .editorconfig sections: generated_code / dotnet_analyzer_diagnostic.severity = none per glob (2026-10-21)
 - [x] 117. Quick-fix previews — Quick Actions: the highlighted action's diff beside the list (2026-10-21)
-- [ ] 118. Bulk quick-fix application
+- [x] 118. Bulk quick-fix application — Quick Actions: '… (fix all in document / project / solution)' with Roslyn's Fix All (2026-10-21)
 - [ ] 119. Duplicate code detection
 - [ ] 120. Structural Search and Replace templates
 - [ ] 121. Dependency cycle detection
@@ -348,3 +348,4 @@ Legend: `[x]` done · `[ ]` to do.
 - 2026-10-21 111: Code style options with a severity in .editorconfig are enforced in the editor.
 - 2026-10-21 116: A glob section of .editorconfig turns inspections off for matching files (generated code, a folder).
 - 2026-10-21 117: The highlighted Quick Action shows removed and added lines (and other files it touches) before it is applied.
+- 2026-10-21 118: Each fix offers Fix All in the document, the project or the solution (Roslyn's FixAllProvider over compiler and IDE analyzer diagnostics).
