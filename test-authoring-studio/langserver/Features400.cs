@@ -7,6 +7,8 @@ using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.FindSymbols;
 using Microsoft.CodeAnalysis.Text;
+using ICSharpCode.Decompiler;
+using ICSharpCode.Decompiler.CSharp;
 
 /// <summary>Language service operations of RIDER-VSCODE-FEATURES.md (analysis, navigation, highlighting).</summary>
 sealed partial class LanguageService
@@ -190,5 +192,31 @@ sealed partial class LanguageService
         Write(type, "");
         if (memberLine == 0) memberLine = 1;
         return new { name = type.ToDisplayString(), assembly = type.ContainingAssembly?.Name, text = sb.ToString(), line = memberLine };
+    }
+    // ------------------------------------------------------------------ decompiled sources (59)
+    /// <summary>The type of the symbol at the caret decompiled to C# (ILSpy's decompiler), at the member's line.</summary>
+    async Task<object> DecompileAt(Document doc, int position)
+    {
+        var symbol = await SymbolAt(doc, position) ?? throw new InvalidOperationException("No symbol at the cursor.");
+        var type = symbol as INamedTypeSymbol ?? symbol.ContainingType ?? throw new InvalidOperationException("Put the caret on a type or a member.");
+        while (type.ContainingType != null) type = type.ContainingType;
+        type = type.OriginalDefinition;
+        if (type.Locations.Any(l => l.IsInSource)) throw new InvalidOperationException($"{type.Name} has source in this repository: use Go to Definition (F12).");
+        var comp = (await doc.Project.GetCompilationAsync())!;
+        var path = (comp.GetMetadataReference(type.ContainingAssembly) as PortableExecutableReference)?.FilePath ?? throw new InvalidOperationException($"The assembly of {type.Name} is not on disk.");
+        var decompiler = new CSharpDecompiler(path, new DecompilerSettings { ThrowOnAssemblyResolveErrors = false });
+        var reflectionName = type.ContainingNamespace.IsGlobalNamespace ? type.MetadataName : $"{type.ContainingNamespace.ToDisplayString()}.{type.MetadataName}";
+        var text = decompiler.DecompileTypeAsString(new ICSharpCode.Decompiler.TypeSystem.FullTypeName(reflectionName));
+        var lines = text.Split('\n');
+        var line = 1;
+        if (!SymbolEqualityComparer.Default.Equals(symbol, type))
+        {
+            // The member's declaration: its name followed by ( < { = ; — not a call or an assignment.
+            var name = symbol is IMethodSymbol { MethodKind: MethodKind.Constructor } ? type.Name : symbol.Name;
+            var i = Array.FindIndex(lines, l => System.Text.RegularExpressions.Regex.IsMatch(l, $@"\b{System.Text.RegularExpressions.Regex.Escape(name)}\s*[(<{{=;]") && !l.TrimStart().StartsWith("//") && !l.Contains(" return ") && !l.Contains(" = " + name) && !l.Contains("." + name));
+            if (i >= 0) line = i + 1;
+        }
+        else line = Math.Max(1, Array.FindIndex(lines, l => System.Text.RegularExpressions.Regex.IsMatch(l, $@"\b(class|struct|interface|enum|record)\s+{System.Text.RegularExpressions.Regex.Escape(type.Name)}\b")) + 1);
+        return new { name = type.ToDisplayString(), assembly = Path.GetFileName(path), text = $"// Decompiled from {Path.GetFileName(path)} (ILSpy)\n{text}", line = line + 1 };
     }
 }

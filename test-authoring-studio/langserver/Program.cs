@@ -103,6 +103,7 @@ sealed partial class LanguageService
             "methodHierarchy" => await MethodHierarchy(doc, Math.Min(Pos(text), text.Length)),
             "classify" => await Classify(doc, (int?)req["from"] ?? 0, (int?)req["to"] ?? text.Length),
             "metadataSource" => await MetadataSource(doc, Math.Min(Pos(text), text.Length)),
+            "decompile" => await DecompileAt(doc, Math.Min(Pos(text), text.Length)),
             "applyAction" => await ApplyAction((string)req["actionId"]!),
             "previewAction" => await PreviewAction((string)req["actionId"]!),
             _ => throw new InvalidOperationException($"Unknown operation {op}."),

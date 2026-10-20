@@ -690,3 +690,16 @@ test('60 External source navigation (metadata as source)', async ({ page }) => {
   // The member asked for is the marked line.
   await expect(dlg.locator('.cm-preview-target')).toContainText('Append(');
 });
+
+test('59 Decompiled source navigation', async ({ page }) => {
+  needsLang();
+  await open(page, CS);
+  await setDoc(page, 'namespace Demo;\npublic class P\n{\n    public string M() => new System.Text.StringBuilder().Clear().ToString();\n}\n');
+  await caretAt(page, 'Clear', 2);
+  await menuItem(page, 'Navigate', /^Go to Decompiled Source$/);
+  const dlg = page.getByRole('dialog', { name: /StringBuilder \[decompiled/ });
+  await expect(dlg).toBeVisible({ timeout: 90_000 });
+  // Real code, with bodies.
+  await expect(dlg.locator('.cm-preview-target')).toContainText('Clear(');
+  await expect(dlg.getByLabel(/StringBuilder \[decompiled/)).toContainText('Decompiled from System.Private.CoreLib.dll');
+});

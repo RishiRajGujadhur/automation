@@ -682,7 +682,7 @@ app.post('/api/csharp/metrics', async (req, res) => {
 });
 // More language service operations (RIDER-VSCODE-FEATURES.md): inactive #if regions, control / data flow of a selection,
 // method hierarchy, semantic classifications, metadata as source.
-const LANG_OPS = ['inactive', 'flow', 'methodHierarchy', 'classify', 'metadataSource'] as const;
+const LANG_OPS = ['inactive', 'flow', 'methodHierarchy', 'classify', 'metadataSource', 'decompile'] as const;
 app.post('/api/csharp/op', async (req, res) => {
   const body = z.object({ op: z.enum(LANG_OPS), file: z.string().max(400).regex(/\.cs$/), source: z.string().max(1_000_000).optional(), line: z.number().int().min(1).default(1), column: z.number().int().min(1).default(1), endLine: z.number().int().min(1).optional(), endColumn: z.number().int().min(1).optional(), from: z.number().int().min(0).optional(), to: z.number().int().min(0).optional() }).parse(req.body);
   await confined(config.repositoryRoot, body.file, false);

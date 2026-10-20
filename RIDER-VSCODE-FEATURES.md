@@ -75,7 +75,7 @@ Legend: `[x]` done · `[ ]` to do.
 - [x] 56. Peek definition — Alt+F12
 - [ ] 57. Peek references
 - [x] 58. Hierarchical symbol navigation — Structure window, breadcrumbs
-- [ ] 59. Decompiled source navigation
+- [x] 59. Decompiled source navigation — Navigate ▸ Go to Decompiled Source (ILSpy decompiler in the language service), opened at the member (2026-10-21)
 - [x] 60. External source navigation — F12 on a framework / NuGet symbol: its declarations from metadata (assembly, namespace, type, members), the member marked (2026-10-21)
 
 ## Refactoring & Code Transformation
@@ -392,3 +392,4 @@ Legend: `[x]` done · `[ ]` to do.
 - 2026-10-21 33: The overrides tree of a C# method: what it overrides or implements above, every override below, to jump through.
 - 2026-10-21 123: The language service knows each project's root namespace and folder, so a namespace that does not match its folder is reported and fixed (also across the solution with Fix All).
 - 2026-10-21 60: Go to Definition outside the repository shows the type's declarations generated from metadata, opened at the member.
+- 2026-10-21 59: Framework and NuGet types decompile to C# with bodies (ICSharpCode.Decompiler in the language service), shown read-only at the member.
