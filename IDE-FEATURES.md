@@ -51,11 +51,11 @@ has it on by default, so the desktop app starts with it on. The others start off
 | X41 | Git Log: Copy Revision Number | VS 2026 / Rider | yes | ✅ 2026-10-20 |
 | X42 | Git Log: New Branch from Commit | VS 2026 / Rider | yes | ✅ 2026-10-20 |
 | X43 | Git Log: New Tag | VS 2026 / Rider | yes | ✅ 2026-10-20 |
+| X44 | Git Log: Cherry-Pick | VS 2026 / Rider | yes | ✅ 2026-10-20 |
 | X45 | Git Log: Revert Commit | VS 2026 / Rider | yes | ✅ 2026-10-20 |
 | X46 | Git Log: Checkout Revision | VS 2026 / Rider | yes | ✅ 2026-10-20 |
 | X47 | Git Log: Reset Current Branch to Here | VS 2026 / Rider | yes | ✅ 2026-10-20 |
 | X48 | Branches popup | VS 2026 / Rider | yes | ✅ 2026-10-20 |
-| X44 | Git Log: Cherry-Pick | VS 2026 / Rider | yes | ✅ 2026-10-20 |
 | X49 | Cycle Step Keyword | Rider | yes | ✅ 2026-10-20 |
 | X50 | Convert Scenario to Outline | Rider | yes | ✅ 2026-10-20 |
 | X51 | Table: Insert Row | Rider | yes | ✅ 2026-10-20 |
@@ -81,8 +81,8 @@ has it on by default, so the desktop app starts with it on. The others start off
 | X71 | Test Explorer: Group By | VS 2026 | yes | ✅ 2026-10-20 |
 | X72 | Test Explorer: search filters | VS 2026 | yes | ✅ 2026-10-20 |
 | X73 | Test Explorer: Copy details | VS 2026 | yes | ✅ 2026-10-20 |
-| X75 | Test Explorer: Collapse / Expand All | VS 2026 | yes | ✅ 2026-10-20 |
 | X74 | Run All Tests in File | Rider / VS 2026 | yes | ✅ 2026-10-20 |
+| X75 | Test Explorer: Collapse / Expand All | VS 2026 | yes | ✅ 2026-10-20 |
 | X76 | Tags window | Rider / SpecFlow | yes | ✅ 2026-10-20 |
 | X77 | Rename Tag | Rider | yes | ✅ 2026-10-20 |
 | X78 | Run Tagged Scenarios | VS Test Explorer traits | yes | ✅ 2026-10-20 |
