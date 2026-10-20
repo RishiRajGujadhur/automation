@@ -883,7 +883,7 @@ test('X175 Save as Live Template, then insert it', async ({ page }) => {
   await caretAt(page, 'Feature:');
   await page.keyboard.press('End');
   await page.keyboard.press('Enter');
-  await menuItem(page, 'Edit', /^Insert Live Template/);
+  await menuItem(page, 'Code', /^Insert Live Template/);
   await page.keyboard.type('browser');
   await page.keyboard.press('Enter');
   await expect.poll(async () => ((await doc(page)).match(/Given the browser is started/g) ?? []).length).toBe(2);

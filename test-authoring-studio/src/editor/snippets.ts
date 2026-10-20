@@ -50,13 +50,25 @@ const gherkinTemplates: { label: string; detail: string; body: (cls: string) => 
   { label: 'tag', detail: 'Tag', body: () => '@${tag}' },
 ];
 
+// Save as Live Template (Rider's Tools ▸ Save as Live Template): your own templates, per file type, in this browser.
+type UserTemplate = { label: string; detail: string; kind: 'feature' | 'cs'; body: string };
+const USER = 'tas:userTemplates';
+export const userTemplates = (): UserTemplate[] => { try { return JSON.parse(localStorage.getItem(USER) ?? '[]') as UserTemplate[]; } catch { return []; } };
+export function saveUserTemplate(label: string, kind: 'feature' | 'cs', text: string) {
+  // Literal text: snippet fields start with ${ or #{, so those are escaped; the caret ends up after the text.
+  const body = `${text.replace(/([$#])\{/g, '$1\\{')}\${}`;
+  const next = [...userTemplates().filter((t) => !(t.label === label && t.kind === kind)), { label, detail: 'Your template', kind, body }];
+  try { localStorage.setItem(USER, JSON.stringify(next)); } catch { /* storage blocked */ }
+}
+const userFor = (file: string) => userTemplates().filter((t) => (file.endsWith('.feature') ? t.kind === 'feature' : file.endsWith('.cs') && t.kind === 'cs')).map((t) => ({ label: t.label, detail: t.detail, body: () => t.body }));
+
 /** Insert Live Template (Ctrl+J): the templates for a file, by extension. */
 export function liveTemplates(file: string) {
-  return (file.endsWith('.feature') ? gherkinTemplates : file.endsWith('.cs') ? templates : []).map((t) => ({ label: t.label, detail: t.detail }));
+  return [...(file.endsWith('.feature') ? gherkinTemplates : file.endsWith('.cs') ? templates : []), ...userFor(file)].map((t) => ({ label: t.label, detail: t.detail }));
 }
 /** Expands a live template at the selection. */
 export function insertTemplate(view: EditorView, file: string, label: string) {
-  const t = (file.endsWith('.feature') ? gherkinTemplates : templates).find((x) => x.label === label);
+  const t = [...userFor(file), ...(file.endsWith('.feature') ? gherkinTemplates : templates)].find((x) => x.label === label);
   if (!t) return;
   const r = view.state.selection.main;
   // snippet() indents the template's lines like the line it is inserted on.

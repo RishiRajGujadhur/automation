@@ -1,5 +1,6 @@
 import type { EditorView } from '@codemirror/view';
 import type { RiderCommand } from './commands';
+import { saveUserTemplate } from '../editor/snippets';
 import { clearBookmarks, getBookmarks } from '../editor/bookmarks';
 import { clearRecent, recentFiles as recentList } from '../navHistory';
 import { sortJsonKeys, jsonPointerAt, xpathAt } from '../editor/docTools';
@@ -169,5 +170,6 @@ export function moreCommands(h: MoreHelpers): RiderCommand[] {
     { id: 'table-select-column', label: 'Table: Select Column', menu: 'Code', submenu: 'Gherkin', run: h.inEditor((v) => tableSelectColumn(v) || h.notice('Put the caret in a table.')) },
     { id: 'clear-recent', label: 'Clear Recent Files', menu: 'Navigate', run: () => { const n = recentList().length; clearRecent(); h.notice(n ? `Cleared ${n} recent file${n === 1 ? '' : 's'}.` : 'No recent files.'); } },
     { id: 'clear-bookmarks', label: 'Clear All Bookmarks…', menu: 'Navigate', run: () => { const n = getBookmarks().length; if (!n) { h.notice('No bookmarks.'); return; } if (!window.confirm(`Delete all ${n} bookmark${n === 1 ? '' : 's'}?`)) return; clearBookmarks(); h.notice(`Deleted ${n} bookmark${n === 1 ? '' : 's'}.`); } },
+    { id: 'save-live-template', label: 'Save as Live Template…', menu: 'Tools', run: h.inEditor((v, file) => { const s = v.state.selection.main; if (s.empty) { h.notice('Select the text to save as a template.'); return; } const kind = file.endsWith('.feature') ? 'feature' : file.endsWith('.cs') ? 'cs' : undefined; if (!kind) { h.notice('Live templates are for feature and C# files.'); return; } const name = window.prompt('Template abbreviation (Insert Live Template, Ctrl+J, lists it):', '')?.trim(); if (!name) return; if (!/^\w+$/.test(name)) { h.notice('Use letters, digits or _ for the abbreviation.'); return; } saveUserTemplate(name, kind, v.state.sliceDoc(s.from, s.to)); h.notice(`Saved the live template "${name}".`); }) },
   ];
 }
