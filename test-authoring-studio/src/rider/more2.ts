@@ -1,5 +1,6 @@
 import type { RiderCommand } from './commands';
 import type { MoreHelpers } from './more';
+import { nextConflict } from '../editor/advanced';
 import { getSnapshot, setBreakpoints } from '../debug/store';
 import { unsavedFiles } from '../editor/autosave';
 import { createTwoFilesPatch } from 'diff';
@@ -119,5 +120,6 @@ export function moreCommands2(h: MoreHelpers): RiderCommand[] {
     { id: 'delete-disabled-breakpoints', label: 'Delete Disabled Breakpoints', menu: 'Tools', run: () => { const all = getSnapshot().breakpoints; let n = 0; for (const [file, specs] of Object.entries(all)) { const keep = specs.filter((b) => b.enabled !== false); if (keep.length !== specs.length) { n += specs.length - keep.length; setBreakpoints(file, keep.map((b) => b.line)); } } h.notice(n ? `Deleted ${n} disabled breakpoint${n === 1 ? '' : 's'}.` : 'No breakpoint is disabled.'); } },
     { id: 'char-info', label: 'Character Info at Caret', menu: 'Tools', run: h.inEditor((v) => h.notice(charInfo(v.state) ?? 'The caret is at the end of the file.')) },
     { id: 'close-lru-tabs', label: 'Close Least Recently Used Tabs', menu: 'View', run: () => { const n = closeLeastRecent(5, unsavedFiles()); h.notice(n ? `Closed ${n} tab${n === 1 ? '' : 's'}; the 5 used last stay open.` : 'Nothing to close: at most 5 tabs (plus pinned and unsaved ones) are open.'); } },
+    { id: 'next-conflict', label: 'Next Merge Conflict', menu: 'Navigate', run: h.inEditor((v) => nextConflict(v) || h.notice('This file has no merge conflicts.')) },
   ];
 }

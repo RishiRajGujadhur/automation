@@ -180,6 +180,7 @@ const ROWS: Record<'edit' | 'view' | 'navigate' | 'code' | 'tools' | 'help', Row
     ['Clear Recent Files', 'clear-recent'],
     ['Clear All Bookmarks…', 'clear-bookmarks'],
     ['Go to Offset…', 'goto-offset'],
+    ['Next Merge Conflict', 'next-conflict'],
   ],
   code: [
     ['Insert Live Template…', 'live-template', 'CmdOrCtrl+J'],

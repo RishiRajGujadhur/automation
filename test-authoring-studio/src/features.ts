@@ -497,6 +497,7 @@ export const FEATURES: Feature[] = [
   { id: 'close-lru-tabs', label: 'Close Least Recently Used Tabs', group: 'Files', essential: false, description: 'View ▸ Close Least Recently Used Tabs keeps the 5 tabs used last (and pinned or unsaved ones) and closes the rest.', commands: ['close-lru-tabs'] },
   // ── Advanced (ADVANCED-20.md) ──
   { id: 'inline-blame', label: 'Inline Git blame (caret line)', group: 'Git', essential: true, vs: 'Git ▸ Line blame', description: 'The line with the caret shows who last changed it, when and the commit summary, at its end.' },
+  { id: 'merge-conflicts', label: 'Merge conflict actions', group: 'Git', essential: true, vs: 'Merge Editor', description: 'Conflict blocks (<<<<<<< ======= >>>>>>>) are coloured with Accept Current / Incoming / Both above them; Navigate ▸ Next Merge Conflict.', commands: ['next-conflict'] },
 ];
 export const GROUPS: FeatureGroup[] = ['Editing', 'Navigation', 'Code intelligence', 'Tool windows', 'Files', 'Git', 'Gherkin', 'View', 'Debugging', 'Help and productivity'];
 

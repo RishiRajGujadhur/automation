@@ -3706,3 +3706,8 @@ html[data-features-off~='inlay-hints'] .cm-inlay {
 .debug-locals-tools { display: flex; justify-content: flex-end; padding: 2px 8px; font-size: 12px; }
 
 .cm-inline-blame { margin-left: 2.5em; color: var(--muted, #888); font-style: italic; opacity: 0.75; font-size: 0.92em; white-space: pre; }
+
+.cm-conflict-current { background: color-mix(in srgb, #2ea04366 40%, transparent); }
+.cm-conflict-incoming { background: color-mix(in srgb, #3b82f666 40%, transparent); }
+.cm-conflict-marker { background: color-mix(in srgb, #8886 40%, transparent); font-weight: 600; }
+.cm-conflict-actions { display: flex; gap: 12px; padding: 1px 4px; font-size: 12px; font-family: var(--font-ui, inherit); }

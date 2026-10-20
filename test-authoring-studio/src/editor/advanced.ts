@@ -1,6 +1,6 @@
 import type { Extension } from '@codemirror/state';
-import { StateEffect } from '@codemirror/state';
-import { Decoration, EditorView, ViewPlugin, WidgetType, type ViewUpdate } from '@codemirror/view';
+import { StateEffect, StateField, type EditorState, type Range } from '@codemirror/state';
+import { Decoration, EditorView, ViewPlugin, WidgetType, type ViewUpdate, type DecorationSet } from '@codemirror/view';
 import { api } from '../api';
 import { featureOn } from '../features';
 import { FILE_SAVED_EVENT } from './events';
@@ -59,3 +59,82 @@ registerAdvanced((file) => (file.startsWith('untitled') ? [] : ViewPlugin.fromCl
     }
   }
 }, { decorations: (v) => v.decorations })));
+
+/* Z2 Merge conflicts (Visual Studio 2026 merge editor / Rider conflict markers): Accept Current / Incoming / Both. */
+export type Conflict = { start: number; mid: number; end: number; base?: number };
+/** The <<<<<<< / ======= / >>>>>>> blocks of a text, as 1-based line numbers (diff3's ||||||| kept as `base`). */
+export function conflictsIn(text: string): Conflict[] {
+  const out: Conflict[] = [];
+  let cur: Partial<Conflict> | null = null;
+  text.split('\n').forEach((l, i) => {
+    const n = i + 1;
+    if (l.startsWith('<<<<<<<')) cur = { start: n };
+    else if (cur && l.startsWith('|||||||') && cur.mid === undefined) cur.base = n;
+    else if (cur && l.startsWith('=======') && cur.mid === undefined) cur.mid = n;
+    else if (cur && cur.mid !== undefined && l.startsWith('>>>>>>>')) { out.push({ ...(cur as Conflict), end: n }); cur = null; }
+  });
+  return out;
+}
+/** The text that replaces a conflict block when one side (or both) is accepted. */
+export function resolveConflict(lines: string[], c: Conflict, take: 'current' | 'incoming' | 'both') {
+  const current = lines.slice(c.start, (c.base ?? c.mid) - 1);
+  const incoming = lines.slice(c.mid, c.end - 1);
+  return take === 'current' ? current : take === 'incoming' ? incoming : [...current, ...incoming];
+}
+function acceptConflict(view: EditorView, c: Conflict, take: 'current' | 'incoming' | 'both') {
+  const doc = view.state.doc;
+  const lines = doc.toString().split('\n');
+  const keep = resolveConflict(lines, c, take);
+  const from = doc.line(c.start).from, to = c.end < doc.lines ? doc.line(c.end + 1).from : doc.length;
+  view.dispatch({ changes: { from, to, insert: keep.length ? keep.join('\n') + (c.end < doc.lines ? '\n' : '') : '' }, userEvent: 'input' });
+  view.focus();
+}
+class ConflictActions extends WidgetType {
+  constructor(readonly c: Conflict) { super(); }
+  eq(o: ConflictActions) { return o.c.start === this.c.start && o.c.end === this.c.end; }
+  toDOM(view: EditorView) {
+    const el = document.createElement('div');
+    el.className = 'cm-conflict-actions';
+    el.setAttribute('role', 'toolbar');
+    el.setAttribute('aria-label', 'Merge conflict');
+    for (const [take, label] of [['current', 'Accept Current'], ['incoming', 'Accept Incoming'], ['both', 'Accept Both']] as const) {
+      const b = document.createElement('button');
+      b.className = 'link-button';
+      b.textContent = label;
+      b.onmousedown = (e) => e.preventDefault();
+      b.onclick = () => { const now = conflictsIn(view.state.doc.toString()).find((x) => x.start === this.c.start); if (now) acceptConflict(view, now, take); };
+      el.append(b);
+    }
+    return el;
+  }
+  ignoreEvent() { return true; }
+}
+const CURRENT = Decoration.line({ class: 'cm-conflict-current' });
+const INCOMING = Decoration.line({ class: 'cm-conflict-incoming' });
+const MARKER = Decoration.line({ class: 'cm-conflict-marker' });
+function conflictDecorations(state: EditorState) {
+  const text = state.doc.toString();
+  if (!featureOn('merge-conflicts') || !text.includes('<<<<<<<')) return Decoration.none;
+  const ranges: Range<Decoration>[] = [];
+  for (const c of conflictsIn(text)) {
+    ranges.push(Decoration.widget({ widget: new ConflictActions(c), block: true, side: -1 }).range(state.doc.line(c.start).from));
+    for (let n = c.start; n <= c.end; n++) ranges.push((n === c.start || n === c.mid || n === c.end || n === c.base ? MARKER : n < (c.base ?? c.mid) ? CURRENT : n > c.mid ? INCOMING : MARKER).range(state.doc.line(n).from));
+  }
+  return Decoration.set(ranges, true);
+}
+const conflictField = StateField.define<DecorationSet>({
+  create: (s) => conflictDecorations(s),
+  update: (v, tr) => (tr.docChanged ? conflictDecorations(tr.state) : v),
+  provide: (f) => EditorView.decorations.from(f),
+});
+registerAdvanced(() => conflictField);
+/** Navigate ▸ Next Merge Conflict: the caret on the next <<<<<<< line (wrapping). */
+export function nextConflict(view: EditorView) {
+  const here = view.state.doc.lineAt(view.state.selection.main.head).number;
+  const all = conflictsIn(view.state.doc.toString());
+  const c = all.find((x) => x.start > here) ?? all[0];
+  if (!c) return false;
+  const at = view.state.doc.line(c.start).from;
+  view.dispatch({ selection: { anchor: at }, effects: EditorView.scrollIntoView(at, { y: 'center' }) });
+  return true;
+}
