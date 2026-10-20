@@ -205,6 +205,7 @@ const ROWS: Record<'edit' | 'view' | 'navigate' | 'code' | 'tools' | 'help', Row
       ['Ignore / Unignore Scenario', 'ignore-scenario'],
       ['Copy Step Definition Stub', 'copy-step-stub'],
       ['Table: Transpose', 'table-transpose'],
+      ['Table: Fill Down', 'table-fill-down'],
     ] },
     ['Collapse Using Directives', 'fold-usings'],
     ['Sort JSON Keys', 'sort-json'],

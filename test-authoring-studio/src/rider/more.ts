@@ -25,7 +25,7 @@ import { renamePath } from '../files/provider';
 import { movedPath } from '../files/tabs';
 import { DEFAULT_TODO_TOKENS } from '../editor/todoHighlight';
 import { copyText as copyFilterText } from '../ui';
-import { cycleStepKeyword, scenarioToOutline, tableInsertRow, tableAddColumn, tableDeleteColumn, tableSortByColumn, testFilter, selectScenario, extractExamplesParameter, outlineToScenario, duplicateScenario, moveScenario, extractBackground, addExamplesTable, toggleTag, toggleScenarioComment, pasteAsTable, tableCsv, renameExamplesParameter, paramAt, removeUnusedColumns, inlineBackground, normalizeStepKeywords, addScenario, scenarioMarkdown, tableDuplicateRow, tableDeleteRow, tableMoveColumn, tableSelectColumn, tableTranspose } from '../editor/gherkinTools';
+import { cycleStepKeyword, scenarioToOutline, tableInsertRow, tableAddColumn, tableDeleteColumn, tableSortByColumn, testFilter, selectScenario, extractExamplesParameter, outlineToScenario, duplicateScenario, moveScenario, extractBackground, addExamplesTable, toggleTag, toggleScenarioComment, pasteAsTable, tableCsv, renameExamplesParameter, paramAt, removeUnusedColumns, inlineBackground, normalizeStepKeywords, addScenario, scenarioMarkdown, tableDuplicateRow, tableDeleteRow, tableMoveColumn, tableSelectColumn, tableTranspose, tableFillDown } from '../editor/gherkinTools';
 import { unsavedFiles } from '../editor/autosave';
 import { getTabs, closeTab } from '../files/tabs';
 import { reopenClosed } from '../files/tabs';
@@ -185,5 +185,6 @@ export function moreCommands(h: MoreHelpers): RiderCommand[] {
     { id: 'copy-env-info', label: 'Copy Environment Info', menu: 'Help', run: () => { const d = (window as unknown as { desktop?: { version?: string } }).desktop; const lines = [`TestAuthoring Studio (${d ? 'desktop app' : 'web app'}${d?.version ? ` ${d.version}` : ''})`, `Browser: ${navigator.userAgent}`, `Platform: ${navigator.platform}`, `Language: ${navigator.language}`, `Screen: ${screen.width}×${screen.height} @${window.devicePixelRatio}x`, `Features on: ${FEATURES.filter((f) => featureOn(f.id)).length} of ${FEATURES.length}`]; void copyText(lines.join('\n')).then((ok) => h.notice(ok ? 'Copied the environment info (for a bug report).' : 'Clipboard unavailable.')); } },
     { id: 'current-scenario', label: 'Highlight Current Scenario', menu: 'View', checked: () => !viewOptions().noScenarioBand, run: () => setViewOptions({ noScenarioBand: !viewOptions().noScenarioBand }) },
     { id: 'table-transpose', label: 'Table: Transpose', menu: 'Code', submenu: 'Gherkin', run: h.inEditor((v) => tableTranspose(v) || h.notice('Put the caret in a table.')) },
+    { id: 'table-fill-down', label: 'Table: Fill Down', menu: 'Code', submenu: 'Gherkin', run: h.inEditor((v) => tableFillDown(v) || h.notice('Put the caret in a table cell below another row.')) },
   ];
 }

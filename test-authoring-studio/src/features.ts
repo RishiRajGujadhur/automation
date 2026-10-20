@@ -282,6 +282,7 @@ export const FEATURES: Feature[] = [
   { id: 'copy-env-info', label: 'Copy Environment Info', group: 'Help and productivity', essential: true, vs: 'Help ▸ About ▸ Copy Info', description: 'Copies the app version, browser and screen details for a bug report.', commands: ['copy-env-info'] },
   { id: 'current-scenario', label: 'Highlight current scenario', group: 'Gherkin', essential: true, description: 'The scenario the caret is in gets a light background band.', commands: ['current-scenario'] },
   { id: 'table-transpose', label: 'Table: Transpose', group: 'Gherkin', essential: true, description: 'Turns the table\'s rows into columns (vertical tables and back).', commands: ['table-transpose'] },
+  { id: 'table-fill-down', label: 'Table: Fill Down', group: 'Gherkin', essential: true, description: 'Copies the cell above into the caret\'s cell (or every selected row).', commands: ['table-fill-down'] },
 ];
 export const GROUPS: FeatureGroup[] = ['Editing', 'Navigation', 'Code intelligence', 'Tool windows', 'Files', 'Git', 'Gherkin', 'View', 'Debugging', 'Help and productivity'];
 

@@ -652,3 +652,17 @@ export function tableTranspose(view: EditorView) {
   const rows = Array.from({ length: t.cols }, (_, c) => t.rows.map((r) => r[c] ?? ''));
   return writeTable(view, t, rows, Math.min(t.col, rows.length - 1), Math.min(t.row, t.rows.length - 1));
 }
+
+/** Table ▸ Fill Down: the caret's cell gets the value of the cell above (a selection over rows: all of them). */
+export function tableFillDown(view: EditorView) {
+  const t = tableAt(view.state);
+  if (!t) return false;
+  const sel = view.state.selection.main;
+  const first = Math.max(t.from, view.state.doc.lineAt(sel.from).number) - t.from;
+  const last = Math.min(t.to, view.state.doc.lineAt(sel.to).number) - t.from;
+  if (first < 1) return false;
+  const rows = t.rows.map((r) => [...r]);
+  const value = rows[first - 1][t.col] ?? '';
+  for (let r = first; r <= Math.max(first, last); r++) { while (rows[r].length <= t.col) rows[r].push(''); rows[r][t.col] = value; }
+  return writeTable(view, t, rows, first, t.col);
+}
