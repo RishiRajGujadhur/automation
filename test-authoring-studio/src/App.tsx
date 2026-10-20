@@ -445,6 +445,8 @@ export default function App() {
   }, []);
   // Split editor (Window ▸ Split / tab ▸ Split Right): a second editor beside the tab group.
   const [splitFile, setSplitFile] = useLocalState<string | null>('splitFile', null);
+  // Explorer ▸ Open to the Side (VS Code): the file in the split editor.
+  useEffect(() => { const h = (e: Event) => setSplitFile((e as CustomEvent<string>).detail); window.addEventListener('tas:open-split', h); return () => window.removeEventListener('tas:open-split', h); }, []); // eslint-disable-line react-hooks/exhaustive-deps
   // One docked bottom panel (as in Visual Studio / VS Code): Build and Debug windows share it as tabs.
   const [dockTab, setDockTab] = useLocalState<'build' | 'debug' | 'output' | 'todo' | RiderTool>('dockTab', 'build');
   // Rider tool windows (Structure, Problems, Hierarchy, Terminal…): more tabs of the same panel.

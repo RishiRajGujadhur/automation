@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { keepTab, useTabs } from './files/tabs';
 import {
   ChevronDown, ChevronRight, Folder, FolderOpen, FileCode2, FileText, FileCog, Braces, Plus, Search, X, Copy, ChevronsDownUp, ChevronsUpDown,
-  Eye, Package, Boxes, Link2, LocateFixed, PencilLine, Files, Layers, SquareStack, Scissors, ClipboardPaste, Trash2, TextCursorInput, Focus, House, FilePlus, GitCompare, BookOpen, Crosshair,
+  Eye, Package, Boxes, Link2, LocateFixed, PencilLine, Files, Layers, SquareStack, Scissors, ClipboardPaste, Trash2, TextCursorInput, Focus, House, FilePlus, GitCompare, BookOpen, Crosshair, Columns2,
 } from 'lucide-react';
 import { fileType } from './files/fileTypes';
 import { featureOn } from './features';
@@ -280,6 +280,7 @@ export default function SolutionExplorer({ features, revision, activeFile, query
         { label: 'Open', icon: FileCode2, onSelect: () => open(path) },
         ...(onSource ? [{ label: 'View source', icon: Eye, onSelect: () => onSource(path, 1) }] : []),
         { label: 'Copy path', icon: Copy, onSelect: () => copyText(path) },
+        ...(featureOn('open-to-side') && !path.endsWith('.feature') && !browserSolution ? [{ label: 'Open to the Side', icon: Columns2, onSelect: () => window.dispatchEvent(new CustomEvent('tas:open-split', { detail: path })) }] : []),
         ...(featureOn('explorer-copy-name') ? [{ label: 'Copy file name', icon: Copy, onSelect: () => void copyText(path.split('/').pop()!) }] : []),
         ...(featureOn('copy-full-path') && !browserSolution ? [{ label: 'Copy Full Path', icon: Copy, onSelect: () => copyFull(path) }] : []),
         ...(featureOn('explorer-compare') ? [{ label: 'Select for Compare', icon: GitCompare, onSelect: () => { compareLeft = path; setCmpLeft(path); onNotice?.(`Selected ${path.split('/').pop()} for compare.`); } }, ...(cmpLeft && cmpLeft !== path ? [{ label: `Compare with ${cmpLeft.split('/').pop()}`, icon: GitCompare, onSelect: () => window.dispatchEvent(new CustomEvent(COMPARE_FILES_EVENT, { detail: { left: cmpLeft, right: path } })) }] : [])] : []),

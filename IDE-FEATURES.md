@@ -195,6 +195,7 @@ has it on by default, so the desktop app starts with it on. The others start off
 | X185 | Table: Fill Down | Rider | yes | ✅ 2026-10-20 |
 | X186 | Table: Clear Column | Rider | yes | ✅ 2026-10-20 |
 | X187 | Explorer: Copy File Name | VS 2026 / Rider | yes | ✅ 2026-10-20 |
+| X188 | Explorer: Open to the Side | VS Code | yes | ✅ 2026-10-20 |
 
 ## Progress log
 - 2026-10-20 X1: Sort Lines: the selected lines (or the whole file) in natural, case-insensitive order, blank lines last. Third-batch plumbing: src/rider/more.ts, src/editor/textTools.ts, IDE-FEATURES.md.
@@ -384,3 +385,4 @@ has it on by default, so the desktop app starts with it on. The others start off
 - 2026-10-20 X185: Cell above copied down
 - 2026-10-20 X186: Empty a column
 - 2026-10-20 X187: Copy the file name
+- 2026-10-20 X188: Split editor from the Explorer
