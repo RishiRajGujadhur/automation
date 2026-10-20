@@ -988,8 +988,9 @@ test('X195–X198 Sort Scenarios, Quick Switch Theme, Close Tabs of This Type, C
   await page.getByRole('dialog', { name: 'Quick Switch Theme' }).getByRole('option').last().click();
   await expect(page.getByText(/^Theme: /).first()).toBeVisible();
   await page.getByRole('navigation').getByRole('button', { name: 'Login.feature', exact: true }).first().dblclick();
+  await page.getByRole('button', { name: 'Discard and open' }).click(); // Sorted.feature has unsaved edits
   await page.getByRole('navigation').getByRole('button', { name: 'AuthSteps.cs', exact: true }).first().dblclick();
-  await page.locator('.editor-tab-label', { hasText: 'Sorted.feature' }).click({ button: 'right' });
+  await page.locator('.editor-tab-label', { hasText: 'Login.feature' }).click({ button: 'right' });
   await page.getByRole('menuitem', { name: 'Close All .feature Tabs' }).click();
   await expect(page.locator('.editor-tab-label', { hasText: '.feature' })).toHaveCount(0);
   await expect(page.locator('.editor-tab-label', { hasText: 'AuthSteps.cs' })).toBeVisible();
