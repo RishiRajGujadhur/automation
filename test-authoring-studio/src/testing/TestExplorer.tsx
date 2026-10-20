@@ -88,6 +88,7 @@ export default function TestExplorer({ revision, onOpen, onDebug, onNotice }: { 
   // Run ▸ Not Run / Passed tests (Visual Studio's Run menu of the Test Explorer).
   const moreRuns: MenuEntry[] = [
     featureOn('run-not-run') && { label: 'Run Not Run Tests', onSelect: () => { const ts = tests.filter((t) => outcome(t) === 'none'); if (ts.length) void start(ts); else onNotice('Every test has run.'); } },
+    featureOn('run-passed') && { label: 'Run Passed Tests', onSelect: () => { const ts = tests.filter((t) => outcome(t) === 'passed'); if (ts.length) void start(ts); else onNotice('No passed tests yet.'); } },
     // more run options
   ].filter(Boolean) as MenuEntry[];
   const toggle = (k: string) => setCollapsed((prev) => { const n = new Set(prev); if (n.has(k)) n.delete(k); else n.add(k); return n; });
