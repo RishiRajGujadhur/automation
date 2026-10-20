@@ -22,7 +22,7 @@ import { lastTestRun, runTests, runUntilFailure, discoverTests } from '../testin
 import { jsonToClasses } from '../editor/jsonClasses';
 import { generateConstructor } from '../editor/generateCtor';
 import { setViewOptions, viewOptions } from '../editor/viewOptions';
-import { lastEditLocation, insertGuid, cyclicExpandWord, gotoMember, toggleVerbatim, reformatJson, stripTrailingSpaces, splitString, tabify, untabify, codeBlockStart, codeBlockEnd } from '../editor/textTools';
+import { lastEditLocation, insertGuid, cyclicExpandWord, gotoMember, toggleVerbatim, reformatJson, stripTrailingSpaces, splitString, tabify, untabify, codeBlockStart, codeBlockEnd, removeDuplicateLines } from '../editor/textTools';
 import { sortLines, reverseLines, deleteHorizontalWhiteSpace, setCase, transposeLine, transposeChars, transposeWords, cursorMatchingBracket, selectMatchingBracket, findSelected } from '../editor/textTools';
 
 /**
@@ -124,5 +124,6 @@ export function moreCommands(h: MoreHelpers): RiderCommand[] {
     { id: 'remove-unused-columns', label: 'Remove Unused Examples Columns', menu: 'Code', submenu: 'Gherkin', run: h.inEditor((v) => removeUnusedColumns(v) || h.notice('No unused columns in this Scenario Outline.')) },
     { id: 'inline-background', label: 'Inline Background', menu: 'Code', submenu: 'Gherkin', run: h.inEditor((v) => inlineBackground(v) || h.notice('This feature has no Background with steps (or no scenarios).')) },
     { id: 'normalize-keywords', label: 'Normalize Step Keywords', menu: 'Code', submenu: 'Gherkin', run: h.inEditor((v) => normalizeStepKeywords(v) || h.notice('The step keywords are already consistent.')) },
+    { id: 'remove-duplicate-lines', label: 'Remove Duplicate Lines', menu: 'Edit', run: h.inEditor(removeDuplicateLines) },
   ];
 }

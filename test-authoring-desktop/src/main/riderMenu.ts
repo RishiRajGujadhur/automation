@@ -54,6 +54,7 @@ const ROWS: Record<'edit' | 'view' | 'navigate' | 'code' | 'tools' | 'help', Row
     null,
     ['Save As…', 'save-as'],
     ['Quick Info (Ctrl+K, Ctrl+I)', 'quick-info'],
+    ['Remove Duplicate Lines', 'remove-duplicate-lines'],
   ],
   view: [
     null,

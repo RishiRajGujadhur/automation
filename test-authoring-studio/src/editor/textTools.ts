@@ -375,3 +375,6 @@ export function codeBlockEdge(end: boolean) {
 }
 export const codeBlockStart = codeBlockEdge(false);
 export const codeBlockEnd = codeBlockEdge(true);
+
+/** Remove Duplicate Lines: later copies of a line go (the selection, else the file); blank lines stay. */
+export const removeDuplicateLines = mapLines((lines) => { const seen = new Set<string>(); return lines.filter((l) => { if (!l.trim()) return true; if (seen.has(l)) return false; seen.add(l); return true; }); });

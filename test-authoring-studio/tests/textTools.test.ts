@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { EditorState, type TransactionSpec } from '@codemirror/state';
 import { EditorView } from '@codemirror/view';
-import { sortLines, reverseLines, deleteHorizontalWhiteSpace, setCase, transposeLine, transposeChars, transposeWords, cursorMatchingBracket, selectMatchingBracket, findSelected, lastEditLocation, trackEdits, insertGuid, cyclicExpandWord, gotoMember, toggleVerbatim, convertCase, reformatJson, stripTrailingSpaces, splitString, tabify, untabify, codeBlockStart, codeBlockEnd } from '../src/editor/textTools';
+import { sortLines, reverseLines, deleteHorizontalWhiteSpace, setCase, transposeLine, transposeChars, transposeWords, cursorMatchingBracket, selectMatchingBracket, findSelected, lastEditLocation, trackEdits, insertGuid, cyclicExpandWord, gotoMember, toggleVerbatim, convertCase, reformatJson, stripTrailingSpaces, splitString, tabify, untabify, codeBlockStart, codeBlockEnd, removeDuplicateLines } from '../src/editor/textTools';
 
 /** Runs an editor command on `doc` with the selection between the markers « and » (or a caret at |). */
 export function run(doc: string, cmd: (v: EditorView) => boolean) {
@@ -148,5 +148,8 @@ describe('text tools (IDE-FEATURES X1…)', () => {
     expect(state.selection.main.head).toBe(plain.indexOf('}'));
     codeBlockEnd(v as unknown as EditorView);
     expect(state.selection.main.head).toBe(plain.lastIndexOf('}'));
+  });
+  it('X134 Remove Duplicate Lines', () => {
+    expect(run('|b\na\nb\n\n\na\nc', removeDuplicateLines)).toBe('b\na\n\n\nc');
   });
 });
