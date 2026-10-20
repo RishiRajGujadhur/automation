@@ -119,3 +119,22 @@ export async function replaceInFiles(root: string, ignored: string[], options: S
   }
   return changed;
 }
+
+/* Search editor (VS Code's .code-search): the results as a document, saved under .tas/searches and run again on open. */
+export const SEARCH_EDITOR_DIR = '.tas/searches';
+export function searchEditorText(o: SearchOptions, r: { files: FileMatches[]; total: number; truncated: boolean }) {
+  const flags = [o.matchCase && 'CaseSensitive', o.wholeWord && 'WordMatch', o.regex && 'RegExp', o.preserveCase && 'PreserveCase', o.ignored && 'IgnoredFiles'].filter(Boolean).join(' ');
+  const head = [`# Query: ${o.query.replace(/\n/g, '\n')}`, ...(flags ? [`# Flags: ${flags}`] : []), ...(o.include ? [`# Including: ${o.include}`] : []), ...(o.exclude ? [`# Excluding: ${o.exclude}`] : []), ''];
+  const summary = r.total ? `${r.total} result${r.total === 1 ? '' : 's'} - ${r.files.length} file${r.files.length === 1 ? '' : 's'}${r.truncated ? ' (first results only)' : ''}` : 'No results found.';
+  const body = r.files.flatMap((f) => ['', `${f.file}:`, ...f.matches.map((m) => `  ${m.line}: ${m.preview.trimEnd()}`)]);
+  return [...head, summary, ...body, ''].join('\n');
+}
+/** The search a .code-search document stands for (its # header). */
+export function parseSearchEditor(text: string): SearchOptions | null {
+  const get = (k: string) => new RegExp(`^# ${k}: (.*)$`, 'm').exec(text)?.[1];
+  const query = get('Query');
+  if (!query) return null;
+  const flags = get('Flags') ?? '';
+  return { query: query.replace(/\n/g, '\n'), matchCase: /CaseSensitive/.test(flags), wholeWord: /WordMatch/.test(flags), regex: /RegExp/.test(flags), preserveCase: /PreserveCase/.test(flags), ignored: /IgnoredFiles/.test(flags), include: get('Including'), exclude: get('Excluding') };
+}
+export const searchEditorName = (query: string) => `${query.replace(/[^\w.-]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 40) || 'search'}.code-search`;

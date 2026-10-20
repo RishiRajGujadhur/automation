@@ -37,7 +37,7 @@ import { Debugger, owningProject, featureTests } from './debugger.js';
 import { TestRunner } from './testRunner.js';
 import { readSolution, projectInfo, findSolutions } from './solution.js';
 import { Builder } from './build.js';
-import { findInFiles, replaceInFiles } from './search.js';
+import { findInFiles, replaceInFiles, searchEditorText, parseSearchEditor, searchEditorName, SEARCH_EDITOR_DIR } from './search.js';
 import { values, render, parameterCount, replaceAttributePattern } from './stepRename.js';
 import { installed as nugetInstalled, updates as nugetUpdates, search as nugetSearch, versions as nugetVersions, install as nugetInstall, uninstall as nugetUninstall } from './nuget.js';
 import { status as gitStatus, stage as gitStage, unstage as gitUnstage, discard as gitDiscard, commit as gitCommit, headInfo, log as gitLog, branches as gitBranches, checkout as gitCheckout, createBranch as gitCreateBranch, sync as gitSync, merge as gitMerge, blame as gitBlame, clone as gitClone, shelves, shelve, unshelve, deleteShelf, lineHistory, commitDetails, graphLog, fileAt, commitAction, git, stageLines } from './git.js';
@@ -187,6 +187,13 @@ async function unboundSteps(file:string){
 }
 // Scratch Files (Rider): throwaway files under .tas/scratches (kept out of Git through .git/info/exclude).
 const SCRATCH_DIR = '.tas/scratches';
+/** .tas (scratch files, search editors) is not part of the repository's history. */
+async function excludeTas() {
+  const exclude = path.join(config.repositoryRoot, '.git', 'info', 'exclude');
+  if (!(await fs.stat(path.dirname(exclude)).then(() => true, () => false))) return;
+  const text = await fs.readFile(exclude, 'utf8').catch(() => '');
+  if (!/^\.tas\/?$/m.test(text)) await fs.appendFile(exclude, `${text && !text.endsWith('\n') ? '\n' : ''}.tas/\n`);
+}
 const SCRATCH_STARTERS: Record<string, string> = {
   cs: 'using System;\n\npublic static class Scratch\n{\n    public static void Main()\n    {\n        Console.WriteLine("Hello");\n    }\n}\n',
   feature: 'Feature: Scratch\n\n  Scenario: Try something\n    Given \n',
@@ -206,12 +213,7 @@ app.post('/api/scratch/new', async (req, res) => {
   const used = (await fs.readdir(dir)).map((n) => Number(/^scratch_(\d+)\./.exec(n)?.[1] ?? 0));
   const name = `scratch_${Math.max(0, ...used) + 1}.${ext}`;
   await fs.writeFile(path.join(dir, name), SCRATCH_STARTERS[ext], 'utf8');
-  // Not part of the repository's history.
-  const exclude = path.join(config.repositoryRoot, '.git', 'info', 'exclude');
-  if (await fs.stat(path.dirname(exclude)).then(() => true, () => false)) {
-    const text = await fs.readFile(exclude, 'utf8').catch(() => '');
-    if (!/^\.tas\/?$/m.test(text)) await fs.appendFile(exclude, `${text && !text.endsWith('\n') ? '\n' : ''}.tas/\n`);
-  }
+  await excludeTas();
   res.json({ file: `${SCRATCH_DIR}/${name}` });
 });
 // Go to Related Files (Rider): a feature's step definition files and code-behind; a step file's features.
@@ -582,7 +584,7 @@ app.get('/api/selectors',async(req,res)=>{await ensure();const {q,offset,limit}=
 app.get('/api/backgrounds',async(req,res)=>{await ensure();const {q,offset,limit}=paging.parse(req.query);res.json(await search!.query('backgrounds',q,offset,limit));});
 // ---- Code editing (C#, feature, XML) --------------------------------------------------------------
 // Text files the editors can save (project files, JSON, Markdown, .http requests, scripts, …).
-const editable = /\.(cs|feature|xml|csproj|props|targets|config|runsettings|resx|json|md|markdown|txt|http|rest|ya?ml|editorconfig|sln|slnx|ps1|psm1|sh|cmd|bat|js|mjs|cjs|ts|tsx|css|scss|html?|gitignore|gitattributes|env|ini|csv|sql)$/i;
+const editable = /\.(cs|feature|xml|csproj|props|targets|config|runsettings|resx|json|md|markdown|txt|http|rest|ya?ml|editorconfig|sln|slnx|ps1|psm1|sh|cmd|bat|js|mjs|cjs|ts|tsx|css|scss|html?|gitignore|gitattributes|env|ini|csv|sql|code-search)$/i;
 // Roslyn syntax diagnostics + step-binding checks for one C# buffer (scanner --diagnostics).
 app.post('/api/csharp/diagnostics', async (req, res) => {
   const { source, path: file } = z.object({ source: z.string().max(1_000_000), path: z.string().max(400).default('') }).parse(req.body);
@@ -916,6 +918,34 @@ app.post('/api/search/text', async (req, res) => {
   if (options.regex) { try { new RegExp(options.query); } catch (e) { throw new Error(`Invalid regular expression: ${(e as Error).message}`); } }
   // "Use exclude settings and ignore files" off: the ignored folders (bin, obj, node_modules…) are searched too.
   res.json(await findInFiles(config.repositoryRoot, options.ignored ? ['.git'] : ignoredDirsFor(config), options));
+});
+// Search editor: Open in Editor writes the results as .tas/searches/<query>.code-search; opening one again reruns it.
+app.post('/api/search/editor', async (req, res) => {
+  const body = searchOptions.extend({ file: z.string().max(400).regex(/\.code-search$/).optional() }).parse(req.body);
+  const { file: given, ...options } = body;
+  const file = given ?? `${SEARCH_EDITOR_DIR}/${searchEditorName(options.query)}`;
+  const target = await confined(config.repositoryRoot, file, false);
+  const result = await findInFiles(config.repositoryRoot, options.ignored ? ['.git'] : ignoredDirsFor(config), options);
+  await fs.mkdir(path.dirname(target), { recursive: true });
+  await fs.writeFile(target, searchEditorText(options, result), 'utf8');
+  await excludeTas();
+  res.json({ file, total: result.total });
+});
+app.get('/api/search/editors', async (_req, res) => {
+  const dir = path.join(config.repositoryRoot, SEARCH_EDITOR_DIR);
+  const names = (await fs.readdir(dir).catch(() => [] as string[])).filter((n) => n.endsWith('.code-search'));
+  const list = await Promise.all(names.map(async (n) => { const text = await fs.readFile(path.join(dir, n), 'utf8').catch(() => ''); return { file: `${SEARCH_EDITOR_DIR}/${n}`, query: parseSearchEditor(text)?.query ?? n, modified: (await fs.stat(path.join(dir, n))).mtimeMs }; }));
+  res.json(list.sort((a, b) => b.modified - a.modified));
+});
+/** Reruns a saved search editor (its # header) and rewrites its results. */
+app.post('/api/search/editor/rerun', async (req, res) => {
+  const { file } = z.object({ file: z.string().max(400).regex(/\.code-search$/) }).parse(req.body);
+  const target = await confined(config.repositoryRoot, file, false);
+  const options = parseSearchEditor(await fs.readFile(target, 'utf8'));
+  if (!options) throw new Error(`${file} has no "# Query:" line.`);
+  const result = await findInFiles(config.repositoryRoot, options.ignored ? ['.git'] : ignoredDirsFor(config), options);
+  await fs.writeFile(target, searchEditorText(options, result), 'utf8');
+  res.json({ file, total: result.total });
 });
 app.post('/api/search/replace', async (req, res) => {
   const { replacement, files, approved: _approved, ...options } = searchOptions.extend({ replacement: z.string().max(5000), files: z.array(z.string().max(400)).max(5000).optional(), approved: z.literal(true) }).parse(req.body);

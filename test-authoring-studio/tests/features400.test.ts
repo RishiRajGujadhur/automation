@@ -49,3 +49,17 @@ describe('206 / 340 / 338 search', () => {
     await fsp.rm(dir, { recursive: true, force: true });
   });
 });
+import { searchEditorText, parseSearchEditor, searchEditorName } from '../server/search';
+import { searchEditorLocation } from '../src/search/searchEditor';
+describe('203 / 204 search editor', () => {
+  it('writes, reads back and locates', () => {
+    const o = { query: 'foo', regex: true, matchCase: true, include: '*.cs' };
+    const text = searchEditorText(o, { files: [{ file: 'Steps/A.cs', matches: [{ line: 3, column: 1, length: 3, preview: 'foo();' }] }], total: 1, truncated: false });
+    expect(text).toContain('# Query: foo\n# Flags: CaseSensitive RegExp\n# Including: *.cs\n\n1 result - 1 file\n\nSteps/A.cs:\n  3: foo();');
+    expect(parseSearchEditor(text)).toMatchObject({ query: 'foo', regex: true, matchCase: true, wholeWord: false, include: '*.cs' });
+    const lines = text.split('\n');
+    expect(searchEditorLocation(lines, lines.indexOf('  3: foo();'))).toEqual({ file: 'Steps/A.cs', line: 3 });
+    expect(searchEditorLocation(lines, 0)).toBeNull();
+    expect(searchEditorName('a b/c?')).toBe('a-b-c.code-search');
+  });
+});

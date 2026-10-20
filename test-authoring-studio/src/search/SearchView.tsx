@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { ChevronDown, ChevronRight, CaseSensitive, WholeWord, Regex, Replace, MoreHorizontal, RefreshCw, X, ChevronsDownUp, ChevronsUpDown, ClipboardCopy, BookOpen, FolderX } from 'lucide-react';
+import { ChevronDown, ChevronRight, CaseSensitive, WholeWord, Regex, Replace, MoreHorizontal, RefreshCw, X, ChevronsDownUp, ChevronsUpDown, ClipboardCopy, BookOpen, FolderX, FileText, History } from 'lucide-react';
 import { api } from '../api';
 import { activeEditor } from '../editor/activeEditor';
 import { useTabs } from '../files/tabs';
@@ -8,6 +8,8 @@ import { featureOn } from '../features';
 import { useConfirm } from '../radix2';
 import { fileType } from '../files/fileTypes';
 import { FILES_CHANGED_EVENT } from '../editor/events';
+import { Dropdown } from '../radix';
+import { isBrowser } from '../files/provider';
 
 type Match = { line: number; column: number; length: number; preview: string };
 type Result = { files: { file: string; matches: Match[] }[]; total: number; truncated: boolean };
@@ -41,6 +43,8 @@ export default function SearchView({ initialReplace, initialInclude, initialQuer
   const [regex, setRegex] = useState(!!last.regex);
   // Preserve Case (VS Code's AB in the replace box) and "Use Exclude Settings and Ignore Files" (off: bin, obj… too).
   const [keepCase, setKeepCase] = useState(false);
+  // Saved search editors (.tas/searches/*.code-search), newest first.
+  const [saved, setSaved] = useState<{ file: string; query: string }[]>([]);
   const [useIgnores, setUseIgnores] = useState(true);
   // Search Only in Open Editors (VS Code's book toggle; Visual Studio's 'All open documents' scope).
   const [openOnly, setOpenOnly] = useState(false);
@@ -49,6 +53,7 @@ export default function SearchView({ initialReplace, initialInclude, initialQuer
   const [result, setResult] = useState<Result>();
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
+  useEffect(() => { if (featureOn('search-editor') && !isBrowser()) api<{ file: string; query: string }[]>('/search/editors').then(setSaved, () => {}); }, [result]);
   const [closed, setClosed] = useState<Set<string>>(new Set());
   const input = useRef<HTMLInputElement>(null);
   // Search history (VS Code: ↑ / ↓ in the search box): the last 20 searches that found something.
@@ -104,6 +109,8 @@ export default function SearchView({ initialReplace, initialInclude, initialQuer
           <button className="icon-button" aria-label="Refresh search" title="Refresh" onClick={search}><RefreshCw size={14} className={busy ? 'spin' : ''} /></button>
           {featureOn('search-collapse') && result && result.files.length > 0 && <button className="icon-button" aria-label={closed.size === result.files.length ? 'Expand All' : 'Collapse All'} title={closed.size === result.files.length ? 'Expand All' : 'Collapse All'} onClick={() => setClosed(closed.size === result.files.length ? new Set() : new Set(result.files.map((f) => f.file)))}>{closed.size === result.files.length ? <ChevronsUpDown size={14} /> : <ChevronsDownUp size={14} />}</button>}
           {featureOn('search-copy') && result && result.total > 0 && <button className="icon-button" aria-label="Copy All Results" title="Copy All (file:line: text)" onClick={() => void copyText(result.files.map((f) => [f.file, ...f.matches.map((m) => `  ${m.line}: ${m.preview.trim()}`)].join('\n')).join('\n\n')).then((ok) => onNotice(ok ? `Copied ${result.total} result${result.total === 1 ? '' : 's'}.` : 'Clipboard unavailable.'))}><ClipboardCopy size={14} /></button>}
+          {featureOn('search-editor') && !isBrowser() && query && <button className="icon-button" aria-label="Open in Editor" title="Open in Editor (search editor: results as a document, saved under .tas/searches)" onClick={() => void api<{ file: string }>('/search/editor', options).then((r) => onOpen(r.file, 1, 1), (e) => onNotice((e as Error).message))}><FileText size={14} /></button>}
+          {featureOn('search-editor') && !isBrowser() && <Dropdown label="Saved search editors" align="end" trigger={<button className="icon-button" aria-label="Saved search editors" title="Saved search editors (run again when opened)"><History size={14} /></button>} entries={saved.length ? saved.map((x) => ({ label: x.query, onSelect: () => void api<{ file: string }>('/search/editor/rerun', { file: x.file }).then((r) => onOpen(r.file, 1, 1), (e) => onNotice((e as Error).message)) })) : [{ label: 'No saved search editors yet', disabled: true, onSelect: () => {} }]} />}
           <button className="icon-button" aria-label="Clear search results" title="Clear" onClick={() => { setQuery(''); setReplace(''); setResult(undefined); }}><X size={14} /></button>
         </div>
       </div>

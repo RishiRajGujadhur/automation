@@ -315,3 +315,25 @@ test('338 Search within ignored files', async ({ page }) => {
   await view.getByLabel('Search in files').press('Enter');
   await expect(view.getByRole('status')).toContainText('1 result in 1 file');
 });
+
+test('203 Search result editor; 204 saved search editors run again', async ({ page }) => {
+  await fs.writeFile(path.join(temp, 'Steps/Notes.cs'), '// alpha\n// beta\n// alpha again\n');
+  await open(page);
+  const view = await findInFiles(page, 'alpha');
+  await expect(view.getByRole('status')).toContainText('2 results');
+  await view.getByRole('button', { name: 'Open in Editor' }).click();
+  const editor = page.getByLabel('Source of .tas/searches/alpha.code-search');
+  await expect(editor).toContainText('# Query: alpha');
+  await expect(editor).toContainText('2 results - 1 file');
+  await expect(editor).toContainText('3: // alpha again');
+  // Double-click a result: the file opens there.
+  await editor.locator('.cm-line', { hasText: '3: // alpha again' }).dblclick();
+  await expect(page.locator('.editor-tab-label[aria-current="true"]')).toHaveAttribute('title', 'Steps/Notes.cs');
+  await expect.poll(() => page.evaluate(() => { const v = (window as unknown as { __activeEditor: () => { view: { state: { doc: { lineAt(p: number): { number: number } }; selection: { main: { head: number } } } } } }).__activeEditor().view; return v.state.doc.lineAt(v.state.selection.main.head).number; })).toBe(3);
+  // Saved: reopened from the Search view, it runs again.
+  await fs.appendFile(path.join(temp, 'Steps/Notes.cs'), '// alpha three\n');
+  await page.keyboard.press('Control+Shift+F');
+  await view.getByRole('button', { name: 'Saved search editors' }).click();
+  await page.getByRole('menuitem', { name: 'alpha' }).click();
+  await expect.poll(() => fs.readFile(path.join(temp, '.tas/searches/alpha.code-search'), 'utf8')).toContain('3 results - 1 file');
+});

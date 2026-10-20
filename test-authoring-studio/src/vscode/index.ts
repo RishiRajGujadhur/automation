@@ -14,4 +14,5 @@ import './scrolling';
 import './folding';
 import './brackets';
 import './workbenchTabs';
+import '../search/searchEditor';
 export { SETTINGS } from './settings';
