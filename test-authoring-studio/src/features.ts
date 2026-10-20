@@ -226,6 +226,7 @@ export const FEATURES: Feature[] = [
   { id: 'git-copy-message', label: 'Git Log: Copy Commit Message', group: 'Git', essential: true, vs: 'Git History ▸ Copy Commit Message', description: 'Copies the selected commit\'s message.' },
   { id: 'git-log-filters', label: 'Git Log: filter syntax', group: 'Git', essential: true, vs: 'Git History ▸ filters', description: 'author:, branch:, hash: terms, "quoted phrases" and -exclusions in the Git Log filter.' },
   { id: 'git-log-current', label: 'Git Log: Current Branch Only', group: 'Git', essential: true, vs: 'Git History ▸ Branch filter', description: 'Shows only the current branch\'s commits instead of every branch.' },
+  { id: 'feature-stats', label: 'Feature statistics (status bar)', group: 'Gherkin', essential: true, description: 'The number of scenarios and steps of the feature file in the status bar.' },
 ];
 export const GROUPS: FeatureGroup[] = ['Editing', 'Navigation', 'Code intelligence', 'Tool windows', 'Files', 'Git', 'Gherkin', 'View', 'Debugging', 'Help and productivity'];
 

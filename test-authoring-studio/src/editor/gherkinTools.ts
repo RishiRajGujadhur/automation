@@ -414,3 +414,17 @@ export function tableCsv(state: EditorState) {
   const cell = (c: string) => { const v = c.replace(/\\\|/g, '|'); return /[",\n]/.test(v) ? `"${v.replace(/"/g, '""')}"` : v; };
   return t.rows.map((r) => r.map(cell).join(',')).join('\n');
 }
+
+/** Feature statistics (status bar): scenarios (an outline counts its example rows too) and steps. */
+export function featureStats(text: string) {
+  let scenarios = 0, steps = 0, examples = 0, inExamples = false, header = false;
+  for (const line of text.split(/\r?\n/)) {
+    const t = line.trim();
+    if (SCENARIO.test(line)) { scenarios++; inExamples = false; }
+    else if (/^(Examples|Scenarios):/.test(t)) { inExamples = true; header = true; }
+    else if (STEP.test(line)) steps++;
+    else if (inExamples && t.startsWith('|')) { if (header) header = false; else examples++; }
+    else if (t && !t.startsWith('#') && !t.startsWith('@')) inExamples = false;
+  }
+  return { scenarios, steps, examples };
+}

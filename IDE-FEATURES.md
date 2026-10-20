@@ -136,6 +136,7 @@ has it on by default, so the desktop app starts with it on. The others start off
 | X126 | Git Log: Copy Commit Message | Rider | yes | ✅ 2026-10-20 |
 | X127 | Git Log: filter syntax | Rider | yes | ✅ 2026-10-20 |
 | X128 | Git Log: Current Branch Only | Rider | yes | ✅ 2026-10-20 |
+| X129 | Feature statistics (status bar) | Rider | yes | ✅ 2026-10-20 |
 
 ## Progress log
 - 2026-10-20 X1: Sort Lines: the selected lines (or the whole file) in natural, case-insensitive order, blank lines last. Third-batch plumbing: src/rider/more.ts, src/editor/textTools.ts, IDE-FEATURES.md.
@@ -266,3 +267,4 @@ has it on by default, so the desktop app starts with it on. The others start off
 - 2026-10-20 X126: Copy the commit message
 - 2026-10-20 X127: author:/branch:/hash:, quotes, exclusions
 - 2026-10-20 X128: HEAD-only log toggle
+- 2026-10-20 X129: Scenarios and steps of the feature

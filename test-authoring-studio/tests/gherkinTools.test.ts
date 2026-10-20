@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { EditorState, type TransactionSpec } from '@codemirror/state';
 import { EditorView } from '@codemirror/view';
-import { cycleStepKeyword, scenarioToOutline, tableInsertRow, tableAddColumn, tableDeleteColumn, tableSortByColumn, testFilter, selectScenario, renameTag, extractExamplesParameter, outlineToScenario, duplicateScenario, moveScenario, extractBackground, addExamplesTable, toggleTag, toggleScenarioComment, pasteAsTable, tableCsv } from '../src/editor/gherkinTools';
+import { cycleStepKeyword, scenarioToOutline, tableInsertRow, tableAddColumn, tableDeleteColumn, tableSortByColumn, testFilter, selectScenario, renameTag, extractExamplesParameter, outlineToScenario, duplicateScenario, moveScenario, extractBackground, addExamplesTable, toggleTag, toggleScenarioComment, pasteAsTable, tableCsv, featureStats } from '../src/editor/gherkinTools';
 
 /** Runs an editor command on `doc` with the selection between « and » (or a caret at ‸); with `caret`, the result marks the caret with ¦. */
 function run(doc: string, cmd: (v: EditorView) => boolean, caret = false) {
@@ -113,5 +113,8 @@ describe('Gherkin tools (IDE-FEATURES X49…)', () => {
     const q = '"';
     expect(tableCsv(state)).toBe(`name,note\nAda,${q}a, ${q}${q}quoted${q}${q}${q}\nBob,x | y`);
     expect(tableCsv(EditorState.create({ doc: 'Given x' }))).toBeUndefined();
+  });
+  it('X129 Feature statistics', () => {
+    expect(featureStats('Feature: F\n  Background:\n    Given a\n  Scenario: S\n    Given b\n    When c\n  Scenario Outline: O\n    Then <x>\n    Examples:\n      | x |\n      | 1 |\n      | 2 |\n')).toEqual({ scenarios: 2, steps: 4, examples: 2 });
   });
 });
