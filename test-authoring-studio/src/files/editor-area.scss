@@ -3750,3 +3750,8 @@ html[data-features-off~='inlay-hints'] .cm-inlay {
 .project-props .pp-evaluated { color: var(--accent, #9270dd); font-size: 11px; }
 .project-props .pp-head { display: flex; align-items: center; gap: 12px; }
 .project-props .pp-config { margin-left: auto; display: flex; gap: 6px; align-items: center; font-size: 12px; }
+.project-props .pp-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 2px; }
+.project-props .pp-list li { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 2px 4px; border-radius: 3px; }
+.project-props .pp-list li:hover { background: color-mix(in srgb, var(--accent, #9270dd) 8%, transparent); }
+.project-props .pp-add { display: flex; gap: 6px; align-items: center; }
+.project-props .pp-add input[name='ns'] { flex: 1; }

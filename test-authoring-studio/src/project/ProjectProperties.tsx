@@ -73,6 +73,24 @@ export default function ProjectProperties({ project, onNotice }: { project: stri
       ))}
     </>
   );
+  customPages.usings = () => {
+    const list = extra.usings ?? data?.usings ?? [];
+    const update = (next: Using[]) => setExtra((x) => ({ ...x, usings: next }));
+    return (
+      <>
+        <p className="subtle">Namespaces imported in every C# file of the project (<code>&lt;Using Include=… /&gt;</code>).</p>
+        <ul className="pp-list" aria-label="Global usings">
+          {list.map((u, i) => <li key={`${u.include}-${i}`}><code>{u.static ? 'static ' : ''}{u.alias ? `${u.alias} = ` : ''}{u.include}</code><button className="icon-button" aria-label={`Remove using ${u.include}`} onClick={() => update(list.filter((_, j) => j !== i))}>×</button></li>)}
+          {!list.length && <li className="subtle">None.</li>}
+        </ul>
+        <form className="pp-add" onSubmit={(e) => { e.preventDefault(); const f = new FormData(e.currentTarget); const include = String(f.get('ns') ?? '').trim(); if (!include || list.some((u) => u.include === include)) return; update([...list, { include, ...(f.get('static') ? { static: true } : {}) }]); e.currentTarget.reset(); }}>
+          <input name="ns" aria-label="Namespace to add" placeholder="NUnit.Framework" spellCheck={false} />
+          <label><input type="checkbox" name="static" /> static</label>
+          <button className="button" type="submit">Add</button>
+        </form>
+      </>
+    );
+  };
   // custom pages
 
   if (!pages.length) return <p className="subtle">Turn on Project Properties in Settings ▸ Features.</p>;
