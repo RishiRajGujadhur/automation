@@ -541,6 +541,7 @@ export const FEATURES: Feature[] = [
   { id: 'bp-hit-counts', label: 'Breakpoints window: hit counts', group: 'Debugging', essential: true, vs: 'Breakpoints window ▸ Hit Count', description: 'The Breakpoints window shows how many times each breakpoint was hit in the session.' },
   { id: 'bp-disable-once', label: 'Disable breakpoint once hit', group: 'Debugging', essential: true, vs: 'Breakpoint Settings ▸ Disable once hit', description: 'A breakpoint can disable itself after its first hit (it stays listed, unchecked).' },
   { id: 'bp-dependent', label: 'Dependent breakpoints', group: 'Debugging', essential: true, vs: 'Breakpoint Settings ▸ Only enable when the following breakpoint is hit', description: 'A breakpoint can wait until another one is hit ("Only enable after"), then stays enabled for the rest of the session.' },
+  { id: 'bp-when-changed', label: 'Conditional breakpoints: when changed', group: 'Debugging', essential: true, vs: 'Breakpoint conditions ▸ When changed', description: 'A breakpoint condition can be "when changed": it stops only when the expression\'s value differs from the previous hit.' },
 ];
 export const GROUPS: FeatureGroup[] = ['Editing', 'Navigation', 'Code intelligence', 'Tool windows', 'Files', 'Git', 'Gherkin', 'View', 'Debugging', 'Help and productivity'];
 

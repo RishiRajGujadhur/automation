@@ -11,7 +11,7 @@ const localDebugger = path.resolve(projectRoot, '../.tools/netcoredbg/netcoredbg
 export const netcoredbg = process.env.STUDIO_NETCOREDBG || (existsSync(localDebugger) ? localDebugger : 'netcoredbg');
 
 /** A breakpoint as Visual Studio has it: condition, hit count ("5", ">= 5", "% 3"), log message (tracepoint), enabled. */
-export type BreakpointSpec = { line: number; condition?: string; hitCondition?: string; logMessage?: string; enabled?: boolean };
+export type BreakpointSpec = { line: number; condition?: string; hitCondition?: string; logMessage?: string; enabled?: boolean; whenChanged?: boolean };
 /** Whether the n-th hit satisfies a hit condition: "5" / "= 5" (equal), ">= 5", "% 3" (every third). */
 export function hitMatches(hits: number, condition?: string) {
   const c = (condition ?? '').trim();
@@ -60,6 +60,8 @@ export class Debugger extends EventEmitter {
   private generation = 0;
   /** Hits per breakpoint (file:line) in the current session, for hit conditions. */
   private hits = new Map<string, number>();
+  /** Last value of each "when changed" condition (file:line). */
+  private changed = new Map<string, string>();
   /** Run to Cursor: a one-shot breakpoint, removed at the next stop (netcoredbg has no native "run to"). */
   private runTo?: { file: string; line: number };
   /** Exception Settings: break when user code leaves an exception unhandled (default), on every throw, or never. */
@@ -94,7 +96,7 @@ export class Debugger extends EventEmitter {
     const active = all.filter((b) => b.enabled !== false);
     try {
       const oneShot = this.runTo?.file === file && !active.some((b) => b.line === this.runTo!.line) ? [{ line: this.runTo.line }] : [];
-      const r = await this.dap!.request<{ breakpoints: { line?: number; verified: boolean }[] }>('setBreakpoints', { source: { path: path.resolve(this.root, file) }, breakpoints: [...active.map((b) => ({ line: b.line, ...(b.condition?.trim() ? { condition: b.condition.trim() } : {}) })), ...oneShot] });
+      const r = await this.dap!.request<{ breakpoints: { line?: number; verified: boolean }[] }>('setBreakpoints', { source: { path: path.resolve(this.root, file) }, breakpoints: [...active.map((b) => ({ line: b.line, ...(b.condition?.trim() && !b.whenChanged ? { condition: b.condition.trim() } : {}) })), ...oneShot] });
       // netcoredbg reports pending breakpoints as unverified until the module loads; they still bind.
       const marks = all.map((b) => { const i = active.indexOf(b); return { ...b, verified: i >= 0 && !!r.breakpoints[i]?.verified }; });
       if (this.state.breakpoints[file]) this.update({ breakpoints: { ...this.state.breakpoints, [file]: marks } });
@@ -109,6 +111,7 @@ export class Debugger extends EventEmitter {
     const generation = ++this.generation;
     this.root = root;
     this.hits.clear();
+    this.changed.clear();
     this.update({ hits: {} });
     this.update({ status: 'building', target: { project, filter: filter ?? '', label }, reason: undefined, exception: undefined, error: undefined, threadId: undefined, frames: [], output: `Building ${project}…\n` });
     const fail = (e: unknown) => {
@@ -194,6 +197,13 @@ export class Debugger extends EventEmitter {
     const hits = (this.hits.get(key) ?? 0) + 1;
     this.hits.set(key, hits);
     this.update({ hits: Object.fromEntries(this.hits) });
+    // "When changed" conditions (Visual Studio): break only when the expression's value differs from its last hit.
+    if (bp.whenChanged && bp.condition?.trim()) {
+      const value = await this.dap!.request<{ result: string }>('evaluate', { expression: bp.condition.trim(), frameId: top!.id, context: 'watch' }, 10_000).then((r) => r.result, (e) => `<${(e as Error).message}>`);
+      const last = this.changed.get(key);
+      this.changed.set(key, value);
+      if (last === undefined || last === value) { await this.dap!.request('continue', { threadId }).catch(() => {}); return true; }
+    }
     if (!bp.hitCondition?.trim() && !bp.logMessage?.trim()) return false;
     if (!hitMatches(hits, bp.hitCondition)) { await this.dap!.request('continue', { threadId }).catch(() => {}); return true; }
     if (bp.logMessage?.trim()) {

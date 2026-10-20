@@ -1345,7 +1345,7 @@ app.get('/api/debug/events', (req, res) => {
   req.on('close', () => { clearInterval(ping); debug.off('state', send); });
 });
 app.post('/api/debug/breakpoints', async (req, res) => {
-  const spec = z.object({ line: z.number().int().min(1), condition: z.string().max(500).optional(), hitCondition: z.string().max(40).optional(), logMessage: z.string().max(1000).optional(), enabled: z.boolean().optional() });
+  const spec = z.object({ line: z.number().int().min(1), condition: z.string().max(500).optional(), hitCondition: z.string().max(40).optional(), logMessage: z.string().max(1000).optional(), enabled: z.boolean().optional(), whenChanged: z.boolean().optional() });
   // `lines` is the plain form (older clients); `breakpoints` carries conditions, hit counts, log messages, enabled.
   const { file, lines, breakpoints } = z.object({ file: repoFile, lines: z.array(z.number().int().min(1)).max(500).optional(), breakpoints: z.array(spec).max(500).optional() }).parse(req.body);
   await confined(config.repositoryRoot, file);

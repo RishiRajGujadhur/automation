@@ -249,7 +249,7 @@ export default function DebugPanel({ onOpen, onNotice, onClose, editingRequest =
             <ul className="dbg-list" aria-label="Breakpoints">
               {shownBps.map((b) => {
                 const key = `${b.file}:${b.line}`;
-                const detail = [b.dependsOn && `after ${b.dependsOn.split('/').pop()} is hit`, b.condition?.trim() && `when ${b.condition.trim()}`, b.hitCondition?.trim() && `hit count ${b.hitCondition.trim()}`, b.logMessage?.trim() && `log "${b.logMessage.trim()}"`].filter(Boolean).join(' · ');
+                const detail = [b.dependsOn && `after ${b.dependsOn.split('/').pop()} is hit`, b.condition?.trim() && (b.whenChanged ? `when ${b.condition.trim()} changes` : `when ${b.condition.trim()}`), b.hitCondition?.trim() && `hit count ${b.hitCondition.trim()}`, b.logMessage?.trim() && `log "${b.logMessage.trim()}"`].filter(Boolean).join(' · ');
                 return (
                   <li key={key} className={`dbg-bp ${b.enabled === false ? 'disabled' : ''}`}>
                     <div className="dbg-bp-row">
@@ -262,7 +262,8 @@ export default function DebugPanel({ onOpen, onNotice, onClose, editingRequest =
                       <IconButton label={`Delete breakpoint ${key}`} onClick={() => setBreakpoints(b.file, breakpointsOf(b.file).filter((l) => l !== b.line))}><X size={12} /></IconButton>
                     </div>
                     {editing === key && (
-                      <form className="bp-settings" aria-label={`Breakpoint settings for ${key}`} onSubmit={(e) => { e.preventDefault(); const f = new FormData(e.currentTarget); updateBreakpoint(b.file, b.line, { condition: String(f.get('condition') ?? ''), hitCondition: String(f.get('hit') ?? ''), logMessage: String(f.get('log') ?? ''), ...(featureOn('bp-dependent') ? (() => { const d = String(f.get('dependsOn') ?? ''); return { dependsOn: d || undefined, ...(d ? { enabled: false } : {}) }; })() : {}), ...(featureOn('bp-disable-once') ? { disableOnceHit: f.get('disableOnce') === 'on' } : {}), ...(featureOn('bp-labels') ? { labels: String(f.get('labels') ?? '').split(',').map((s) => s.trim()).filter(Boolean) } : {}) }); setEditing(null); }}>
+                      <form className="bp-settings" aria-label={`Breakpoint settings for ${key}`} onSubmit={(e) => { e.preventDefault(); const f = new FormData(e.currentTarget); updateBreakpoint(b.file, b.line, { condition: String(f.get('condition') ?? ''), hitCondition: String(f.get('hit') ?? ''), logMessage: String(f.get('log') ?? ''), ...(featureOn('bp-when-changed') ? { whenChanged: f.get('mode') === 'changed' } : {}), ...(featureOn('bp-dependent') ? (() => { const d = String(f.get('dependsOn') ?? ''); return { dependsOn: d || undefined, ...(d ? { enabled: false } : {}) }; })() : {}), ...(featureOn('bp-disable-once') ? { disableOnceHit: f.get('disableOnce') === 'on' } : {}), ...(featureOn('bp-labels') ? { labels: String(f.get('labels') ?? '').split(',').map((s) => s.trim()).filter(Boolean) } : {}) }); setEditing(null); }}>
+                        {featureOn('bp-when-changed') && <label>Condition is <select name="mode" aria-label="Condition mode" defaultValue={b.whenChanged ? 'changed' : 'true'}><option value="true">true</option><option value="changed">when changed</option></select></label>}
                         <label>Condition <input name="condition" defaultValue={b.condition ?? ''} placeholder="C# expression, e.g. number > 50" autoFocus /></label>
                         <label>Hit count <input name="hit" defaultValue={b.hitCondition ?? ''} placeholder="5, >= 5 or % 5" /></label>
                         <label>Log message <input name="log" defaultValue={b.logMessage ?? ''} placeholder="Value is {number} (continues without breaking)" /></label>

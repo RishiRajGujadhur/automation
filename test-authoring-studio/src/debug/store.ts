@@ -3,7 +3,7 @@ import { useSyncExternalStore } from 'react';
 import { api } from '../api';
 
 /** Breakpoint settings (Visual Studio's Breakpoint Settings): condition, hit count, log message (tracepoint), enabled. */
-export type BreakpointSpec = { line: number; condition?: string; hitCondition?: string; logMessage?: string; enabled?: boolean; temporary?: boolean; labels?: string[]; disableOnceHit?: boolean; dependsOn?: string };
+export type BreakpointSpec = { line: number; condition?: string; hitCondition?: string; logMessage?: string; enabled?: boolean; temporary?: boolean; labels?: string[]; disableOnceHit?: boolean; dependsOn?: string; whenChanged?: boolean };
 export type DebugFrame = { id: number; name: string; file?: string; line: number; column: number; external: boolean };
 export type DebugStatus = 'idle' | 'building' | 'starting' | 'running' | 'paused' | 'ended';
 export type DebugState = {

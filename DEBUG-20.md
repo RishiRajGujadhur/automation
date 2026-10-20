@@ -11,6 +11,7 @@ a Settings ▸ Features switch and tests that drive a real debugging session of 
 | DB3 | Breakpoints window: hit counts | VS 2026 | yes | ✅ 2026-10-20 |
 | DB4 | Disable breakpoint once hit | VS 2026 | yes | ✅ 2026-10-20 |
 | DB5 | Dependent breakpoints | VS 2026 | yes | ✅ 2026-10-20 |
+| DB6 | Conditional breakpoints: when changed | VS 2026 | yes | ✅ 2026-10-20 |
 
 ## Progress log
 - 2026-10-20 DB1: Filters breakpoints by file, line, condition, log message or label.
@@ -18,3 +19,4 @@ a Settings ▸ Features switch and tests that drive a real debugging session of 
 - 2026-10-20 DB3: How many times each breakpoint was hit in the session.
 - 2026-10-20 DB4: The breakpoint unchecks itself after its first hit.
 - 2026-10-20 DB5: Only enabled after another breakpoint is hit; re-armed for the next session.
+- 2026-10-20 DB6: Stops only when the condition's value differs from the previous hit.
