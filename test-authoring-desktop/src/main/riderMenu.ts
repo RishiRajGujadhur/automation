@@ -131,6 +131,7 @@ const ROWS: Record<'edit' | 'view' | 'navigate' | 'code' | 'tools' | 'help', Row
     ['Next Problem in File', 'next-problem'],
     ['Previous Problem in File', 'previous-problem'],
     ['Go to Test / Test Subject', 'goto-test'],
+    ['Clear Recent Files', 'clear-recent'],
   ],
   code: [
     ['Insert Live Template…', 'live-template', 'CmdOrCtrl+J'],

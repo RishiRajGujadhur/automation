@@ -41,6 +41,8 @@ function move(step: number) {
 export const back = () => move(-1);
 export const forward = () => move(1);
 export const recentFiles = () => recent;
+/** Clear Recent Files (Visual Studio's File ▸ Recent Files ▸ clear, Rider's Clear Recent Files). */
+export function clearRecent() { recent = []; stack = stack.slice(index >= 0 ? index : 0, index + 1); index = stack.length - 1; emit(); }
 /** Recent Locations: newest first, one per file and line. */
 export const recentLocations = () => {
   const seen = new Set<string>();
