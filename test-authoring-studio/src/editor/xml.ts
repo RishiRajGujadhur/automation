@@ -3,7 +3,9 @@ import { linter, lintGutter, type Diagnostic } from '@codemirror/lint';
 import type { Text } from '@codemirror/state';
 import type { Extension } from '@codemirror/state';
 import { msbuildElements } from './msbuildSchema';
-import { autocompletion } from '@codemirror/autocomplete';
+import { autocompletion, type CompletionContext, type CompletionResult } from '@codemirror/autocomplete';
+import { PAGES } from '../project/pages';
+import { featureOn } from '../features';
 
 const SELECTOR_TYPES = /^(testid|text|css|xpath|ariarole\.(textbox|combobox|button|link|checkbox|radio|option|tab|menuitem|heading))$/i;
 
@@ -84,7 +86,18 @@ export const xmlLinter = (dictionary = true) =>
     return syntax.length || !dictionary ? syntax : dictionaryDiagnostics(src, view.state.doc);
   }, { delay: 250 });
 
+/** Values of MSBuild properties in project files (C18): the options of the Project Properties pages, as completions inside <Property>…</Property>. */
+const PROPERTY_VALUES: Record<string, string[]> = Object.fromEntries(PAGES.flatMap((p) => p.fields).filter((f) => f.kind !== 'text').map((f) => [f.name, f.kind === 'bool' ? [f.on ?? 'true', f.off ?? 'false'] : f.options ?? []]));
+export function msbuildValues(ctx: CompletionContext): CompletionResult | null {
+  if (!featureOn('msbuild-values')) return null;
+  const line = ctx.state.doc.lineAt(ctx.pos);
+  const m = /<([A-Za-z_][\w.-]*)>([^<]*)$/.exec(line.text.slice(0, ctx.pos - line.from));
+  const values = m && PROPERTY_VALUES[m[1]];
+  if (!values?.length || (!ctx.explicit && m![2] === '' && !ctx.matchBefore(/>$/))) return null;
+  return { from: ctx.pos - m![2].length, options: values.map((v) => ({ label: v, type: 'enum', detail: m![1] })), validFor: /^[\w.;-]*$/ };
+}
 export function xmlExtensions(dictionary = true, msbuild = false): Extension[] {
   // Project files get element / attribute IntelliSense from a small MSBuild schema.
-  return [...(msbuild ? [xmlLanguage({ elements: msbuildElements }), autocompletion({ activateOnTyping: true })] : [xmlLanguage()]), xmlLinter(dictionary), lintGutter()];
+  const lang = msbuild ? xmlLanguage({ elements: msbuildElements }) : xmlLanguage();
+  return [...(msbuild ? [lang, lang.language.data.of({ autocomplete: msbuildValues }), autocompletion({ activateOnTyping: true })] : [lang]), xmlLinter(dictionary), lintGutter()];
 }
