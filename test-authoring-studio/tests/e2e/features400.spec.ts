@@ -388,3 +388,16 @@ test('177 Custom folding patterns', async ({ page }) => {
   await expect(page.locator('.cm-foldPlaceholder')).toHaveCount(2);
   await expect(page.locator('.cm-line', { hasText: 'public class C' })).toHaveCount(0);
 });
+
+test('175 Linked editing (XML tags)', async ({ page }) => {
+  await fs.writeFile(path.join(temp, 'Selectors/linked.xml'), '<root>\n  <item>x</item>\n</root>\n');
+  expect((await page.request.post('/api/workspace', { data: { repositoryRoot: temp, targetProject: '.' } })).ok()).toBe(true);
+  await open(page, 'Selectors/linked.xml', { 'editor.linkedEditing': true });
+  await caretAt(page, 'item>x', 4);
+  await page.keyboard.type('s');
+  await expect.poll(() => docText(page)).toContain('<items>x</items>');
+  // Renaming the closing tag renames the opening one.
+  await caretAt(page, '/items>', 6);
+  await page.keyboard.press('Backspace');
+  await expect.poll(() => docText(page)).toContain('<item>x</item>');
+});

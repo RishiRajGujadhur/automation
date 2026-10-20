@@ -204,7 +204,7 @@ Legend: `[x]` done · `[ ]` to do.
 - [x] 172. Postfix completion templates
 - [x] 173. Custom code snippets — Save as Live Template
 - [ ] 174. Snippet placeholder transformations
-- [ ] 175. Linked editing
+- [x] 175. Linked editing — editor.linkedEditing: XML / HTML / project files rename the matching tag as you type (2026-10-21)
 - [x] 176. Code folding regions — `#region` folding
 - [x] 177. Custom folding patterns — editor.foldingMarkers.start / end: // region … // endregion, // <editor-fold> … // </editor-fold> (2026-10-21)
 - [x] 178. Sticky scroll
@@ -361,3 +361,4 @@ Legend: `[x]` done · `[ ]` to do.
 - 2026-10-21 207: Look-alike characters in mixed words (Cyrillic а in admin, typographic quotes) and invisible characters get a box with an explanation; prose files skip look-alikes.
 - 2026-10-21 211: Bracket pairs over several lines get a vertical guide at the closing bracket's column, coloured by depth; the pair around the caret is brighter; 'active' shows only that one.
 - 2026-10-21 177: Comment-marked regions fold (nested too); the start and end patterns are settings.
+- 2026-10-21 175: Typing in an opening or closing tag name renames its partner (comments, CDATA and self-closing tags skipped).

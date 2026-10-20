@@ -95,3 +95,14 @@ describe('177 custom folding markers', () => {
     expect(regionEnd(lines, 7, s, e)).toBeNull();
   });
 });
+import { tagPairs } from '../src/vscode/linkedEditing';
+describe('175 linked editing', () => {
+  it('pairs tags, skipping comments and self-closing', () => {
+    const t = '<a><!-- <x> --><b/><c x="1">t</c></a>';
+    const { tags, partner } = tagPairs(t);
+    expect(tags.map((x) => x.name)).toEqual(['a', 'b', 'c', 'c', 'a']);
+    expect(partner.get(0)).toBe(4);
+    expect(partner.get(2)).toBe(3);
+    expect(partner.has(1)).toBe(false);
+  });
+});

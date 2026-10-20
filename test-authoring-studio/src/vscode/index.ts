@@ -10,6 +10,7 @@ import './rulers';
 import './unicode';
 import './bracketGuides';
 import './foldingMarkers';
+import './linkedEditing';
 import './lineHighlight';
 import './filesOnSave';
 import './suggestions';
