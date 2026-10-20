@@ -7,7 +7,8 @@ import path from 'node:path';
 test.use({ storageState: { cookies: [], origins: [] } });
 test.setTimeout(400_000);
 
-test('X102–X104 Next Error goes to the compiler error; Output Clear All and Word Wrap', async ({ page, request }) => {
+test('X102–X104 Next Error goes to the compiler error; Output Clear All and Word Wrap', async ({ page, request, context }) => {
+  await context.grantPermissions(['clipboard-read', 'clipboard-write']);
   const previous = (await (await request.get('/api/workspace')).json()).config;
   const root = await fs.mkdtemp(path.join(os.tmpdir(), 'studio-build-more-'));
   await fs.cp(path.resolve(import.meta.dirname, '../../samples/Calculator'), root, { recursive: true, filter: (s) => !/[\\/](bin|obj)$/.test(s) });
@@ -34,6 +35,9 @@ test('X102–X104 Next Error goes to the compiler error; Output Clear All and Wo
     await panel.getByRole('tab', { name: 'Output' }).click();
     const out = panel.getByLabel('Build output');
     await expect(out).toContainText('Build failed');
+    // QL96 Copy Output.
+    await panel.getByRole('button', { name: 'Copy Output' }).click();
+    await expect(page.getByText('Copied the build output.').first()).toBeVisible();
     await panel.getByRole('button', { name: 'Toggle Word Wrap' }).click();
     await expect(out).toHaveClass(/wrap/);
     await panel.getByRole('button', { name: 'Clear All' }).click();

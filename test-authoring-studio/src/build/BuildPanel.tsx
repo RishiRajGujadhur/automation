@@ -126,6 +126,7 @@ export default function BuildPanel({ onOpen, onNotice, onClose }: { onOpen: (fil
         <Tabs.Content value="output" className="debug-body">
           <div className="output-tools">
           {featureOn('output-find') && <label className="error-search output-find"><Search size={12} /><input aria-label="Find in Output" placeholder="Find in Output (matching lines)" value={outFind} onChange={(e) => setOutFind(e.target.value)} onKeyDown={(e) => { if (e.key === 'Escape' && outFind) { e.stopPropagation(); setOutFind(''); } }} />{outFind && <small>{outText.split('\n').filter((l) => l.toLowerCase().includes(outFind.toLowerCase())).length} lines</small>}</label>}
+          {featureOn('output-copy') && <button className="icon-button" aria-label="Copy Output" title="Copy All" disabled={!outText} onClick={() => void copyText(outText).then((ok) => onNotice(ok ? 'Copied the build output.' : 'Clipboard unavailable.'))}><Copy size={13} /></button>}
           {featureOn('output-clear') && <button className="icon-button" aria-label="Clear All" title="Clear All" disabled={!outText} onClick={() => setCleared(b.output.length)}><Eraser size={13} /></button>}
           {featureOn('output-wrap') && <button className={`icon-button ${outWrap ? 'pressed' : ''}`} aria-label="Toggle Word Wrap" aria-pressed={outWrap} title="Toggle Word Wrap" onClick={() => setOutWrap(!outWrap)}><WrapText size={13} /></button>}
           {/* output tools */}

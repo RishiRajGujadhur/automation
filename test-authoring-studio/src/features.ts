@@ -390,6 +390,7 @@ export const FEATURES: Feature[] = [
   { id: 'folder-count', label: 'Explorer: file count in folder tooltips', group: 'Files', essential: true, description: 'Hovering a folder shows how many files it holds.' },
   { id: 'tab-number-keys', label: 'Ctrl+1…9 go to a tab', group: 'Files', essential: true, description: 'Ctrl+1 to Ctrl+8 activate that editor tab; Ctrl+9 the last one.' },
   { id: 'tab-copy-full', label: 'Tab menu: Copy Full Path', group: 'Files', essential: true, description: 'The editor tab menu copies the file\'s absolute path.' },
+  { id: 'output-copy', label: 'Build Output: Copy All', group: 'Tool windows', essential: true, description: 'A button copies the whole build output.' },
 ];
 export const GROUPS: FeatureGroup[] = ['Editing', 'Navigation', 'Code intelligence', 'Tool windows', 'Files', 'Git', 'Gherkin', 'View', 'Debugging', 'Help and productivity'];
 

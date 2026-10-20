@@ -30,7 +30,7 @@ async function start(page: Page) {
   await expect.poll(async () => ((await (await page.request.get('/api/tests')).json()).tests ?? []).length, { timeout: 240_000, intervals: [3000] }).toBeGreaterThan(0);
 }
 
-test('X74 Run All Tests in File: every test of the active file', async ({ page }) => {
+test('X74 / QL99 / QL100 Run All Tests in File: every test of the active file; result message and status bar', async ({ page }) => {
   await start(page);
   await page.getByRole('navigation').getByRole('button', { name: 'CalculatorTests.cs', exact: true }).first().click();
   await expect(page.locator('.cm-line', { hasText: 'AddsTwoNumbers' }).first()).toBeVisible();
@@ -44,6 +44,10 @@ test('X74 Run All Tests in File: every test of the active file', async ({ page }
   expect(mine.length).toBeGreaterThan(0);
   expect((JSON.parse(runs[0]).ids as string[]).sort()).toEqual(mine);
   await expect.poll(() => status(page), { timeout: 240_000, intervals: [2000] }).toMatch(/done|failed/);
+  // QL99 the result message; QL100 the status bar result opens Test Explorer.
+  await expect(page.getByText(/^Tests (passed|failed)( in [\d.]+ s)?: \d+ passed, \d+ failed/).first()).toBeVisible({ timeout: 30_000 });
+  await page.getByRole('button', { name: /^Tests: \d+ passed, \d+ failed$/ }).click();
+  await expect(page.getByRole('region', { name: 'Test Explorer' })).toBeVisible();
 });
 
 test('X71 X72 X73 X75 Test Explorer: group by outcome, search filters, Copy, Collapse / Expand All', async ({ page, context }) => {

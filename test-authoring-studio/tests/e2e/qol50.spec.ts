@@ -659,3 +659,12 @@ test('QL94 / QL95 Ctrl+1…9 go to a tab; tab menu Copy Full Path', async ({ pag
   await page.getByRole('menuitem', { name: 'Copy Full Path' }).click();
   await expect.poll(() => page.evaluate(() => navigator.clipboard.readText())).toBe(path.join(root, 'Steps', 'AuthSteps.cs'));
 });
+
+test('QL97 Escape clears the Find in Files query', async ({ page }) => {
+  await openFeature(page);
+  await page.keyboard.press('Control+Shift+F');
+  const input = page.getByRole('region', { name: 'Search' }).getByLabel('Search in files');
+  await input.fill('anything');
+  await input.press('Escape');
+  await expect(input).toHaveValue('');
+});

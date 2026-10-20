@@ -32,6 +32,7 @@ test('breakpoint on a feature line, step into the C# step, watch, step out, call
     await page.keyboard.press('F5');
     const panel = page.getByRole('region', { name: 'Debugger' });
     await expect(panel.getByRole('status')).toHaveText(/Paused · breakpoint/, { timeout: 180_000 });
+    await expect(page).toHaveTitle(/Debugging \(paused\)/); // QL98
     await expect(page.locator('.gherkin-editor .cm-exec-line')).toHaveText(/When the two numbers are added/);
     await expect(panel).toBeInViewport();
     await page.screenshot({ path: 'test-results/debugger-feature-breakpoint.png' });
