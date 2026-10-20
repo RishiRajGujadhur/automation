@@ -248,6 +248,7 @@ export const FEATURES: Feature[] = [
   { id: 'add-scenario', label: 'Add Scenario', group: 'Gherkin', essential: true, description: 'Starts a new scenario after the one at the caret.', commands: ['add-scenario'] },
   { id: 'copy-scenario-md', label: 'Copy Scenario as Markdown', group: 'Gherkin', essential: true, description: 'Copies the scenario at the caret as Markdown (for reports and tickets).', commands: ['copy-scenario-md'] },
   { id: 'copy-problems', label: 'Copy Problems in File', group: 'Code intelligence', essential: true, vs: 'Error List ▸ Copy (current document)', description: 'Copies the errors and warnings of the active file (file:line:column: severity: message).', commands: ['copy-problems'] },
+  { id: 'full-screen', label: 'Full Screen', group: 'View', essential: true, vs: 'View ▸ Full Screen (Shift+Alt+Enter)', description: 'The whole window full screen (the desktop app has it in its View menu).', commands: ['full-screen'] },
 ];
 export const GROUPS: FeatureGroup[] = ['Editing', 'Navigation', 'Code intelligence', 'Tool windows', 'Files', 'Git', 'Gherkin', 'View', 'Debugging', 'Help and productivity'];
 

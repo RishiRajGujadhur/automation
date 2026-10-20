@@ -158,6 +158,7 @@ has it on by default, so the desktop app starts with it on. The others start off
 | X148 | Add Scenario | Rider | yes | ✅ 2026-10-20 |
 | X149 | Copy Scenario as Markdown | Rider | yes | ✅ 2026-10-20 |
 | X150 | Copy Problems in File | VS 2026 / Rider | yes | ✅ 2026-10-20 |
+| X151 | Full Screen | VS 2026 | yes | ✅ 2026-10-20 |
 
 ## Progress log
 - 2026-10-20 X1: Sort Lines: the selected lines (or the whole file) in natural, case-insensitive order, blank lines last. Third-batch plumbing: src/rider/more.ts, src/editor/textTools.ts, IDE-FEATURES.md.
@@ -310,3 +311,4 @@ has it on by default, so the desktop app starts with it on. The others start off
 - 2026-10-20 X148: New scenario after the caret's
 - 2026-10-20 X149: Scenario to Markdown
 - 2026-10-20 X150: Diagnostics as text
+- 2026-10-20 X151: Whole window full screen (web)
