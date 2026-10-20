@@ -208,7 +208,7 @@ Legend: `[x]` done · `[ ]` to do.
 - [x] 176. Code folding regions — `#region` folding
 - [x] 177. Custom folding patterns — editor.foldingMarkers.start / end: // region … // endregion, // <editor-fold> … // </editor-fold> (2026-10-21)
 - [x] 178. Sticky scroll
-- [ ] 179. Semantic syntax highlighting
+- [x] 179. Semantic syntax highlighting — C#: Roslyn classifications (types, interfaces, members, locals, parameters, static); editor.semanticHighlighting.enabled (2026-10-21)
 - [x] 180. Inlay hints
 - [x] 181. Parameter name hints
 - [x] 182. Type hints
@@ -386,3 +386,4 @@ Legend: `[x]` done · `[ ]` to do.
 - 2026-10-21 398: A locked side group takes no new editors; Open to the Side then opens in the main group.
 - 2026-10-21 387: A file opens in a floating window of its own (web pop-up, desktop window) with the same editor features and saving.
 - 2026-10-21 259: Inactive preprocessor branches are greyed with the symbols listed in their tooltip; the language service now compiles each project with DEBUG, TRACE, its framework symbols and DefineConstants.
+- 2026-10-21 179: Semantic highlighting from the language service colours types, interfaces, methods, properties, fields, locals and parameters; a setting turns it off.
