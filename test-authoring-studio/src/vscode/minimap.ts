@@ -145,6 +145,7 @@ class Minimap {
     }
     // Section headers (V3): a label in the minimap for // MARK: and #region lines.
     const headers = headerSources.flatMap((f) => f(view.state));
+    this.dom.dataset.sections = headers.map((h) => `${h.separator ? '— ' : ''}${h.label}`).join(' | ');
     if (headers.length) {
       const f = headerFont();
       ctx.globalAlpha = 1;

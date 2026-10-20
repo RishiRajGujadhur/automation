@@ -103,3 +103,21 @@ test('V2 Minimap: enabled, side, slider, scale, max column, click to scroll', as
   // Slider on mouse over only (the default).
   expect(await map2.locator('.cm-minimap-slider').evaluate((e) => getComputedStyle(e).opacity)).toBe('0');
 });
+
+test('V3 Minimap section headers: MARK comments and regions, custom regex, settings in Text Editor ▸ Minimap', async ({ page }) => {
+  await open(page, 'Steps/AuthSteps.cs', { 'editor.minimap.enabled': true });
+  await setDoc(page, `// MARK: - Setup\nclass A {\n#region Steps\n  int x; // TODO: tidy\n#endregion\n}\n`);
+  const map = view(page).locator('.cm-minimap');
+  await expect(map).toHaveAttribute('data-sections', '— Setup | Steps');
+  const d = await openSettings(page);
+  await d.getByRole('navigation', { name: 'Settings categories' }).getByRole('button', { name: 'Minimap', exact: true }).click();
+  await expect(d.getByRole('heading', { name: 'Minimap', level: 2 })).toBeVisible();
+  await d.locator('[data-setting-id="editor.minimap.showRegionSectionHeaders"]').getByRole('checkbox').click();
+  const regex = d.getByRole('textbox', { name: 'Mark Section Header Regex' });
+  await regex.fill(String.raw`\bTODO:\s*(?<label>.*)$`);
+  await regex.press('Enter');
+  await expect(d.locator('[data-setting-id="editor.minimap.markSectionHeaderRegex"]')).toHaveClass(/modified/);
+  await page.keyboard.press('Escape');
+  await page.keyboard.press('Escape');
+  await expect(view(page).locator('.cm-minimap')).toHaveAttribute('data-sections', 'tidy');
+});

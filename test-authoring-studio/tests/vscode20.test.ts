@@ -43,3 +43,21 @@ describe('V2 minimap layout', () => {
     expect(Math.round(end.sliderTop + end.sliderHeight)).toBe(500);
   });
 });
+import { findSectionHeaders } from '../src/vscode/sectionHeaders';
+describe('V3 minimap section headers', () => {
+  const regex = String.raw`\bMARK:\s*(?<separator>-?)\s*(?<label>.*)$`;
+  it('finds MARK comments and named regions', () => {
+    const lines = ['// MARK: - Setup', 'var x = 1; // MARK: Helpers', '#region Steps', '#endregion', 'var s = "MARK: not a comment";', '#region', '<!-- MARK: Fields -->', '# MARK: Gherkin'];
+    expect(findSectionHeaders(lines, { region: true, mark: true, regex })).toEqual([
+      { line: 1, label: 'Setup', separator: true },
+      { line: 2, label: 'Helpers', separator: false },
+      { line: 3, label: 'Steps', separator: false },
+      { line: 7, label: 'Fields', separator: false },
+      { line: 8, label: 'Gherkin', separator: false },
+    ]);
+    expect(findSectionHeaders(lines, { region: false, mark: true, regex }).map((h) => h.line)).toEqual([1, 2, 7, 8]);
+    expect(findSectionHeaders(lines, { region: true, mark: false, regex }).map((h) => h.line)).toEqual([3]);
+    expect(findSectionHeaders(['// TODO: x'], { region: true, mark: true, regex: String.raw`\bTODO:\s*(?<label>.*)` })).toEqual([{ line: 1, label: 'x', separator: false }]);
+    expect(findSectionHeaders(['// MARK: x'], { region: true, mark: true, regex: '(' })).toEqual([]);
+  });
+});
