@@ -248,6 +248,7 @@ const ROWS: Record<'edit' | 'view' | 'navigate' | 'code' | 'tools' | 'help', Row
       ['Expand Outline to Scenarios', 'expand-outline'],
       ['Wrap in Rule…', 'wrap-in-rule'],
       ['Set Language Header…', 'language-header'],
+      ['Copy Scenario Name', 'copy-scenario-name'],
     ] },
     ['Collapse Using Directives', 'fold-usings'],
     ['Sort JSON Keys', 'sort-json'],

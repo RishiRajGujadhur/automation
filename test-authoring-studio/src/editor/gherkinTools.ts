@@ -911,3 +911,9 @@ export function setLanguageHeader(text: string, lang: string) {
   if (i >= 0 && /^\s*#\s*language\s*:/.test(lines[i])) { if (lines[i].trim() === header) return null; lines[i] = header; return lines.join('\n'); }
   return `${header}\n${text}`;
 }
+
+/** Copy Scenario Name: the title of the scenario at the caret (for test filters, tickets). */
+export function scenarioName(state: EditorState) {
+  const b = scenarioBlock(state, state.doc.lineAt(state.selection.main.head).number);
+  return b ? state.doc.line(b.head).text.replace(/^\s*[^:]+:\s*/, '').trim() : null;
+}
