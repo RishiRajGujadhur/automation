@@ -25,7 +25,7 @@ import { renamePath } from '../files/provider';
 import { movedPath } from '../files/tabs';
 import { DEFAULT_TODO_TOKENS } from '../editor/todoHighlight';
 import { copyText as copyFilterText } from '../ui';
-import { cycleStepKeyword, scenarioToOutline, tableInsertRow, tableAddColumn, tableDeleteColumn, tableSortByColumn, testFilter, selectScenario, extractExamplesParameter, outlineToScenario, duplicateScenario, moveScenario, extractBackground, addExamplesTable, toggleTag, toggleScenarioComment, pasteAsTable, tableCsv, renameExamplesParameter, paramAt, removeUnusedColumns, inlineBackground, normalizeStepKeywords, addScenario, scenarioMarkdown, tableDuplicateRow, tableDeleteRow, tableMoveColumn, tableSelectColumn, tableTranspose, tableFillDown, tableClearColumn } from '../editor/gherkinTools';
+import { cycleStepKeyword, scenarioToOutline, tableInsertRow, tableAddColumn, tableDeleteColumn, tableSortByColumn, testFilter, selectScenario, extractExamplesParameter, outlineToScenario, duplicateScenario, moveScenario, extractBackground, addExamplesTable, toggleTag, toggleScenarioComment, pasteAsTable, tableCsv, renameExamplesParameter, paramAt, removeUnusedColumns, inlineBackground, normalizeStepKeywords, addScenario, scenarioMarkdown, tableDuplicateRow, tableDeleteRow, tableMoveColumn, tableSelectColumn, tableTranspose, tableFillDown, tableClearColumn, sortScenarios } from '../editor/gherkinTools';
 import { unsavedFiles } from '../editor/autosave';
 import { getTabs, closeTab } from '../files/tabs';
 import { reopenClosed } from '../files/tabs';
@@ -188,5 +188,6 @@ export function moreCommands(h: MoreHelpers): RiderCommand[] {
     { id: 'table-fill-down', label: 'Table: Fill Down', menu: 'Code', submenu: 'Gherkin', run: h.inEditor((v) => tableFillDown(v) || h.notice('Put the caret in a table cell below another row.')) },
     { id: 'table-clear-column', label: 'Table: Clear Column', menu: 'Code', submenu: 'Gherkin', run: h.inEditor((v) => tableClearColumn(v) || h.notice('Put the caret in a table with rows under its header.')) },
     { id: 'reset-features', label: 'Reset Feature Settings…', menu: 'Tools', run: () => { if (!window.confirm('Turn every feature back to the default set of this app? Your own switches are forgotten.')) return; resetFeatures(); h.notice('Feature settings are back to the defaults.'); } },
+    { id: 'sort-scenarios', label: 'Sort Scenarios by Name', menu: 'Code', submenu: 'Gherkin', run: h.inEditor((v) => sortScenarios(v) || h.notice('The scenarios are already in order (features with Rules are not sorted).')) },
   ];
 }

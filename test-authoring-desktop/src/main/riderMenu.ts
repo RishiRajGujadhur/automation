@@ -207,6 +207,7 @@ const ROWS: Record<'edit' | 'view' | 'navigate' | 'code' | 'tools' | 'help', Row
       ['Table: Transpose', 'table-transpose'],
       ['Table: Fill Down', 'table-fill-down'],
       ['Table: Clear Column', 'table-clear-column'],
+      ['Sort Scenarios by Name', 'sort-scenarios'],
     ] },
     ['Collapse Using Directives', 'fold-usings'],
     ['Sort JSON Keys', 'sort-json'],

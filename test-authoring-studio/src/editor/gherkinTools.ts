@@ -674,3 +674,25 @@ export function tableClearColumn(view: EditorView) {
   const rows = t.rows.map((r, i) => (i === 0 ? r : r.map((c, k) => (k === t.col ? '' : c))));
   return writeTable(view, t, rows, Math.max(1, t.row), t.col);
 }
+
+/** Sort Scenarios by Name: the scenarios (with their tags and Examples) in title order, the Background first. */
+export function sortScenarios(view: EditorView) {
+  const { state } = view;
+  const doc = state.doc;
+  if (/^\s*Rule:/m.test(doc.toString())) return false;
+  const blocks: { first: number; end: number; title: string }[] = [];
+  for (let n = 1; n <= doc.lines; n++) {
+    if (!SCENARIO.test(doc.line(n).text)) continue;
+    const b = scenarioBlock(state, n)!;
+    blocks.push({ first: b.first, end: b.end, title: doc.line(b.head).text.replace(/^\s*[^:]*:\s*/, '') });
+    n = b.end;
+  }
+  if (blocks.length < 2) return false;
+  const c = new Intl.Collator(undefined, { numeric: true, sensitivity: 'base' });
+  const sorted = [...blocks].sort((a, b) => c.compare(a.title, b.title));
+  if (sorted.every((b, i) => b === blocks[i])) return false;
+  const text = (b: { first: number; end: number }) => doc.sliceString(doc.line(b.first).from, doc.line(b.end).to);
+  const from = doc.line(blocks[0].first).from, to = doc.line(blocks[blocks.length - 1].end).to;
+  view.dispatch({ changes: { from, to, insert: sorted.map(text).join(state.lineBreak + state.lineBreak) }, userEvent: 'input' });
+  return true;
+}

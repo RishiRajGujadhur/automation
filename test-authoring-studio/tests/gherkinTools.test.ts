@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { EditorState, type TransactionSpec } from '@codemirror/state';
 import { EditorView } from '@codemirror/view';
-import { cycleStepKeyword, scenarioToOutline, tableInsertRow, tableAddColumn, tableDeleteColumn, tableSortByColumn, testFilter, selectScenario, renameTag, extractExamplesParameter, outlineToScenario, duplicateScenario, moveScenario, extractBackground, addExamplesTable, toggleTag, toggleScenarioComment, pasteAsTable, tableCsv, featureStats, renameExamplesParameter, removeUnusedColumns, inlineBackground, normalizeStepKeywords, addScenario, scenarioMarkdown, tableDuplicateRow, tableDeleteRow, tableMoveColumn, tableSelectColumn, tableTranspose, tableFillDown, tableClearColumn } from '../src/editor/gherkinTools';
+import { cycleStepKeyword, scenarioToOutline, tableInsertRow, tableAddColumn, tableDeleteColumn, tableSortByColumn, testFilter, selectScenario, renameTag, extractExamplesParameter, outlineToScenario, duplicateScenario, moveScenario, extractBackground, addExamplesTable, toggleTag, toggleScenarioComment, pasteAsTable, tableCsv, featureStats, renameExamplesParameter, removeUnusedColumns, inlineBackground, normalizeStepKeywords, addScenario, scenarioMarkdown, tableDuplicateRow, tableDeleteRow, tableMoveColumn, tableSelectColumn, tableTranspose, tableFillDown, tableClearColumn, sortScenarios } from '../src/editor/gherkinTools';
 
 /** Runs an editor command on `doc` with the selection between « and » (or a caret at ‸); with `caret`, the result marks the caret with ¦. */
 function run(doc: string, cmd: (v: EditorView) => boolean, caret = false) {
@@ -173,5 +173,10 @@ describe('Gherkin tools (IDE-FEATURES X49…)', () => {
   });
   it('X186 Table Clear Column', () => {
     expect(run('| a | b‸ |\n| 1 | 2 |\n| 3 | 4 |', tableClearColumn)).toBe('| a | b |\n| 1 |   |\n| 3 |   |');
+  });
+  it('X195 Sort Scenarios by Name', () => {
+    const doc = 'Feature: F\n  Background:\n    Given x\n\n  Scenario: Zebra\n    Given z\n\n  @t\n  Scenario: apple 10\n    Given a\n  Scenario: apple 2\n    Given b\n';
+    expect(run(doc, sortScenarios)).toBe('Feature: F\n  Background:\n    Given x\n\n  Scenario: apple 2\n    Given b\n\n  @t\n  Scenario: apple 10\n    Given a\n\n  Scenario: Zebra\n    Given z\n');
+    expect(run('Feature: F\n  Scenario: A\n  Scenario: B', sortScenarios)).toBe('Feature: F\n  Scenario: A\n  Scenario: B');
   });
 });

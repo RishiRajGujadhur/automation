@@ -202,6 +202,7 @@ has it on by default, so the desktop app starts with it on. The others start off
 | X192 | Reset Feature Settings | VS 2026 | yes | ✅ 2026-10-20 |
 | X193 | Status bar: Go to Line | VS Code | yes | ✅ 2026-10-20 |
 | X194 | Status bar: File Properties | VS 2026 | yes | ✅ 2026-10-20 |
+| X195 | Sort Scenarios by Name | Rider | no | ✅ 2026-10-20 |
 
 ## Progress log
 - 2026-10-20 X1: Sort Lines: the selected lines (or the whole file) in natural, case-insensitive order, blank lines last. Third-batch plumbing: src/rider/more.ts, src/editor/textTools.ts, IDE-FEATURES.md.
@@ -398,3 +399,4 @@ has it on by default, so the desktop app starts with it on. The others start off
 - 2026-10-20 X192: Back to the default feature set
 - 2026-10-20 X193: Click Ln/Col for Go to Line
 - 2026-10-20 X194: Click encoding for File Properties
+- 2026-10-20 X195: Scenario blocks in title order

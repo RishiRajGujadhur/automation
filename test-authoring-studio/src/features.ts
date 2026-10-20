@@ -292,6 +292,7 @@ export const FEATURES: Feature[] = [
   { id: 'reset-features', label: 'Reset Feature Settings', group: 'Help and productivity', essential: true, vs: 'Import and Export Settings ▸ Reset all settings', description: 'Turns Settings ▸ Features back to the app\'s default set.', commands: ['reset-features'] },
   { id: 'status-goto-line', label: 'Status bar: Go to Line', group: 'Navigation', essential: true, vs: 'Status bar ▸ Go to Line', description: 'A click on "Ln, Col" in the status bar opens Go to Line.' },
   { id: 'status-file-props', label: 'Status bar: File Properties', group: 'Files', essential: true, description: 'A click on the encoding in the status bar shows the file\'s properties.' },
+  { id: 'sort-scenarios', label: 'Sort Scenarios by Name', group: 'Gherkin', essential: false, description: 'Orders the scenarios of a feature by title (tags and Examples move with them).', commands: ['sort-scenarios'] },
 ];
 export const GROUPS: FeatureGroup[] = ['Editing', 'Navigation', 'Code intelligence', 'Tool windows', 'Files', 'Git', 'Gherkin', 'View', 'Debugging', 'Help and productivity'];
 
