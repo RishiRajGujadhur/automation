@@ -356,3 +356,27 @@ export function tableOfContents(markdown: string) {
 
 /** Markdown: Insert Table (Rider): a 2×2 table to fill in. */
 export const MARKDOWN_TABLE = '| Column 1 | Column 2 |\n| -------- | -------- |\n|          |          |\n';
+
+/** Remove Comments (Rider Code Cleanup): line comments (`//`, or `#` in Gherkin / YAML) and block comments of the
+ * selection or file; comment-only lines are deleted, strings are left alone. `# language:` lines stay. */
+export function removeComments(text: string, line = '//', block: [string, string] | null = ['/*', '*/']) {
+  const out: string[] = [];
+  let inBlock = false;
+  for (const l of text.split('\n')) {
+    let res = '', i = 0, quote = '';
+    let had = false;
+    while (i < l.length) {
+      if (inBlock) { const e = block ? l.indexOf(block[1], i) : -1; if (e < 0) { i = l.length; had = true; break; } inBlock = false; had = true; i = e + block![1].length; continue; }
+      const c = l[i];
+      if (quote) { res += c; if (c === '\\') { res += l[i + 1] ?? ''; i += 2; continue; } if (c === quote) quote = ''; i++; continue; }
+      if (c === '"' || (c === "'" && line === '//')) { quote = c; res += c; i++; continue; }
+      if (block && l.startsWith(block[0], i)) { inBlock = true; had = true; i += block[0].length; continue; }
+      if (l.startsWith(line, i) && (line !== '#' || !l.slice(0, i).trim()) && !/^\s*#\s*language\s*:/.test(l)) { had = true; break; }
+      res += c; i++;
+    }
+    if (had && !res.trim()) continue;
+    out.push(had ? res.trimEnd() : res);
+  }
+  const next = out.join('\n');
+  return next === text ? null : next;
+}

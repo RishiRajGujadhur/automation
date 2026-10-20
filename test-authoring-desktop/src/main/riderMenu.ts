@@ -261,6 +261,7 @@ const ROWS: Record<'edit' | 'view' | 'navigate' | 'code' | 'tools' | 'help', Row
       ['Insert Table of Contents', 'md-toc'],
       ['Insert Table', 'md-insert-table'],
     ] },
+    ['Remove Comments', 'remove-comments'],
   ],
   tools: [
     ['Run Anything… (Ctrl twice)', 'run-anything'],
