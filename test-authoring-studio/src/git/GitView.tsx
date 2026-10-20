@@ -7,6 +7,7 @@ import { useLocalState } from '../ui';
 import { useConfirm } from '../radix2';
 import { fileType } from '../files/fileTypes';
 import { FILES_CHANGED_EVENT, UNSAVED_REFRESH, GIT_CHANGED_EVENT } from '../editor/events';
+import { issueKey, withIssueKey } from './commitTools';
 
 type GitFile = { file: string; staged: boolean; status: 'M' | 'A' | 'D' | 'R' | 'U' | '?'; from?: string };
 type GitStatus = { repo: boolean; branch?: string; upstream?: string; ahead: number; behind: number; files: GitFile[] };
@@ -168,6 +169,7 @@ export default function GitView({ onOpen, onNotice, onChanged }: { onOpen: (file
             <Check size={14} />{staged.length ? 'Commit Staged' : 'Commit All'}
           </button>
           <label className="git-amend"><input type="checkbox" checked={amend} onChange={(e) => setAmend(e.target.checked)} />Amend</label>
+          {featureOn('commit-issue-key') && issueKey(st?.branch) && <button className="link-button" aria-label={`Insert issue key ${issueKey(st?.branch)}`} title={`Put the issue key of branch ${st?.branch} in front of the message`} onClick={() => setMessage(withIssueKey(message, issueKey(st?.branch)!))}>{issueKey(st?.branch)}</button>}
         </div>
       </div>
       <div className="git-lists">

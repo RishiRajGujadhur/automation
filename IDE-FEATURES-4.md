@@ -69,6 +69,7 @@ has it on by default, so the desktop app starts with it on. The others start off
 | Y58 | Test Explorer: Copy Test Name | VS 2026 | no | ✅ 2026-10-20 |
 | Y59 | Test Explorer: Export Results (CSV) | VS 2026 | no | ✅ 2026-10-20 |
 | Y60 | Copy Current Branch Name | Rider | no | ✅ 2026-10-20 |
+| Y61 | Commit message: issue key from the branch | Rider | no | ✅ 2026-10-20 |
 
 ## Progress log
 - 2026-10-20 Y1: Percent-encodes the selection (or line) and decodes it.
@@ -131,3 +132,4 @@ has it on by default, so the desktop app starts with it on. The others start off
 - 2026-10-20 Y58: Copies Class.Method of the selected tests.
 - 2026-10-20 Y59: Saves test, project, outcome, duration and message as CSV.
 - 2026-10-20 Y60: Copies the checked-out Git branch.
+- 2026-10-20 Y61: Offers the branch's issue key (ABC-123, #42) to put in front of the message.

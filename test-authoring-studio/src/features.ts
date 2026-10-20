@@ -455,6 +455,7 @@ export const FEATURES: Feature[] = [
   { id: 'test-copy-name', label: 'Test Explorer: Copy Test Name', group: 'Tool windows', essential: false, description: 'The Test Explorer menu copies the full names (Class.Method) of the selected tests.' },
   { id: 'test-export', label: 'Test Explorer: Export Results (CSV)', group: 'Tool windows', essential: false, description: 'A Test Explorer button saves every test with its outcome, duration and message as a CSV file.' },
   { id: 'copy-branch-name', label: 'Copy Current Branch Name', group: 'Git', essential: false, description: 'Tools ▸ Copy Current Branch Name copies the checked-out branch (for commit messages and tickets).', commands: ['copy-branch-name'] },
+  { id: 'commit-issue-key', label: 'Commit message: issue key from the branch', group: 'Git', essential: false, description: 'Git Changes offers the branch\'s issue key (ABC-123, #42) to put in front of the commit message.' },
 ];
 export const GROUPS: FeatureGroup[] = ['Editing', 'Navigation', 'Code intelligence', 'Tool windows', 'Files', 'Git', 'Gherkin', 'View', 'Debugging', 'Help and productivity'];
 
