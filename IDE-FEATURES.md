@@ -167,6 +167,7 @@ has it on by default, so the desktop app starts with it on. The others start off
 | X157 | Tabs: Unpin All | VS 2026 | yes | ✅ 2026-10-20 |
 | X158 | Sort Tabs by Name | Rider | no | ✅ 2026-10-20 |
 | X159 | Collapse Using Directives | VS 2026 / Rider | yes | ✅ 2026-10-20 |
+| X160 | Find Step Usages (feature step) | Rider | yes | ✅ 2026-10-20 |
 
 ## Progress log
 - 2026-10-20 X1: Sort Lines: the selected lines (or the whole file) in natural, case-insensitive order, blank lines last. Third-batch plumbing: src/rider/more.ts, src/editor/textTools.ts, IDE-FEATURES.md.
@@ -328,3 +329,4 @@ has it on by default, so the desktop app starts with it on. The others start off
 - 2026-10-20 X157: Tab menu unpins everything
 - 2026-10-20 X158: Alphabetical tab order
 - 2026-10-20 X159: Fold the using block
+- 2026-10-20 X160: Steps bound to the same definition

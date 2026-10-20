@@ -753,6 +753,18 @@ app.post('/api/nuget/uninstall', async (req, res) => {
   res.json({ output, installed: await nugetInstalled(config.repositoryRoot, project) });
 });
 /** Step usages (CodeLens for step definitions): for each binding in a C# file, the feature lines that use it. */
+// Find Step Usages from a feature step (Rider's Find Usages on a Gherkin step): every step bound to the same definition.
+app.get('/api/steps/usages', async (req, res) => {
+  const q = z.object({ file: z.string().min(1).max(400), line: z.coerce.number().int().min(1) }).parse(req.query);
+  const i = await ensure();
+  const f = i.features.find((x) => x.file === q.file);
+  const step = f && [...f.backgrounds, ...f.scenarios].flatMap((b) => b.steps).find((s) => s.line === q.line);
+  const id = step?.candidates[0];
+  const b = id ? i.stepDefinitions.find((x) => x.id === id) : undefined;
+  const usages: { file: string; line: number; text: string; scenario: string }[] = [];
+  if (id) for (const ff of i.features) for (const block of [...ff.backgrounds.map((x) => ({ ...x, name: `Background${x.name ? `: ${x.name}` : ''}` })), ...ff.scenarios]) for (const s of block.steps) if (s.candidates.includes(id)) usages.push({ file: ff.file, line: s.line, text: `${s.keyword} ${s.text}`.trim(), scenario: block.name });
+  res.json({ binding: b ? { pattern: b.pattern, file: b.file, line: b.line } : null, usages });
+});
 app.get('/api/steps/lenses', async (req, res) => {
   const file = z.string().min(1).max(400).parse(req.query.file);
   const i = await ensure();
