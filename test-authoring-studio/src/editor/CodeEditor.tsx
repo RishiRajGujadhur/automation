@@ -9,6 +9,7 @@ import { History, Save, TriangleAlert, RotateCcw, CircleCheck, CloudOff, Loader,
 import { RowMenu } from '../ui';
 import { csharpLanguage, lineCol, offsetOf, replaceText, type CsHandlers, type CsLocation } from './csharp';
 import { FILES_CHANGED_EVENT } from './events';
+import { markdownQol } from './markdownQol';
 import { stepLenses, setLenses, setRefLenses, type StepLens, type RefLens } from './lens';
 import { runGutter, setRunMarks, type RunMark } from './runGutter';
 import { changeGutter } from './changeGutter';
@@ -88,6 +89,7 @@ function languageOf(file: string, browser: boolean) {
   if (/\.(xml|csproj|props|targets|config|runsettings|resx)$/.test(file)) return xmlExtensions(false, /\.(csproj|props|targets)$/.test(file));
   if (file.endsWith('.feature')) return [...(browser ? [] : [breakpoints(file)]), ...gherkinSyntaxExtensions()];
   if (isHttpFile(file)) return [StreamLanguage.define(httpMode)];
+  if (/\.(md|markdown|txt)$/i.test(file)) return markdownQol;
   return [];
 }
 

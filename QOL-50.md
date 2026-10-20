@@ -57,6 +57,7 @@ Every improvement is verified by a unit or Playwright test (`tests/e2e/qol50.spe
 | QL48 | Explorer: folders with changes | Explorer / Git | ✅ 2026-10-20 |
 | QL49 | Save All reports what it saved | Files | ✅ 2026-10-20 |
 | QL50 | Save before build and test runs | Build / Tests | ✅ 2026-10-20 |
+| QL51 | Markdown wraps long lines | Editor | ✅ 2026-10-20 |
 
 ## Progress log
 - 2026-10-20 QL1: Title names the file and workspace folder
@@ -109,3 +110,4 @@ Every improvement is verified by a unit or Playwright test (`tests/e2e/qol50.spe
 - 2026-10-20 QL48: Dot on folders with changes
 - 2026-10-20 QL49: Saved N files / Nothing to save
 - 2026-10-20 QL50: Unsaved editors saved before running
+- 2026-10-20 QL51: md/txt soft-wrap by default

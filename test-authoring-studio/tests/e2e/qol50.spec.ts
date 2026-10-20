@@ -395,3 +395,49 @@ test('QL50 Unsaved editors are saved before a build', async ({ page }) => {
   await page.getByRole('menuitem', { name: /^Build Solution/ }).click();
   await expect.poll(() => fs.readFile(path.join(root, 'Features/Auth/Login.feature'), 'utf8')).toContain('# saved by the build');
 });
+
+test('QL51 Markdown wraps long lines', async ({ page }) => {
+  await fs.writeFile(path.join(root, 'Long.md'), `# Long\n\n${'word '.repeat(200)}\n`);
+  await reindex(page);
+  await openCs(page, 'Long.md', '# Long');
+  await expect(page.locator('.code-editor:not([hidden]) .cm-content')).toHaveClass(/cm-lineWrapping/);
+});
+
+test('QL52 Find starts with the last search in another file', async ({ page }) => {
+  await openFeature(page);
+  await caretAt(page, 'Feature:');
+  await page.keyboard.press('Control+F');
+  await page.keyboard.type('dashboard');
+  await page.keyboard.press('Enter');
+  await page.keyboard.press('Escape');
+  await nav(page).getByRole('button', { name: 'AuthSteps.cs', exact: true }).first().dblclick();
+  await page.getByLabel('Source of Steps/AuthSteps.cs').locator('.cm-line').first().click();
+  await page.keyboard.press('Control+F');
+  await expect(page.locator('.code-editor:not([hidden]) .cm-search input[name="search"]')).toHaveValue('dashboard');
+});
+
+test('QL53 The line you jump to flashes', async ({ page }) => {
+  await openFeature(page);
+  await caretAt(page, 'Feature:');
+  await page.keyboard.press('Control+G');
+  await page.keyboard.type('8');
+  await page.keyboard.press('Enter');
+  await expect(page.locator('.gherkin-editor .cm-flash-line')).toHaveCount(1);
+});
+
+test('QL57 / QL58 Gherkin: tag and <parameter> completion', async ({ page, request }) => {
+  await fs.writeFile(path.join(root, 'Features/Roles.feature'), ['@authentication', 'Feature: Roles', '  Scenario Outline: As a role', '    Given the browser is started', '', '    Examples:', '      | role  | user |', '      | admin | ada  |', ''].join('\n'));
+  await reindex(page);
+  await openFeature(page, 'Roles.feature');
+  await caretAt(page, '@authentication');
+  await page.keyboard.press('End');
+  await page.keyboard.type(' @au');
+  await expect(page.locator('.cm-tooltip-autocomplete')).toContainText('@authentication');
+  await page.keyboard.press('Escape');
+  await caretAt(page, 'Given the browser is started');
+  await page.keyboard.press('End');
+  await page.keyboard.type(' as <ro');
+  await expect(page.locator('.cm-tooltip-autocomplete')).toContainText('role');
+  await page.keyboard.press('Enter');
+  await expect.poll(() => doc(page)).toContain('started as <role>');
+});
