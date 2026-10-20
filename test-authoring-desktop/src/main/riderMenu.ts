@@ -388,6 +388,7 @@ const ROWS: Record<'edit' | 'view' | 'navigate' | 'code' | 'tools' | 'help', Row
     ['Open Directory.Build.props', 'directory-build-props'],
     ['Project Dependency Graph', 'project-graph'],
     ['Force Run to Cursor', 'force-run-to-cursor', 'CmdOrCtrl+Shift+F10'],
+    ['Debug Last Test Run', 'debug-last-run'],
   ],
   help: [
     null,

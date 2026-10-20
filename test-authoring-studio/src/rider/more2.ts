@@ -4,11 +4,11 @@ import { tidyProject, foldersUp, DIRECTORY_BUILD_PROPS } from '../project/projec
 import { livingDocHtml, type DocFeature } from '../testing/livingDoc';
 import { GIT_CHANGED_EVENT } from '../editor/events';
 import { nextConflict } from '../editor/advanced';
-import { getSnapshot, setBreakpoints, specAt, breakpointsOf, updateBreakpoint } from '../debug/store';
+import { getSnapshot, setBreakpoints, specAt, breakpointsOf, updateBreakpoint, startDebugging } from '../debug/store';
 import { unsavedFiles } from '../editor/autosave';
 import { createTwoFilesPatch } from 'diff';
 import { readFile, isBrowser, renamePath } from '../files/provider';
-import { discoverTests, runTests, getTestRun, outcomeOf } from '../testing/store';
+import { discoverTests, runTests, getTestRun, outcomeOf, lastTestRun } from '../testing/store';
 import { forEachDiagnostic } from '@codemirror/lint';
 import { api } from '../api';
 import { getTabs, setPinned, movedPath, closeLeastRecent } from '../files/tabs';
@@ -136,5 +136,6 @@ export function moreCommands2(h: MoreHelpers): RiderCommand[] {
     { id: 'directory-build-props', label: 'Open Directory.Build.props', menu: 'Tools', run: () => { void (async () => { const s = await api<{ projects?: { file: string; missing?: boolean }[] }>('/solution'); const ps = (s.projects ?? []).filter((p) => /\.(cs|fs|vb)proj$/i.test(p.file) && !p.missing); const active = getTabs().active ?? ''; const dir = (f: string) => (f.includes('/') ? f.slice(0, f.lastIndexOf('/') + 1) : ''); const own = ps.filter((p) => active.startsWith(dir(p.file))).sort((a, b) => b.file.length - a.file.length)[0] ?? ps[0]; for (const d of foldersUp(own?.file ?? 'x.csproj')) { const f = `${d ? `${d}/` : ''}Directory.Build.props`; if (await readFile(f).then(() => true, () => false)) { h.navigate({ file: f }); return; } } const pv = await api<{ id: string }>('/file/preview', { file: 'Directory.Build.props', source: DIRECTORY_BUILD_PROPS }); window.dispatchEvent(new CustomEvent('tas:project-previews', { detail: { title: 'Create Directory.Build.props', previews: [pv] } })); })().catch((e) => h.notice((e as Error).message)); } },
     { id: 'project-graph', label: 'Project Dependency Graph', menu: 'Tools', run: () => window.dispatchEvent(new Event('tas:project-graph')) },
     { id: 'force-run-to-cursor', label: 'Force Run to Cursor', menu: 'Tools', shortcut: 'Ctrl Shift F10', run: h.inEditor((v, file) => { if (getSnapshot().state.status !== 'paused') { h.notice('Force Run to Cursor works while the debugger is paused.'); return; } void api('/debug/run-to', { file, line: v.state.doc.lineAt(v.state.selection.main.head).number, force: true }).catch((e) => h.notice((e as Error).message)); }) },
+    { id: 'debug-last-run', label: 'Debug Last Test Run', menu: 'Tools', shortcut: 'Ctrl R, D', run: () => { const last = lastTestRun(); if (!last) { h.notice('Run some tests first (Test Explorer).'); return; } void (async () => { const tests = last.tests === 'all' ? (await discoverTests()).tests : last.tests; const project = tests.find((t) => t.projectFile)?.projectFile; if (!project) { h.notice('The last run\'s tests have no project file (build first).'); return; } const filter = last.tests === 'all' ? undefined : tests.map((t) => t.filter).join('|'); await startDebugging({ project, ...(filter ? { filter } : {}) }); h.notice(`Debugging the last test run (${last.tests === 'all' ? 'all tests' : `${tests.length} test${tests.length === 1 ? '' : 's'}`}).`); })().catch((e) => h.notice((e as Error).message)); } },
   ];
 }

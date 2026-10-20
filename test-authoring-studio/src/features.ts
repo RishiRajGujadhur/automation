@@ -554,6 +554,7 @@ export const FEATURES: Feature[] = [
   { id: 'pinned-datatips', label: 'Pinned DataTips', group: 'Debugging', essential: true, vs: 'DataTips ▸ Pin to source', description: 'A variable\'s menu pins it to the current source line; the line shows its value whenever the debugger pauses (× unpins).' },
   { id: 'debug-output-tools', label: 'Debug Output: find, copy, clear, wrap', group: 'Debugging', essential: true, vs: 'Output window tools', description: 'The debugger\'s Output tab gets a find box (matching lines), Copy All, Clear All and word wrap.' },
   { id: 'exception-types', label: 'Break on specific exception types', group: 'Debugging', essential: false, vs: 'Exception Settings ▸ per-type', description: 'With Break on: All thrown exceptions, a list of exception types (ArgumentException, …) limits the stops to those types.' },
+  { id: 'debug-last-run', label: 'Debug Last Test Run', group: 'Debugging', essential: true, vs: 'Test ▸ Debug Last Run', description: 'Ctrl+R, D (Tools ▸ Debug Last Test Run) runs the tests of the last run again under the debugger.', commands: ['debug-last-run'] },
 ];
 export const GROUPS: FeatureGroup[] = ['Editing', 'Navigation', 'Code intelligence', 'Tool windows', 'Files', 'Git', 'Gherkin', 'View', 'Debugging', 'Help and productivity'];
 

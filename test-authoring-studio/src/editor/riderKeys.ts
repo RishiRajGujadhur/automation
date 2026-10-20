@@ -323,6 +323,7 @@ export function riderKeys(file = ''): Extension {
     opens('Mod-r t', 'run-context'),
     opens('Mod-r Mod-t', 'debug-context'),
     opens('Mod-r l', 'repeat-run'),
+    opens('Mod-r d', 'debug-last-run'),
     opens('Mod-F9', 'toggle-bp-enabled'),
     opens('Mod-Shift-Backspace', 'last-edit'),
     opens('Mod-k Mod-e', 'code-cleanup'),
