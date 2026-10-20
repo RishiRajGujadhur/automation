@@ -191,6 +191,8 @@ const ROWS: Record<'edit' | 'view' | 'navigate' | 'code' | 'tools' | 'help', Row
       ['Copy Step Text', 'copy-step-text'],
       ['Table: Duplicate Row', 'table-duplicate-row'],
       ['Table: Delete Row', 'table-delete-row'],
+      ['Table: Move Column Left', 'table-column-left'],
+      ['Table: Move Column Right', 'table-column-right'],
     ] },
     ['Collapse Using Directives', 'fold-usings'],
     ['Sort JSON Keys', 'sort-json'],

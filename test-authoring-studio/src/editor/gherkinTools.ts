@@ -615,3 +615,15 @@ export function tableDeleteRow(view: EditorView) {
   const rows = t.rows.filter((_, i) => i !== t.row);
   return writeTable(view, t, rows, Math.min(t.row, rows.length - 1), t.col);
 }
+
+/** Table ▸ Move Column Left / Right: swaps the caret's column with its neighbour in every row. */
+export function tableMoveColumn(dir: 1 | -1) {
+  return (view: EditorView) => {
+    const t = tableAt(view.state);
+    if (!t) return false;
+    const to = t.col + dir;
+    if (to < 0 || to >= t.cols) return false;
+    const rows = t.rows.map((r) => { const c = [...r, ...Array<string>(Math.max(0, t.cols - r.length)).fill('')]; [c[t.col], c[to]] = [c[to], c[t.col]]; return c; });
+    return writeTable(view, t, rows, t.row, to);
+  };
+}

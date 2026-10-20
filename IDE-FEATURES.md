@@ -178,6 +178,7 @@ has it on by default, so the desktop app starts with it on. The others start off
 | X168 | What's New | VS 2026 / Rider | yes | ✅ 2026-10-20 |
 | X169 | Table: Duplicate Row | Rider | yes | ✅ 2026-10-20 |
 | X170 | Table: Delete Row | Rider | yes | ✅ 2026-10-20 |
+| X171 | Table: Move Column | Rider | yes | ✅ 2026-10-20 |
 
 ## Progress log
 - 2026-10-20 X1: Sort Lines: the selected lines (or the whole file) in natural, case-insensitive order, blank lines last. Third-batch plumbing: src/rider/more.ts, src/editor/textTools.ts, IDE-FEATURES.md.
@@ -350,3 +351,4 @@ has it on by default, so the desktop app starts with it on. The others start off
 - 2026-10-20 X168: Latest features with switches
 - 2026-10-20 X169: Copy of the caret's row
 - 2026-10-20 X170: Remove the caret's row
+- 2026-10-20 X171: Column left / right

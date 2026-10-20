@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { EditorState, type TransactionSpec } from '@codemirror/state';
 import { EditorView } from '@codemirror/view';
-import { cycleStepKeyword, scenarioToOutline, tableInsertRow, tableAddColumn, tableDeleteColumn, tableSortByColumn, testFilter, selectScenario, renameTag, extractExamplesParameter, outlineToScenario, duplicateScenario, moveScenario, extractBackground, addExamplesTable, toggleTag, toggleScenarioComment, pasteAsTable, tableCsv, featureStats, renameExamplesParameter, removeUnusedColumns, inlineBackground, normalizeStepKeywords, addScenario, scenarioMarkdown, tableDuplicateRow, tableDeleteRow } from '../src/editor/gherkinTools';
+import { cycleStepKeyword, scenarioToOutline, tableInsertRow, tableAddColumn, tableDeleteColumn, tableSortByColumn, testFilter, selectScenario, renameTag, extractExamplesParameter, outlineToScenario, duplicateScenario, moveScenario, extractBackground, addExamplesTable, toggleTag, toggleScenarioComment, pasteAsTable, tableCsv, featureStats, renameExamplesParameter, removeUnusedColumns, inlineBackground, normalizeStepKeywords, addScenario, scenarioMarkdown, tableDuplicateRow, tableDeleteRow, tableMoveColumn } from '../src/editor/gherkinTools';
 
 /** Runs an editor command on `doc` with the selection between « and » (or a caret at ‸); with `caret`, the result marks the caret with ¦. */
 function run(doc: string, cmd: (v: EditorView) => boolean, caret = false) {
@@ -153,5 +153,9 @@ describe('Gherkin tools (IDE-FEATURES X49…)', () => {
   it('X170 Table Delete Row', () => {
     expect(run('| a |\n| 1‸ |\n| 2 |', tableDeleteRow, true)).toBe('| a |\n| ¦2 |');
     expect(run('| a‸ |', tableDeleteRow)).toBe('| a |');
+  });
+  it('X171 Table Move Column', () => {
+    expect(run('| a | b‸ | c |\n| 1 | 2 | 3 |', tableMoveColumn(-1), true)).toBe('| ¦b | a | c |\n| 2 | 1 | 3 |');
+    expect(run('| a‸ | b |', tableMoveColumn(-1))).toBe('| a | b |');
   });
 });

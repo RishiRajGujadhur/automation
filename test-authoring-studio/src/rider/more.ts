@@ -20,7 +20,7 @@ import { renamePath } from '../files/provider';
 import { movedPath } from '../files/tabs';
 import { DEFAULT_TODO_TOKENS } from '../editor/todoHighlight';
 import { copyText as copyFilterText } from '../ui';
-import { cycleStepKeyword, scenarioToOutline, tableInsertRow, tableAddColumn, tableDeleteColumn, tableSortByColumn, testFilter, selectScenario, extractExamplesParameter, outlineToScenario, duplicateScenario, moveScenario, extractBackground, addExamplesTable, toggleTag, toggleScenarioComment, pasteAsTable, tableCsv, renameExamplesParameter, paramAt, removeUnusedColumns, inlineBackground, normalizeStepKeywords, addScenario, scenarioMarkdown, tableDuplicateRow, tableDeleteRow } from '../editor/gherkinTools';
+import { cycleStepKeyword, scenarioToOutline, tableInsertRow, tableAddColumn, tableDeleteColumn, tableSortByColumn, testFilter, selectScenario, extractExamplesParameter, outlineToScenario, duplicateScenario, moveScenario, extractBackground, addExamplesTable, toggleTag, toggleScenarioComment, pasteAsTable, tableCsv, renameExamplesParameter, paramAt, removeUnusedColumns, inlineBackground, normalizeStepKeywords, addScenario, scenarioMarkdown, tableDuplicateRow, tableDeleteRow, tableMoveColumn } from '../editor/gherkinTools';
 import { unsavedFiles } from '../editor/autosave';
 import { getTabs, closeTab } from '../files/tabs';
 import { reopenClosed } from '../files/tabs';
@@ -162,5 +162,7 @@ export function moreCommands(h: MoreHelpers): RiderCommand[] {
     { id: 'toggle-activity-bar', label: 'Activity Bar', menu: 'View', checked: () => !viewOptions().hideActivityBar, run: () => setViewOptions({ hideActivityBar: !viewOptions().hideActivityBar }) },
     { id: 'table-duplicate-row', label: 'Table: Duplicate Row', menu: 'Code', submenu: 'Gherkin', run: h.inEditor((v) => tableDuplicateRow(v) || h.notice('Put the caret in a table row.')) },
     { id: 'table-delete-row', label: 'Table: Delete Row', menu: 'Code', submenu: 'Gherkin', run: h.inEditor((v) => tableDeleteRow(v) || h.notice('Put the caret in a table with more than one row.')) },
+    { id: 'table-column-left', label: 'Table: Move Column Left', menu: 'Code', submenu: 'Gherkin', run: h.inEditor((v) => tableMoveColumn(-1)(v) || h.notice('No column to the left.')) },
+    { id: 'table-column-right', label: 'Table: Move Column Right', menu: 'Code', submenu: 'Gherkin', run: h.inEditor((v) => tableMoveColumn(1)(v) || h.notice('No column to the right.')) },
   ];
 }
