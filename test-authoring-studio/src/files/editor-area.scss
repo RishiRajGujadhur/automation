@@ -3722,3 +3722,5 @@ html[data-features-off~='inlay-hints'] .cm-inlay {
 .cm-inline-value { margin-left: 2em; padding: 0 6px; border-radius: 3px; background: color-mix(in srgb, var(--accent, #9270dd) 15%, transparent); color: var(--accent, #9270dd); font-size: 0.9em; white-space: pre; }
 
 .cm-unused-step { opacity: 0.55; }
+
+.cm-same-binding { background: color-mix(in srgb, var(--accent, #9270dd) 18%, transparent); border-radius: 2px; }

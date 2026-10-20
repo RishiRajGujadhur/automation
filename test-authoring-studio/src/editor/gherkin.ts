@@ -130,6 +130,19 @@ export const stepMarks = StateField.define<DecorationSet>({
   provide: (f) => EditorView.decorations.from(f),
 });
 
+/** The binding each bound step line resolved to (and its parameters), from the last binding check. */
+export type StepBinding = { from: number; to: number; key: string; params: { from: number; to: number; name?: string }[] };
+export const setStepBindings = StateEffect.define<StepBinding[]>();
+export const stepBindings = StateField.define<StepBinding[]>({
+  create: () => [],
+  update(v, tr) {
+    for (const e of tr.effects) if (e.is(setStepBindings)) return e.value;
+    if (!tr.docChanged) return v;
+    const m = (p: number, side = 1) => tr.changes.mapPos(p, side);
+    return v.map((b) => ({ ...b, from: m(b.from), to: m(b.to, -1), params: b.params.map((p) => ({ ...p, from: m(p.from), to: m(p.to, -1) })) }));
+  },
+});
+
 /** 2. Steps with no binding, or ambiguous bindings, flagged against the repository index. */
 export const bindingLinter = linter(
   async (view) => {
@@ -137,7 +150,7 @@ export const bindingLinter = linter(
     const lines = stepLines(doc.toString()).slice(0, 300);
     if (!lines.length) { queueMicrotask(() => view.dispatch({ effects: setStepMarks.of(Decoration.none) })); return []; }
     try {
-      const res = await api<{ status: string; params: [number, number][]; binding: { pattern: string; file: string; line: number } | null }[]>('/steps/match', { steps: lines.map((l) => ({ keyword: l.resolved, text: l.text, tags: l.tags, feature: l.feature, scenario: l.scenario })) });
+      const res = await api<{ status: string; params: [number, number][]; names?: string[]; binding: { pattern: string; file: string; line: number } | null }[]>('/steps/match', { steps: lines.map((l) => ({ keyword: l.resolved, text: l.text, tags: l.tags, feature: l.feature, scenario: l.scenario })) });
       // Highlighting like Reqnroll's extension: unbound steps, bound steps, and the parameters of bound steps.
       if (view.state.doc === doc) {
         const marks = lines.flatMap((l, i) => {
@@ -148,7 +161,8 @@ export const bindingLinter = linter(
           if (r.status !== 'Matched') return [];
           return [BOUND.range(l.textFrom, to), ...(r.params ?? []).map(([a, b]) => PARAM.range(l.textFrom + a, l.textFrom + Math.min(b, l.text.length)))];
         });
-        queueMicrotask(() => { if (view.state.doc === doc) view.dispatch({ effects: setStepMarks.of(Decoration.set(marks, true)) }); });
+        const bound: StepBinding[] = lines.flatMap((l, i) => { const r = res[i]; if (!r || r.status !== 'Matched' || !r.binding || !l.text) return []; return [{ from: l.textFrom, to: l.textFrom + l.text.length, key: `${r.binding.file}:${r.binding.line}`, params: (r.params ?? []).map(([a, b], k) => ({ from: l.textFrom + a, to: l.textFrom + Math.min(b, l.text.length), name: r.names?.[k] })) }]; });
+        queueMicrotask(() => { if (view.state.doc === doc) view.dispatch({ effects: [setStepMarks.of(Decoration.set(marks, true)), setStepBindings.of(bound)] }); });
       }
       return lines.flatMap((l, i): Diagnostic[] => {
         const r = res[i];
@@ -444,6 +458,7 @@ export function gherkinExtensions(opts: { onSave?: () => void; onValidate?: () =
     outlineLinter,
     bindingLinter,
     stepMarks,
+    stepBindings,
     duplicateStepLinter,
     smellLinter,
     gherkinLint2,

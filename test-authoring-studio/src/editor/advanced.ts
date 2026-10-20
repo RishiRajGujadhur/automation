@@ -4,6 +4,7 @@ import { Decoration, EditorView, ViewPlugin, WidgetType, type ViewUpdate, type D
 import { api } from '../api';
 import { featureOn } from '../features';
 import { FILE_SAVED_EVENT } from './events';
+import { stepBindings, setStepBindings } from './gherkin';
 
 /**
  * Advanced Visual Studio 2026 / Rider editor features (ADVANCED-20.md, Z1–Z20). Each registers a factory here; the code
@@ -237,3 +238,23 @@ registerAdvanced((file, kind) => (kind !== 'code' || !file.endsWith('.cs') ? [] 
   }
   update(u: ViewUpdate) { if (u.docChanged) this.decorations = this.decorations.map(u.changes); }
 }, { decorations: (p) => p.decorations })));
+
+/* Z11 Steps sharing a step definition (Rider highlights usages): with the caret on a bound step, every step of the file
+   bound to the same definition is highlighted. */
+const SAME = Decoration.mark({ class: 'cm-same-binding', attributes: { title: 'Bound to the same step definition' } });
+function sameBinding(state: EditorState) {
+  if (!featureOn('same-binding')) return Decoration.none;
+  const all = state.field(stepBindings, false);
+  if (!all?.length) return Decoration.none;
+  const line = state.doc.lineAt(state.selection.main.head);
+  const here = all.find((b) => b.from <= line.to && b.to >= line.from);
+  if (!here) return Decoration.none;
+  const same = all.filter((b) => b.key === here.key && b.to > b.from);
+  return same.length > 1 ? Decoration.set(same.map((b) => SAME.range(b.from, b.to)), true) : Decoration.none;
+}
+const sameBindingField = StateField.define<DecorationSet>({
+  create: (s) => sameBinding(s),
+  update: (v, tr) => (tr.selection || tr.effects.some((e) => e.is(setStepBindings)) || tr.docChanged ? sameBinding(tr.state) : v),
+  provide: (f) => EditorView.decorations.from(f),
+});
+registerAdvanced((_file, kind) => (kind === 'gherkin' ? sameBindingField : []));
