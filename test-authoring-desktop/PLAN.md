@@ -231,3 +231,12 @@ Tracked feature by feature in [IDE-FEATURES.md](../IDE-FEATURES.md) (one commit 
 - [x] X105–X200 (Explorer compare / scope / filters, debugger watches, Git stage / undo / file history, Gherkin refactorings and table tools, Quick Info, scroll bar annotations, tab options, JSON / XML tools, Zoom IDE, What's New, feature settings export / import)
 - [x] Fixes found on the way: long menus scroll; popups no longer select the row under a still pointer; menu commands keep the editor caret
 - [x] Rebuild the desktop exe (`npm run dist`; the language server's `metrics` and `unnecessary` operations republish because its sources changed) and run `npm run test:packaged` (38 passed, 2 skipped)
+
+## Quality of life, 100 improvements (2026-10-20)
+
+Tracked one by one in [QOL-50.md](../QOL-50.md) (QL1–QL100; one commit and push each, each with a Settings ▸ Features switch and tests).
+
+- [x] QL1–QL50 (window title, caret restore, Explorer keyboard / drag / Git badges, search memory, notifications history, status bar items, Test Explorer memory, Gherkin paste / table / indent helpers, Markdown helpers)
+- [x] QL51–QL100 (Error List group / Copy All, build and test result messages, commit message history, changed-settings marks, Notifications filter / relative times / dismiss, Gherkin keyword capitalisation, `<>` and Examples header, Terminal clear / zoom / rename / copy-paste / Open in Terminal, Close Saved Tabs, Ctrl+1…9, Copy Full Path, Debugging title, status bar test results)
+- [x] Fixes found on the way: Close to the Right now feeds Reopen Closed Tab; terminal listeners are removed on remount (no double zoom / paste)
+- [x] Regression: 333 passed, 1 skipped, 1 intermittent (X106 passes on rerun); desktop `npm run dist` and `npm run test:packaged` (38 passed, 2 skipped)
