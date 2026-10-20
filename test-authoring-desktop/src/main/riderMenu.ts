@@ -224,6 +224,7 @@ const ROWS: Record<'edit' | 'view' | 'navigate' | 'code' | 'tools' | 'help', Row
     ['Remove Breakpoints in File', 'clear-file-breakpoints'],
     null,
     ['Git: Undo Changes in File…', 'git-undo-file'],
+    ['Git: Stage File', 'git-stage-file'],
   ],
   help: [
     null,
