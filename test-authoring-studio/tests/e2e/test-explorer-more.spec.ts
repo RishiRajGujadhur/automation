@@ -145,3 +145,19 @@ test('X144 / X145 Test Explorer: Group by Tag and tag: filter', async ({ page })
   await expect(tree.locator('.t-label', { hasText: /AddsTwoNumbers/ })).toHaveCount(0);
   await expect(tree.locator('.t-label', { hasText: /Add two numbers/ })).toBeVisible();
 });
+
+test('X189 / X190 Test Explorer: Copy dotnet test Filter, failed tests only', async ({ page, context }) => {
+  await context.grantPermissions(['clipboard-read', 'clipboard-write']);
+  await start(page);
+  await page.getByRole('button', { name: 'Test Explorer' }).click();
+  const te = page.getByRole('region', { name: 'Test Explorer' });
+  const tree = te.getByRole('navigation', { name: 'Tests' });
+  await expect(tree.locator('.t-label', { hasText: /AddsTwoNumbers/ })).toBeVisible({ timeout: 60_000 });
+  await tree.locator('.t-label', { hasText: /AddsTwoNumbers/ }).click({ button: 'right' });
+  await page.getByRole('menuitem', { name: 'Copy dotnet test Filter' }).click();
+  await expect.poll(() => page.evaluate(() => navigator.clipboard.readText())).toMatch(/^dotnet test --filter ".*AddsTwoNumbers.*"$/);
+  await te.getByRole('button', { name: 'Show only failed tests' }).click();
+  await expect(tree.locator('.t-label', { hasText: /AddsTwoNumbers/ })).toHaveCount(0);
+  await te.getByRole('button', { name: 'Show only failed tests' }).click();
+  await expect(tree.locator('.t-label', { hasText: /AddsTwoNumbers/ })).toBeVisible();
+});

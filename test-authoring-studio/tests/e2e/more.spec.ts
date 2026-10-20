@@ -924,3 +924,37 @@ test('X179–X183 Zoom IDE, Compact Mode, feature settings export / import, envi
   await caretAt(page, 'the user signs in');
   await expect(page.locator('.gherkin-editor .cm-current-scenario')).toHaveCount(4);
 });
+
+test('X184–X186 Table: Transpose, Fill Down, Clear Column', async ({ page, request }) => {
+  await fs.writeFile(path.join(root, 'Features/Table2.feature'), ['Feature: Table2', '  Scenario: T', '    Given the users:', '      | name | role  |', '      | ada  | admin |', '      | bob  | guest |', ''].join('\n'));
+  expect((await request.post('/api/workspace', { data: { repositoryRoot: root, targetProject: '.' } })).ok()).toBe(true);
+  await openFeature(page, 'Table2.feature');
+  await caretAt(page, 'guest');
+  await gherkinItem(page, /^Table: Fill Down/);
+  await expect.poll(() => doc(page)).toMatch(/\| bob {2}\| admin \|/);
+  await gherkinItem(page, /^Table: Clear Column/);
+  await expect.poll(() => doc(page)).toMatch(/\| ada {2}\| {6}\|/);
+  await gherkinItem(page, /^Table: Transpose/);
+  await expect.poll(() => doc(page)).toMatch(/\| name \| ada \| bob \|/);
+});
+
+test('X187 / X188 Explorer: Copy File Name and Open to the Side', async ({ page, context }) => {
+  await context.grantPermissions(['clipboard-read', 'clipboard-write']);
+  await openFeature(page);
+  const nav = page.getByRole('navigation', { name: 'Solution' });
+  await nav.getByRole('button', { name: 'AuthSteps.cs', exact: true }).first().click({ button: 'right' });
+  await page.getByRole('menuitem', { name: 'Copy file name' }).click();
+  await expect.poll(() => page.evaluate(() => navigator.clipboard.readText())).toBe('AuthSteps.cs');
+  await nav.getByRole('button', { name: 'AuthSteps.cs', exact: true }).first().click({ button: 'right' });
+  await page.getByRole('menuitem', { name: 'Open to the Side' }).click();
+  await expect(page.getByRole('region', { name: 'Split editor Steps/AuthSteps.cs' })).toBeVisible();
+});
+
+test('X191 Notifications: Copy All', async ({ page, context }) => {
+  await context.grantPermissions(['clipboard-read', 'clipboard-write']);
+  await openFeature(page);
+  await menuItem(page, 'Navigate', /^Clear Recent Files/);
+  await menuItem(page, 'View', /^Notifications/);
+  await page.getByRole('button', { name: 'Copy all notifications' }).click();
+  await expect.poll(() => page.evaluate(() => navigator.clipboard.readText())).toMatch(/recent file/);
+});

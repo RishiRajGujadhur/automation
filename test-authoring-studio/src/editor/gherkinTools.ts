@@ -644,3 +644,11 @@ export function tableSelectColumn(view: EditorView) {
   view.dispatch({ selection: EditorSelection.create(ranges, t.row) });
   return true;
 }
+
+/** Table ▸ Transpose: rows become columns (a horizontal table vertical, and back). */
+export function tableTranspose(view: EditorView) {
+  const t = tableAt(view.state);
+  if (!t) return false;
+  const rows = Array.from({ length: t.cols }, (_, c) => t.rows.map((r) => r[c] ?? ''));
+  return writeTable(view, t, rows, Math.min(t.col, rows.length - 1), Math.min(t.row, t.rows.length - 1));
+}

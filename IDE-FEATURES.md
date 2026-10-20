@@ -191,6 +191,7 @@ has it on by default, so the desktop app starts with it on. The others start off
 | X181 | Export / Import Feature Settings | VS 2026 | yes | ✅ 2026-10-20 |
 | X182 | Copy Environment Info | VS 2026 | yes | ✅ 2026-10-20 |
 | X183 | Highlight current scenario | Rider | yes | ✅ 2026-10-20 |
+| X184 | Table: Transpose | Rider | yes | ✅ 2026-10-20 |
 
 ## Progress log
 - 2026-10-20 X1: Sort Lines: the selected lines (or the whole file) in natural, case-insensitive order, blank lines last. Third-batch plumbing: src/rider/more.ts, src/editor/textTools.ts, IDE-FEATURES.md.
@@ -376,3 +377,4 @@ has it on by default, so the desktop app starts with it on. The others start off
 - 2026-10-20 X181: Feature switches as JSON
 - 2026-10-20 X182: Version/browser info for bug reports
 - 2026-10-20 X183: Band behind the caret's scenario
+- 2026-10-20 X184: Rows become columns

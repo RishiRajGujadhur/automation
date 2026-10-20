@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { EditorState, type TransactionSpec } from '@codemirror/state';
 import { EditorView } from '@codemirror/view';
-import { cycleStepKeyword, scenarioToOutline, tableInsertRow, tableAddColumn, tableDeleteColumn, tableSortByColumn, testFilter, selectScenario, renameTag, extractExamplesParameter, outlineToScenario, duplicateScenario, moveScenario, extractBackground, addExamplesTable, toggleTag, toggleScenarioComment, pasteAsTable, tableCsv, featureStats, renameExamplesParameter, removeUnusedColumns, inlineBackground, normalizeStepKeywords, addScenario, scenarioMarkdown, tableDuplicateRow, tableDeleteRow, tableMoveColumn, tableSelectColumn } from '../src/editor/gherkinTools';
+import { cycleStepKeyword, scenarioToOutline, tableInsertRow, tableAddColumn, tableDeleteColumn, tableSortByColumn, testFilter, selectScenario, renameTag, extractExamplesParameter, outlineToScenario, duplicateScenario, moveScenario, extractBackground, addExamplesTable, toggleTag, toggleScenarioComment, pasteAsTable, tableCsv, featureStats, renameExamplesParameter, removeUnusedColumns, inlineBackground, normalizeStepKeywords, addScenario, scenarioMarkdown, tableDuplicateRow, tableDeleteRow, tableMoveColumn, tableSelectColumn, tableTranspose } from '../src/editor/gherkinTools';
 
 /** Runs an editor command on `doc` with the selection between « and » (or a caret at ‸); with `caret`, the result marks the caret with ¦. */
 function run(doc: string, cmd: (v: EditorView) => boolean, caret = false) {
@@ -163,5 +163,8 @@ describe('Gherkin tools (IDE-FEATURES X49…)', () => {
     const view = { get state() { return state; }, dispatch: (spec: TransactionSpec) => { state = state.update(spec).state; } };
     tableSelectColumn(view as unknown as EditorView);
     expect(state.selection.ranges.map((r) => state.sliceDoc(r.from, r.to))).toEqual(['age', '36', '']);
+  });
+  it('X184 Table Transpose', () => {
+    expect(run('| name | ada‸ | bob |\n| age  | 36  | 4   |', tableTranspose)).toBe('| name | age |\n| ada  | 36  |\n| bob  | 4   |');
   });
 });

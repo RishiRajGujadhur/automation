@@ -204,6 +204,7 @@ const ROWS: Record<'edit' | 'view' | 'navigate' | 'code' | 'tools' | 'help', Row
       ['Table: Select Column', 'table-select-column'],
       ['Ignore / Unignore Scenario', 'ignore-scenario'],
       ['Copy Step Definition Stub', 'copy-step-stub'],
+      ['Table: Transpose', 'table-transpose'],
     ] },
     ['Collapse Using Directives', 'fold-usings'],
     ['Sort JSON Keys', 'sort-json'],
