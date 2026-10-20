@@ -36,7 +36,7 @@ export default function StatusBarItems({ repository, onGit, onErrors }: { reposi
     <span className="status-items">
       {cursor && (
         <>
-          <span className="status-item" aria-label="Cursor position" title={cursor.file}>Ln {cursor.line}, Col {cursor.column}{cursor.selected ? ` (${cursor.selected} selected)` : ''}</span>
+          <span className="status-item" aria-label="Cursor position" title={cursor.file}>Ln {cursor.line}, Col {cursor.column}{cursor.selected ? ` (${cursor.selected} selected${featureOn('selected-lines') && (cursor.lines ?? 0) > 1 ? `, ${cursor.lines} lines` : ''})` : ''}</span>
           <Dropdown
             label="Line separators"
             trigger={<button className="status-item" aria-label={`Line separators: ${cursor.eol}`} title="Line separators (click to change)">{cursor.eol}</button>}
