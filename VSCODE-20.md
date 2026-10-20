@@ -23,6 +23,7 @@ switch. Web and desktop share the implementation.
 | V13 | Files: trim and final newline on save | files.trimTrailingWhitespace, files.insertFinalNewline, files.trimFinalNewlines | ✅ 2026-10-20 |
 | V14 | Suggestions | editor.quickSuggestions, quickSuggestionsDelay, suggestOnTriggerCharacters, acceptSuggestionOnEnter, tabCompletion | ✅ 2026-10-20 |
 | V15 | Mouse wheel and smooth scrolling | editor.mouseWheelScrollSensitivity, editor.fastScrollSensitivity, editor.smoothScrolling | ✅ 2026-10-20 |
+| V16 | Folding | editor.folding, editor.showFoldingControls, editor.foldingHighlight | ✅ 2026-10-20 |
 
 ## Progress log
 - 2026-10-20 V1: Schema-driven VS Code settings with sub-categories, modified marker, reset, @modified and settings.json copy/import; editor.lineNumbers on / off / relative / interval; Ctrl+, opens Preferences in the web app.
@@ -40,3 +41,4 @@ switch. Web and desktop share the implementation.
 - 2026-10-20 V13: A save trims trailing whitespace, adds a final newline and removes extra final newlines (CRLF kept); the editor takes the saved text line by line, so the caret stays.
 - 2026-10-20 V14: IntelliSense (C# and Gherkin) opens while typing or only on Ctrl+Space, after a delay, on '.' or not; Enter and Tab accept or not.
 - 2026-10-20 V15: Wheel scrolling multiplied by the sensitivity, Alt+wheel by the fast sensitivity, and an animated scroll when smooth scrolling is on.
+- 2026-10-20 V16: Fold arrows shown on gutter hover (VS Code's default), always or never; folded lines tinted; folding off removes the arrows and ignores fold commands.

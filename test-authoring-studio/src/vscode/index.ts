@@ -11,4 +11,5 @@ import './lineHighlight';
 import './filesOnSave';
 import './suggestions';
 import './scrolling';
+import './folding';
 export { SETTINGS } from './settings';

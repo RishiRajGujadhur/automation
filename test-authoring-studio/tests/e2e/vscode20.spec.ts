@@ -352,3 +352,21 @@ test('V15 Mouse wheel sensitivity, fast scroll with Alt, smooth scrolling', asyn
   await expect.poll(top).toBe(300);
   expect(first).toBeLessThan(300);
 });
+
+test('V16 Folding: controls on mouse over, folded highlight, folding off', async ({ page }) => {
+  await open(page, 'Steps/AuthSteps.cs', { 'editor.showFoldingControls': 'mouseover' });
+  const marker = view(page).locator('.cm-foldGutter .cm-gutterElement').filter({ hasText: /\S/, visible: true }).first();
+  await expect(marker).toHaveCSS('opacity', '0');
+  await view(page).locator('.cm-gutters').hover();
+  await expect(marker).toHaveCSS('opacity', '1');
+  await marker.click();
+  await expect(view(page).locator('.cm-foldPlaceholder')).toHaveCount(1);
+  await expect(view(page).locator('.cm-line.cm-vsc-folded')).toHaveCount(1);
+  // Folding off: no fold arrows, and Ctrl+Shift+[ does nothing.
+  await setSettings(page, { 'editor.folding': false });
+  await expect(view(page).locator('.cm-foldGutter')).toBeHidden();
+  await caretLine(page, 4);
+  await page.keyboard.press('Control+Shift+BracketLeft');
+  await page.waitForTimeout(300);
+  await expect(view(page).locator('.cm-foldPlaceholder')).toHaveCount(0);
+});
