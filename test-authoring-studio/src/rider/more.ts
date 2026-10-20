@@ -1,5 +1,6 @@
 import type { EditorView } from '@codemirror/view';
 import type { RiderCommand } from './commands';
+import { foldEffect, foldedRanges } from '@codemirror/language';
 import { sortTabs } from '../files/tabs';
 import { requestFileHistory } from './GitLogPanel';
 import { GIT_CHANGED_EVENT as GIT_EVENT, FILES_CHANGED_EVENT } from '../editor/events';
@@ -151,5 +152,6 @@ export function moreCommands(h: MoreHelpers): RiderCommand[] {
     { id: 'git-stage-file', label: 'Git: Stage File', menu: 'Tools', run: h.inEditor((_v, file) => { if (isBrowser()) { h.notice('Git needs a folder indexed by the studio server.'); return; } void api('/git/stage', { files: [file] }).then(() => { window.dispatchEvent(new Event(GIT_EVENT)); h.notice(`Staged ${file.split('/').pop()}.`); }, (e) => h.notice((e as Error).message)); }) },
     { id: 'git-file-history', label: 'Git: Show History for File', menu: 'Tools', run: h.inEditor((_v, file) => { if (isBrowser()) { h.notice('Git needs a folder indexed by the studio server.'); return; } requestFileHistory(file); runRider('tool-gitlog', 'menu'); }) },
     { id: 'sort-tabs', label: 'Sort Tabs by Name', menu: 'View', run: () => sortTabs() },
+    { id: 'fold-usings', label: 'Collapse Using Directives', menu: 'Code', run: h.inEditor((v, file) => { if (!file.endsWith('.cs')) { h.notice('Open a C# file first.'); return; } const doc = v.state.doc; let first = 0, last = 0; for (let n = 1; n <= doc.lines; n++) { const t = doc.line(n).text.trim(); if (/^(global\s+)?using\s+[^(=]*;$|^using\s+\w+\s*=/.test(t)) { if (!first) first = n; last = n; } else if (t && !t.startsWith('//') && !t.startsWith('#')) { if (first) break; } } if (!first || first === last) { h.notice('Fewer than two using directives at the top of the file.'); return; } const from = doc.line(first).to, to = doc.line(last).to; let folded = false; foldedRanges(v.state).between(from, to, (a, b) => { if (a === from && b === to) folded = true; }); if (!folded) v.dispatch({ effects: foldEffect.of({ from, to }) }); }) },
   ];
 }

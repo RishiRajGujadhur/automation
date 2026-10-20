@@ -185,6 +185,7 @@ const ROWS: Record<'edit' | 'view' | 'navigate' | 'code' | 'tools' | 'help', Row
       ['Add Scenario', 'add-scenario'],
       ['Copy Scenario as Markdown', 'copy-scenario-md'],
     ] },
+    ['Collapse Using Directives', 'fold-usings'],
   ],
   tools: [
     ['Run Anything… (Ctrl twice)', 'run-anything'],
