@@ -408,6 +408,7 @@ export const FEATURES: Feature[] = [
   { id: 'swap-selections', label: 'Swap Selections', group: 'Editing', essential: false, description: 'With two selections, Edit ▸ Convert swaps their text.', commands: ['swap-selections'] },
   { id: 'count-occurrences', label: 'Count Occurrences', group: 'Editing', essential: false, description: 'Edit ▸ Count Occurrences says how often the selection or the word at the caret appears in the file.', commands: ['count-occurrences'] },
   { id: 'trim-lines', label: 'Trim Lines', group: 'Editing', essential: false, description: 'Edit ▸ Convert removes leading and trailing white space from the selected lines.', commands: ['trim-lines'] },
+  { id: 'insert-date', label: 'Insert Date and Time', group: 'Editing', essential: false, description: 'Code ▸ Insert Date and Time writes the current local date and time (yyyy-MM-dd HH:mm).', commands: ['insert-date'] },
 ];
 export const GROUPS: FeatureGroup[] = ['Editing', 'Navigation', 'Code intelligence', 'Tool windows', 'Files', 'Git', 'Gherkin', 'View', 'Debugging', 'Help and productivity'];
 

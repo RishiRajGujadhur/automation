@@ -239,6 +239,7 @@ const ROWS: Record<'edit' | 'view' | 'navigate' | 'code' | 'tools' | 'help', Row
     ['Copy JSON Pointer', 'copy-json-pointer'],
     ['Copy XPath', 'copy-xpath'],
     ['Toggle Ignore Test', 'toggle-ignore'],
+    ['Insert Date and Time', 'insert-date'],
   ],
   tools: [
     ['Run Anything… (Ctrl twice)', 'run-anything'],

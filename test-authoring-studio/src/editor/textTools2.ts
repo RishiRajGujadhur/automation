@@ -174,3 +174,11 @@ export function trimLines(view: EditorView) {
   view.dispatch({ changes: { from: first.from, to: last.to, insert: next }, userEvent: 'input.convert' });
   return true;
 }
+
+/** Insert Date and Time (Rider live template "date"): local ISO-like "yyyy-MM-dd HH:mm" at each caret. */
+export const stamp = (d = new Date()) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')} ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
+export const insertText = (text: () => string) => (view: EditorView) => {
+  const t = text();
+  view.dispatch({ ...view.state.changeByRange((r) => ({ changes: { from: r.from, to: r.to, insert: t }, range: EditorSelection.cursor(r.from + t.length) })), userEvent: 'input' });
+  return true;
+};

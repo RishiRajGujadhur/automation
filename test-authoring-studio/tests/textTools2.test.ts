@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { EditorSelection, EditorState, type TransactionSpec } from '@codemirror/state';
 import type { EditorView } from '@codemirror/view';
-import { mapSelections, urlEncode, urlDecode, base64Encode, base64Decode, escapeString, unescapeString, htmlEncode, htmlDecode, stepNumber, insertSequence, toggleQuotes, joinWith, splitAt, alignAssignments, swapSelections, countOccurrences, trimLines } from '../src/editor/textTools2';
+import { mapSelections, urlEncode, urlDecode, base64Encode, base64Decode, escapeString, unescapeString, htmlEncode, htmlDecode, stepNumber, insertSequence, toggleQuotes, joinWith, splitAt, alignAssignments, swapSelections, countOccurrences, trimLines, stamp, insertText } from '../src/editor/textTools2';
 
 /** Runs an editor command on `doc` with the selection between « and » (or a caret at |). */
 function run(doc: string, cmd: (v: EditorView) => boolean) {
@@ -75,5 +75,9 @@ describe('text tools, fourth batch (IDE-FEATURES-4 Y1…)', () => {
   });
   it('Y13 Trim Lines', () => {
     expect(run('«  a  \n\tb »\n  c', trimLines)).toBe('a\nb\n  c');
+  });
+  it('Y14 Insert Date and Time', () => {
+    expect(stamp(new Date(2026, 0, 5, 9, 7))).toBe('2026-01-05 09:07');
+    expect(run('at |now', insertText(() => 'X'))).toBe('at Xnow');
   });
 });
