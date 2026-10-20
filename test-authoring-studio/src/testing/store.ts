@@ -1,3 +1,4 @@
+import { featureOn } from '../features';
 import { useSyncExternalStore } from 'react';
 import { api } from '../api';
 import { saveBeforeRun } from '../editor/saveFirst';
@@ -60,7 +61,7 @@ export const discoverTests = () => api<{ tests: DiscoveredTest[]; warning?: stri
 let lastRun: { tests: DiscoveredTest[] | 'all'; configuration: string; coverage: boolean } | null = null;
 export const lastTestRun = () => lastRun;
 export const runTests = async (tests: DiscoveredTest[] | 'all', configuration = 'Debug', coverage = false) =>
-  (lastRun = { tests, configuration, coverage }, await saveBeforeRun(), api<TestRunState>('/tests/run', tests === 'all' ? { configuration, coverage } : { ids: tests.map((t) => t.id), filters: tests.map((t) => t.filter), configuration, coverage }));
+  (lastRun = { tests, configuration, coverage }, await saveBeforeRun(), api<TestRunState>('/tests/run', { ...(tests === 'all' ? { configuration, coverage } : { ids: tests.map((t) => t.id), filters: tests.map((t) => t.filter), configuration, coverage }), ...envBody() }));
 export const cancelTests = () => api<TestRunState>('/tests/cancel', {});
 
 /** Resolves when the run that `started` belongs to has finished. */
@@ -130,3 +131,13 @@ export async function runRepeatedly(tests: DiscoveredTest[], n: number, configur
 }
 /** "AddsTwoNumbers 3/3 passed; DividesByZero 2/3 passed (flaky)". */
 export const repeatSummary = (tally: Map<string, { passed: number; runs: number }>) => [...tally].map(([name, t]) => `${name} ${t.passed}/${t.runs} passed${t.passed && t.passed < t.runs ? ' (flaky)' : ''}`).join('; ');
+
+/** Test run environment variables (Rider run configurations / .runsettings): "NAME=value" lines or "; "-separated. */
+export function parseEnv(text: string) {
+  const env: Record<string, string> = {};
+  for (const part of text.split(/[;\n]/)) { const m = /^\s*([A-Za-z_][A-Za-z0-9_]{0,63})\s*=(.*)$/.exec(part); if (m) env[m[1]] = m[2].trim(); }
+  return env;
+}
+export const testEnvText = () => { try { return localStorage.getItem('tas:testEnv') ?? ''; } catch { return ''; } };
+export const setTestEnvText = (t: string) => { try { localStorage.setItem('tas:testEnv', t); } catch { /* storage blocked */ } };
+function envBody() { const env = parseEnv(testEnvText()); return Object.keys(env).length && featureOn('test-env') ? { env } : {}; }

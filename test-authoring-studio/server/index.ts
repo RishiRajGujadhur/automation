@@ -1370,7 +1370,7 @@ app.get('/api/tests/events', (req, res) => {
 });
 app.post('/api/tests/run', async (req, res) => {
   await afterRestore();
-  const { filters, ids, configuration, coverage } = z.object({ filters: z.array(z.string().max(600)).max(2000).default([]), ids: z.array(z.string().max(600)).max(2000).default([]), configuration: z.string().regex(/^[\w .|-]{1,60}$/).default('Debug'), coverage: z.boolean().optional() }).parse(req.body);
+  const { filters, ids, configuration, coverage, env } = z.object({ filters: z.array(z.string().max(600)).max(2000).default([]), ids: z.array(z.string().max(600)).max(2000).default([]), configuration: z.string().regex(/^[\w .|-]{1,60}$/).default('Debug'), coverage: z.boolean().optional(), env: z.record(z.string().regex(/^[A-Za-z_][A-Za-z0-9_]{0,63}$/), z.string().max(2000)).optional() }).parse(req.body);
   // One filter per test, or-ed; a very long filter (huge selections) runs everything instead.
   const joined = [...new Set(filters)].join('|');
   const filter = filters.length && joined.length < 8000 ? joined : undefined;
@@ -1385,7 +1385,7 @@ app.post('/api/tests/run', async (req, res) => {
     const packagesDir = path.join(config.repositoryRoot, path.dirname(classic[0]), 'packages');
     classicRun = { msbuild: vs.msbuild, buildArgs: msbuildArgs(target, 'build', cfg), vstest: vs.vstest, dll: await classicOutput(config.repositoryRoot, classic[0], cfg), ...(existsSync(packagesDir) ? { adapters: packagesDir } : {}) };
   }
-  res.json(await tests.run({ root: config.repositoryRoot, target, filter, requested: filters.length ? ids : ['all'], configuration: cfg, coverage, classic: classicRun }));
+  res.json(await tests.run({ root: config.repositoryRoot, target, filter, requested: filters.length ? ids : ['all'], configuration: cfg, coverage, classic: classicRun, env }));
 });
 app.post('/api/tests/cancel', (_req, res) => res.json(tests.cancel()));
 app.use(express.static(path.join(projectRoot, 'dist')));

@@ -1,12 +1,12 @@
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { FILE_SAVED_EVENT } from '../editor/events';
-import { ChevronDown, ChevronRight, Play, PlayCircle, Bug, RefreshCw, Square, CircleCheck, CircleX, CircleSlash, Circle, Loader, Search, X, FileText, FlaskConical, Boxes, RotateCcw, Navigation, ListPlus, ListMinus, Trash2, ShieldCheck, Copy, ChevronsDownUp, ChevronsUpDown, Hash, ClipboardList, Download, Timer, Repeat } from 'lucide-react';
+import { ChevronDown, ChevronRight, Play, PlayCircle, Bug, RefreshCw, Square, CircleCheck, CircleX, CircleSlash, Circle, Loader, Search, X, FileText, FlaskConical, Boxes, RotateCcw, Navigation, ListPlus, ListMinus, Trash2, ShieldCheck, Copy, ChevronsDownUp, ChevronsUpDown, Hash, ClipboardList, Download, Timer, Repeat, Braces } from 'lucide-react';
 import { RowMenu, useLocalState, copyText } from '../ui';
 import { api } from '../api';
 import { Dropdown, type MenuEntry } from '../radix';
 import { groupTests, type Group, type GroupBy, matchTest, testDetails } from './grouping';
 import { featureOn } from '../features';
-import { historyOf, runRepeatedly, repeatSummary } from './store';
+import { historyOf, runRepeatedly, repeatSummary, parseEnv, testEnvText, setTestEnvText } from './store';
 import { useTestRun, discoverTests, runTests, cancelTests, resultsOf, outcomeOf, combine, type DiscoveredTest, type Outcome } from './store';
 
 const icon = (o: Outcome) =>
@@ -86,6 +86,7 @@ export default function TestExplorer({ revision, onOpen, onDebug, onNotice }: { 
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [tests, run]);
   const running = run.status === 'running';
+  const [envText, setEnvText] = useState(testEnvText);
   // Elapsed time while tests run (QOL-50).
   const [startedAt, setStartedAt] = useState(0);
   const [, tick] = useState(0);
@@ -188,6 +189,7 @@ export default function TestExplorer({ revision, onOpen, onDebug, onNotice }: { 
           {moreRuns.length > 0 && <Dropdown label="More run options" align="end" trigger={<button className="icon-button" aria-label="More run options" title="More run options" disabled={running}><ChevronDown size={14} /></button>} entries={moreRuns} />}
           {featureOn('slowest-tests') && <button className="icon-button" aria-label="Slowest tests" title="Slowest tests" disabled={!run.results.length} onClick={() => { const top = tests.map((t) => ({ t, ms: resultsOf(t, run.results).reduce((n, r) => n + r.durationMs, 0) })).filter((x) => x.ms > 0).sort((a, b) => b.ms - a.ms).slice(0, 5); onNotice(top.length ? `Slowest: ${top.map((x) => `${x.t.method} ${ms(x.ms)}`).join(', ')}.` : 'Run the tests first.'); }}><Timer size={14} /></button>}
           {featureOn('continuous-testing') && <button className={`icon-button ${continuous ? 'pressed' : ''}`} aria-label="Continuous testing" aria-pressed={continuous} title="Continuous testing: run failed tests again after each save" onClick={() => setContinuous(!continuous)}><Repeat size={14} /></button>}
+          {featureOn('test-env') && <button className={`icon-button ${envText.trim() ? 'pressed' : ''}`} aria-label="Test environment variables" aria-pressed={!!envText.trim()} title={envText.trim() ? `Environment: ${Object.keys(parseEnv(envText)).join(', ')}` : 'Environment variables for test runs'} onClick={() => { const t = window.prompt('Environment variables for test runs (NAME=value; NAME2=value):', envText); if (t === null) return; setTestEnvText(t); setEnvText(t); onNotice(Object.keys(parseEnv(t)).length ? `Test runs use ${Object.keys(parseEnv(t)).join(', ')}.` : 'Test runs use no extra environment variables.'); }}><Braces size={14} /></button>}
           {featureOn('test-export') && <button className="icon-button" aria-label="Export results as CSV" title="Export results (CSV)" disabled={!tests.length} onClick={() => { const q = (v: string) => (/[",\n]/.test(v) ? `"${v.replace(/"/g, '""')}"` : v); const rows = [['Test', 'Project', 'Outcome', 'Duration (ms)', 'Message'], ...tests.map((t) => { const rs = resultsOf(t, run.results); return [`${t.className}.${t.method}`, t.project, outcome(t) ?? 'not run', rs.length ? String(rs.reduce((n, r) => n + r.durationMs, 0)) : '', rs.find((r) => r.message)?.message ?? '']; })]; const url = URL.createObjectURL(new Blob([rows.map((r) => r.map(q).join(',')).join('\r\n')], { type: 'text/csv' })); const a = document.createElement('a'); a.href = url; a.download = 'test-results.csv'; a.click(); setTimeout(() => URL.revokeObjectURL(url), 1000); }}><Download size={14} /></button>}
           {featureOn('test-summary') && <button className="icon-button" aria-label="Copy results summary" title="Copy results summary" disabled={!tests.length} onClick={() => { const failedNames = tests.filter((t) => outcome(t) === 'failed').map((t) => `- ${t.className}.${t.method}`); const text = [`Passed ${counts.passed}, failed ${counts.failed}, skipped ${counts.skipped}, not run ${counts.none} (${tests.length} tests)`, ...(failedNames.length ? ['', 'Failed:', ...failedNames] : [])].join('\n'); void copyText(text).then((ok) => onNotice(ok ? 'Copied the test results summary.' : 'Clipboard unavailable.')); }}><ClipboardList size={14} /></button>}
           {featureOn('test-failed-only') && <button className={`icon-button ${failedOnly ? 'pressed' : ''}`} aria-label="Show only failed tests" aria-pressed={failedOnly} title="Failed tests only" onClick={() => setFailedOnly(!failedOnly)}><CircleX size={14} /></button>}

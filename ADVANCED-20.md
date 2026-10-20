@@ -21,6 +21,7 @@ web and desktop apps, each with a Settings ▸ Features switch and tests.
 | Z14 | Parameter name hints in steps | Rider | no | ✅ 2026-10-20 |
 | Z15 | Import CSV as Table | Rider | no | ✅ 2026-10-20 |
 | Z16 | Export Living Documentation | Rider | no | ✅ 2026-10-20 |
+| Z17 | Test run environment variables | Rider | yes | ✅ 2026-10-20 |
 
 ## Progress log
 - 2026-10-20 Z1: Who last changed the caret's line, when and the commit summary, at its end.
@@ -39,3 +40,4 @@ web and desktop apps, each with a Settings ▸ Features switch and tests.
 - 2026-10-20 Z14: The step definition's parameter names before each argument.
 - 2026-10-20 Z15: A CSV/TSV file read into an aligned Gherkin table under the caret.
 - 2026-10-20 Z16: One HTML page of features, scenarios, tags, steps and last outcomes.
+- 2026-10-20 Z17: NAME=value pairs passed to dotnet test; names shown in the output.

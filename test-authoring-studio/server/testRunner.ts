@@ -138,7 +138,7 @@ export class TestRunner extends EventEmitter {
    * `classic`: a .NET Framework project, built with Visual Studio's MSBuild and run with vstest.console (test adapters
    * from the local packages/ folder), as Visual Studio's Test Explorer does.
    */
-  async run({ root, target, filter, requested, configuration, coverage, classic }: { root: string; target: string; filter?: string; requested: string[]; configuration: string; coverage?: boolean; classic?: { msbuild: string; buildArgs: string[]; vstest: string; dll: string; adapters?: string } }) {
+  async run({ root, target, filter, requested, configuration, coverage, classic, env }: { root: string; target: string; filter?: string; requested: string[]; configuration: string; coverage?: boolean; env?: Record<string, string>; classic?: { msbuild: string; buildArgs: string[]; vstest: string; dll: string; adapters?: string } }) {
     if (this.running) throw new Error('Tests are already running. Cancel the run first.');
     const results = await fs.mkdtemp(path.join(os.tmpdir(), 'tas-trx-'));
     const exe = classic ? classic.vstest : dotnet;
@@ -162,7 +162,9 @@ export class TestRunner extends EventEmitter {
       if (built !== 0) { this.proc = undefined; this.update({ status: 'failed', error: 'The build failed: see the output.' }); return this.state; }
       this.update({ output: `${this.state.output}\n> "${exe}" ${args.map(quote).join(' ')}\n` });
     }
-    const proc = spawn(exe, args, { cwd: root, windowsHide: true, env: { ...process.env, DOTNET_CLI_UI_LANGUAGE: 'en', MSBUILDTERMINALLOGGER: 'off' } });
+    // Run configuration environment variables (Rider / Visual Studio .runsettings): names are shown, not values.
+    if (env && Object.keys(env).length) this.update({ output: `${this.state.output}(environment: ${Object.keys(env).join(', ')})\n` });
+    const proc = spawn(exe, args, { cwd: root, windowsHide: true, env: { ...process.env, ...env, DOTNET_CLI_UI_LANGUAGE: 'en', MSBUILDTERMINALLOGGER: 'off' } });
     this.proc = proc;
     const read = (d: Buffer) => this.update({ output: (this.state.output + d.toString()).slice(-200_000) });
     proc.stdout!.on('data', read);

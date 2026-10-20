@@ -3,7 +3,7 @@ import { relativeDay, conflictsIn, resolveConflict, postfix, inlineValuesFor } f
 import { selectHunks } from '../server/git';
 import { outlinePreview } from '../src/editor/gherkinTools';
 import { EditorState } from '@codemirror/state';
-import { addToHistory, repeatSummary } from '../src/testing/store';
+import { addToHistory, repeatSummary, parseEnv } from '../src/testing/store';
 import { calculate } from '../src/search/calc';
 import { livingDocHtml } from '../src/testing/livingDoc';
 
@@ -80,5 +80,8 @@ describe('advanced features (ADVANCED-20)', () => {
     expect(html).toContain('1 features · 2 scenarios · 1 passed · 1 failed · 0 skipped · 0 not run · 2026-10-20 09:30 UTC');
     expect(html).toContain('<details open><summary><span class="o failed">failed</span> Fails');
     expect(html).toContain('<li><b>Given</b> a &quot;user&quot;</li>');
+  });
+  it('Z17 test environment variables', () => {
+    expect(parseEnv('BASE_URL=https://x.test; HEADED = 1\nbad line\n1X=2')).toEqual({ BASE_URL: 'https://x.test', HEADED: '1' });
   });
 });
