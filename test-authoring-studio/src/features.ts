@@ -219,6 +219,7 @@ export const FEATURES: Feature[] = [
   { id: 'scroll-marks', label: 'Scroll bar annotations', group: 'View', essential: true, vs: 'Scroll Bars ▸ Show annotations', description: 'Errors, warnings and the caret line marked over the scroll bar.', commands: ['scroll-marks'] },
   { id: 'report-problem', label: 'Report a Problem', group: 'Help and productivity', essential: true, vs: 'Help ▸ Send Feedback ▸ Report a Problem', description: 'Opens a new GitHub issue with a short template (nothing about your files is sent).', commands: ['report-problem'] },
   { id: 'pinned-row', label: 'Pinned tabs in a separate row', group: 'View', essential: false, vs: 'Tabs ▸ Show pinned tabs in a separate row', description: 'Pinned tabs get their own row above the others.', commands: ['pinned-row'] },
+  { id: 'color-tabs', label: 'Colorize document tabs', group: 'View', essential: false, vs: 'Tabs ▸ Colorize document tabs', description: 'Tabs are tinted with their file type\'s colour.', commands: ['color-tabs'] },
 ];
 export const GROUPS: FeatureGroup[] = ['Editing', 'Navigation', 'Code intelligence', 'Tool windows', 'Files', 'Git', 'Gherkin', 'View', 'Debugging', 'Help and productivity'];
 
