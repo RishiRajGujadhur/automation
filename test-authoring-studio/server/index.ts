@@ -40,6 +40,7 @@ import { findInFiles, replaceInFiles } from './search.js';
 import { values, render, parameterCount, replaceAttributePattern } from './stepRename.js';
 import { installed as nugetInstalled, updates as nugetUpdates, search as nugetSearch, versions as nugetVersions, install as nugetInstall, uninstall as nugetUninstall } from './nuget.js';
 import { status as gitStatus, stage as gitStage, unstage as gitUnstage, discard as gitDiscard, commit as gitCommit, headInfo, log as gitLog, branches as gitBranches, checkout as gitCheckout, createBranch as gitCreateBranch, sync as gitSync, merge as gitMerge, blame as gitBlame, clone as gitClone, shelves, shelve, unshelve, deleteShelf, lineHistory, commitDetails, graphLog, fileAt, commitAction, git, stageLines } from './git.js';
+import { readProperties, setProperties } from './projectProps.js';
 import { LanguageService } from './langService.js';
 import type { Index } from '../src/types.js';
 import { readSettings, writeSettings, settingsSchema, tracesDir, spySnapshotsDir } from './settings.js';
@@ -448,6 +449,24 @@ async function restoreOnOpen(target: typeof config) {
 }
 app.get('/api/restore', (_req, res) => res.json(restoreState));
 app.get('/api/health',(_req,res)=>res.json({ok:true,scannedAt:index?.scannedAt??null}));
+// Project Properties (CSHARP-20.md): a .csproj's property pages; writes are previewed diffs approved through /api/generation/apply.
+const projectFile = z.string().max(400).regex(/\.(cs|fs|vb)proj$/i);
+async function previewProject(project: string, edit: (xml: string) => string, changes: string[]) {
+  const target = await confined(config.repositoryRoot, project, false);
+  const before = await fs.readFile(target, 'utf8');
+  const source = edit(before);
+  const id = randomUUID();
+  previews.set(id, { file: project, source, hash: hash(before), root: config.repositoryRoot });
+  return { id, file: project, diff: createPatch(project, before, source, 'repository', 'proposed'), changed: before !== source, changes };
+}
+app.get('/api/project/properties', async (req, res) => {
+  const project = projectFile.parse(req.query.project);
+  res.json({ project, ...readProperties(await fs.readFile(await confined(config.repositoryRoot, project, false), 'utf8')) });
+});
+app.post('/api/project/properties/preview', async (req, res) => {
+  const { project, set, config: cfg } = z.object({ project: projectFile, set: z.record(z.string().max(80), z.string().max(4000).nullable()), config: z.string().regex(/^[\w.-]{1,40}$/).optional() }).parse(req.body);
+  res.json(await previewProject(project, (xml) => setProperties(xml, set, cfg), Object.entries(set).map(([k, v]) => (v === null ? `Remove ${k}${cfg ? ` (${cfg})` : ''}` : `${k} = ${v}${cfg ? ` (${cfg})` : ''}`))));
+});
 app.get('/api/project/model',async(_req,res)=>{res.json(await projectModel(config,await ensure()));});
 app.get('/api/project/files',async(req,res)=>{const folder=z.string().default('.').parse(req.query.folder);const dir=await confined(config.repositoryRoot,folder);const entries=await fs.readdir(dir,{withFileTypes:true});const {offset,limit}=paging.parse(req.query);const filtered=entries.filter(e=>!e.isSymbolicLink()&&!e.name.startsWith('.')&&!ignoredDirsFor(config).includes(e.name)).sort((a,b)=>Number(b.isDirectory())-Number(a.isDirectory())||a.name.localeCompare(b.name));res.json({folder,items:filtered.slice(offset,offset+limit).map(e=>({name:e.name,file:path.relative(config.repositoryRoot,path.join(dir,e.name)).replaceAll('\\','/'),directory:e.isDirectory()})),total:filtered.length,hasNext:offset+limit<filtered.length});});
 app.post('/api/workspace', async (req, res) => {

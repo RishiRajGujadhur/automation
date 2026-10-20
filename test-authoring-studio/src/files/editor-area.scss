@@ -3731,3 +3731,19 @@ html[data-features-off~='inlay-hints'] .cm-inlay {
 
 .cm-binding-doc { margin: 4px 0 0; max-width: 420px; white-space: normal; }
 .cm-binding-method { font-family: var(--font-mono, monospace); font-size: 12px; }
+
+// Project Properties (CSHARP-20).
+.rider-popup:has(.project-props) { width: min(880px, 96vw); max-width: none; }
+.project-props { display: flex; flex-direction: column; gap: 8px; min-height: 360px; }
+.project-props .pp-file { margin: 0; font-family: var(--font-mono, monospace); font-size: 12px; }
+.project-props .pp-body { display: flex; gap: 12px; flex: 1; min-height: 0; }
+.project-props .pp-nav { display: flex; flex-direction: column; min-width: 150px; border-right: 1px solid var(--border, #8884); padding-right: 8px; }
+.project-props .pp-nav button { text-align: left; background: none; border: 0; padding: 5px 8px; border-radius: 4px; color: inherit; cursor: pointer; font: inherit; }
+.project-props .pp-nav button.active { background: color-mix(in srgb, var(--accent, #9270dd) 18%, transparent); font-weight: 600; }
+.project-props .pp-page { flex: 1; display: flex; flex-direction: column; gap: 10px; max-height: 52vh; overflow: auto; padding-right: 4px; }
+.project-props .pp-field { display: flex; flex-direction: column; gap: 2px; }
+.project-props .pp-field.changed label::after { content: ' •'; color: var(--accent, #9270dd); }
+.project-props .pp-input { display: flex; gap: 4px; align-items: center; }
+.project-props .pp-input input:not([type='checkbox']), .project-props .pp-input select, .project-props .pp-input textarea { flex: 1; min-width: 0; }
+.project-props .pp-footer { display: flex; gap: 8px; align-items: center; justify-content: flex-end; }
+.project-props .pp-footer small { margin-right: auto; }

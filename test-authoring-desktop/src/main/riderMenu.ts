@@ -381,6 +381,7 @@ const ROWS: Record<'edit' | 'view' | 'navigate' | 'code' | 'tools' | 'help', Row
     ['Stage Selected Lines', 'stage-lines'],
     ['Toggle Temporary Breakpoint', 'temporary-breakpoint', 'CmdOrCtrl+Alt+Shift+F8'],
     ['Export Living Documentation…', 'living-doc'],
+    ['Project Properties…', 'project-properties'],
   ],
   help: [
     null,

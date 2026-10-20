@@ -516,6 +516,7 @@ export const FEATURES: Feature[] = [
   { id: 'code-vision-authors', label: 'Code Vision: authors of scenarios', group: 'Git', essential: false, description: 'Each Feature, Rule and Scenario line shows who changed the block last, when, and how many authors it has (from git).' },
   { id: 'step-hover-docs', label: 'Step hover: definition docs', group: 'Gherkin', essential: true, vs: 'Quick Info for steps', description: 'Hovering a step shows the bound method and its XML documentation summary (Quick Documentation).' },
   { id: 'run-impacted', label: 'Run Impacted Tests', group: 'Tool windows', essential: true, vs: 'Test Impact Analysis', description: 'A Test Explorer button runs only the tests affected by uncommitted changes: changed test files and scenarios whose steps bind to changed step files (Test Impact Analysis).' },
+  { id: 'project-properties', label: 'Project Properties', group: 'Code intelligence', essential: true, vs: 'Project ▸ Properties', description: 'The Explorer\'s project menu (and Tools ▸ Project Properties) opens property pages for the .csproj; changes are previewed as a diff before they are written.', commands: ['project-properties'] },
 ];
 export const GROUPS: FeatureGroup[] = ['Editing', 'Navigation', 'Code intelligence', 'Tool windows', 'Files', 'Git', 'Gherkin', 'View', 'Debugging', 'Help and productivity'];
 
