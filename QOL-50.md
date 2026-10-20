@@ -63,6 +63,7 @@ Every improvement is verified by a unit or Playwright test (`tests/e2e/qol50.spe
 | QL54 | Markdown: paste a link over text | Markdown | ✅ 2026-10-20 |
 | QL55 | Markdown: Ctrl+B / Ctrl+I | Markdown | ✅ 2026-10-20 |
 | QL56 | Markdown: lists continue on Enter | Markdown | ✅ 2026-10-20 |
+| QL57 | Gherkin: tag completion | Gherkin | ✅ 2026-10-20 |
 
 ## Progress log
 - 2026-10-20 QL1: Title names the file and workspace folder
@@ -121,3 +122,4 @@ Every improvement is verified by a unit or Playwright test (`tests/e2e/qol50.spe
 - 2026-10-20 QL54: [text](url) on paste
 - 2026-10-20 QL55: Bold / italic toggles
 - 2026-10-20 QL56: Next bullet; empty item ends
+- 2026-10-20 QL57: @ suggests repository tags

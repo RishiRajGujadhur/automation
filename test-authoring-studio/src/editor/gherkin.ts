@@ -1,3 +1,4 @@
+import { featureOn } from '../features';
 import { Parser, AstBuilder, GherkinClassicTokenMatcher } from '@cucumber/gherkin';
 import { IdGenerator } from '@cucumber/messages';
 import { linter, type Diagnostic } from '@codemirror/lint';
@@ -283,6 +284,13 @@ const keywordOptions: Completion[] = ['Feature: ', 'Background:', 'Scenario: ', 
 export async function gherkinCompletions(ctx: CompletionContext): Promise<CompletionResult | null> {
   const line = ctx.state.doc.lineAt(ctx.pos);
   const before = line.text.slice(0, ctx.pos - line.from);
+  // Tags in use in the repository (QOL-50), on tag lines.
+  const tagTyped = /(^|\s)(@[^\s@]*)$/.exec(before);
+  if (tagTyped && /^\s*@/.test(line.text) && featureOn('tag-complete')) {
+    const rows = await api<{ tag: string; scenarios: unknown[] }[]>('/tags').catch(() => []);
+    return { from: ctx.pos - tagTyped[2].length, options: rows.map((r) => ({ label: r.tag, detail: `${r.scenarios.length} scenario${r.scenarios.length === 1 ? '' : 's'}`, type: 'keyword' })), validFor: /^@[^\s@]*$/ };
+  }
+  // gherkin completion: params
   const m = /^(\s*)(Given|When|Then|And|But|\*)\s+(.*)$/.exec(before);
   if (!m) {
     const word = /^\s*(\w*)$/.exec(before);
