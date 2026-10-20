@@ -145,3 +145,42 @@ test('350 Convert fields to auto-properties', async ({ page }) => {
   await convert(page, 'namespace Demo;\npublic class P\n{\n    private int count;\n    public int Count { get { return count; } set { count = value; } }\n}\n',
     'Count {', /^Use auto property$/, (d) => /public int Count \{ get; set; \}/.test(d) && !d.includes('private int count'));
 });
+
+/** Writes .editorconfig into the temporary repository and reloads the workspace (the language server reads it). */
+async function editorconfig(page: Page, text: string) {
+  await fs.writeFile(path.join(temp, '.editorconfig'), text);
+  expect((await page.request.post('/api/workspace', { data: { repositoryRoot: temp, targetProject: '.' } })).ok()).toBe(true);
+}
+const lintText = async (page: Page, cls: string) => (await page.locator(cls).allTextContents()).join('');
+test('111 Code style enforcement from .editorconfig (var / explicit type as a warning)', async ({ page }) => {
+  needsLang();
+  await editorconfig(page, 'root = true\n[*.cs]\ncsharp_style_var_for_built_in_types = false:warning\ncsharp_style_var_when_type_is_apparent = false:warning\ncsharp_style_var_elsewhere = false:warning\ndotnet_diagnostic.IDE0008.severity = warning\n');
+  await open(page, CS);
+  await setDoc(page, 'namespace Demo;\npublic class P\n{\n    public int M()\n    {\n        var n = 3;\n        return n;\n    }\n}\n');
+  await expect.poll(() => lintText(page, '.cm-lintRange-warning'), { timeout: 60_000 }).toContain('var');
+  await caretAt(page, 'var n', 1);
+  await quickAction(page, /^Use explicit type instead of 'var'$/);
+  await expect.poll(() => docText(page)).toContain('int n = 3;');
+});
+test('114 Custom analyzer configuration: dotnet_diagnostic severities', async ({ page }) => {
+  needsLang();
+  await editorconfig(page, 'root = true\n[*.cs]\ndotnet_diagnostic.IDE0059.severity = warning\ndotnet_diagnostic.IDE0044.severity = none\n');
+  await open(page, CS);
+  await setDoc(page, 'namespace Demo;\npublic class P\n{\n    private int f = 1;\n    public int Run(int a)\n    {\n        var x = 1;\n        x = a;\n        return x + f;\n    }\n}\n');
+  // IDE0059 raised to a warning; IDE0044 (make field readonly) turned off.
+  await expect.poll(() => lintText(page, '.cm-lintRange-warning'), { timeout: 60_000 }).toContain('x');
+  await expect(page.locator('.cm-lintRange-info')).toHaveCount(0);
+});
+test('116 Inspection exclusion scopes: a folder of generated code', async ({ page }) => {
+  needsLang();
+  await editorconfig(page, 'root = true\n[*.cs]\ndotnet_diagnostic.IDE0059.severity = warning\n[Steps/Auth*.cs]\ngenerated_code = true\ndotnet_analyzer_diagnostic.severity = none\n');
+  await open(page, CS);
+  await setDoc(page, 'namespace Demo;\npublic class P\n{\n    public int Run(int a)\n    {\n        var x = 1;\n        x = a;\n        return x;\n    }\n}\n');
+  // Other files still get the warning (checked through the API), this one none.
+  const other = await (await page.request.post('/api/csharp/analyze', { data: { file: 'Steps/SearchSteps.cs', source: 'namespace Demo;\npublic class Q\n{\n    public int Run(int a)\n    {\n        var x = 1;\n        x = a;\n        return x;\n    }\n}\n' } })).json() as { id: string; severity: string }[];
+  expect(other.some((d) => d.id === 'IDE0059' && d.severity === 'warning')).toBe(true);
+  const mine = await (await page.request.post('/api/csharp/analyze', { data: { file: CS, source: await docText(page) } })).json() as { id: string }[];
+  expect(mine).toEqual([]);
+  await page.waitForTimeout(1500);
+  await expect(page.locator('.cm-lintRange-warning, .cm-lintRange-info, .cm-unnecessary')).toHaveCount(0);
+});

@@ -136,7 +136,7 @@ Legend: `[x]` done · `[ ]` to do.
 - [ ] 111. Code style enforcement
 - [x] 112. EditorConfig integration — EditorConfig designer, Gherkin formatting from .editorconfig
 - [x] 113. Roslyn analyzer integration — Roslyn IDE analyzers in the language server: suggestions, faded unused code, fixes in Quick Actions (2026-10-21)
-- [ ] 114. Custom analyzer configuration
+- [x] 114. Custom analyzer configuration — .editorconfig dotnet_diagnostic.<id>.severity drives the IDE analyzers (warning stays faded) (2026-10-21)
 - [x] 115. Suppression of individual inspections — Error List: Suppress in Project File
 - [ ] 116. Inspection exclusion scopes
 - [ ] 117. Quick-fix previews
@@ -344,3 +344,4 @@ Legend: `[x]` done · `[ ]` to do.
 - 2026-10-21 360: A switch over an enum gets a case per missing member.
 - 2026-10-21 87: A lambda becomes a local function (IDE0039) and then a method.
 - 2026-10-21 350: A field with a trivial property becomes an auto-property.
+- 2026-10-21 114: Rule severities from .editorconfig (error, warning, suggestion, none) apply to the analyzers in the editor; unused code raised to a warning is both squiggled and faded.
