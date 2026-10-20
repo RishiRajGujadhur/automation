@@ -30,7 +30,7 @@ const gherkin = (page: Page) => page.getByLabel('Gherkin source');
 async function caretAt(page: Page, text: string) {
   const line = gherkin(page).locator('.cm-line', { hasText: text }).first();
   await line.click();
-  const full = (await line.textContent()) ?? '';
+  const full = await line.evaluate((el) => { const c = el.cloneNode(true) as HTMLElement; c.querySelectorAll('[contenteditable="false"], .cm-widgetBuffer').forEach((w) => w.remove()); return c.textContent ?? ''; }); // widgets (inline blame, hints) are not text
   await page.keyboard.press('End');
   for (let i = 0; i < full.length - full.indexOf(text); i++) await page.keyboard.press('ArrowLeft');
 }
@@ -726,7 +726,7 @@ test('X148 / X149 Add Scenario and Copy Scenario as Markdown', async ({ page, co
   await caretAt(page, 'Scenario: Sign in');
   await gherkinItem(page, /^Copy Scenario as Markdown/);
   await expect.poll(() => page.evaluate(() => navigator.clipboard.readText())).toContain('### Scenario: Sign in');
-  await gherkinItem(page, /^Add Scenario/);
+  await gherkinItem(page, /^Add Scenario(?! Outline)/);
   await page.keyboard.type('Sign out');
   await expect.poll(() => doc(page)).toMatch(/Scenario: Sign out\r?\n\s+Given $/m);
 });

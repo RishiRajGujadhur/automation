@@ -270,7 +270,8 @@ test('Y93 / Y94 Slowest tests; continuous testing runs the failed tests again af
   await tree.locator('.t-label', { hasText: /AddsTwoNumbers/ }).click({ button: 'right' });
   await page.getByRole('menuitem', { name: 'Run', exact: true }).click();
   await expect(tree.locator('.t-label', { hasText: /AddsTwoNumbers/ }).getByLabel('Failed')).toBeVisible({ timeout: 240_000 });
-  // Y93
+  // Y93 (after the run's own result message, which would replace this one)
+  await expect(page.getByText(/^Tests (passed|failed)/).first()).toBeVisible({ timeout: 30_000 });
   await te.getByRole('button', { name: 'Slowest tests' }).click();
   await expect(page.getByText(/^Slowest: AddsTwoNumbers \d/).first()).toBeVisible();
   // Y94: turn it on, save a file from the editor: the failed test runs again.

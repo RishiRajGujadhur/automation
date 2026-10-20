@@ -33,7 +33,7 @@ const gherkin = (page: Page) => page.getByLabel('Gherkin source');
 async function caretAt(page: Page, text: string) {
   const line = gherkin(page).locator('.cm-line', { hasText: text }).first();
   await line.click();
-  const full = (await line.textContent()) ?? '';
+  const full = await line.evaluate((el) => { const c = el.cloneNode(true) as HTMLElement; c.querySelectorAll('[contenteditable="false"], .cm-widgetBuffer').forEach((w) => w.remove()); return c.textContent ?? ''; }); // widgets (inline blame, hints) are not text
   await page.keyboard.press('End');
   for (let i = 0; i < full.length - full.indexOf(text); i++) await page.keyboard.press('ArrowLeft');
 }

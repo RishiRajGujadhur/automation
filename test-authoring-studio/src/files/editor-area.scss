@@ -3398,7 +3398,7 @@ html[data-features-off~='inlay-hints'] .cm-inlay {
   gap: 6px;
   padding: 2px 8px;
   font-size: 11.5px;
-  color: var(--muted, #6b7280);
+  color: var(--text-muted, #6b7280);
   span {
     flex: 1;
     min-width: 0;
@@ -3411,7 +3411,7 @@ html[data-features-off~='inlay-hints'] .cm-inlay {
 .output-find {
   margin: 4px 6px;
   small {
-    color: var(--muted, #6b7280);
+    color: var(--text-muted, #6b7280);
     white-space: nowrap;
   }
 }
@@ -3467,7 +3467,7 @@ html[data-features-off~='inlay-hints'] .cm-inlay {
   gap: 6px;
   padding: 0 8px 4px;
   font-size: 11.5px;
-  color: var(--muted, #6b7280);
+  color: var(--text-muted, #6b7280);
   select {
     flex: 1;
     font-size: 11.5px;
@@ -3705,7 +3705,7 @@ html[data-features-off~='inlay-hints'] .cm-inlay {
 // Locals: Copy All as JSON (IDE-FEATURES-4).
 .debug-locals-tools { display: flex; justify-content: flex-end; padding: 2px 8px; font-size: 12px; }
 
-.cm-inline-blame { margin-left: 2.5em; color: var(--muted, #888); font-style: italic; opacity: 0.75; font-size: 0.92em; white-space: pre; }
+.cm-inline-blame { margin-left: 2.5em; color: var(--text-muted, #888); font-style: italic; font-size: 0.92em; white-space: pre; }
 
 .cm-conflict-current { background: color-mix(in srgb, #2ea04366 40%, transparent); }
 .cm-conflict-incoming { background: color-mix(in srgb, #3b82f666 40%, transparent); }
@@ -3725,9 +3725,9 @@ html[data-features-off~='inlay-hints'] .cm-inlay {
 
 .cm-same-binding { background: color-mix(in srgb, var(--accent, #9270dd) 18%, transparent); border-radius: 2px; }
 
-.cm-param-hint { margin-right: 3px; padding: 0 4px; border-radius: 3px; font-size: 0.82em; color: var(--muted, #888); background: color-mix(in srgb, var(--muted, #888) 14%, transparent); }
+.cm-param-hint { margin-right: 3px; padding: 0 4px; border-radius: 3px; font-size: 0.82em; color: var(--text-muted, #888); background: color-mix(in srgb, var(--text-muted, #888) 14%, transparent); }
 
-.cm-code-vision { margin-left: 2em; color: var(--muted, #888); font-size: 0.85em; }
+.cm-code-vision { margin-left: 2em; color: var(--text-muted, #888); font-size: 0.85em; }
 
 .cm-binding-doc { margin: 4px 0 0; max-width: 420px; white-space: normal; }
 .cm-binding-method { font-family: var(--font-mono, monospace); font-size: 12px; }
@@ -3769,15 +3769,15 @@ html[data-features-off~='inlay-hints'] .cm-inlay {
 .project-graph .pg-node { cursor: pointer; }
 .project-graph .pg-node:hover rect, .project-graph .pg-node:focus rect { fill: color-mix(in srgb, var(--accent, #9270dd) 14%, var(--panel, #fff)); }
 .project-graph .pg-name { font-weight: 600; font-size: 13px; fill: var(--text, #222); }
-.project-graph .pg-meta { font-size: 11px; fill: var(--muted, #777); }
-.project-graph .pg-edge { fill: none; stroke: var(--muted, #888); stroke-width: 1.4; }
-.project-graph .pg-arrowhead { fill: var(--muted, #888); }
+.project-graph .pg-meta { font-size: 11px; fill: var(--text-muted, #777); }
+.project-graph .pg-edge { fill: none; stroke: var(--text-muted, #888); stroke-width: 1.4; }
+.project-graph .pg-arrowhead { fill: var(--text-muted, #888); }
 
 // Debugger (DEBUG-20).
 .dbg-bp-search { margin-left: auto; width: 150px; height: 22px; padding: 0 6px; font: inherit; font-size: 12px; background: transparent; color: inherit; border: 1px solid var(--border, #8884); border-radius: 3px; }
 .bp-labels { display: inline-flex; gap: 3px; }
 .bp-label { font-size: 10px; padding: 0 5px; border-radius: 8px; background: color-mix(in srgb, var(--accent, #9270dd) 22%, transparent); }
-.bp-hits { font-size: 11px; color: var(--muted, #888); white-space: nowrap; }
+.bp-hits { font-size: 11px; color: var(--text-muted, #888); white-space: nowrap; }
 .bp-settings .bp-check { display: flex; gap: 6px; align-items: center; }
 .dbg-edit { width: 100%; font: inherit; padding: 0 3px; background: var(--input-bg, transparent); color: inherit; border: 1px solid var(--accent, #9270dd); }
 .dbg-locals-search { margin: 4px 8px; display: block; }
