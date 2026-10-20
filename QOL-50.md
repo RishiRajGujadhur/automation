@@ -96,6 +96,7 @@ Every improvement is verified by a unit or Playwright test (`tests/e2e/qol50.spe
 | QL87 | Close to the Right can be reopened | Files | ✅ 2026-10-20 |
 | QL88 | Gherkin < closes with > | Gherkin | ✅ 2026-10-20 |
 | QL89 | Examples header from the outline | Gherkin | ✅ 2026-10-20 |
+| QL90 | Terminal right-click copies or pastes | Tool windows | ✅ 2026-10-20 |
 
 ## Progress log
 - 2026-10-20 QL1: Title names the file and workspace folder
@@ -187,3 +188,4 @@ Every improvement is verified by a unit or Playwright test (`tests/e2e/qol50.spe
 - 2026-10-20 QL87: Bug fix: tabs closed with Close to the Right now go to Reopen Closed Tab (Ctrl+Shift+T).
 - 2026-10-20 QL88: Typing < adds the closing > of an outline parameter.
 - 2026-10-20 QL89: Enter after Examples: writes the header row from the outline's <parameters>.
+- 2026-10-20 QL90: Right-click copies the terminal selection, or pastes when nothing is selected.

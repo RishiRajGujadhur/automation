@@ -85,6 +85,14 @@ function Shell({ active, onTitle, onExit, takeCommand }: { active: boolean; onTi
       line = line.slice(0, pos) + parts[0] + line.slice(pos); pos += parts[0].length; redraw();
       if (parts.length > 1) { const cmd = line; line = ''; pos = 0; submit(cmd); }
     });
+    // Right-click copies the selection, or pastes (Windows Terminal) (QOL-50).
+    const rightClick = (e: MouseEvent) => {
+      if (!featureOn('terminal-right-click')) return;
+      e.preventDefault();
+      if (term.hasSelection()) { void navigator.clipboard.writeText(term.getSelection()).catch(() => {}); term.clearSelection(); }
+      else void navigator.clipboard.readText().then((t) => { if (t) term.paste(t); }, () => {});
+    };
+    host.current!.addEventListener('contextmenu', rightClick);
     clearRef.current = () => { term.clear(); redraw(); term.focus(); };
     // Ctrl+wheel changes the font size of every terminal (kept) (QOL-50).
     const zoom = (e: WheelEvent) => {
@@ -100,7 +108,7 @@ function Shell({ active, onTitle, onExit, takeCommand }: { active: boolean; onTi
     window.addEventListener('tas:terminal-font', applyFont);
     const resize = new ResizeObserver(() => { try { fit.fit(); } catch { /* hidden */ } });
     resize.observe(host.current!);
-    return () => { live = false; window.removeEventListener('tas:terminal-font', applyFont); wheelHost.removeEventListener('wheel', zoom); resize.disconnect(); source?.close(); if (id) void api('/terminal/stop', { id }); term.dispose(); };
+    return () => { live = false; window.removeEventListener('tas:terminal-font', applyFont); wheelHost.removeEventListener('wheel', zoom); wheelHost.removeEventListener('contextmenu', rightClick); resize.disconnect(); source?.close(); if (id) void api('/terminal/stop', { id }); term.dispose(); };
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(() => { if (active) requestAnimationFrame(() => { try { fitRef.current?.fit(); } catch { /* hidden */ } }); }, [active]);
   useEffect(() => {
