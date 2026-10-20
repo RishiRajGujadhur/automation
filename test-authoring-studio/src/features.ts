@@ -487,6 +487,7 @@ export const FEATURES: Feature[] = [
   { id: 'test-data', label: 'Insert Test Data', group: 'Editing', essential: false, description: 'Code ▸ Test Data inserts a random email address, person name, number or date (example.test addresses).', commands: ['test-data-email', 'test-data-name', 'test-data-number', 'test-data-date'] },
   { id: 'new-file-here', label: 'New File Next to Active', group: 'Files', essential: true, vs: 'Rider: New ▸ File (Alt+Insert)', description: 'Code ▸ New File Next to Active creates a file in the active file\'s folder and opens it.', commands: ['new-file-here'] },
   { id: 'rename-active-file', label: 'Rename Active File', group: 'Files', essential: true, vs: 'File ▸ Rename (Shift+F6 in Rider)', description: 'Code ▸ Rename Active File renames the file of the active editor (its tab follows).', commands: ['rename-active-file'] },
+  { id: 'slowest-tests', label: 'Test Explorer: Slowest Tests', group: 'Tool windows', essential: false, description: 'A Test Explorer button names the five slowest tests of the last run.' },
 ];
 export const GROUPS: FeatureGroup[] = ['Editing', 'Navigation', 'Code intelligence', 'Tool windows', 'Files', 'Git', 'Gherkin', 'View', 'Debugging', 'Help and productivity'];
 
