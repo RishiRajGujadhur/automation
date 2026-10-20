@@ -601,3 +601,32 @@ test('387 Open files in a floating editor window', async ({ page, context }) => 
   await win.keyboard.press('Control+s');
   await expect.poll(() => fs.readFile(path.join(temp, CS), 'utf8'), { timeout: 20_000 }).toContain('// from the floating window');
 });
+
+test('259 Conditional compilation branch highlighting', async ({ page }) => {
+  needsLang();
+  await open(page, CS);
+  await setDoc(page, 'namespace Demo;\npublic class P\n{\n#if DEBUG\n    public int OnlyInDebug;\n#else\n    public int OnlyInRelease;\n#endif\n#if CUSTOM_SYMBOL\n    public int Custom;\n#endif\n}\n');
+  const inactive = page.locator('.cm-inactive-code');
+  await expect.poll(async () => (await inactive.allTextContents()).join(''), { timeout: 60_000 }).toContain('OnlyInRelease');
+  expect((await inactive.allTextContents()).join('')).toContain('Custom');
+  expect((await inactive.allTextContents()).join('')).not.toContain('OnlyInDebug');
+  await expect(inactive.first()).toHaveAttribute('title', /DEBUG;TRACE/);
+});
+test('179 Semantic syntax highlighting', async ({ page }) => {
+  needsLang();
+  await open(page, CS);
+  await setDoc(page, 'namespace Demo;\npublic interface IShape { double Area(); }\npublic class Circle : IShape\n{\n    private double radius;\n    public double Area() { var r = radius; return r * r; }\n}\n');
+  await expect.poll(async () => (await page.locator('.cm-sem-interface').allTextContents()).join(','), { timeout: 60_000 }).toContain('IShape');
+  expect(await page.locator('.cm-sem-field').allTextContents()).toContain('radius');
+  expect(await page.locator('.cm-sem-local').allTextContents()).toContain('r');
+  expect(await page.locator('.cm-sem-method').allTextContents()).toContain('Area');
+  // Off from Settings: the next edit draws none.
+  const d = await openSettings(page);
+  await d.getByRole('searchbox', { name: 'Search settings' }).fill('semanticHighlighting');
+  await d.getByRole('combobox', { name: 'Semantic Highlighting: Enabled' }).click();
+  await page.getByRole('option', { name: 'false' }).click();
+  await page.keyboard.press('Escape');
+  await page.keyboard.press('Escape');
+  await setDoc(page, 'namespace Demo;\npublic interface IShape { }\n');
+  await expect(page.locator('.cm-sem-interface')).toHaveCount(0);
+});

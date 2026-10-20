@@ -41,7 +41,7 @@ while ((line = Console.ReadLine()) != null)
     }
 }
 
-sealed class LanguageService
+sealed partial class LanguageService
 {
     static readonly string[] Ignored = ["bin", "obj", ".git", ".vs", "node_modules", "TestResults"];
     AdhocWorkspace? workspace;
@@ -98,6 +98,11 @@ sealed class LanguageService
             "unnecessary" => await Unnecessary(doc),
             "inheritance" => await Inheritance(doc),
             "analyze" => await Analyze(doc),
+            "inactive" => await InactiveRegions(doc),
+            "flow" => await Flow(doc, Math.Min(Pos(text), text.Length), req["endLine"] is null ? Math.Min(Pos(text), text.Length) : text.Lines[Math.Clamp((int)req["endLine"]! - 1, 0, text.Lines.Count - 1)].Start + (int)req["endColumn"]! - 1),
+            "methodHierarchy" => await MethodHierarchy(doc, Math.Min(Pos(text), text.Length)),
+            "classify" => await Classify(doc, (int?)req["from"] ?? 0, (int?)req["to"] ?? text.Length),
+            "metadataSource" => await MetadataSource(doc, Math.Min(Pos(text), text.Length)),
             "applyAction" => await ApplyAction((string)req["actionId"]!),
             "previewAction" => await PreviewAction((string)req["actionId"]!),
             _ => throw new InvalidOperationException($"Unknown operation {op}."),
@@ -126,6 +131,7 @@ sealed class LanguageService
         var csprojs = new[] { root }.Concat(extraRoots).SelectMany(r => Directory.EnumerateFiles(r, "*.csproj", SearchOption.AllDirectories)).Where(p => !IsIgnored(p)).Take(200).Select(Path.GetFullPath).Distinct(StringComparer.OrdinalIgnoreCase).ToList();
         var ids = csprojs.ToDictionary(p => p, p => ProjectId.CreateNewId(Path.GetFileNameWithoutExtension(p)), StringComparer.OrdinalIgnoreCase);
         var infos = new List<ProjectInfo>();
+        var rootNamespaces = new Dictionary<ProjectId, (string, string)>();
         var allPackages = new Dictionary<string, MetadataReference>(StringComparer.OrdinalIgnoreCase);
         foreach (var proj in csprojs)
         {
@@ -162,7 +168,9 @@ sealed class LanguageService
             var tfv = xml?.Descendants().FirstOrDefault(e => e.Name.LocalName == "TargetFrameworkVersion")?.Value.Trim();
             var projectFramework = (tfv != null ? NetFrameworkReferences(tfv) : null) ?? framework;
             infos.Add(ProjectInfo.Create(ids[proj], VersionStamp.Create(), name, name, LanguageNames.CSharp, filePath: proj,
-                compilationOptions: Options, parseOptions: Parse, metadataReferences: projectFramework.Concat(refs.Values), projectReferences: projectRefs));
+                compilationOptions: Options, parseOptions: Parse.WithPreprocessorSymbols(PreprocessorSymbols(xml)), metadataReferences: projectFramework.Concat(refs.Values), projectReferences: projectRefs));
+            // The root namespace and folder, for Roslyn's "namespace does not match folder" (IDE0130).
+            rootNamespaces[ids[proj]] = (xml?.Descendants().FirstOrDefault(e => e.Name.LocalName == "RootNamespace")?.Value.Trim() is { Length: > 0 } rn ? rn : name, dir);
         }
         owners = csprojs.Select(p => (Path.GetDirectoryName(p)!, ids[p])).OrderByDescending(o => o.Item1.Length).ToList();
         var files = SourceFiles().ToList();
@@ -171,12 +179,14 @@ sealed class LanguageService
         {
             miscId = ProjectId.CreateNewId("Miscellaneous Files");
             infos.Add(ProjectInfo.Create(miscId, VersionStamp.Create(), owners.Count == 0 ? "Workspace" : "Miscellaneous Files", "Miscellaneous", LanguageNames.CSharp,
-                compilationOptions: Options, parseOptions: Parse, metadataReferences: framework.Concat(allPackages.Values), projectReferences: ids.Values.Select(i => new ProjectReference(i))));
+                compilationOptions: Options, parseOptions: Parse.WithPreprocessorSymbols("DEBUG", "TRACE"), metadataReferences: framework.Concat(allPackages.Values), projectReferences: ids.Values.Select(i => new ProjectReference(i))));
         }
         var solution = workspace.AddSolution(SolutionInfo.Create(SolutionId.CreateNewId(), VersionStamp.Create(), projects: infos));
         foreach (var file in files) solution = solution.AddDocument(DocumentId.CreateNewId(Owner(file) ?? miscId!), Path.GetFileName(file), SourceText.From(File.ReadAllText(file)), filePath: file);
         // Implicit usings of SDK-style projects (dotnet new), so `Task`, `List<>`… resolve as they do in the build.
         foreach (var p in infos) solution = solution.AddDocument(DocumentId.CreateNewId(p.Id), "GlobalUsings.g.cs", SourceText.From(ImplicitUsings));
+        foreach (var (id, (rootNamespace, projectDir)) in rootNamespaces)
+            solution = solution.AddAnalyzerConfigDocument(DocumentId.CreateNewId(id), ".globalconfig", SourceText.From($"is_global = true\nbuild_property.RootNamespace = {rootNamespace}\nbuild_property.ProjectDir = {projectDir}{Path.DirectorySeparatorChar}\n"), filePath: Path.Combine(projectDir, ".tas.globalconfig"));
         // .editorconfig files (repository root down to each project) drive formatting and code style, as in the build.
         foreach (var p in infos)
         {

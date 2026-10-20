@@ -259,7 +259,7 @@ Legend: `[x]` done · `[ ]` to do.
 - [ ] 256. Generated source inspection
 - [ ] 257. Source generator output navigation
 - [ ] 258. Source generator debugging
-- [ ] 259. Conditional compilation branch highlighting
+- [x] 259. Conditional compilation branch highlighting — C#: code an #if leaves out is greyed (DEBUG, TRACE, target framework, DefineConstants); the language service parses with these symbols (2026-10-21)
 - [x] 260. Target framework switching — Upgrade Target Framework
 
 ## Advanced Navigation & Search
@@ -385,3 +385,4 @@ Legend: `[x]` done · `[ ]` to do.
 - 2026-10-21 386: The active editor moves between the main tab group and the side group.
 - 2026-10-21 398: A locked side group takes no new editors; Open to the Side then opens in the main group.
 - 2026-10-21 387: A file opens in a floating window of its own (web pop-up, desktop window) with the same editor features and saving.
+- 2026-10-21 259: Inactive preprocessor branches are greyed with the symbols listed in their tooltip; the language service now compiles each project with DEBUG, TRACE, its framework symbols and DefineConstants.

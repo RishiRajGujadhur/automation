@@ -21,4 +21,5 @@ import './workbenchTabs';
 import '../search/searchEditor';
 import './zenMode';
 import './workbenchLayout';
+import '../editor/csharpExtras';
 export { SETTINGS } from './settings';
