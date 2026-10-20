@@ -108,6 +108,11 @@ export default function DebugPanel({ onOpen, onNotice, onClose, editingRequest =
     return () => { live = false; };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [frameKey]);
+  // Inline values (Visual Studio 2026 / Rider): the editor shows the locals next to the lines that use them.
+  useEffect(() => {
+    window.dispatchEvent(new CustomEvent('tas:inline-values', { detail: frame?.file && locals.length ? { file: frame.file, line: frame.line, values: locals.map((v) => ({ name: v.name, value: v.value })) } : null }));
+  }, [locals, frame?.file, frame?.line]);
+  useEffect(() => () => { window.dispatchEvent(new CustomEvent('tas:inline-values', { detail: null })); }, []);
   useEffect(() => {
     if (!frame || !watches.length) { setValues([]); return; }
     let live = true;

@@ -177,3 +177,43 @@ registerAdvanced((file, kind) => (kind !== 'code' || !file.endsWith('.cs') ? [] 
     return true;
   },
 }]))));
+
+/* Z9 Inline values while debugging (Visual Studio 2026 inline values, Rider): "name = value" after the lines of the
+   paused method that use a local. */
+type InlineValues = { file: string; line: number; values: { name: string; value: string }[] } | null;
+let lastValues: InlineValues = null;
+const setInlineValues = StateEffect.define<null>();
+if (typeof window !== 'undefined') window.addEventListener('tas:inline-values', (e) => { lastValues = (e as CustomEvent<InlineValues>).detail; for (const v of inlineViews) v.dispatch({ effects: setInlineValues.of(null) }); });
+const inlineViews = new Set<EditorView>();
+/** The values to show on each line (1-based) from `first` to `last`: locals used on that line, up to 3. */
+export function inlineValuesFor(lines: string[], first: number, last: number, values: { name: string; value: string }[]) {
+  const out = new Map<number, string>();
+  for (let n = first; n <= last; n++) {
+    const text = (lines[n - 1] ?? '').replace(/"(?:[^"\\]|\\.)*"/g, '""').replace(/\/\/.*$/, '');
+    const used = values.filter((v) => /^[A-Za-z_]\w*$/.test(v.name) && new RegExp(`\\b${v.name}\\b`).test(text)).slice(0, 3);
+    if (used.length) out.set(n, used.map((v) => `${v.name} = ${v.value.length > 40 ? `${v.value.slice(0, 37)}…` : v.value}`).join(', '));
+  }
+  return out;
+}
+class ValueWidget extends WidgetType {
+  constructor(readonly text: string) { super(); }
+  eq(o: ValueWidget) { return o.text === this.text; }
+  toDOM() { const el = document.createElement('span'); el.className = 'cm-inline-value'; el.textContent = this.text; return el; }
+}
+registerAdvanced((file) => ViewPlugin.fromClass(class {
+  decorations = Decoration.none;
+  constructor(readonly view: EditorView) { inlineViews.add(view); this.decorations = this.build(); }
+  destroy() { inlineViews.delete(this.view); }
+  update(u: ViewUpdate) { if (u.docChanged || u.transactions.some((t) => t.effects.some((e) => e.is(setInlineValues)))) this.decorations = this.build(); }
+  build() {
+    const v = lastValues;
+    if (!v || v.file !== file || !featureOn('inline-values')) return Decoration.none;
+    const doc = this.view.state.doc;
+    const lines = doc.toString().split('\n');
+    const last = Math.min(v.line, doc.lines);
+    let first = last;
+    while (first > 1 && last - first < 40 && !/^\s*(public|private|protected|internal|static|async|void)\b.*\(/.test(lines[first - 1])) first--;
+    const map = inlineValuesFor(lines, first, last, v.values);
+    return Decoration.set([...map].map(([n, text]) => Decoration.widget({ widget: new ValueWidget(text), side: 1 }).range(doc.line(n).to)));
+  }
+}, { decorations: (p) => p.decorations }));

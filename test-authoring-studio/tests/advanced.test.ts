@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { relativeDay, conflictsIn, resolveConflict, postfix } from '../src/editor/advanced';
+import { relativeDay, conflictsIn, resolveConflict, postfix, inlineValuesFor } from '../src/editor/advanced';
 import { selectHunks } from '../server/git';
 import { outlinePreview } from '../src/editor/gherkinTools';
 import { EditorState } from '@codemirror/state';
@@ -57,5 +57,10 @@ describe('advanced features (ADVANCED-20)', () => {
   });
   it('Z7 repeat summary marks flaky tests', () => {
     expect(repeatSummary(new Map([['A', { passed: 3, runs: 3 }], ['B', { passed: 1, runs: 3 }], ['C', { passed: 0, runs: 3 }]]))).toBe('A 3/3 passed; B 1/3 passed (flaky); C 0/3 passed');
+  });
+  it('Z9 inline values for the lines that use a local', () => {
+    const lines = ['void M()', '{', '    var total = a + b;', '    Log("a total");', '    // b', '    return total;'];
+    const m = inlineValuesFor(lines, 1, 6, [{ name: 'a', value: '2' }, { name: 'b', value: '3' }, { name: 'total', value: '5' }]);
+    expect([...m]).toEqual([[3, 'a = 2, b = 3, total = 5'], [6, 'total = 5']]);
   });
 });

@@ -504,6 +504,7 @@ export const FEATURES: Feature[] = [
   { id: 'test-history', label: 'Test history', group: 'Tool windows', essential: true, vs: 'Test Explorer ▸ test history', description: 'Test Explorer\'s details show the last 10 outcomes of a test (✓ ✗) and its pass rate.' },
   { id: 'run-repeatedly', label: 'Test Explorer: Run Repeatedly', group: 'Tool windows', essential: false, description: 'The Test Explorer menu runs the selected tests n times and reports each one\'s pass count (flaky tests stand out).' },
   { id: 'format-on-save', label: 'Reformat feature files on save', group: 'Gherkin', essential: false, vs: 'Code Cleanup on save', description: 'Saving a feature file (Ctrl+S) formats it first: indentation and aligned tables (the .editorconfig settings when present).' },
+  { id: 'inline-values', label: 'Inline values while debugging', group: 'Debugging', essential: true, vs: 'Debugger inline values', description: 'When the debugger pauses, the lines of the current method show the values of the locals they use.' },
 ];
 export const GROUPS: FeatureGroup[] = ['Editing', 'Navigation', 'Code intelligence', 'Tool windows', 'Files', 'Git', 'Gherkin', 'View', 'Debugging', 'Help and productivity'];
 
