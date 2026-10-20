@@ -630,3 +630,28 @@ test('179 Semantic syntax highlighting', async ({ page }) => {
   await setDoc(page, 'namespace Demo;\npublic interface IShape { }\n');
   await expect(page.locator('.cm-sem-interface')).toHaveCount(0);
 });
+
+const selectText = (page: Page, from: string, to: string) => page.evaluate(([a, b]) => { const v = (window as unknown as { __activeEditor: () => { view: { state: { doc: { toString(): string } }; dispatch(x: unknown): void; focus(): void } } }).__activeEditor().view; const t = v.state.doc.toString(); v.dispatch({ selection: { anchor: t.indexOf(a), head: t.indexOf(b) + b.length } }); v.focus(); }, [from, to] as const);
+const FLOW = 'namespace Demo;\npublic class P\n{\n    public int M(int a)\n    {\n        var x = a;\n        int y;\n        y = x + 1;\n        return y;\n    }\n}\n';
+test('104 Control-flow analysis', async ({ page }) => {
+  needsLang();
+  await open(page, CS);
+  await setDoc(page, FLOW);
+  await selectText(page, 'y = x + 1;', 'return y;');
+  await menuItem(page, 'Code', /^Analyze Control Flow$/);
+  const dlg = page.getByRole('dialog');
+  await expect(dlg).toContainText('2 statements selected', { timeout: 60_000 });
+  await expect(dlg).toContainText(/End point reachable:\s+no/);
+  await expect(dlg).toContainText(/Return statements:\s+1/);
+});
+test('105 Data-flow analysis', async ({ page }) => {
+  needsLang();
+  await open(page, CS);
+  await setDoc(page, FLOW);
+  await selectText(page, 'y = x + 1;', 'return y;');
+  await menuItem(page, 'Code', /^Analyze Data Flow$/);
+  const dlg = page.getByRole('dialog');
+  await expect(dlg).toContainText(/Flows in \(read, set before\):\s+x/, { timeout: 60_000 });
+  await expect(dlg).toContainText(/Written inside:\s+y/);
+  await expect(dlg).toContainText(/Always assigned:\s+y/);
+});

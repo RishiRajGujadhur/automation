@@ -126,7 +126,7 @@ Legend: `[x]` done · `[ ]` to do.
 - [x] 101. Solution-wide code inspections — Problems (Alt+Shift+6)
 - [x] 102. Custom inspection severity levels — Configure Severity
 - [x] 103. Nullability analysis — compiler nullable warnings in the editor and Problems
-- [ ] 104. Control-flow analysis
+- [x] 104. Control-flow analysis — Code ▸ Analyze Control Flow (selected statements: reachable start / end, returns, entry and exit points) (2026-10-21)
 - [ ] 105. Data-flow analysis
 - [x] 106. Unreachable code detection — compiler CS0162 in the editor and Problems
 - [x] 107. Dead code detection — IDE0035: unreachable code faded, Remove unreachable code (2026-10-21)
@@ -387,3 +387,4 @@ Legend: `[x]` done · `[ ]` to do.
 - 2026-10-21 387: A file opens in a floating window of its own (web pop-up, desktop window) with the same editor features and saving.
 - 2026-10-21 259: Inactive preprocessor branches are greyed with the symbols listed in their tooltip; the language service now compiles each project with DEBUG, TRACE, its framework symbols and DefineConstants.
 - 2026-10-21 179: Semantic highlighting from the language service colours types, interfaces, methods, properties, fields, locals and parameters; a setting turns it off.
+- 2026-10-21 104: Roslyn's control-flow analysis of the selected statements as a report.

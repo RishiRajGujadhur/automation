@@ -9,11 +9,38 @@ import { findInSelection } from '../editor/findInSelection';
 import { toggleZen } from '../vscode/zenMode';
 import { layoutState } from './layoutModes';
 import { splitEditor, toggleMaximizeGroup } from '../vscode/editorGroups';
+import { api } from '../api';
+import type { EditorView } from '@codemirror/view';
 
 /**
  * Rider and VS Code features (RIDER-VSCODE-FEATURES.md): commands of the 2026-10-21 list. RiderHost registers them with
  * the same helpers as the earlier batches; each command's feature switch is in src/features.ts.
  */
+
+type Flow = { kind: string; count: number; control: { startReachable: boolean; endReachable: boolean; returns: number; entryPoints: number; exitPoints: number } | null; data: Record<string, string> | null };
+/** Line / column of the selection for the language service. */
+const range = (v: EditorView) => { const r = v.state.selection.main; const a = v.state.doc.lineAt(r.from), b = v.state.doc.lineAt(r.to); return { line: a.number, column: r.from - a.from + 1, endLine: b.number, endColumn: r.to - b.from + 1 }; };
+/** Analyze Control Flow / Data Flow (Rider's inspections of the selection): Roslyn's analysis as a readable report. */
+export function flowReport(f: Flow, what: 'control' | 'data') {
+  const yes = (b: boolean) => (b ? 'yes' : 'no');
+  const head = f.kind === 'statements' ? `${f.count} statement${f.count === 1 ? '' : 's'} selected` : 'Expression selected';
+  if (what === 'control') {
+    if (!f.control) return `${head}
+
+Control flow is analysed for whole statements: select one or more statements of a block.`;
+    const c = f.control;
+    return `${head}
+
+Start point reachable:  ${yes(c.startReachable)}
+End point reachable:    ${yes(c.endReachable)}${c.endReachable ? '' : '  (every path returns, throws or jumps away)'}
+Return statements:      ${c.returns}
+Entry points (labels):  ${c.entryPoints}
+Exit points (return, break, continue, goto): ${c.exitPoints}`;
+  }
+  const d = f.data ?? {};
+  const row = (label: string, k: string) => `${label.padEnd(30)} ${d[k] || '(none)'}`;
+  return [head, '', row('Flows in (read, set before):', 'dataFlowsIn'), row('Flows out (set, read after):', 'dataFlowsOut'), row('Read inside:', 'readInside'), row('Written inside:', 'writtenInside'), row('Always assigned:', 'alwaysAssigned'), row('Declared inside:', 'declared'), row('Captured by lambdas:', 'captured')].join('\n');
+}
 let failureAt = -1;
 export function moreCommands3(h: MoreHelpers): RiderCommand[] {
   const tokens = () => viewOptions().todoTokens ?? DEFAULT_TODO_TOKENS;
@@ -27,6 +54,8 @@ export function moreCommands3(h: MoreHelpers): RiderCommand[] {
     { id: 'move-editor-next-group', label: 'Move Editor into Next Group', menu: 'View', run: () => window.dispatchEvent(new CustomEvent('tas:move-editor', { detail: 'next' })) },
     { id: 'move-editor-previous-group', label: 'Move Editor into Previous Group', menu: 'View', run: () => window.dispatchEvent(new CustomEvent('tas:move-editor', { detail: 'previous' })) },
     { id: 'open-floating', label: 'Open in New Window', menu: 'View', run: h.inEditor((_v, file) => { if (!window.open(`${location.origin}${location.pathname}#/float?file=${encodeURIComponent(file)}`, '_blank', 'popup,width=900,height=700')) h.notice('The window was blocked: allow pop-ups for the studio.'); }) },
+    { id: 'analyze-control-flow', label: 'Analyze Control Flow', menu: 'Code', group: true, run: h.inEditor((v, file) => { if (!file.endsWith('.cs')) { h.notice('Open a C# file and select statements.'); return; } void api<Flow>('/csharp/op', { op: 'flow', file, source: v.state.doc.toString(), ...range(v) }).then((f) => window.dispatchEvent(new CustomEvent('tas:text-preview', { detail: flowReport(f, 'control') })), (e) => h.notice((e as Error).message)); }) },
+    { id: 'analyze-data-flow', label: 'Analyze Data Flow', menu: 'Code', run: h.inEditor((v, file) => { if (!file.endsWith('.cs')) { h.notice('Open a C# file and select statements or an expression.'); return; } void api<Flow>('/csharp/op', { op: 'flow', file, source: v.state.doc.toString(), ...range(v) }).then((f) => window.dispatchEvent(new CustomEvent('tas:text-preview', { detail: flowReport(f, 'data') })), (e) => h.notice((e as Error).message)); }) },
     { id: 'next-todo', label: 'Next TODO', menu: 'Navigate', group: true, run: h.inEditor((v) => gotoTodo(tokens(), 1)(v) || h.notice(`No ${tokens().join(' / ')} comments in this file.`)) },
     { id: 'previous-todo', label: 'Previous TODO', menu: 'Navigate', run: h.inEditor((v) => gotoTodo(tokens(), -1)(v) || h.notice(`No ${tokens().join(' / ')} comments in this file.`)) },
     { id: 'previous-conflict', label: 'Previous Merge Conflict', menu: 'Navigate', run: h.inEditor((v) => prevConflict(v) || h.notice('This file has no merge conflicts.')) },

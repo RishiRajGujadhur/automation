@@ -200,6 +200,9 @@ const ROWS: Record<'edit' | 'view' | 'navigate' | 'code' | 'tools' | 'help', Row
     ['Search with Pattern…', 'search-pattern'],
   ],
   code: [
+    ['Analyze Control Flow', 'analyze-control-flow'],
+    ['Analyze Data Flow', 'analyze-data-flow'],
+    null,
     ['Insert Live Template…', 'live-template', 'CmdOrCtrl+J'],
     ['Surround With…', 'surround-with', 'CmdOrCtrl+Alt+J'],
     null,
