@@ -1,4 +1,4 @@
-import { EditorSelection, type EditorState } from '@codemirror/state';
+import { EditorSelection, EditorState } from '@codemirror/state';
 import type { EditorView } from '@codemirror/view';
 import { indentUnit } from '@codemirror/language';
 import { mapLines } from './textTools';
@@ -756,4 +756,43 @@ export function xmlDocAbove(lines: string[], line: number) {
   const text = doc.join(' ');
   const summary = /<summary>([\s\S]*?)<\/summary>/.exec(text)?.[1] ?? (text.includes('<') ? '' : text);
   return summary.replace(/<see\s+cref="([^"]+)"\s*\/>/g, '$1').replace(/<[^>]+>/g, '').replace(/\s+/g, ' ').trim() || null;
+}
+
+/** The body of the class around the caret: from after its "{" to its "}". */
+function classBody(state: EditorState) {
+  const c = classAt(state);
+  if (!c) return undefined;
+  const text = state.doc.toString();
+  let depth = 0, open = -1;
+  for (let i = c.close; i >= 0; i--) { if (text[i] === '}') depth++; else if (text[i] === '{' && --depth === 0) { open = i; break; } }
+  return open < 0 ? undefined : { ...c, open, body: text.slice(open + 1, c.close), text };
+}
+/** Public instance methods declared directly in a class body: return type, name, type parameters, parameters. */
+export function publicMethods(body: string) {
+  const out: { ret: string; name: string; generic: string; params: string }[] = [];
+  let depth = 0;
+  for (const line of body.split('\n')) {
+    const m = depth === 0 && /^\s*public\s+(?!static\b|class\b|interface\b|enum\b|struct\b|record\b|const\b|event\b|abstract\b)(?:async\s+|virtual\s+|override\s+|new\s+)*([\w<>[\],.?]+(?:<[^()]*?>)?\??)\s+(\w+)\s*(<[^()]*>)?\s*\(([^)]*)\)/.exec(line);
+    if (m) out.push({ ret: m[1], name: m[2], generic: m[3] ?? '', params: m[4].trim() });
+    depth = Math.max(0, depth + (line.match(/\{/g) ?? []).length - (line.match(/\}/g) ?? []).length);
+  }
+  return out;
+}
+const namespaceOf = (text: string) => /^\s*namespace\s+([\w.]+)\s*[;{]?/m.exec(text)?.[1];
+/** Extract Interface (Rider / Visual Studio): an interface with the class's public methods and properties, and the class implementing it. */
+export function extractInterface(state: EditorState) {
+  const c = classBody(state);
+  if (!c) return null;
+  const methods = publicMethods(c.body);
+  const props = c.props.map((p) => { const line = c.body.split('\n').find((l) => new RegExp(`\\b${p.name}\\s*\\{`).test(l)) ?? ''; return `${p.type} ${p.name} { get;${/[^e]\bset;|^\s*public[^{]*\{\s*get;\s*set;/.test(line) && !/private set|protected set|init;/.test(line) ? ' set;' : ''} }`; });
+  if (!methods.length && !props.length) return null;
+  const name = `I${c.name}`;
+  const ns = namespaceOf(c.text);
+  const members = [...props, ...methods.map((m) => `${m.ret} ${m.name}${m.generic}(${m.params});`)].map((s) => `    ${s}`).join('\n');
+  const iface = `${ns ? `namespace ${ns};\n\n` : ''}public interface ${name}\n{\n${members}\n}\n`;
+  const head = new RegExp(`(\\bclass\\s+${c.name}\\b(?:<[^>]*>)?)(\\s*:\\s*[^{\\n]+?)?(\\s*(?:\\{|$|\\n))`);
+  const hm = head.exec(c.text);
+  if (!hm) return null;
+  const header = hm[2] ? `${hm[1]}${hm[2].trimEnd()}, ${name}${hm[3]}` : `${hm[1]} : ${name}${hm[3]}`;
+  return { name, iface, classText: c.text.slice(0, hm.index) + header + c.text.slice(hm.index + hm[0].length) };
 }
