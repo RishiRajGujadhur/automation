@@ -3701,3 +3701,6 @@ html[data-features-off~='inlay-hints'] .cm-inlay {
 
 // Caret blinking off (View ▸ Caret Blinking) (IDE-FEATURES-4).
 :root[data-no-blink] .cm-cursorLayer { animation: none !important; }
+
+// Locals: Copy All as JSON (IDE-FEATURES-4).
+.debug-locals-tools { display: flex; justify-content: flex-end; padding: 2px 8px; font-size: 12px; }

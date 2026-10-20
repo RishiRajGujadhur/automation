@@ -451,6 +451,7 @@ export const FEATURES: Feature[] = [
   { id: 'caret-blink', label: 'Caret Blinking toggle', group: 'View', essential: true, vs: 'Options: Text Editor ▸ caret blinking', description: 'View ▸ Caret Blinking turns the blinking of the text cursor on or off (Visual Studio Options ▸ Text Editor).', commands: ['caret-blink'] },
   { id: 'pin-active-tab', label: 'Pin / Unpin Active Tab', group: 'Files', essential: true, vs: 'Window ▸ Pin Tab', description: 'Ctrl+K, Shift+Enter (or View ▸ Pin / Unpin Active Tab) pins the active editor tab, or unpins it.', commands: ['pin-active-tab'] },
   { id: 'status-file-problems', label: 'Problems in the file (status bar)', group: 'View', essential: true, vs: 'File health indicator', description: 'The status bar counts the errors and warnings of the active file; a click goes to the next one.' },
+  { id: 'copy-locals', label: 'Locals: Copy All as JSON', group: 'Debugging', essential: false, description: 'The Locals window copies every local and its value as a JSON object.' },
 ];
 export const GROUPS: FeatureGroup[] = ['Editing', 'Navigation', 'Code intelligence', 'Tool windows', 'Files', 'Git', 'Gherkin', 'View', 'Debugging', 'Help and productivity'];
 

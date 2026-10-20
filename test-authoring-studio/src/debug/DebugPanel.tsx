@@ -192,7 +192,7 @@ export default function DebugPanel({ onOpen, onNotice, onClose, editingRequest =
           />
         </Tabs.Content>
         <Tabs.Content value="locals" className="debug-body">
-          {frame ? <Grid label="Locals">{locals.map((v) => <VariableRow key={v.name} v={v} depth={0} frameKey={frameKey} />)}</Grid> : <p className="subtle debug-empty">Locals appear when the debugger is paused.</p>}
+          {frame ? <>{featureOn('copy-locals') && locals.length > 0 && <div className="debug-locals-tools"><button className="link-button" onClick={() => void copyText(JSON.stringify(Object.fromEntries(locals.map((v) => [v.name, v.value])), null, 2))}>Copy All as JSON</button></div>}<Grid label="Locals">{locals.map((v) => <VariableRow key={v.name} v={v} depth={0} frameKey={frameKey} />)}</Grid></> : <p className="subtle debug-empty">Locals appear when the debugger is paused.</p>}
         </Tabs.Content>
         <Tabs.Content value="watch" className="debug-body">
           <Grid label="Watch 1">
