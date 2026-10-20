@@ -399,6 +399,7 @@ export const FEATURES: Feature[] = [
   { id: 'base64', label: 'Base64 Encode / Decode', group: 'Editing', essential: false, description: 'Edit ▸ Convert encodes the selection as Base64 (UTF-8) and decodes it back.', commands: ['base64-encode', 'base64-decode'] },
   { id: 'escape-string', label: 'Escape / Unescape C# String', group: 'Editing', essential: false, description: 'Edit ▸ Convert escapes quotes, backslashes and control characters for a C# string literal, and back.', commands: ['escape-string', 'unescape-string'] },
   { id: 'html-encode', label: 'HTML Encode / Decode', group: 'Editing', essential: false, description: 'Edit ▸ Convert turns < > & and quotes into entities, and entities back into text.', commands: ['html-encode', 'html-decode'] },
+  { id: 'step-number', label: 'Increment / Decrement Number', group: 'Editing', essential: false, description: 'Edit ▸ Convert adds or subtracts one from the number at each caret (zero padding kept).', commands: ['increment-number', 'decrement-number'] },
 ];
 export const GROUPS: FeatureGroup[] = ['Editing', 'Navigation', 'Code intelligence', 'Tool windows', 'Files', 'Git', 'Gherkin', 'View', 'Debugging', 'Help and productivity'];
 

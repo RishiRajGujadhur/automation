@@ -49,3 +49,29 @@ export const unescapeString = mapSelections((t) => t.replace(/\\(u[0-9a-fA-F]{4}
 const HTML: Record<string, string> = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' };
 export const htmlEncode = mapSelections((t) => t.replace(/[&<>"']/g, (c) => HTML[c]), 'line');
 export const htmlDecode = mapSelections((t) => t.replace(/&(amp|lt|gt|quot|apos|#\d+|#x[0-9a-fA-F]+);/g, (_, e: string) => (e[0] === '#' ? String.fromCodePoint(e[1] === 'x' ? parseInt(e.slice(2), 16) : Number(e.slice(1))) : ({ amp: '&', lt: '<', gt: '>', quot: '"', apos: "'" } as Record<string, string>)[e])), 'line');
+
+/** Increment / Decrement Number (Rider String Manipulation): the number at each caret, keeping zero padding. */
+export function stepNumber(by: number) {
+  return (view: EditorView) => {
+    const { state } = view;
+    let changed = false;
+    const tr = state.changeByRange((r) => {
+      const line = state.doc.lineAt(r.head);
+      for (const m of line.text.matchAll(/-?\d+/g)) {
+        const from = line.from + m.index!, to = from + m[0].length;
+        if (r.head < from || r.head > to) continue;
+        const neg = m[0].startsWith('-');
+        const digits = neg ? m[0].slice(1) : m[0];
+        const n = BigInt(m[0]) + BigInt(by);
+        const abs = (n < 0n ? -n : n).toString().padStart(digits.length, '0');
+        const next = (n < 0n ? '-' : '') + abs;
+        changed = true;
+        return { changes: { from, to, insert: next }, range: EditorSelection.cursor(Math.min(from + next.length, r.head + next.length - m[0].length)) };
+      }
+      return { range: r };
+    });
+    if (!changed) return false;
+    view.dispatch({ ...tr, userEvent: 'input.convert' });
+    return true;
+  };
+}

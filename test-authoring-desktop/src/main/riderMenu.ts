@@ -68,6 +68,8 @@ const ROWS: Record<'edit' | 'view' | 'navigate' | 'code' | 'tools' | 'help', Row
       ['Unescape C# String', 'unescape-string'],
       ['HTML Encode', 'html-encode'],
       ['HTML Decode', 'html-decode'],
+      ['Increment Number', 'increment-number'],
+      ['Decrement Number', 'decrement-number'],
     ] },
   ],
   view: [

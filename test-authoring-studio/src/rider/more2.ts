@@ -1,6 +1,6 @@
 import type { RiderCommand } from './commands';
 import type { MoreHelpers } from './more';
-import { urlEncode, urlDecode, base64Encode, base64Decode, escapeString, unescapeString, htmlEncode, htmlDecode } from '../editor/textTools2';
+import { urlEncode, urlDecode, base64Encode, base64Decode, escapeString, unescapeString, htmlEncode, htmlDecode, stepNumber } from '../editor/textTools2';
 
 /**
  * Fourth batch of Visual Studio 2026 / JetBrains Rider commands (IDE-FEATURES-4.md, Y1–Y100). RiderHost registers
@@ -16,5 +16,7 @@ export function moreCommands2(h: MoreHelpers): RiderCommand[] {
     { id: 'unescape-string', label: 'Unescape C# String', menu: 'Edit', submenu: 'Convert', run: h.inEditor((v) => unescapeString(v) || h.notice('Select text (or put the caret on a word) to convert.')) },
     { id: 'html-encode', label: 'HTML Encode', menu: 'Edit', submenu: 'Convert', run: h.inEditor((v) => htmlEncode(v) || h.notice('Select text (or put the caret on a word) to convert.')) },
     { id: 'html-decode', label: 'HTML Decode', menu: 'Edit', submenu: 'Convert', run: h.inEditor((v) => htmlDecode(v) || h.notice('Select text (or put the caret on a word) to convert.')) },
+    { id: 'increment-number', label: 'Increment Number', menu: 'Edit', submenu: 'Convert', run: h.inEditor((v) => stepNumber(1)(v) || h.notice('Put the caret on a number.')) },
+    { id: 'decrement-number', label: 'Decrement Number', menu: 'Edit', submenu: 'Convert', run: h.inEditor((v) => stepNumber(-1)(v) || h.notice('Put the caret on a number.')) },
   ];
 }

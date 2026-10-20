@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { EditorSelection, EditorState, type TransactionSpec } from '@codemirror/state';
 import type { EditorView } from '@codemirror/view';
-import { mapSelections, urlEncode, urlDecode, base64Encode, base64Decode, escapeString, unescapeString, htmlEncode, htmlDecode } from '../src/editor/textTools2';
+import { mapSelections, urlEncode, urlDecode, base64Encode, base64Decode, escapeString, unescapeString, htmlEncode, htmlDecode, stepNumber } from '../src/editor/textTools2';
 
 /** Runs an editor command on `doc` with the selection between « and » (or a caret at |). */
 function run(doc: string, cmd: (v: EditorView) => boolean) {
@@ -34,5 +34,11 @@ describe('text tools, fourth batch (IDE-FEATURES-4 Y1…)', () => {
   it('Y4 HTML Encode / Decode', () => {
     expect(run('«<a href="x">Tom & Jerry</a>»', htmlEncode)).toBe('&lt;a href=&quot;x&quot;&gt;Tom &amp; Jerry&lt;/a&gt;');
     expect(run('«&lt;b&gt; &#39;x&#39; &#x41;»', htmlDecode)).toBe("<b> 'x' A");
+  });
+  it('Y5 Increment / Decrement Number at the caret, zero padding kept', () => {
+    expect(run('id = 4|1;', stepNumber(1))).toBe('id = 42;');
+    expect(run('v|009', stepNumber(1))).toBe('v010');
+    expect(run('x = |0', stepNumber(-1))).toBe('x = -1');
+    expect(run('no |number', stepNumber(1))).toBe('no number');
   });
 });
