@@ -544,6 +544,7 @@ export const FEATURES: Feature[] = [
   { id: 'bp-when-changed', label: 'Conditional breakpoints: when changed', group: 'Debugging', essential: true, vs: 'Breakpoint conditions ▸ When changed', description: 'A breakpoint condition can be "when changed": it stops only when the expression\'s value differs from the previous hit.' },
   { id: 'force-run-to-cursor', label: 'Force Run to Cursor', group: 'Debugging', essential: true, vs: 'Debug ▸ Force Run to Cursor', description: 'Ctrl+Shift+F10 (Tools ▸ Force Run to Cursor) runs to the caret\'s line without stopping at breakpoints on the way.', commands: ['force-run-to-cursor'] },
   { id: 'step-out-to', label: 'Call Stack: Step Out to Here', group: 'Debugging', essential: true, vs: 'Call Stack ▸ Run To Cursor', description: 'The Call Stack\'s row menu steps out until the chosen frame is on top (Visual Studio\'s Run to Cursor on a frame).' },
+  { id: 'function-breakpoints', label: 'Function breakpoints', group: 'Debugging', essential: true, vs: 'New ▸ Function Breakpoint', description: 'New Function Breakpoint… in the Breakpoints window stops in a method by name (Calculator.Add), wherever it is called from.' },
 ];
 export const GROUPS: FeatureGroup[] = ['Editing', 'Navigation', 'Code intelligence', 'Tool windows', 'Files', 'Git', 'Gherkin', 'View', 'Debugging', 'Help and productivity'];
 

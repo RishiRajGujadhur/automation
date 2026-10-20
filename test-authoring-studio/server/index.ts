@@ -1370,6 +1370,11 @@ app.post('/api/debug/control', async (req, res) => {
   if (action === 'stop') await debug.stop(); else await debug.control(action);
   res.json(debug.state);
 });
+app.post('/api/debug/function-breakpoints', async (req, res) => {
+  const { names } = z.object({ names: z.array(z.string().regex(/^[\w.`<>,]{1,200}$/)).max(100) }).parse(req.body);
+  await debug.setFunctionBreakpoints(names);
+  res.json({ names });
+});
 app.get('/api/debug/exceptions', (_req, res) => res.json({ breakOn: debug.breakOn }));
 app.post('/api/debug/exceptions', async (req, res) => {
   const { breakOn } = z.object({ breakOn: z.enum(['unhandled', 'all', 'never']) }).parse(req.body);

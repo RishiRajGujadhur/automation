@@ -130,6 +130,9 @@ export default function DebugPanel({ onOpen, onNotice, onClose, editingRequest =
     if (target) startDebugging({ project: target.project, filter: target.filter }).catch((e) => onNotice((e as Error).message));
   };
   const [bpQuery, setBpQuery] = useState('');
+  // Function breakpoints (kept per browser, sent to the server for this and the next sessions).
+  const [fnBps, setFnBps] = useLocalState<string[]>('functionBreakpoints', []);
+  useEffect(() => { if (featureOn('function-breakpoints')) void api('/debug/function-breakpoints', { names: fnBps }).catch(() => {}); }, [fnBps.join('|')]); // eslint-disable-line react-hooks/exhaustive-deps
   const bpList = Object.entries(breakpoints).flatMap(([file, specs]) => specs.map((b) => ({ ...b, file, verified: state.breakpoints[file]?.find((x) => x.line === b.line)?.verified })));
   // Search in the Breakpoints window (Visual Studio): file, line, condition, log message, labels.
   const bpText = (b: (typeof bpList)[number]) => `${b.file}:${b.line} ${b.condition ?? ''} ${b.hitCondition ?? ''} ${b.logMessage ?? ''} ${(b as { labels?: string[] }).labels?.join(' ') ?? ''}`.toLowerCase();
@@ -242,11 +245,13 @@ export default function DebugPanel({ onOpen, onNotice, onClose, editingRequest =
         </Tabs.Content>
         <Tabs.Content value="breakpoints" className="debug-body">
           <div className="dbg-list-tools">
+            {featureOn('function-breakpoints') && <button className="link-button" onClick={() => { const n = window.prompt('Function name (e.g. Calculator.Add or Add):', '')?.trim(); if (!n) return; if (!/^[\w.`<>,]{1,200}$/.test(n)) { onNotice('A function name has letters, digits, dots and underscores.'); return; } if (!fnBps.includes(n)) setFnBps([...fnBps, n]); }}>New Function Breakpoint…</button>}
             <IconButton label="Delete all breakpoints" disabled={!bpList.length} onClick={clearBreakpoints}><Trash2 size={13} /></IconButton>
             <IconButton label="Disable all breakpoints" disabled={!bpList.some((b) => b.enabled !== false)} onClick={() => enableAllBreakpoints(false)}><CircleOff size={13} /></IconButton>
             {featureOn('bp-search') && <input className="dbg-bp-search" type="search" aria-label="Search breakpoints" placeholder="Search" value={bpQuery} onChange={(e) => setBpQuery(e.target.value)} />}
             <IconButton label="Enable all breakpoints" disabled={!bpList.some((b) => b.enabled === false)} onClick={() => enableAllBreakpoints(true)}><CircleDot size={13} /></IconButton>
           </div>
+          {featureOn('function-breakpoints') && fnBps.length > 0 && <ul className="dbg-list" aria-label="Function breakpoints">{fnBps.map((n) => <li key={n} className="dbg-bp"><div className="dbg-bp-row"><CircleDot size={12} className="bp-dot" aria-hidden="true" /><span className="dbg-frame-name">{n}()</span><span className="bp-detail">function</span><IconButton label={`Delete function breakpoint ${n}`} onClick={() => setFnBps(fnBps.filter((x) => x !== n))}><X size={12} /></IconButton></div></li>)}</ul>}
           {bpList.length ? (
             <ul className="dbg-list" aria-label="Breakpoints">
               {shownBps.map((b) => {

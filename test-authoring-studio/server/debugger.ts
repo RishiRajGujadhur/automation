@@ -64,6 +64,8 @@ export class Debugger extends EventEmitter {
   private changed = new Map<string, string>();
   /** Run to Cursor: a one-shot breakpoint, removed at the next stop (netcoredbg has no native "run to"). */
   private runTo?: { file: string; line: number };
+  /** Function breakpoints (New ▸ Function Breakpoint): method names, e.g. Calculator.Add. */
+  functionBreakpoints: string[] = [];
   /** Force Run to Cursor: breakpoints are set aside until the next stop. */
   private forceRun = false;
   /** Exception Settings: break when user code leaves an exception unhandled (default), on every throw, or never. */
@@ -165,6 +167,7 @@ export class Debugger extends EventEmitter {
     await dap.request('initialize', { clientID: 'tas', adapterID: 'coreclr', linesStartAt1: true, columnsStartAt1: true, pathFormat: 'path' });
     await dap.request('attach', { processId: pid, justMyCode: true });
     for (const file of Object.keys(this.state.breakpoints)) await this.send(file);
+    await this.sendFunctions();
     await this.sendExceptions();
     // netcoredbg rejects configurationDone after attach; the waiting test host continues once a debugger is attached.
     await dap.request('configurationDone').catch(() => {});
@@ -245,6 +248,11 @@ export class Debugger extends EventEmitter {
     await this.dap.request(action, { threadId });
   }
 
+  private async sendFunctions() {
+    if (!this.dap || !this.functionBreakpoints.length) return;
+    await this.dap.request('setFunctionBreakpoints', { breakpoints: this.functionBreakpoints.map((name) => ({ name })) }).catch((e) => this.log(`Function breakpoints: ${(e as Error).message}\n`));
+  }
+  async setFunctionBreakpoints(names: string[]) { this.functionBreakpoints = names; if (this.dap && this.active) { if (!names.length) await this.dap.request('setFunctionBreakpoints', { breakpoints: [] }).catch(() => {}); else await this.sendFunctions(); } }
   private async sendExceptions() {
     if (!this.dap) return;
     const filters = this.breakOn === 'all' ? ['all'] : this.breakOn === 'unhandled' ? ['user-unhandled'] : [];
