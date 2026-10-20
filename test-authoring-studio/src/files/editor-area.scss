@@ -3748,3 +3748,5 @@ html[data-features-off~='inlay-hints'] .cm-inlay {
 .project-props .pp-footer { display: flex; gap: 8px; align-items: center; justify-content: flex-end; }
 .project-props .pp-footer small { margin-right: auto; }
 .project-props .pp-evaluated { color: var(--accent, #9270dd); font-size: 11px; }
+.project-props .pp-head { display: flex; align-items: center; gap: 12px; }
+.project-props .pp-config { margin-left: auto; display: flex; gap: 6px; align-items: center; font-size: 12px; }

@@ -14,7 +14,7 @@ type Props = { all: Record<string, string>; byConfig: Record<string, Record<stri
 export default function ProjectProperties({ project, onNotice }: { project: string; onNotice: (m: string) => void }) {
   const pages = PAGES.filter((p) => featureOn(p.feature));
   const [page, setPage] = useState(pages[0]?.id ?? '');
-  const [config] = useState('');
+  const [config, setConfig] = useState('');
   const [data, setData] = useState<Props>();
   const [edits, setEdits] = useState<Record<string, string | null>>({});
   const [preview, setPreview] = useState<FilePreview>();
@@ -58,7 +58,10 @@ export default function ProjectProperties({ project, onNotice }: { project: stri
   if (!pages.length) return <p className="subtle">Turn on Project Properties in Settings ▸ Features.</p>;
   return (
     <div className="project-props" aria-label={`Properties of ${project}`}>
-      <p className="subtle pp-file">{project}</p>
+      <div className="pp-head">
+        <p className="subtle pp-file">{project}</p>
+        {featureOn('pp-configurations') && <label className="pp-config">Configuration <select aria-label="Configuration" value={config} onChange={(e) => { setConfig(e.target.value); setEdits({}); setPreview(undefined); }}><option value="">All configurations</option>{[...new Set(['Debug', 'Release', ...Object.keys(data?.byConfig ?? {})])].map((c) => <option key={c} value={c}>{c}</option>)}</select></label>}
+      </div>
       <div className="pp-body">
         <nav className="pp-nav" aria-label="Property pages">
           {pages.map((p) => <button key={p.id} className={p.id === current?.id ? 'active' : ''} aria-current={p.id === current?.id ? 'page' : undefined} onClick={() => setPage(p.id)}>{p.title}</button>)}

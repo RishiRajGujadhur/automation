@@ -89,7 +89,7 @@ export function setProperties(xml: string, changes: Record<string, string | null
 export async function evaluate(projectPath: string, names: string[], cwd: string, configuration?: string) {
   const safe = names.filter((n) => NAME.test(n)).slice(0, 60);
   if (!safe.length) return {};
-  const out = await command(dotnet, ['msbuild', projectPath, '-nologo', ...(configuration ? [`-property:Configuration=${configuration}`] : []), ...safe.map((n) => `-getProperty:${n}`)], '', cwd).catch(() => '');
+  const out = await command(dotnet, ['msbuild', projectPath, '-nologo', '-nodeReuse:false', ...(configuration ? [`-property:Configuration=${configuration}`] : []), ...safe.map((n) => `-getProperty:${n}`)], '', cwd).catch(() => '');
   if (!out.trim()) return {};
   if (safe.length === 1) return { [safe[0]]: out.trim() };
   try { return (JSON.parse(out) as { Properties?: Record<string, string> }).Properties ?? {}; } catch { return {}; }
