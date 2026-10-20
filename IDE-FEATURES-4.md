@@ -75,6 +75,7 @@ has it on by default, so the desktop app starts with it on. The others start off
 | Y64 | Copy SHA-256 Hash | Rider | no | ✅ 2026-10-20 |
 | Y65 | Decode JWT | Rider | no | ✅ 2026-10-20 |
 | Y66 | Sort Tokens | Rider | no | ✅ 2026-10-20 |
+| Y67 | Copy as Markdown Code Block | Rider | no | ✅ 2026-10-20 |
 
 ## Progress log
 - 2026-10-20 Y1: Percent-encodes the selection (or line) and decodes it.
@@ -143,3 +144,4 @@ has it on by default, so the desktop app starts with it on. The others start off
 - 2026-10-20 Y64: Copies the SHA-256 of the selection or file.
 - 2026-10-20 Y65: Shows alg, sub and dates of the token at the caret; copies header and payload.
 - 2026-10-20 Y66: Sorts the comma- or space-separated values of the selection.
+- 2026-10-20 Y67: Copies the selection or file in a fenced block with its language.

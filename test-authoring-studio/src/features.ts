@@ -461,6 +461,7 @@ export const FEATURES: Feature[] = [
   { id: 'copy-sha256', label: 'Copy SHA-256 Hash', group: 'Help and productivity', essential: false, description: 'Tools ▸ Copy SHA-256 Hash copies the hash of the selection (or the file).', commands: ['copy-sha256'] },
   { id: 'decode-jwt', label: 'Decode JWT', group: 'Help and productivity', essential: false, description: 'Tools ▸ Decode JWT shows the token at the caret (algorithm, subject, dates) and copies its header and payload as JSON.', commands: ['decode-jwt'] },
   { id: 'sort-tokens', label: 'Sort Tokens', group: 'Editing', essential: false, description: 'Edit ▸ Convert sorts the comma- or space-separated values of the selection.', commands: ['sort-tokens'] },
+  { id: 'copy-markdown-block', label: 'Copy as Markdown Code Block', group: 'Editing', essential: false, description: 'Edit ▸ Copy as Markdown Code Block copies the selection (or file) inside a fenced block with its language (for tickets and chats).', commands: ['copy-markdown-block'] },
 ];
 export const GROUPS: FeatureGroup[] = ['Editing', 'Navigation', 'Code intelligence', 'Tool windows', 'Files', 'Git', 'Gherkin', 'View', 'Debugging', 'Help and productivity'];
 

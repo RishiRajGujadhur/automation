@@ -451,3 +451,11 @@ export const sortTokens = mapSelections((t) => {
   const sorted = [...parts].sort(new Intl.Collator(undefined, { numeric: true, sensitivity: 'base' }).compare);
   return sorted.join(sep === ',' ? (/,\s/.test(t) ? ', ' : ',') : ' ');
 }, 'line');
+
+const FENCE: Record<string, string> = { cs: 'csharp', feature: 'gherkin', json: 'json', xml: 'xml', csproj: 'xml', md: 'markdown', ts: 'ts', tsx: 'tsx', js: 'js', yml: 'yaml', yaml: 'yaml', ps1: 'powershell', sh: 'bash', http: 'http', sql: 'sql', html: 'html', css: 'css' };
+/** Copy as Markdown Code Block: the selection (or file) in a ``` fence named after the file's language. */
+export function markdownCodeBlock(text: string, file: string) {
+  const lang = FENCE[file.split('.').pop()!.toLowerCase()] ?? '';
+  const fence = text.includes('```') ? '````' : '```';
+  return `${fence}${lang}\n${text.replace(/\n$/, '')}\n${fence}`;
+}
