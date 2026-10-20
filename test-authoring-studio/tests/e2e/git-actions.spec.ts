@@ -172,3 +172,31 @@ test('X124–X128 Git Log: view at revision, compare with local, copy message, f
   await expect(list.getByRole('option')).toHaveCount(2);
   await expect(list).not.toContainText('Side notes');
 });
+
+test('X152–X154 Git: Stage File, Undo Changes in File, Show History for File', async ({ page }) => {
+  const steps = path.join(root, 'Steps/AuthSteps.cs');
+  const committed = await fs.readFile(steps, 'utf8');
+  await fs.writeFile(steps, committed.replace('public class AuthSteps', 'public class AuthSteps // changed'));
+  await page.addInitScript(() => { if (!sessionStorage.getItem('seeded')) { localStorage.setItem('tas:prefs', JSON.stringify({ mode: 'advanced', autoSave: 'off' })); sessionStorage.setItem('seeded', '1'); } });
+  await page.goto('/#/features/editor');
+  await expect(page.getByText('Repository indexed')).toBeVisible();
+  await page.getByRole('navigation').getByRole('button', { name: 'AuthSteps.cs', exact: true }).first().click();
+  await page.getByLabel('Source of Steps/AuthSteps.cs').locator('.cm-line').first().click();
+  const tool = async (item: RegExp) => { await page.getByRole('button', { name: 'Tools menu' }).click(); await page.getByRole('menuitem', { name: item }).click(); };
+  // X153 stage.
+  await tool(/^Git: Stage File/);
+  await expect.poll(() => g('diff', '--cached', '--name-only')).toContain('Steps/AuthSteps.cs');
+  g('reset', '-q');
+  // X152 undo changes.
+  page.once('dialog', (d) => void d.accept());
+  await tool(/^Git: Undo Changes in File/);
+  await expect.poll(() => fs.readFile(steps, 'utf8')).toBe(committed);
+  await expect(page.getByLabel('Source of Steps/AuthSteps.cs')).not.toContainText('// changed');
+  // X154 history of the file: only the base commit touched it.
+  await tool(/^Git: Show History for File/);
+  const list = page.getByRole('region', { name: 'Git Log' }).getByRole('listbox', { name: 'Commits' });
+  await expect(list.getByRole('option')).toHaveCount(1);
+  await expect(list).toContainText('base');
+  await page.getByRole('button', { name: 'Show every file' }).click();
+  await expect(list.getByRole('option')).toHaveCount(2);
+});

@@ -3546,3 +3546,16 @@ html[data-features-off~='inlay-hints'] .cm-inlay {
   margin-left: 8px;
   font-size: 11px;
 }
+
+.cm-editor.cm-session-readonly .cm-content {
+  caret-color: transparent;
+}
+.cm-editor.cm-session-readonly::after {
+  content: 'read-only';
+  position: absolute;
+  top: 2px;
+  right: 14px;
+  font-size: 10px;
+  opacity: 0.6;
+  pointer-events: none;
+}

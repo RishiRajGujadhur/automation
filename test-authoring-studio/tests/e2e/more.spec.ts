@@ -704,3 +704,47 @@ test('X146 Remove Breakpoints in File', async ({ page }) => {
   await menuItem(page, 'Tools', /^Remove Breakpoints in File/);
   await expect(page.locator('.gherkin-editor .cm-bp:visible')).toHaveCount(0);
 });
+
+test('X147 Toggle Read-Only (Session): edits are refused until toggled back', async ({ page }) => {
+  await openFeature(page);
+  await caretAt(page, 'Feature:');
+  await menuItem(page, 'View', /^Toggle Read-Only/);
+  await expect(page.locator('.gherkin-editor .cm-editor').first()).toHaveClass(/cm-session-readonly/);
+  const before = await doc(page);
+  await caretAt(page, 'Feature:');
+  await page.keyboard.type('xyz');
+  expect(await doc(page)).toBe(before);
+  await menuItem(page, 'View', /^Toggle Read-Only/);
+  await caretAt(page, 'Feature:');
+  await page.keyboard.type('xyz');
+  await expect.poll(() => doc(page)).toContain('xyzFeature:');
+});
+
+test('X148 / X149 Add Scenario and Copy Scenario as Markdown', async ({ page, context }) => {
+  await context.grantPermissions(['clipboard-read', 'clipboard-write']);
+  await openFeature(page);
+  await caretAt(page, 'Scenario: Sign in');
+  await gherkinItem(page, /^Copy Scenario as Markdown/);
+  await expect.poll(() => page.evaluate(() => navigator.clipboard.readText())).toContain('### Scenario: Sign in');
+  await gherkinItem(page, /^Add Scenario/);
+  await page.keyboard.type('Sign out');
+  await expect.poll(() => doc(page)).toMatch(/Scenario: Sign out\r?\n\s+Given $/m);
+});
+
+test('X150 Copy Problems in File', async ({ page, request, context }) => {
+  await context.grantPermissions(['clipboard-read', 'clipboard-write']);
+  await fs.writeFile(path.join(root, 'Steps/Broken3.cs'), ['namespace Demo;', 'public class Broken3', '{', '    public void M() { int x = ; }', '}', ''].join('\n'));
+  expect((await request.post('/api/workspace', { data: { repositoryRoot: root, targetProject: '.' } })).ok()).toBe(true);
+  await openCs(page, 'Steps/Broken3.cs', 'public class Broken3');
+  await expect(page.locator('.code-editor:not([hidden]) .cm-lintRange-error').first()).toBeAttached({ timeout: 30_000 });
+  await menuItem(page, 'Edit', /^Copy Problems in File/);
+  await expect.poll(() => page.evaluate(() => navigator.clipboard.readText())).toMatch(/^Steps\/Broken3\.cs:4:\d+: error: /);
+});
+
+test('X151 Full Screen', async ({ page }) => {
+  await openFeature(page);
+  await menuItem(page, 'View', /^Full Screen/);
+  await expect.poll(() => page.evaluate(() => !!document.fullscreenElement)).toBe(true);
+  await menuItem(page, 'View', /^Full Screen/);
+  await expect.poll(() => page.evaluate(() => !!document.fullscreenElement)).toBe(false);
+});
