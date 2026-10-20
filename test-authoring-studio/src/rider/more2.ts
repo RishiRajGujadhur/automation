@@ -1,6 +1,6 @@
 import type { RiderCommand } from './commands';
 import type { MoreHelpers } from './more';
-import { urlEncode, urlDecode, base64Encode, base64Decode, escapeString, unescapeString, htmlEncode, htmlDecode, stepNumber, insertSequence, toggleQuotes, joinWith, splitAt, alignAssignments, swapSelections, countOccurrences, trimLines, stamp, insertText, LOREM, shuffleLines, reformatXml, minifyXml, jsonEscape, jsonUnescape, numberLines, mapDoc, toFileScopedNamespace, toBlockScopedNamespace, removeRegions, toRawString, toggleTask, formatMarkdownTable, tableOfContents } from '../editor/textTools2';
+import { urlEncode, urlDecode, base64Encode, base64Decode, escapeString, unescapeString, htmlEncode, htmlDecode, stepNumber, insertSequence, toggleQuotes, joinWith, splitAt, alignAssignments, swapSelections, countOccurrences, trimLines, stamp, insertText, LOREM, shuffleLines, reformatXml, minifyXml, jsonEscape, jsonUnescape, numberLines, mapDoc, toFileScopedNamespace, toBlockScopedNamespace, removeRegions, toRawString, toggleTask, formatMarkdownTable, tableOfContents, MARKDOWN_TABLE } from '../editor/textTools2';
 
 /**
  * Fourth batch of Visual Studio 2026 / JetBrains Rider commands (IDE-FEATURES-4.md, Y1–Y100). RiderHost registers
@@ -41,5 +41,6 @@ export function moreCommands2(h: MoreHelpers): RiderCommand[] {
     { id: 'md-toggle-task', label: 'Toggle Task', menu: 'Code', submenu: 'Markdown', run: h.inEditor((v) => toggleTask(v) || h.notice('Put the caret on a line.')) },
     { id: 'md-format-table', label: 'Format Table', menu: 'Code', submenu: 'Markdown', run: h.inEditor((v) => formatMarkdownTable(v) || h.notice('Put the caret in a Markdown table.')) },
     { id: 'md-toc', label: 'Insert Table of Contents', menu: 'Code', submenu: 'Markdown', run: h.inEditor((v) => { const toc = tableOfContents(v.state.doc.toString()); if (!toc) { h.notice('The file has no headings.'); return; } insertText(() => `${toc}\n`)(v); }) },
+    { id: 'md-insert-table', label: 'Insert Table', menu: 'Code', submenu: 'Markdown', run: h.inEditor((v) => { const line = v.state.doc.lineAt(v.state.selection.main.head); insertText(() => (line.text.trim() ? '\n' : '') + MARKDOWN_TABLE)(v); }) },
   ];
 }

@@ -422,6 +422,7 @@ export const FEATURES: Feature[] = [
   { id: 'md-toggle-task', label: 'Markdown: Toggle Task', group: 'Editing', essential: false, description: 'Code ▸ Markdown checks or unchecks "- [ ]" tasks (and turns a line into a task).', commands: ['md-toggle-task'] },
   { id: 'md-format-table', label: 'Markdown: Format Table', group: 'Editing', essential: false, description: 'Code ▸ Markdown lines up the pipes of the table at the caret (alignment colons kept).', commands: ['md-format-table'] },
   { id: 'md-toc', label: 'Markdown: Table of Contents', group: 'Editing', essential: false, description: 'Code ▸ Markdown inserts a nested list of links to the file\'s headings.', commands: ['md-toc'] },
+  { id: 'md-insert-table', label: 'Markdown: Insert Table', group: 'Editing', essential: false, description: 'Code ▸ Markdown inserts an empty two-column table.', commands: ['md-insert-table'] },
 ];
 export const GROUPS: FeatureGroup[] = ['Editing', 'Navigation', 'Code intelligence', 'Tool windows', 'Files', 'Git', 'Gherkin', 'View', 'Debugging', 'Help and productivity'];
 

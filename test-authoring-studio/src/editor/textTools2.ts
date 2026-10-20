@@ -353,3 +353,6 @@ export function tableOfContents(markdown: string) {
   const min = Math.min(...heads.map((h) => h.level));
   return heads.map((h) => `${'  '.repeat(h.level - min)}- [${h.text}](#${slug(h.text)})`).join('\n');
 }
+
+/** Markdown: Insert Table (Rider): a 2×2 table to fill in. */
+export const MARKDOWN_TABLE = '| Column 1 | Column 2 |\n| -------- | -------- |\n|          |          |\n';

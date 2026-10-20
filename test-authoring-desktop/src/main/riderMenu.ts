@@ -259,6 +259,7 @@ const ROWS: Record<'edit' | 'view' | 'navigate' | 'code' | 'tools' | 'help', Row
       ['Toggle Task', 'md-toggle-task'],
       ['Format Table', 'md-format-table'],
       ['Insert Table of Contents', 'md-toc'],
+      ['Insert Table', 'md-insert-table'],
     ] },
   ],
   tools: [
