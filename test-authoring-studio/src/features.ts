@@ -227,6 +227,7 @@ export const FEATURES: Feature[] = [
   { id: 'git-log-filters', label: 'Git Log: filter syntax', group: 'Git', essential: true, vs: 'Git History ▸ filters', description: 'author:, branch:, hash: terms, "quoted phrases" and -exclusions in the Git Log filter.' },
   { id: 'git-log-current', label: 'Git Log: Current Branch Only', group: 'Git', essential: true, vs: 'Git History ▸ Branch filter', description: 'Shows only the current branch\'s commits instead of every branch.' },
   { id: 'feature-stats', label: 'Feature statistics (status bar)', group: 'Gherkin', essential: true, description: 'The number of scenarios and steps of the feature file in the status bar.' },
+  { id: 'rename-param', label: 'Rename Examples Parameter', group: 'Gherkin', essential: true, description: 'Renames a <parameter> in the outline\'s steps and its Examples column together.', commands: ['rename-param'] },
 ];
 export const GROUPS: FeatureGroup[] = ['Editing', 'Navigation', 'Code intelligence', 'Tool windows', 'Files', 'Git', 'Gherkin', 'View', 'Debugging', 'Help and productivity'];
 

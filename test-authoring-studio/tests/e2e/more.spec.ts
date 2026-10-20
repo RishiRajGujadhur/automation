@@ -616,3 +616,34 @@ test('X129 Feature statistics in the status bar', async ({ page }) => {
   await caretAt(page, 'Feature:');
   await expect(page.getByLabel('Feature statistics')).toHaveText('1 scenario · 4 steps');
 });
+
+test('X130–X133 Gherkin: rename parameter, remove unused columns, inline Background, table check', async ({ page }) => {
+  await openFeature(page);
+  await caretAt(page, 'Scenario: Sign in');
+  await page.keyboard.press('End');
+  for (const text of ['', '  Scenario Outline: Roles', '    When the user signs in as "<role>"', '    Examples:', '      | role  | unused |', '      | admin | x      |', '      | guest |']) { await page.keyboard.press('Enter'); await page.keyboard.press('Home'); await page.keyboard.press('Shift+Home'); await page.keyboard.type(text); }
+  // X133: the short row is flagged.
+  await expect(gherkin(page).locator('.cm-lintRange-warning').first()).toBeVisible({ timeout: 15_000 });
+  await caretAt(page, '<role>');
+  await page.keyboard.press('ArrowRight');
+  page.once('dialog', (d) => void d.accept('kind'));
+  await gherkinItem(page, /^Rename Examples Parameter/);
+  await expect.poll(() => doc(page)).toContain('"<kind>"');
+  expect(await doc(page)).toMatch(/\| kind\s+\| unused \|/);
+  await gherkinItem(page, /^Remove Unused Examples Columns/);
+  await expect.poll(() => doc(page)).not.toContain('unused');
+  await gherkinItem(page, /^Inline Background/);
+  await expect.poll(() => doc(page)).not.toContain('Background:');
+});
+
+test('X137 / X138 Centered Layout and Do Not Disturb', async ({ page }) => {
+  await openFeature(page);
+  await menuItem(page, 'View', /Centered Layout/);
+  await expect(page.locator('.gherkin-editor .cm-editor').first()).toHaveClass(/cm-centered/);
+  await menuItem(page, 'View', /Do Not Disturb/);
+  await caretAt(page, 'Feature:');
+  await gherkinItem(page, /^Comment \/ Uncomment Scenario/); // a notice: no scenario at the caret
+  await expect(page.locator('.toast')).toHaveCount(0);
+  await menuItem(page, 'View', /^Notifications/);
+  await expect(page.getByRole('list', { name: 'Notification history' })).toContainText('Put the caret in a scenario');
+});

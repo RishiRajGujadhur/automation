@@ -10,7 +10,7 @@ import { renamePath } from '../files/provider';
 import { movedPath } from '../files/tabs';
 import { DEFAULT_TODO_TOKENS } from '../editor/todoHighlight';
 import { copyText as copyFilterText } from '../ui';
-import { cycleStepKeyword, scenarioToOutline, tableInsertRow, tableAddColumn, tableDeleteColumn, tableSortByColumn, testFilter, selectScenario, extractExamplesParameter, outlineToScenario, duplicateScenario, moveScenario, extractBackground, addExamplesTable, toggleTag, toggleScenarioComment, pasteAsTable, tableCsv } from '../editor/gherkinTools';
+import { cycleStepKeyword, scenarioToOutline, tableInsertRow, tableAddColumn, tableDeleteColumn, tableSortByColumn, testFilter, selectScenario, extractExamplesParameter, outlineToScenario, duplicateScenario, moveScenario, extractBackground, addExamplesTable, toggleTag, toggleScenarioComment, pasteAsTable, tableCsv, renameExamplesParameter, paramAt } from '../editor/gherkinTools';
 import { unsavedFiles } from '../editor/autosave';
 import { getTabs, closeTab } from '../files/tabs';
 import { reopenClosed } from '../files/tabs';
@@ -120,5 +120,6 @@ export function moreCommands(h: MoreHelpers): RiderCommand[] {
     { id: 'report-problem', label: 'Report a Problem…', menu: 'Help', group: true, run: () => { const kind = (window as unknown as { desktop?: unknown }).desktop ? 'desktop app' : 'web app'; const body = `**What happened**\n\n\n**Steps to reproduce**\n1. \n\n**Expected**\n\n\n_TestAuthoring Studio (${kind})_`; window.open(`https://github.com/RishiRajGujadhur/automation/issues/new?title=${encodeURIComponent('Problem: ')}&body=${encodeURIComponent(body)}`, '_blank', 'noopener'); } },
     { id: 'pinned-row', label: 'Show Pinned Tabs in a Separate Row', menu: 'View', checked: () => !!viewOptions().pinnedRow, run: () => setViewOptions({ pinnedRow: !viewOptions().pinnedRow }) },
     { id: 'color-tabs', label: 'Colorize Document Tabs', menu: 'View', checked: () => !!viewOptions().colorTabs, run: () => setViewOptions({ colorTabs: !viewOptions().colorTabs }) },
+    { id: 'rename-param', label: 'Rename Examples Parameter…', menu: 'Code', submenu: 'Gherkin', run: h.inEditor((v) => { const name = paramAt(v.state, v.state.selection.main.head); if (!name) { h.notice('Put the caret on a <parameter> or an Examples column header of a Scenario Outline.'); return; } const to = window.prompt(`Rename <${name}> to:`, name); if (!to) return; if (!renameExamplesParameter(to)(v)) h.notice('Use a name without <, > or |.'); }) },
   ];
 }

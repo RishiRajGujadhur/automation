@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { EditorState, type TransactionSpec } from '@codemirror/state';
 import { EditorView } from '@codemirror/view';
-import { cycleStepKeyword, scenarioToOutline, tableInsertRow, tableAddColumn, tableDeleteColumn, tableSortByColumn, testFilter, selectScenario, renameTag, extractExamplesParameter, outlineToScenario, duplicateScenario, moveScenario, extractBackground, addExamplesTable, toggleTag, toggleScenarioComment, pasteAsTable, tableCsv, featureStats } from '../src/editor/gherkinTools';
+import { cycleStepKeyword, scenarioToOutline, tableInsertRow, tableAddColumn, tableDeleteColumn, tableSortByColumn, testFilter, selectScenario, renameTag, extractExamplesParameter, outlineToScenario, duplicateScenario, moveScenario, extractBackground, addExamplesTable, toggleTag, toggleScenarioComment, pasteAsTable, tableCsv, featureStats, renameExamplesParameter } from '../src/editor/gherkinTools';
 
 /** Runs an editor command on `doc` with the selection between « and » (or a caret at ‸); with `caret`, the result marks the caret with ¦. */
 function run(doc: string, cmd: (v: EditorView) => boolean, caret = false) {
@@ -116,5 +116,11 @@ describe('Gherkin tools (IDE-FEATURES X49…)', () => {
   });
   it('X129 Feature statistics', () => {
     expect(featureStats('Feature: F\n  Background:\n    Given a\n  Scenario: S\n    Given b\n    When c\n  Scenario Outline: O\n    Then <x>\n    Examples:\n      | x |\n      | 1 |\n      | 2 |\n')).toEqual({ scenarios: 2, steps: 4, examples: 2 });
+  });
+  it('X130 Rename Examples Parameter: steps, title and header', () => {
+    const doc = 'Scenario Outline: As <role>\n  Given "<user>" is a <ro‸le>\n  Examples:\n    | user | role  |\n    | ada  | admin |';
+    expect(run(doc, renameExamplesParameter('permission'))).toBe('Scenario Outline: As <permission>\n  Given "<user>" is a <permission>\n  Examples:\n    | user | permission |\n    | ada  | admin      |');
+    expect(run('Scenario Outline: S\n  Given <a>\n  Examples:\n    | a‸ |\n    | 1 |', renameExamplesParameter('<b>'))).toBe('Scenario Outline: S\n  Given <b>\n  Examples:\n    | b |\n    | 1 |');
+    expect(run('Scenario: S\n  Given <a‸>', renameExamplesParameter('b'))).toBe('Scenario: S\n  Given <a>');
   });
 });

@@ -428,3 +428,47 @@ export function featureStats(text: string) {
   }
   return { scenarios, steps, examples };
 }
+
+/** The Examples parameter at a position: a <name> in a step or title, or a header cell of an Examples table. */
+export function paramAt(state: EditorState, pos: number) {
+  const line = state.doc.lineAt(pos);
+  const col = pos - line.from;
+  for (const m of line.text.matchAll(/<([^<>\s][^<>]*)>/g)) if (col >= m.index! && col <= m.index! + m[0].length) return m[1];
+  const b = scenarioBlock(state, line.number);
+  if (!b) return undefined;
+  for (const rows of examplesTables(state, b)) if (rows[0] === line.number) return splitRow(line.text)[Math.max(0, cellAt(line.text, col) - 1)];
+  return undefined;
+}
+/** Rename Examples Parameter (Rider's rename for Gherkin): <name> in the outline's steps and title, and the column header. */
+export function renameExamplesParameter(to: string) {
+  return (view: EditorView) => {
+    const { state } = view;
+    const doc = state.doc;
+    const next = to.trim().replace(/^<|>$/g, '');
+    if (!next || /[<>|]/.test(next)) return false;
+    const head = state.selection.main.head;
+    const name = paramAt(state, head);
+    const b = scenarioBlock(state, doc.lineAt(head).number);
+    if (!name || !b || !/^\s*Scenario (Outline|Template):/.test(doc.line(b.head).text) || name === next) return false;
+    const esc = name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const tables = examplesTables(state, b);
+    const inTable = new Set(tables.flat());
+    const changes: ChangeSpec[] = [];
+    for (let n = b.head; n <= b.end; n++) {
+      if (inTable.has(n)) continue;
+      const line = doc.line(n);
+      const t = line.text.replace(new RegExp(`<${esc}>`, 'g'), `<${next}>`);
+      if (t !== line.text) changes.push({ from: line.from, to: line.to, insert: t });
+    }
+    for (const rows of tables) {
+      const cells = rows.map((n) => splitRow(doc.line(n).text));
+      if (!cells[0].includes(name)) continue;
+      cells[0] = cells[0].map((c) => (c === name ? next : c));
+      const indent = /^\s*/.exec(doc.line(rows[0]).text)![0];
+      changes.push({ from: doc.line(rows[0]).from, to: doc.line(rows[rows.length - 1]).to, insert: alignTable(cells.map((r) => `${indent}| ${r.join(' | ')} |`)).join(state.lineBreak) });
+    }
+    if (!changes.length) return false;
+    view.dispatch({ changes, userEvent: 'input' });
+    return true;
+  };
+}

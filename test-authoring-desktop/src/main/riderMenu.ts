@@ -167,6 +167,7 @@ const ROWS: Record<'edit' | 'view' | 'navigate' | 'code' | 'tools' | 'help', Row
       ['Comment / Uncomment Scenario', 'comment-scenario'],
       ['Paste as Gherkin Table', 'paste-table'],
       ['Copy Table as CSV', 'copy-table-csv'],
+      ['Rename Examples Parameter…', 'rename-param'],
     ] },
   ],
   tools: [
