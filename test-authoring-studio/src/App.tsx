@@ -23,7 +23,7 @@ import TestDesign, { designTools } from './TestDesign';
 import ActivityBar from './ActivityBar';
 import CreateStepDialog from './CreateStepDialog';
 import CodeEditor from './editor/CodeEditor';
-import { readDraft, sha256, useAutoSave, unsavedFiles, editedThisSession } from './editor/autosave';
+import { readDraft, sha256, useAutoSave, unsavedFiles, editedThisSession, UNSAVED_EVENT } from './editor/autosave';
 import EditorTabs, { EditorActions } from './files/EditorTabs';
 import OpenSolution from './OpenSolution';
 import StartWindow from './StartWindow';
@@ -740,9 +740,15 @@ export default function App() {
         : 'Assemble tests from the capabilities your project already contains.'
       : (headings[tab] ?? 'Discover existing automation, with evidence from your repository.');
   const pageTitle = tab === 'Features' ? (view === 'spy' ? 'Spy' : view === 'recorder' ? 'Playwright recorder' : view === 'builder' ? 'Scenario builder' : (feature?.name ?? 'Feature editor')) : tab;
+  // The window title names the active file and the folder (VS Code: "file — folder"); a dot for unsaved changes.
+  const [unsavedTick, setUnsavedTick] = useState(0);
+  useEffect(() => { const h = () => setUnsavedTick((t) => t + 1); window.addEventListener(UNSAVED_EVENT, h); return () => window.removeEventListener(UNSAVED_EVENT, h); }, []);
   useEffect(() => {
-    document.title = `${dirty ? '● ' : ''}${pageTitle} · TestAuthoring Studio`;
-  }, [pageTitle, dirty]);
+    const file = tab === 'Features' && (view === 'editor' || view === 'code') ? openEditors.active : undefined;
+    const folder = fileSrc.kind === 'browser' ? fileSrc.name : (config?.repositoryRoot ?? '').split(/[\\/]/).filter(Boolean).pop();
+    const changed = dirty || (!!file && unsavedFiles().includes(file));
+    document.title = file ? `${changed ? '● ' : ''}${file.split('/').pop()}${folder ? ` — ${folder}` : ''} · TestAuthoring Studio` : `${dirty ? '● ' : ''}${pageTitle} · TestAuthoring Studio`;
+  }, [pageTitle, dirty, tab, view, openEditors.active, fileSrc, config?.repositoryRoot, unsavedTick]);
   useEffect(() => {
     const name = tab === 'Features' ? ({ recorder: 'Playwright Recorder', builder: 'Scenario Builder', editor: 'Feature Editor' } as Record<string, string>)[view] ?? tab : tab;
     setRecentPages((r) => [name, ...r.filter((x) => x !== name)].slice(0, 5));
