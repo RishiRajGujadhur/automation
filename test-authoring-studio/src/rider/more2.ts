@@ -1,7 +1,7 @@
 import type { RiderCommand } from './commands';
 import type { MoreHelpers } from './more';
 import { createTwoFilesPatch } from 'diff';
-import { readFile } from '../files/provider';
+import { readFile, isBrowser } from '../files/provider';
 import { discoverTests, runTests } from '../testing/store';
 import { forEachDiagnostic } from '@codemirror/lint';
 import { api } from '../api';
@@ -109,5 +109,6 @@ export function moreCommands2(h: MoreHelpers): RiderCommand[] {
     { id: 'test-data-name', label: 'Person Name', menu: 'Code', submenu: 'Test Data', run: h.inEditor(insertText(() => testData('name'))) },
     { id: 'test-data-number', label: 'Number', menu: 'Code', submenu: 'Test Data', run: h.inEditor(insertText(() => testData('number'))) },
     { id: 'test-data-date', label: 'Date', menu: 'Code', submenu: 'Test Data', run: h.inEditor(insertText(() => testData('date'))) },
+    { id: 'new-file-here', label: 'New File Next to Active…', menu: 'Code', run: h.inEditor((_v, file) => { if (isBrowser()) { h.notice('Use the Explorer\'s New File in a browser folder.'); return; } const dir = file.includes('/') ? file.slice(0, file.lastIndexOf('/') + 1) : ''; const name = window.prompt(`New file in ${dir || 'the workspace root'}:`, file.split('.').length > 1 ? `New.${file.split('.').pop()}` : 'New.txt')?.trim(); if (!name) return; if (/[\\/:*?"<>|]/.test(name)) { h.notice('A file name cannot contain \\ / : * ? " < > |.'); return; } const target = dir + name; void api('/file/create', { file: target, source: '' }).then(() => { window.dispatchEvent(new CustomEvent('tas:rescan')); h.navigate({ file: target }); }, (e) => h.notice((e as Error).message)); }) },
   ];
 }

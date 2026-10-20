@@ -314,6 +314,7 @@ const ROWS: Record<'edit' | 'view' | 'navigate' | 'code' | 'tools' | 'help', Row
       ['Number', 'test-data-number'],
       ['Date', 'test-data-date'],
     ] },
+    ['New File Next to Active…', 'new-file-here'],
   ],
   tools: [
     ['Run Anything… (Ctrl twice)', 'run-anything'],

@@ -99,6 +99,7 @@ has it on by default, so the desktop app starts with it on. The others start off
 | Y88 | Unicode Escape / Unescape | Rider | no | ✅ 2026-10-20 |
 | Y89 | Hex ⇄ Decimal | Rider | no | ✅ 2026-10-20 |
 | Y90 | Insert Test Data (email, name, number, date) | Rider | no | ✅ 2026-10-20 |
+| Y91 | New File Next to Active… | Rider | yes | ✅ 2026-10-20 |
 
 ## Progress log
 - 2026-10-20 Y1: Percent-encodes the selection (or line) and decodes it.
@@ -191,3 +192,4 @@ has it on by default, so the desktop app starts with it on. The others start off
 - 2026-10-20 Y88: Non-ASCII characters as \uXXXX escapes, and back.
 - 2026-10-20 Y89: The number at the caret between decimal and hexadecimal.
 - 2026-10-20 Y90: Code ▸ Test Data inserts random realistic values.
+- 2026-10-20 Y91: Creates a file in the active file's folder and opens it.
