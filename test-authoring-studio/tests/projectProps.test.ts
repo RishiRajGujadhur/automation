@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { readEditorConfig, setEditorConfig } from '../src/project/editorconfig';
-import { addNoWarn, tidyProject } from '../src/project/projectText';
+import { addNoWarn, tidyProject, foldersUp } from '../src/project/projectText';
 import { configOf, readProperties, setProperty, setProperties, readEvents, setEvent, readUsings, setUsings, readReferences, setReferences, relativeProjectPath, readFileItem, setFileItem, isExcluded, setExcluded } from '../server/projectProps';
 
 const CSPROJ = `<Project Sdk="Microsoft.NET.Sdk">
@@ -107,5 +107,12 @@ describe('Tidy Project File (CSHARP-20)', () => {
   it('C17 sorts references, drops empty groups, trims', () => {
     const messy = '<Project Sdk="Microsoft.NET.Sdk">   \n  <PropertyGroup>\n  </PropertyGroup>\n\n\n\n  <ItemGroup>\n    <PackageReference Include="NUnit" Version="4.2.2" />\n    <PackageReference Include="coverlet.collector" Version="6.0.2" />\n  </ItemGroup>\n</Project>\n\n';
     expect(tidyProject(messy)).toBe('<Project Sdk="Microsoft.NET.Sdk">\n\n  <ItemGroup>\n    <PackageReference Include="coverlet.collector" Version="6.0.2" />\n    <PackageReference Include="NUnit" Version="4.2.2" />\n  </ItemGroup>\n</Project>\n');
+  });
+});
+
+describe('Directory.Build.props (CSHARP-20)', () => {
+  it('C19 folders from the project up to the root', () => {
+    expect(foldersUp('src/Tests/Tests.csproj')).toEqual(['src/Tests', 'src', '']);
+    expect(foldersUp('Demo.csproj')).toEqual(['']);
   });
 });

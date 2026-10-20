@@ -1,6 +1,6 @@
 import type { RiderCommand } from './commands';
 import type { MoreHelpers } from './more';
-import { tidyProject } from '../project/projectText';
+import { tidyProject, foldersUp, DIRECTORY_BUILD_PROPS } from '../project/projectText';
 import { livingDocHtml, type DocFeature } from '../testing/livingDoc';
 import { GIT_CHANGED_EVENT } from '../editor/events';
 import { nextConflict } from '../editor/advanced';
@@ -133,5 +133,6 @@ export function moreCommands2(h: MoreHelpers): RiderCommand[] {
     { id: 'upgrade-framework', label: 'Upgrade Target Framework…', menu: 'Tools', run: () => { const fw = window.prompt('Target framework for every project (e.g. net10.0):', 'net10.0')?.trim(); if (!fw) return; void api<{ projects?: { file: string; missing?: boolean }[] }>('/solution').then((s) => api<{ id: string }[]>('/project/retarget/preview', { projects: (s.projects ?? []).filter((p) => /\.(cs|fs|vb)proj$/i.test(p.file) && !p.missing).map((p) => p.file), framework: fw })).then((list) => { if (!list.length) { h.notice(`Every project already targets ${fw} (or uses TargetFrameworks).`); return; } window.dispatchEvent(new CustomEvent('tas:project-previews', { detail: list })); }, (e) => h.notice((e as Error).message)); } },
     { id: 'editorconfig-designer', label: 'EditorConfig…', menu: 'Tools', run: () => window.dispatchEvent(new Event('tas:editorconfig')) },
     { id: 'tidy-project', label: 'Tidy Project File', menu: 'Tools', run: h.inEditor((v, file) => { if (!/\.(cs|fs|vb)proj$|\.props$|\.targets$/i.test(file)) { h.notice('Open a project file (.csproj, .props) first.'); return; } const text = v.state.doc.toString(); const next = tidyProject(text); if (next === text) { h.notice('The project file is already tidy.'); return; } v.dispatch({ changes: { from: 0, to: text.length, insert: next }, userEvent: 'input.format' }); h.notice('Tidied the project file (save to keep it).'); }) },
+    { id: 'directory-build-props', label: 'Open Directory.Build.props', menu: 'Tools', run: () => { void (async () => { const s = await api<{ projects?: { file: string; missing?: boolean }[] }>('/solution'); const ps = (s.projects ?? []).filter((p) => /\.(cs|fs|vb)proj$/i.test(p.file) && !p.missing); const active = getTabs().active ?? ''; const dir = (f: string) => (f.includes('/') ? f.slice(0, f.lastIndexOf('/') + 1) : ''); const own = ps.filter((p) => active.startsWith(dir(p.file))).sort((a, b) => b.file.length - a.file.length)[0] ?? ps[0]; for (const d of foldersUp(own?.file ?? 'x.csproj')) { const f = `${d ? `${d}/` : ''}Directory.Build.props`; if (await readFile(f).then(() => true, () => false)) { h.navigate({ file: f }); return; } } const pv = await api<{ id: string }>('/file/preview', { file: 'Directory.Build.props', source: DIRECTORY_BUILD_PROPS }); window.dispatchEvent(new CustomEvent('tas:project-previews', { detail: { title: 'Create Directory.Build.props', previews: [pv] } })); })().catch((e) => h.notice((e as Error).message)); } },
   ];
 }

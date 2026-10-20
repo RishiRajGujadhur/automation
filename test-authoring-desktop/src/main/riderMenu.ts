@@ -385,6 +385,7 @@ const ROWS: Record<'edit' | 'view' | 'navigate' | 'code' | 'tools' | 'help', Row
     ['Upgrade Target Framework…', 'upgrade-framework'],
     ['EditorConfig…', 'editorconfig-designer'],
     ['Tidy Project File', 'tidy-project'],
+    ['Open Directory.Build.props', 'directory-build-props'],
   ],
   help: [
     null,

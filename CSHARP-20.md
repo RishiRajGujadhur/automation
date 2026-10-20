@@ -25,6 +25,7 @@ Earlier batches: [ADVANCED-20.md](ADVANCED-20.md), [IDE-FEATURES-4.md](IDE-FEATU
 | C16 | EditorConfig designer | VS 2026 | yes | ✅ 2026-10-20 |
 | C17 | Tidy Project File | Rider | no | ✅ 2026-10-20 |
 | C18 | Project file value completions | VS 2026 | yes | ✅ 2026-10-20 |
+| C19 | Open Directory.Build.props | VS 2026 | yes | ✅ 2026-10-20 |
 
 ## Progress log
 - 2026-10-20 C1: Property pages for a .csproj from the Explorer's project menu or Tools; changes previewed as a diff, then written.
@@ -45,3 +46,4 @@ Earlier batches: [ADVANCED-20.md](ADVANCED-20.md), [IDE-FEATURES-4.md](IDE-FEATU
 - 2026-10-20 C16: Whitespace / C# code style options and rule severities in .editorconfig (previewed).
 - 2026-10-20 C17: Sorts references and usings, removes empty groups and stray blank lines.
 - 2026-10-20 C18: Valid values inside <TargetFramework>, <Nullable>… from the Project Properties lists.
+- 2026-10-20 C19: Opens the nearest Directory.Build.props, or previews a new one at the root.

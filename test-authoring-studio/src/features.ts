@@ -534,6 +534,7 @@ export const FEATURES: Feature[] = [
   { id: 'editorconfig-designer', label: 'EditorConfig designer', group: 'Code intelligence', essential: true, vs: 'EditorConfig designer', description: 'Tools ▸ EditorConfig… sets whitespace and C# code style options and rule severities in the repository\'s .editorconfig (previewed diff).', commands: ['editorconfig-designer'] },
   { id: 'tidy-project', label: 'Tidy Project File', group: 'Code intelligence', essential: false, description: 'Tools ▸ Tidy Project File sorts package / project references and usings, removes empty groups and stray blank lines in the open project file.', commands: ['tidy-project'] },
   { id: 'msbuild-values', label: 'Project file value completions', group: 'Code intelligence', essential: true, vs: 'MSBuild IntelliSense values', description: 'In .csproj files, typing inside <TargetFramework>, <Nullable>, <OutputType>, <LangVersion>… offers the valid values (the same lists as Project Properties).' },
+  { id: 'directory-build-props', label: 'Open Directory.Build.props', group: 'Code intelligence', essential: true, vs: 'Add ▸ Directory.Build.props', description: 'Tools ▸ Open Directory.Build.props opens the nearest one above the active project, or previews a new one at the repository root.', commands: ['directory-build-props'] },
 ];
 export const GROUPS: FeatureGroup[] = ['Editing', 'Navigation', 'Code intelligence', 'Tool windows', 'Files', 'Git', 'Gherkin', 'View', 'Debugging', 'Help and productivity'];
 

@@ -26,3 +26,10 @@ export function tidyProject(xml: string) {
   out = out.replace(/(\r?\n){3,}/g, `${eol}${eol}`);
   return out.replace(/\s*$/, '') + eol;
 }
+
+/** The folders from a project's folder up to the repository root, nearest first ('' = root). */
+export function foldersUp(project: string) {
+  const parts = project.split('/').slice(0, -1);
+  return Array.from({ length: parts.length + 1 }, (_, i) => parts.slice(0, parts.length - i).join('/'));
+}
+export const DIRECTORY_BUILD_PROPS = '<Project>\n  <!-- Settings shared by every project in this folder and below (Directory.Build.props). -->\n  <PropertyGroup>\n  </PropertyGroup>\n</Project>\n';
