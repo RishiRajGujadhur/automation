@@ -57,6 +57,7 @@ has it on by default, so the desktop app starts with it on. The others start off
 | Y46 | Table: Column Statistics | Rider | no | ✅ 2026-10-20 |
 | Y47 | Table: Copy Column | Rider | no | ✅ 2026-10-20 |
 | Y48 | Table: Fill Series | Rider | no | ✅ 2026-10-20 |
+| Y49 | Merge Examples Tables | Rider | no | ✅ 2026-10-20 |
 
 ## Progress log
 - 2026-10-20 Y1: Percent-encodes the selection (or line) and decodes it.
@@ -107,3 +108,4 @@ has it on by default, so the desktop app starts with it on. The others start off
 - 2026-10-20 Y46: Count, sum, average, min, max of the caret's column.
 - 2026-10-20 Y47: The caret column's values, one per line.
 - 2026-10-20 Y48: The caret's column numbered 1, 2, 3… downwards.
+- 2026-10-20 Y49: Examples tables with the same columns merged into the first.

@@ -967,3 +967,44 @@ export function tableFillSeries(view: EditorView) {
   const rows = t.rows.map((r, i) => (i < t.row ? r : Object.assign([...r], { [t.col]: String(start + i - t.row) })));
   return writeTable(view, t, rows, t.row, t.col);
 }
+
+/** The scenario around a line, running on over tagged Examples (scenarioBlock stops at any tag line). */
+export function outlineBlock(state: EditorState, lineNo: number) {
+  const sb = scenarioBlock(state, lineNo);
+  if (!sb) return undefined;
+  const doc = state.doc;
+  let end = sb.head;
+  for (let n = sb.head + 1; n <= doc.lines; n++) {
+    const t = doc.line(n).text;
+    if (/^\s*(Scenario|Scenario Outline|Scenario Template|Example|Background|Rule|Feature):/.test(t)) break;
+    if (/^\s*@/.test(t)) { let k = n; while (k <= doc.lines && /^\s*@/.test(doc.line(k).text)) k++; if (k > doc.lines || !/^\s*(Examples|Scenarios):/.test(doc.line(k).text)) break; }
+    end = n;
+  }
+  while (end > sb.head && !doc.line(end).text.trim()) end--;
+  return { ...sb, end };
+}
+/** Merge Examples Tables: the outline's Examples tables with the same columns become one (the first keeps its tags). */
+export function mergeExamples(view: EditorView) {
+  const { state } = view;
+  const doc = state.doc;
+  const b = outlineBlock(state, doc.lineAt(state.selection.main.head).number);
+  if (!b) return false;
+  const tables = examplesTables(state, b);
+  if (tables.length < 2) return false;
+  const key = (rows: number[]) => splitRow(doc.line(rows[0]).text).map((c) => c.trim()).join('|');
+  const first = tables[0];
+  const same = tables.slice(1).filter((t) => key(t) === key(first));
+  if (!same.length) return false;
+  const indent = /^\s*/.exec(doc.line(first[0]).text)![0];
+  const merged = alignTable([...first, ...same.flatMap((t) => t.slice(1))].map((n) => `${indent}${doc.line(n).text.trim()}`));
+  const changes: ChangeSpec[] = [{ from: doc.line(first[0]).from, to: doc.line(first.at(-1)!).to, insert: merged.join(state.lineBreak) }];
+  for (const t of same) {
+    let k = t[0] - 1;
+    while (k > b.head && !/^\s*(Examples|Scenarios):/.test(doc.line(k).text)) k--;
+    let start = k;
+    while (start - 1 > first.at(-1)! && (/^\s*@/.test(doc.line(start - 1).text) || !doc.line(start - 1).text.trim())) start--;
+    changes.push({ from: doc.line(start - 1).to, to: doc.line(t.at(-1)!).to });
+  }
+  view.dispatch({ changes, userEvent: 'input' });
+  return true;
+}

@@ -254,6 +254,7 @@ const ROWS: Record<'edit' | 'view' | 'navigate' | 'code' | 'tools' | 'help', Row
       ['Table: Column Statistics', 'table-column-stats'],
       ['Table: Copy Column', 'table-copy-column'],
       ['Table: Fill Series', 'table-fill-series'],
+      ['Merge Examples Tables', 'merge-examples'],
     ] },
     ['Collapse Using Directives', 'fold-usings'],
     ['Sort JSON Keys', 'sort-json'],

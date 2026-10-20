@@ -443,6 +443,7 @@ export const FEATURES: Feature[] = [
   { id: 'table-column-stats', label: 'Table: Column Statistics', group: 'Gherkin', essential: false, description: 'Code ▸ Gherkin shows the count, sum, average, min and max of the numbers in the caret\'s column.', commands: ['table-column-stats'] },
   { id: 'table-copy-column', label: 'Table: Copy Column', group: 'Gherkin', essential: false, description: 'Code ▸ Gherkin copies the values of the caret\'s column (without the header), one per line.', commands: ['table-copy-column'] },
   { id: 'table-fill-series', label: 'Table: Fill Series', group: 'Gherkin', essential: false, description: 'Code ▸ Gherkin numbers the caret\'s column 1, 2, 3… downwards (or counts on from the cell\'s number).', commands: ['table-fill-series'] },
+  { id: 'merge-examples', label: 'Merge Examples Tables', group: 'Gherkin', essential: false, description: 'Code ▸ Gherkin merges the outline\'s Examples tables that have the same columns into the first.', commands: ['merge-examples'] },
 ];
 export const GROUPS: FeatureGroup[] = ['Editing', 'Navigation', 'Code intelligence', 'Tool windows', 'Files', 'Git', 'Gherkin', 'View', 'Debugging', 'Help and productivity'];
 

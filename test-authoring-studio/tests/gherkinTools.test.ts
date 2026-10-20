@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { EditorState, type TransactionSpec } from '@codemirror/state';
 import { EditorView } from '@codemirror/view';
-import { cycleStepKeyword, scenarioToOutline, tableInsertRow, tableAddColumn, tableDeleteColumn, tableSortByColumn, testFilter, selectScenario, renameTag, extractExamplesParameter, outlineToScenario, duplicateScenario, moveScenario, extractBackground, addExamplesTable, toggleTag, toggleScenarioComment, pasteAsTable, tableCsv, featureStats, renameExamplesParameter, removeUnusedColumns, inlineBackground, normalizeStepKeywords, addScenario, scenarioMarkdown, tableDuplicateRow, tableDeleteRow, tableMoveColumn, tableSelectColumn, tableTranspose, tableFillDown, tableClearColumn, sortScenarios, featureOutline, tableDeleteEmptyRows, tableRemoveDuplicateRows, tableMarkdown, tagAllScenarios, removeTagEverywhere, sortTags, promoteCommonTags, insertDocString, expandOutline, wrapInRule, setLanguageHeader, scenarioName, tableInsertRowAbove, addScenarioOutline, tableColumnStats, tableColumnValues, tableFillSeries } from '../src/editor/gherkinTools';
+import { cycleStepKeyword, scenarioToOutline, tableInsertRow, tableAddColumn, tableDeleteColumn, tableSortByColumn, testFilter, selectScenario, renameTag, extractExamplesParameter, outlineToScenario, duplicateScenario, moveScenario, extractBackground, addExamplesTable, toggleTag, toggleScenarioComment, pasteAsTable, tableCsv, featureStats, renameExamplesParameter, removeUnusedColumns, inlineBackground, normalizeStepKeywords, addScenario, scenarioMarkdown, tableDuplicateRow, tableDeleteRow, tableMoveColumn, tableSelectColumn, tableTranspose, tableFillDown, tableClearColumn, sortScenarios, featureOutline, tableDeleteEmptyRows, tableRemoveDuplicateRows, tableMarkdown, tagAllScenarios, removeTagEverywhere, sortTags, promoteCommonTags, insertDocString, expandOutline, wrapInRule, setLanguageHeader, scenarioName, tableInsertRowAbove, addScenarioOutline, tableColumnStats, tableColumnValues, tableFillSeries, mergeExamples } from '../src/editor/gherkinTools';
 
 /** Runs an editor command on `doc` with the selection between « and » (or a caret at ‸); with `caret`, the result marks the caret with ¦. */
 function run(doc: string, cmd: (v: EditorView) => boolean, caret = false) {
@@ -244,5 +244,9 @@ describe('Gherkin tools (IDE-FEATURES X49…)', () => {
   });
   it('Y48 Table: Fill Series', () => {
     expect(run('| n | x |\n| 5‸ | a |\n|   | b |\n| 9 | c |', tableFillSeries)).toBe('| n | x |\n| 5 | a |\n| 6 | b |\n| 7 | c |');
+  });
+  it('Y49 Merge Examples Tables', () => {
+    const src = 'Feature: F\n  Scenario Outline: o‸\n    Given <a>\n\n    Examples: one\n      | a |\n      | 1 |\n\n    @slow\n    Examples: two\n      | a  |\n      | 22 |';
+    expect(run(src, mergeExamples)).toBe('Feature: F\n  Scenario Outline: o\n    Given <a>\n\n    Examples: one\n      | a  |\n      | 1  |\n      | 22 |');
   });
 });

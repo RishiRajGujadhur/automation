@@ -1,7 +1,7 @@
 import type { RiderCommand } from './commands';
 import type { MoreHelpers } from './more';
 import { copyText } from '../ui';
-import { tableDeleteEmptyRows, tableRemoveDuplicateRows, tableMarkdown, tagAllScenarios, removeTagEverywhere, sortTags, promoteCommonTags, insertDocString, expandOutline, wrapInRule, setLanguageHeader, scenarioName, tableInsertRowAbove, addScenarioOutline, tableColumnStats, tableColumnValues, tableFillSeries } from '../editor/gherkinTools';
+import { tableDeleteEmptyRows, tableRemoveDuplicateRows, tableMarkdown, tagAllScenarios, removeTagEverywhere, sortTags, promoteCommonTags, insertDocString, expandOutline, wrapInRule, setLanguageHeader, scenarioName, tableInsertRowAbove, addScenarioOutline, tableColumnStats, tableColumnValues, tableFillSeries, mergeExamples } from '../editor/gherkinTools';
 import { urlEncode, urlDecode, base64Encode, base64Decode, escapeString, unescapeString, htmlEncode, htmlDecode, stepNumber, insertSequence, toggleQuotes, joinWith, splitAt, alignAssignments, swapSelections, countOccurrences, trimLines, stamp, insertText, LOREM, shuffleLines, reformatXml, minifyXml, jsonEscape, jsonUnescape, numberLines, mapDoc, toFileScopedNamespace, toBlockScopedNamespace, removeRegions, toRawString, toggleTask, formatMarkdownTable, tableOfContents, MARKDOWN_TABLE, removeComments, concatToInterpolationCmd } from '../editor/textTools2';
 
 /**
@@ -63,5 +63,6 @@ export function moreCommands2(h: MoreHelpers): RiderCommand[] {
     { id: 'table-column-stats', label: 'Table: Column Statistics', menu: 'Code', submenu: 'Gherkin', run: h.inEditor((v) => { const s = tableColumnStats(v.state); if (!s) { h.notice('Put the caret in a table.'); return; } const f = (n: number) => String(Math.round(n * 1000) / 1000); h.notice(s.count ? `${s.column}: ${s.count} numbers, sum ${f(s.sum!)}, average ${f(s.average!)}, min ${f(s.min!)}, max ${f(s.max!)}.` : `${s.column}: no numbers in this column.`); }) },
     { id: 'table-copy-column', label: 'Table: Copy Column', menu: 'Code', submenu: 'Gherkin', run: h.inEditor((v) => { const t = tableColumnValues(v.state); if (t === null) { h.notice('Put the caret in a table.'); return; } void copyText(t).then((ok) => h.notice(ok ? `Copied ${t ? t.split('\n').length : 0} values.` : 'Clipboard unavailable.')); }) },
     { id: 'table-fill-series', label: 'Table: Fill Series', menu: 'Code', submenu: 'Gherkin', run: h.inEditor((v) => tableFillSeries(v) || h.notice('Put the caret in a table cell below the header.')) },
+    { id: 'merge-examples', label: 'Merge Examples Tables', menu: 'Code', submenu: 'Gherkin', run: h.inEditor((v) => mergeExamples(v) || h.notice('The outline needs two Examples tables with the same columns.')) },
   ];
 }
