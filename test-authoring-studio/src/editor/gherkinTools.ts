@@ -901,3 +901,13 @@ export const wrapInRule = (name: string) => (view: EditorView) => {
   view.dispatch({ changes: { from, to, insert }, selection: EditorSelection.cursor(from + indent.length), userEvent: 'input' });
   return true;
 };
+
+/** Add Language Header (Gherkin i18n): `# language: xx` as the first line (or the existing one changed). */
+export function setLanguageHeader(text: string, lang: string) {
+  if (!/^[a-z]{2,3}(-[a-z0-9]{2,8})?$/i.test(lang)) return null;
+  const header = `# language: ${lang}`;
+  const lines = text.split('\n');
+  const i = lines.findIndex((l) => l.trim() && !/^\s*#\s*language\s*:/.test(l) ? true : /^\s*#\s*language\s*:/.test(l));
+  if (i >= 0 && /^\s*#\s*language\s*:/.test(lines[i])) { if (lines[i].trim() === header) return null; lines[i] = header; return lines.join('\n'); }
+  return `${header}\n${text}`;
+}

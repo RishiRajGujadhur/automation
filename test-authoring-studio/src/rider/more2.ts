@@ -1,7 +1,7 @@
 import type { RiderCommand } from './commands';
 import type { MoreHelpers } from './more';
 import { copyText } from '../ui';
-import { tableDeleteEmptyRows, tableRemoveDuplicateRows, tableMarkdown, tagAllScenarios, removeTagEverywhere, sortTags, promoteCommonTags, insertDocString, expandOutline, wrapInRule } from '../editor/gherkinTools';
+import { tableDeleteEmptyRows, tableRemoveDuplicateRows, tableMarkdown, tagAllScenarios, removeTagEverywhere, sortTags, promoteCommonTags, insertDocString, expandOutline, wrapInRule, setLanguageHeader } from '../editor/gherkinTools';
 import { urlEncode, urlDecode, base64Encode, base64Decode, escapeString, unescapeString, htmlEncode, htmlDecode, stepNumber, insertSequence, toggleQuotes, joinWith, splitAt, alignAssignments, swapSelections, countOccurrences, trimLines, stamp, insertText, LOREM, shuffleLines, reformatXml, minifyXml, jsonEscape, jsonUnescape, numberLines, mapDoc, toFileScopedNamespace, toBlockScopedNamespace, removeRegions, toRawString, toggleTask, formatMarkdownTable, tableOfContents, MARKDOWN_TABLE, removeComments, concatToInterpolationCmd } from '../editor/textTools2';
 
 /**
@@ -56,5 +56,6 @@ export function moreCommands2(h: MoreHelpers): RiderCommand[] {
     { id: 'insert-doc-string', label: 'Insert Doc String', menu: 'Code', submenu: 'Gherkin', run: h.inEditor((v) => insertDocString(v) || h.notice('Put the caret on a step without a doc string.')) },
     { id: 'expand-outline', label: 'Expand Outline to Scenarios', menu: 'Code', submenu: 'Gherkin', run: h.inEditor((v) => expandOutline(v) || h.notice('Put the caret in a Scenario Outline with Examples.')) },
     { id: 'wrap-in-rule', label: 'Wrap in Rule…', menu: 'Code', submenu: 'Gherkin', run: h.inEditor((v) => { const name = window.prompt('Rule name (the business rule the selected scenarios illustrate):', ''); if (name === null) return; if (!wrapInRule(name)(v)) h.notice('Put the caret in a scenario (or select several) and give the rule a name.'); }) },
+    { id: 'language-header', label: 'Set Language Header…', menu: 'Code', submenu: 'Gherkin', run: h.inEditor((v) => { const lang = window.prompt('Gherkin language of this file (en, fr, de, es, nl…):', 'en')?.trim(); if (!lang) return; const next = setLanguageHeader(v.state.doc.toString(), lang); if (next === null) { h.notice('The file already has that header (or the code is not a language code).'); return; } v.dispatch({ changes: { from: 0, to: v.state.doc.length, insert: next }, userEvent: 'input' }); }) },
   ];
 }

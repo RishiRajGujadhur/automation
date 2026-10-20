@@ -247,6 +247,7 @@ const ROWS: Record<'edit' | 'view' | 'navigate' | 'code' | 'tools' | 'help', Row
       ['Insert Doc String', 'insert-doc-string'],
       ['Expand Outline to Scenarios', 'expand-outline'],
       ['Wrap in Rule…', 'wrap-in-rule'],
+      ['Set Language Header…', 'language-header'],
     ] },
     ['Collapse Using Directives', 'fold-usings'],
     ['Sort JSON Keys', 'sort-json'],

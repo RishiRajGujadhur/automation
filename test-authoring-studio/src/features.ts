@@ -435,6 +435,7 @@ export const FEATURES: Feature[] = [
   { id: 'insert-doc-string', label: 'Insert Doc String', group: 'Gherkin', essential: false, description: 'Code ▸ Gherkin adds a doc string block (triple quotes) under the step at the caret.', commands: ['insert-doc-string'] },
   { id: 'expand-outline', label: 'Expand Outline to Scenarios', group: 'Gherkin', essential: false, description: 'Code ▸ Gherkin writes one plain Scenario per Examples row of the outline at the caret (values filled in).', commands: ['expand-outline'] },
   { id: 'wrap-in-rule', label: 'Wrap Scenarios in Rule', group: 'Gherkin', essential: false, description: 'Code ▸ Gherkin puts the selected scenarios under a new Rule: (Gherkin 6), indented one level.', commands: ['wrap-in-rule'] },
+  { id: 'language-header', label: 'Set Language Header', group: 'Gherkin', essential: false, description: 'Code ▸ Gherkin writes (or changes) the # language: line that picks the Gherkin keywords\' language.', commands: ['language-header'] },
 ];
 export const GROUPS: FeatureGroup[] = ['Editing', 'Navigation', 'Code intelligence', 'Tool windows', 'Files', 'Git', 'Gherkin', 'View', 'Debugging', 'Help and productivity'];
 
