@@ -3559,3 +3559,13 @@ html[data-features-off~='inlay-hints'] .cm-inlay {
   opacity: 0.6;
   pointer-events: none;
 }
+
+.git-file-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  font-size: 11.5px;
+  padding: 0 4px;
+  border-radius: 4px;
+  background: var(--hover, rgba(127, 127, 127, 0.15));
+}

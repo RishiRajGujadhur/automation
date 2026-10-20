@@ -251,6 +251,7 @@ export const FEATURES: Feature[] = [
   { id: 'full-screen', label: 'Full Screen', group: 'View', essential: true, vs: 'View ▸ Full Screen (Shift+Alt+Enter)', description: 'The whole window full screen (the desktop app has it in its View menu).', commands: ['full-screen'] },
   { id: 'git-undo-file', label: 'Git: Undo Changes in File', group: 'Git', essential: true, vs: 'Git ▸ Undo Changes', description: 'Brings the active file back to its last committed version.', commands: ['git-undo-file'] },
   { id: 'git-stage-file', label: 'Git: Stage File', group: 'Git', essential: true, vs: 'Git ▸ Stage', description: 'Stages the active file (save it first).', commands: ['git-stage-file'] },
+  { id: 'git-file-history', label: 'Git: Show History for File', group: 'Git', essential: true, vs: 'Git ▸ View History', description: 'The Git Log of the active file only.', commands: ['git-file-history'] },
 ];
 export const GROUPS: FeatureGroup[] = ['Editing', 'Navigation', 'Code intelligence', 'Tool windows', 'Files', 'Git', 'Gherkin', 'View', 'Debugging', 'Help and productivity'];
 

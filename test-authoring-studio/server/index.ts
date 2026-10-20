@@ -634,7 +634,11 @@ app.post('/api/git/commit-action', async (req, res) => {
   rescanSoon(300);
   res.json({ output });
 });
-app.get('/api/git/graph', async (req, res) => res.json(await graphLog(config.repositoryRoot, 200, req.query.scope !== 'current')));
+app.get('/api/git/graph', async (req, res) => {
+  const file = z.string().max(400).optional().parse(req.query.file);
+  if (file) await confined(config.repositoryRoot, file, false);
+  res.json(await graphLog(config.repositoryRoot, 200, req.query.scope !== 'current', file || undefined));
+});
 app.get('/api/git/at', async (req, res) => {
   const q = z.object({ file: z.string().min(1).max(400), ref: z.string().min(1).max(200) }).parse(req.query);
   await confined(config.repositoryRoot, q.file, false);

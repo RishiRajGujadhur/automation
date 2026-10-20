@@ -12,6 +12,11 @@ import { featureOn } from '../features';
 import { GIT_CHANGED_EVENT, FILES_CHANGED_EVENT } from '../editor/events';
 import { useEditorTheme } from '../themes';
 
+/** Show History for File: the Git Log opens on one file (the file waits here until the window mounts). */
+export const FILE_HISTORY_EVENT = 'tas:git-file-history';
+let pendingFile: string | undefined;
+export const requestFileHistory = (file: string) => { pendingFile = file; window.dispatchEvent(new CustomEvent(FILE_HISTORY_EVENT, { detail: file })); };
+const takeFileHistory = () => { const f = pendingFile; pendingFile = undefined; return f; };
 type Row = { graph: string; hash?: string; author?: string; when?: string; refs?: string; subject?: string };
 type Commit = { hash: string; author: string; email: string; date: string; message: string; files: { status: string; file: string }[]; patch: string };
 const SETUP = { foldGutter: false, autocompletion: false };
@@ -40,8 +45,11 @@ export default function GitLogPanel({ onOpen, onClose, onNotice }: { onOpen: (fi
   };
   // Current branch only (Rider's Branch filter: HEAD), else every branch.
   const [currentOnly, setCurrentOnly] = useLocalState('gitLogCurrentOnly', false);
-  const load = () => api<Row[]>(`/git/graph${currentOnly && featureOn('git-log-current') ? '?scope=current' : ''}`).then((r) => { setRows(r); setError(''); }, (e) => setError((e as Error).message));
-  useEffect(() => { void load(); }, [currentOnly]); // eslint-disable-line react-hooks/exhaustive-deps
+  // Show History for File (Git): the log of one file.
+  const [ofFile, setOfFile] = useState<string | undefined>(takeFileHistory);
+  useEffect(() => { const h = (e: Event) => setOfFile((e as CustomEvent<string>).detail); window.addEventListener(FILE_HISTORY_EVENT, h); return () => window.removeEventListener(FILE_HISTORY_EVENT, h); }, []);
+  const load = () => api<Row[]>(`/git/graph?${new URLSearchParams({ ...(currentOnly && featureOn('git-log-current') ? { scope: 'current' } : {}), ...(ofFile ? { file: ofFile } : {}) })}`).then((r) => { setRows(r); setError(''); }, (e) => setError((e as Error).message));
+  useEffect(() => { void load(); }, [currentOnly, ofFile]); // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(() => { setCommit(undefined); setShownFile(undefined); if (selected) api<Commit>(`/git/commit?hash=${selected}`).then(setCommit, (e) => setError((e as Error).message)); }, [selected]);
   const shown = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -52,6 +60,7 @@ export default function GitLogPanel({ onOpen, onClose, onNotice }: { onOpen: (fi
       <div className="debug-toolbar" role="toolbar" aria-label="Git Log">
         <input className="shelf-name" aria-label="Filter commits" placeholder={featureOn('git-log-filters') ? 'Filter: words, author:…, branch:…, hash:…, -exclude' : 'Filter: text, hash, author, branch'} value={query} onChange={(e) => setQuery(e.target.value)} />
         {featureOn('git-log-current') && <label className="build-on-save" title="Show only the commits of the current branch"><input type="checkbox" checked={currentOnly} onChange={(e) => setCurrentOnly(e.target.checked)} /> Current branch only</label>}
+        {ofFile && <span className="git-file-chip" title={ofFile}>History of {ofFile.split('/').pop()} <button className="icon-button" aria-label="Show every file" title="Every file" onClick={() => setOfFile(undefined)}><X size={12} /></button></span>}
         <button className="icon-button" aria-label="Refresh log" title="Refresh" onClick={() => void load()}><RefreshCw size={14} /></button>
         <span className="debug-spacer" />
         <button className="icon-button" aria-label="Close Git Log" title="Close" onClick={onClose}><X size={14} /></button>

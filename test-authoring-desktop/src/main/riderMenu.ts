@@ -225,6 +225,7 @@ const ROWS: Record<'edit' | 'view' | 'navigate' | 'code' | 'tools' | 'help', Row
     null,
     ['Git: Undo Changes in File…', 'git-undo-file'],
     ['Git: Stage File', 'git-stage-file'],
+    ['Git: Show History for File', 'git-file-history'],
   ],
   help: [
     null,
