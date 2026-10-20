@@ -242,6 +242,7 @@ export const FEATURES: Feature[] = [
   { id: 'run-selection-terminal', label: 'Run Selected Text in Terminal', group: 'Tool windows', essential: true, vs: 'Terminal ▸ Run Selected Text', description: 'Runs the selection (or the caret\'s line) in the Terminal window.', commands: ['run-selection-terminal'] },
   { id: 'selected-lines', label: 'Selected lines in the status bar', group: 'Editing', essential: true, vs: 'Status bar ▸ Sel', description: 'The status bar counts the selected lines too, not only characters.' },
   { id: 'test-group-tag', label: 'Test Explorer: Group by Tag', group: 'Tool windows', essential: true, vs: 'Test Explorer ▸ Group By ▸ Traits', description: 'Scenarios grouped by their Gherkin tags (traits).' },
+  { id: 'test-tag-filter', label: 'Test Explorer: tag: filter', group: 'Tool windows', essential: true, vs: 'Test Explorer ▸ Trait filter', description: 'tag:@smoke (or -tag:…) in the Test Explorer search.' },
 ];
 export const GROUPS: FeatureGroup[] = ['Editing', 'Navigation', 'Code intelligence', 'Tool windows', 'Files', 'Git', 'Gherkin', 'View', 'Debugging', 'Help and productivity'];
 

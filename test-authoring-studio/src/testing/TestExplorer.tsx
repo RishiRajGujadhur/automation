@@ -49,17 +49,17 @@ export default function TestExplorer({ revision, onOpen, onDebug, onNotice }: { 
   const finished = run.status === 'done' || run.status === 'failed' ? run.version : 0;
   useEffect(() => { if (finished) refresh(); }, [finished]); // eslint-disable-line react-hooks/exhaustive-deps
 
+  // Scenario tags (Gherkin) as test traits: Group by Tag and the tag: search filter.
+  const [tagRows, setTagRows] = useState<{ tag: string; scenarios: { file: string; line: number; scenario: string }[] }[]>([]);
+  useEffect(() => { api<typeof tagRows>('/tags').then(setTagRows, () => setTagRows([])); }, [revision]);
+  const tagsOf = useMemo(() => { const m = new Map<string, string[]>(); for (const r of tagRows) for (const s of r.scenarios) for (const k of [`${s.file}:${s.line}`, `${s.file}#${s.scenario}`]) m.set(k, [...(m.get(k) ?? []), r.tag]); return (t: DiscoveredTest) => (t.kind === 'scenario' ? [...new Set([...(m.get(`${t.file}:${t.line}`) ?? []), ...(m.get(`${t.file}#${t.name}`) ?? [])])] : []); }, [tagRows]);
   const visible = useMemo(() => {
     const q = query.trim().toLowerCase();
     const inList = playlist && playlists[playlist] ? new Set(playlists[playlist]) : null;
     const pool = inList ? tests.filter((t) => inList.has(t.id)) : tests;
     if (!q) return pool;
-    return featureOn('test-search-filters') ? pool.filter((t) => matchTest(t, q, outcomeOf(t, run))) : pool.filter((t) => `${t.project} ${t.className} ${t.name} ${t.feature ?? ''}`.toLowerCase().includes(q));
-  }, [tests, query, playlist, playlists, run]);
-  // Scenario tags (Gherkin) as test traits: Group by Tag and the tag: search filter.
-  const [tagRows, setTagRows] = useState<{ tag: string; scenarios: { file: string; line: number; scenario: string }[] }[]>([]);
-  useEffect(() => { api<typeof tagRows>('/tags').then(setTagRows, () => setTagRows([])); }, [revision]);
-  const tagsOf = useMemo(() => { const m = new Map<string, string[]>(); for (const r of tagRows) for (const s of r.scenarios) for (const k of [`${s.file}:${s.line}`, `${s.file}#${s.scenario}`]) m.set(k, [...(m.get(k) ?? []), r.tag]); return (t: DiscoveredTest) => (t.kind === 'scenario' ? [...new Set([...(m.get(`${t.file}:${t.line}`) ?? []), ...(m.get(`${t.file}#${t.name}`) ?? [])])] : []); }, [tagRows]);
+    return featureOn('test-search-filters') ? pool.filter((t) => matchTest(t, q, outcomeOf(t, run), featureOn('test-tag-filter') ? tagsOf(t) : [])) : pool.filter((t) => `${t.project} ${t.className} ${t.name} ${t.feature ?? ''}`.toLowerCase().includes(q));
+  }, [tests, query, playlist, playlists, run, tagsOf]);
   const groups = useMemo(() => groupTests(visible, groupBy, (t) => outcomeOf(t, run), (t) => { const rs = resultsOf(t, run.results); return rs.length ? rs.reduce((n, r) => n + r.durationMs, 0) : undefined; }, tagsOf), [visible, groupBy, run, tagsOf]);
 
   const outcome = (t: DiscoveredTest) => outcomeOf(t, run);
@@ -175,7 +175,7 @@ export default function TestExplorer({ revision, onOpen, onDebug, onNotice }: { 
       )}
       <label className="search-box">
         <Search size={14} />
-        <input aria-label="Search Test Explorer" placeholder={featureOn('test-search-filters') ? 'Search (outcome:failed class:… -name:…)' : 'Search Test Explorer'} value={query} onChange={(e) => setQuery(e.target.value)} />
+        <input aria-label="Search Test Explorer" placeholder={featureOn('test-search-filters') ? featureOn('test-tag-filter') ? 'Search (outcome:failed tag:@smoke -name:…)' : 'Search (outcome:failed class:… -name:…)' : 'Search Test Explorer'} value={query} onChange={(e) => setQuery(e.target.value)} />
         {query && <button className="icon-button" aria-label="Clear test search" onClick={() => setQuery('')}><X size={13} /></button>}
       </label>
       {featureOn('test-group-by') && (

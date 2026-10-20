@@ -34,4 +34,8 @@ describe('Test Explorer grouping (X71…)', () => {
     const tags: Record<string, string[]> = { Scenario: ['@smoke', '@login'], Adds: ['@smoke'] };
     expect(shape(groupTests(tests, 'tag', (x) => outcomes[x.id], (x) => durations[x.id], (x) => tags[x.id] ?? []))).toEqual(['@login: Scenario', '@smoke: Adds,Scenario', 'No tags: Divides,Other']);
   });
+  it('X145 tag: filter', () => {
+    expect(tests.filter((x) => matchTest(x, 'tag:@smoke', outcomes[x.id], x.id === 'Scenario' ? ['@smoke'] : [])).map((x) => x.id)).toEqual(['Scenario']);
+    expect(tests.filter((x) => matchTest(x, '-tag:smoke', outcomes[x.id], x.id === 'Scenario' ? ['@smoke'] : [])).map((x) => x.id)).toEqual(['Adds', 'Divides', 'Other']);
+  });
 });

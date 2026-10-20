@@ -35,14 +35,15 @@ export function groupTests(tests: DiscoveredTest[], by: GroupBy, outcome: (t: Di
  * Test Explorer search (Visual Studio's filter syntax): free words match project, class, name and feature; `outcome:failed`,
  * `class:`, `project:`, `feature:`, `name:` and `file:` match one field; quotes keep spaces ("add two"); `-word` excludes.
  */
-export function matchTest(t: DiscoveredTest, query: string, outcome: Outcome) {
+export function matchTest(t: DiscoveredTest, query: string, outcome: Outcome, tags: string[] = []) {
   const terms = query.trim().toLowerCase().match(/-?\w+:"[^"]*"|-?"[^"]*"|\S+/g) ?? [];
   return terms.every((raw) => {
     const not = raw.startsWith('-') && raw.length > 1;
     const term = not ? raw.slice(1) : raw;
-    const m = /^(outcome|state|class|project|feature|name|file):"?([^"]*)"?$/.exec(term);
+    const m = /^(outcome|state|class|project|feature|name|file|tag|trait):"?([^"]*)"?$/.exec(term);
     const value = m ? m[2] : term.replace(/^"|"$/g, '');
     const field = !m ? `${t.project} ${t.className} ${t.name} ${t.feature ?? ''}`
+      : m[1] === 'tag' || m[1] === 'trait' ? tags.join(' ')
       : m[1] === 'outcome' || m[1] === 'state' ? (outcome === 'none' ? 'not run' : outcome)
       : m[1] === 'class' ? t.className : m[1] === 'project' ? t.project : m[1] === 'feature' ? t.feature ?? '' : m[1] === 'file' ? t.file : t.name;
     return field.toLowerCase().includes(value) !== not;
