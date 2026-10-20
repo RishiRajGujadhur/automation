@@ -142,5 +142,6 @@ export function moreCommands2(h: MoreHelpers): RiderCommand[] {
     { id: 'refactor-this', label: 'Refactor This…', menu: 'Code', submenu: 'Refactor', shortcut: 'Ctrl Alt Shift T', run: h.inEditor((_v, file) => cs(file, { kind: 'refactor', label: 'refactorings' })) },
     { id: 'extract-method', label: 'Extract Method', menu: 'Code', submenu: 'Refactor', shortcut: 'Ctrl Alt M', run: h.inEditor((_v, file) => cs(file, { kind: 'refactor', title: '^Extract method$', label: 'Extract Method for this selection', auto: true })) },
     { id: 'introduce-variable', label: 'Introduce Variable', menu: 'Code', submenu: 'Refactor', shortcut: 'Ctrl Alt V', run: h.inEditor((_v, file) => cs(file, { kind: 'refactor', title: '^Introduce local for (?!all )', label: 'Introduce Variable for this selection', auto: true })) },
+    { id: 'inline-symbol', label: 'Inline', menu: 'Code', submenu: 'Refactor', shortcut: 'Ctrl Alt N', run: h.inEditor((_v, file) => cs(file, { kind: 'refactor', title: '^Inline ', label: 'Inline refactoring at the caret', auto: true })) },
   ];
 }

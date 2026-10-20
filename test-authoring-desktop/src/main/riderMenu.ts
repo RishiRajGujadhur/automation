@@ -328,6 +328,7 @@ const ROWS: Record<'edit' | 'view' | 'navigate' | 'code' | 'tools' | 'help', Row
       ['Refactor This…', 'refactor-this'],
       ['Extract Method', 'extract-method'],
       ['Introduce Variable', 'introduce-variable'],
+      ['Inline', 'inline-symbol'],
     ] },
   ],
   tools: [
