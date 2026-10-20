@@ -333,6 +333,7 @@ export const FEATURES: Feature[] = [
   { id: 'shortcut-filter', label: 'Keyboard shortcuts: filter', group: 'Help and productivity', essential: true, description: 'The keyboard shortcuts dialog filters by key or action as you type.' },
   { id: 'settings-remember', label: 'Settings remembers its section', group: 'Help and productivity', essential: true, description: 'Settings reopens on the section you used last.' },
   { id: 'settings-query', label: 'Settings remembers its search', group: 'Help and productivity', essential: true, description: 'The settings search stays until you clear it (this session).' },
+  { id: 'palette-last', label: 'Command palette remembers the last query', group: 'Help and productivity', essential: true, vs: 'Quick Open ▸ preserve input', description: 'Reopening the palette shows your last query, selected (typing replaces it).' },
 ];
 export const GROUPS: FeatureGroup[] = ['Editing', 'Navigation', 'Code intelligence', 'Tool windows', 'Files', 'Git', 'Gherkin', 'View', 'Debugging', 'Help and productivity'];
 

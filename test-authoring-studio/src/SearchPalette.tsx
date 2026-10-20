@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
+import { featureOn } from './features';
 import { Command } from 'cmdk';
 import { Search, History } from 'lucide-react';
 import { useStepSearch } from './useStepSearch';
@@ -8,15 +9,18 @@ export type PaletteCommand = { label: string; run: () => void; shortcut?: string
 const pages = ['Dashboard', 'Test Generator', 'Project Explorer', 'Dictionary Inspector', 'Test Design', 'Config', 'Step Catalog', 'Backgrounds', 'Selectors', 'Scenario Builder', 'Playwright Recorder', 'Feature Editor'];
 
 export default function SearchPalette({ open, onOpenChange, onNavigate, onAdd, revision, commands = [], recentPages = [] }: { open: boolean; onOpenChange: (open: boolean) => void; onNavigate: (name: string) => void; onAdd: (binding: Binding) => void; revision?: string; commands?: PaletteCommand[]; recentPages?: string[] }) {
+  // The last query comes back, selected, when the palette reopens (QOL-50; typing replaces it).
+  const lastQuery = useRef('');
   const [query, setQuery] = useState('');
+  useEffect(() => { if (open && featureOn('palette-last')) { setQuery(lastQuery.current); requestAnimationFrame(() => document.querySelector<HTMLInputElement>('.command-palette input')?.select()); } }, [open]); // eslint-disable-line react-hooks/exhaustive-deps
   const { data, loading, error } = useStepSearch(query, 0, 8, '', revision);
   const q = query.toLowerCase();
   const recent = recentPages.filter((p) => pages.includes(p)).slice(0, 3);
   const ordered = [...recent, ...pages.filter((p) => !recent.includes(p))].filter((p) => p.toLowerCase().includes(q));
   const cmds = commands.filter((c) => c.label.toLowerCase().includes(q)).map((c, i) => ({ c, i })).sort((a, b) => (b.c.recent ?? 0) - (a.c.recent ?? 0) || a.i - b.i).map((x) => x.c);
-  const close = () => { onOpenChange(false); setQuery(''); };
+  const close = () => { lastQuery.current = query; onOpenChange(false); setQuery(''); };
   return (
-    <Command.Dialog open={open} onOpenChange={(o) => { onOpenChange(o); if (!o) setQuery(''); }} label="Search commands and steps" shouldFilter={false} className="command-palette">
+    <Command.Dialog open={open} onOpenChange={(o) => { if (!o) lastQuery.current = query; onOpenChange(o); if (!o) setQuery(''); }} label="Search commands and steps" shouldFilter={false} className="command-palette">
       <div className="palette-heading">
         <Search size={20} />
         <Command.Input autoFocus aria-label="Search commands and steps" placeholder="Go to a page, run a command, or find a step…" value={query} onValueChange={setQuery} />
