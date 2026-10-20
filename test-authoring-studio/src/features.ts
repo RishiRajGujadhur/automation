@@ -402,6 +402,7 @@ export const FEATURES: Feature[] = [
   { id: 'step-number', label: 'Increment / Decrement Number', group: 'Editing', essential: false, description: 'Edit ▸ Convert adds or subtracts one from the number at each caret (zero padding kept).', commands: ['increment-number', 'decrement-number'] },
   { id: 'insert-sequence', label: 'Insert Sequence at carets', group: 'Editing', essential: false, description: 'With several carets, Edit ▸ Convert writes 1, 2, 3… (or counts on from a selected number).', commands: ['insert-sequence'] },
   { id: 'toggle-quotes', label: 'Toggle Quotes', group: 'Editing', essential: false, description: 'Edit ▸ Convert switches the string at the caret between double and single quotes.', commands: ['toggle-quotes'] },
+  { id: 'join-with', label: 'Join Lines with Separator', group: 'Editing', essential: false, description: 'Edit ▸ Convert joins the selected lines with a separator you choose (", " by default).', commands: ['join-with'] },
 ];
 export const GROUPS: FeatureGroup[] = ['Editing', 'Navigation', 'Code intelligence', 'Tool windows', 'Files', 'Git', 'Gherkin', 'View', 'Debugging', 'Help and productivity'];
 

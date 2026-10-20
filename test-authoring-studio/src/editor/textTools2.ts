@@ -104,3 +104,9 @@ export function toggleQuotes(view: EditorView) {
   }
   return false;
 }
+
+/** Join Lines with Separator (Rider String Manipulation): the selected lines, trimmed, joined by `sep`. */
+export const joinWith = (sep: string) => (view: EditorView) => {
+  if (view.state.selection.main.empty) return false;
+  return mapLines((lines) => { const indent = /^\s*/.exec(lines[0])![0]; return [indent + lines.map((l) => l.trim()).filter(Boolean).join(sep)]; }, false)(view);
+};

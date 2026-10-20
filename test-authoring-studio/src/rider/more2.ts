@@ -1,6 +1,6 @@
 import type { RiderCommand } from './commands';
 import type { MoreHelpers } from './more';
-import { urlEncode, urlDecode, base64Encode, base64Decode, escapeString, unescapeString, htmlEncode, htmlDecode, stepNumber, insertSequence, toggleQuotes } from '../editor/textTools2';
+import { urlEncode, urlDecode, base64Encode, base64Decode, escapeString, unescapeString, htmlEncode, htmlDecode, stepNumber, insertSequence, toggleQuotes, joinWith } from '../editor/textTools2';
 
 /**
  * Fourth batch of Visual Studio 2026 / JetBrains Rider commands (IDE-FEATURES-4.md, Y1–Y100). RiderHost registers
@@ -20,5 +20,6 @@ export function moreCommands2(h: MoreHelpers): RiderCommand[] {
     { id: 'decrement-number', label: 'Decrement Number', menu: 'Edit', submenu: 'Convert', run: h.inEditor((v) => stepNumber(-1)(v) || h.notice('Put the caret on a number.')) },
     { id: 'insert-sequence', label: 'Insert Sequence (1, 2, 3…)', menu: 'Edit', submenu: 'Convert', run: h.inEditor((v) => insertSequence(v) || h.notice('Add carets first (Alt+click or Alt+J), then insert the numbers.')) },
     { id: 'toggle-quotes', label: 'Toggle Quotes', menu: 'Edit', submenu: 'Convert', run: h.inEditor((v) => toggleQuotes(v) || h.notice('Put the caret in a quoted string.')) },
+    { id: 'join-with', label: 'Join Lines with Separator…', menu: 'Edit', submenu: 'Convert', run: h.inEditor((v) => { if (v.state.selection.main.empty) { h.notice('Select the lines to join.'); return; } const sep = window.prompt('Join the selected lines with:', ', '); if (sep !== null) joinWith(sep)(v); }) },
   ];
 }
