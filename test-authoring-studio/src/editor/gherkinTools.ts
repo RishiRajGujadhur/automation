@@ -373,3 +373,36 @@ export function toggleScenarioComment(view: EditorView) {
   view.dispatch({ changes, userEvent: 'input' });
   return true;
 }
+
+/** Cells of pasted spreadsheet text: tab-separated (Excel, Google Sheets), else CSV with "quoted" cells. */
+export function parseDelimited(text: string) {
+  const lines = text.replace(/\r\n?/g, '\n').replace(/\n+$/, '').split('\n');
+  if (lines.some((l) => l.includes('\t'))) return lines.map((l) => l.split('\t').map((c) => c.trim()));
+  return lines.map((l) => {
+    const cells: string[] = [];
+    let cur = '', quoted = false;
+    for (let i = 0; i < l.length; i++) {
+      const c = l[i];
+      if (quoted) { if (c === '"' && l[i + 1] === '"') { cur += '"'; i++; } else if (c === '"') quoted = false; else cur += c; }
+      else if (c === '"' && !cur.trim()) quoted = true;
+      else if (c === ',') { cells.push(cur.trim()); cur = ''; }
+      else cur += c;
+    }
+    cells.push(cur.trim());
+    return cells;
+  });
+}
+/** Paste as Gherkin Table: spreadsheet text becomes an aligned table on the caret's line (or below a step). */
+export function pasteAsTable(text: string) {
+  return (view: EditorView) => {
+    const rows = parseDelimited(text).filter((r) => r.some((c) => c));
+    if (!rows.length) return false;
+    const { state } = view;
+    const line = state.doc.lineAt(state.selection.main.head);
+    const blank = !line.text.trim();
+    const indent = blank ? /^\s*/.exec(line.text)![0] : `${/^\s*/.exec(line.text)![0]}  `;
+    const table = alignTable(rows.map((r) => `${indent}| ${r.map((c) => c.replace(/\|/g, '\\|')).join(' | ')} |`)).join(state.lineBreak);
+    view.dispatch(blank ? { changes: { from: line.from, to: line.to, insert: table }, userEvent: 'input.paste' } : { changes: { from: line.to, insert: state.lineBreak + table }, userEvent: 'input.paste' });
+    return true;
+  };
+}

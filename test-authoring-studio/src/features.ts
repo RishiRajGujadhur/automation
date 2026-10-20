@@ -214,6 +214,7 @@ export const FEATURES: Feature[] = [
   { id: 'coverage-selected', label: 'Code Coverage for selected tests', group: 'Debugging', essential: true, vs: 'Test Explorer ▸ Analyze Code Coverage for Selected Tests', description: 'A test\'s (or group\'s) context menu runs it with code coverage.' },
   { id: 'run-not-run', label: 'Run Not Run Tests', group: 'Debugging', essential: true, vs: 'Test Explorer ▸ Run Not Run Tests', description: 'Runs the tests that have no result yet (Test Explorer ▸ More run options).' },
   { id: 'run-passed', label: 'Run Passed Tests', group: 'Debugging', essential: false, vs: 'Test Explorer ▸ Run Passed Tests', description: 'Runs the tests that passed last time (Test Explorer ▸ More run options).' },
+  { id: 'paste-table', label: 'Paste as Gherkin Table', group: 'Gherkin', essential: true, description: 'Spreadsheet cells (TSV) or CSV from the clipboard become an aligned table.', commands: ['paste-table'] },
 ];
 export const GROUPS: FeatureGroup[] = ['Editing', 'Navigation', 'Code intelligence', 'Tool windows', 'Files', 'Git', 'Gherkin', 'View', 'Debugging', 'Help and productivity'];
 

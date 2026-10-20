@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { EditorState, type TransactionSpec } from '@codemirror/state';
 import { EditorView } from '@codemirror/view';
-import { cycleStepKeyword, scenarioToOutline, tableInsertRow, tableAddColumn, tableDeleteColumn, tableSortByColumn, testFilter, selectScenario, renameTag, extractExamplesParameter, outlineToScenario, duplicateScenario, moveScenario, extractBackground, addExamplesTable, toggleTag, toggleScenarioComment } from '../src/editor/gherkinTools';
+import { cycleStepKeyword, scenarioToOutline, tableInsertRow, tableAddColumn, tableDeleteColumn, tableSortByColumn, testFilter, selectScenario, renameTag, extractExamplesParameter, outlineToScenario, duplicateScenario, moveScenario, extractBackground, addExamplesTable, toggleTag, toggleScenarioComment, pasteAsTable } from '../src/editor/gherkinTools';
 
 /** Runs an editor command on `doc` with the selection between « and » (or a caret at ‸); with `caret`, the result marks the caret with ¦. */
 function run(doc: string, cmd: (v: EditorView) => boolean, caret = false) {
@@ -103,5 +103,9 @@ describe('Gherkin tools (IDE-FEATURES X49…)', () => {
     const once = run(doc, toggleScenarioComment);
     expect(once).toBe('Feature: F\n  # @a\n  # Scenario: S\n    # Given x\n\n    # Examples:\n\n  Scenario: T');
     expect(run(once.replace('# Given x', '# Given ‸x'), toggleScenarioComment)).toBe('Feature: F\n  @a\n  Scenario: S\n    Given x\n\n    Examples:\n\n  Scenario: T'.replace('\n\n    Examples:', '\n\n    # Examples:'));
+  });
+  it('X117 Paste as Gherkin Table: TSV or CSV, aligned, below a step', () => {
+    expect(run('  Given the users:‸', pasteAsTable('name\tage\nAda\t36\r\nBob\t4\n'))).toBe('  Given the users:\n    | name | age |\n    | Ada  | 36  |\n    | Bob  | 4   |');
+    expect(run('    ‸', pasteAsTable('a,"b, c","d""e"\n1,2,3'))).toBe('    | a | b, c | d"e |\n    | 1 | 2    | 3   |');
   });
 });

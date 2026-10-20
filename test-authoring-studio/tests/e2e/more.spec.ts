@@ -558,3 +558,54 @@ test('X113 Quick Info (Ctrl+K, Ctrl+I): the hover information at the caret', asy
   await page.keyboard.press('Escape');
   await expect(page.locator('.cm-tooltip.cm-quickinfo')).toHaveCount(0);
 });
+
+test('X117 / X118 Paste as Gherkin Table and Copy Table as CSV', async ({ page, context }) => {
+  await context.grantPermissions(['clipboard-read', 'clipboard-write']);
+  await openFeature(page);
+  await caretAt(page, 'the dashboard is displayed');
+  await page.keyboard.press('End');
+  await page.evaluate(() => navigator.clipboard.writeText('name\tage\nAda\t36\n'));
+  await gherkinItem(page, /^Paste as Gherkin Table/);
+  await expect.poll(() => doc(page)).toMatch(/\| name \| age \|\r?\n\s+\| Ada {2}\| 36 {2}\|/);
+  await caretAt(page, '| Ada');
+  await gherkinItem(page, /^Copy Table as CSV/);
+  await expect.poll(() => page.evaluate(() => navigator.clipboard.readText())).toBe('name,age\nAda,36');
+});
+
+test('X119 Scroll bar annotations: errors and the caret line', async ({ page, request }) => {
+  await fs.writeFile(path.join(root, 'Steps/Broken.cs'), ['namespace Demo;', 'public class Broken', '{', '    public void M() { int x = ; }', '}', ''].join('\n'));
+  expect((await request.post('/api/workspace', { data: { repositoryRoot: root, targetProject: '.' } })).ok()).toBe(true);
+  const src = await openCs(page, 'Steps/Broken.cs', 'public class Broken');
+  await expect(src.locator('.cm-scroll-annotations .m-caret')).toHaveCount(1);
+  await expect(src.locator('.cm-scroll-annotations .m-error').first()).toBeAttached({ timeout: 30_000 });
+  await menuItem(page, 'View', /^Scroll Bar Annotations/);
+  await expect(src.locator('.cm-scroll-annotations')).toHaveCount(0);
+});
+
+test('X120 Report a Problem opens a GitHub issue form', async ({ page, context }) => {
+  await context.route('https://github.com/**', (r) => r.fulfill({ status: 200, body: 'ok' }));
+  await openFeature(page);
+  const popup = page.waitForEvent('popup');
+  await menuItem(page, 'Help', /^Report a Problem/);
+  const url = (await popup).url();
+  expect(url).toContain('https://github.com/RishiRajGujadhur/automation/issues/new');
+  expect(decodeURIComponent(url)).toContain('Steps to reproduce');
+});
+
+test('X121–X123 Tabs: pinned row, colorized tabs, Copy File Name', async ({ page, context }) => {
+  await context.grantPermissions(['clipboard-read', 'clipboard-write']);
+  await openFeature(page);
+  await page.getByRole('navigation').getByRole('button', { name: 'AuthSteps.cs', exact: true }).first().dblclick();
+  const labels = page.locator('.editor-tab-label');
+  await expect(labels).toHaveCount(2);
+  await labels.first().click({ button: 'right' });
+  await page.getByRole('menuitem', { name: 'Pin', exact: true }).click();
+  await menuItem(page, 'View', /^Show Pinned Tabs in a Separate Row/);
+  await expect(page.locator('.editor-tabs')).toHaveClass(/pinned-row/);
+  await expect(page.locator('.tab-row-break')).toHaveCount(1);
+  await menuItem(page, 'View', /^Colorize Document Tabs/);
+  await expect(page.locator('.editor-tabs')).toHaveClass(/colorized/);
+  await labels.last().click({ button: 'right' });
+  await page.getByRole('menuitem', { name: 'Copy File Name' }).click();
+  await expect.poll(() => page.evaluate(() => navigator.clipboard.readText())).toMatch(/\.(cs|feature)$/);
+});

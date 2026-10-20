@@ -162,6 +162,7 @@ const ROWS: Record<'edit' | 'view' | 'navigate' | 'code' | 'tools' | 'help', Row
       ['Add Examples Table', 'add-examples'],
       ['Toggle Tag…', 'toggle-tag'],
       ['Comment / Uncomment Scenario', 'comment-scenario'],
+      ['Paste as Gherkin Table', 'paste-table'],
     ] },
   ],
   tools: [
