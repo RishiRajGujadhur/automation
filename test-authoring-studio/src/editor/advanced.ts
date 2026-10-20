@@ -365,3 +365,32 @@ registerAdvanced((file) => ViewPlugin.fromClass(class {
     return Decoration.set(lines.map((l) => Decoration.widget({ widget: new PinWidget(mine.filter((p) => p.line === l)), side: 3 }).range(doc.line(l).to)));
   }
 }, { decorations: (p) => p.decorations }));
+
+/* RC10 Highlight exit points (Rider): with the caret on return / throw, every exit of the method is highlighted. */
+export function exitPoints(text: string, pos: number) {
+  const word = /\b(return|throw)\b/g;
+  let at: RegExpExecArray | null = null;
+  for (let m = word.exec(text); m; m = word.exec(text)) if (pos >= m.index && pos <= m.index + m[0].length) { at = m; break; }
+  if (!at) return [];
+  // The enclosing block: walk back to the "{" that opens the method body (the outermost brace below the type).
+  let depth = 0, open = -1;
+  const opens: number[] = [];
+  for (let i = at.index; i >= 0; i--) { const c = text[i]; if (c === '}') depth++; else if (c === '{') { if (depth === 0) opens.push(i); else depth--; } }
+  // opens: innermost first; the method body is the second-outermost (inside the type), or the outermost in top-level code.
+  open = opens.length >= 2 ? opens[opens.length - 2] : opens[0] ?? 0;
+  if (opens.length >= 3 && /namespace\s+[\w.]+\s*$/.test(text.slice(0, opens[opens.length - 1]).trimEnd())) open = opens[opens.length - 3];
+  let d = 0, close = text.length;
+  for (let i = open; i < text.length; i++) { if (text[i] === '{') d++; else if (text[i] === '}' && --d === 0) { close = i; break; } }
+  const out: { from: number; to: number }[] = [];
+  const inner = /\b(return|throw)\b/g;
+  inner.lastIndex = open;
+  for (let m = inner.exec(text); m && m.index < close; m = inner.exec(text)) out.push({ from: m.index, to: m.index + m[0].length });
+  return out;
+}
+const EXIT = Decoration.mark({ class: 'cm-exit-point' });
+const exitField = StateField.define<DecorationSet>({
+  create: () => Decoration.none,
+  update: (v, tr) => { if (!tr.selection && !tr.docChanged) return v; if (!featureOn('exit-points')) return Decoration.none; const pts = exitPoints(tr.state.doc.toString(), tr.state.selection.main.head); return pts.length > 1 ? Decoration.set(pts.map((p) => EXIT.range(p.from, p.to))) : Decoration.none; },
+  provide: (f) => EditorView.decorations.from(f),
+});
+registerAdvanced((file, kind) => (kind === 'code' && file.endsWith('.cs') ? exitField : []));

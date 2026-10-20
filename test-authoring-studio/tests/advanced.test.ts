@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { relativeDay, conflictsIn, resolveConflict, postfix, inlineValuesFor, blockAuthors } from '../src/editor/advanced';
+import { relativeDay, conflictsIn, resolveConflict, postfix, inlineValuesFor, blockAuthors, exitPoints } from '../src/editor/advanced';
 import { selectHunks } from '../server/git';
 import { outlinePreview } from '../src/editor/gherkinTools';
 import { EditorState } from '@codemirror/state';
@@ -89,5 +89,10 @@ describe('advanced features (ADVANCED-20)', () => {
     const lines = [b('a1', 'Ada', '2026-10-01'), b('b2', 'Bo', '2026-10-15'), b('a1', 'Ada', '2026-10-01')];
     expect(blockAuthors(lines, 1, 3)!.text).toMatch(/^Bo \+1 · /);
     expect(blockAuthors([...lines, b('0000000000', 'Not Committed Yet', '2026-10-20')], 1, 4)!.text).toBe('You (changed) · 2 authors');
+  });
+  it('RC10 exit points of the method around the caret', () => {
+    const src = 'namespace D;\nclass A\n{\n    int M(int x)\n    {\n        if (x < 0) throw new X();\n        if (x == 0) { return 0; }\n        return x;\n    }\n    int N() { return 1; }\n}';
+    const pts = exitPoints(src, src.indexOf('return x') + 2).map((p) => src.slice(p.from, p.to));
+    expect(pts).toEqual(['throw', 'return', 'return']);
   });
 });
