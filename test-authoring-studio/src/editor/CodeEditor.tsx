@@ -71,6 +71,10 @@ const csharpLinter = (file: string) => linter(async (view) => {
   try {
     // Unnecessary usings fade (Visual Studio's IDE0005) when the language server is running.
     const [items, unused] = await Promise.all([api<CsDiagnostic[]>('/csharp/diagnostics', { source: doc.toString(), path: file }), featureOn('fade-usings') && !isBrowser() ? api<Omit<CsDiagnostic, 'severity' | 'id' | 'message'>[]>('/csharp/unnecessary', { file, source: doc.toString() }).catch(() => []) : Promise.resolve([])]);
+    // Roslyn's IDE analyzers: suggestions (dotted), warnings, and unnecessary code faded (Visual Studio's IDE rules).
+    const ide = featureOn('ide-analyzers') && !isBrowser() ? await api<{ id: string; severity: string; message: string; from: number; to: number; unnecessary: boolean }[]>('/csharp/analyze', { file, source: doc.toString() }).catch(() => []) : [];
+    if (view.state.doc !== doc) return [];
+    const suggestions = ide.filter((d) => d.to <= doc.length).map((d): Diagnostic => ({ from: d.from, to: Math.max(d.from + 1, d.to), severity: d.unnecessary ? 'hint' : d.severity === 'warning' || d.severity === 'error' ? 'warning' : 'info', ...(d.unnecessary ? { markClass: 'cm-unnecessary' } : {}), source: 'Roslyn', message: `${d.id}: ${d.message}` }));
     const faded = unused.map((d): Diagnostic => { const from = doc.line(Math.min(doc.lines, d.line)).from + d.column - 1; const to = Math.min(doc.length, doc.line(Math.min(doc.lines, d.endLine)).from + d.endColumn - 1); return { from, to: Math.max(from + 1, to), severity: 'hint', markClass: 'cm-unnecessary', source: 'Roslyn', message: 'IDE0005: Using directive is unnecessary.' }; });
     return items.map((d): Diagnostic => {
       const from = doc.line(Math.min(doc.lines, d.line)).from + d.column - 1;
@@ -79,7 +83,7 @@ const csharpLinter = (file: string) => linter(async (view) => {
       // Errors at the very end of a file (e.g. a missing brace) still get a visible one-character range.
       const start = Math.max(0, Math.min(from, doc.length - 1));
       return { from: start, to: Math.max(start + 1, Math.min(to, doc.length)), severity: d.severity, source: d.id.startsWith('TAS') ? 'Bindings' : 'Roslyn', message: `${d.id}: ${d.message}` };
-    }).concat(faded);
+    }).concat(faded, suggestions);
   } catch {
     return [];
   }

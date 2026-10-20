@@ -135,7 +135,7 @@ Legend: `[x]` done · `[ ]` to do.
 - [ ] 110. Redundant type declaration detection
 - [ ] 111. Code style enforcement
 - [x] 112. EditorConfig integration — EditorConfig designer, Gherkin formatting from .editorconfig
-- [ ] 113. Roslyn analyzer integration
+- [x] 113. Roslyn analyzer integration — Roslyn IDE analyzers in the language server: suggestions, faded unused code, fixes in Quick Actions (2026-10-21)
 - [ ] 114. Custom analyzer configuration
 - [x] 115. Suppression of individual inspections — Error List: Suppress in Project File
 - [ ] 116. Inspection exclusion scopes
@@ -334,3 +334,4 @@ Legend: `[x]` done · `[ ]` to do.
 ## Progress log
 - 2026-10-21 Created: existing features ticked.
 - 2026-10-21 S2: Text Editor and Workbench fold their sub-categories in the Settings nav; arrow keys expand and collapse; the state is remembered; a search shows everything.
+- 2026-10-21 113: The language server runs Roslyn's IDE analyzers (Visual Studio's IDE rules): suggestions and faded unused code in the C# editor, their fixes (Hidden rules too) in Quick Actions; nested action titles like 'updating usages' keep their parent.

@@ -54,6 +54,7 @@ export const FEATURES: Feature[] = [
   { id: 'numbered-bookmarks', label: 'Numbered bookmarks', group: 'Navigation', essential: false, description: 'Ctrl+Shift+digit sets, Ctrl+digit jumps.', commands: ['numbered-bookmarks'] },
   { id: 'copy-reference', label: 'Copy Reference / Copy Path', group: 'Navigation', essential: false, description: 'Ctrl+Alt+Shift+C copies the symbol, Ctrl+Shift+C offers paths.', commands: ['copy-reference', 'copy-path'] },
   // Code intelligence (features that existed before the Rider work)
+  { id: 'ide-analyzers', label: 'Roslyn IDE analyzers (suggestions)', group: 'Code intelligence', essential: true, vs: 'Code style and quality suggestions (IDE rules)', description: 'The Roslyn IDE analyzers run on the C# file: unused members and parameters, unnecessary assignments, possible simplifications as dotted suggestions or faded code, and their fixes in Quick Actions (Ctrl+.). Severities follow .editorconfig.' },
   { id: 'codelens', label: 'CodeLens', group: 'Code intelligence', essential: true, vs: 'CodeLens', description: 'Reference counts, step usages and test results above members.' },
   { id: 'inlay-hints', label: 'Inlay hints', group: 'Code intelligence', essential: false, vs: 'Inline hints (off by default)', description: 'Parameter names and inferred types shown inline.' },
   { id: 'sticky-scroll', label: 'Sticky scroll', group: 'Code intelligence', essential: true, vs: 'Sticky Scroll', description: 'The enclosing type and member stay at the top while scrolling.' },

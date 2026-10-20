@@ -17,6 +17,7 @@ using Microsoft.CodeAnalysis.Host.Mef;
 using Microsoft.CodeAnalysis.QuickInfo;
 using Microsoft.CodeAnalysis.Rename;
 using Microsoft.CodeAnalysis.Text;
+using Microsoft.CodeAnalysis.Diagnostics;
 
 // C# language service: one JSON request per stdin line, one JSON response per stdout line.
 // Requests: {id, op, file, source?, line?, column?, ...}. Positions are 1-based lines and columns.
@@ -96,6 +97,7 @@ sealed class LanguageService
             "metrics" => await Metrics(doc),
             "unnecessary" => await Unnecessary(doc),
             "inheritance" => await Inheritance(doc),
+            "analyze" => await Analyze(doc),
             "applyAction" => await ApplyAction((string)req["actionId"]!),
             _ => throw new InvalidOperationException($"Unknown operation {op}."),
         };
@@ -387,10 +389,66 @@ sealed class LanguageService
     }
     readonly Dictionary<string, CodeAction> actions = [];
 
+    // Roslyn's IDE analyzers (unused members, unnecessary assignments, switch expressions, missing cases…), the ones
+    // Visual Studio runs for its suggestions; their diagnostics drive Quick Actions and the editor's suggestions.
+    static ImmutableArray<DiagnosticAnalyzer>? ideAnalyzers;
+    static ImmutableArray<DiagnosticAnalyzer> IdeAnalyzers()
+    {
+        LoadProviders();
+        return ideAnalyzers ??= Exported(typeof(DiagnosticAnalyzerAttribute))
+            .Where(t => t.GetCustomAttributes(typeof(DiagnosticAnalyzerAttribute), false).Cast<DiagnosticAnalyzerAttribute>().Any(a => a.Languages.Contains(LanguageNames.CSharp)))
+            .Select(Create<DiagnosticAnalyzer>).OfType<DiagnosticAnalyzer>().ToImmutableArray();
+    }
+    static async Task<ImmutableArray<Diagnostic>> AnalyzerDiagnostics(Document doc, TextSpan? span, CancellationToken ct)
+    {
+        var comp = (await doc.Project.GetCompilationAsync(ct))!;
+        var tree = (await doc.GetSyntaxTreeAsync(ct))!;
+        var analyzers = IdeAnalyzers();
+        if (analyzers.IsEmpty) return [];
+        var cwa = comp.WithAnalyzers(analyzers, new CompilationWithAnalyzersOptions(doc.Project.AnalyzerOptions, (e, a, d) => { }, concurrentAnalysis: true, logAnalyzerExecutionTime: false, reportSuppressedDiagnostics: false));
+        try
+        {
+            // The whole file: every analysis, compilation-end ones too (unused private members are only known then).
+            // (A span over the whole text: with no span some symbol-end analyzers, like unused members, report nothing.)
+            if (span == null)
+            {
+                var model = comp.GetSemanticModel(tree);
+                var all = (await cwa.GetAnalyzerSemanticDiagnosticsAsync(model, new TextSpan(0, tree.Length), ct)).AddRange(await cwa.GetAnalyzerSyntaxDiagnosticsAsync(tree, ct));
+                return all.Where(d => d.Location.IsInSource && d.Location.SourceTree == tree).GroupBy(d => (d.Id, d.Location.SourceSpan)).Select(g => g.First()).ToImmutableArray();
+            }
+            var syn = await cwa.GetAnalyzerSyntaxDiagnosticsAsync(tree, ct);
+            var sem = await cwa.GetAnalyzerSemanticDiagnosticsAsync(comp.GetSemanticModel(tree), span, ct);
+            return syn.AddRange(sem).Where(d => d.Location.IsInSource && d.Location.SourceTree == tree).ToImmutableArray();
+        }
+        catch (OperationCanceledException) { return []; }
+    }
+    // Code Visual Studio fades even when the rule is only "hidden": unused members, unnecessary code, unreachable code.
+    static readonly HashSet<string> FadedIds = ["IDE0001", "IDE0002", "IDE0004", "IDE0035", "IDE0051", "IDE0052", "IDE0059", "IDE0060", "IDE0079", "IDE0080", "IDE0100", "IDE0110"];
+    static bool Faded(Diagnostic d) => d.Descriptor.CustomTags.Contains(WellKnownDiagnosticTags.Unnecessary) || FadedIds.Contains(d.Id);
+    /// <summary>The IDE analyzers' findings for a file (Info and above: suggestions; Hidden ones only offer Quick Actions).</summary>
+    async Task<object> Analyze(Document doc)
+    {
+        using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(20));
+        var text = await doc.GetTextAsync();
+        var found = await AnalyzerDiagnostics(doc, null, cts.Token);
+        // Unused private members are only reported when a private member's own span is analyzed (as the lightbulb does).
+        var model = (await doc.GetSemanticModelAsync(cts.Token))!;
+        foreach (var m in (await doc.GetSyntaxRootAsync(cts.Token))!.DescendantNodes().OfType<MemberDeclarationSyntax>().Where(m => m is MethodDeclarationSyntax or PropertyDeclarationSyntax or FieldDeclarationSyntax or EventFieldDeclarationSyntax).Take(200))
+        {
+            var sym = m is FieldDeclarationSyntax f ? f.Declaration.Variables.Select(v => model.GetDeclaredSymbol(v)).FirstOrDefault() : model.GetDeclaredSymbol(m);
+            if (sym?.DeclaredAccessibility != Accessibility.Private) continue;
+            found = found.AddRange((await AnalyzerDiagnostics(doc, m.Span, cts.Token)).Where(d => d.Id is "IDE0051" or "IDE0052"));
+        }
+        return found.GroupBy(d => (d.Id, d.Location.SourceSpan)).Select(g => g.First())
+            .Where(d => (d.Severity >= DiagnosticSeverity.Info || Faded(d)) && !d.Id.StartsWith("CS") && d.Id is not ("IDE0005" or "IDE0055"))
+            .Select(d => { var l = d.Location.GetLineSpan(); return new { id = d.Id, severity = d.Severity.ToString().ToLowerInvariant(), message = d.GetMessage(), from = d.Location.SourceSpan.Start, to = d.Location.SourceSpan.End, line = l.StartLinePosition.Line + 1, column = l.StartLinePosition.Character + 1, unnecessary = Faded(d) }; })
+            .ToList();
+    }
+
     /// <summary>Nested actions with their titles; a fragment ("and update call sites directly") keeps its parent's title in front.</summary>
     static IEnumerable<(CodeAction Action, string Title)> Flatten(CodeAction a, string? parent = null)
     {
-        var title = parent != null && System.Text.RegularExpressions.Regex.IsMatch(a.Title, "^(and|into|in|for|with|as|to) ") ? $"{parent} {a.Title}" : a.Title;
+        var title = parent != null && System.Text.RegularExpressions.Regex.IsMatch(a.Title, "^(and|into|in|for|with|as|to|updating) ") ? $"{parent} {a.Title}" : a.Title;
         var nested = (ImmutableArray<CodeAction>?)typeof(CodeAction).GetProperty("NestedActions", BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance)?.GetValue(a);
         return nested is { IsDefaultOrEmpty: false } n ? n.SelectMany(c => Flatten(c, title)) : [(a, title)];
     }
@@ -406,6 +464,8 @@ sealed class LanguageService
         var diagnostics = model.GetDiagnostics().Where(d => d.Location.IsInSource && (d.Location.SourceSpan.IntersectsWith(span) || d.Location.SourceSpan.IntersectsWith(line)) && d.Severity != DiagnosticSeverity.Hidden || (d.Id == "CS8019" && d.Location.SourceSpan.IntersectsWith(line))).ToList();
         var found = new List<(CodeAction Action, string Kind)>();
         using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(8));
+        // The IDE analyzers' diagnostics there too (Hidden ones included: they are Visual Studio's refactoring-like fixes).
+        try { diagnostics.AddRange((await AnalyzerDiagnostics(doc, line, cts.Token)).Where(d => d.Id != "IDE0055" && (d.Location.SourceSpan.IntersectsWith(span) || d.Location.SourceSpan.IntersectsWith(line)))); } catch { }
         foreach (var d in diagnostics)
             foreach (var f in fixers!.Where(f => f.FixableDiagnosticIds.Contains(d.Id)))
             {
