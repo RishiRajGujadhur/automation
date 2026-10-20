@@ -558,6 +558,7 @@ export const FEATURES: Feature[] = [
   { id: 'tracepoint-macros', label: 'Tracepoint macros', group: 'Debugging', essential: true, vs: 'Tracepoints ▸ special keywords', description: 'Tracepoint messages can use $FUNCTION, $CALLER, $TID and $FILEPOS, like Visual Studio\'s.' },
   { id: 'refactor-this', label: 'Refactor This', group: 'Code intelligence', essential: true, vs: 'Quick Actions ▸ refactorings', description: 'Ctrl+Alt+Shift+T lists only the refactorings available at the caret or selection (Rider\'s Refactor This).', commands: ['refactor-this'] },
   { id: 'extract-method', label: 'Extract Method', group: 'Code intelligence', essential: true, vs: 'Ctrl+R, Ctrl+M Extract Method', description: 'Ctrl+Alt+M turns the selected statements or expression into a new method (Roslyn\'s Extract Method).', commands: ['extract-method'] },
+  { id: 'introduce-variable', label: 'Introduce Variable', group: 'Code intelligence', essential: true, vs: 'Introduce local', description: 'Ctrl+Alt+V puts the selected expression into a new local variable.', commands: ['introduce-variable'] },
 ];
 export const GROUPS: FeatureGroup[] = ['Editing', 'Navigation', 'Code intelligence', 'Tool windows', 'Files', 'Git', 'Gherkin', 'View', 'Debugging', 'Help and productivity'];
 

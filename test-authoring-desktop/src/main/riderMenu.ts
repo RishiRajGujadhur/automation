@@ -327,6 +327,7 @@ const ROWS: Record<'edit' | 'view' | 'navigate' | 'code' | 'tools' | 'help', Row
     { submenu: 'Refactor', rows: [
       ['Refactor This…', 'refactor-this'],
       ['Extract Method', 'extract-method'],
+      ['Introduce Variable', 'introduce-variable'],
     ] },
   ],
   tools: [
