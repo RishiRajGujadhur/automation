@@ -298,6 +298,7 @@ const ROWS: Record<'edit' | 'view' | 'navigate' | 'code' | 'tools' | 'help', Row
     ['Remove Comments', 'remove-comments'],
     ['Insert TODO Comment', 'insert-todo'],
     ['Validate JSON', 'validate-json'],
+    ['Copy JSON as CSV', 'json-to-csv'],
   ],
   tools: [
     ['Run Anything… (Ctrl twice)', 'run-anything'],

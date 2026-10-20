@@ -627,3 +627,14 @@ export function curlToRequest(cmd: string) {
   return [`${method.toUpperCase()} ${url}`, ...headers, ...(body ? ['', body] : [])].join('\n');
 }
 export const curlToRequestCmd = mapSelections((t) => curlToRequest(t), 'line');
+
+/** Copy JSON as CSV (Rider): an array of objects as CSV, one column per key (nested values as JSON). */
+export function jsonToCsv(text: string) {
+  let data: unknown;
+  try { data = JSON.parse(text); } catch { return null; }
+  if (!Array.isArray(data) || !data.length || !data.every((r) => r && typeof r === 'object' && !Array.isArray(r))) return null;
+  const rows = data as Record<string, unknown>[];
+  const keys = [...new Set(rows.flatMap((r) => Object.keys(r)))];
+  const cell = (v: unknown) => { const s = v === undefined || v === null ? '' : typeof v === 'object' ? JSON.stringify(v) : String(v); return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s; };
+  return [keys.map(cell).join(','), ...rows.map((r) => keys.map((k) => cell(r[k])).join(','))].join('\n');
+}
