@@ -18,6 +18,7 @@ import { activeEditor } from './editor/activeEditor';
 import { gotoLine } from '@codemirror/search';
 import { featureStats } from './editor/gherkinTools';
 import { wordCount } from './editor/docTools';
+import { forEachDiagnostic, nextDiagnostic } from '@codemirror/lint';
 
 /**
  * Right side of the status bar, like Visual Studio's: Git branch (with ↑/↓), errors and warnings of the last build,
@@ -25,6 +26,13 @@ import { wordCount } from './editor/docTools';
  */
 export default function StatusBarItems({ repository, onGit, onErrors }: { repository?: string; onGit: () => void; onErrors: () => void }) {
   const build = useBuild();
+  // Problems of the active editor (its squiggles), refreshed every second; a click goes to the next one.
+  const [fileProblems, setFileProblems] = useState({ errors: 0, warnings: 0 });
+  useEffect(() => {
+    if (!featureOn('status-file-problems')) return;
+    const t = window.setInterval(() => { const a = activeEditor(); let errors = 0, warnings = 0; if (a) forEachDiagnostic(a.view.state, (d) => { if (d.severity === 'error') errors++; else if (d.severity === 'warning') warnings++; }); setFileProblems((p) => (p.errors === errors && p.warnings === warnings ? p : { errors, warnings })); }, 1000);
+    return () => clearInterval(t);
+  }, []);
   // Memory indicator (Rider): the page's JavaScript heap, every few seconds (Chromium / Electron only).
   const [heap, setHeap] = useState<{ used: number; limit: number }>();
   useEffect(() => {
@@ -102,6 +110,7 @@ export default function StatusBarItems({ repository, onGit, onErrors }: { reposi
       {featureOn('autosave-status') && <button className="status-item" aria-label={`Auto Save: ${prefs.autoSave === 'off' ? 'off' : prefs.autoSave === 'afterDelay' ? 'after a delay' : 'on focus change'} (click to change)`} title="Auto Save (click to change)" onClick={() => setPrefs({ autoSave: prefs.autoSave === 'off' ? 'afterDelay' : prefs.autoSave === 'afterDelay' ? 'onFocusChange' : 'off' })}>{prefs.autoSave === 'off' ? 'Auto Save off' : prefs.autoSave === 'afterDelay' ? 'Auto Save' : 'Save on blur'}</button>}
       {featureOn('status-tests') && (testRun.status === 'done' || testRun.status === 'failed') && passed + failed > 0 && <button className={`status-item ${failed ? 'status-tests-failed' : ''}`} aria-label={`Tests: ${passed} passed, ${failed} failed`} title="Last test run — Test Explorer" onClick={() => window.dispatchEvent(new Event('tas:show-tests'))}><FlaskConical size={12} />{passed}✓{failed ? ` ${failed}✗` : ''}</button>}
       {featureOn('memory-indicator') && heap && <span className="status-item" aria-label={`Memory: ${Math.round(heap.used / 1048576)} MB`} title={`JavaScript heap: ${Math.round(heap.used / 1048576)} of ${Math.round(heap.limit / 1048576)} MB`}><MemoryStick size={12} />{Math.round(heap.used / 1048576)} MB</span>}
+      {featureOn('status-file-problems') && fileProblems.errors + fileProblems.warnings > 0 && <button className="status-item" aria-label={`Problems in this file: ${fileProblems.errors} errors, ${fileProblems.warnings} warnings`} title="Problems in this file — next problem (F8)" onClick={() => { const a = activeEditor(); if (a) { a.view.focus(); nextDiagnostic(a.view); } }}>{fileProblems.errors > 0 && <><CircleX size={12} className="sev-error" />{fileProblems.errors}</>}{fileProblems.warnings > 0 && <><TriangleAlert size={12} className="sev-warning" />{fileProblems.warnings}</>} in file</button>}
       {featureOn('notification-badge') && unread > 0 && <button className="status-item" aria-label={`${unread} new notification${unread === 1 ? '' : 's'}`} title="Notifications" onClick={() => runRider('tool-notifications', 'menu')}><Bell size={12} />{unread}</button>}
       {build.status !== 'idle' && (
         <button className="status-item" aria-label={`${errors} errors, ${warnings} warnings: open the Error List`} title="Error List" onClick={onErrors}>
