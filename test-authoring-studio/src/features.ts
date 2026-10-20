@@ -539,6 +539,7 @@ export const FEATURES: Feature[] = [
   { id: 'bp-search', label: 'Breakpoints window: search', group: 'Debugging', essential: true, vs: 'Breakpoints window ▸ Search', description: 'A search box in the Breakpoints window filters by file, line, condition, log message or label.' },
   { id: 'bp-labels', label: 'Breakpoint labels', group: 'Debugging', essential: true, vs: 'Breakpoints ▸ Edit labels', description: 'Breakpoint Settings take labels (login, slow…), shown in the Breakpoints window and matched by its search.' },
   { id: 'bp-hit-counts', label: 'Breakpoints window: hit counts', group: 'Debugging', essential: true, vs: 'Breakpoints window ▸ Hit Count', description: 'The Breakpoints window shows how many times each breakpoint was hit in the session.' },
+  { id: 'bp-disable-once', label: 'Disable breakpoint once hit', group: 'Debugging', essential: true, vs: 'Breakpoint Settings ▸ Disable once hit', description: 'A breakpoint can disable itself after its first hit (it stays listed, unchecked).' },
 ];
 export const GROUPS: FeatureGroup[] = ['Editing', 'Navigation', 'Code intelligence', 'Tool windows', 'Files', 'Git', 'Gherkin', 'View', 'Debugging', 'Help and productivity'];
 
