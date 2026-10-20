@@ -437,6 +437,7 @@ export const FEATURES: Feature[] = [
   { id: 'wrap-in-rule', label: 'Wrap Scenarios in Rule', group: 'Gherkin', essential: false, description: 'Code ▸ Gherkin puts the selected scenarios under a new Rule: (Gherkin 6), indented one level.', commands: ['wrap-in-rule'] },
   { id: 'language-header', label: 'Set Language Header', group: 'Gherkin', essential: false, description: 'Code ▸ Gherkin writes (or changes) the # language: line that picks the Gherkin keywords\' language.', commands: ['language-header'] },
   { id: 'copy-scenario-name', label: 'Copy Scenario Name', group: 'Gherkin', essential: false, description: 'Code ▸ Gherkin copies the title of the scenario at the caret.', commands: ['copy-scenario-name'] },
+  { id: 'table-row-above', label: 'Table: Insert Row Above', group: 'Gherkin', essential: false, description: 'Code ▸ Gherkin adds an empty row above the caret\'s row.', commands: ['table-row-above'] },
 ];
 export const GROUPS: FeatureGroup[] = ['Editing', 'Navigation', 'Code intelligence', 'Tool windows', 'Files', 'Git', 'Gherkin', 'View', 'Debugging', 'Help and productivity'];
 

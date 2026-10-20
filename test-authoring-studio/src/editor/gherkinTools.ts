@@ -917,3 +917,13 @@ export function scenarioName(state: EditorState) {
   const b = scenarioBlock(state, state.doc.lineAt(state.selection.main.head).number);
   return b ? state.doc.line(b.head).text.replace(/^\s*[^:]+:\s*/, '').trim() : null;
 }
+
+/** Table ▸ Insert Row Above: an empty row above the caret's row (below the header when on it). */
+export function tableInsertRowAbove(view: EditorView) {
+  const t = tableAt(view.state);
+  if (!t) return false;
+  const at = Math.max(1, t.row);
+  const rows = [...t.rows];
+  rows.splice(at, 0, Array<string>(t.cols).fill(''));
+  return writeTable(view, t, rows, at, 0);
+}

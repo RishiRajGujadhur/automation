@@ -249,6 +249,7 @@ const ROWS: Record<'edit' | 'view' | 'navigate' | 'code' | 'tools' | 'help', Row
       ['Wrap in Rule…', 'wrap-in-rule'],
       ['Set Language Header…', 'language-header'],
       ['Copy Scenario Name', 'copy-scenario-name'],
+      ['Table: Insert Row Above', 'table-row-above'],
     ] },
     ['Collapse Using Directives', 'fold-usings'],
     ['Sort JSON Keys', 'sort-json'],
