@@ -19,7 +19,7 @@ export type DebugState = {
   breakpoints: Record<string, (BreakpointSpec & { verified: boolean })[]>;
   hits?: Record<string, number>;
 };
-export type Variable = { name: string; value: string; type?: string; variablesReference: number };
+export type Variable = { name: string; value: string; type?: string; variablesReference: number; parentRef?: number };
 
 /**
  * Debugger state shared by the editors (breakpoint gutters, execution line) and the debug windows.

@@ -546,6 +546,7 @@ export const FEATURES: Feature[] = [
   { id: 'step-out-to', label: 'Call Stack: Step Out to Here', group: 'Debugging', essential: true, vs: 'Call Stack ▸ Run To Cursor', description: 'The Call Stack\'s row menu steps out until the chosen frame is on top (Visual Studio\'s Run to Cursor on a frame).' },
   { id: 'function-breakpoints', label: 'Function breakpoints', group: 'Debugging', essential: true, vs: 'New ▸ Function Breakpoint', description: 'New Function Breakpoint… in the Breakpoints window stops in a method by name (Calculator.Add), wherever it is called from.' },
   { id: 'just-my-code', label: 'Just My Code', group: 'Debugging', essential: true, vs: 'Options ▸ Debugging ▸ Enable Just My Code', description: 'A Just My Code switch in the debug toolbar: off, the debugger also steps into and stops in framework and package code (next session).' },
+  { id: 'edit-values', label: 'Edit values while debugging', group: 'Debugging', essential: true, vs: 'Locals ▸ Edit Value', description: 'Double-click a value in Locals (or an expanded member) to change it while paused (Enter sets it).' },
 ];
 export const GROUPS: FeatureGroup[] = ['Editing', 'Navigation', 'Code intelligence', 'Tool windows', 'Files', 'Git', 'Gherkin', 'View', 'Debugging', 'Help and productivity'];
 

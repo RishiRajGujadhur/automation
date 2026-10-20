@@ -289,6 +289,11 @@ export class Debugger extends EventEmitter {
     if (!this.dap) throw new Error('No debugging session.');
     return (await this.dap.request<{ variables: { name: string; value: string; type?: string; variablesReference: number }[] }>('variables', { variablesReference })).variables;
   }
+  /** Edit Value (Visual Studio: double-click a value in Locals): setVariable on the variable's container. */
+  async setVariable(variablesReference: number, name: string, value: string) {
+    if (!this.dap || this.state.status !== 'paused') throw new Error('The debugger is not paused.');
+    return this.dap.request<{ value: string; type?: string }>('setVariable', { variablesReference, name, value }, 15_000).catch((e) => { throw new Error((e as Error).message.replace(/^Failed command 'setVariable' : /, '')); });
+  }
   async evaluate(expression: string, frameId?: number) {
     if (!this.dap || this.state.status !== 'paused') return { error: 'Not available while running.' };
     try {

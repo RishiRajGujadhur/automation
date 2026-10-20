@@ -3779,3 +3779,4 @@ html[data-features-off~='inlay-hints'] .cm-inlay {
 .bp-label { font-size: 10px; padding: 0 5px; border-radius: 8px; background: color-mix(in srgb, var(--accent, #9270dd) 22%, transparent); }
 .bp-hits { font-size: 11px; color: var(--muted, #888); white-space: nowrap; }
 .bp-settings .bp-check { display: flex; gap: 6px; align-items: center; }
+.dbg-edit { width: 100%; font: inherit; padding: 0 3px; background: var(--input-bg, transparent); color: inherit; border: 1px solid var(--accent, #9270dd); }

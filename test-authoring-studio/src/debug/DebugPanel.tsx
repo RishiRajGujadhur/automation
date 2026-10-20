@@ -14,8 +14,14 @@ const CS_KEYWORDS = new Set('var new return if else for foreach while do in is a
 const statusText: Record<string, string> = { idle: 'Not debugging', building: 'Building…', starting: 'Starting test host…', running: 'Running', paused: 'Paused', ended: 'Ended' };
 
 /** One expandable row of the Locals / Watch trees (children load on demand, like Visual Studio). */
-function VariableRow({ v, depth, frameKey }: { v: { name: string; value: string; type?: string; variablesReference: number }; depth: number; frameKey: string }) {
+function VariableRow({ v, depth, frameKey }: { v: { name: string; value: string; type?: string; variablesReference: number; parentRef?: number }; depth: number; frameKey: string }) {
   const [open, setOpen] = useState(false);
+  // Edit Value: double-click the value (Locals and expanded members), Enter sets it, Escape cancels.
+  const [editingValue, setEditingValue] = useState<string | null>(null);
+  const [shown, setShown] = useState<string | null>(null);
+  useEffect(() => { setShown(null); setEditingValue(null); }, [frameKey, v.value]);
+  const editable = featureOn('edit-values') && !!v.parentRef;
+  const commit = async () => { if (editingValue === null) return; try { const r = await api<{ value: string }>('/debug/set-variable', { ref: v.parentRef, name: v.name, value: editingValue }); setShown(r.value); } catch (e) { window.dispatchEvent(new CustomEvent('tas:notice', { detail: (e as Error).message })); } setEditingValue(null); };
   const [children, setChildren] = useState<Variable[]>();
   useEffect(() => { setChildren(undefined); setOpen(false); }, [frameKey]);
   const expandable = v.variablesReference > 0;
@@ -32,11 +38,11 @@ function VariableRow({ v, depth, frameKey }: { v: { name: string; value: string;
           {expandable ? <button className="se-twisty" aria-label={`${open ? 'Collapse' : 'Expand'} ${v.name}`} onClick={toggle}>{open ? <ChevronDown size={13} /> : <ChevronRight size={13} />}</button> : <span className="se-twisty-space" />}
           {v.name}
         </span>
-        <span role="gridcell" className="dbg-value" title={v.value}>{v.value}</span>
+        <span role="gridcell" className="dbg-value" title={editable ? `${shown ?? v.value} (double-click to edit)` : v.value} onDoubleClick={() => { if (editable) setEditingValue(shown ?? v.value); }}>{editingValue !== null ? <input className="dbg-edit" aria-label={`New value of ${v.name}`} autoFocus value={editingValue} onChange={(e) => setEditingValue(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter') void commit(); else if (e.key === 'Escape') { e.stopPropagation(); setEditingValue(null); } }} onBlur={() => setEditingValue(null)} /> : shown ?? v.value}</span>
         <span role="gridcell" className="dbg-type">{v.type ?? ''}</span>
       </div>
       </RowMenu>
-      {open && children?.map((c) => <VariableRow key={c.name} v={c} depth={depth + 1} frameKey={frameKey} />)}
+      {open && children?.map((c) => <VariableRow key={c.name} v={{ ...c, parentRef: v.variablesReference }} depth={depth + 1} frameKey={frameKey} />)}
     </>
   );
 }
@@ -104,7 +110,7 @@ export default function DebugPanel({ onOpen, onNotice, onClose, editingRequest =
     let live = true;
     (async () => {
       const scopes = await api<{ name: string; variablesReference: number }[]>('/debug/scopes', { frameId: frame.id }).catch(() => []);
-      const all = (await Promise.all(scopes.map((s) => api<Variable[]>('/debug/variables', { ref: s.variablesReference }).catch(() => [])))).flat();
+      const all = (await Promise.all(scopes.map((s) => api<Variable[]>('/debug/variables', { ref: s.variablesReference }).then((vs) => vs.map((v) => ({ ...v, parentRef: s.variablesReference })), () => [])))).flat();
       if (live) setLocals(all);
     })();
     return () => { live = false; };
