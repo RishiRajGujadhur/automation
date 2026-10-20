@@ -3657,3 +3657,13 @@ html[data-features-off~='inlay-hints'] .cm-inlay {
   text-decoration: underline;
   text-underline-offset: 2px;
 }
+
+.se-git {
+  margin-left: auto;
+  padding: 0 6px;
+  font-size: 10.5px;
+  font-weight: 700;
+  &.se-git-m, &.se-git-r { color: #d29922; }
+  &.se-git-a, &.se-git-u { color: #3fb950; }
+  &.se-git-d { color: #f85149; }
+}

@@ -11,6 +11,7 @@ import { RowMenu, copyText } from './ui';
 import { api } from './api';
 import { normalizeFeaturePath, parentFolders } from './featureTree';
 import { UNSAVED_EVENT, unsavedFiles } from './editor/autosave';
+import { GIT_CHANGED_EVENT, FILE_SAVED_EVENT } from './editor/events';
 import type { Feature } from './types';
 
 export type SolutionNode = { kind: 'folder'; name: string; children: SolutionNode[] } | { kind: 'project'; name: string; file: string };
@@ -162,6 +163,17 @@ export default function SolutionExplorer({ features, revision, activeFile, query
     else if (mod && e.key.toLowerCase() === 'v') { e.preventDefault(); void paste(folder ? path : dirOf(path)); }
   };
   const [serverSolution, setSolution] = useState<Solution>();
+  // Git status colours (VS Code): modified, added, untracked and conflicted files (QOL-50).
+  const [gitFiles, setGitFiles] = useState<Map<string, string>>(new Map());
+  useEffect(() => {
+    if (browserSolution || !featureOn('explorer-git')) return;
+    const load = () => { api<{ repo: boolean; files: { file: string; status: string }[] }>('/git/status').then((s) => setGitFiles(new Map(s.repo ? s.files.map((f) => [f.file, f.status] as [string, string]) : [])), () => {}); };
+    load();
+    const t = setInterval(load, 15_000);
+    window.addEventListener(GIT_CHANGED_EVENT, load);
+    window.addEventListener(FILE_SAVED_EVENT, load);
+    return () => { clearInterval(t); window.removeEventListener(GIT_CHANGED_EVENT, load); window.removeEventListener(FILE_SAVED_EVENT, load); };
+  }, [browserSolution, revision]);
   // Copy actions say what they copied (QOL-50).
   const copied = (text: string) => void copyText(text).then((ok) => { if (featureOn('copy-feedback')) onNotice?.(ok ? `Copied ${text}` : 'Clipboard unavailable.'); });
   // Copy Full Path (Visual Studio): the repository folder on disk plus the item's path.
@@ -359,6 +371,7 @@ export default function SolutionExplorer({ features, revision, activeFile, query
               <span>{featureOn('explorer-search-mark') ? markQuery(name, query) : name}</span>
               {extra?.note && <small>{extra.note}</small>}
             </button>}
+            {gitFiles.has(path) && !extra?.linked && <span className={`se-git se-git-${gitFiles.get(path) === '?' ? 'u' : gitFiles.get(path)!.toLowerCase()}`} title={{ M: 'Modified', A: 'Added', D: 'Deleted', R: 'Renamed', U: 'Conflict', '?': 'Untracked' }[gitFiles.get(path)!] ?? 'Changed'} aria-label={`Git: ${{ M: 'modified', A: 'added', D: 'deleted', R: 'renamed', U: 'conflict', '?': 'untracked' }[gitFiles.get(path)!] ?? 'changed'}`}>{gitFiles.get(path) === '?' ? 'U' : gitFiles.get(path)}</span>}
             {unsaved && <span className="se-dirty" role="img" title="Unsaved changes" aria-label={`${name} has unsaved changes`}>●</span>}
           </div>
           {expanded && (
