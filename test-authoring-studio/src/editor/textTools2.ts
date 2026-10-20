@@ -222,3 +222,7 @@ export const reformatXml = (view: EditorView) => mapSelections((t) => formatXml(
 
 /** Minify XML (Rider): the white space between tags removed. */
 export const minifyXml = mapSelections((t) => (formatXml(t) === null ? null : t.replace(/>\s+</g, '><').trim()), 'doc');
+
+/** Escape / Unescape JSON String (Rider): the selection as the body of a JSON string, and back. */
+export const jsonEscape = mapSelections((t) => JSON.stringify(t).slice(1, -1), 'line');
+export const jsonUnescape = mapSelections((t) => { try { return JSON.parse(`"${t.replace(/(^|[^\\])"/g, '$1\\"')}"`) as string; } catch { return null; } }, 'line');

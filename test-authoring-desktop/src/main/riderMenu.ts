@@ -76,6 +76,8 @@ const ROWS: Record<'edit' | 'view' | 'navigate' | 'code' | 'tools' | 'help', Row
       ['Split at Separator…', 'split-at'],
       ['Swap Selections', 'swap-selections'],
       ['Trim Lines', 'trim-lines'],
+      ['Escape JSON String', 'json-escape'],
+      ['Unescape JSON String', 'json-unescape'],
     ] },
     ['Align Assignments', 'align-assignments', 'CmdOrCtrl+Alt+]'],
     ['Count Occurrences', 'count-occurrences'],
