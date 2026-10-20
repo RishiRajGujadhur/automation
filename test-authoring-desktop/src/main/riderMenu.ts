@@ -307,6 +307,13 @@ const ROWS: Record<'edit' | 'view' | 'navigate' | 'code' | 'tools' | 'help', Row
     ['Insert TODO Comment', 'insert-todo'],
     ['Validate JSON', 'validate-json'],
     ['Copy JSON as CSV', 'json-to-csv'],
+    null,
+    { submenu: 'Test Data', rows: [
+      ['Email Address', 'test-data-email'],
+      ['Person Name', 'test-data-name'],
+      ['Number', 'test-data-number'],
+      ['Date', 'test-data-date'],
+    ] },
   ],
   tools: [
     ['Run Anything… (Ctrl twice)', 'run-anything'],

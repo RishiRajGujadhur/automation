@@ -221,3 +221,37 @@ test('Y72–Y80 Rename / Split Scenario, TODO, C# generators, Validate JSON, Com
   await gherkinItem(page, /^Rename Scenario/);
   await expect.poll(() => doc(page)).toContain('  Scenario: Second half\n    Then b');
 });
+
+test('Y81–Y90 cURL, JSON as CSV, bodies, [Binding], data table, tag filter, escapes, hex, test data', async ({ page, context }) => {
+  await context.grantPermissions(['clipboard-read', 'clipboard-write']);
+  await open(page, 'AuthSteps.cs');
+  await expect(page.getByLabel('Source of Steps/AuthSteps.cs')).toBeVisible();
+  await setDoc(page, "curl -X DELETE 'https://example.test/items/1'", 3);
+  await menuItem(page, 'Tools', /^Convert cURL to Request/);
+  await expect.poll(() => doc(page)).toBe('DELETE https://example.test/items/1');
+  await setDoc(page, '[{"a":1},{"a":2}]', 0);
+  await menuItem(page, 'Code', /^Copy JSON as CSV/);
+  await expect.poll(() => page.evaluate(async () => (await navigator.clipboard.readText()).replace(/\r\n/g, '\n'))).toBe('a\n1\n2');
+  await setDoc(page, '    public int Twice(int x)\n    {\n        return x * 2;\n    }', 40);
+  await codeSub(page, 'C#', /^Convert to Expression Body/);
+  await expect.poll(() => doc(page)).toBe('    public int Twice(int x) => x * 2;');
+  await codeSub(page, 'C#', /^Convert to Block Body/);
+  await expect.poll(() => doc(page)).toBe('    public int Twice(int x)\n    {\n        return x * 2;\n    }');
+  await setDoc(page, 'public class S\n{\n    [Given("a")] public void A() { }\n}', 0);
+  await codeSub(page, 'C#', /^Add Missing \[Binding\]/);
+  await expect.poll(() => doc(page)).toMatch(/^\[Binding\]\npublic class S/);
+  await setDoc(page, 'x = 255;', 5);
+  await convert(page, /^Hex ⇄ Decimal/);
+  await expect.poll(() => doc(page)).toBe('x = 0xFF;');
+  await setDoc(page, '', 0);
+  await codeSub(page, 'Test Data', /^Email Address/);
+  await expect.poll(() => doc(page)).toMatch(/^[a-z]+\.[a-z]+\d+@example\.test$/);
+  await page.getByRole('navigation', { name: 'Solution' }).getByRole('button', { name: 'Login.feature', exact: true }).first().click();
+  await expect(page.getByLabel('Gherkin source')).toContainText('Feature:');
+  await setDoc(page, 'Feature: F\n  @smoke\n  Scenario: S\n    Given the users\n', 14);
+  await gherkinItem(page, /^Copy Test Filter for Tag/);
+  await expect.poll(() => page.evaluate(() => navigator.clipboard.readText())).toBe('dotnet test --filter "Category=smoke"');
+  await setDoc(page, 'Feature: F\n  @smoke\n  Scenario: S\n    Given the users\n', 45);
+  await gherkinItem(page, /^Insert Data Table/);
+  await expect.poll(() => doc(page)).toContain('    Given the users\n      | column |\n      |        |');
+});

@@ -690,3 +690,15 @@ export const hexDecimal = mapSelections((t) => {
   if (/^\d+$/.test(s)) return `0x${BigInt(s).toString(16).toUpperCase()}`;
   return null;
 }, 'word');
+
+const FIRST = ['Ada', 'Grace', 'Alan', 'Linus', 'Margaret', 'Tim', 'Barbara', 'Ken', 'Radia', 'Dennis'];
+const LAST = ['Lovelace', 'Hopper', 'Turing', 'Torvalds', 'Hamilton', 'Berners-Lee', 'Liskov', 'Thompson', 'Perlman', 'Ritchie'];
+/** Test data (Rider's Test Data plugin): realistic values for steps and Examples tables. */
+export function testData(kind: 'email' | 'name' | 'number' | 'date', random = Math.random) {
+  const pick = <T,>(a: T[]) => a[Math.floor(random() * a.length)];
+  if (kind === 'name') return `${pick(FIRST)} ${pick(LAST)}`;
+  if (kind === 'email') return `${pick(FIRST).toLowerCase()}.${pick(LAST).toLowerCase().replace(/[^a-z]/g, '')}${Math.floor(random() * 100)}@example.test`;
+  if (kind === 'number') return String(1 + Math.floor(random() * 1000));
+  const d = new Date(Date.UTC(2020, 0, 1) + Math.floor(random() * 3650) * 86_400_000);
+  return d.toISOString().slice(0, 10);
+}

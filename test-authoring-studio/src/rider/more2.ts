@@ -8,7 +8,7 @@ import { api } from '../api';
 import { getTabs, setPinned } from '../files/tabs';
 import { copyText } from '../ui';
 import { tableDeleteEmptyRows, tableRemoveDuplicateRows, tableMarkdown, tagAllScenarios, removeTagEverywhere, sortTags, promoteCommonTags, insertDocString, expandOutline, wrapInRule, setLanguageHeader, scenarioName, tableInsertRowAbove, addScenarioOutline, tableColumnStats, tableColumnValues, tableFillSeries, mergeExamples, scenarioSteps, renameScenario, splitScenario, insertDataTable, tagAt, tagFilter } from '../editor/gherkinTools';
-import { urlEncode, urlDecode, base64Encode, base64Decode, escapeString, unescapeString, htmlEncode, htmlDecode, stepNumber, insertSequence, toggleQuotes, joinWith, splitAt, alignAssignments, swapSelections, countOccurrences, trimLines, stamp, insertText, LOREM, shuffleLines, reformatXml, minifyXml, jsonEscape, jsonUnescape, numberLines, mapDoc, toFileScopedNamespace, toBlockScopedNamespace, removeRegions, toRawString, toggleTask, formatMarkdownTable, tableOfContents, MARKDOWN_TABLE, removeComments, concatToInterpolationCmd, gotoOffset, timestampCmd, sha256Hex, decodeJwt, jwtAt, sortTokens, markdownCodeBlock, fileStatistics, todoComment, generateEquality, generateToString, addNullChecks, validateJson, requestAsCurl, curlToRequestCmd, jsonToCsv, toExpressionBody, toBlockBody, addBindingAttribute, unicodeEscape, unicodeUnescape, hexDecimal } from '../editor/textTools2';
+import { urlEncode, urlDecode, base64Encode, base64Decode, escapeString, unescapeString, htmlEncode, htmlDecode, stepNumber, insertSequence, toggleQuotes, joinWith, splitAt, alignAssignments, swapSelections, countOccurrences, trimLines, stamp, insertText, LOREM, shuffleLines, reformatXml, minifyXml, jsonEscape, jsonUnescape, numberLines, mapDoc, toFileScopedNamespace, toBlockScopedNamespace, removeRegions, toRawString, toggleTask, formatMarkdownTable, tableOfContents, MARKDOWN_TABLE, removeComments, concatToInterpolationCmd, gotoOffset, timestampCmd, sha256Hex, decodeJwt, jwtAt, sortTokens, markdownCodeBlock, fileStatistics, todoComment, generateEquality, generateToString, addNullChecks, validateJson, requestAsCurl, curlToRequestCmd, jsonToCsv, toExpressionBody, toBlockBody, addBindingAttribute, unicodeEscape, unicodeUnescape, hexDecimal, testData } from '../editor/textTools2';
 
 /**
  * Fourth batch of Visual Studio 2026 / JetBrains Rider commands (IDE-FEATURES-4.md, Y1–Y100). RiderHost registers
@@ -105,5 +105,9 @@ export function moreCommands2(h: MoreHelpers): RiderCommand[] {
     { id: 'unicode-escape', label: 'Unicode Escape', menu: 'Edit', submenu: 'Convert', run: h.inEditor((v) => unicodeEscape(v) || h.notice('The selection has no non-ASCII characters.')) },
     { id: 'unicode-unescape', label: 'Unicode Unescape', menu: 'Edit', submenu: 'Convert', run: h.inEditor((v) => unicodeUnescape(v) || h.notice('The selection has no \\uXXXX escapes.')) },
     { id: 'hex-decimal', label: 'Hex ⇄ Decimal', menu: 'Edit', submenu: 'Convert', run: h.inEditor((v) => hexDecimal(v) || h.notice('Put the caret on a number (255 or 0xFF).')) },
+    { id: 'test-data-email', label: 'Email Address', menu: 'Code', submenu: 'Test Data', run: h.inEditor(insertText(() => testData('email'))) },
+    { id: 'test-data-name', label: 'Person Name', menu: 'Code', submenu: 'Test Data', run: h.inEditor(insertText(() => testData('name'))) },
+    { id: 'test-data-number', label: 'Number', menu: 'Code', submenu: 'Test Data', run: h.inEditor(insertText(() => testData('number'))) },
+    { id: 'test-data-date', label: 'Date', menu: 'Code', submenu: 'Test Data', run: h.inEditor(insertText(() => testData('date'))) },
   ];
 }
