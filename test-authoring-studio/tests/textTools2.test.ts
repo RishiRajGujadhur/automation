@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { EditorSelection, EditorState, type TransactionSpec } from '@codemirror/state';
 import type { EditorView } from '@codemirror/view';
-import { mapSelections, urlEncode, urlDecode, base64Encode, base64Decode, escapeString, unescapeString, htmlEncode, htmlDecode, stepNumber, insertSequence, toggleQuotes, joinWith, splitAt, alignAssignments, swapSelections, countOccurrences, trimLines, stamp, insertText, LOREM, shuffleLines, formatXml, minifyXml, jsonEscape, jsonUnescape, numberLines, toFileScopedNamespace, toBlockScopedNamespace, removeRegions, toRawString, toggleTask, formatMarkdownTable, tableOfContents, MARKDOWN_TABLE, removeComments, concatToInterpolation, concatToInterpolationCmd, gotoOffset, convertTimestamp, timestampCmd, sha256Hex, decodeJwt, jwtAt, sortTokens, markdownCodeBlock, fileStatistics, todoComment, generateEquality, generateToString, addNullChecks, validateJson, requestAsCurl, curlToRequest, jsonToCsv, toExpressionBody, toBlockBody, addBindingAttribute, unicodeEscape, unicodeUnescape, hexDecimal, testData, reverseText, fillParagraph, charInfo } from '../src/editor/textTools2';
+import { mapSelections, urlEncode, urlDecode, base64Encode, base64Decode, escapeString, unescapeString, htmlEncode, htmlDecode, stepNumber, insertSequence, toggleQuotes, joinWith, splitAt, alignAssignments, swapSelections, countOccurrences, trimLines, stamp, insertText, LOREM, shuffleLines, formatXml, minifyXml, jsonEscape, jsonUnescape, numberLines, toFileScopedNamespace, toBlockScopedNamespace, removeRegions, toRawString, toggleTask, formatMarkdownTable, tableOfContents, MARKDOWN_TABLE, removeComments, concatToInterpolation, concatToInterpolationCmd, gotoOffset, convertTimestamp, timestampCmd, sha256Hex, decodeJwt, jwtAt, sortTokens, markdownCodeBlock, fileStatistics, todoComment, generateEquality, generateToString, addNullChecks, validateJson, requestAsCurl, curlToRequest, jsonToCsv, toExpressionBody, toBlockBody, addBindingAttribute, unicodeEscape, unicodeUnescape, hexDecimal, testData, reverseText, fillParagraph, charInfo, xmlDocAbove } from '../src/editor/textTools2';
 
 /** Runs an editor command on `doc` with the selection between « and » (or a caret at |). */
 function run(doc: string, cmd: (v: EditorView) => boolean) {
@@ -249,5 +249,11 @@ describe('text tools, fourth batch (IDE-FEATURES-4 Y1…)', () => {
     expect(charInfo(EditorState.create({ doc: 'é', selection: { anchor: 0 } }))).toBe('"é" U+00E9 · UTF-8 C3 A9');
     expect(charInfo(EditorState.create({ doc: 'a\u00a0b', selection: { anchor: 1 } }))).toBe('No-break space U+00A0 · UTF-8 C2 A0');
     expect(charInfo(EditorState.create({ doc: 'a', selection: { anchor: 1 } }))).toBe(null);
+  });
+  it('Z19 XML doc above a member', () => {
+    const lines = ['    /// <summary>', '    /// Opens the <see cref="LoginPage"/> page.', '    /// </summary>', '    [Given("the login page is open")]', '    public void Open() { }'];
+    expect(xmlDocAbove(lines, 4)).toBe('Opens the LoginPage page.');
+    expect(xmlDocAbove(lines, 5)).toBe('Opens the LoginPage page.');
+    expect(xmlDocAbove(['x', '[Given("a")] void A() {}'], 2)).toBe(null);
   });
 });

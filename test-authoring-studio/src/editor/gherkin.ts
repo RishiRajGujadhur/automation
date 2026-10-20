@@ -14,6 +14,8 @@ import { Trie } from '../algorithms/search';
 import { levenshteinRatio, dice } from '../algorithms/strings';
 import { smellChecks, type QScenario } from '../algorithms/quality';
 import { algorithmOn } from '../radix2';
+import { readFile } from '../files/provider';
+import { xmlDocAbove } from './textTools2';
 import { gherkinLint2 } from './gherkinLint2';
 
 const STEP = /^(\s*)(Given|When|Then|And|But|\*)(\s+)(.*)$/;
@@ -380,7 +382,9 @@ const stepHover = hoverTooltip(async (view, pos) => {
   const step = all.find((s) => s.line === line.number);
   if (!step) return null;
   try {
-    const [r] = await api<{ status: string; binding: { pattern: string; file: string; line: number } | null }[]>('/steps/match', { steps: [{ keyword: step.resolved, text: step.text }] });
+    const [r] = await api<{ status: string; method?: string; binding: { pattern: string; file: string; line: number } | null }[]>('/steps/match', { steps: [{ keyword: step.resolved, text: step.text }] });
+    // The step definition's XML documentation and method (Rider's Quick Documentation for steps).
+    const docs = r.binding && featureOn('step-hover-docs') ? await readFile(r.binding.file).then((f) => xmlDocAbove(f.source.split(/\r?\n/), r.binding!.line), () => null) : null;
     return {
       pos: step.textFrom,
       end: line.to,
@@ -397,6 +401,8 @@ const stepHover = hoverTooltip(async (view, pos) => {
           const meta = document.createElement('div');
           meta.textContent = `${r.binding.file}:${r.binding.line}`;
           dom.append(code, meta);
+          if (featureOn('step-hover-docs') && r.method) { const m = document.createElement('div'); m.className = 'cm-binding-method'; m.textContent = r.method.split('(')[0].split('.').slice(-2).join('.') + '()'; dom.append(m); }
+          if (docs) { const d = document.createElement('p'); d.className = 'cm-binding-doc'; d.textContent = docs; dom.append(d); }
         }
         return { dom };
       },

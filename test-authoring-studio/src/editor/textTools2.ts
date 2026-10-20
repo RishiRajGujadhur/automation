@@ -746,3 +746,14 @@ export function charInfo(state: EditorState) {
   const shown = cp < 32 ? ({ 9: 'Tab', 10: 'Line feed', 13: 'Carriage return' } as Record<number, string>)[cp] ?? 'control' : cp === 32 ? 'Space' : cp === 0xa0 ? 'No-break space' : cp === 0xfeff ? 'Byte order mark' : `"${ch}"`;
   return `${shown} U+${cp.toString(16).toUpperCase().padStart(4, '0')} · UTF-8 ${bytes}`;
 }
+
+/** The XML documentation summary above a C# member (attribute lines skipped), as plain text. */
+export function xmlDocAbove(lines: string[], line: number) {
+  let n = line - 1;
+  while (n >= 1 && /^\s*\[.*\]\s*$/.test(lines[n - 1])) n--;
+  const doc: string[] = [];
+  for (; n >= 1 && /^\s*\/\/\//.test(lines[n - 1]); n--) doc.unshift(lines[n - 1].replace(/^\s*\/\/\/\s?/, ''));
+  const text = doc.join(' ');
+  const summary = /<summary>([\s\S]*?)<\/summary>/.exec(text)?.[1] ?? (text.includes('<') ? '' : text);
+  return summary.replace(/<see\s+cref="([^"]+)"\s*\/>/g, '$1').replace(/<[^>]+>/g, '').replace(/\s+/g, ' ').trim() || null;
+}

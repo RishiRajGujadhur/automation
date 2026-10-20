@@ -3728,3 +3728,6 @@ html[data-features-off~='inlay-hints'] .cm-inlay {
 .cm-param-hint { margin-right: 3px; padding: 0 4px; border-radius: 3px; font-size: 0.82em; color: var(--muted, #888); background: color-mix(in srgb, var(--muted, #888) 14%, transparent); }
 
 .cm-code-vision { margin-left: 2em; color: var(--muted, #888); font-size: 0.85em; }
+
+.cm-binding-doc { margin: 4px 0 0; max-width: 420px; white-space: normal; }
+.cm-binding-method { font-family: var(--font-mono, monospace); font-size: 12px; }
