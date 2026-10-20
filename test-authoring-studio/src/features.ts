@@ -432,6 +432,7 @@ export const FEATURES: Feature[] = [
   { id: 'remove-tag-everywhere', label: 'Remove Tag Everywhere', group: 'Gherkin', essential: false, description: 'Code ▸ Gherkin removes a tag from every tag line of the file.', commands: ['remove-tag-everywhere'] },
   { id: 'sort-tags', label: 'Sort Tags', group: 'Gherkin', essential: false, description: 'Code ▸ Gherkin sorts the tags of each tag line (selection or file) and drops repeats.', commands: ['sort-tags'] },
   { id: 'promote-tags', label: 'Promote Common Tags to Feature', group: 'Gherkin', essential: false, description: 'Code ▸ Gherkin moves the tags every scenario has up to the Feature (they are inherited).', commands: ['promote-tags'] },
+  { id: 'insert-doc-string', label: 'Insert Doc String', group: 'Gherkin', essential: false, description: 'Code ▸ Gherkin adds a doc string block (triple quotes) under the step at the caret.', commands: ['insert-doc-string'] },
 ];
 export const GROUPS: FeatureGroup[] = ['Editing', 'Navigation', 'Code intelligence', 'Tool windows', 'Files', 'Git', 'Gherkin', 'View', 'Debugging', 'Help and productivity'];
 

@@ -1,7 +1,7 @@
 import type { RiderCommand } from './commands';
 import type { MoreHelpers } from './more';
 import { copyText } from '../ui';
-import { tableDeleteEmptyRows, tableRemoveDuplicateRows, tableMarkdown, tagAllScenarios, removeTagEverywhere, sortTags, promoteCommonTags } from '../editor/gherkinTools';
+import { tableDeleteEmptyRows, tableRemoveDuplicateRows, tableMarkdown, tagAllScenarios, removeTagEverywhere, sortTags, promoteCommonTags, insertDocString } from '../editor/gherkinTools';
 import { urlEncode, urlDecode, base64Encode, base64Decode, escapeString, unescapeString, htmlEncode, htmlDecode, stepNumber, insertSequence, toggleQuotes, joinWith, splitAt, alignAssignments, swapSelections, countOccurrences, trimLines, stamp, insertText, LOREM, shuffleLines, reformatXml, minifyXml, jsonEscape, jsonUnescape, numberLines, mapDoc, toFileScopedNamespace, toBlockScopedNamespace, removeRegions, toRawString, toggleTask, formatMarkdownTable, tableOfContents, MARKDOWN_TABLE, removeComments, concatToInterpolationCmd } from '../editor/textTools2';
 
 /**
@@ -53,5 +53,6 @@ export function moreCommands2(h: MoreHelpers): RiderCommand[] {
     { id: 'remove-tag-everywhere', label: 'Remove Tag Everywhere…', menu: 'Code', submenu: 'Gherkin', run: h.inEditor((v) => { const tag = window.prompt('Tag to remove from the whole file:', '@wip')?.trim(); if (!tag) return; const next = removeTagEverywhere(v.state.doc.toString(), tag); if (next === null) { h.notice('The file has no such tag.'); return; } v.dispatch({ changes: { from: 0, to: v.state.doc.length, insert: next }, userEvent: 'input' }); }) },
     { id: 'sort-tags', label: 'Sort Tags', menu: 'Code', submenu: 'Gherkin', run: h.inEditor((v) => sortTags(v) || h.notice('The tags are already in order.')) },
     { id: 'promote-tags', label: 'Promote Common Tags to Feature', menu: 'Code', submenu: 'Gherkin', run: h.inEditor((v) => mapDoc(promoteCommonTags)(v) || h.notice('No tag is shared by every scenario.')) },
+    { id: 'insert-doc-string', label: 'Insert Doc String', menu: 'Code', submenu: 'Gherkin', run: h.inEditor((v) => insertDocString(v) || h.notice('Put the caret on a step without a doc string.')) },
   ];
 }

@@ -824,3 +824,16 @@ export function promoteCommonTags(text: string) {
   else { lines.splice(feature, 0, /^\s*/.exec(lines[feature])![0] + common.join(' ')); const shifted = new Set([...drop].map((d) => d + 1)); drop.clear(); shifted.forEach((d) => drop.add(d)); k = -1; }
   return lines.filter((_, i) => !drop.has(i)).join('\n');
 }
+
+/** Insert Doc String: a doc string block (triple quotes) under the step at the caret, the caret inside. */
+export function insertDocString(view: EditorView) {
+  const { state } = view;
+  const line = state.doc.lineAt(state.selection.main.head);
+  const m = STEP.exec(line.text);
+  if (!m) return false;
+  if (line.number < state.doc.lines && /^\s*("{3}|`{3})/.test(state.doc.line(line.number + 1).text)) return false;
+  const ind = m[1] + '  ', br = state.lineBreak, q = '"'.repeat(3);
+  const insert = `${br}${ind}${q}${br}${ind}${br}${ind}${q}`;
+  view.dispatch({ changes: { from: line.to, insert }, selection: EditorSelection.cursor(line.to + br.length * 2 + ind.length * 2 + 3), userEvent: 'input' });
+  return true;
+}

@@ -244,6 +244,7 @@ const ROWS: Record<'edit' | 'view' | 'navigate' | 'code' | 'tools' | 'help', Row
       ['Remove Tag Everywhere…', 'remove-tag-everywhere'],
       ['Sort Tags', 'sort-tags'],
       ['Promote Common Tags to Feature', 'promote-tags'],
+      ['Insert Doc String', 'insert-doc-string'],
     ] },
     ['Collapse Using Directives', 'fold-usings'],
     ['Sort JSON Keys', 'sort-json'],
