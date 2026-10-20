@@ -73,6 +73,7 @@ has it on by default, so the desktop app starts with it on. The others start off
 | Y62 | Commit message: Conventional Commits type | Rider | no | ✅ 2026-10-20 |
 | Y63 | Unix Timestamp ⇄ Date | Rider | no | ✅ 2026-10-20 |
 | Y64 | Copy SHA-256 Hash | Rider | no | ✅ 2026-10-20 |
+| Y65 | Decode JWT | Rider | no | ✅ 2026-10-20 |
 
 ## Progress log
 - 2026-10-20 Y1: Percent-encodes the selection (or line) and decodes it.
@@ -139,3 +140,4 @@ has it on by default, so the desktop app starts with it on. The others start off
 - 2026-10-20 Y62: A Type… list puts feat:, fix:, test:… in front of the message.
 - 2026-10-20 Y63: Unix seconds / ms to ISO (UTC), and ISO to Unix seconds.
 - 2026-10-20 Y64: Copies the SHA-256 of the selection or file.
+- 2026-10-20 Y65: Shows alg, sub and dates of the token at the caret; copies header and payload.

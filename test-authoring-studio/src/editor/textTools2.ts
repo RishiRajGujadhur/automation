@@ -426,3 +426,19 @@ export async function sha256Hex(text: string) {
   const d = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(text));
   return [...new Uint8Array(d)].map((b) => b.toString(16).padStart(2, '0')).join('');
 }
+
+/** Decode JWT (Rider's HTTP Client shows tokens): header and payload of a JSON Web Token; the signature is not checked. */
+export function decodeJwt(token: string) {
+  const parts = token.trim().replace(/^Bearer\s+/i, '').split('.');
+  if (parts.length !== 3) return null;
+  const json = (p: string) => { const b = p.replace(/-/g, '+').replace(/_/g, '/'); return JSON.parse(new TextDecoder().decode(Uint8Array.from(atob(b + '='.repeat((4 - (b.length % 4)) % 4)), (c) => c.charCodeAt(0)))) as Record<string, unknown>; };
+  try { return { header: json(parts[0]), payload: json(parts[1]) }; } catch { return null; }
+}
+/** The token at the caret (or the selection). */
+export function jwtAt(state: EditorState) {
+  const r = state.selection.main;
+  if (!r.empty) return state.sliceDoc(r.from, r.to);
+  const line = state.doc.lineAt(r.head);
+  for (const m of line.text.matchAll(/[\w-]+\.[\w-]+\.[\w-]*/g)) { const from = line.from + m.index!; if (r.head >= from && r.head <= from + m[0].length) return m[0]; }
+  return '';
+}

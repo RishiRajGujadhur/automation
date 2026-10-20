@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { EditorSelection, EditorState, type TransactionSpec } from '@codemirror/state';
 import type { EditorView } from '@codemirror/view';
-import { mapSelections, urlEncode, urlDecode, base64Encode, base64Decode, escapeString, unescapeString, htmlEncode, htmlDecode, stepNumber, insertSequence, toggleQuotes, joinWith, splitAt, alignAssignments, swapSelections, countOccurrences, trimLines, stamp, insertText, LOREM, shuffleLines, formatXml, minifyXml, jsonEscape, jsonUnescape, numberLines, toFileScopedNamespace, toBlockScopedNamespace, removeRegions, toRawString, toggleTask, formatMarkdownTable, tableOfContents, MARKDOWN_TABLE, removeComments, concatToInterpolation, concatToInterpolationCmd, gotoOffset, convertTimestamp, timestampCmd, sha256Hex } from '../src/editor/textTools2';
+import { mapSelections, urlEncode, urlDecode, base64Encode, base64Decode, escapeString, unescapeString, htmlEncode, htmlDecode, stepNumber, insertSequence, toggleQuotes, joinWith, splitAt, alignAssignments, swapSelections, countOccurrences, trimLines, stamp, insertText, LOREM, shuffleLines, formatXml, minifyXml, jsonEscape, jsonUnescape, numberLines, toFileScopedNamespace, toBlockScopedNamespace, removeRegions, toRawString, toggleTask, formatMarkdownTable, tableOfContents, MARKDOWN_TABLE, removeComments, concatToInterpolation, concatToInterpolationCmd, gotoOffset, convertTimestamp, timestampCmd, sha256Hex, decodeJwt, jwtAt } from '../src/editor/textTools2';
 
 /** Runs an editor command on `doc` with the selection between « and » (or a caret at |). */
 function run(doc: string, cmd: (v: EditorView) => boolean) {
@@ -160,5 +160,11 @@ describe('text tools, fourth batch (IDE-FEATURES-4 Y1…)', () => {
   });
   it('Y64 SHA-256', async () => {
     expect(await sha256Hex('abc')).toBe('ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad');
+  });
+  it('Y65 Decode JWT', () => {
+    const tok = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c';
+    expect(decodeJwt(`Bearer ${tok}`)).toEqual({ header: { alg: 'HS256', typ: 'JWT' }, payload: { sub: '1234567890', name: 'John Doe', iat: 1516239022 } });
+    expect(jwtAt(EditorState.create({ doc: `token = "${tok}";`, selection: { anchor: 15 } }))).toBe(tok);
+    expect(decodeJwt('a.b')).toBe(null);
   });
 });
