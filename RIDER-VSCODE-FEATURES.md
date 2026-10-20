@@ -106,7 +106,7 @@ Legend: `[x]` done · `[ ]` to do.
 - [x] 84. Convert loops to LINQ — Quick Actions: Convert to LINQ
 - [ ] 85. Convert LINQ to loops
 - [x] 86. Convert anonymous types to named types — Quick Actions: Convert to class / record
-- [ ] 87. Convert anonymous functions to methods
+- [x] 87. Convert anonymous functions to methods — Quick Actions: Use local function, then Convert to method (2026-10-21)
 - [ ] 88. Convert methods to local functions
 - [x] 89. Convert local functions to methods — Quick Actions: Convert to method
 - [x] 90. Convert class to record — Quick Actions: Convert to positional record
@@ -342,3 +342,4 @@ Legend: `[x]` done · `[ ]` to do.
 - 2026-10-21 357: A tuple becomes a struct or record struct with its usages updated; the nested action titles now say which scope.
 - 2026-10-21 92: Switch statements become switch expressions (the IDE analyzer's fix).
 - 2026-10-21 360: A switch over an enum gets a case per missing member.
+- 2026-10-21 87: A lambda becomes a local function (IDE0039) and then a method.
