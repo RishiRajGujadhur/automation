@@ -138,7 +138,7 @@ Legend: `[x]` done · `[ ]` to do.
 - [x] 113. Roslyn analyzer integration — Roslyn IDE analyzers in the language server: suggestions, faded unused code, fixes in Quick Actions (2026-10-21)
 - [x] 114. Custom analyzer configuration — .editorconfig dotnet_diagnostic.<id>.severity drives the IDE analyzers (warning stays faded) (2026-10-21)
 - [x] 115. Suppression of individual inspections — Error List: Suppress in Project File
-- [ ] 116. Inspection exclusion scopes
+- [x] 116. Inspection exclusion scopes — .editorconfig sections: generated_code / dotnet_analyzer_diagnostic.severity = none per glob (2026-10-21)
 - [ ] 117. Quick-fix previews
 - [ ] 118. Bulk quick-fix application
 - [ ] 119. Duplicate code detection
@@ -346,3 +346,4 @@ Legend: `[x]` done · `[ ]` to do.
 - 2026-10-21 350: A field with a trivial property becomes an auto-property.
 - 2026-10-21 114: Rule severities from .editorconfig (error, warning, suggestion, none) apply to the analyzers in the editor; unused code raised to a warning is both squiggled and faded.
 - 2026-10-21 111: Code style options with a severity in .editorconfig are enforced in the editor.
+- 2026-10-21 116: A glob section of .editorconfig turns inspections off for matching files (generated code, a folder).
