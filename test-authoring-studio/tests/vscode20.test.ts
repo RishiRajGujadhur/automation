@@ -30,3 +30,16 @@ describe('VS Code settings (VSCODE-20.md)', () => {
     expect(lineLabel('interval', 3, 3)).toBe('3');
   });
 });
+import { minimapLayout } from '../src/vscode/minimap';
+describe('V2 minimap layout', () => {
+  it('proportional, fit and fill', () => {
+    const base = { lines: 1000, height: 500, scale: 1, scrollTop: 0, scrollHeight: 20000, clientHeight: 500 };
+    expect(minimapLayout({ ...base, size: 'proportional' }).lineH).toBe(2);
+    expect(minimapLayout({ ...base, size: 'fit' }).lineH).toBe(0.5);
+    expect(minimapLayout({ ...base, lines: 100, size: 'fit' }).lineH).toBe(2);
+    expect(minimapLayout({ ...base, lines: 100, size: 'fill' }).lineH).toBe(5);
+    const end = minimapLayout({ ...base, size: 'proportional', scrollTop: 19500 });
+    expect(end.offset).toBe(1500);
+    expect(Math.round(end.sliderTop + end.sliderHeight)).toBe(500);
+  });
+});

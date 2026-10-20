@@ -71,3 +71,35 @@ test('V1 Settings editor: Text Editor category, modified bar, reset, @modified, 
   await page.keyboard.press('Escape');
   await expect(view(page).locator('.cm-vsc-numbers')).toHaveCount(0);
 });
+
+/** Replaces the editor text. */
+const setDoc = (page: Page, text: string) => page.evaluate((t) => { const v = (window as unknown as { __activeEditor: () => { view: { state: { doc: { length: number } }; dispatch(x: unknown): void } } }).__activeEditor().view; v.dispatch({ changes: { from: 0, to: v.state.doc.length, insert: t } }); }, text);
+const longText = (n: number) => Array.from({ length: n }, (_, i) => `    var value${i} = Compute(${i}); // line ${i + 1}`).join('\n');
+
+test('V2 Minimap: enabled, side, slider, scale, max column, click to scroll', async ({ page }) => {
+  await open(page, 'Steps/AuthSteps.cs', { 'editor.minimap.enabled': true, 'editor.minimap.showSlider': 'always' });
+  await setDoc(page, longText(400));
+  const map = view(page).locator('.cm-minimap');
+  await expect(map).toBeVisible();
+  expect((await map.boundingBox())!.width).toBe(120);
+  const scroller = view(page).locator('.cm-scroller');
+  expect(await scroller.evaluate((e) => getComputedStyle(e).marginRight)).toBe('120px');
+  const slider = map.locator('.cm-minimap-slider');
+  expect(await slider.evaluate((e) => getComputedStyle(e).opacity)).toBe('1');
+  // Click near the bottom of the minimap: the editor scrolls down.
+  const box = (await map.boundingBox())!;
+  await page.mouse.click(box.x + 40, box.y + box.height - 5);
+  await expect.poll(() => scroller.evaluate((e) => e.scrollTop)).toBeGreaterThan(200);
+  // Pixels were drawn.
+  expect(await map.locator('canvas').evaluate((c: HTMLCanvasElement) => { const d = c.getContext('2d')!.getImageData(0, 0, c.width, Math.min(c.height, 60)).data; let n = 0; for (let i = 3; i < d.length; i += 4) if (d[i]) n++; return n; })).toBeGreaterThan(50);
+  // Left side, scale 2, 40 columns: 80 px on the left.
+  await page.evaluate(() => { localStorage.setItem('tas:settings', JSON.stringify({ 'editor.minimap.enabled': true, 'editor.minimap.side': 'left', 'editor.minimap.scale': 2, 'editor.minimap.maxColumn': 40 })); });
+  await page.reload();
+  await expect(page.getByText('Repository indexed')).toBeVisible();
+  const map2 = view(page).locator('.cm-minimap');
+  await expect(map2).toHaveClass(/cm-minimap-left/);
+  expect((await map2.boundingBox())!.width).toBe(80);
+  expect(await view(page).locator('.cm-scroller').evaluate((e) => getComputedStyle(e).marginLeft)).toBe('80px');
+  // Slider on mouse over only (the default).
+  expect(await map2.locator('.cm-minimap-slider').evaluate((e) => getComputedStyle(e).opacity)).toBe('0');
+});
