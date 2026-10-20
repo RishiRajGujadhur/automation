@@ -14,6 +14,7 @@ web and desktop apps, each with a Settings ▸ Features switch and tests.
 | Z7 | Test Explorer: Run Repeatedly | Rider | no | ✅ 2026-10-20 |
 | Z8 | Reformat feature files on save | Rider | no | ✅ 2026-10-20 |
 | Z9 | Inline values while debugging | VS 2026 | yes | ✅ 2026-10-20 |
+| Z10 | Fade unused step definitions | Rider | yes | ✅ 2026-10-20 |
 
 ## Progress log
 - 2026-10-20 Z1: Who last changed the caret's line, when and the commit summary, at its end.
@@ -25,3 +26,4 @@ web and desktop apps, each with a Settings ▸ Features switch and tests.
 - 2026-10-20 Z7: Runs the selected tests n times; per-test pass counts flag flaky tests.
 - 2026-10-20 Z8: Ctrl+S formats the feature (indentation, tables) before saving.
 - 2026-10-20 Z9: Locals shown after the lines of the paused method that use them.
+- 2026-10-20 Z10: Unused step definitions faded in C#, with a tooltip.

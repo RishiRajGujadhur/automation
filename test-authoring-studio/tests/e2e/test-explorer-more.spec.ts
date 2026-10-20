@@ -288,3 +288,19 @@ test('Y93 / Y94 Slowest tests; continuous testing runs the failed tests again af
   expect(JSON.parse(runs[0]).ids).toEqual(all.filter((t) => t.method === 'AddsTwoNumbers').map((t) => t.id));
   await expect.poll(() => status(page), { timeout: 240_000, intervals: [2000] }).toMatch(/done|failed/);
 });
+
+test('Z6 / Z7 Test history; Run Repeatedly', async ({ page }) => {
+  await start(page);
+  await page.getByRole('button', { name: 'Test Explorer' }).click();
+  const te = page.getByRole('region', { name: 'Test Explorer' });
+  const tree = te.getByRole('navigation', { name: 'Tests' });
+  const test1 = tree.locator('.t-label', { hasText: /AddsTwoNumbers/ });
+  await expect(test1).toBeVisible({ timeout: 60_000 });
+  page.once('dialog', (d) => void d.accept('2'));
+  await test1.click({ button: 'right' });
+  await page.getByRole('menuitem', { name: 'Run Repeatedly…' }).click();
+  await expect(page.getByText('Repeated 2×: AddsTwoNumbers 2/2 passed.').first()).toBeVisible({ timeout: 300_000 });
+  await test1.click();
+  await expect(te.getByLabel('Test history')).toContainText('✓✓');
+  await expect(te.getByLabel('Test history')).toContainText('100% passed');
+});

@@ -217,3 +217,23 @@ registerAdvanced((file) => ViewPlugin.fromClass(class {
     return Decoration.set([...map].map(([n, text]) => Decoration.widget({ widget: new ValueWidget(text), side: 1 }).range(doc.line(n).to)));
   }
 }, { decorations: (p) => p.decorations }));
+
+/* Z10 Unused step definitions (Rider's Reqnroll plugin greys them out): faded, with a tooltip, in C# step files. */
+type Unused = { file: string; line: number; pattern: string };
+let unusedCache: { at: number; p: Promise<Unused[]> } | undefined;
+const unusedSteps = () => { if (!unusedCache || Date.now() - unusedCache.at > 15_000) unusedCache = { at: Date.now(), p: api<Unused[]>('/steps/unused').catch(() => []) }; return unusedCache.p; };
+if (typeof window !== 'undefined') for (const ev of [FILE_SAVED_EVENT, 'tas:files-changed']) window.addEventListener(ev, () => { unusedCache = undefined; });
+const unusedReady = StateEffect.define<null>();
+registerAdvanced((file, kind) => (kind !== 'code' || !file.endsWith('.cs') ? [] : ViewPlugin.fromClass(class {
+  decorations = Decoration.none;
+  constructor(readonly view: EditorView) { this.load(); }
+  load() {
+    if (!featureOn('unused-steps')) return;
+    void unusedSteps().then((list) => {
+      const mine = list.filter((u) => u.file === file && u.line <= this.view.state.doc.lines);
+      this.decorations = Decoration.set(mine.map((u) => Decoration.line({ class: 'cm-unused-step', attributes: { title: `Step definition not used by any feature: ${u.pattern}` } }).range(this.view.state.doc.line(u.line).from)), true);
+      queueMicrotask(() => { try { this.view.dispatch({ effects: unusedReady.of(null) }); } catch { /* destroyed */ } });
+    });
+  }
+  update(u: ViewUpdate) { if (u.docChanged) this.decorations = this.decorations.map(u.changes); }
+}, { decorations: (p) => p.decorations })));

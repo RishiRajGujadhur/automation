@@ -61,3 +61,26 @@ test('Z2 / Z4 / Z5 Merge conflict actions, postfix templates, outline preview', 
   await page.keyboard.press('Escape');
   expect(await doc(page)).toBe(src);
 });
+
+test('Z8 / Z9 / Z10 Reformat on save, inline values, unused step definitions', async ({ page }) => {
+  // Z10: a step definition no feature uses is faded.
+  const steps = path.join(root, 'Steps/AuthSteps.cs');
+  await fs.writeFile(steps, (await fs.readFile(steps, 'utf8')).replace(/\}\s*$/, ' [Then("nobody uses this step")] public void Unused() { }\n}\n'));
+  expect((await page.request.post('/api/workspace', { data: { repositoryRoot: root, targetProject: '.' } })).ok()).toBe(true);
+  await open(page, 'AuthSteps.cs');
+  const src = page.getByLabel('Source of Steps/AuthSteps.cs');
+  await expect(src.locator('.cm-unused-step')).toHaveAttribute('title', 'Step definition not used by any feature: nobody uses this step');
+  await expect(src.locator('.cm-unused-step')).toHaveCount(1);
+  // Z9: the Debugger window's locals show after the lines that use them.
+  await page.evaluate(() => window.dispatchEvent(new CustomEvent('tas:inline-values', { detail: { file: 'Steps/AuthSteps.cs', line: 6, values: [{ name: 'userName', value: '"admin"' }] } })));
+  await expect(src.locator('.cm-inline-value')).toHaveText('userName = "admin"');
+  await page.evaluate(() => window.dispatchEvent(new CustomEvent('tas:inline-values', { detail: null })));
+  await expect(src.locator('.cm-inline-value')).toHaveCount(0);
+  // Z8: Ctrl+S formats the feature, then saves it.
+  await page.getByRole('navigation', { name: 'Solution' }).getByRole('button', { name: 'Login.feature', exact: true }).first().click();
+  await expect(page.getByLabel('Gherkin source')).toContainText('Feature:');
+  await setDoc(page, 'Feature: F\nScenario: S\nGiven the login page is open\n', 0);
+  await page.keyboard.press('Control+S');
+  await expect.poll(() => doc(page)).toBe('Feature: F\n  Scenario: S\n    Given the login page is open\n');
+  await expect.poll(async () => (await fs.readFile(path.join(root, 'Features/Auth/Login.feature'), 'utf8')).replace(/\r\n/g, '\n')).toBe('Feature: F\n  Scenario: S\n    Given the login page is open\n');
+});

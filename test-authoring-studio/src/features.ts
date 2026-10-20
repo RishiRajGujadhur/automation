@@ -505,6 +505,7 @@ export const FEATURES: Feature[] = [
   { id: 'run-repeatedly', label: 'Test Explorer: Run Repeatedly', group: 'Tool windows', essential: false, description: 'The Test Explorer menu runs the selected tests n times and reports each one\'s pass count (flaky tests stand out).' },
   { id: 'format-on-save', label: 'Reformat feature files on save', group: 'Gherkin', essential: false, vs: 'Code Cleanup on save', description: 'Saving a feature file (Ctrl+S) formats it first: indentation and aligned tables (the .editorconfig settings when present).' },
   { id: 'inline-values', label: 'Inline values while debugging', group: 'Debugging', essential: true, vs: 'Debugger inline values', description: 'When the debugger pauses, the lines of the current method show the values of the locals they use.' },
+  { id: 'unused-steps', label: 'Fade unused step definitions', group: 'Code intelligence', essential: true, vs: 'Reqnroll: unused step definition', description: 'In C# step files, step definitions no feature uses are faded, with a tooltip saying so (Rider\'s Reqnroll support).' },
 ];
 export const GROUPS: FeatureGroup[] = ['Editing', 'Navigation', 'Code intelligence', 'Tool windows', 'Files', 'Git', 'Gherkin', 'View', 'Debugging', 'Help and productivity'];
 
