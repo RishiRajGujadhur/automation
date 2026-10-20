@@ -1408,6 +1408,12 @@ app.post('/api/debug/set-variable', async (req, res) => {
   const { ref, name, value } = z.object({ ref: z.number().int().min(1), name: z.string().min(1).max(200), value: z.string().max(2000) }).parse(req.body);
   res.json(await debug.setVariable(ref, name, value));
 });
+app.get('/api/debug/threads', async (_req, res) => res.json(await debug.threads()));
+app.post('/api/debug/thread', async (req, res) => {
+  const { id } = z.object({ id: z.number().int() }).parse(req.body);
+  await debug.selectThread(id);
+  res.json(debug.state);
+});
 app.post('/api/debug/evaluate', async (req, res) => {
   const { expressions, frameId } = z.object({ expressions: z.array(z.string().min(1).max(500)).max(50), frameId: z.number().int().optional() }).parse(req.body);
   const results = [];

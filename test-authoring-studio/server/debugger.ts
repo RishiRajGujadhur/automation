@@ -294,6 +294,16 @@ export class Debugger extends EventEmitter {
     if (!this.dap || this.state.status !== 'paused') throw new Error('The debugger is not paused.');
     return this.dap.request<{ value: string; type?: string }>('setVariable', { variablesReference, name, value }, 15_000).catch((e) => { throw new Error((e as Error).message.replace(/^Failed command 'setVariable' : /, '')); });
   }
+  /** Threads window: the debuggee's threads; selecting one shows its call stack. */
+  async threads() {
+    if (!this.dap || this.state.status !== 'paused') return [];
+    return (await this.dap.request<{ threads: { id: number; name: string }[] }>('threads')).threads;
+  }
+  async selectThread(threadId: number) {
+    if (!this.dap || this.state.status !== 'paused') throw new Error('The debugger is not paused.');
+    const frames = await this.frames(threadId);
+    this.update({ threadId, frames });
+  }
   async evaluate(expression: string, frameId?: number) {
     if (!this.dap || this.state.status !== 'paused') return { error: 'Not available while running.' };
     try {

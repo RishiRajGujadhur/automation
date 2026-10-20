@@ -77,6 +77,9 @@ export default function DebugPanel({ onOpen, onNotice, onClose, editingRequest =
   const frameKey = `${state.version}:${frame?.id ?? ''}`;
   const [locals, setLocals] = useState<Variable[]>([]);
   const [localsQuery, setLocalsQuery] = useState('');
+  // Threads window.
+  const [threads, setThreads] = useState<{ id: number; name: string }[]>([]);
+  useEffect(() => { if (!featureOn('threads-window') || state.status !== 'paused' || tab !== 'threads') { setThreads([]); return; } void api<{ id: number; name: string }[]>('/debug/threads').then(setThreads, () => setThreads([])); }, [state.version, tab]); // eslint-disable-line react-hooks/exhaustive-deps
   // Visualizers (Visual Studio's magnifier): a string as text, formatted JSON or XML; a collection as a table.
   const [visual, setVisual] = useState<{ kind: string; name: string; text?: string; rows?: Record<string, string>[] } | null>(null);
   useEffect(() => {
@@ -243,6 +246,7 @@ export default function DebugPanel({ onOpen, onNotice, onClose, editingRequest =
           <Tabs.Trigger value="stack">Call Stack</Tabs.Trigger>
           <Tabs.Trigger value="breakpoints">Breakpoints{bpList.length ? ` (${bpList.length})` : ''}</Tabs.Trigger>
           <Tabs.Trigger value="immediate">Immediate</Tabs.Trigger>
+          {featureOn('threads-window') && <Tabs.Trigger value="threads">Threads</Tabs.Trigger>}
           <Tabs.Trigger value="output">Output</Tabs.Trigger>
         </Tabs.List>
         <Tabs.Content value="autos" className="debug-body">
@@ -348,6 +352,14 @@ export default function DebugPanel({ onOpen, onNotice, onClose, editingRequest =
             </ul>
           ) : <p className="subtle debug-empty">Click the margin left of a line number, or press F9, to set a breakpoint in a .feature or .cs file.</p>}
         </Tabs.Content>
+        {featureOn('threads-window') && <Tabs.Content value="threads" className="debug-body">
+          {paused ? (
+            <ul className="dbg-list" aria-label="Threads">
+              {threads.map((t) => <li key={t.id}><button className={`dbg-frame ${t.id === state.threadId ? 'current' : ''}`} aria-current={t.id === state.threadId ? 'true' : undefined} onClick={() => void api('/debug/thread', { id: t.id }).catch((e) => onNotice((e as Error).message))}><span className="dbg-frame-mark">{t.id === state.threadId ? '➜' : ''}</span><span className="dbg-frame-name">{t.name || '<No Name>'}</span><span className="meta">#{t.id}</span></button></li>)}
+              {!threads.length && <li className="subtle">No threads.</li>}
+            </ul>
+          ) : <p className="subtle debug-empty">Threads appear when the debugger is paused.</p>}
+        </Tabs.Content>}
         <Tabs.Content value="output" className="debug-body">
           <pre className="debug-output" aria-label="Debug output">{state.output || 'No output yet.'}</pre>
         </Tabs.Content>

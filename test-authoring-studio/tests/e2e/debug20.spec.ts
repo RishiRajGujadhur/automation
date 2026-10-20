@@ -136,3 +136,43 @@ test('DB6–DB10 When-changed condition, Step Out to Here, Force Run to Cursor, 
   await expect.poll(async () => (await (await request.get('/api/debug/options')).json()).justMyCode).toBe(false);
   await panel(page).getByLabel('Just My Code').check();
 });
+
+test('DB11–DB15 Edit value, search Locals, JSON visualizer, table visualizer, Threads window', async ({ page, request }) => {
+  const steps = path.join(temp, STEPS);
+  await fs.writeFile(steps, (await fs.readFile(steps, 'utf8')).replace('        var sum = First + Second;', '        var json = "{\\"a\\":[1,2]}"; var items = new System.Collections.Generic.List<Calculator> { new Calculator { First = 1, Second = 2 }, new Calculator { First = 3 } }; var sum = First + Second;'));
+  await openSteps(page);
+  await breakpointAt(page, request, 45);
+  expect((await request.post('/api/debug/start', { data: { project: 'Calculator.csproj' } })).ok()).toBe(true);
+  await pausedAt(page, request, 45);
+  await panel(page).getByRole('tab', { name: 'Locals' }).click();
+  const locals = panel(page).getByRole('treegrid', { name: 'Locals' });
+  const row = (name: string) => locals.getByRole('row').filter({ has: page.locator('.dbg-name', { hasText: new RegExp(`^${name}$`) }) }).first();
+  await expect(row('items')).toBeVisible();
+  // DB12
+  await panel(page).getByLabel('Search Locals').fill('json');
+  await expect(locals.getByRole('row')).toHaveCount(2);
+  await panel(page).getByLabel('Search Locals').fill('');
+  // DB13
+  await row('json').click({ button: 'right' });
+  await page.getByRole('menuitem', { name: 'JSON Visualizer' }).click();
+  await expect(panel(page).getByLabel('Visualizer text')).toHaveText('{\n  "a": [\n    1,\n    2\n  ]\n}');
+  await panel(page).getByRole('button', { name: 'Close visualizer' }).click();
+  // DB14
+  await row('items').click({ button: 'right' });
+  await page.getByRole('menuitem', { name: 'View as Table' }).click();
+  const table = panel(page).getByRole('table', { name: 'Visualizer table' });
+  await expect(table.locator('th')).toContainText(['#', 'First', 'Second']);
+  await expect(table.locator('tbody tr')).toHaveCount(2);
+  await panel(page).getByRole('button', { name: 'Close visualizer' }).click();
+  // DB11
+  await row('sum').locator('.dbg-value').dblclick();
+  await panel(page).getByLabel('New value of sum').fill('99');
+  await panel(page).getByLabel('New value of sum').press('Enter');
+  await expect(row('sum').locator('.dbg-value')).toHaveText('99');
+  const frameId = (await debugState(request)).frames.find((f: { external: boolean }) => !f.external).id;
+  expect((await (await request.post('/api/debug/evaluate', { data: { expressions: ['sum'], frameId } })).json())[0].result).toBe('99');
+  // DB15
+  await panel(page).getByRole('tab', { name: 'Threads' }).click();
+  const threads = panel(page).getByRole('list', { name: 'Threads' });
+  await expect(threads.locator('[aria-current="true"]')).toHaveCount(1);
+});

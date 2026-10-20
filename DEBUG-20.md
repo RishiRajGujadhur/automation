@@ -20,6 +20,7 @@ a Settings ▸ Features switch and tests that drive a real debugging session of 
 | DB12 | Search in Locals | VS 2026 | yes | ✅ 2026-10-20 |
 | DB13 | Text / JSON / XML visualizers | VS 2026 | yes | ✅ 2026-10-20 |
 | DB14 | IEnumerable visualizer (table) | VS 2026 | yes | ✅ 2026-10-20 |
+| DB15 | Threads window | VS 2026 | yes | ✅ 2026-10-20 |
 
 ## Progress log
 - 2026-10-20 DB1: Filters breakpoints by file, line, condition, log message or label.
@@ -36,3 +37,4 @@ a Settings ▸ Features switch and tests that drive a real debugging session of 
 - 2026-10-20 DB12: Filters Locals by name, value or type.
 - 2026-10-20 DB13: String values opened as text, formatted JSON or indented XML.
 - 2026-10-20 DB14: A collection's items as rows and their members as columns.
+- 2026-10-20 DB15: Threads while paused; selecting one shows its call stack.
