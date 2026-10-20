@@ -16,6 +16,7 @@ export type DebugState = {
   frames: DebugFrame[];
   output: string;
   breakpoints: Record<string, (BreakpointSpec & { verified: boolean })[]>;
+  hits?: Record<string, number>;
 };
 export type Variable = { name: string; value: string; type?: string; variablesReference: number };
 

@@ -257,6 +257,7 @@ export default function DebugPanel({ onOpen, onNotice, onClose, editingRequest =
                       <CircleDot size={12} className={`bp-dot ${b.verified === false && live ? 'pending' : ''} ${b.logMessage?.trim() ? 'tracepoint' : ''}`} aria-hidden="true" />
                       <button className="dbg-frame" onClick={() => onOpen(b.file, b.line)}><span className="dbg-frame-name">{b.file.split('/').pop()}, line {b.line}</span>{detail && <span className="bp-detail">{detail}</span>}<span className="meta">{b.file}</span></button>
                       {featureOn('bp-labels') && b.labels?.length ? <span className="bp-labels">{b.labels.map((l) => <span key={l} className="bp-label">{l}</span>)}</span> : null}
+                      {featureOn('bp-hit-counts') && state.hits?.[key] ? <span className="bp-hits" title="Times hit in this session">hit {state.hits[key]}×</span> : null}
                       <IconButton label={`Breakpoint settings ${key}`} onClick={() => setEditing(editing === key ? null : key)}><Settings2 size={12} /></IconButton>
                       <IconButton label={`Delete breakpoint ${key}`} onClick={() => setBreakpoints(b.file, breakpointsOf(b.file).filter((l) => l !== b.line))}><X size={12} /></IconButton>
                     </div>

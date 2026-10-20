@@ -33,6 +33,8 @@ export type DebugState = {
   threadId?: number;
   frames: DebugFrame[];
   output: string;
+  /** Times each breakpoint (file:line) was hit in this session (the Breakpoints window's Hit Count). */
+  hits?: Record<string, number>;
   /** Breakpoint lines per repository file, with whether the debugger resolved them. */
   breakpoints: Record<string, (BreakpointSpec & { verified: boolean })[]>;
 };
@@ -107,6 +109,7 @@ export class Debugger extends EventEmitter {
     const generation = ++this.generation;
     this.root = root;
     this.hits.clear();
+    this.update({ hits: {} });
     this.update({ status: 'building', target: { project, filter: filter ?? '', label }, reason: undefined, exception: undefined, error: undefined, threadId: undefined, frames: [], output: `Building ${project}…\n` });
     const fail = (e: unknown) => {
       if (generation !== this.generation) return;
@@ -186,10 +189,12 @@ export class Debugger extends EventEmitter {
   private async tracepointOrSkip(threadId: number) {
     const top = (await this.frames(threadId)).find((f) => !f.external);
     const bp = top?.file ? this.state.breakpoints[top.file]?.find((b) => b.line === top.line) : undefined;
-    if (!bp || (!bp.hitCondition?.trim() && !bp.logMessage?.trim())) return false;
+    if (!bp) return false;
     const key = `${top!.file}:${bp.line}`;
     const hits = (this.hits.get(key) ?? 0) + 1;
     this.hits.set(key, hits);
+    this.update({ hits: Object.fromEntries(this.hits) });
+    if (!bp.hitCondition?.trim() && !bp.logMessage?.trim()) return false;
     if (!hitMatches(hits, bp.hitCondition)) { await this.dap!.request('continue', { threadId }).catch(() => {}); return true; }
     if (bp.logMessage?.trim()) {
       let message = bp.logMessage;
