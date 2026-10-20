@@ -20,6 +20,7 @@ Earlier batches: [ADVANCED-20.md](ADVANCED-20.md), [IDE-FEATURES-4.md](IDE-FEATU
 | C11 | File Properties: Build Action / Copy to Output | VS 2026 | yes | ✅ 2026-10-20 |
 | C12 | Exclude From Project | VS 2026 | yes | ✅ 2026-10-20 |
 | C13 | Error List: Suppress in Project File | VS 2026 | yes | ✅ 2026-10-20 |
+| C14 | Project Properties: Debug (launch profiles) | VS 2026 | yes | ✅ 2026-10-20 |
 
 ## Progress log
 - 2026-10-20 C1: Property pages for a .csproj from the Explorer's project menu or Tools; changes previewed as a diff, then written.
@@ -35,3 +36,4 @@ Earlier batches: [ADVANCED-20.md](ADVANCED-20.md), [IDE-FEATURES-4.md](IDE-FEATU
 - 2026-10-20 C11: Build Action and Copy to Output Directory written to the project file.
 - 2026-10-20 C12: A Remove item keeps the file on disk but out of the build; File Properties includes it again.
 - 2026-10-20 C13: Adds the code to the project's NoWarn (previewed).
+- 2026-10-20 C14: Launch profiles in Properties/launchSettings.json: kind, args, working dir, environment.

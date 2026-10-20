@@ -516,6 +516,29 @@ app.post('/api/project/item/preview', async (req, res) => {
   if (excluded) { res.json(await previewProject(project, (x) => setExcluded(x, itemOf(project, file), true), [`Exclude ${file.split('/').pop()} from the project`])); return; }
   res.json(await previewProject(project, (x) => setFileItem(setExcluded(x, itemOf(project, file), false), itemOf(project, file), { action, copy }), [`${file.split('/').pop()}: Build Action ${action}, Copy to Output ${copy}`]));
 });
+// Launch profiles (Project Properties ▸ Debug): Properties/launchSettings.json next to the project.
+const launchFile = (project: string) => `${project.includes('/') ? project.slice(0, project.lastIndexOf('/') + 1) : ''}Properties/launchSettings.json`;
+const launchProfile = z.object({ commandName: z.string().max(60), commandLineArgs: z.string().max(4000).optional(), workingDirectory: z.string().max(400).optional(), environmentVariables: z.record(z.string().max(200), z.string().max(4000)).optional() }).passthrough();
+app.get('/api/project/launch', async (req, res) => {
+  const project = projectFile.parse(req.query.project);
+  const file = launchFile(project);
+  const text = await fs.readFile(await confined(config.repositoryRoot, file, false), 'utf8').catch(() => '');
+  let profiles = {};
+  try { profiles = text ? (JSON.parse(text) as { profiles?: object }).profiles ?? {} : {}; } catch { throw new Error(`${file} is not valid JSON.`); }
+  res.json({ file, profiles });
+});
+app.post('/api/project/launch/preview', async (req, res) => {
+  const { project, profiles } = z.object({ project: projectFile, profiles: z.record(z.string().min(1).max(100), launchProfile) }).parse(req.body);
+  const file = launchFile(project);
+  const target = await confined(config.repositoryRoot, file, false);
+  const before = await fs.readFile(target, 'utf8').catch(() => '');
+  let doc: Record<string, unknown> = {};
+  try { doc = before ? JSON.parse(before) as Record<string, unknown> : {}; } catch { throw new Error(`${file} is not valid JSON.`); }
+  const source = `${JSON.stringify({ ...doc, profiles }, null, 2)}\n`;
+  const id = randomUUID();
+  previews.set(id, { file, source, hash: hash(before), root: config.repositoryRoot });
+  res.json({ id, file, diff: createPatch(file, before, source, 'repository', 'proposed'), changed: before !== source, created: !before });
+});
 app.get('/api/project/model',async(_req,res)=>{res.json(await projectModel(config,await ensure()));});
 app.get('/api/project/files',async(req,res)=>{const folder=z.string().default('.').parse(req.query.folder);const dir=await confined(config.repositoryRoot,folder);const entries=await fs.readdir(dir,{withFileTypes:true});const {offset,limit}=paging.parse(req.query);const filtered=entries.filter(e=>!e.isSymbolicLink()&&!e.name.startsWith('.')&&!ignoredDirsFor(config).includes(e.name)).sort((a,b)=>Number(b.isDirectory())-Number(a.isDirectory())||a.name.localeCompare(b.name));res.json({folder,items:filtered.slice(offset,offset+limit).map(e=>({name:e.name,file:path.relative(config.repositoryRoot,path.join(dir,e.name)).replaceAll('\\','/'),directory:e.isDirectory()})),total:filtered.length,hasNext:offset+limit<filtered.length});});
 app.post('/api/workspace', async (req, res) => {

@@ -33,6 +33,12 @@ export default function ProjectProperties({ project, onNotice }: { project: stri
     void api<Record<string, string>>('/project/properties/evaluate', { project, names: pages.flatMap((p) => p.fields.map((f) => f.name)), ...(config ? { configuration: config } : {}) }).then((r) => { if (live) setEvaluated(r); }, () => {});
     return () => { live = false; };
   }, [data, config]); // eslint-disable-line react-hooks/exhaustive-deps
+  // Launch profiles (Debug page): Properties/launchSettings.json.
+  type Profile = { commandName: string; commandLineArgs?: string; workingDirectory?: string; environmentVariables?: Record<string, string> };
+  const [launch, setLaunch] = useState<{ file: string; profiles: Record<string, Profile> }>();
+  const [profile, setProfile] = useState('');
+  const [launchPreview, setLaunchPreview] = useState<FilePreview>();
+  useEffect(() => { if (page !== 'debug' || launch) return; void api<{ file: string; profiles: Record<string, Profile> }>(`/project/launch?project=${encodeURIComponent(project)}`).then((l) => { setLaunch(l); setProfile(Object.keys(l.profiles)[0] ?? ''); }, (e) => onNotice((e as Error).message)); }, [page]); // eslint-disable-line react-hooks/exhaustive-deps
   // Other projects of the solution (Project References page).
   const [others, setOthers] = useState<string[]>([]);
   useEffect(() => { void api<{ projects?: { file: string; missing?: boolean }[] }>('/solution').then((s) => setOthers((s.projects ?? []).filter((p) => /\.(cs|fs|vb)proj$/i.test(p.file) && !p.missing && p.file !== project).map((p) => p.file)), () => {}); }, [project]);
@@ -106,6 +112,31 @@ export default function ProjectProperties({ project, onNotice }: { project: stri
           {refs.filter((r) => !others.some((o) => same(relativeProjectPath(project, o), r))).map((r) => <li key={r}><span>{r} <small className="subtle">(not in the solution)</small></span><button className="icon-button" aria-label={`Remove reference ${r}`} onClick={() => setExtra((x) => ({ ...x, references: refs.filter((y) => y !== r) }))}>×</button></li>)}
           {!others.length && !refs.length && <li className="subtle">No other projects in the solution.</li>}
         </ul>
+      </>
+    );
+  };
+  customPages.debug = () => {
+    if (!launch) return <p className="subtle">Loading…</p>;
+    const names = Object.keys(launch.profiles);
+    const cur = launch.profiles[profile];
+    const put = (patch: Partial<Profile>) => { setLaunchPreview(undefined); setLaunch({ ...launch, profiles: { ...launch.profiles, [profile]: { ...cur, ...patch } } }); };
+    const env = Object.entries(cur?.environmentVariables ?? {}).map(([k, v]) => `${k}=${v}`).join('\n');
+    return (
+      <>
+        <p className="subtle">Launch profiles in <code>{launch.file}</code> (used by dotnet run and the debugger).</p>
+        <div className="pp-add">
+          <select aria-label="Launch profile" value={profile} onChange={(e) => setProfile(e.target.value)}>{names.map((n) => <option key={n}>{n}</option>)}{!names.length && <option value="">(no profiles)</option>}</select>
+          <button className="button" onClick={() => { const n = window.prompt('Profile name:', project.split('/').pop()!.replace(/\.\w+proj$/, '')); if (!n?.trim() || launch.profiles[n.trim()]) return; setLaunchPreview(undefined); setLaunch({ ...launch, profiles: { ...launch.profiles, [n.trim()]: { commandName: 'Project' } } }); setProfile(n.trim()); }}>New profile</button>
+          {cur && <button className="button" onClick={() => { const rest = { ...launch.profiles }; delete rest[profile]; setLaunchPreview(undefined); setLaunch({ ...launch, profiles: rest }); setProfile(Object.keys(rest)[0] ?? ''); }}>Delete</button>}
+        </div>
+        {cur && <>
+          <div className="pp-field"><label htmlFor="lp-cmd">Launch</label><select id="lp-cmd" aria-label="Launch" value={cur.commandName} onChange={(e) => put({ commandName: e.target.value })}>{[...new Set(['Project', 'Executable', 'IISExpress', cur.commandName])].map((c) => <option key={c}>{c}</option>)}</select></div>
+          <div className="pp-field"><label htmlFor="lp-args">Command line arguments</label><input id="lp-args" aria-label="Command line arguments" value={cur.commandLineArgs ?? ''} onChange={(e) => put({ commandLineArgs: e.target.value || undefined })} /></div>
+          <div className="pp-field"><label htmlFor="lp-wd">Working directory</label><input id="lp-wd" aria-label="Working directory" value={cur.workingDirectory ?? ''} onChange={(e) => put({ workingDirectory: e.target.value || undefined })} /></div>
+          <div className="pp-field"><label htmlFor="lp-env">Environment variables</label><textarea id="lp-env" aria-label="Environment variables" rows={3} spellCheck={false} placeholder="NAME=value (one per line)" value={env} onChange={(e) => put({ environmentVariables: Object.fromEntries(e.target.value.split('\n').map((l) => /^\s*([^=\s]+)\s*=(.*)$/.exec(l)).filter((m): m is RegExpExecArray => !!m).map((m) => [m[1], m[2].trim()])) })} /></div>
+        </>}
+        <div className="pp-footer"><button className="button primary" onClick={() => void api<FilePreview>('/project/launch/preview', { project, profiles: launch.profiles }).then(setLaunchPreview, (e) => onNotice((e as Error).message))}>Preview launchSettings.json</button></div>
+        {launchPreview && <DiffApproval preview={launchPreview} height="160px" onApplied={() => { setLaunchPreview(undefined); onNotice(`Saved ${launch.file}.`); }} />}
       </>
     );
   };

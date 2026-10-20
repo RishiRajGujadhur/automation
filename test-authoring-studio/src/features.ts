@@ -529,6 +529,7 @@ export const FEATURES: Feature[] = [
   { id: 'file-build-action', label: 'File Properties: Build Action / Copy to Output', group: 'Files', essential: true, vs: 'File Properties ▸ Build Action', description: 'The Explorer\'s Build Action… sets a file\'s Build Action (None, Content, Embedded Resource…) and Copy to Output Directory in the project file.' },
   { id: 'exclude-from-project', label: 'Exclude From Project', group: 'Files', essential: true, vs: 'Exclude From Project', description: 'The Explorer\'s Exclude From Project… keeps a file on disk but out of the build (a Remove item), and File Properties can include it again.' },
   { id: 'suppress-in-project', label: 'Error List: Suppress in Project File', group: 'Tool windows', essential: true, vs: 'Error List ▸ Suppress ▸ In Project File', description: 'The Error List\'s row menu adds the warning\'s code to the project\'s NoWarn (previewed diff), like Visual Studio\'s Suppress ▸ In Project File.' },
+  { id: 'pp-debug', label: 'Project Properties: Debug (launch profiles)', group: 'Code intelligence', essential: true, vs: 'Project Properties ▸ Debug ▸ Launch profiles', description: 'The Debug page edits launch profiles (Properties/launchSettings.json): launch kind, arguments, working directory, environment variables.' },
 ];
 export const GROUPS: FeatureGroup[] = ['Editing', 'Navigation', 'Code intelligence', 'Tool windows', 'Files', 'Git', 'Gherkin', 'View', 'Debugging', 'Help and productivity'];
 
