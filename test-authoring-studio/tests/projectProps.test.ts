@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { configOf, readProperties, setProperty, setProperties } from '../server/projectProps';
+import { configOf, readProperties, setProperty, setProperties, readEvents, setEvent, readUsings, setUsings, readReferences, setReferences, relativeProjectPath, readFileItem, setFileItem } from '../server/projectProps';
 
 const CSPROJ = `<Project Sdk="Microsoft.NET.Sdk">
   <!-- comment kept -->
@@ -39,5 +39,36 @@ describe('project properties (CSHARP-20)', () => {
   it('C1 keeps CRLF line endings', () => {
     const crlf = CSPROJ.replace(/\n/g, '\r\n');
     expect(setProperty(crlf, 'RootNamespace', 'Demo')).toContain('    <RootNamespace>Demo</RootNamespace>\r\n  </PropertyGroup>');
+  });
+});
+
+describe('project file items (CSHARP-20)', () => {
+  it('C7 build events', () => {
+    const x = setEvent(CSPROJ, 'post', 'echo "done" > out.txt');
+    expect(x).toContain('  <Target Name="PostBuild" AfterTargets="PostBuildEvent">\n    <Exec Command="echo &quot;done&quot; &gt; out.txt" />\n  </Target>\n</Project>');
+    expect(readEvents(x)).toEqual({ pre: '', post: 'echo "done" > out.txt' });
+    expect(setEvent(x, 'post', null)).toBe(CSPROJ);
+  });
+  it('C8 global usings', () => {
+    const x = setUsings(CSPROJ, [{ include: 'NUnit.Framework' }, { include: 'System.Math', static: true }]);
+    expect(readUsings(x)).toEqual([{ include: 'NUnit.Framework' }, { include: 'System.Math', static: true }]);
+    expect(setUsings(x, [])).toBe(CSPROJ);
+  });
+  it('C9 project references', () => {
+    expect(relativeProjectPath('Tests/Tests.csproj', 'App/App.csproj')).toBe('..\\App\\App.csproj');
+    expect(relativeProjectPath('Demo.csproj', 'Lib/Lib.csproj')).toBe('Lib\\Lib.csproj');
+    const x = setReferences(CSPROJ, ['..\\App\\App.csproj']);
+    expect(readReferences(x)).toEqual(['..\\App\\App.csproj']);
+    expect(setReferences(x, [])).toBe(CSPROJ);
+  });
+  it('C11 build action and copy to output', () => {
+    expect(readFileItem(CSPROJ, 'Data/users.json')).toEqual({ action: 'None', copy: 'Never' });
+    const copy = setFileItem(CSPROJ, 'Data/users.json', { action: 'None', copy: 'PreserveNewest' });
+    expect(copy).toContain('<None Update="Data\\users.json"><CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory></None>');
+    expect(readFileItem(copy, 'Data/users.json')).toEqual({ action: 'None', copy: 'PreserveNewest' });
+    const embedded = setFileItem(copy, 'Data/users.json', { action: 'EmbeddedResource', copy: 'Never' });
+    expect(readFileItem(embedded, 'Data/users.json')).toEqual({ action: 'EmbeddedResource', copy: 'Never' });
+    expect(embedded).toContain('<None Remove="Data\\users.json" />');
+    expect(setFileItem(embedded, 'Data/users.json', { action: 'None', copy: 'Never' })).toBe(CSPROJ);
   });
 });

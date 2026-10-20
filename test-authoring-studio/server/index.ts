@@ -40,7 +40,7 @@ import { findInFiles, replaceInFiles } from './search.js';
 import { values, render, parameterCount, replaceAttributePattern } from './stepRename.js';
 import { installed as nugetInstalled, updates as nugetUpdates, search as nugetSearch, versions as nugetVersions, install as nugetInstall, uninstall as nugetUninstall } from './nuget.js';
 import { status as gitStatus, stage as gitStage, unstage as gitUnstage, discard as gitDiscard, commit as gitCommit, headInfo, log as gitLog, branches as gitBranches, checkout as gitCheckout, createBranch as gitCreateBranch, sync as gitSync, merge as gitMerge, blame as gitBlame, clone as gitClone, shelves, shelve, unshelve, deleteShelf, lineHistory, commitDetails, graphLog, fileAt, commitAction, git, stageLines } from './git.js';
-import { readProperties, setProperties, evaluate } from './projectProps.js';
+import { readProperties, setProperties, evaluate, readEvents, setEvent, readUsings, setUsings, readReferences, setReferences } from './projectProps.js';
 import { LanguageService } from './langService.js';
 import type { Index } from '../src/types.js';
 import { readSettings, writeSettings, settingsSchema, tracesDir, spySnapshotsDir } from './settings.js';
@@ -461,15 +461,35 @@ async function previewProject(project: string, edit: (xml: string) => string, ch
 }
 app.get('/api/project/properties', async (req, res) => {
   const project = projectFile.parse(req.query.project);
-  res.json({ project, ...readProperties(await fs.readFile(await confined(config.repositoryRoot, project, false), 'utf8')) });
+  const xml = await fs.readFile(await confined(config.repositoryRoot, project, false), 'utf8');
+  res.json({ project, ...readProperties(xml), events: readEvents(xml), usings: readUsings(xml), references: readReferences(xml) });
 });
 app.post('/api/project/properties/evaluate', async (req, res) => {
   const { project, names, configuration } = z.object({ project: projectFile, names: z.array(z.string().max(80)).max(60), configuration: z.string().regex(/^[\w.-]{1,40}$/).optional() }).parse(req.body);
   res.json(await evaluate(await confined(config.repositoryRoot, project, false), names, config.repositoryRoot, configuration));
 });
 app.post('/api/project/properties/preview', async (req, res) => {
-  const { project, set, config: cfg } = z.object({ project: projectFile, set: z.record(z.string().max(80), z.string().max(4000).nullable()), config: z.string().regex(/^[\w.-]{1,40}$/).optional() }).parse(req.body);
-  res.json(await previewProject(project, (xml) => setProperties(xml, set, cfg), Object.entries(set).map(([k, v]) => (v === null ? `Remove ${k}${cfg ? ` (${cfg})` : ''}` : `${k} = ${v}${cfg ? ` (${cfg})` : ''}`))));
+  const { project, set, config: cfg, events, usings, references } = z.object({
+    project: projectFile,
+    set: z.record(z.string().max(80), z.string().max(4000).nullable()).default({}),
+    config: z.string().regex(/^[\w.-]{1,40}$/).optional(),
+    events: z.object({ pre: z.string().max(4000).optional(), post: z.string().max(4000).optional() }).optional(),
+    usings: z.array(z.object({ include: z.string().min(1).max(300), static: z.boolean().optional(), alias: z.string().max(100).optional() })).max(300).optional(),
+    references: z.array(z.string().min(1).max(400)).max(200).optional(),
+  }).parse(req.body);
+  const notes = Object.entries(set).map(([k, v]) => (v === null ? `Remove ${k}${cfg ? ` (${cfg})` : ''}` : `${k} = ${v}${cfg ? ` (${cfg})` : ''}`));
+  if (events?.pre !== undefined) notes.push(events.pre ? 'Pre-build event' : 'Remove the pre-build event');
+  if (events?.post !== undefined) notes.push(events.post ? 'Post-build event' : 'Remove the post-build event');
+  if (usings) notes.push(`${usings.length} global using${usings.length === 1 ? '' : 's'}`);
+  if (references) notes.push(`${references.length} project reference${references.length === 1 ? '' : 's'}`);
+  res.json(await previewProject(project, (xml) => {
+    let out = setProperties(xml, set, cfg);
+    if (events?.pre !== undefined) out = setEvent(out, 'pre', events.pre || null);
+    if (events?.post !== undefined) out = setEvent(out, 'post', events.post || null);
+    if (usings) out = setUsings(out, usings);
+    if (references) out = setReferences(out, references);
+    return out;
+  }, notes));
 });
 app.get('/api/project/model',async(_req,res)=>{res.json(await projectModel(config,await ensure()));});
 app.get('/api/project/files',async(req,res)=>{const folder=z.string().default('.').parse(req.query.folder);const dir=await confined(config.repositoryRoot,folder);const entries=await fs.readdir(dir,{withFileTypes:true});const {offset,limit}=paging.parse(req.query);const filtered=entries.filter(e=>!e.isSymbolicLink()&&!e.name.startsWith('.')&&!ignoredDirsFor(config).includes(e.name)).sort((a,b)=>Number(b.isDirectory())-Number(a.isDirectory())||a.name.localeCompare(b.name));res.json({folder,items:filtered.slice(offset,offset+limit).map(e=>({name:e.name,file:path.relative(config.repositoryRoot,path.join(dir,e.name)).replaceAll('\\','/'),directory:e.isDirectory()})),total:filtered.length,hasNext:offset+limit<filtered.length});});

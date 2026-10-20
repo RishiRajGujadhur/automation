@@ -75,4 +75,5 @@ export const PAGES: Page[] = [
       { name: 'RunAnalyzersDuringBuild', label: 'Run analyzers on build', kind: 'bool' },
     ],
   },
+  { id: 'events', title: 'Build Events', feature: 'pp-events', fields: [], custom: true },
 ];

@@ -82,3 +82,10 @@ const sortTree = (nodes: SolutionNode[]): SolutionNode[] => {
   return nodes;
 };
 
+/** The relative path from one project file to another, Visual Studio style (backslashes). */
+export function relativeProjectPath(from: string, to: string) {
+  const a = from.split('/').slice(0, -1), b = to.split('/');
+  let i = 0;
+  while (i < a.length && i < b.length - 1 && a[i] === b[i]) i++;
+  return [...a.slice(i).map(() => '..'), ...b.slice(i)].join('\\');
+}

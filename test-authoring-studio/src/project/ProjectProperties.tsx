@@ -1,11 +1,14 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, type ReactNode } from 'react';
 import { RotateCcw } from 'lucide-react';
 import { api, type FilePreview } from '../api';
 import DiffApproval from '../DiffApproval';
 import { featureOn } from '../features';
 import { PAGES, type Field } from './pages';
 
-type Props = { all: Record<string, string>; byConfig: Record<string, Record<string, string>> };
+type Using = { include: string; static?: boolean; alias?: string };
+type Props = { all: Record<string, string>; byConfig: Record<string, Record<string, string>>; events: { pre: string; post: string }; usings: Using[]; references: string[] };
+/** Edits outside the property groups: build events, global usings, project references. */
+type Extra = { events?: { pre?: string; post?: string }; usings?: Using[]; references?: string[] };
 
 /**
  * Project Properties (Visual Studio 2026): the property pages of a .csproj. Edits are collected, then previewed as a
@@ -18,6 +21,9 @@ export default function ProjectProperties({ project, onNotice }: { project: stri
   const [data, setData] = useState<Props>();
   const [edits, setEdits] = useState<Record<string, string | null>>({});
   const [preview, setPreview] = useState<FilePreview>();
+  const [extra, setExtraState] = useState<Extra>({});
+  const setExtra = (f: (e: Extra) => Extra) => { setPreview(undefined); setExtraState(f); };
+  const count = Object.keys(edits).length + Object.keys(extra).length;
   // Evaluated values (Visual Studio shows the effective value): SDK defaults, Directory.Build.props, imports.
   const [evaluated, setEvaluated] = useState<Record<string, string>>({});
   useEffect(() => {
@@ -53,8 +59,22 @@ export default function ProjectProperties({ project, onNotice }: { project: stri
     );
   };
   const save = async () => {
-    try { setPreview(await api<FilePreview>('/project/properties/preview', { project, set: edits, ...(config ? { config } : {}) })); } catch (e) { onNotice((e as Error).message); }
+    try { setPreview(await api<FilePreview>('/project/properties/preview', { project, set: edits, ...(config ? { config } : {}), ...extra })); } catch (e) { onNotice((e as Error).message); }
   };
+  const customPages: Record<string, () => ReactNode> = {};
+  customPages.events = () => (
+    <>
+      {(['pre', 'post'] as const).map((k) => (
+        <div key={k} className={`pp-field ${extra.events?.[k] !== undefined ? 'changed' : ''}`}>
+          <label htmlFor={`pp-${k}`}>{k === 'pre' ? 'Pre-build event' : 'Post-build event'}</label>
+          <textarea id={`pp-${k}`} aria-label={k === 'pre' ? 'Pre-build event' : 'Post-build event'} rows={3} spellCheck={false} value={extra.events?.[k] ?? data?.events[k] ?? ''} onChange={(e) => { const v = e.target.value; setExtra((x) => ({ ...x, events: { ...x.events, [k]: v } })); }} />
+          <small className="subtle">{k === 'pre' ? 'Runs before the build (an Exec in a PreBuild target).' : 'Runs after a successful build. Macros such as $(TargetDir) work.'}</small>
+        </div>
+      ))}
+    </>
+  );
+  // custom pages
+
   if (!pages.length) return <p className="subtle">Turn on Project Properties in Settings ▸ Features.</p>;
   return (
     <div className="project-props" aria-label={`Properties of ${project}`}>
@@ -67,15 +87,15 @@ export default function ProjectProperties({ project, onNotice }: { project: stri
           {pages.map((p) => <button key={p.id} className={p.id === current?.id ? 'active' : ''} aria-current={p.id === current?.id ? 'page' : undefined} onClick={() => setPage(p.id)}>{p.title}</button>)}
         </nav>
         <section className="pp-page" aria-label={current?.title}>
-          {!data ? <p className="subtle">Loading…</p> : current?.fields.map(field)}
+          {!data ? <p className="subtle">Loading…</p> : current?.custom ? customPages[current.id]?.() : current?.fields.map(field)}
         </section>
       </div>
       <div className="pp-footer">
-        <small className="subtle">{Object.keys(edits).length ? `${Object.keys(edits).length} change${Object.keys(edits).length === 1 ? '' : 's'}` : 'No changes'}</small>
-        <button className="button" disabled={!Object.keys(edits).length} onClick={() => { setEdits({}); setPreview(undefined); }}>Discard</button>
-        <button className="button primary" disabled={!Object.keys(edits).length} onClick={() => void save()}>Preview changes</button>
+        <small className="subtle">{count ? `${count} change${count === 1 ? '' : 's'}` : 'No changes'}</small>
+        <button className="button" disabled={!count} onClick={() => { setEdits({}); setExtraState({}); setPreview(undefined); }}>Discard</button>
+        <button className="button primary" disabled={!count} onClick={() => void save()}>Preview changes</button>
       </div>
-      {preview && <DiffApproval preview={preview} height="180px" onApplied={() => { setEdits({}); setPreview(undefined); void load(); onNotice(`Saved the properties of ${project.split('/').pop()}.`); window.dispatchEvent(new Event('tas:rescan')); }} />}
+      {preview && <DiffApproval preview={preview} height="180px" onApplied={() => { setEdits({}); setExtraState({}); setPreview(undefined); void load(); onNotice(`Saved the properties of ${project.split('/').pop()}.`); window.dispatchEvent(new Event('tas:rescan')); }} />}
     </div>
   );
 }
