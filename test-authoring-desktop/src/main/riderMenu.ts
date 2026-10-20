@@ -84,6 +84,7 @@ const ROWS: Record<'edit' | 'view' | 'navigate' | 'code' | 'tools' | 'help', Row
       ['Unicode Escape', 'unicode-escape'],
       ['Unicode Unescape', 'unicode-unescape'],
       ['Hex ⇄ Decimal', 'hex-decimal'],
+      ['Reverse Text', 'reverse-text'],
     ] },
     ['Align Assignments', 'align-assignments', 'CmdOrCtrl+Alt+]'],
     ['Count Occurrences', 'count-occurrences'],

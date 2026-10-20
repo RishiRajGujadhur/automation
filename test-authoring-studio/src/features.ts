@@ -489,6 +489,7 @@ export const FEATURES: Feature[] = [
   { id: 'rename-active-file', label: 'Rename Active File', group: 'Files', essential: true, vs: 'File ▸ Rename (Shift+F6 in Rider)', description: 'Code ▸ Rename Active File renames the file of the active editor (its tab follows).', commands: ['rename-active-file'] },
   { id: 'slowest-tests', label: 'Test Explorer: Slowest Tests', group: 'Tool windows', essential: false, description: 'A Test Explorer button names the five slowest tests of the last run.' },
   { id: 'continuous-testing', label: 'Continuous testing (failed tests on save)', group: 'Tool windows', essential: false, vs: 'Live Unit Testing', description: 'A Test Explorer toggle runs the failed tests again after each save (Rider\'s continuous testing).' },
+  { id: 'reverse-text', label: 'Reverse Text', group: 'Editing', essential: false, description: 'Edit ▸ Convert reverses the characters of the selection.', commands: ['reverse-text'] },
 ];
 export const GROUPS: FeatureGroup[] = ['Editing', 'Navigation', 'Code intelligence', 'Tool windows', 'Files', 'Git', 'Gherkin', 'View', 'Debugging', 'Help and productivity'];
 

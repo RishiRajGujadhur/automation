@@ -103,6 +103,7 @@ has it on by default, so the desktop app starts with it on. The others start off
 | Y92 | Rename Active File… | Rider | yes | ✅ 2026-10-20 |
 | Y93 | Test Explorer: Slowest Tests | VS 2026 | no | ✅ 2026-10-20 |
 | Y94 | Continuous testing (failed tests on save) | Rider | no | ✅ 2026-10-20 |
+| Y95 | Reverse Text | Rider | no | ✅ 2026-10-20 |
 
 ## Progress log
 - 2026-10-20 Y1: Percent-encodes the selection (or line) and decodes it.
@@ -199,3 +200,4 @@ has it on by default, so the desktop app starts with it on. The others start off
 - 2026-10-20 Y92: Renames the active editor's file; its tab follows.
 - 2026-10-20 Y93: Names the five slowest tests of the last run.
 - 2026-10-20 Y94: After each save the failed tests run again.
+- 2026-10-20 Y95: The characters of the selection reversed.

@@ -702,3 +702,6 @@ export function testData(kind: 'email' | 'name' | 'number' | 'date', random = Ma
   const d = new Date(Date.UTC(2020, 0, 1) + Math.floor(random() * 3650) * 86_400_000);
   return d.toISOString().slice(0, 10);
 }
+
+/** Reverse Text (Rider String Manipulation): the characters of the selection in reverse order (surrogate pairs kept). */
+export const reverseText = mapSelections((t) => [...t].reverse().join(''), 'word');
