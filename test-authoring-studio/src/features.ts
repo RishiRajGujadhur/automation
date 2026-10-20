@@ -365,6 +365,7 @@ export const FEATURES: Feature[] = [
   { id: 'goto-last', label: 'Go to All remembers the last query', group: 'Navigation', essential: true, description: 'Ctrl+T / Ctrl+P reopen with the last query selected (typing replaces it).' },
   { id: 'test-detail-copy', label: 'Test details: Copy message / stack trace', group: 'Tool windows', essential: true, description: 'The test details pane copies the failure message or the stack trace.' },
   { id: 'test-detail-run', label: 'Test details: Run / Debug', group: 'Tool windows', essential: true, description: 'The test details pane has Run and Debug buttons for that test.' },
+  { id: 'test-tree-keys', label: 'Test Explorer arrow keys', group: 'Tool windows', essential: true, description: '↑ / ↓ move through the tests; ← / → collapse and expand groups.' },
 ];
 export const GROUPS: FeatureGroup[] = ['Editing', 'Navigation', 'Code intelligence', 'Tool windows', 'Files', 'Git', 'Gherkin', 'View', 'Debugging', 'Help and productivity'];
 

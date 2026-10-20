@@ -225,7 +225,17 @@ export default function TestExplorer({ revision, onOpen, onDebug, onNotice }: { 
       )}
       {warning && <p className="field-error" role="alert">{warning}</p>}
       {run.error && <p className="field-error" role="alert">{run.error}</p>}
-      <nav className="t-tree" aria-label="Tests">
+      <nav className="t-tree" aria-label="Tests" onKeyDown={(e) => {
+        // ↑ / ↓ between rows, ← / → collapse and expand a group (QOL-50).
+        const t = e.target as HTMLElement;
+        if (!featureOn('test-tree-keys') || !t.matches('.t-label')) return;
+        const rows = [...e.currentTarget.querySelectorAll<HTMLElement>('.t-label')];
+        const i = rows.indexOf(t);
+        const twisty = t.parentElement?.querySelector<HTMLButtonElement>('.se-twisty');
+        if (e.key === 'ArrowDown' || e.key === 'ArrowUp') { e.preventDefault(); rows[i + (e.key === 'ArrowDown' ? 1 : -1)]?.focus(); }
+        else if (e.key === 'ArrowRight' && twisty?.getAttribute('aria-expanded') === 'false') { e.preventDefault(); twisty.click(); }
+        else if (e.key === 'ArrowLeft' && twisty?.getAttribute('aria-expanded') === 'true') { e.preventDefault(); twisty.click(); }
+      }}>
         <ul>{groups.map((g) => groupRow(g, 0))}</ul>
         {!loading && !tests.length && (featureOn('test-empty-help') ? (
           <div className="explorer-empty t-empty" role="note">
