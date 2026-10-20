@@ -47,6 +47,7 @@ has it on by default, so the desktop app starts with it on. The others start off
 | Y36 | Sort Tags | Rider | no | ✅ 2026-10-20 |
 | Y37 | Promote Common Tags to Feature | Rider | no | ✅ 2026-10-20 |
 | Y38 | Insert Doc String | Rider | no | ✅ 2026-10-20 |
+| Y39 | Expand Outline to Scenarios | Rider | no | ✅ 2026-10-20 |
 
 ## Progress log
 - 2026-10-20 Y1: Percent-encodes the selection (or line) and decodes it.
@@ -87,3 +88,4 @@ has it on by default, so the desktop app starts with it on. The others start off
 - 2026-10-20 Y36: Tags of each tag line sorted (natural order), repeats dropped.
 - 2026-10-20 Y37: Tags every scenario has move to the Feature tag line.
 - 2026-10-20 Y38: A triple-quote doc string block under the step at the caret.
+- 2026-10-20 Y39: One plain Scenario per Examples row, values filled in, tags kept.

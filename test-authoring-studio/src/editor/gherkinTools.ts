@@ -837,3 +837,52 @@ export function insertDocString(view: EditorView) {
   view.dispatch({ changes: { from: line.to, insert }, selection: EditorSelection.cursor(line.to + br.length * 2 + ind.length * 2 + 3), userEvent: 'input' });
   return true;
 }
+
+/** Expand Outline to Scenarios: a Scenario Outline becomes one Scenario per Examples row (values filled in). */
+export function expandOutline(view: EditorView) {
+  const { state } = view;
+  const doc = state.doc;
+  const sb = scenarioBlock(state, doc.lineAt(state.selection.main.head).number);
+  if (!sb || !/^\s*Scenario (Outline|Template):/.test(doc.line(sb.head).text)) return false;
+  // The outline runs to the next scenario / rule (tagged Examples belong to it, unlike scenarioBlock's end).
+  let end = sb.head;
+  for (let n = sb.head + 1; n <= doc.lines; n++) {
+    const t = doc.line(n).text;
+    if (/^\s*(Scenario|Scenario Outline|Scenario Template|Example|Background|Rule|Feature):/.test(t)) break;
+    if (/^\s*@/.test(t)) { let k = n; while (k <= doc.lines && /^\s*@/.test(doc.line(k).text)) k++; if (k > doc.lines || !/^\s*(Examples|Scenarios):/.test(doc.line(k).text)) break; }
+    end = n;
+  }
+  while (end > sb.head && !doc.line(end).text.trim()) end--;
+  const b = { ...sb, end };
+  const tables = examplesTables(state, b);
+  if (!tables.length) return false;
+  const head = doc.line(b.head).text;
+  const indent = /^\s*/.exec(head)![0];
+  const title = head.replace(/^\s*Scenario (Outline|Template):\s*/, '');
+  const firstExamples = (() => { for (let n = b.head + 1; n <= b.end; n++) if (/^\s*(Examples|Scenarios):/.test(doc.line(n).text)) return n; return b.end + 1; })();
+  let stepsEnd = firstExamples - 1;
+  while (stepsEnd > b.head && (!doc.line(stepsEnd).text.trim() || /^\s*@/.test(doc.line(stepsEnd).text))) stepsEnd--;
+  const steps = Array.from({ length: stepsEnd - b.head }, (_, i) => doc.line(b.head + 1 + i).text);
+  const outlineTags = Array.from({ length: b.head - b.first }, (_, i) => doc.line(b.first + i).text.trim()).join(' ');
+  const out: string[] = [];
+  for (const rows of tables) {
+    let k = rows[0] - 1;
+    while (k > b.head && !/^\s*(Examples|Scenarios):/.test(doc.line(k).text)) k--;
+    const exTags: string[] = [];
+    for (let t = k - 1; t > b.head && /^\s*@/.test(doc.line(t).text); t--) exTags.unshift(doc.line(t).text.trim());
+    const header = splitRow(doc.line(rows[0]).text).map((c) => c.trim());
+    for (const r of rows.slice(1)) {
+      const vals = splitRow(doc.line(r).text).map((c) => c.trim());
+      const fill = (s: string) => s.replace(/<([^<>]+)>/g, (all, p: string) => { const i = header.indexOf(p); return i >= 0 ? vals[i] ?? '' : all; });
+      const name = fill(title);
+      const tags = [outlineTags, ...exTags].filter(Boolean).join(' ');
+      if (out.length) out.push('');
+      if (tags) out.push(indent + tags);
+      out.push(`${indent}Scenario: ${name === title ? `${title} (${vals.join(', ')})` : name}`);
+      out.push(...steps.map(fill));
+    }
+  }
+  const from = doc.line(b.first).from, to = doc.line(b.end).to;
+  view.dispatch({ changes: { from, to, insert: out.join(state.lineBreak) }, selection: EditorSelection.cursor(from), userEvent: 'input' });
+  return true;
+}

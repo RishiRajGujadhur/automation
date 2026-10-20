@@ -245,6 +245,7 @@ const ROWS: Record<'edit' | 'view' | 'navigate' | 'code' | 'tools' | 'help', Row
       ['Sort Tags', 'sort-tags'],
       ['Promote Common Tags to Feature', 'promote-tags'],
       ['Insert Doc String', 'insert-doc-string'],
+      ['Expand Outline to Scenarios', 'expand-outline'],
     ] },
     ['Collapse Using Directives', 'fold-usings'],
     ['Sort JSON Keys', 'sort-json'],

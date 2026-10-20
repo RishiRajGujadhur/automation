@@ -1,7 +1,7 @@
 import type { RiderCommand } from './commands';
 import type { MoreHelpers } from './more';
 import { copyText } from '../ui';
-import { tableDeleteEmptyRows, tableRemoveDuplicateRows, tableMarkdown, tagAllScenarios, removeTagEverywhere, sortTags, promoteCommonTags, insertDocString } from '../editor/gherkinTools';
+import { tableDeleteEmptyRows, tableRemoveDuplicateRows, tableMarkdown, tagAllScenarios, removeTagEverywhere, sortTags, promoteCommonTags, insertDocString, expandOutline } from '../editor/gherkinTools';
 import { urlEncode, urlDecode, base64Encode, base64Decode, escapeString, unescapeString, htmlEncode, htmlDecode, stepNumber, insertSequence, toggleQuotes, joinWith, splitAt, alignAssignments, swapSelections, countOccurrences, trimLines, stamp, insertText, LOREM, shuffleLines, reformatXml, minifyXml, jsonEscape, jsonUnescape, numberLines, mapDoc, toFileScopedNamespace, toBlockScopedNamespace, removeRegions, toRawString, toggleTask, formatMarkdownTable, tableOfContents, MARKDOWN_TABLE, removeComments, concatToInterpolationCmd } from '../editor/textTools2';
 
 /**
@@ -54,5 +54,6 @@ export function moreCommands2(h: MoreHelpers): RiderCommand[] {
     { id: 'sort-tags', label: 'Sort Tags', menu: 'Code', submenu: 'Gherkin', run: h.inEditor((v) => sortTags(v) || h.notice('The tags are already in order.')) },
     { id: 'promote-tags', label: 'Promote Common Tags to Feature', menu: 'Code', submenu: 'Gherkin', run: h.inEditor((v) => mapDoc(promoteCommonTags)(v) || h.notice('No tag is shared by every scenario.')) },
     { id: 'insert-doc-string', label: 'Insert Doc String', menu: 'Code', submenu: 'Gherkin', run: h.inEditor((v) => insertDocString(v) || h.notice('Put the caret on a step without a doc string.')) },
+    { id: 'expand-outline', label: 'Expand Outline to Scenarios', menu: 'Code', submenu: 'Gherkin', run: h.inEditor((v) => expandOutline(v) || h.notice('Put the caret in a Scenario Outline with Examples.')) },
   ];
 }
