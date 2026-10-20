@@ -927,3 +927,17 @@ export function tableInsertRowAbove(view: EditorView) {
   rows.splice(at, 0, Array<string>(t.cols).fill(''));
   return writeTable(view, t, rows, at, 0);
 }
+
+/** Add Scenario Outline: a new outline (with an Examples table) after the scenario at the caret, the caret on its title. */
+export function addScenarioOutline(view: EditorView) {
+  const { state } = view;
+  const doc = state.doc;
+  const b = scenarioBlock(state, doc.lineAt(state.selection.main.head).number);
+  const at = b ? doc.line(b.end).to : doc.length;
+  const indent = b ? /^\s*/.exec(doc.line(b.head).text)![0] : '  ';
+  const lb = state.lineBreak;
+  const before = at > 0 && doc.sliceString(at - 1, at) !== '\n' ? `${lb}${lb}` : at > 0 ? lb : '';
+  const insert = `${before}${indent}Scenario Outline: ${lb}${indent}  Given <value>${lb}${lb}${indent}  Examples:${lb}${indent}    | value |${lb}${indent}    |       |`;
+  view.dispatch({ changes: { from: at, insert }, selection: { anchor: at + before.length + indent.length + 'Scenario Outline: '.length }, scrollIntoView: true, userEvent: 'input' });
+  return true;
+}

@@ -250,6 +250,7 @@ const ROWS: Record<'edit' | 'view' | 'navigate' | 'code' | 'tools' | 'help', Row
       ['Set Language Header…', 'language-header'],
       ['Copy Scenario Name', 'copy-scenario-name'],
       ['Table: Insert Row Above', 'table-row-above'],
+      ['Add Scenario Outline', 'add-outline'],
     ] },
     ['Collapse Using Directives', 'fold-usings'],
     ['Sort JSON Keys', 'sort-json'],

@@ -53,6 +53,7 @@ has it on by default, so the desktop app starts with it on. The others start off
 | Y42 | Copy Scenario Name | Rider | no | ✅ 2026-10-20 |
 | Y43 | Table: Insert Row Above | Rider | no | ✅ 2026-10-20 |
 | Y44 | Warn on duplicate scenario names | Rider | yes | ✅ 2026-10-20 |
+| Y45 | Add Scenario Outline | Rider | no | ✅ 2026-10-20 |
 
 ## Progress log
 - 2026-10-20 Y1: Percent-encodes the selection (or line) and decodes it.
@@ -99,3 +100,4 @@ has it on by default, so the desktop app starts with it on. The others start off
 - 2026-10-20 Y42: Copies the title of the scenario at the caret.
 - 2026-10-20 Y43: An empty row above the caret's row.
 - 2026-10-20 Y44: Same-named scenarios in a file get a warning.
+- 2026-10-20 Y45: A new outline with an Examples table after the caret's scenario.
