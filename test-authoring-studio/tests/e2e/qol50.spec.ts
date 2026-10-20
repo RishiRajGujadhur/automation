@@ -496,3 +496,13 @@ test('QL65 / QL66 Find in Files starts with the selection; Go to All remembers i
   await page.keyboard.press('Control+P');
   await expect(page.getByRole('dialog').locator('input').first()).toHaveValue('login');
 });
+
+test('QL74 Settings: changed feature switches are marked; @modified lists them', async ({ page }) => {
+  await page.goto('/#/dashboard');
+  await page.getByRole('button', { name: 'Preferences' }).click();
+  const dialog = page.getByRole('dialog', { name: 'Preferences' });
+  await dialog.getByRole('navigation', { name: 'Settings categories' }).getByRole('button', { name: 'Features' }).click();
+  await dialog.getByRole('switch', { name: 'Copy XPath', exact: true }).click();
+  await dialog.getByRole('searchbox').or(dialog.getByRole('textbox').first()).fill('@modified');
+  await expect(dialog.getByText('Copy XPath (changed)')).toBeVisible();
+});

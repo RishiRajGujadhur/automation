@@ -195,3 +195,30 @@ test('QL24–QL26 Test Explorer: remembers its view, shows the first failure, el
   await expect(te.getByLabel('Search Test Explorer')).toHaveValue('Adds');
 });
 
+
+test('QL67–QL69 Test details: Copy / Run / Debug; arrow keys in the tree', async ({ page, context }) => {
+  await context.grantPermissions(['clipboard-read', 'clipboard-write']);
+  const file = path.join(root, 'Tests/CalculatorTests.cs');
+  await fs.writeFile(file, (await fs.readFile(file, 'utf8')).replace(/\}\s*$/, '\n    [Test]\n    public void FailsOnPurpose()\n    {\n        Assert.That(1 + 1, Is.EqualTo(3));\n    }\n}\n'));
+  await page.request.post('/api/scan', { data: {} });
+  await start(page);
+  await page.getByRole('button', { name: 'Test Explorer' }).click();
+  const te = page.getByRole('region', { name: 'Test Explorer' });
+  const tree = te.getByRole('navigation', { name: 'Tests' });
+  await expect(tree.locator('.t-label', { hasText: /FailsOnPurpose/ })).toBeVisible({ timeout: 60_000 });
+  // QL69: arrows from the first row.
+  await tree.locator('.t-label').first().focus();
+  await page.keyboard.press('ArrowDown');
+  await expect(tree.locator('.t-label').nth(1)).toBeFocused();
+  // QL68: run the selected test from its details.
+  await tree.locator('.t-label', { hasText: /FailsOnPurpose/ }).click();
+  const details = te.getByRole('region', { name: 'Test details' });
+  await expect(async () => {
+    await details.getByRole('button', { name: 'Run this test' }).click();
+    await expect.poll(() => status(page), { timeout: 5_000 }).toBe('running');
+  }).toPass({ timeout: 60_000 });
+  await expect(details).toContainText('Expected: 3', { timeout: 240_000 });
+  // QL67: copy the message.
+  await details.getByRole('button', { name: 'Copy message' }).click();
+  await expect.poll(() => page.evaluate(() => navigator.clipboard.readText())).toContain('Expected: 3');
+});

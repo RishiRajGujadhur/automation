@@ -363,6 +363,7 @@ export const FEATURES: Feature[] = [
   { id: 'mru-close', label: 'Closing a tab goes back to the last one used', group: 'Files', essential: true, description: 'Closing the active tab shows the tab you used before it, not just its neighbour.' },
   { id: 'search-selection', label: 'Find in Files starts with the selection', group: 'Navigation', essential: true, description: 'Ctrl+Shift+F with text selected searches for it.' },
   { id: 'goto-last', label: 'Go to All remembers the last query', group: 'Navigation', essential: true, description: 'Ctrl+T / Ctrl+P reopen with the last query selected (typing replaces it).' },
+  { id: 'test-detail-copy', label: 'Test details: Copy message / stack trace', group: 'Tool windows', essential: true, description: 'The test details pane copies the failure message or the stack trace.' },
 ];
 export const GROUPS: FeatureGroup[] = ['Editing', 'Navigation', 'Code intelligence', 'Tool windows', 'Files', 'Git', 'Gherkin', 'View', 'Debugging', 'Help and productivity'];
 

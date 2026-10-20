@@ -249,6 +249,12 @@ export default function TestExplorer({ revision, onOpen, onDebug, onNotice }: { 
           {detailResults.map((r, i) => (
             <div key={i} className="t-result">
               <p>{icon(r.outcome)} {r.name} · {ms(r.durationMs)}</p>
+              {featureOn('test-detail-copy') && (r.message || r.stackTrace) && (
+                <div className="t-copy">
+                  {r.message && <button className="link-button" onClick={() => void copyText(r.message!).then((ok) => onNotice(ok ? 'Copied the message.' : 'Clipboard unavailable.'))}>Copy message</button>}
+                  {r.stackTrace && <button className="link-button" onClick={() => void copyText(r.stackTrace!).then((ok) => onNotice(ok ? 'Copied the stack trace.' : 'Clipboard unavailable.'))}>Copy stack trace</button>}
+                </div>
+              )}
               {r.message && <pre className="t-message">{r.message}</pre>}
               {r.stackTrace && <pre className="t-stack">{r.stackTrace.split('\n').map((line, j) => {
                 const m = /in (.+?):line (\d+)/.exec(line);
