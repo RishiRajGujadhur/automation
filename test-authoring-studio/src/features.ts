@@ -394,6 +394,7 @@ export const FEATURES: Feature[] = [
   { id: 'debug-title', label: 'Debugging in the window title', group: 'Debugging', essential: true, description: 'The window title says "Debugging" (or "paused") while a debug session runs.' },
   { id: 'test-summary-notice', label: 'Test run result message', group: 'Tool windows', essential: true, description: 'When a test run ends a message says how many passed and failed, and how long it took.' },
   { id: 'status-tests', label: 'Test results in the status bar', group: 'Tool windows', essential: true, description: 'After a test run the status bar shows passed / failed counts; a click opens Test Explorer.' },
+  // ── Fourth batch (IDE-FEATURES-4.md) ──
 ];
 export const GROUPS: FeatureGroup[] = ['Editing', 'Navigation', 'Code intelligence', 'Tool windows', 'Files', 'Git', 'Gherkin', 'View', 'Debugging', 'Help and productivity'];
 
