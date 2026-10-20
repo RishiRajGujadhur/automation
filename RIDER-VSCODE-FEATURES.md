@@ -327,7 +327,7 @@ Legend: `[x]` done · `[ ]` to do.
 - [x] 395. Save custom window layouts
 - [x] 396. Restore editor layout — reopen files where you left them
 - [x] 397. Maximize editor group — View ▸ Maximize Editor Group (Ctrl+K Ctrl+M) (2026-10-21)
-- [ ] 398. Editor group locking
+- [x] 398. Editor group locking — Side group: Lock Group (new editors open in the main group) (2026-10-21)
 - [x] 399. Independent editor group scrolling — the split editor and the tab group scroll on their own (existing)
 - [x] 400. Synchronized scrolling between diff panes — Compare windows: Unified / Side by Side; the panes scroll together (Synchronized scrolling) (2026-10-21)
 
@@ -383,3 +383,4 @@ Legend: `[x]` done · `[ ]` to do.
 - 2026-10-21 400: Differences can be shown side by side with aligned rows; both panes scroll together unless Synchronized scrolling is unticked.
 - 2026-10-21 383: The split editor became an editor group with its own tabs.
 - 2026-10-21 386: The active editor moves between the main tab group and the side group.
+- 2026-10-21 398: A locked side group takes no new editors; Open to the Side then opens in the main group.
