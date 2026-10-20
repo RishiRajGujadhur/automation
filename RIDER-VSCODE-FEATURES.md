@@ -221,7 +221,7 @@ Legend: `[x]` done · `[ ]` to do.
 - [x] 201. Regex-based find and replace
 - [x] 202. Multi-file regex replacement — Search: Replace with regex
 - [x] 203. Search result editor — Search ▸ Open in Editor: a .code-search document; double-click / F12 / Enter on a result opens it (2026-10-21)
-- [ ] 204. Search editor result persistence
+- [x] 204. Search editor result persistence — Saved search editors (.tas/searches) listed in the Search view, run again when reopened (2026-10-21)
 - [x] 205. Search exclusion patterns — files to include / exclude
 - [x] 206. Case-preserving replacement — Search ▸ Replace: Preserve Case (AB) (2026-10-21)
 - [ ] 207. Unicode character highlighting
@@ -357,3 +357,4 @@ Legend: `[x]` done · `[ ]` to do.
 - 2026-10-21 340: A regular expression containing a line break searches whole files; replacements keep CRLF line ends.
 - 2026-10-21 338: Turning the toggle off searches the ignored folders (bin, obj, node_modules…) too.
 - 2026-10-21 203: Find in Files results open as a search editor document (VS Code's format) whose result lines open their location.
+- 2026-10-21 204: Search editors are saved under .tas/searches (kept out of Git) and rerun from their # header when opened from the Search view's history.
