@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { EditorSelection, EditorState, type TransactionSpec } from '@codemirror/state';
 import type { EditorView } from '@codemirror/view';
-import { mapSelections, urlEncode, urlDecode, base64Encode, base64Decode, escapeString, unescapeString, htmlEncode, htmlDecode, stepNumber, insertSequence, toggleQuotes, joinWith } from '../src/editor/textTools2';
+import { mapSelections, urlEncode, urlDecode, base64Encode, base64Decode, escapeString, unescapeString, htmlEncode, htmlDecode, stepNumber, insertSequence, toggleQuotes, joinWith, splitAt } from '../src/editor/textTools2';
 
 /** Runs an editor command on `doc` with the selection between « and » (or a caret at |). */
 function run(doc: string, cmd: (v: EditorView) => boolean) {
@@ -55,5 +55,9 @@ describe('text tools, fourth batch (IDE-FEATURES-4 Y1…)', () => {
   it('Y8 Join Lines with Separator', () => {
     expect(run('«  a\n  b\n\n  c»', joinWith(', '))).toBe('  a, b, c');
     expect(run('a|\nb', joinWith(', '))).toBe('a\nb');
+  });
+  it('Y9 Split at Separator', () => {
+    expect(run('  a, b,c|', splitAt(','))).toBe('  a\n  b\n  c');
+    expect(run('«x;y\nz»', splitAt(';'))).toBe('x\ny\nz');
   });
 });

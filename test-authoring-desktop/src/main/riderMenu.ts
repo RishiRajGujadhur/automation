@@ -73,6 +73,7 @@ const ROWS: Record<'edit' | 'view' | 'navigate' | 'code' | 'tools' | 'help', Row
       ['Insert Sequence (1, 2, 3…)', 'insert-sequence'],
       ['Toggle Quotes', 'toggle-quotes'],
       ['Join Lines with Separator…', 'join-with'],
+      ['Split at Separator…', 'split-at'],
     ] },
   ],
   view: [

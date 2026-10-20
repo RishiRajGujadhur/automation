@@ -110,3 +110,9 @@ export const joinWith = (sep: string) => (view: EditorView) => {
   if (view.state.selection.main.empty) return false;
   return mapLines((lines) => { const indent = /^\s*/.exec(lines[0])![0]; return [indent + lines.map((l) => l.trim()).filter(Boolean).join(sep)]; }, false)(view);
 };
+
+/** Split at Separator (Rider String Manipulation): the selection (or line) becomes one line per part, trimmed, indented like the line. */
+export const splitAt = (sep: string) => (view: EditorView) => {
+  if (!sep) return false;
+  return mapLines((lines) => lines.flatMap((l) => { if (!l.includes(sep)) return [l]; const indent = /^\s*/.exec(l)![0]; return l.split(sep).map((p) => p.trim()).filter(Boolean).map((p) => indent + p); }), false)(view);
+};
