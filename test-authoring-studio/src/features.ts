@@ -223,6 +223,7 @@ export const FEATURES: Feature[] = [
   { id: 'tab-copy-name', label: 'Tab: Copy File Name', group: 'Files', essential: true, vs: 'Tab ▸ Copy File Name', description: 'The tab menu copies the file name.' },
   { id: 'git-view-revision', label: 'Git Log: View File at Revision', group: 'Git', essential: true, vs: 'Git History ▸ View file at this commit', description: 'Shows a changed file as it was in the selected commit.' },
   { id: 'git-compare-local', label: 'Git Log: Compare with Local', group: 'Git', essential: true, vs: 'Git History ▸ Compare with Local', description: 'The difference between a file in the selected commit and the working copy.' },
+  { id: 'git-copy-message', label: 'Git Log: Copy Commit Message', group: 'Git', essential: true, vs: 'Git History ▸ Copy Commit Message', description: 'Copies the selected commit\'s message.' },
 ];
 export const GROUPS: FeatureGroup[] = ['Editing', 'Navigation', 'Code intelligence', 'Tool windows', 'Files', 'Git', 'Gherkin', 'View', 'Debugging', 'Help and productivity'];
 
