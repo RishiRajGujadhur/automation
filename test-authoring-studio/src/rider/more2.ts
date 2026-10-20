@@ -1,6 +1,6 @@
 import type { RiderCommand } from './commands';
 import type { MoreHelpers } from './more';
-import { tableDeleteEmptyRows } from '../editor/gherkinTools';
+import { tableDeleteEmptyRows, tableRemoveDuplicateRows } from '../editor/gherkinTools';
 import { urlEncode, urlDecode, base64Encode, base64Decode, escapeString, unescapeString, htmlEncode, htmlDecode, stepNumber, insertSequence, toggleQuotes, joinWith, splitAt, alignAssignments, swapSelections, countOccurrences, trimLines, stamp, insertText, LOREM, shuffleLines, reformatXml, minifyXml, jsonEscape, jsonUnescape, numberLines, mapDoc, toFileScopedNamespace, toBlockScopedNamespace, removeRegions, toRawString, toggleTask, formatMarkdownTable, tableOfContents, MARKDOWN_TABLE, removeComments, concatToInterpolationCmd } from '../editor/textTools2';
 
 /**
@@ -46,5 +46,6 @@ export function moreCommands2(h: MoreHelpers): RiderCommand[] {
     { id: 'remove-comments', label: 'Remove Comments', menu: 'Code', run: h.inEditor((v, file) => { const gherkinLike = /\.(feature|ya?ml|ps1|sh|py|toml|ini)$/i.test(file); const s = v.state.selection.main; const from = s.empty ? 0 : v.state.doc.lineAt(s.from).from, to = s.empty ? v.state.doc.length : v.state.doc.lineAt(s.to).to; const next = removeComments(v.state.sliceDoc(from, to), gherkinLike ? '#' : '//', gherkinLike ? null : ['/*', '*/']); if (next === null) { h.notice('No comments to remove.'); return; } v.dispatch({ changes: { from, to, insert: next }, userEvent: 'input.convert' }); }) },
     { id: 'to-interpolation', label: 'Convert to Interpolated String', menu: 'Code', submenu: 'C#', run: h.inEditor((v) => concatToInterpolationCmd(v) || h.notice('Select a string concatenation ("a" + b + "c").')) },
     { id: 'table-delete-empty', label: 'Table: Delete Empty Rows', menu: 'Code', submenu: 'Gherkin', run: h.inEditor((v) => tableDeleteEmptyRows(v) || h.notice('The table has no empty rows (or the caret is not in a table).')) },
+    { id: 'table-dedupe', label: 'Table: Remove Duplicate Rows', menu: 'Code', submenu: 'Gherkin', run: h.inEditor((v) => tableRemoveDuplicateRows(v) || h.notice('The table has no repeated rows (or the caret is not in a table).')) },
   ];
 }

@@ -722,3 +722,13 @@ export function tableDeleteEmptyRows(view: EditorView) {
   if (rows.length === t.rows.length) return false;
   return writeTable(view, t, rows, Math.min(t.row, rows.length - 1), t.col);
 }
+
+/** Table ▸ Remove Duplicate Rows: repeated data rows go, the first of each stays. */
+export function tableRemoveDuplicateRows(view: EditorView) {
+  const t = tableAt(view.state);
+  if (!t) return false;
+  const seen = new Set<string>();
+  const rows = t.rows.filter((r, i) => { if (i === 0) return true; const k = r.map((c) => c.trim()).join('\u0000'); if (seen.has(k)) return false; seen.add(k); return true; });
+  if (rows.length === t.rows.length) return false;
+  return writeTable(view, t, rows, Math.min(t.row, rows.length - 1), t.col);
+}

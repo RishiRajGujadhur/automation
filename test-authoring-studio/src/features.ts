@@ -426,6 +426,7 @@ export const FEATURES: Feature[] = [
   { id: 'remove-comments', label: 'Remove Comments', group: 'Editing', essential: false, description: 'Code ▸ Remove Comments deletes the comments of the selection or file (strings and # language: lines are kept).', commands: ['remove-comments'] },
   { id: 'to-interpolation', label: 'Convert to Interpolated String', group: 'Code intelligence', essential: true, vs: 'Quick Actions: Convert to interpolated string', description: 'Code ▸ C# turns a selected "a" + b + "c" concatenation into $"a{b}c".', commands: ['to-interpolation'] },
   { id: 'table-delete-empty', label: 'Table: Delete Empty Rows', group: 'Gherkin', essential: false, description: 'Code ▸ Gherkin removes the table rows whose cells are all empty.', commands: ['table-delete-empty'] },
+  { id: 'table-dedupe', label: 'Table: Remove Duplicate Rows', group: 'Gherkin', essential: false, description: 'Code ▸ Gherkin removes repeated rows of the table, keeping the first.', commands: ['table-dedupe'] },
 ];
 export const GROUPS: FeatureGroup[] = ['Editing', 'Navigation', 'Code intelligence', 'Tool windows', 'Files', 'Git', 'Gherkin', 'View', 'Debugging', 'Help and productivity'];
 
