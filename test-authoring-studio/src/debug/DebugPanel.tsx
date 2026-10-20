@@ -256,14 +256,16 @@ export default function DebugPanel({ onOpen, onNotice, onClose, editingRequest =
                       <input type="checkbox" aria-label={`Enable breakpoint ${key}`} checked={b.enabled !== false} onChange={(e) => updateBreakpoint(b.file, b.line, { enabled: e.target.checked })} />
                       <CircleDot size={12} className={`bp-dot ${b.verified === false && live ? 'pending' : ''} ${b.logMessage?.trim() ? 'tracepoint' : ''}`} aria-hidden="true" />
                       <button className="dbg-frame" onClick={() => onOpen(b.file, b.line)}><span className="dbg-frame-name">{b.file.split('/').pop()}, line {b.line}</span>{detail && <span className="bp-detail">{detail}</span>}<span className="meta">{b.file}</span></button>
+                      {featureOn('bp-labels') && b.labels?.length ? <span className="bp-labels">{b.labels.map((l) => <span key={l} className="bp-label">{l}</span>)}</span> : null}
                       <IconButton label={`Breakpoint settings ${key}`} onClick={() => setEditing(editing === key ? null : key)}><Settings2 size={12} /></IconButton>
                       <IconButton label={`Delete breakpoint ${key}`} onClick={() => setBreakpoints(b.file, breakpointsOf(b.file).filter((l) => l !== b.line))}><X size={12} /></IconButton>
                     </div>
                     {editing === key && (
-                      <form className="bp-settings" aria-label={`Breakpoint settings for ${key}`} onSubmit={(e) => { e.preventDefault(); const f = new FormData(e.currentTarget); updateBreakpoint(b.file, b.line, { condition: String(f.get('condition') ?? ''), hitCondition: String(f.get('hit') ?? ''), logMessage: String(f.get('log') ?? '') }); setEditing(null); }}>
+                      <form className="bp-settings" aria-label={`Breakpoint settings for ${key}`} onSubmit={(e) => { e.preventDefault(); const f = new FormData(e.currentTarget); updateBreakpoint(b.file, b.line, { condition: String(f.get('condition') ?? ''), hitCondition: String(f.get('hit') ?? ''), logMessage: String(f.get('log') ?? ''), ...(featureOn('bp-labels') ? { labels: String(f.get('labels') ?? '').split(',').map((s) => s.trim()).filter(Boolean) } : {}) }); setEditing(null); }}>
                         <label>Condition <input name="condition" defaultValue={b.condition ?? ''} placeholder="C# expression, e.g. number > 50" autoFocus /></label>
                         <label>Hit count <input name="hit" defaultValue={b.hitCondition ?? ''} placeholder="5, >= 5 or % 5" /></label>
                         <label>Log message <input name="log" defaultValue={b.logMessage ?? ''} placeholder="Value is {number} (continues without breaking)" /></label>
+                        {featureOn('bp-labels') && <label>Labels <input name="labels" defaultValue={(b.labels ?? []).join(', ')} placeholder="login, slow (comma separated)" /></label>}
                         <div><button className="button primary" type="submit">Close</button></div>
                       </form>
                     )}

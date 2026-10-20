@@ -3775,3 +3775,5 @@ html[data-features-off~='inlay-hints'] .cm-inlay {
 
 // Debugger (DEBUG-20).
 .dbg-bp-search { margin-left: auto; width: 150px; height: 22px; padding: 0 6px; font: inherit; font-size: 12px; background: transparent; color: inherit; border: 1px solid var(--border, #8884); border-radius: 3px; }
+.bp-labels { display: inline-flex; gap: 3px; }
+.bp-label { font-size: 10px; padding: 0 5px; border-radius: 8px; background: color-mix(in srgb, var(--accent, #9270dd) 22%, transparent); }

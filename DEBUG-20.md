@@ -7,6 +7,8 @@ a Settings ▸ Features switch and tests that drive a real debugging session of 
 | # | Feature | From | Essential | Status |
 | --- | --- | --- | --- | --- |
 | DB1 | Breakpoints window: search | VS 2026 | yes | ✅ 2026-10-20 |
+| DB2 | Breakpoint labels | VS 2026 | yes | ✅ 2026-10-20 |
 
 ## Progress log
 - 2026-10-20 DB1: Filters breakpoints by file, line, condition, log message or label.
+- 2026-10-20 DB2: Labels in Breakpoint Settings, shown as chips and searchable.
