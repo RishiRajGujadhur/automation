@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { EditorSelection, EditorState, type TransactionSpec } from '@codemirror/state';
 import type { EditorView } from '@codemirror/view';
-import { mapSelections, urlEncode, urlDecode, base64Encode, base64Decode, escapeString, unescapeString } from '../src/editor/textTools2';
+import { mapSelections, urlEncode, urlDecode, base64Encode, base64Decode, escapeString, unescapeString, htmlEncode, htmlDecode } from '../src/editor/textTools2';
 
 /** Runs an editor command on `doc` with the selection between « and » (or a caret at |). */
 function run(doc: string, cmd: (v: EditorView) => boolean) {
@@ -30,5 +30,9 @@ describe('text tools, fourth batch (IDE-FEATURES-4 Y1…)', () => {
   it('Y3 Escape / Unescape C# String', () => {
     expect(run('«say "hi"\\path»', escapeString)).toBe('say \\"hi\\"\\\\path');
     expect(run('«a\\tb\\n\\"c\\" \\u0041»', unescapeString)).toBe('a\tb\n"c" A');
+  });
+  it('Y4 HTML Encode / Decode', () => {
+    expect(run('«<a href="x">Tom & Jerry</a>»', htmlEncode)).toBe('&lt;a href=&quot;x&quot;&gt;Tom &amp; Jerry&lt;/a&gt;');
+    expect(run('«&lt;b&gt; &#39;x&#39; &#x41;»', htmlDecode)).toBe("<b> 'x' A");
   });
 });

@@ -66,6 +66,8 @@ const ROWS: Record<'edit' | 'view' | 'navigate' | 'code' | 'tools' | 'help', Row
       ['Base64 Decode', 'base64-decode'],
       ['Escape C# String', 'escape-string'],
       ['Unescape C# String', 'unescape-string'],
+      ['HTML Encode', 'html-encode'],
+      ['HTML Decode', 'html-decode'],
     ] },
   ],
   view: [
