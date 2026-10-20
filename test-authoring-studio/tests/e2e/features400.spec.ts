@@ -675,3 +675,18 @@ test('33 Method hierarchy', async ({ page }) => {
 test('123 Namespace consistency inspections', async ({ page }) => {
   await analyzerFix(page, 'namespace Wrong.Place;\npublic class P { }\n', [{ cls: '.cm-lintRange-info', text: 'Wrong.Place' }], 'Wrong.Place', /^Change namespace to match folder structure$/, (d) => d.includes('namespace Fixtures.Steps'));
 });
+
+test('60 External source navigation (metadata as source)', async ({ page }) => {
+  needsLang();
+  await open(page, CS);
+  await setDoc(page, 'namespace Demo;\npublic class P\n{\n    public string M() => new System.Text.StringBuilder().Append(1).ToString();\n}\n');
+  await caretAt(page, 'Append', 2);
+  await page.keyboard.press('F12');
+  const dlg = page.getByRole('dialog', { name: /StringBuilder \[from metadata/ });
+  await expect(dlg).toBeVisible({ timeout: 60_000 });
+  const src = dlg.getByLabel(/StringBuilder \[from metadata/);
+  await expect(src).toContainText('public sealed class StringBuilder');
+  await expect(src).toContainText('namespace System.Text;');
+  // The member asked for is the marked line.
+  await expect(dlg.locator('.cm-preview-target')).toContainText('Append(');
+});

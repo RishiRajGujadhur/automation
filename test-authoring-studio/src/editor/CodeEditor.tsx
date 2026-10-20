@@ -289,6 +289,8 @@ export default function CodeEditor({ file, reveal, active = true, onNotice, onIn
         const r = await api<{ name: string; locations: CsLocation[]; external?: string }>('/csharp/definition', position(pos));
         const here = r.locations.find((l) => l.file === file);
         const target = here ?? r.locations[0];
+        // Outside the repository: the declarations from metadata (Visual Studio's metadata as source).
+        if (!target && featureOn('metadata-source')) { const m = await api<{ name: string; assembly?: string; text: string; line: number }>('/csharp/op', { op: 'metadataSource', ...position(pos) }); window.dispatchEvent(new CustomEvent('tas:code-preview', { detail: { title: `${m.name} [from metadata${m.assembly ? `: ${m.assembly}` : ''}]`, text: m.text, line: m.line } })); return; }
         if (!target) { onNotice?.(`${r.name} is defined in ${r.external ?? 'a referenced assembly'} (no source in this repository).`); return; }
         if (target.file === file) { const v = ref.current!.view!; const at = offsetOf(v.state.doc, target.line, target.column); v.dispatch({ selection: { anchor: at }, effects: EditorView.scrollIntoView(at, { y: 'center' }) }); v.focus(); }
         else onOpen?.(target.file, target.line, target.column);

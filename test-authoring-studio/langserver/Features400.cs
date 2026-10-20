@@ -171,7 +171,11 @@ sealed partial class LanguageService
             Doc(t, indent);
             if (SymbolEqualityComparer.Default.Equals(t, symbol)) memberLine = Lines();
             var bases = new[] { t.BaseType }.Where(b => b != null && b.SpecialType is not (SpecialType.System_Object or SpecialType.System_ValueType or SpecialType.System_Enum)).Concat(t.Interfaces).Select(b => b!.ToDisplayString(SymbolDisplayFormat.MinimallyQualifiedFormat)).ToList();
-            sb.AppendLine($"{indent}{t.ToDisplayString(decl)}{(bases.Count > 0 ? " : " + string.Join(", ", bases) : "")}");
+            // The type's own header: accessibility, modifiers, kind and name (the display format leaves them out for types).
+            var access = t.DeclaredAccessibility switch { Accessibility.Public => "public ", Accessibility.Internal => "internal ", Accessibility.Protected => "protected ", Accessibility.Private => "private ", _ => "" };
+            var mods = t.TypeKind == TypeKind.Class ? (t.IsStatic ? "static " : t.IsAbstract ? "abstract " : t.IsSealed ? "sealed " : "") : "";
+            var kind = t.IsRecord ? (t.TypeKind == TypeKind.Struct ? "record struct" : "record") : t.TypeKind switch { TypeKind.Struct => (t.IsReadOnly ? "readonly struct" : "struct"), TypeKind.Interface => "interface", TypeKind.Enum => "enum", TypeKind.Delegate => "delegate", _ => "class" };
+            sb.AppendLine($"{indent}{access}{mods}{kind} {t.ToDisplayString(SymbolDisplayFormat.MinimallyQualifiedFormat)}{(bases.Count > 0 ? " : " + string.Join(", ", bases) : "")}");
             sb.AppendLine($"{indent}{{");
             foreach (var m in t.GetMembers().Where(m => !m.IsImplicitlyDeclared && m.DeclaredAccessibility is Accessibility.Public or Accessibility.Protected or Accessibility.ProtectedOrInternal && m is not IMethodSymbol { MethodKind: MethodKind.PropertyGet or MethodKind.PropertySet or MethodKind.EventAdd or MethodKind.EventRemove or MethodKind.EventRaise }))
             {
