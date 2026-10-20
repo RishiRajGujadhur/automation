@@ -34,6 +34,7 @@ import OutputPanel, { type OutputSource } from './OutputPanel';
 import TodoPanel from './TodoPanel';
 import { eolOf, withEol, SET_EOL_EVENT, type Eol } from './editor/lineSeparator';
 import RiderHost from './rider/RiderHost';
+import { formatFeature } from './editor/gherkin';
 import { activeEditor as focusedEditor } from './editor/activeEditor';
 import BusyTitle from './BusyTitle';
 import { setBaseTitle } from './windowTitle';
@@ -735,7 +736,13 @@ export default function App() {
   const featureAuto = useAutoSave({ file: feature?.file, value: featureDisk, loaded: featureBase });
   // Ctrl+S / the save icon write the feature straight to disk; a new (unsaved) feature goes through the diff.
   // Saving is quiet (the tab's ● and the status show it); only failures are announced.
-  const saveFeature = () => { if (feature) void featureAuto.save().then((ok) => { if (!ok) setNotice('Not saved: see the editor status.'); }); else previewChange(); };
+  // Reformat on save (Rider's "Reformat code" on save / VS Code Cleanup on save): the feature is formatted, then saved.
+  const [formatSave, setFormatSave] = useState(0);
+  useEffect(() => { if (formatSave) void featureAuto.save().then((ok) => { if (!ok) setNotice('Not saved: see the editor status.'); }); }, [formatSave]); // eslint-disable-line react-hooks/exhaustive-deps
+  const saveFeature = () => {
+    if (feature && featureOn('format-on-save')) { const formatted = formatFeature(source, feature.file); if (formatted !== source) { setSource(formatted); setFormatSave((n) => n + 1); return; } }
+    if (feature) void featureAuto.save().then((ok) => { if (!ok) setNotice('Not saved: see the editor status.'); }); else previewChange();
+  };
   // The active tab drives the editor area: a feature tab loads into the feature editor, a code tab shows its editor.
   useEffect(() => {
     const t = activeEditor;

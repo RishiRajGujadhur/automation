@@ -12,6 +12,7 @@ web and desktop apps, each with a Settings ▸ Features switch and tests.
 | Z5 | Preview Expanded Outline | Rider | yes | ✅ 2026-10-20 |
 | Z6 | Test history | VS 2026 | yes | ✅ 2026-10-20 |
 | Z7 | Test Explorer: Run Repeatedly | Rider | no | ✅ 2026-10-20 |
+| Z8 | Reformat feature files on save | Rider | no | ✅ 2026-10-20 |
 
 ## Progress log
 - 2026-10-20 Z1: Who last changed the caret's line, when and the commit summary, at its end.
@@ -21,3 +22,4 @@ web and desktop apps, each with a Settings ▸ Features switch and tests.
 - 2026-10-20 Z5: The scenarios an outline runs, shown without changing the file.
 - 2026-10-20 Z6: Details show a test's last 10 outcomes and its pass rate.
 - 2026-10-20 Z7: Runs the selected tests n times; per-test pass counts flag flaky tests.
+- 2026-10-20 Z8: Ctrl+S formats the feature (indentation, tables) before saving.
