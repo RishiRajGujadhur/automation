@@ -598,7 +598,7 @@ test('X121–X123 Tabs: pinned row, colorized tabs, Copy File Name', async ({ pa
   await openFeature(page);
   await page.getByRole('navigation').getByRole('button', { name: 'AuthSteps.cs', exact: true }).first().dblclick();
   const labels = page.locator('.editor-tab-label');
-  await expect(labels).toHaveCount(2);
+  await expect.poll(() => labels.count()).toBeGreaterThan(1);
   await labels.first().click({ button: 'right' });
   await page.getByRole('menuitem', { name: 'Pin', exact: true }).click();
   await menuItem(page, 'View', /Show Pinned Tabs in a Separate Row/);

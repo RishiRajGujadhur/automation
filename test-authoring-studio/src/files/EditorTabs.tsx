@@ -85,6 +85,7 @@ export default function EditorTabs({ onClose, onSplit, children }: { onClose: (f
                 { label: 'Close All', icon: XCircle, onSelect: () => closeAll() },
                 'separator',
                 { label: 'Copy Relative Path', icon: Copy, onSelect: () => copyText(t.file) },
+                ...(featureOn('tab-copy-name') ? [{ label: 'Copy File Name', icon: Copy, onSelect: () => void copyText(base(t.file)) }] : []),
                 ...(featureOn('tab-reveal') ? [{ label: 'Reveal in Explorer', onSelect: () => { activateTab(t.file); requestAnimationFrame(() => window.dispatchEvent(new Event(SELECT_IN_EXPLORER))); } }] : []),
                 ...(onSplit && !t.file.endsWith('.feature') ? ['separator' as const, { label: 'Split Right', onSelect: () => onSplit(t.file) }] : []),
               ]}>
