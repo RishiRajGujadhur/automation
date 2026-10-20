@@ -519,6 +519,7 @@ export const FEATURES: Feature[] = [
   { id: 'project-properties', label: 'Project Properties', group: 'Code intelligence', essential: true, vs: 'Project ▸ Properties', description: 'The Explorer\'s project menu (and Tools ▸ Project Properties) opens property pages for the .csproj; changes are previewed as a diff before they are written.', commands: ['project-properties'] },
   { id: 'pp-build', label: 'Project Properties: Build page', group: 'Code intelligence', essential: true, vs: 'Project Properties ▸ Build', description: 'Nullable, implicit usings, language version, warnings as errors, suppressed warnings, symbols, optimisation, platform and output path.' },
   { id: 'pp-package', label: 'Project Properties: Package page', group: 'Code intelligence', essential: true, vs: 'Project Properties ▸ Package', description: 'NuGet package metadata: ID, version, authors, company, description, tags, repository, license and pack on build.' },
+  { id: 'pp-analysis', label: 'Project Properties: Code Analysis page', group: 'Code intelligence', essential: true, vs: 'Project Properties ▸ Code Analysis', description: '.NET analyzers, analysis level and mode, code style on build and documentation file.' },
 ];
 export const GROUPS: FeatureGroup[] = ['Editing', 'Navigation', 'Code intelligence', 'Tool windows', 'Files', 'Git', 'Gherkin', 'View', 'Debugging', 'Help and productivity'];
 

@@ -62,4 +62,17 @@ export const PAGES: Page[] = [
       { name: 'GeneratePackageOnBuild', label: 'Generate NuGet package on build', kind: 'bool' },
     ],
   },
+  {
+    id: 'analysis',
+    title: 'Code Analysis',
+    feature: 'pp-analysis',
+    fields: [
+      { name: 'EnableNETAnalyzers', label: 'Enable .NET analyzers', kind: 'bool' },
+      { name: 'AnalysisLevel', label: 'Analysis level', kind: 'select', options: ['latest', 'latest-recommended', 'latest-all', 'latest-minimum', 'preview', '10.0', '9.0', '8.0'] },
+      { name: 'AnalysisMode', label: 'Analysis mode', kind: 'select', options: ['Default', 'Minimum', 'Recommended', 'All', 'None'] },
+      { name: 'EnforceCodeStyleInBuild', label: 'Enforce code style on build', kind: 'bool', help: 'IDE rules from .editorconfig are reported by dotnet build.' },
+      { name: 'GenerateDocumentationFile', label: 'Generate documentation file', kind: 'bool', help: 'Also reports public members without XML docs (CS1591).' },
+      { name: 'RunAnalyzersDuringBuild', label: 'Run analyzers on build', kind: 'bool' },
+    ],
+  },
 ];
