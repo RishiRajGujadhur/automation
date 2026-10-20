@@ -3612,3 +3612,9 @@ html[data-features-off~='inlay-hints'] .cm-inlay {
     min-height: 26px;
   }
 }
+
+.explorer-folder-row.drop-target {
+  outline: 1px dashed var(--accent, #4b8bf5);
+  outline-offset: -1px;
+  background: color-mix(in srgb, var(--accent, #4b8bf5) 12%, transparent);
+}

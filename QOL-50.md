@@ -24,6 +24,7 @@ Every improvement is verified by a unit or Playwright test (`tests/e2e/qol50.spe
 | QL15 | Explorer: Enter opens and moves to the editor | Explorer | ✅ 2026-10-20 |
 | QL16 | Explorer: middle-click keeps the tab | Explorer | ✅ 2026-10-20 |
 | QL17 | Copy actions confirm what they copied | Explorer / Tabs | ✅ 2026-10-20 |
+| QL18 | Drag a file onto a folder to move it | Explorer | ✅ 2026-10-20 |
 
 ## Progress log
 - 2026-10-20 QL1: Title names the file and workspace folder
@@ -43,3 +44,4 @@ Every improvement is verified by a unit or Playwright test (`tests/e2e/qol50.spe
 - 2026-10-20 QL15: Enter keeps the tab and focuses the editor
 - 2026-10-20 QL16: Middle-click opens a normal tab
 - 2026-10-20 QL17: Notice after Copy path / name
+- 2026-10-20 QL18: Drop on a folder moves (confirmed)

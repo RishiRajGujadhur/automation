@@ -314,6 +314,7 @@ export const FEATURES: Feature[] = [
   { id: 'explorer-enter', label: 'Explorer: Enter opens and moves to the editor', group: 'Files', essential: true, description: 'Enter on a file keeps its tab and puts the keyboard in the editor.' },
   { id: 'explorer-middle-click', label: 'Explorer: middle-click keeps the tab', group: 'Files', essential: true, description: 'A middle-click opens the file in a normal (not preview) tab.' },
   { id: 'copy-feedback', label: 'Copy actions confirm what they copied', group: 'Files', essential: true, description: 'Copy path / file name in the Explorer and tab menus show a short message.' },
+  { id: 'drag-move', label: 'Explorer: drag a file onto a folder to move it', group: 'Files', essential: true, description: 'Dropping a file on a folder moves it there (after a confirmation).' },
 ];
 export const GROUPS: FeatureGroup[] = ['Editing', 'Navigation', 'Code intelligence', 'Tool windows', 'Files', 'Git', 'Gherkin', 'View', 'Debugging', 'Help and productivity'];
 
