@@ -1,5 +1,6 @@
 import type { RiderCommand } from './commands';
 import type { MoreHelpers } from './more';
+import { getSnapshot, setBreakpoints } from '../debug/store';
 import { unsavedFiles } from '../editor/autosave';
 import { createTwoFilesPatch } from 'diff';
 import { readFile, isBrowser, renamePath } from '../files/provider';
@@ -115,5 +116,6 @@ export function moreCommands2(h: MoreHelpers): RiderCommand[] {
     { id: 'reverse-text', label: 'Reverse Text', menu: 'Edit', submenu: 'Convert', run: h.inEditor((v) => reverseText(v) || h.notice('Select text (or put the caret on a word).')) },
     { id: 'fill-paragraph', label: 'Fill Paragraph', menu: 'Edit', run: h.inEditor((v) => fillParagraph(80)(v) || h.notice('Put the caret in a paragraph (or a comment) to re-wrap it at 80 columns.')) },
     { id: 'fix-keyword-case', label: 'Fix Keyword Case', menu: 'Code', submenu: 'Gherkin', run: h.inEditor((v) => mapDoc(fixKeywordCase)(v) || h.notice('Every keyword is already in the right case.')) },
+    { id: 'delete-disabled-breakpoints', label: 'Delete Disabled Breakpoints', menu: 'Tools', run: () => { const all = getSnapshot().breakpoints; let n = 0; for (const [file, specs] of Object.entries(all)) { const keep = specs.filter((b) => b.enabled !== false); if (keep.length !== specs.length) { n += specs.length - keep.length; setBreakpoints(file, keep.map((b) => b.line)); } } h.notice(n ? `Deleted ${n} disabled breakpoint${n === 1 ? '' : 's'}.` : 'No breakpoint is disabled.'); } },
   ];
 }

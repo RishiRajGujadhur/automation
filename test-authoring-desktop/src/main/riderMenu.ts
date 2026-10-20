@@ -372,6 +372,7 @@ const ROWS: Record<'edit' | 'view' | 'navigate' | 'code' | 'tools' | 'help', Row
     ['File Statistics', 'file-statistics'],
     ['Copy Request as cURL', 'copy-curl'],
     ['Convert cURL to Request', 'curl-to-request'],
+    ['Delete Disabled Breakpoints', 'delete-disabled-breakpoints'],
   ],
   help: [
     null,

@@ -106,6 +106,7 @@ has it on by default, so the desktop app starts with it on. The others start off
 | Y95 | Reverse Text | Rider | no | ✅ 2026-10-20 |
 | Y96 | Fill Paragraph | Rider | no | ✅ 2026-10-20 |
 | Y97 | Fix Keyword Case | Rider | no | ✅ 2026-10-20 |
+| Y98 | Delete Disabled Breakpoints | VS 2026 | no | ✅ 2026-10-20 |
 
 ## Progress log
 - 2026-10-20 Y1: Percent-encodes the selection (or line) and decodes it.
@@ -205,3 +206,4 @@ has it on by default, so the desktop app starts with it on. The others start off
 - 2026-10-20 Y95: The characters of the selection reversed.
 - 2026-10-20 Y96: Re-wraps the paragraph or comment at 80 columns, prefix kept.
 - 2026-10-20 Y97: Gherkin keywords in the wrong case corrected in the whole file.
+- 2026-10-20 Y98: Removes every disabled breakpoint, keeps the enabled ones.
