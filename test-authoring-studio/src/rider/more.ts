@@ -1,5 +1,6 @@
 import type { EditorView } from '@codemirror/view';
 import type { RiderCommand } from './commands';
+import { GIT_CHANGED_EVENT as GIT_EVENT, FILES_CHANGED_EVENT } from '../editor/events';
 import { forEachDiagnostic } from '@codemirror/lint';
 import { isReadOnlyFile, setReadOnlyFile } from '../editor/activeEditor';
 import { runRider } from './commands';
@@ -144,5 +145,6 @@ export function moreCommands(h: MoreHelpers): RiderCommand[] {
     { id: 'copy-scenario-md', label: 'Copy Scenario as Markdown', menu: 'Code', submenu: 'Gherkin', run: h.inEditor((v) => { const md = scenarioMarkdown(v.state, v.state.doc.lineAt(v.state.selection.main.head).number); if (!md) { h.notice('Put the caret in a scenario.'); return; } void copyText(md).then((ok) => h.notice(ok ? 'Copied the scenario as Markdown.' : 'Clipboard unavailable.')); }) },
     { id: 'copy-problems', label: 'Copy Problems in File', menu: 'Edit', run: h.inEditor((v, file) => { const lines: string[] = []; forEachDiagnostic(v.state, (d) => { const l = v.state.doc.lineAt(d.from); lines.push(`${file}:${l.number}:${d.from - l.from + 1}: ${d.severity}: ${d.message}`); }); if (!lines.length) { h.notice('No problems in this file.'); return; } void copyText(lines.join('\n')).then((ok) => h.notice(ok ? `Copied ${lines.length} problem${lines.length === 1 ? '' : 's'}.` : 'Clipboard unavailable.')); }) },
     { id: 'full-screen', label: 'Full Screen', menu: 'View', shortcut: 'Shift Alt Enter', run: () => { if (document.fullscreenElement) void document.exitFullscreen(); else document.documentElement.requestFullscreen().catch((e) => h.notice((e as Error).message)); } },
+    { id: 'git-undo-file', label: 'Git: Undo Changes in File…', menu: 'Tools', group: true, run: h.inEditor((_v, file) => { if (isBrowser()) { h.notice('Git needs a folder indexed by the studio server.'); return; } if (!window.confirm(`Undo every uncommitted change in ${file.split('/').pop()}? The file goes back to its last committed version.`)) return; void api('/git/discard', { files: [file], approved: true }).then(() => { window.dispatchEvent(new CustomEvent(FILES_CHANGED_EVENT, { detail: [file] })); window.dispatchEvent(new Event(GIT_EVENT)); h.notice(`Undid the changes in ${file.split('/').pop()}.`); }, (e) => h.notice((e as Error).message)); }) },
   ];
 }

@@ -222,6 +222,8 @@ const ROWS: Record<'edit' | 'view' | 'navigate' | 'code' | 'tools' | 'help', Row
     ['Undo Last Commit…', 'undo-commit'],
     ['Run Selected Text in Terminal', 'run-selection-terminal'],
     ['Remove Breakpoints in File', 'clear-file-breakpoints'],
+    null,
+    ['Git: Undo Changes in File…', 'git-undo-file'],
   ],
   help: [
     null,
