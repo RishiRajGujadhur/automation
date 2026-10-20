@@ -233,3 +233,23 @@ export const numberLines = (view: EditorView) => {
   let n = 0;
   return mapLines((lines) => lines.map((l) => (l.trim() ? l.replace(/^(\s*)/, (_, ind: string) => `${ind}${++n}. `) : l)), false)(view);
 };
+
+/** Replaces the whole document with `fn(text)` (null: nothing to do). */
+export const mapDoc = (fn: (text: string) => string | null) => (view: EditorView) => {
+  const text = view.state.doc.toString();
+  const next = fn(text);
+  if (next === null || next === text) return false;
+  view.dispatch({ changes: { from: 0, to: text.length, insert: next }, userEvent: 'input.convert' });
+  return true;
+};
+/** Convert to File-Scoped Namespace (Visual Studio / Rider quick action): `namespace X { … }` → `namespace X;`, body unindented. */
+export function toFileScopedNamespace(text: string) {
+  if ((text.match(/^\s*namespace\s/gm) ?? []).length !== 1) return null;
+  const m = /^([ \t]*)namespace\s+([\w.]+)\s*\{[ \t]*\r?\n?/m.exec(text);
+  if (!m) return null;
+  const close = text.lastIndexOf('}');
+  if (close < m.index + m[0].length || text.slice(close + 1).trim()) return null;
+  const eol = text.includes('\r\n') ? '\r\n' : '\n';
+  const body = text.slice(m.index + m[0].length, close).split(/\r?\n/).map((l) => l.replace(/^( {4}|\t)/, '')).join(eol).replace(/^(\s*\r?\n)+/, '').trimEnd();
+  return `${text.slice(0, m.index)}namespace ${m[2]};${eol}${eol}${body}${eol}`;
+}

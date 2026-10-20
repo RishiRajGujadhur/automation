@@ -415,6 +415,7 @@ export const FEATURES: Feature[] = [
   { id: 'minify-xml', label: 'Minify XML', group: 'Editing', essential: false, description: 'Code ▸ Minify XML removes the white space between tags.', commands: ['minify-xml'] },
   { id: 'json-escape', label: 'Escape / Unescape JSON String', group: 'Editing', essential: false, description: 'Edit ▸ Convert turns the selection into the body of a JSON string (quotes, backslashes, new lines), and back.', commands: ['json-escape', 'json-unescape'] },
   { id: 'number-lines', label: 'Number Lines', group: 'Editing', essential: false, description: 'Edit ▸ Convert puts 1., 2., 3.… before the selected lines.', commands: ['number-lines'] },
+  { id: 'file-scoped-namespace', label: 'Convert to File-Scoped Namespace', group: 'Code intelligence', essential: true, vs: 'Quick Actions: Convert to file-scoped namespace', description: 'Code ▸ C# turns namespace X { … } into namespace X; and unindents the file.', commands: ['file-scoped-namespace'] },
 ];
 export const GROUPS: FeatureGroup[] = ['Editing', 'Navigation', 'Code intelligence', 'Tool windows', 'Files', 'Git', 'Gherkin', 'View', 'Debugging', 'Help and productivity'];
 

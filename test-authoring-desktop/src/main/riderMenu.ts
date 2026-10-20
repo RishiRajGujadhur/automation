@@ -247,6 +247,10 @@ const ROWS: Record<'edit' | 'view' | 'navigate' | 'code' | 'tools' | 'help', Row
     ['Insert Lorem Ipsum', 'insert-lorem'],
     ['Reformat XML', 'reformat-xml'],
     ['Minify XML', 'minify-xml'],
+    null,
+    { submenu: 'C#', rows: [
+      ['Convert to File-Scoped Namespace', 'file-scoped-namespace'],
+    ] },
   ],
   tools: [
     ['Run Anything… (Ctrl twice)', 'run-anything'],
