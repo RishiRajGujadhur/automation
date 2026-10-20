@@ -124,6 +124,7 @@ const ROWS: Record<'edit' | 'view' | 'navigate' | 'code' | 'tools' | 'help', Row
     ['Previous Error', 'previous-error'],
     ['Next Problem in File', 'next-problem'],
     ['Previous Problem in File', 'previous-problem'],
+    ['Go to Test / Test Subject', 'goto-test'],
   ],
   code: [
     ['Insert Live Template…', 'live-template', 'CmdOrCtrl+J'],

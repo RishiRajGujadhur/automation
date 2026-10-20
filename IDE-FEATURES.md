@@ -147,6 +147,7 @@ has it on by default, so the desktop app starts with it on. The others start off
 | X137 | Centered layout | VS Code | no | ✅ 2026-10-20 |
 | X138 | Do Not Disturb | VS Code / VS 2026 | yes | ✅ 2026-10-20 |
 | X139 | Next / Previous Problem in File | VS 2026 / Rider | yes | ✅ 2026-10-20 |
+| X140 | Go to Test / Test Subject | Rider / VS 2026 | yes | ✅ 2026-10-20 |
 
 ## Progress log
 - 2026-10-20 X1: Sort Lines: the selected lines (or the whole file) in natural, case-insensitive order, blank lines last. Third-batch plumbing: src/rider/more.ts, src/editor/textTools.ts, IDE-FEATURES.md.
@@ -288,3 +289,4 @@ has it on by default, so the desktop app starts with it on. The others start off
 - 2026-10-20 X137: Readable centered text column
 - 2026-10-20 X138: Toasts hidden, notifications kept
 - 2026-10-20 X139: F8 / Shift+F8 through diagnostics
+- 2026-10-20 X140: Foo.cs <-> FooTests.cs

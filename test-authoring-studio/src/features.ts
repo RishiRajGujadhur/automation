@@ -237,6 +237,7 @@ export const FEATURES: Feature[] = [
   { id: 'centered-layout', label: 'Centered layout', group: 'View', essential: false, description: 'The editor text in a readable column in the middle of a wide window.', commands: ['centered-layout'] },
   { id: 'do-not-disturb', label: 'Do Not Disturb', group: 'Help and productivity', essential: true, vs: 'Notifications ▸ Do Not Disturb', description: 'Hides the message pop-ups; they are still kept in the Notifications window.', commands: ['do-not-disturb'] },
   { id: 'next-problem', label: 'Next / Previous Problem in File', group: 'Navigation', essential: true, vs: 'Edit.GoToNextIssueInFile', description: 'F8 / Shift+F8 go to the next or previous error or warning in the editor.', commands: ['next-problem', 'previous-problem'] },
+  { id: 'goto-test', label: 'Go to Test / Test Subject', group: 'Navigation', essential: true, vs: 'Navigate ▸ Test (Rider) / Go To Test', description: 'From Foo.cs to FooTests.cs and back.', commands: ['goto-test'] },
 ];
 export const GROUPS: FeatureGroup[] = ['Editing', 'Navigation', 'Code intelligence', 'Tool windows', 'Files', 'Git', 'Gherkin', 'View', 'Debugging', 'Help and productivity'];
 
