@@ -232,6 +232,7 @@ export const FEATURES: Feature[] = [
   { id: 'inline-background', label: 'Inline Background', group: 'Gherkin', essential: true, description: 'The Background\'s steps move into every scenario.', commands: ['inline-background'] },
   { id: 'normalize-keywords', label: 'Normalize Step Keywords', group: 'Gherkin', essential: true, description: 'Repeated Given / When / Then become And; a scenario never starts with And.', commands: ['normalize-keywords'] },
   { id: 'remove-duplicate-lines', label: 'Remove Duplicate Lines', group: 'Editing', essential: true, description: 'Removes repeated lines (selection or file).', commands: ['remove-duplicate-lines'] },
+  { id: 'remove-blank-lines', label: 'Remove Blank Lines', group: 'Editing', essential: true, description: 'Removes empty lines (selection or file).', commands: ['remove-blank-lines'] },
 ];
 export const GROUPS: FeatureGroup[] = ['Editing', 'Navigation', 'Code intelligence', 'Tool windows', 'Files', 'Git', 'Gherkin', 'View', 'Debugging', 'Help and productivity'];
 

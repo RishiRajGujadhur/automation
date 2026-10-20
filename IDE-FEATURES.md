@@ -142,6 +142,7 @@ has it on by default, so the desktop app starts with it on. The others start off
 | X132 | Inline Background | Rider | yes | ✅ 2026-10-20 |
 | X133 | Normalize Step Keywords | Rider | yes | ✅ 2026-10-20 |
 | X134 | Remove Duplicate Lines | VS Code / Rider | yes | ✅ 2026-10-20 |
+| X135 | Remove Blank Lines | VS 2026 | yes | ✅ 2026-10-20 |
 
 ## Progress log
 - 2026-10-20 X1: Sort Lines: the selected lines (or the whole file) in natural, case-insensitive order, blank lines last. Third-batch plumbing: src/rider/more.ts, src/editor/textTools.ts, IDE-FEATURES.md.
@@ -278,3 +279,4 @@ has it on by default, so the desktop app starts with it on. The others start off
 - 2026-10-20 X132: Background steps into each scenario
 - 2026-10-20 X133: Repeated keywords become And
 - 2026-10-20 X134: Later copies of lines removed
+- 2026-10-20 X135: Empty lines removed
