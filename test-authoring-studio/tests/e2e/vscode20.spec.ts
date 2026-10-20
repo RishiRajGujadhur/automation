@@ -328,3 +328,27 @@ test('V14 Suggestions: quick suggestions, accept on Enter, Tab completion', asyn
   await page.keyboard.press('Tab');
   await expect.poll(text).toContain('Given the login page is open');
 });
+
+test('V15 Mouse wheel sensitivity, fast scroll with Alt, smooth scrolling', async ({ page }) => {
+  await open(page, 'Steps/AuthSteps.cs', { 'editor.mouseWheelScrollSensitivity': 2 });
+  await setDoc(page, longText(600));
+  const scroller = view(page).locator('.cm-scroller');
+  const box = (await scroller.boundingBox())!;
+  await page.mouse.move(box.x + 200, box.y + 100);
+  const top = () => scroller.evaluate((e) => e.scrollTop);
+  await page.mouse.wheel(0, 100);
+  await expect.poll(top).toBe(200);
+  // Alt: 5 times faster.
+  await page.keyboard.down('Alt');
+  await page.mouse.wheel(0, 100);
+  await page.keyboard.up('Alt');
+  await expect.poll(top).toBe(700);
+  // Smooth: reaches the same place, animated.
+  await setSettings(page, { 'editor.smoothScrolling': true });
+  await setDoc(page, longText(600));
+  await page.mouse.move(box.x + 200, box.y + 100);
+  await page.mouse.wheel(0, 300);
+  const first = await top();
+  await expect.poll(top).toBe(300);
+  expect(first).toBeLessThan(300);
+});

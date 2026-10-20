@@ -132,3 +132,11 @@ describe('V14 suggestions', () => {
     expect(suggestAllowed(false, '.', { quick: true, trigger: false })).toBe(false);
   });
 });
+import { wheelDelta } from '../src/vscode/scrolling';
+describe('V15 wheel delta', () => {
+  it('pixels, lines and pages', () => {
+    expect(wheelDelta(100, 0, 20, 600, 2)).toBe(200);
+    expect(wheelDelta(3, 1, 20, 600, 1)).toBe(60);
+    expect(wheelDelta(1, 2, 20, 600, 5)).toBe(3000);
+  });
+});

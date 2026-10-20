@@ -10,4 +10,5 @@ import './rulers';
 import './lineHighlight';
 import './filesOnSave';
 import './suggestions';
+import './scrolling';
 export { SETTINGS } from './settings';
