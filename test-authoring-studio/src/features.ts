@@ -547,6 +547,7 @@ export const FEATURES: Feature[] = [
   { id: 'function-breakpoints', label: 'Function breakpoints', group: 'Debugging', essential: true, vs: 'New ▸ Function Breakpoint', description: 'New Function Breakpoint… in the Breakpoints window stops in a method by name (Calculator.Add), wherever it is called from.' },
   { id: 'just-my-code', label: 'Just My Code', group: 'Debugging', essential: true, vs: 'Options ▸ Debugging ▸ Enable Just My Code', description: 'A Just My Code switch in the debug toolbar: off, the debugger also steps into and stops in framework and package code (next session).' },
   { id: 'edit-values', label: 'Edit values while debugging', group: 'Debugging', essential: true, vs: 'Locals ▸ Edit Value', description: 'Double-click a value in Locals (or an expanded member) to change it while paused (Enter sets it).' },
+  { id: 'locals-search', label: 'Search in Locals', group: 'Debugging', essential: true, vs: 'Locals ▸ Search', description: 'A search box filters Locals by name, value or type (Visual Studio\'s Locals search).' },
 ];
 export const GROUPS: FeatureGroup[] = ['Editing', 'Navigation', 'Code intelligence', 'Tool windows', 'Files', 'Git', 'Gherkin', 'View', 'Debugging', 'Help and productivity'];
 

@@ -3780,3 +3780,4 @@ html[data-features-off~='inlay-hints'] .cm-inlay {
 .bp-hits { font-size: 11px; color: var(--muted, #888); white-space: nowrap; }
 .bp-settings .bp-check { display: flex; gap: 6px; align-items: center; }
 .dbg-edit { width: 100%; font: inherit; padding: 0 3px; background: var(--input-bg, transparent); color: inherit; border: 1px solid var(--accent, #9270dd); }
+.dbg-locals-search { margin: 4px 8px; display: block; }

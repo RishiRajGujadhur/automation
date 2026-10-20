@@ -63,6 +63,7 @@ export default function DebugPanel({ onOpen, onNotice, onClose, editingRequest =
   const frame: DebugFrame | undefined = state.status === 'paused' ? state.frames[frameIndex] : undefined;
   const frameKey = `${state.version}:${frame?.id ?? ''}`;
   const [locals, setLocals] = useState<Variable[]>([]);
+  const [localsQuery, setLocalsQuery] = useState('');
   const [values, setValues] = useState<{ result?: string; type?: string; error?: string; variablesReference?: number }[]>([]);
   const [draft, setDraft] = useState('');
   // Exception Settings (kept per browser, sent to the server so the next session uses them too).
@@ -213,7 +214,7 @@ export default function DebugPanel({ onOpen, onNotice, onClose, editingRequest =
           />
         </Tabs.Content>
         <Tabs.Content value="locals" className="debug-body">
-          {frame ? <>{featureOn('copy-locals') && locals.length > 0 && <div className="debug-locals-tools"><button className="link-button" onClick={() => void copyText(JSON.stringify(Object.fromEntries(locals.map((v) => [v.name, v.value])), null, 2))}>Copy All as JSON</button></div>}<Grid label="Locals">{locals.map((v) => <VariableRow key={v.name} v={v} depth={0} frameKey={frameKey} />)}</Grid></> : <p className="subtle debug-empty">Locals appear when the debugger is paused.</p>}
+          {frame ? <>{featureOn('copy-locals') && locals.length > 0 && <div className="debug-locals-tools"><button className="link-button" onClick={() => void copyText(JSON.stringify(Object.fromEntries(locals.map((v) => [v.name, v.value])), null, 2))}>Copy All as JSON</button></div>}<>{featureOn('locals-search') && <input className="dbg-bp-search dbg-locals-search" type="search" aria-label="Search Locals" placeholder="Search Locals" value={localsQuery} onChange={(e) => setLocalsQuery(e.target.value)} />}<Grid label="Locals">{locals.filter((v) => !featureOn('locals-search') || !localsQuery.trim() || `${v.name} ${v.value} ${v.type ?? ''}`.toLowerCase().includes(localsQuery.trim().toLowerCase())).map((v) => <VariableRow key={v.name} v={v} depth={0} frameKey={frameKey} />)}</Grid></></> : <p className="subtle debug-empty">Locals appear when the debugger is paused.</p>}
         </Tabs.Content>
         <Tabs.Content value="watch" className="debug-body">
           <Grid label="Watch 1">

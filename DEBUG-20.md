@@ -17,6 +17,7 @@ a Settings ▸ Features switch and tests that drive a real debugging session of 
 | DB9 | Function breakpoints | VS 2026 | yes | ✅ 2026-10-20 |
 | DB10 | Just My Code | VS 2026 | yes | ✅ 2026-10-20 |
 | DB11 | Edit values while debugging | VS 2026 | yes | ✅ 2026-10-20 |
+| DB12 | Search in Locals | VS 2026 | yes | ✅ 2026-10-20 |
 
 ## Progress log
 - 2026-10-20 DB1: Filters breakpoints by file, line, condition, log message or label.
@@ -30,3 +31,4 @@ a Settings ▸ Features switch and tests that drive a real debugging session of 
 - 2026-10-20 DB9: Stops in a method by name (setFunctionBreakpoints).
 - 2026-10-20 DB10: Toolbar switch for the next session's justMyCode.
 - 2026-10-20 DB11: Double-click a Locals value to set it (DAP setVariable).
+- 2026-10-20 DB12: Filters Locals by name, value or type.
