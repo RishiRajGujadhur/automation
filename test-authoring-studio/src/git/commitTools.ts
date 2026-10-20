@@ -19,3 +19,9 @@ export function withCommitType(message: string, type: string) {
   const key = /^([A-Z][A-Z0-9]+-\d+|#\d+):\s*/.exec(message);
   return key ? `${key[0]}${type}: ${message.slice(key[0].length)}` : `${type}: ${message}`;
 }
+
+/** The message to commit from a box that started with a template: the template's # comment lines go. Pure. */
+export function withoutTemplateComments(message: string, template: string) {
+  const comments = new Set(template.split('\n').filter((l) => l.startsWith('#')));
+  return message.split('\n').filter((l) => !comments.has(l)).join('\n').replace(/\n{3,}/g, '\n\n').trim();
+}

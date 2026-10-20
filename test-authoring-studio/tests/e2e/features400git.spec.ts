@@ -1,0 +1,53 @@
+import { test, expect, type Page } from '@playwright/test';
+import fs from 'node:fs/promises';
+import os from 'node:os';
+import path from 'node:path';
+import { execFileSync } from 'node:child_process';
+
+// Git features of RIDER-VSCODE-FEATURES.md, on a temporary Git repository made from the fixtures.
+test.use({ storageState: { cookies: [], origins: [] } });
+test.setTimeout(120_000);
+
+let root: string;
+let previous: unknown;
+const git = (...args: string[]) => execFileSync('git', args, { cwd: root, encoding: 'utf8' });
+test.beforeEach(async ({ request }) => {
+  previous = (await (await request.get('/api/workspace')).json()).config;
+  root = await fs.mkdtemp(path.join(os.tmpdir(), 'studio-f400git-'));
+  await fs.cp(path.resolve(import.meta.dirname, '../../fixtures'), root, { recursive: true });
+  git('init', '-q', '-b', 'main');
+  git('config', 'user.email', 'test@example.com');
+  git('config', 'user.name', 'Test');
+  git('config', 'core.autocrlf', 'false');
+  git('add', '-A');
+  git('commit', '-q', '-m', 'Initial');
+  expect((await request.post('/api/workspace', { data: { repositoryRoot: root, targetProject: '.' } })).ok()).toBe(true);
+});
+test.afterEach(async ({ request }) => {
+  await request.post('/api/workspace', { data: previous });
+  await fs.rm(root, { recursive: true, force: true, maxRetries: 5 }).catch(() => {});
+});
+async function open(page: Page) {
+  await page.addInitScript(() => { if (!sessionStorage.getItem('seeded')) { localStorage.setItem('tas:prefs', JSON.stringify({ mode: 'advanced', autoSave: 'off' })); sessionStorage.setItem('seeded', '1'); } });
+  await page.goto('/#/features/editor');
+  await expect(page.getByText('Repository indexed')).toBeVisible();
+}
+const gitChanges = async (page: Page) => { await page.getByRole('button', { name: 'Git Changes', exact: true }).click(); return page.getByRole('region', { name: 'Git Changes' }); };
+
+test('165 Commit message templates', async ({ page }) => {
+  await fs.writeFile(path.join(root, '.gitmessage'), 'Summary\n\n# Why is this change needed?\nWhy: \n');
+  git('add', '.gitmessage');
+  git('commit', '-q', '-m', 'Template');
+  await fs.appendFile(path.join(root, 'Steps/AuthSteps.cs'), '// change\n');
+  await open(page);
+  const view = await gitChanges(page);
+  const box = view.getByLabel('Commit message');
+  await expect(box).toHaveValue('Summary\n\n# Why is this change needed?\nWhy: \n');
+  // Untouched: nothing to commit yet.
+  await expect(view.getByRole('button', { name: /Commit (All|Staged)/ })).toBeDisabled();
+  await box.fill('Fix the steps\n\n# Why is this change needed?\nWhy: a test\n');
+  await view.getByRole('button', { name: /Commit (All|Staged)/ }).click();
+  await expect.poll(() => git('log', '-1', '--format=%B').trim()).toBe('Fix the steps\n\nWhy: a test');
+  // The box starts again with the template.
+  await expect(box).toHaveValue('Summary\n\n# Why is this change needed?\nWhy: \n');
+});

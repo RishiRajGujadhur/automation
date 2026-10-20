@@ -7,7 +7,7 @@ import { useLocalState } from '../ui';
 import { useConfirm } from '../radix2';
 import { fileType } from '../files/fileTypes';
 import { FILES_CHANGED_EVENT, UNSAVED_REFRESH, GIT_CHANGED_EVENT } from '../editor/events';
-import { issueKey, withIssueKey, COMMIT_TYPES, withCommitType } from './commitTools';
+import { issueKey, withIssueKey, COMMIT_TYPES, withCommitType, withoutTemplateComments } from './commitTools';
 
 type GitFile = { file: string; staged: boolean; status: 'M' | 'A' | 'D' | 'R' | 'U' | '?'; from?: string };
 type GitStatus = { repo: boolean; branch?: string; upstream?: string; ahead: number; behind: number; files: GitFile[] };
@@ -23,6 +23,11 @@ export default function GitView({ onOpen, onNotice, onChanged }: { onOpen: (file
   const [st, setSt] = useState<GitStatus>();
   // The commit message draft survives a reload (QOL-50).
   const [message, setMessage] = useLocalState('gitCommitDraft', '');
+  // Commit message template (git's commit.template or .gitmessage): an empty box starts with it.
+  const [template, setTemplate] = useState<{ text: string; source: string } | null>(null);
+  // The template as it came (only its comments and headings): nothing to commit yet.
+  const untouched = !!template && withoutTemplateComments(message, template.text) === withoutTemplateComments(template.text, template.text);
+  useEffect(() => { if (featureOn('commit-template')) api<{ text: string; source: string } | null>('/git/commit-template').then((t) => { setTemplate(t); if (t) setMessage((m) => m || t.text); }, () => {}); }, []); // eslint-disable-line react-hooks/exhaustive-deps
   const [pastMessages, setPastMessages] = useLocalState<string[]>('gitCommitHistory', []);
   const [amend, setAmend] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -47,10 +52,10 @@ export default function GitView({ onOpen, onNotice, onChanged }: { onOpen: (file
   const staged = st?.files.filter((f) => f.staged) ?? [];
   const changes = st?.files.filter((f) => !f.staged) ?? [];
   const doCommit = (all: boolean) => act(async () => {
-    const r = await api<{ summary: string }>('/git/commit', { message, all, amend });
+    const r = await api<{ summary: string }>('/git/commit', { message: template ? withoutTemplateComments(message, template.text) : message, all, amend });
     // Previous commit messages: ↑ in an empty box recalls them (QOL-50).
     setPastMessages((h) => [message.trim(), ...h.filter((m) => m !== message.trim())].slice(0, 20));
-    setMessage('');
+    setMessage(template?.text ?? '');
     setAmend(false);
     window.dispatchEvent(new Event(GIT_CHANGED_EVENT));
     onNotice(`Committed ${r.summary}.`);
@@ -155,7 +160,7 @@ export default function GitView({ onOpen, onNotice, onChanged }: { onOpen: (file
       <div className="git-commit">
         <textarea aria-label="Commit message" placeholder={`Message (Ctrl+Enter to commit${st?.branch ? ` on "${st.branch}"` : ''})`} value={message} onChange={(e) => setMessage(e.target.value)}
           onKeyDown={(e) => {
-            if ((e.ctrlKey || e.metaKey) && e.key === 'Enter' && message.trim()) { e.preventDefault(); void doCommit(!staged.length); return; }
+            if ((e.ctrlKey || e.metaKey) && e.key === 'Enter' && message.trim() && !untouched) { e.preventDefault(); void doCommit(!staged.length); return; }
             if ((e.key === 'ArrowUp' || e.key === 'ArrowDown') && featureOn('commit-pastMessages') && pastMessages.length && (message === '' || pastMessages.includes(message)) && e.currentTarget.selectionStart === 0) {
               e.preventDefault();
               const at = message === '' ? -1 : pastMessages.indexOf(message);
@@ -165,7 +170,7 @@ export default function GitView({ onOpen, onNotice, onChanged }: { onOpen: (file
           }} rows={3} />
         {featureOn('commit-length') && (message.split('\n')[0].length > 72 || (message.includes('\n') && message.split('\n')[1].trim() !== '')) && <p className="git-commit-hint" role="note">{message.split('\n')[0].length > 72 ? `The summary line has ${message.split('\n')[0].length} characters; keep it under 72.` : 'Leave the second line empty between the summary and the description.'}</p>}
         <div className="git-commit-row">
-          <button className="button primary" disabled={busy || !message.trim() || (!staged.length && !changes.length && !amend)} onClick={() => void doCommit(!staged.length)}>
+          <button className="button primary" disabled={busy || !message.trim() || untouched || (!staged.length && !changes.length && !amend)} onClick={() => void doCommit(!staged.length)}>
             <Check size={14} />{staged.length ? 'Commit Staged' : 'Commit All'}
           </button>
           <label className="git-amend"><input type="checkbox" checked={amend} onChange={(e) => setAmend(e.target.checked)} />Amend</label>

@@ -40,6 +40,7 @@ import { Builder } from './build.js';
 import { findInFiles, replaceInFiles, searchEditorText, parseSearchEditor, searchEditorName, SEARCH_EDITOR_DIR } from './search.js';
 import { values, render, parameterCount, replaceAttributePattern } from './stepRename.js';
 import { installed as nugetInstalled, updates as nugetUpdates, search as nugetSearch, versions as nugetVersions, install as nugetInstall, uninstall as nugetUninstall } from './nuget.js';
+import { commitTemplate } from './git2.js';
 import { status as gitStatus, stage as gitStage, unstage as gitUnstage, discard as gitDiscard, commit as gitCommit, headInfo, log as gitLog, branches as gitBranches, checkout as gitCheckout, createBranch as gitCreateBranch, sync as gitSync, merge as gitMerge, blame as gitBlame, clone as gitClone, shelves, shelve, unshelve, deleteShelf, lineHistory, commitDetails, graphLog, fileAt, commitAction, git, stageLines } from './git.js';
 import { readProperties, setProperties, evaluate, readEvents, setEvent, readUsings, setUsings, readReferences, setReferences, readFileItem, setFileItem, isExcluded, setExcluded } from './projectProps.js';
 import { findPattern, replacePattern } from '../src/search/ssr.js';
@@ -816,6 +817,8 @@ app.post('/api/git/sync', async (req, res) => {
   if (action === 'pull') rescanSoon(300);
   res.json({ output, status: await gitStatus(config.repositoryRoot) });
 });
+// Commit message template (git's commit.template or .gitmessage): the commit box starts with it.
+app.get('/api/git/commit-template', async (_req, res) => res.json(await commitTemplate(config.repositoryRoot).catch(() => null)));
 app.post('/api/git/commit', async (req, res) => {
   const { message, all, amend } = z.object({ message: z.string().trim().min(1, 'Enter a commit message.').max(20000), all: z.boolean().optional(), amend: z.boolean().optional() }).parse(req.body);
   const summary = await gitCommit(config.repositoryRoot, message, { all, amend });

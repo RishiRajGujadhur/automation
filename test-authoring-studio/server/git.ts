@@ -17,7 +17,7 @@ export type GitFile = { file: string; staged: boolean; status: 'M' | 'A' | 'D' |
 export type GitStatus = { repo: boolean; branch?: string; upstream?: string; ahead: number; behind: number; files: GitFile[]; top?: string };
 
 /** Repository top level and the workspace folder's path inside it ('' = the top). */
-async function locate(root: string) {
+export async function locate(root: string) {
   const top = (await git(root, ['rev-parse', '--show-toplevel'])).trim();
   const prefix = path.relative(path.resolve(top), path.resolve(root)).replaceAll('\\', '/');
   return { top, prefix };
