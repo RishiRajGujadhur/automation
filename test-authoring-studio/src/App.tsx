@@ -2281,6 +2281,8 @@ export default function App() {
       <Toast.Provider swipeDirection={typeof window !== 'undefined' && matchMedia('(max-width: 640px)').matches ? 'down' : 'right'} duration={6000}>
         <Toast.Root
           key={toastKey}
+          // Problems stay up longer than confirmations (QOL-50).
+          duration={featureOn('toast-errors-longer') && /\b(fail|failed|error|errors|cannot|could not|not found|invalid|refused|denied|unavailable)\b/i.test(notice) && !/\b0 errors\b/.test(notice) ? 15000 : undefined}
           className="toast"
           open={!!notice && !(viewOpts.doNotDisturb && featureOn('do-not-disturb'))}
           onOpenChange={(open) => { if (!open) { setNotice(''); setUndo(undefined); } }}

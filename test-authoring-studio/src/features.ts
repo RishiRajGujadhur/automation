@@ -369,6 +369,7 @@ export const FEATURES: Feature[] = [
   { id: 'error-list-group', label: 'Error List: group by file', group: 'Tool windows', essential: true, vs: 'Error List ▸ Group by', description: 'A toggle groups errors and warnings under their file.' },
   { id: 'build-summary', label: 'Build result message', group: 'Tool windows', essential: true, description: 'When a build ends, a message gives the result, the time and the error / warning counts.' },
   { id: 'commit-history', label: 'Commit message history', group: 'Git', essential: true, description: '↑ in an empty commit message box recalls your previous messages.' },
+  { id: 'toast-errors-longer', label: 'Error messages stay longer', group: 'Help and productivity', essential: true, description: 'Messages about failures stay up for 15 seconds instead of 6.' },
 ];
 export const GROUPS: FeatureGroup[] = ['Editing', 'Navigation', 'Code intelligence', 'Tool windows', 'Files', 'Git', 'Gherkin', 'View', 'Debugging', 'Help and productivity'];
 
