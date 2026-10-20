@@ -6,4 +6,5 @@ import './cursor';
 import './font';
 import './whitespace';
 import './wordWrap';
+import './rulers';
 export { SETTINGS } from './settings';

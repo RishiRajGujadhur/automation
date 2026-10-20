@@ -254,3 +254,20 @@ test('V10 Word wrap: on, column, bounded; wrapping indent', async ({ page }) => 
   const l2 = await view(page).locator('.cm-line').nth(1).evaluate((e) => e.getBoundingClientRect().height);
   expect((await view(page).locator('.cm-line').first().boundingBox())!.height).toBeLessThan(l2 * 1.5);
 });
+
+test('V11 Rulers', async ({ page }) => {
+  await open(page, 'Steps/AuthSteps.cs');
+  const d = await openSettings(page);
+  await d.getByRole('searchbox', { name: 'Search settings' }).fill('editor.rulers');
+  const box = d.getByRole('textbox', { name: 'Rulers' });
+  await box.fill('80, 120');
+  await box.press('Enter');
+  await expect(d.locator('[data-setting-id="editor.rulers"]')).toHaveClass(/modified/);
+  expect(await page.evaluate(() => localStorage.getItem('tas:settings'))).toBe('{"editor.rulers":[80,120]}');
+  await page.keyboard.press('Escape');
+  await page.keyboard.press('Escape');
+  await expect(view(page)).toHaveAttribute('data-rulers', '80,120');
+  // 80, 120 (and the right margin guide at 120 when it is on).
+  const img = await view(page).locator('.cm-content').evaluate((e) => getComputedStyle(e).backgroundImage);
+  expect(img.match(/linear-gradient/g)!.length).toBeGreaterThanOrEqual(2);
+});

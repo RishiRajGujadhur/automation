@@ -97,3 +97,11 @@ describe('V10 wrapping indent', () => {
     expect(hangingIndent('x', 'deepIndent', 4, 2)).toBe(4);
   });
 });
+import { rulerImage } from '../src/vscode/rulers';
+describe('V11 rulers', () => {
+  it('one line per distinct column, in order', () => {
+    const img = rulerImage([120, 80, 80]);
+    expect(img.match(/linear-gradient/g)).toHaveLength(2);
+    expect(img.indexOf('80ch')).toBeLessThan(img.indexOf('120ch'));
+  });
+});
