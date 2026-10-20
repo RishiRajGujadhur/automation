@@ -31,3 +31,31 @@ const setDoc = (page: Page, text: string, anchor = 0, head = anchor) => page.eva
 const menuItem = async (page: Page, menu: string, item: RegExp) => { await page.getByRole('button', { name: `${menu} menu` }).click(); await page.getByRole('menuitem', { name: item }).click(); };
 const gherkinItem = async (page: Page, item: RegExp) => { await page.getByRole('button', { name: 'Code menu' }).click(); await page.getByRole('menuitem', { name: 'Gherkin', exact: true }).click(); await page.getByRole('menuitem', { name: item }).click(); };
 void gherkinItem; void menuItem;
+
+const convert = async (page: Page, item: RegExp) => { await page.getByRole('button', { name: 'Edit menu' }).click(); await page.getByRole('menuitem', { name: 'Convert', exact: true }).click(); await page.getByRole('menuitem', { name: item }).click(); };
+
+test('Y1–Y10 Edit ▸ Convert: encode / decode, numbers, quotes, join / split; Align Assignments', async ({ page }) => {
+  await open(page, 'AuthSteps.cs');
+  await expect(page.getByLabel('Source of Steps/AuthSteps.cs')).toBeVisible();
+  await setDoc(page, 'a b&c', 0, 5);
+  await convert(page, /^URL Encode/);
+  await expect.poll(() => doc(page)).toBe('a%20b%26c');
+  await convert(page, /^URL Decode/);
+  await expect.poll(() => doc(page)).toBe('a b&c');
+  await setDoc(page, 'héllo', 0, 5);
+  await convert(page, /^Base64 Encode/);
+  await expect.poll(() => doc(page)).toBe('aMOpbGxv');
+  await setDoc(page, 'x = "a"', 6);
+  await convert(page, /^Toggle Quotes/);
+  await expect.poll(() => doc(page)).toBe("x = 'a'");
+  await setDoc(page, 'id = 41', 6);
+  await convert(page, /^Increment Number/);
+  await expect.poll(() => doc(page)).toBe('id = 42');
+  await setDoc(page, 'a\nb\nc', 0, 5);
+  page.once('dialog', (d) => void d.accept(' | '));
+  await convert(page, /^Join Lines with Separator/);
+  await expect.poll(() => doc(page)).toBe('a | b | c');
+  await setDoc(page, 'var a = 1;\nvar longName=2;', 3);
+  await page.keyboard.press('Control+Alt+BracketRight');
+  await expect.poll(() => doc(page)).toBe('var a        = 1;\nvar longName = 2;');
+});

@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { EditorSelection, EditorState, type TransactionSpec } from '@codemirror/state';
 import type { EditorView } from '@codemirror/view';
-import { mapSelections, urlEncode, urlDecode, base64Encode, base64Decode, escapeString, unescapeString, htmlEncode, htmlDecode, stepNumber, insertSequence, toggleQuotes, joinWith, splitAt } from '../src/editor/textTools2';
+import { mapSelections, urlEncode, urlDecode, base64Encode, base64Decode, escapeString, unescapeString, htmlEncode, htmlDecode, stepNumber, insertSequence, toggleQuotes, joinWith, splitAt, alignAssignments } from '../src/editor/textTools2';
 
 /** Runs an editor command on `doc` with the selection between « and » (or a caret at |). */
 function run(doc: string, cmd: (v: EditorView) => boolean) {
@@ -59,5 +59,8 @@ describe('text tools, fourth batch (IDE-FEATURES-4 Y1…)', () => {
   it('Y9 Split at Separator', () => {
     expect(run('  a, b,c|', splitAt(','))).toBe('  a\n  b\n  c');
     expect(run('«x;y\nz»', splitAt(';'))).toBe('x\ny\nz');
+  });
+  it('Y10 Align Assignments around the caret', () => {
+    expect(run('var a = 1;\nvar long|Name=2;\nif (a == b) x += 3;\n\nz = 0;', alignAssignments)).toBe('var a        = 1;\nvar longName = 2;\nif (a == b) x += 3;\n\nz = 0;');
   });
 });

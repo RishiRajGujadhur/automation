@@ -404,6 +404,7 @@ export const FEATURES: Feature[] = [
   { id: 'toggle-quotes', label: 'Toggle Quotes', group: 'Editing', essential: false, description: 'Edit ▸ Convert switches the string at the caret between double and single quotes.', commands: ['toggle-quotes'] },
   { id: 'join-with', label: 'Join Lines with Separator', group: 'Editing', essential: false, description: 'Edit ▸ Convert joins the selected lines with a separator you choose (", " by default).', commands: ['join-with'] },
   { id: 'split-at', label: 'Split at Separator', group: 'Editing', essential: false, description: 'Edit ▸ Convert puts each part of the line (split at "," or your separator) on its own line.', commands: ['split-at'] },
+  { id: 'align-assignments', label: 'Align Assignments', group: 'Editing', essential: false, vs: 'Productivity Power Tools: Align Assignments', description: 'Ctrl+Alt+] lines up the "=" of the selected lines or the block of assignments at the caret.', commands: ['align-assignments'] },
 ];
 export const GROUPS: FeatureGroup[] = ['Editing', 'Navigation', 'Code intelligence', 'Tool windows', 'Files', 'Git', 'Gherkin', 'View', 'Debugging', 'Help and productivity'];
 

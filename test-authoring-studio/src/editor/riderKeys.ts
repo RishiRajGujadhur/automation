@@ -10,6 +10,7 @@ import { moveStatement } from './moveStatement';
 import { deleteHorizontalWhiteSpace, transposeLine, cursorMatchingBracket, selectMatchingBracket, findSelected, trackEdits, cyclicExpandWord, gotoMember } from './textTools';
 import { gotoChange, rollbackLines } from './changeGutter';
 import { completeStatement } from './completeStatement';
+import { alignAssignments } from './textTools2';
 import { collapseAll, collapseToDefinitions, expandAll } from './foldAll';
 
 type Span = { from: number; to: number };
@@ -301,6 +302,7 @@ export function riderKeys(file = ''): Extension {
     ['F12', false, 'file-structure', () => runRider('file-structure', 'key')],
     ['KeyH', false, 'call-hierarchy', () => runRider('call-hierarchy', 'key')],
     ['Home', false, 'related-files', () => runRider('related-files', 'key')],
+    ['BracketRight', false, 'align-assignments', alignAssignments],
     ['KeyZ', false, 'rollback-lines', (v) => { if (!rollbackLines(v)) runRider('rollback-lines', 'key'); return true; }],
   ];
   const ctrlAlt = EditorView.domEventHandlers({

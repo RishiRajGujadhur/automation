@@ -75,6 +75,7 @@ const ROWS: Record<'edit' | 'view' | 'navigate' | 'code' | 'tools' | 'help', Row
       ['Join Lines with Separator…', 'join-with'],
       ['Split at Separator…', 'split-at'],
     ] },
+    ['Align Assignments', 'align-assignments', 'CmdOrCtrl+Alt+]'],
   ],
   view: [
     null,

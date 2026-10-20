@@ -116,3 +116,26 @@ export const splitAt = (sep: string) => (view: EditorView) => {
   if (!sep) return false;
   return mapLines((lines) => lines.flatMap((l) => { if (!l.includes(sep)) return [l]; const indent = /^\s*/.exec(l)![0]; return l.split(sep).map((p) => p.trim()).filter(Boolean).map((p) => indent + p); }), false)(view);
 };
+
+/** The first lone "=" of a line (not ==, =>, <=, >=, !=, +=…), or -1. */
+const assignAt = (l: string) => { const m = /(?<![=<>!+\-*/%&|^?:])=(?![=>])/.exec(l); return m ? m.index : -1; };
+/** Align Assignments (Visual Studio Productivity Power Tools, Ctrl+Alt+]): the "=" of the selected lines (or the block of
+ * assignments around the caret) in one column. */
+export function alignAssignments(view: EditorView) {
+  const { state } = view;
+  const r = state.selection.main;
+  let first = state.doc.lineAt(r.from).number, last = state.doc.lineAt(r.to).number;
+  if (r.empty) {
+    if (assignAt(state.doc.line(first).text) < 0) return false;
+    while (first > 1 && assignAt(state.doc.line(first - 1).text) >= 0) first--;
+    while (last < state.doc.lines && assignAt(state.doc.line(last + 1).text) >= 0) last++;
+  }
+  const lines = Array.from({ length: last - first + 1 }, (_, i) => state.doc.line(first + i).text);
+  const col = Math.max(...lines.map((l) => { const i = assignAt(l); return i < 0 ? -1 : l.slice(0, i).trimEnd().length; }));
+  if (col < 0) return false;
+  const next = lines.map((l) => { const i = assignAt(l); return i < 0 ? l : `${l.slice(0, i).trimEnd().padEnd(col)} = ${l.slice(i + 1).trimStart()}`; }).join('\n');
+  const from = state.doc.line(first).from, to = state.doc.line(last).to;
+  if (next === state.sliceDoc(from, to)) return true;
+  view.dispatch({ changes: { from, to, insert: next }, userEvent: 'input.convert' });
+  return true;
+}
