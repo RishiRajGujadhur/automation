@@ -1,10 +1,7 @@
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { keepTab, useTabs } from './files/tabs';
 import { fileSource } from './files/provider';
-import {
-  ChevronDown, ChevronRight, Folder, FolderOpen, FileCode2, FileText, FileCog, Braces, Plus, Search, X, Copy, ChevronsDownUp, ChevronsUpDown,
-  Eye, Package, Boxes, Link2, LocateFixed, PencilLine, Files, Layers, SquareStack, Scissors, ClipboardPaste, Trash2, TextCursorInput, Focus, House, FilePlus, GitCompare, BookOpen, Crosshair, Columns2,
-} from 'lucide-react';
+import { ChevronDown, ChevronRight, Folder, FolderOpen, FileCode2, FileText, FileCog, Braces, Plus, Search, X, Copy, ChevronsDownUp, ChevronsUpDown, Eye, Package, Boxes, Link2, LocateFixed, PencilLine, Files, Layers, SquareStack, Scissors, ClipboardPaste, Trash2, TextCursorInput, Focus, House, FilePlus, GitCompare, BookOpen, Crosshair, Columns2, SquareTerminal } from 'lucide-react';
 import { fileType } from './files/fileTypes';
 import { featureOn } from './features';
 import { RowMenu, copyText } from './ui';
@@ -413,6 +410,7 @@ export default function SolutionExplorer({ features, revision, activeFile, query
             'separator' as const,
             { label: 'Copy folder path', icon: Copy, onSelect: () => copied(n.path) },
             ...(featureOn('copy-full-path') && !browserSolution ? [{ label: 'Copy Full Path', icon: Copy, onSelect: () => copyFull(n.path) }] : []),
+            ...(featureOn('open-in-terminal') && !browserSolution ? [{ label: 'Open in Terminal', icon: SquareTerminal, onSelect: () => void api<{ config: { repositoryRoot: string } }>('/workspace').then((w) => { const sep = w.config.repositoryRoot.includes('\\') ? '\\' : '/'; window.dispatchEvent(new CustomEvent('tas:terminal-in', { detail: `${w.config.repositoryRoot.replace(/[\\/]+$/, '')}${sep}${n.path.replaceAll('/', sep)}` })); }, (e) => onNotice?.((e as Error).message)) }] : []),
             ...(featureOn('find-in-folder') ? [{ label: 'Find in Folder…', icon: Search, onSelect: () => window.dispatchEvent(new CustomEvent('tas:find-in-folder', { detail: n.path })) }] : []),
             ...(featureOn('explorer-new-file') && !browserSolution ? [{ label: 'New File…', icon: FilePlus, onSelect: () => void newFile(n.path) }] : []),
             ...(featureOn('explorer-scope') ? [{ label: 'Scope to This', icon: Focus, onSelect: () => setScope(n.path) }] : []),

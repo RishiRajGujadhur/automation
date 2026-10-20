@@ -622,3 +622,40 @@ test('QL90 Terminal: right-click pastes', async ({ page, context }) => {
   await expect(host.locator('.xterm-rows')).toContainText('Write-Output pasted-90');
   await expect(host.locator('.xterm-rows')).not.toContainText(/pasted-90[\s\S]*pasted-90/);
 });
+
+test('QL91 / QL93 Explorer: Open in Terminal; file count in folder tooltips', async ({ page }) => {
+  await openFeature(page);
+  const folder = nav(page).getByRole('button', { name: /folder Steps$/ }).first();
+  await expect(folder).toHaveAttribute('title', /Steps · \d+ files?/);
+  await folder.click({ button: 'right' });
+  await page.getByRole('menuitem', { name: 'Open in Terminal' }).click();
+  const screen = page.getByRole('region', { name: 'Terminal' }).locator('.terminal-host:not([hidden]) .xterm-rows');
+  await expect(screen).toContainText(`PS ${path.join(root, 'Steps')}>`, { timeout: 30_000 });
+});
+
+test('QL92 Terminal: Ctrl+Shift+V pastes', async ({ page, context }) => {
+  await context.grantPermissions(['clipboard-read', 'clipboard-write']);
+  await openFeature(page);
+  await page.keyboard.press('Alt+F12');
+  const host = page.getByRole('region', { name: 'Terminal' }).locator('.terminal-host:not([hidden])');
+  await expect(host.locator('.xterm-rows')).toContainText('PS ', { timeout: 30_000 });
+  await page.evaluate(() => navigator.clipboard.writeText('Write-Output keys-92'));
+  await host.click();
+  await page.keyboard.press('Control+Shift+V');
+  await expect(host.locator('.xterm-rows')).toContainText('Write-Output keys-92');
+});
+
+test('QL94 / QL95 Ctrl+1…9 go to a tab; tab menu Copy Full Path', async ({ page, context }) => {
+  await context.grantPermissions(['clipboard-read', 'clipboard-write']);
+  await openFeature(page);
+  await nav(page).getByRole('button', { name: 'AuthSteps.cs', exact: true }).first().dblclick();
+  await nav(page).getByRole('button', { name: 'SearchSteps.cs', exact: true }).first().dblclick();
+  const first = (await page.locator('.editor-tab-label').first().getAttribute('title'))!;
+  await page.keyboard.press('Control+1');
+  await expect(page.locator('.editor-tab-label[aria-current="true"]')).toHaveAttribute('title', first);
+  await page.keyboard.press('Control+9');
+  await expect(page.locator('.editor-tab-label[aria-current="true"]')).toHaveText(/SearchSteps\.cs/);
+  await page.locator('.editor-tab-label', { hasText: 'AuthSteps.cs' }).click({ button: 'right' });
+  await page.getByRole('menuitem', { name: 'Copy Full Path' }).click();
+  await expect.poll(() => page.evaluate(() => navigator.clipboard.readText())).toBe(path.join(root, 'Steps', 'AuthSteps.cs'));
+});

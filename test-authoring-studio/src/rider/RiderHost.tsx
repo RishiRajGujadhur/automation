@@ -298,6 +298,12 @@ export default function RiderHost(props: RiderHostProps) {
     fn(a.view, a.file);
     focusKeepingSelection(a.view);
   };
+  // Explorer ▸ Open in Terminal: a terminal in that folder (QOL-50).
+  useEffect(() => {
+    const h = (e: Event) => { const cmd = `Set-Location "${(e as CustomEvent<string>).detail}"`; if (document.querySelector('.terminal-host:not([hidden])')) runInTerminal(cmd); else queueTerminalCommand(cmd); p.current.onTool('terminal'); };
+    window.addEventListener('tas:terminal-in', h);
+    return () => window.removeEventListener('tas:terminal-in', h);
+  }, []);
   // Explorer ▸ Compare with Selected: the two files' unified diff.
   useEffect(() => {
     const h = (e: Event) => {
