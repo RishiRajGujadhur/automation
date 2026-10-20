@@ -350,6 +350,7 @@ export const FEATURES: Feature[] = [
   { id: 'md-wrap', label: 'Markdown wraps long lines', group: 'Editing', essential: true, description: 'Markdown and text files soft-wrap by default, like VS Code.' },
   { id: 'find-memory', label: 'Find remembers the last search', group: 'Editing', essential: true, description: 'Ctrl+F in another file starts with what you searched last (nothing selected).' },
   { id: 'line-flash', label: 'Highlight the line you jump to', group: 'Navigation', essential: true, description: 'After Go to Line, F12, a search result or Back / Forward the target line flashes briefly.' },
+  { id: 'md-paste-link', label: 'Markdown: paste a link over text', group: 'Editing', essential: true, description: 'Pasting a web address over selected text makes [text](url).' },
 ];
 export const GROUPS: FeatureGroup[] = ['Editing', 'Navigation', 'Code intelligence', 'Tool windows', 'Files', 'Git', 'Gherkin', 'View', 'Debugging', 'Help and productivity'];
 
