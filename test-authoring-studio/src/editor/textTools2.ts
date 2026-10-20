@@ -337,3 +337,19 @@ export function formatMarkdownTable(view: EditorView) {
   view.dispatch({ changes: { from, to, insert: out }, userEvent: 'input.convert' });
   return true;
 }
+
+/** GitHub-style heading anchor. */
+export const slug = (text: string) => text.trim().toLowerCase().replace(/[^\p{L}\p{N}\s-]/gu, '').replace(/\s/g, '-');
+/** Markdown: Table of Contents (Rider): a nested list of links to the headings (not those inside code fences). */
+export function tableOfContents(markdown: string) {
+  let fence = false;
+  const heads: { level: number; text: string }[] = [];
+  for (const l of markdown.split('\n')) {
+    if (/^\s*(```|~~~)/.test(l)) { fence = !fence; continue; }
+    const m = !fence && /^(#{1,6})\s+(.+?)\s*#*\s*$/.exec(l);
+    if (m) heads.push({ level: m[1].length, text: m[2] });
+  }
+  if (!heads.length) return '';
+  const min = Math.min(...heads.map((h) => h.level));
+  return heads.map((h) => `${'  '.repeat(h.level - min)}- [${h.text}](#${slug(h.text)})`).join('\n');
+}

@@ -258,6 +258,7 @@ const ROWS: Record<'edit' | 'view' | 'navigate' | 'code' | 'tools' | 'help', Row
     { submenu: 'Markdown', rows: [
       ['Toggle Task', 'md-toggle-task'],
       ['Format Table', 'md-format-table'],
+      ['Insert Table of Contents', 'md-toc'],
     ] },
   ],
   tools: [

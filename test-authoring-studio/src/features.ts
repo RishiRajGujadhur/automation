@@ -421,6 +421,7 @@ export const FEATURES: Feature[] = [
   { id: 'raw-string', label: 'Convert to Raw String Literal', group: 'Code intelligence', essential: true, vs: 'Quick Actions: Convert to raw string', description: 'Code ▸ C# turns the string at the caret into a C# 11 raw string literal (escapes gone; multi-line when it has new lines).', commands: ['raw-string'] },
   { id: 'md-toggle-task', label: 'Markdown: Toggle Task', group: 'Editing', essential: false, description: 'Code ▸ Markdown checks or unchecks "- [ ]" tasks (and turns a line into a task).', commands: ['md-toggle-task'] },
   { id: 'md-format-table', label: 'Markdown: Format Table', group: 'Editing', essential: false, description: 'Code ▸ Markdown lines up the pipes of the table at the caret (alignment colons kept).', commands: ['md-format-table'] },
+  { id: 'md-toc', label: 'Markdown: Table of Contents', group: 'Editing', essential: false, description: 'Code ▸ Markdown inserts a nested list of links to the file\'s headings.', commands: ['md-toc'] },
 ];
 export const GROUPS: FeatureGroup[] = ['Editing', 'Navigation', 'Code intelligence', 'Tool windows', 'Files', 'Git', 'Gherkin', 'View', 'Debugging', 'Help and productivity'];
 
