@@ -16,6 +16,7 @@ switch. Web and desktop share the implementation.
 | V6 | Cursor surrounding lines | editor.cursorSurroundingLines, editor.cursorSurroundingLinesStyle | ✅ 2026-10-20 |
 | V7 | Font family, weight and ligatures | editor.fontFamily, editor.fontWeight, editor.fontLigatures | ✅ 2026-10-20 |
 | V8 | Line height and letter spacing | editor.lineHeight, editor.letterSpacing | ✅ 2026-10-20 |
+| V9 | Render whitespace | editor.renderWhitespace | ✅ 2026-10-20 |
 
 ## Progress log
 - 2026-10-20 V1: Schema-driven VS Code settings with sub-categories, modified marker, reset, @modified and settings.json copy/import; editor.lineNumbers on / off / relative / interval; Ctrl+, opens Preferences in the web app.
@@ -26,3 +27,4 @@ switch. Web and desktop share the implementation.
 - 2026-10-20 V6: Keeps n lines visible above and below the caret when it moves by keyboard (or, with all, also by mouse).
 - 2026-10-20 V7: The editors' (and gutters') font from a VS Code–style family list, a weight from 100 to 900, and ligatures on or off.
 - 2026-10-20 V8: Line height automatic, as a multiple of the font size (< 8) or in pixels; letter spacing in pixels; the gutters follow.
+- 2026-10-20 V9: Spaces and tabs drawn as · and → in the selection (VS Code's default), at boundaries, trailing only, everywhere or nowhere.

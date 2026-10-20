@@ -4,4 +4,5 @@ import './minimap';
 import './sectionHeaders';
 import './cursor';
 import './font';
+import './whitespace';
 export { SETTINGS } from './settings';

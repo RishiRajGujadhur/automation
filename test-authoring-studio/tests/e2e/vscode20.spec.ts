@@ -213,3 +213,21 @@ test('V8 Line height and letter spacing', async ({ page }) => {
   const fs = await view(page).locator('.cm-line').nth(1).evaluate((e) => parseFloat(getComputedStyle(e).fontSize));
   expect(parseFloat(await view(page).locator('.cm-line').nth(1).evaluate((e) => getComputedStyle(e).lineHeight))).toBeCloseTo(fs * 2, 0);
 });
+
+test('V9 Render whitespace: selection (default), boundary, trailing, all', async ({ page }) => {
+  await open(page, 'Steps/AuthSteps.cs');
+  await setDoc(page, 'int  a = 1;   \n');
+  const dots = view(page).locator('.cm-line').first().locator('.cm-highlightSpace');
+  await expect(dots).toHaveCount(0);
+  await page.evaluate(() => { const v = (window as unknown as { __activeEditor: () => { view: { dispatch(x: unknown): void } } }).__activeEditor().view; v.dispatch({ selection: { anchor: 0, head: 8 } }); });
+  await expect(dots).toHaveCount(3);
+  await setSettings(page, { 'editor.renderWhitespace': 'trailing' });
+  await setDoc(page, 'int  a = 1;   \n');
+  await expect(view(page).locator('.cm-line').first().locator('.cm-highlightSpace')).toHaveCount(3);
+  await setSettings(page, { 'editor.renderWhitespace': 'boundary' });
+  await setDoc(page, 'int  a = 1;   \n');
+  await expect(view(page).locator('.cm-line').first().locator('.cm-highlightSpace')).toHaveCount(5);
+  await setSettings(page, { 'editor.renderWhitespace': 'all' });
+  await setDoc(page, 'int  a = 1;   \n');
+  await expect(view(page).locator('.cm-line').first().locator('.cm-highlightSpace')).toHaveCount(7);
+});

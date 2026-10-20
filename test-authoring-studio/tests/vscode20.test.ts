@@ -76,3 +76,14 @@ describe('V8 line height', () => {
     expect(lineHeightCss(24)).toBe('24px');
   });
 });
+import { whitespaceToDraw } from '../src/vscode/whitespace';
+describe('V9 render whitespace', () => {
+  const t = '  a b  c\tx  ';
+  it('modes', () => {
+    expect(whitespaceToDraw(t, 'none')).toEqual([]);
+    expect(whitespaceToDraw(t, 'all')).toEqual([0, 1, 3, 5, 6, 8, 10, 11]);
+    expect(whitespaceToDraw(t, 'boundary')).toEqual([0, 1, 5, 6, 8, 10, 11]);
+    expect(whitespaceToDraw(t, 'trailing')).toEqual([10, 11]);
+    expect(whitespaceToDraw(t, 'selection', [[2, 7]])).toEqual([3, 5, 6]);
+  });
+});
