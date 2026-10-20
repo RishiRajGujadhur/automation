@@ -2,11 +2,13 @@ import { Bell, Copy, Trash2, X } from 'lucide-react';
 import { copyText } from '../ui';
 import { featureOn } from '../features';
 import { fileRefs, OPEN_LOCATION_EVENT } from '../editor/links';
-import { clearNotices, useNotices } from './notifications';
+import { clearNotices, markNoticesSeen, useNotices } from './notifications';
+import { useEffect } from 'react';
 
 /** Notifications tool window: the session's messages, newest first. */
 export default function NotificationsPanel({ onClose }: { onClose: () => void }) {
   const notes = useNotices();
+  useEffect(() => { markNoticesSeen(); }, [notes]);
   return (
     <section className="debug-panel todo-panel" aria-label="Notifications">
       <div className="debug-toolbar" role="toolbar" aria-label="Notifications">

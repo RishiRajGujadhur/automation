@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react';
-import { GitBranch, CircleX, TriangleAlert, ArrowUp, ArrowDown, Loader } from 'lucide-react';
+import { GitBranch, CircleX, TriangleAlert, ArrowUp, ArrowDown, Loader, Bell } from 'lucide-react';
 import { api } from './api';
 import { useBuild } from './build/store';
+import { useNotices, unreadNotices } from './rider/notifications';
 import { usePrefs } from './radix2';
 import { SAVE_ALL_EVENT } from './editor/events';
 import { unsavedFiles, UNSAVED_EVENT } from './editor/autosave';
@@ -23,6 +24,8 @@ import { wordCount } from './editor/docTools';
  */
 export default function StatusBarItems({ repository, onGit, onErrors }: { repository?: string; onGit: () => void; onErrors: () => void }) {
   const build = useBuild();
+  const notes = useNotices();
+  const unread = unreadNotices(notes);
   const { prefs, setPrefs } = usePrefs();
   // Unsaved files: the count, a click saves them all (QOL-50).
   const [unsaved, setUnsaved] = useState(unsavedFiles);
@@ -83,6 +86,7 @@ export default function StatusBarItems({ repository, onGit, onErrors }: { reposi
       {featureOn('build-elapsed') && build.status === 'running' && <span className="status-item" aria-label="Build progress"><Loader size={12} className="spin" /> {build.action === 'clean' ? 'Cleaning' : 'Building'}… {Math.max(0, Math.round((Date.now() - (buildStart || Date.now())) / 1000))} s</span>}
       {featureOn('unsaved-count') && unsaved.length > 0 && <button className="status-item" aria-label={`${unsaved.length} unsaved file${unsaved.length === 1 ? '' : 's'}: Save All`} title={`Unsaved: ${unsaved.join(', ')} — click to save all`} onClick={() => window.dispatchEvent(new Event(SAVE_ALL_EVENT))}>● {unsaved.length} unsaved</button>}
       {featureOn('autosave-status') && <button className="status-item" aria-label={`Auto Save: ${prefs.autoSave === 'off' ? 'off' : prefs.autoSave === 'afterDelay' ? 'after a delay' : 'on focus change'} (click to change)`} title="Auto Save (click to change)" onClick={() => setPrefs({ autoSave: prefs.autoSave === 'off' ? 'afterDelay' : prefs.autoSave === 'afterDelay' ? 'onFocusChange' : 'off' })}>{prefs.autoSave === 'off' ? 'Auto Save off' : prefs.autoSave === 'afterDelay' ? 'Auto Save' : 'Save on blur'}</button>}
+      {featureOn('notification-badge') && unread > 0 && <button className="status-item" aria-label={`${unread} new notification${unread === 1 ? '' : 's'}`} title="Notifications" onClick={() => runRider('tool-notifications', 'menu')}><Bell size={12} />{unread}</button>}
       {build.status !== 'idle' && (
         <button className="status-item" aria-label={`${errors} errors, ${warnings} warnings: open the Error List`} title="Error List" onClick={onErrors}>
           <CircleX size={12} />{errors} <TriangleAlert size={12} />{warnings}

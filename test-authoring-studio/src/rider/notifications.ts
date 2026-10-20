@@ -9,5 +9,9 @@ export function recordNotice(text: string) {
   notes = [{ text, at: Date.now() }, ...notes].slice(0, 200);
   for (const l of listeners) l();
 }
+// Unread notifications (the status bar badge): those newer than the last look at the window.
+let seenAt = Date.now();
+export const markNoticesSeen = () => { if (notes[0] && notes[0].at > seenAt) { seenAt = notes[0].at; for (const l of listeners) l(); } };
+export const unreadNotices = (list: Note[]) => list.filter((n) => n.at > seenAt).length;
 export function clearNotices() { notes = []; for (const l of listeners) l(); }
 export const useNotices = () => useSyncExternalStore((l) => { listeners.add(l); return () => listeners.delete(l); }, () => notes);
