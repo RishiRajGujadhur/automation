@@ -188,7 +188,7 @@ Legend: `[x]` done · `[ ]` to do.
 - [ ] 159. Changelist management
 - [x] 160. Local History
 - [x] 161. Compare branches — Compare with Branch
-- [ ] 162. Compare commits
+- [x] 162. Compare commits — Git Log: Ctrl+click a second commit, files that differ and the patch (2026-10-21)
 - [x] 163. Revert individual hunks — Rollback Lines, change gutter
 - [ ] 164. Git bisect integration
 - [x] 165. Commit message templates — Git Changes: the commit box starts with commit.template / .gitmessage; its # comments are left out (2026-10-21)
@@ -370,3 +370,4 @@ Legend: `[x]` done · `[ ]` to do.
 - 2026-10-21 384: The split editor opens below or beside the tab group; the direction is a setting.
 - 2026-10-21 397: The editor group with focus (tab group or split editor) fills the editor area until toggled back.
 - 2026-10-21 165: The commit message box starts with the repository's commit template; comment lines are stripped on commit and an untouched template cannot be committed.
+- 2026-10-21 162: Two commits compare in Git Log: the files that differ between them and the full patch.

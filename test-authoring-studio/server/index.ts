@@ -40,7 +40,7 @@ import { Builder } from './build.js';
 import { findInFiles, replaceInFiles, searchEditorText, parseSearchEditor, searchEditorName, SEARCH_EDITOR_DIR } from './search.js';
 import { values, render, parameterCount, replaceAttributePattern } from './stepRename.js';
 import { installed as nugetInstalled, updates as nugetUpdates, search as nugetSearch, versions as nugetVersions, install as nugetInstall, uninstall as nugetUninstall } from './nuget.js';
-import { commitTemplate } from './git2.js';
+import { commitTemplate, compareCommits } from './git2.js';
 import { status as gitStatus, stage as gitStage, unstage as gitUnstage, discard as gitDiscard, commit as gitCommit, headInfo, log as gitLog, branches as gitBranches, checkout as gitCheckout, createBranch as gitCreateBranch, sync as gitSync, merge as gitMerge, blame as gitBlame, clone as gitClone, shelves, shelve, unshelve, deleteShelf, lineHistory, commitDetails, graphLog, fileAt, commitAction, git, stageLines } from './git.js';
 import { readProperties, setProperties, evaluate, readEvents, setEvent, readUsings, setUsings, readReferences, setReferences, readFileItem, setFileItem, isExcluded, setExcluded } from './projectProps.js';
 import { findPattern, replacePattern } from '../src/search/ssr.js';
@@ -774,6 +774,11 @@ app.get('/api/git/graph', async (req, res) => {
   const file = z.string().max(400).optional().parse(req.query.file);
   if (file) await confined(config.repositoryRoot, file, false);
   res.json(await graphLog(config.repositoryRoot, 200, req.query.scope !== 'current', file || undefined));
+});
+// Compare two commits (Git Log: Ctrl+click a second commit).
+app.get('/api/git/compare', async (req, res) => {
+  const ref = z.string().regex(/^[0-9a-f]{4,40}$/i);
+  res.json(await compareCommits(config.repositoryRoot, ref.parse(req.query.from), ref.parse(req.query.to)));
 });
 app.get('/api/git/at', async (req, res) => {
   const q = z.object({ file: z.string().min(1).max(400), ref: z.string().min(1).max(200) }).parse(req.query);

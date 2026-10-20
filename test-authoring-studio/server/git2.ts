@@ -19,3 +19,13 @@ export async function commitTemplate(root: string): Promise<{ text: string; sour
   }
   return null;
 }
+
+/** Compare two commits (Rider's Compare Versions): the files that differ and the patch, inside the workspace folder. */
+export async function compareCommits(root: string, from: string, to: string) {
+  const { top, prefix } = await locate(root);
+  const scope = ['--', prefix || '.'];
+  const names = await git(top, ['diff', '--name-status', '--no-renames', from, to, ...scope]);
+  const files = names.split('\n').filter(Boolean).map((l) => { const [status, file] = l.split('\t'); return { status: status[0], file: prefix && file.startsWith(`${prefix}/`) ? file.slice(prefix.length + 1) : file }; });
+  const patch = await git(top, ['diff', '--no-color', from, to, ...scope]);
+  return { files, patch: patch.length > 400_000 ? `${patch.slice(0, 400_000)}\n… (cut)` : patch };
+}

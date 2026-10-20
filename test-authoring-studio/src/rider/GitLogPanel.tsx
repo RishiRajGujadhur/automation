@@ -34,6 +34,10 @@ export default function GitLogPanel({ onOpen, onClose, onNotice }: { onOpen: (fi
   const query = remember ? savedQuery : plainQuery;
   const setQuery = remember ? setSavedQuery : setPlainQuery;
   const [selected, setSelected] = useState<string>();
+  // Compare commits: Ctrl+click a second commit (Rider's Compare Versions).
+  const [other, setOther] = useState<string>();
+  const [comparison, setComparison] = useState<{ files: { file: string; status: string }[]; patch: string }>();
+  useEffect(() => { setComparison(undefined); if (selected && other) api<{ files: { file: string; status: string }[]; patch: string }>(`/git/compare?from=${other}&to=${selected}`).then(setComparison, (e) => setError((e as Error).message)); }, [selected, other]);
   const [commit, setCommit] = useState<Commit>();
   // A file at the selected revision, or its difference from the working copy, instead of the commit's patch.
   const [shownFile, setShownFile] = useState<{ title: string; text: string; diff: boolean }>();
@@ -74,7 +78,7 @@ export default function GitLogPanel({ onOpen, onClose, onNotice }: { onOpen: (fi
       <div className="git-log-body">
         <ul className="git-log-list" role="listbox" aria-label="Commits">
           {shown.map((r, i) => (r.hash ? (
-            <li key={`${r.hash}-${i}`} role="option" aria-selected={selected === r.hash} className={selected === r.hash ? 'active' : ''} onClick={() => setSelected(r.hash)}>
+            <li key={`${r.hash}-${i}`} role="option" aria-selected={selected === r.hash || other === r.hash} className={selected === r.hash ? 'active' : other === r.hash ? 'active compared' : ''} onClick={(e) => { if ((e.ctrlKey || e.metaKey) && selected && selected !== r.hash && featureOn('git-compare-commits')) setOther(r.hash); else { setSelected(r.hash); setOther(undefined); } }}>
               <span className="git-graph">{r.graph}</span>
               {r.refs && <span className="git-refs">{r.refs}</span>}
               <span className="git-subject">{r.subject}</span>
@@ -85,7 +89,14 @@ export default function GitLogPanel({ onOpen, onClose, onNotice }: { onOpen: (fi
         </ul>
         <div className="git-log-details" aria-label="Commit details">
           {!selected && <p className="subtle">Select a commit to see its changes.</p>}
-          {commit && (
+          {other && selected && (
+            <div className="git-compare" aria-label="Commit comparison">
+              <p className="git-commit-head"><strong>Comparing {other.slice(0, 7)} → {selected.slice(0, 7)}</strong> <button className="link-button" onClick={() => setOther(undefined)}>Stop comparing</button></p>
+              {comparison && (comparison.files.length ? <ul className="git-commit-files" aria-label="Files that differ">{comparison.files.map((f) => <li key={f.file}><span className={`git-status s-${f.status}`}>{f.status}</span> <button className="link-button" onClick={() => onOpen(f.file)}>{f.file}</button></li>)}</ul> : <p className="subtle">No difference.</p>)}
+              {comparison && comparison.files.length > 0 && <CodeMirror value={comparison.patch} theme={theme} editable={false} basicSetup={SETUP} extensions={DIFF} height="260px" aria-label="Comparison patch" />}
+            </div>
+          )}
+          {commit && !other && (
             <>
               <p className="git-commit-head"><strong>{commit.message.split('\n')[0]}</strong><br /><small>{commit.hash.slice(0, 10)} · {commit.author} &lt;{commit.email}&gt; · {new Date(commit.date).toLocaleString()}</small></p>
               {commit.message.includes('\n') && <pre className="git-commit-body">{commit.message.split('\n').slice(1).join('\n').trim()}</pre>}

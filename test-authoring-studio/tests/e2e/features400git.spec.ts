@@ -51,3 +51,23 @@ test('165 Commit message templates', async ({ page }) => {
   // The box starts again with the template.
   await expect(box).toHaveValue('Summary\n\n# Why is this change needed?\nWhy: \n');
 });
+
+test('162 Compare commits', async ({ page }) => {
+  await fs.appendFile(path.join(root, 'Steps/AuthSteps.cs'), '// one\n');
+  git('commit', '-q', '-am', 'One');
+  await fs.appendFile(path.join(root, 'Steps/SearchSteps.cs'), '// two\n');
+  git('commit', '-q', '-am', 'Two');
+  await open(page);
+  await page.keyboard.press('Alt+9');
+  const log = page.getByRole('region', { name: 'Git Log' });
+  const commits = log.getByRole('listbox', { name: 'Commits' });
+  await commits.getByRole('option', { name: /Two/ }).click();
+  await commits.getByRole('option', { name: /Initial/ }).click({ modifiers: ['Control'] });
+  const cmp = log.getByLabel('Commit comparison');
+  await expect(cmp).toContainText(/Comparing [0-9a-f]{7} → [0-9a-f]{7}/);
+  const files = cmp.getByLabel('Files that differ');
+  await expect(files.getByRole('button')).toHaveText(['Steps/AuthSteps.cs', 'Steps/SearchSteps.cs']);
+  await expect(cmp.getByLabel('Comparison patch')).toContainText('+// two');
+  await cmp.getByRole('button', { name: 'Stop comparing' }).click();
+  await expect(cmp).toHaveCount(0);
+});
