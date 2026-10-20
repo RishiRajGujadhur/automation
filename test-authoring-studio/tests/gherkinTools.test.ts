@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { EditorState, type TransactionSpec } from '@codemirror/state';
 import { EditorView } from '@codemirror/view';
-import { cycleStepKeyword, scenarioToOutline, tableInsertRow, tableAddColumn, tableDeleteColumn, tableSortByColumn, testFilter, selectScenario, renameTag, extractExamplesParameter, outlineToScenario, duplicateScenario, moveScenario, extractBackground, addExamplesTable, toggleTag, toggleScenarioComment, pasteAsTable, tableCsv, featureStats, renameExamplesParameter, removeUnusedColumns, inlineBackground, normalizeStepKeywords, addScenario } from '../src/editor/gherkinTools';
+import { cycleStepKeyword, scenarioToOutline, tableInsertRow, tableAddColumn, tableDeleteColumn, tableSortByColumn, testFilter, selectScenario, renameTag, extractExamplesParameter, outlineToScenario, duplicateScenario, moveScenario, extractBackground, addExamplesTable, toggleTag, toggleScenarioComment, pasteAsTable, tableCsv, featureStats, renameExamplesParameter, removeUnusedColumns, inlineBackground, normalizeStepKeywords, addScenario, scenarioMarkdown } from '../src/editor/gherkinTools';
 
 /** Runs an editor command on `doc` with the selection between « and » (or a caret at ‸); with `caret`, the result marks the caret with ¦. */
 function run(doc: string, cmd: (v: EditorView) => boolean, caret = false) {
@@ -141,5 +141,10 @@ describe('Gherkin tools (IDE-FEATURES X49…)', () => {
   it('X148 Add Scenario: after the scenario at the caret, caret on the title', () => {
     expect(run('Feature: F\n  Scenario: A‸\n    Given a\n\n  Scenario: B\n    Given b', addScenario, true)).toBe('Feature: F\n  Scenario: A\n    Given a\n\n  Scenario: ¦\n    Given \n\n  Scenario: B\n    Given b');
     expect(run('Feature: F‸\n', addScenario, true)).toBe('Feature: F\n\n  Scenario: ¦\n    Given ');
+  });
+  it('X149 Copy Scenario as Markdown', () => {
+    const state = EditorState.create({ doc: 'Feature: F\n  @smoke @login\n  Scenario Outline: Sign in\n    Given the users:\n      | name | role |\n      | ada  | <r>  |\n    When "<r>" signs in\n    Examples:\n      | r     |\n      | admin |' });
+    expect(scenarioMarkdown(state, 3)).toBe('### Scenario Outline: Sign in\n\n_@smoke @login_\n\n- **Given** the users:\n\n| name | role |\n| --- | --- |\n| ada | <r> |\n\n- **When** "<r>" signs in\n\n#### Examples\n\n| r |\n| --- |\n| admin |');
+    expect(scenarioMarkdown(EditorState.create({ doc: 'Feature: F' }), 1)).toBeUndefined();
   });
 });

@@ -570,3 +570,31 @@ export function addScenario(view: EditorView) {
   view.dispatch({ changes: { from: at, insert }, selection: { anchor: at + before.length + indent.length + 'Scenario: '.length }, scrollIntoView: true, userEvent: 'input' });
   return true;
 }
+
+/** Copy Scenario as Markdown (test reports, tickets): title, tags, steps as a list, tables as Markdown tables. */
+export function scenarioMarkdown(state: EditorState, lineNo: number) {
+  const b = scenarioBlock(state, lineNo);
+  if (!b) return undefined;
+  const doc = state.doc;
+  const out: string[] = [];
+  const tags = Array.from({ length: b.head - b.first }, (_, i) => doc.line(b.first + i).text.trim()).join(' ');
+  out.push(`### ${doc.line(b.head).text.trim()}`);
+  if (tags) out.push('', `_${tags}_`);
+  out.push('');
+  let table: string[][] = [];
+  const flush = () => { if (!table.length) return; out.push('', `| ${table[0].join(' | ')} |`, `|${table[0].map(() => ' --- |').join('')}`, ...table.slice(1).map((r) => `| ${r.join(' | ')} |`), ''); table = []; };
+  let fence = false;
+  for (let n = b.head + 1; n <= b.end; n++) {
+    const t = doc.line(n).text.trim();
+    if (t.startsWith('\"\"\"') || t.startsWith('```')) { flush(); out.push('```'); fence = !fence; continue; }
+    if (fence) { out.push(doc.line(n).text.replace(/^\s{0,6}/, '')); continue; }
+    if (t.startsWith('|')) { table.push(splitRow(t)); continue; }
+    flush();
+    const m = /^(Given|When|Then|And|But)\s+(.*)$/.exec(t);
+    if (m) out.push(`- **${m[1]}** ${m[2]}`);
+    else if (/^(Examples|Scenarios):/.test(t)) out.push('', `#### ${t.replace(/:$/, '')}`);
+    else if (t && !t.startsWith('#')) out.push(t);
+  }
+  flush();
+  return out.join('\n').replace(/\n{3,}/g, '\n\n').trim();
+}

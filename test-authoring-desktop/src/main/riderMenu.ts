@@ -181,6 +181,7 @@ const ROWS: Record<'edit' | 'view' | 'navigate' | 'code' | 'tools' | 'help', Row
       ['Inline Background', 'inline-background'],
       ['Normalize Step Keywords', 'normalize-keywords'],
       ['Add Scenario', 'add-scenario'],
+      ['Copy Scenario as Markdown', 'copy-scenario-md'],
     ] },
   ],
   tools: [
