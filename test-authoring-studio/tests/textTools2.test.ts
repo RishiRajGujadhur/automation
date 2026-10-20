@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { EditorSelection, EditorState, type TransactionSpec } from '@codemirror/state';
 import type { EditorView } from '@codemirror/view';
-import { mapSelections, urlEncode, urlDecode, base64Encode, base64Decode, escapeString, unescapeString, htmlEncode, htmlDecode, stepNumber, insertSequence } from '../src/editor/textTools2';
+import { mapSelections, urlEncode, urlDecode, base64Encode, base64Decode, escapeString, unescapeString, htmlEncode, htmlDecode, stepNumber, insertSequence, toggleQuotes } from '../src/editor/textTools2';
 
 /** Runs an editor command on `doc` with the selection between « and » (or a caret at |). */
 function run(doc: string, cmd: (v: EditorView) => boolean) {
@@ -46,5 +46,10 @@ describe('text tools, fourth batch (IDE-FEATURES-4 Y1…)', () => {
     const view = { get state() { return state; }, dispatch: (spec: TransactionSpec) => { state = state.update(spec).state; } };
     expect(insertSequence(view as unknown as EditorView)).toBe(true);
     expect(state.doc.toString()).toBe('a1\nb2\nc3');
+  });
+  it('Y7 Toggle Quotes', () => {
+    expect(run('x = "it|\'s";', toggleQuotes)).toBe("x = 'it\\'s';");
+    expect(run("x = 'a|b';", toggleQuotes)).toBe('x = "ab";');
+    expect(run('no| quotes', toggleQuotes)).toBe('no quotes');
   });
 });

@@ -87,3 +87,20 @@ export function insertSequence(view: EditorView) {
   view.dispatch({ ...view.state.changeByRange((r) => { const text = String(start + order.get(r.from)!); return { changes: { from: r.from, to: r.to, insert: text }, range: EditorSelection.cursor(r.from + text.length) }; }), userEvent: 'input.convert' });
   return true;
 }
+
+/** Toggle Quotes (Rider): the string at the caret switches between "double" and 'single' quotes. */
+export function toggleQuotes(view: EditorView) {
+  const { state } = view;
+  const head = state.selection.main.head;
+  const line = state.doc.lineAt(head);
+  for (const m of line.text.matchAll(/"((?:[^"\\]|\\.)*)"|'((?:[^'\\]|\\.)*)'/g)) {
+    const from = line.from + m.index!, to = from + m[0].length;
+    if (head < from || head > to) continue;
+    const dq = m[1] !== undefined;
+    const body = dq ? m[1].replace(/\\"/g, '"').replace(/'/g, "\\'") : m[2].replace(/\\'/g, "'").replace(/"/g, '\\"');
+    const q = dq ? "'" : '"';
+    view.dispatch({ changes: { from, to, insert: q + body + q }, selection: { anchor: Math.min(head, from + body.length + 1) }, userEvent: 'input.convert' });
+    return true;
+  }
+  return false;
+}

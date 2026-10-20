@@ -71,6 +71,7 @@ const ROWS: Record<'edit' | 'view' | 'navigate' | 'code' | 'tools' | 'help', Row
       ['Increment Number', 'increment-number'],
       ['Decrement Number', 'decrement-number'],
       ['Insert Sequence (1, 2, 3…)', 'insert-sequence'],
+      ['Toggle Quotes', 'toggle-quotes'],
     ] },
   ],
   view: [

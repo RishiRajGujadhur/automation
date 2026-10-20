@@ -15,6 +15,7 @@ has it on by default, so the desktop app starts with it on. The others start off
 | Y4 | HTML Encode / Decode | Rider | no | ✅ 2026-10-20 |
 | Y5 | Increment / Decrement Number | Rider | no | ✅ 2026-10-20 |
 | Y6 | Insert Sequence at carets | Rider | no | ✅ 2026-10-20 |
+| Y7 | Toggle Quotes | Rider | no | ✅ 2026-10-20 |
 
 ## Progress log
 - 2026-10-20 Y1: Percent-encodes the selection (or line) and decodes it.
@@ -23,3 +24,4 @@ has it on by default, so the desktop app starts with it on. The others start off
 - 2026-10-20 Y4: Entities for < > & and quotes, and numeric entities when decoding.
 - 2026-10-20 Y5: The number at each caret changes by one; zero padding kept.
 - 2026-10-20 Y6: 1, 2, 3… at several carets, or counting on from a selected number.
+- 2026-10-20 Y7: The string at the caret switches between double and single quotes.
