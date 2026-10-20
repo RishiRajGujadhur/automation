@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { ChevronDown, ChevronRight, CaseSensitive, WholeWord, Regex, Replace, MoreHorizontal, RefreshCw, X, ChevronsDownUp, ChevronsUpDown, ClipboardCopy, BookOpen } from 'lucide-react';
 import { api } from '../api';
+import { activeEditor } from '../editor/activeEditor';
 import { useTabs } from '../files/tabs';
 import { useLocalState, copyText } from '../ui';
 import { featureOn } from '../features';
@@ -15,6 +16,16 @@ type Result = { files: { file: string; matches: Match[] }[]; total: number; trun
  * Find and Replace in Files (Ctrl+Shift+F / Ctrl+Shift+H), like VS Code's Search view and Visual Studio's Find in
  * Files: match case, whole word, regular expressions, files to include / exclude, results by file, Replace All.
  */
+/** Selects the match once its file is the active editor (QOL-50: the found text is selected, as in VS Code). */
+function selectWhenOpen(file: string, line: number, column: number, length: number, tries = 0) {
+  const a = activeEditor();
+  if (a?.file === file && line <= a.view.state.doc.lines) {
+    const l = a.view.state.doc.line(line);
+    const from = Math.min(l.to, l.from + column - 1);
+    if (a.view.state.selection.main.head === from || tries > 4) { a.view.dispatch({ selection: { anchor: from, head: Math.min(l.to, from + length) }, scrollIntoView: true }); return; }
+  }
+  if (tries < 40) setTimeout(() => selectWhenOpen(file, line, column, length, tries + 1), 75);
+}
 export default function SearchView({ initialReplace, initialInclude, onOpen, onNotice, onChanged }: { initialReplace?: boolean; initialInclude?: string; onOpen: (file: string, line: number, column: number) => void; onNotice: (m: string) => void; onChanged: () => void }) {
   const confirm = useConfirm();
   // The last search comes back after a reload (QOL-50).
@@ -141,7 +152,7 @@ export default function SearchView({ initialReplace, initialInclude, onOpen, onN
                 {open && (
                   <ul>
                     {f.matches.map((m, i) => (
-                      <li key={i}><button className="search-match" onClick={() => onOpen(f.file, m.line, m.column)} title={`${f.file}:${m.line}:${m.column}`}>{highlight(m)}</button></li>
+                      <li key={i}><button className="search-match" onClick={() => { onOpen(f.file, m.line, m.column); if (featureOn('search-select')) selectWhenOpen(f.file, m.line, m.column, m.length); }} title={`${f.file}:${m.line}:${m.column}`}>{highlight(m)}</button></li>
                     ))}
                   </ul>
                 )}

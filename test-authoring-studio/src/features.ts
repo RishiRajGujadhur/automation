@@ -319,6 +319,7 @@ export const FEATURES: Feature[] = [
   { id: 'tabstrip-new', label: 'Double-click the tab bar for a new scratch file', group: 'Files', essential: true, vs: 'Double-click tab bar ▸ New file', description: 'Double-clicking empty space beside the tabs starts a scratch file.' },
   { id: 'search-remember', label: 'Search remembers the last search', group: 'Navigation', essential: true, description: 'The search box, options and file filters come back after a reload.' },
   { id: 'search-keys', label: 'Search results by keyboard', group: 'Navigation', essential: true, description: '↓ from the search box goes into the results; ↑ / ↓ move, Enter opens.' },
+  { id: 'search-select', label: 'Search: the found text is selected', group: 'Navigation', essential: true, description: 'Opening a search result selects the match in the editor.' },
 ];
 export const GROUPS: FeatureGroup[] = ['Editing', 'Navigation', 'Code intelligence', 'Tool windows', 'Files', 'Git', 'Gherkin', 'View', 'Debugging', 'Help and productivity'];
 

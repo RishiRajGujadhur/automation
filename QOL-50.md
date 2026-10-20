@@ -29,6 +29,7 @@ Every improvement is verified by a unit or Playwright test (`tests/e2e/qol50.spe
 | QL20 | Double-click the tab bar for a scratch file | Tabs | ✅ 2026-10-20 |
 | QL21 | Search remembers the last search | Search | ✅ 2026-10-20 |
 | QL22 | Search results by keyboard | Search | ✅ 2026-10-20 |
+| QL23 | Search: the found text is selected | Search | ✅ 2026-10-20 |
 
 ## Progress log
 - 2026-10-20 QL1: Title names the file and workspace folder
@@ -53,3 +54,4 @@ Every improvement is verified by a unit or Playwright test (`tests/e2e/qol50.spe
 - 2026-10-20 QL20: Tab bar double-click: New Scratch File
 - 2026-10-20 QL21: Query, options and filters kept after reload
 - 2026-10-20 QL22: Down into results, Up/Down, Enter
+- 2026-10-20 QL23: Opening a result selects the match
