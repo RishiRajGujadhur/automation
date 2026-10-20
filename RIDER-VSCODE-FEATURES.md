@@ -10,7 +10,7 @@ Legend: `[x]` done · `[ ]` to do.
 ## Settings (from the screenshots)
 
 - [x] S1. VS Code–style settings with ids, modified bar, reset, `@modified`, settings.json — VSCODE-20.md V1
-- [ ] S2. Settings categories as a collapsible tree (Text Editor ▸ Minimap, Workbench ▸ …), as in VS Code
+- [x] S2. Settings categories as a collapsible tree (Text Editor ▸ Minimap, Workbench ▸ …), as in VS Code — Settings nav: chevrons, ←/→, remembered (2026-10-21)
 
 ## Debugging
 
@@ -333,3 +333,4 @@ Legend: `[x]` done · `[ ]` to do.
 
 ## Progress log
 - 2026-10-21 Created: existing features ticked.
+- 2026-10-21 S2: Text Editor and Workbench fold their sub-categories in the Settings nav; arrow keys expand and collapse; the state is remembered; a search shows everything.

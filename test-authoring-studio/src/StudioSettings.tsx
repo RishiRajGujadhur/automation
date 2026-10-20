@@ -4,7 +4,7 @@ import * as Yup from 'yup';
 import CodeMirror from '@uiw/react-codemirror';
 import { StreamLanguage } from '@codemirror/language';
 import { gherkin } from '@codemirror/legacy-modes/mode/gherkin';
-import { Download, Trash2, RotateCcw, Search, Settings2, Palette, Code2, Accessibility, PanelLeft, Network, Activity, FolderCog, HardDrive, Keyboard, X, Cpu, Info, ToggleRight, Type, AppWindow, FileJson, type LucideIcon } from 'lucide-react';
+import { Download, Trash2, RotateCcw, Search, Settings2, Palette, Code2, Accessibility, PanelLeft, Network, Activity, FolderCog, HardDrive, Keyboard, X, Cpu, Info, ToggleRight, Type, AppWindow, FileJson, ChevronRight, ChevronDown, type LucideIcon } from 'lucide-react';
 import { api } from './api';
 import { TextField } from './forms';
 import { Switch as SwitchPrimitive, Segmented, usePrefs, useConfirm, useAlgorithms, Tip } from './radix2';
@@ -89,6 +89,11 @@ export default function StudioSettings({ onNotice, onWorkspace, shortcuts, onClo
     return [...baseSections.slice(0, i), ...extra, ...baseSections.slice(i)];
   }, []);
   const importRef = useRef<HTMLInputElement>(null);
+  // The nav is a tree as in VS Code: Text Editor and Workbench fold their sub-categories (remembered).
+  const [collapsed, setCollapsed] = useLocalState<string[]>('settingsCollapsed', []);
+  const parentOf = (s: Section) => (s.sub ? s.id.split(' ▸ ')[0] : null);
+  const hasSubs = (s: Section) => !s.sub && sections.some((x) => parentOf(x) === s.id);
+  const toggle = (id: string, open?: boolean) => setCollapsed((c) => ((open ?? c.includes(id)) ? c.filter((x) => x !== id) : [...c.filter((x) => x !== id), id]));
   // Re-render on feature switches (and know whether they differ from the preset).
   useFeatures();
   const featureVersion = FEATURES.map((f) => (featureOn(f.id) ? 1 : 0)).join('');
@@ -316,9 +321,16 @@ export default function StudioSettings({ onNotice, onWorkspace, shortcuts, onClo
       <nav className="settings-nav" aria-label="Settings categories">
         <span className="settings-nav-label">Categories</span>
         <ul>
-          {sections.map((s) => (
-            <li key={s.id}>
+          {sections.filter((s) => q || !s.sub || !collapsed.includes(parentOf(s)!)).map((s) => (
+            <li key={s.id} className={hasSubs(s) ? 'has-subs' : ''}>
+              {hasSubs(s) && !q && (
+                <button className="settings-nav-twisty" aria-label={`${collapsed.includes(s.id) ? 'Expand' : 'Collapse'} ${s.label}`} aria-expanded={!collapsed.includes(s.id)} tabIndex={-1} onClick={() => toggle(s.id)}>
+                  {collapsed.includes(s.id) ? <ChevronRight size={14} aria-hidden="true" /> : <ChevronDown size={14} aria-hidden="true" />}
+                </button>
+              )}
               <button
+                aria-expanded={hasSubs(s) && !q ? !collapsed.includes(s.id) : undefined}
+                onKeyDown={(e) => { if (!hasSubs(s) || q) return; if (e.key === 'ArrowLeft') { e.preventDefault(); toggle(s.id, false); } else if (e.key === 'ArrowRight') { e.preventDefault(); toggle(s.id, true); } }}
                 className={`settings-nav-item ${s.sub ? 'sub' : ''} ${!q && current.id === s.id ? 'active' : ''} ${q && !counts[s.id] ? 'dim' : ''}`}
                 aria-current={!q && current.id === s.id ? 'page' : undefined}
                 onClick={() => { setQuery(''); setSection(s.id); }}
