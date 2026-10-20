@@ -243,6 +243,7 @@ const ROWS: Record<'edit' | 'view' | 'navigate' | 'code' | 'tools' | 'help', Row
     ['Insert Date and Time', 'insert-date'],
     ['Insert Lorem Ipsum', 'insert-lorem'],
     ['Reformat XML', 'reformat-xml'],
+    ['Minify XML', 'minify-xml'],
   ],
   tools: [
     ['Run Anything… (Ctrl twice)', 'run-anything'],

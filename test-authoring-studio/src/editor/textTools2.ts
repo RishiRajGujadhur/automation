@@ -219,3 +219,6 @@ export function formatXml(src: string, unit = '  ') {
 }
 /** Uses the editor's indent unit (Tab or spaces). */
 export const reformatXml = (view: EditorView) => mapSelections((t) => formatXml(t, view.state.facet(indentUnit)), 'doc')(view);
+
+/** Minify XML (Rider): the white space between tags removed. */
+export const minifyXml = mapSelections((t) => (formatXml(t) === null ? null : t.replace(/>\s+</g, '><').trim()), 'doc');

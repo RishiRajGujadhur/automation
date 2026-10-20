@@ -26,6 +26,7 @@ has it on by default, so the desktop app starts with it on. The others start off
 | Y15 | Insert Lorem Ipsum | Rider | no | ✅ 2026-10-20 |
 | Y16 | Shuffle Lines | Rider | no | ✅ 2026-10-20 |
 | Y17 | Reformat XML | VS 2026 | yes | ✅ 2026-10-20 |
+| Y18 | Minify XML | Rider | no | ✅ 2026-10-20 |
 
 ## Progress log
 - 2026-10-20 Y1: Percent-encodes the selection (or line) and decodes it.
@@ -45,3 +46,4 @@ has it on by default, so the desktop app starts with it on. The others start off
 - 2026-10-20 Y15: Code menu: a sentence of placeholder text.
 - 2026-10-20 Y16: The selected lines in random order.
 - 2026-10-20 Y17: One element per line, indented with the editor's unit; short text inline.
+- 2026-10-20 Y18: White space between tags removed (well-formed XML only).
