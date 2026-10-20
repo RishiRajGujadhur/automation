@@ -589,6 +589,7 @@ export default function App() {
   // Notices from places without access to setNotice (e.g. a turned-off feature's command).
   useEffect(() => { const h = (e: Event) => setNotice((e as CustomEvent<string>).detail); window.addEventListener('tas:notice', h); return () => window.removeEventListener('tas:notice', h); }, []); // eslint-disable-line react-hooks/exhaustive-deps
   // A command created files (Save As…): re-index, then let it continue (detail: a callback).
+  useEffect(() => { const h = () => menuRef.current('test-explorer'); window.addEventListener('tas:show-tests', h); return () => window.removeEventListener('tas:show-tests', h); }, []);
   useEffect(() => { const h = (e: Event) => { api<Index>('/scan', {}).then((i) => { setIndex(i); (e as CustomEvent<(() => void) | undefined>).detail?.(); }, (err) => setNotice((err as Error).message)); }; window.addEventListener('tas:rescan', h); return () => window.removeEventListener('tas:rescan', h); }, []); // eslint-disable-line react-hooks/exhaustive-deps
   // The desktop app's native menus hide the commands of turned-off features.
   useEffect(() => { const push = () => desktop?.setDisabledCommands?.(disabledCommands()); push(); return onFeaturesChanged(push); }, []);
