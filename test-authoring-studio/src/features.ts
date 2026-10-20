@@ -464,6 +464,7 @@ export const FEATURES: Feature[] = [
   { id: 'copy-markdown-block', label: 'Copy as Markdown Code Block', group: 'Editing', essential: false, description: 'Edit ▸ Copy as Markdown Code Block copies the selection (or file) inside a fenced block with its language (for tickets and chats).', commands: ['copy-markdown-block'] },
   { id: 'file-statistics', label: 'File Statistics', group: 'Help and productivity', essential: false, description: 'Tools ▸ File Statistics counts the code, comment and blank lines of the active file.', commands: ['file-statistics'] },
   { id: 'copy-scenario-steps', label: 'Copy Scenario Steps', group: 'Gherkin', essential: false, description: 'Code ▸ Gherkin copies the steps of the scenario at the caret (tables included), to reuse them.', commands: ['copy-scenario-steps'] },
+  { id: 'list-unbound', label: 'Next Unbound Step', group: 'Gherkin', essential: true, vs: 'Reqnroll: unbound steps', description: 'Code ▸ Gherkin goes to the next step without a step definition and says how many the file has.', commands: ['list-unbound'] },
 ];
 export const GROUPS: FeatureGroup[] = ['Editing', 'Navigation', 'Code intelligence', 'Tool windows', 'Files', 'Git', 'Gherkin', 'View', 'Debugging', 'Help and productivity'];
 

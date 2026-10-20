@@ -1,5 +1,6 @@
 import type { RiderCommand } from './commands';
 import type { MoreHelpers } from './more';
+import { forEachDiagnostic } from '@codemirror/lint';
 import { api } from '../api';
 import { getTabs, setPinned } from '../files/tabs';
 import { copyText } from '../ui';
@@ -80,5 +81,6 @@ export function moreCommands2(h: MoreHelpers): RiderCommand[] {
     { id: 'copy-markdown-block', label: 'Copy as Markdown Code Block', menu: 'Edit', run: h.inEditor((v, file) => { const s = v.state.selection.main; const text = s.empty ? v.state.doc.toString() : v.state.sliceDoc(s.from, s.to); void copyText(markdownCodeBlock(text, file)).then((ok) => h.notice(ok ? `Copied the ${s.empty ? 'file' : 'selection'} as a Markdown code block.` : 'Clipboard unavailable.')); }) },
     { id: 'file-statistics', label: 'File Statistics', menu: 'Tools', run: h.inEditor((v, file) => { const s = fileStatistics(v.state.doc.toString(), file); h.notice(`${file.split('/').pop()}: ${s.lines} lines — ${s.code} code, ${s.comments} comment, ${s.blank} blank; ${v.state.doc.length} characters.`); }) },
     { id: 'copy-scenario-steps', label: 'Copy Scenario Steps', menu: 'Code', submenu: 'Gherkin', run: h.inEditor((v) => { const s = scenarioSteps(v.state); if (!s) { h.notice('Put the caret in a scenario with steps.'); return; } void copyText(s).then((ok) => h.notice(ok ? `Copied ${s.split('\n').filter((l) => !l.startsWith(' ')).length} steps.` : 'Clipboard unavailable.')); }) },
+    { id: 'list-unbound', label: 'Next Unbound Step', menu: 'Code', submenu: 'Gherkin', run: h.inEditor((v) => { const found: { from: number; message: string }[] = []; forEachDiagnostic(v.state, (d, from) => { if (/binding matches this step/.test(d.message)) found.push({ from, message: d.message }); }); if (!found.length) { h.notice('Every step of this file is bound.'); return; } const here = v.state.selection.main.head; const next = found.find((f) => f.from > here) ?? found[0]; v.dispatch({ selection: { anchor: next.from }, scrollIntoView: true }); h.notice(`${found.length} unbound step${found.length === 1 ? '' : 's'} in this file.`); }) },
   ];
 }

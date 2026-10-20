@@ -252,3 +252,15 @@ test('Y60 Copy Current Branch Name', async ({ page, context }) => {
   await page.getByRole('menuitem', { name: /^Copy Current Branch Name/ }).click();
   await expect.poll(() => page.evaluate(() => navigator.clipboard.readText())).toBe('main');
 });
+
+test('Y61 / Y62 Commit message: issue key from the branch; Conventional Commits type', async ({ page }) => {
+  g('checkout', '-q', '-b', 'feature/ABC-123-sign-in');
+  await open(page);
+  await page.getByRole('button', { name: 'Git Changes', exact: true }).click();
+  const view = page.getByRole('region', { name: 'Git Changes' });
+  await view.getByLabel('Commit message').fill('Sign in works');
+  await view.getByRole('button', { name: 'Insert issue key ABC-123' }).click();
+  await expect(view.getByLabel('Commit message')).toHaveValue('ABC-123: Sign in works');
+  await view.getByLabel('Commit type').selectOption('fix');
+  await expect(view.getByLabel('Commit message')).toHaveValue('ABC-123: fix: Sign in works');
+});

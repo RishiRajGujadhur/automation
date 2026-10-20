@@ -169,3 +169,23 @@ test('Y51–Y56 Move tab, memory indicator, Go to Offset, Caret Blinking, Pin Ac
   await setDoc(page, 'Feature: F\n  Scenario: A\n    Given x\n  Scenario: a\n    Given y\n', 0);
   await expect(page.getByRole('button', { name: /^Problems in this file: \d+ errors, [1-9]\d* warnings$/ })).toBeVisible({ timeout: 10_000 });
 });
+
+test('Y63–Y70 Timestamp, JWT, Sort Tokens, File Statistics, Next Unbound Step', async ({ page }) => {
+  await open(page);
+  await expect(page.getByLabel('Gherkin source')).toContainText('Feature:');
+  await setDoc(page, 'Feature: F\n  Scenario: S\n    Given nothing binds this step\n', 0);
+  await expect(page.locator('.cm-lintRange-error, .cm-lintRange-warning', { hasText: 'nothing binds' }).first()).toBeVisible({ timeout: 15_000 });
+  await gherkinItem(page, /^Next Unbound Step/);
+  await expect(page.getByText('1 unbound step in this file.').first()).toBeVisible();
+  await menuItem(page, 'Tools', /^File Statistics/);
+  await expect(page.getByText(/^Login\.feature: 4 lines — 3 code, 0 comment, 1 blank;/).first()).toBeVisible();
+  await setDoc(page, 'at 1700000000 ok', 5);
+  await convert(page, /^Unix Timestamp/);
+  await expect.poll(() => doc(page)).toBe('at 2023-11-14T22:13:20Z ok');
+  await setDoc(page, 'c, a, b', 0, 7);
+  await convert(page, /^Sort Tokens/);
+  await expect.poll(() => doc(page)).toBe('a, b, c');
+  await setDoc(page, 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c', 3);
+  await menuItem(page, 'Tools', /^Decode JWT/);
+  await expect(page.getByText(/^JWT HS256 · sub 1234567890 iat 2018-01-18T01:30:22\.000Z/).first()).toBeVisible();
+});
