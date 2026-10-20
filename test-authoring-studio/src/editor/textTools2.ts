@@ -477,3 +477,6 @@ export function fileStatistics(text: string, file: string) {
   }
   return { lines, code, comments, blank };
 }
+
+/** Insert TODO Comment (Rider live template "todo"): `// TODO (yyyy-MM-dd): ` with the file's comment token. */
+export const todoComment = (file: string, date = new Date()) => `${/\.(feature|ya?ml|ps1|sh|py|toml|ini)$/i.test(file) ? '#' : /\.(xml|csproj|props|targets|html?|config)$/i.test(file) ? '<!--' : '//'} TODO (${stamp(date).slice(0, 10)}): `;
