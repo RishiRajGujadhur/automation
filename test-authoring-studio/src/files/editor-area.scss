@@ -3711,3 +3711,5 @@ html[data-features-off~='inlay-hints'] .cm-inlay {
 .cm-conflict-incoming { background: color-mix(in srgb, #3b82f666 40%, transparent); }
 .cm-conflict-marker { background: color-mix(in srgb, #8886 40%, transparent); font-weight: 600; }
 .cm-conflict-actions { display: flex; gap: 12px; padding: 1px 4px; font-size: 12px; font-family: var(--font-ui, inherit); }
+
+.text-preview { max-height: 60vh; overflow: auto; margin: 0; padding: 8px 12px; font-family: var(--font-mono, Consolas, monospace); font-size: 12px; white-space: pre; }

@@ -277,6 +277,7 @@ const ROWS: Record<'edit' | 'view' | 'navigate' | 'code' | 'tools' | 'help', Row
       ['Insert Data Table', 'insert-data-table'],
       ['Copy Test Filter for Tag', 'copy-tag-filter'],
       ['Fix Keyword Case', 'fix-keyword-case'],
+      ['Preview Expanded Outline', 'outline-preview'],
     ] },
     ['Collapse Using Directives', 'fold-usings'],
     ['Sort JSON Keys', 'sort-json'],

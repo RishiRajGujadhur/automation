@@ -1,4 +1,4 @@
-import { EditorSelection, type ChangeSpec, type EditorState } from '@codemirror/state';
+import { EditorSelection, type ChangeSpec, type EditorState, type TransactionSpec } from '@codemirror/state';
 import type { EditorView } from '@codemirror/view';
 import { alignTable, block, cellAt, cellStart, splitRow } from './gherkinTables';
 
@@ -1088,4 +1088,19 @@ export function fixKeywordCase(text: string) {
     return l;
   }).join('\n');
   return next === text ? null : next;
+}
+
+/** Scenario Outline preview (Rider's outline preview): the plain scenarios its Examples make, without changing the file. */
+export function outlinePreview(state: EditorState) {
+  let s = state;
+  const view = { get state() { return s; }, dispatch: (spec: TransactionSpec) => { s = s.update(spec).state; } };
+  if (!expandOutline(view as unknown as EditorView)) return null;
+  const b = scenarioBlock(state, state.doc.lineAt(state.selection.main.head).number)!;
+  const from = state.doc.line(b.first).from;
+  const after = s.doc.toString().slice(from);
+  const rest = state.doc.toString().slice(from);
+  // The expanded text is everything up to where the original tail (after the outline) starts again.
+  let k = 0;
+  while (k < after.length && k < rest.length && after[after.length - 1 - k] === rest[rest.length - 1 - k]) k++;
+  return after.slice(0, after.length - k).trimEnd();
 }

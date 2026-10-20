@@ -500,6 +500,7 @@ export const FEATURES: Feature[] = [
   { id: 'merge-conflicts', label: 'Merge conflict actions', group: 'Git', essential: true, vs: 'Merge Editor', description: 'Conflict blocks (<<<<<<< ======= >>>>>>>) are coloured with Accept Current / Incoming / Both above them; Navigate ▸ Next Merge Conflict.', commands: ['next-conflict'] },
   { id: 'stage-lines', label: 'Stage Selected Lines', group: 'Git', essential: true, vs: 'Git Changes ▸ Stage selected ranges', description: 'Tools ▸ Stage Selected Lines stages only the changes on the selected lines (the rest of the file stays unstaged).', commands: ['stage-lines'] },
   { id: 'postfix-templates', label: 'Postfix templates (C#)', group: 'Code intelligence', essential: false, description: 'In C#, expr.var, .if, .not, .null, .notnull, .foreach, .return, .await, .throw or .par then Tab rewrites the expression (Rider).' },
+  { id: 'outline-preview', label: 'Preview Expanded Outline', group: 'Gherkin', essential: true, vs: 'Rider: Scenario Outline preview', description: 'Code ▸ Gherkin shows the plain scenarios a Scenario Outline runs (one per Examples row), without changing the file.', commands: ['outline-preview'] },
 ];
 export const GROUPS: FeatureGroup[] = ['Editing', 'Navigation', 'Code intelligence', 'Tool windows', 'Files', 'Git', 'Gherkin', 'View', 'Debugging', 'Help and productivity'];
 

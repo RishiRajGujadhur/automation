@@ -264,3 +264,26 @@ test('Y61 / Y62 Commit message: issue key from the branch; Conventional Commits 
   await view.getByLabel('Commit type').selectOption('fix');
   await expect(view.getByLabel('Commit message')).toHaveValue('ABC-123: fix: Sign in works');
 });
+
+test('Z1 / Z3 Inline blame on the caret line; Stage Selected Lines', async ({ page }) => {
+  const login = path.join(root, 'Features/Auth/Login.feature');
+  const lines = (await fs.readFile(login, 'utf8')).split('\n');
+  const mark = (i: number, m: string) => { lines[i] = lines[i].replace(/(\r?)$/, ` ${m}$1`); };
+  mark(0, '(one)');
+  mark(3, '(two)');
+  await fs.writeFile(login, lines.join('\n'));
+  await open(page);
+  // Z1: an unchanged line shows its commit; a changed one says so.
+  await page.getByLabel('Gherkin source').locator('.cm-line', { hasText: '"admin"' }).click();
+  await expect(page.locator('.cm-inline-blame')).toHaveText(/^Ada, today · Sign in as admin$/);
+  await page.getByLabel('Gherkin source').locator('.cm-line').first().click();
+  await expect(page.locator('.cm-inline-blame')).toHaveText('You · not committed yet');
+  // Z3: only the first line's change is staged.
+  await page.getByRole('button', { name: 'Tools menu' }).click();
+  await page.getByRole('menuitem', { name: /^Stage Selected Lines/ }).click();
+  await expect(page.getByText(/^Staged 1 change of lines 1–1\.$/).first()).toBeVisible();
+  const staged = g('diff', '--cached');
+  expect(staged).toContain('(one)');
+  expect(staged).not.toContain('(two)');
+  expect(g('diff')).toContain('(two)');
+});

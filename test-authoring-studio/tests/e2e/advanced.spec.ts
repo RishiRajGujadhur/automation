@@ -33,3 +33,31 @@ const gherkinItem = async (page: Page, item: RegExp) => { await page.getByRole('
 void gherkinItem; void menuItem;
 const codeSub = async (page: Page, sub: string, item: RegExp) => { await page.getByRole('button', { name: 'Code menu' }).click(); await page.getByRole('menuitem', { name: sub, exact: true }).click(); await page.getByRole('menuitem', { name: item }).click(); };
 void codeSub;
+
+test('Z2 / Z4 / Z5 Merge conflict actions, postfix templates, outline preview', async ({ page }) => {
+  await open(page, 'AuthSteps.cs');
+  await expect(page.getByLabel('Source of Steps/AuthSteps.cs')).toBeVisible();
+  // Z2
+  await setDoc(page, 'a\n<<<<<<< HEAD\nmine\n=======\ntheirs\n>>>>>>> feature\nz', 0);
+  const bar = page.getByRole('toolbar', { name: 'Merge conflict' });
+  await expect(bar).toBeVisible();
+  await expect(page.locator('.cm-conflict-current')).toHaveText('mine');
+  await bar.getByRole('button', { name: 'Accept Incoming' }).click();
+  await expect.poll(() => doc(page)).toBe('a\ntheirs\nz');
+  // Z4
+  await setDoc(page, '    user.notnull', 16);
+  await page.keyboard.press('Tab');
+  await expect.poll(() => doc(page)).toBe('    if (user is not null)\n    {\n        \n    }');
+  await setDoc(page, '        var t = 1;\n        page.GetTitle().var', 46);
+  await page.keyboard.press('Tab');
+  await expect.poll(() => doc(page)).toBe('        var t = 1;\n        var title = page.GetTitle();');
+  // Z5
+  await page.getByRole('navigation', { name: 'Solution' }).getByRole('button', { name: 'Login.feature', exact: true }).first().click();
+  await expect(page.getByLabel('Gherkin source')).toContainText('Feature:');
+  const src = 'Feature: F\n  Scenario Outline: As <r>\n    Given I am <r>\n\n    Examples:\n      | r |\n      | a |\n      | b |\n';
+  await setDoc(page, src, 20);
+  await gherkinItem(page, /^Preview Expanded Outline/);
+  await expect(page.getByLabel('Preview text')).toHaveText('  Scenario: As a\n    Given I am a\n\n  Scenario: As b\n    Given I am b');
+  await page.keyboard.press('Escape');
+  expect(await doc(page)).toBe(src);
+});

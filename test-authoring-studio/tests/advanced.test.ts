@@ -1,6 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import { relativeDay, conflictsIn, resolveConflict, postfix } from '../src/editor/advanced';
 import { selectHunks } from '../server/git';
+import { outlinePreview } from '../src/editor/gherkinTools';
+import { EditorState } from '@codemirror/state';
 
 describe('advanced features (ADVANCED-20)', () => {
   it('registry starts empty', () => { expect(true).toBe(true); });
@@ -36,5 +38,11 @@ describe('advanced features (ADVANCED-20)', () => {
     expect(postfix('    users.foreach', '    ')!.text.split('\n')[0]).toBe('foreach (var item in users)');
     expect(postfix('    ok.not', '    ')!.text).toBe('!ok');
     expect(postfix('    plain text', '    ')).toBe(null);
+  });
+  it('Z5 Scenario Outline preview leaves the file alone', () => {
+    const src = 'Feature: F\n  Scenario Outline: As <r>\n    Given I am <r>\n\n    Examples:\n      | r |\n      | a |\n      | b |\n\n  Scenario: after\n    Given x\n';
+    const state = EditorState.create({ doc: src, selection: { anchor: 15 } });
+    expect(outlinePreview(state)).toBe('  Scenario: As a\n    Given I am a\n\n  Scenario: As b\n    Given I am b');
+    expect(state.doc.toString()).toBe(src);
   });
 });
