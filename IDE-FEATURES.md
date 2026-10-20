@@ -188,6 +188,7 @@ has it on by default, so the desktop app starts with it on. The others start off
 | X178 | Copy Step Definition Stub | Rider | yes | ✅ 2026-10-20 |
 | X179 | Zoom IDE | Rider | yes | ✅ 2026-10-20 |
 | X180 | Compact mode | Rider | no | ✅ 2026-10-20 |
+| X181 | Export / Import Feature Settings | VS 2026 | yes | ✅ 2026-10-20 |
 
 ## Progress log
 - 2026-10-20 X1: Sort Lines: the selected lines (or the whole file) in natural, case-insensitive order, blank lines last. Third-batch plumbing: src/rider/more.ts, src/editor/textTools.ts, IDE-FEATURES.md.
@@ -370,3 +371,4 @@ has it on by default, so the desktop app starts with it on. The others start off
 - 2026-10-20 X178: Binding method for the step
 - 2026-10-20 X179: Whole window zoom
 - 2026-10-20 X180: Tighter UI rows
+- 2026-10-20 X181: Feature switches as JSON

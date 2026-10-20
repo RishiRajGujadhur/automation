@@ -1,5 +1,6 @@
 import type { EditorView } from '@codemirror/view';
 import type { RiderCommand } from './commands';
+import { exportFeatures, importFeatures } from '../features';
 import { saveUserTemplate } from '../editor/snippets';
 import { clearBookmarks, getBookmarks } from '../editor/bookmarks';
 import { clearRecent, recentFiles as recentList } from '../navHistory';
@@ -178,5 +179,7 @@ export function moreCommands(h: MoreHelpers): RiderCommand[] {
     { id: 'zoom-ide-out', label: 'Zoom IDE Out', menu: 'View', run: () => setViewOptions({ uiZoom: Math.max(50, (viewOptions().uiZoom ?? 100) - 10) }) },
     { id: 'zoom-ide-reset', label: 'Reset IDE Zoom', menu: 'View', run: () => setViewOptions({ uiZoom: undefined }) },
     { id: 'compact-mode', label: 'Compact Mode', menu: 'View', checked: () => !!viewOptions().compact, run: () => setViewOptions({ compact: !viewOptions().compact }) },
+    { id: 'export-features', label: 'Export Feature Settings', menu: 'Tools', group: true, run: () => { void copyText(exportFeatures()).then((ok) => h.notice(ok ? 'Copied the feature settings (JSON) to the clipboard.' : 'Clipboard unavailable.')); } },
+    { id: 'import-features', label: 'Import Feature Settings…', menu: 'Tools', run: () => { const json = window.prompt('Paste exported feature settings (JSON):', ''); if (!json) return; try { const n = importFeatures(json); h.notice(`Imported the feature settings (${n} switch${n === 1 ? '' : 'es'}).`); } catch { h.notice('That is not exported feature settings JSON.'); } } },
   ];
 }

@@ -252,6 +252,9 @@ const ROWS: Record<'edit' | 'view' | 'navigate' | 'code' | 'tools' | 'help', Row
     ['Git: Stage File', 'git-stage-file'],
     ['Git: Show History for File', 'git-file-history'],
     ['Save as Live Template…', 'save-live-template'],
+    null,
+    ['Export Feature Settings', 'export-features'],
+    ['Import Feature Settings…', 'import-features'],
   ],
   help: [
     null,

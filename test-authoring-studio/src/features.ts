@@ -278,6 +278,7 @@ export const FEATURES: Feature[] = [
   { id: 'copy-step-stub', label: 'Copy Step Definition Stub', group: 'Gherkin', essential: true, vs: 'Create Step (copy to clipboard)', description: 'Copies a C# binding method for the step at the caret.', commands: ['copy-step-stub'] },
   { id: 'zoom-ide', label: 'Zoom IDE', group: 'View', essential: true, vs: 'View ▸ Appearance ▸ Zoom IDE (Rider)', description: 'Zooms the whole window in or out (50–200 %), not only the editors.', commands: ['zoom-ide-in', 'zoom-ide-out', 'zoom-ide-reset'] },
   { id: 'compact-mode', label: 'Compact mode', group: 'View', essential: false, vs: 'Appearance ▸ Compact mode (Rider)', description: 'Tighter rows in trees, tabs, menus and the status bar.', commands: ['compact-mode'] },
+  { id: 'features-io', label: 'Export / Import Feature Settings', group: 'Help and productivity', essential: true, vs: 'Import and Export Settings', description: 'Copies the Settings ▸ Features switches as JSON, or applies pasted ones.', commands: ['export-features', 'import-features'] },
 ];
 export const GROUPS: FeatureGroup[] = ['Editing', 'Navigation', 'Code intelligence', 'Tool windows', 'Files', 'Git', 'Gherkin', 'View', 'Debugging', 'Help and productivity'];
 
@@ -307,6 +308,16 @@ function changed() {
   version++;
   applyToDocument();
   for (const l of listeners) l();
+}
+/** Export / Import Feature Settings: the preset and every switch changed from it, as JSON. */
+export const exportFeatures = () => JSON.stringify({ preset: saved.preset ?? 'default', overrides: saved.overrides ?? {} }, null, 2);
+export function importFeatures(json: string) {
+  const v = JSON.parse(json) as { preset?: string; overrides?: Record<string, unknown> };
+  const known = new Set(FEATURES.map((f) => f.id));
+  const overrides = Object.fromEntries(Object.entries(v.overrides ?? {}).filter(([k, on]) => known.has(k) && typeof on === 'boolean')) as Record<string, boolean>;
+  saved = { ...(v.preset === 'essentials' || v.preset === 'all' ? { preset: v.preset } : {}), overrides };
+  changed();
+  return Object.keys(overrides).length;
 }
 export function setFeature(id: string, on: boolean) { saved = { ...saved, overrides: { ...saved.overrides, [id]: on } }; changed(); }
 export function setFeatures(values: Record<string, boolean>) { saved = { ...saved, overrides: { ...saved.overrides, ...values } }; changed(); }
