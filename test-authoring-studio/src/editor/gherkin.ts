@@ -14,6 +14,7 @@ import { Trie } from '../algorithms/search';
 import { levenshteinRatio, dice } from '../algorithms/strings';
 import { smellChecks, type QScenario } from '../algorithms/quality';
 import { algorithmOn } from '../radix2';
+import { gherkinLint2 } from './gherkinLint2';
 
 const STEP = /^(\s*)(Given|When|Then|And|But|\*)(\s+)(.*)$/;
 const api = async <T>(url: string, body?: unknown): Promise<T> => {
@@ -445,6 +446,7 @@ export function gherkinExtensions(opts: { onSave?: () => void; onValidate?: () =
     stepMarks,
     duplicateStepLinter,
     smellLinter,
+    gherkinLint2,
     autocompletion({ override: [gherkinCompletions], activateOnTyping: true, maxRenderedOptions: 12, icons: true }),
     stepHover,
     keymap.of([

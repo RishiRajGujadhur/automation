@@ -438,6 +438,7 @@ export const FEATURES: Feature[] = [
   { id: 'language-header', label: 'Set Language Header', group: 'Gherkin', essential: false, description: 'Code ▸ Gherkin writes (or changes) the # language: line that picks the Gherkin keywords\' language.', commands: ['language-header'] },
   { id: 'copy-scenario-name', label: 'Copy Scenario Name', group: 'Gherkin', essential: false, description: 'Code ▸ Gherkin copies the title of the scenario at the caret.', commands: ['copy-scenario-name'] },
   { id: 'table-row-above', label: 'Table: Insert Row Above', group: 'Gherkin', essential: false, description: 'Code ▸ Gherkin adds an empty row above the caret\'s row.', commands: ['table-row-above'] },
+  { id: 'duplicate-scenario-names', label: 'Warn on duplicate scenario names', group: 'Gherkin', essential: true, vs: 'Reqnroll: duplicate scenario name', description: 'Two scenarios with the same name in a file get a warning (reports and filters cannot tell them apart).' },
 ];
 export const GROUPS: FeatureGroup[] = ['Editing', 'Navigation', 'Code intelligence', 'Tool windows', 'Files', 'Git', 'Gherkin', 'View', 'Debugging', 'Help and productivity'];
 
