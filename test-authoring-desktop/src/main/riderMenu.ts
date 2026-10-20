@@ -285,6 +285,7 @@ const ROWS: Record<'edit' | 'view' | 'navigate' | 'code' | 'tools' | 'help', Row
       ['Convert to Interpolated String', 'to-interpolation'],
       ['Generate Equality Members', 'generate-equality'],
       ['Generate ToString()', 'generate-tostring'],
+      ['Add Null Checks for Parameters', 'add-null-checks'],
     ] },
     null,
     { submenu: 'Markdown', rows: [

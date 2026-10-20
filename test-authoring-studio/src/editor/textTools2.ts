@@ -536,3 +536,26 @@ export function generateToString(view: EditorView) {
   if (!c || !c.props.length || /override\s+string\s+ToString\s*\(/.test(view.state.doc.toString())) return false;
   return addMembers(view, c.close, [`${c.indent}public override string ToString() => $"${c.name} {{ ${c.props.map((p) => `${p.name} = {${p.name}}`).join(', ')} }}";`]);
 }
+
+const VALUE_TYPES = new Set(['int', 'long', 'short', 'byte', 'sbyte', 'uint', 'ulong', 'ushort', 'bool', 'char', 'double', 'float', 'decimal', 'nint', 'nuint', 'Guid', 'DateTime', 'DateTimeOffset', 'TimeSpan', 'DateOnly', 'TimeOnly', 'CancellationToken']);
+/** Add Null Checks (Rider "Check parameter for null"): ArgumentNullException.ThrowIfNull for the method's reference-type parameters. */
+export function addNullChecks(view: EditorView) {
+  const { state } = view;
+  const doc = state.doc;
+  const here = doc.lineAt(state.selection.main.head).number;
+  for (let n = here; n >= Math.max(1, here - 30); n--) {
+    const m = /\b\w+\s*\(([^()]*)\)\s*(?:\{|$)/.exec(doc.line(n).text);
+    if (!m || /^\s*(if|for|foreach|while|switch|using|lock|return|catch)\b/.test(doc.line(n).text)) continue;
+    let brace = n;
+    while (brace <= doc.lines && !doc.line(brace).text.includes('{')) { if (doc.line(brace).text.includes('=>')) return false; brace++; }
+    if (brace > doc.lines) return false;
+    const names = m[1].split(',').map((p) => p.trim().replace(/^(this|params|in|ref|out|scoped)\s+/, '')).filter(Boolean).map((p) => /^(.+?)\s+(\w+)(\s*=.*)?$/.exec(p)).filter((p): p is RegExpExecArray => !!p && !p[1].endsWith('?') && !VALUE_TYPES.has(p[1]) && !p[3]).map((p) => p[2]);
+    const body = doc.sliceString(doc.line(brace).to, Math.min(doc.length, doc.line(brace).to + 2000));
+    const todo = names.filter((x) => !body.includes(`ThrowIfNull(${x})`));
+    if (!todo.length) return false;
+    const indent = /^\s*/.exec(doc.line(n).text)![0] + '    ';
+    view.dispatch({ changes: { from: doc.line(brace).to, insert: todo.map((x) => `\n${indent}ArgumentNullException.ThrowIfNull(${x});`).join('') }, userEvent: 'input' });
+    return true;
+  }
+  return false;
+}
