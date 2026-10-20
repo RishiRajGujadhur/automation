@@ -256,6 +256,8 @@ export default function SolutionExplorer({ features, revision, activeFile, query
   const searching = !!query.trim() || pendingOnly || openOnly;
   // Files per project (deepest project folder wins); files outside every project are "Miscellaneous Files".
   const projects = useMemo(() => solution?.projects ?? [], [solution]);
+  // The SDK-style C# project a file belongs to (the deepest project folder containing it).
+  const ownerProject = (file: string) => projects.filter((p) => /\.(cs|fs|vb)proj$/i.test(p.file) && !p.legacy && (p.dir === '' || p.dir === '.' || file.startsWith(`${p.dir}/`))).sort((a, b) => b.dir.length - a.dir.length)[0]?.file;
   const byProject = useMemo(() => {
     const dirs = projects.map((p) => p.dir);
     const owner = (f: string) => { let best: string | undefined; for (const d of dirs) if ((d === '' || f.startsWith(`${d}/`)) && (best === undefined || d.length > best.length)) best = d; return best; };
@@ -356,6 +358,7 @@ export default function SolutionExplorer({ features, revision, activeFile, query
         { label: 'Open', icon: FileCode2, onSelect: () => open(path) },
         ...(onSource ? [{ label: 'View source', icon: Eye, onSelect: () => onSource(path, 1) }] : []),
         { label: 'Copy path', icon: Copy, onSelect: () => copied(path) },
+        ...(featureOn('file-build-action') && !browserSolution && !/\.(cs|fs|vb)proj$/i.test(path) && ownerProject(path) ? [{ label: 'Build Action…', icon: FileCog, onSelect: () => window.dispatchEvent(new CustomEvent('tas:file-item', { detail: { project: ownerProject(path)!, file: path } })) }] : []),
         ...(featureOn('open-to-side') && !path.endsWith('.feature') && !browserSolution ? [{ label: 'Open to the Side', icon: Columns2, onSelect: () => window.dispatchEvent(new CustomEvent('tas:open-split', { detail: path })) }] : []),
         ...(featureOn('explorer-copy-name') ? [{ label: 'Copy file name', icon: Copy, onSelect: () => copied(path.split('/').pop()!) }] : []),
         ...(featureOn('copy-full-path') && !browserSolution ? [{ label: 'Copy Full Path', icon: Copy, onSelect: () => copyFull(path) }] : []),

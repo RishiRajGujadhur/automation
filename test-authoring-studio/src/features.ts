@@ -526,6 +526,7 @@ export const FEATURES: Feature[] = [
   { id: 'pp-usings', label: 'Project Properties: Global Usings', group: 'Code intelligence', essential: true, vs: 'Project Properties ▸ Global Usings', description: 'The Global Usings page lists, adds and removes the project\'s <Using> items (static usings too).' },
   { id: 'pp-references', label: 'Project Properties: Project References', group: 'Code intelligence', essential: true, vs: 'Add ▸ Project Reference', description: 'The Project References page adds or removes references to the solution\'s other projects (relative paths, like Visual Studio).' },
   { id: 'upgrade-framework', label: 'Upgrade Target Framework', group: 'Code intelligence', essential: true, vs: 'Upgrade Assistant: target framework', description: 'Tools ▸ Upgrade Target Framework previews the TargetFramework change of every project (one diff each) and writes the ones you approve.', commands: ['upgrade-framework'] },
+  { id: 'file-build-action', label: 'File Properties: Build Action / Copy to Output', group: 'Files', essential: true, vs: 'File Properties ▸ Build Action', description: 'The Explorer\'s Build Action… sets a file\'s Build Action (None, Content, Embedded Resource…) and Copy to Output Directory in the project file.' },
 ];
 export const GROUPS: FeatureGroup[] = ['Editing', 'Navigation', 'Code intelligence', 'Tool windows', 'Files', 'Git', 'Gherkin', 'View', 'Debugging', 'Help and productivity'];
 

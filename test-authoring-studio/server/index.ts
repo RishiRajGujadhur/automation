@@ -40,7 +40,7 @@ import { findInFiles, replaceInFiles } from './search.js';
 import { values, render, parameterCount, replaceAttributePattern } from './stepRename.js';
 import { installed as nugetInstalled, updates as nugetUpdates, search as nugetSearch, versions as nugetVersions, install as nugetInstall, uninstall as nugetUninstall } from './nuget.js';
 import { status as gitStatus, stage as gitStage, unstage as gitUnstage, discard as gitDiscard, commit as gitCommit, headInfo, log as gitLog, branches as gitBranches, checkout as gitCheckout, createBranch as gitCreateBranch, sync as gitSync, merge as gitMerge, blame as gitBlame, clone as gitClone, shelves, shelve, unshelve, deleteShelf, lineHistory, commitDetails, graphLog, fileAt, commitAction, git, stageLines } from './git.js';
-import { readProperties, setProperties, evaluate, readEvents, setEvent, readUsings, setUsings, readReferences, setReferences } from './projectProps.js';
+import { readProperties, setProperties, evaluate, readEvents, setEvent, readUsings, setUsings, readReferences, setReferences, readFileItem, setFileItem } from './projectProps.js';
 import { LanguageService } from './langService.js';
 import type { Index } from '../src/types.js';
 import { readSettings, writeSettings, settingsSchema, tracesDir, spySnapshotsDir } from './settings.js';
@@ -502,6 +502,17 @@ app.post('/api/project/retarget/preview', async (req, res) => {
     out.push(await previewProject(project, (x) => setProperties(x, { TargetFramework: framework }), [`TargetFramework ${all.TargetFramework} → ${framework}`]));
   }
   res.json(out);
+});
+// File Properties: Build Action and Copy to Output Directory of a file of a project.
+const projectItem = z.object({ project: projectFile, file: z.string().min(1).max(400) });
+const itemOf = (project: string, file: string) => { const dir = project.includes('/') ? project.slice(0, project.lastIndexOf('/') + 1) : ''; if (!file.startsWith(dir)) throw new Error(`${file} is not under ${project}.`); return file.slice(dir.length); };
+app.get('/api/project/item', async (req, res) => {
+  const { project, file } = projectItem.parse(req.query);
+  res.json(readFileItem(await fs.readFile(await confined(config.repositoryRoot, project, false), 'utf8'), itemOf(project, file)));
+});
+app.post('/api/project/item/preview', async (req, res) => {
+  const { project, file, action, copy } = projectItem.extend({ action: z.enum(['None', 'Content', 'EmbeddedResource', 'Compile', 'AdditionalFiles']), copy: z.enum(['Never', 'Always', 'PreserveNewest']) }).parse(req.body);
+  res.json(await previewProject(project, (x) => setFileItem(x, itemOf(project, file), { action, copy }), [`${file.split('/').pop()}: Build Action ${action}, Copy to Output ${copy}`]));
 });
 app.get('/api/project/model',async(_req,res)=>{res.json(await projectModel(config,await ensure()));});
 app.get('/api/project/files',async(req,res)=>{const folder=z.string().default('.').parse(req.query.folder);const dir=await confined(config.repositoryRoot,folder);const entries=await fs.readdir(dir,{withFileTypes:true});const {offset,limit}=paging.parse(req.query);const filtered=entries.filter(e=>!e.isSymbolicLink()&&!e.name.startsWith('.')&&!ignoredDirsFor(config).includes(e.name)).sort((a,b)=>Number(b.isDirectory())-Number(a.isDirectory())||a.name.localeCompare(b.name));res.json({folder,items:filtered.slice(offset,offset+limit).map(e=>({name:e.name,file:path.relative(config.repositoryRoot,path.join(dir,e.name)).replaceAll('\\','/'),directory:e.isDirectory()})),total:filtered.length,hasNext:offset+limit<filtered.length});});

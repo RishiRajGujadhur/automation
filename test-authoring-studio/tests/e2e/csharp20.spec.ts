@@ -91,3 +91,46 @@ test('C2–C6 Build / Package / Code Analysis pages, effective values, per-confi
   await approve(page, dlg);
   await expect.poll(csproj).toContain(`<PropertyGroup Condition="'$(Configuration)'=='Release'">\n    <Optimize>true</Optimize>\n  </PropertyGroup>`);
 });
+
+test('C7–C11 Build Events, Global Usings, Project References, Upgrade Target Framework, Build Action', async ({ page }) => {
+  await fs.mkdir(path.join(root, 'Lib'), { recursive: true });
+  await fs.writeFile(path.join(root, 'Lib/Lib.csproj'), '<Project Sdk="Microsoft.NET.Sdk">\n  <PropertyGroup>\n    <TargetFramework>net8.0</TargetFramework>\n  </PropertyGroup>\n</Project>\n');
+  expect((await page.request.post('/api/workspace', { data: { repositoryRoot: root, targetProject: '.' } })).ok()).toBe(true);
+  const dlg = await properties(page);
+  const pages = dlg.getByRole('navigation', { name: 'Property pages' });
+  // C7
+  await pages.getByRole('button', { name: 'Build Events' }).click();
+  await dlg.getByLabel('Post-build event').fill('echo built');
+  // C8
+  await pages.getByRole('button', { name: 'Global Usings' }).click();
+  await dlg.getByLabel('Namespace to add').fill('NUnit.Framework');
+  await dlg.getByRole('button', { name: 'Add', exact: true }).click();
+  await expect(dlg.getByRole('list', { name: 'Global usings' })).toContainText('NUnit.Framework');
+  // C9
+  await pages.getByRole('button', { name: 'Project References' }).click();
+  await dlg.getByLabel('Reference Lib/Lib.csproj').check();
+  await approve(page, dlg);
+  const text = await csproj();
+  expect(text).toContain('<Target Name="PostBuild" AfterTargets="PostBuildEvent">\n    <Exec Command="echo built" />\n  </Target>');
+  expect(text).toContain('<Using Include="NUnit.Framework" />');
+  expect(text).toContain('<ProjectReference Include="Lib\\Lib.csproj" />');
+  await dlg.getByRole('button', { name: 'Close dialog' }).click();
+  // C10: one diff per project; approve the library's.
+  page.once('dialog', (d) => void d.accept('net10.0'));
+  await menuItem(page, 'Tools', /^Upgrade Target Framework/);
+  const up = page.getByRole('dialog', { name: 'Upgrade Target Framework' });
+  await expect(up.getByRole('button', { name: /^Approve and write / })).toHaveCount(2);
+  await up.getByRole('button', { name: 'Approve and write Lib.csproj' }).click();
+  await expect.poll(async () => fs.readFile(path.join(root, 'Lib/Lib.csproj'), 'utf8')).toContain('<TargetFramework>net10.0</TargetFramework>');
+  expect(await csproj()).toContain('<TargetFramework>net8.0</TargetFramework>');
+  await up.getByRole('button', { name: 'Close dialog' }).click();
+  // C11: Copy to Output for a feature file.
+  await page.getByRole('navigation', { name: 'Solution' }).getByRole('button', { name: 'Login.feature', exact: true }).first().click({ button: 'right' });
+  await page.getByRole('menuitem', { name: 'Build Action…' }).click();
+  const fp = page.getByRole('dialog', { name: 'File Properties' });
+  await expect(fp.getByLabel('Build Action')).toHaveValue('None');
+  await fp.getByLabel('Copy to Output Directory').selectOption('PreserveNewest');
+  await fp.getByRole('button', { name: 'Preview changes' }).click();
+  await fp.getByRole('button', { name: 'Approve and write Fixtures.csproj' }).click();
+  await expect.poll(csproj).toContain('<None Update="Features\\Auth\\Login.feature"><CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory></None>');
+});
