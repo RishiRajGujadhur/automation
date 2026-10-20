@@ -352,6 +352,7 @@ export const FEATURES: Feature[] = [
   { id: 'line-flash', label: 'Highlight the line you jump to', group: 'Navigation', essential: true, description: 'After Go to Line, F12, a search result or Back / Forward the target line flashes briefly.' },
   { id: 'md-paste-link', label: 'Markdown: paste a link over text', group: 'Editing', essential: true, description: 'Pasting a web address over selected text makes [text](url).' },
   { id: 'md-format-keys', label: 'Markdown: Ctrl+B / Ctrl+I', group: 'Editing', essential: true, description: 'Bold and italic around the selection or word in Markdown files.' },
+  { id: 'md-lists', label: 'Markdown: lists continue on Enter', group: 'Editing', essential: true, description: 'Enter in a Markdown list adds the next bullet or number; on an empty item it ends the list.' },
 ];
 export const GROUPS: FeatureGroup[] = ['Editing', 'Navigation', 'Code intelligence', 'Tool windows', 'Files', 'Git', 'Gherkin', 'View', 'Debugging', 'Help and productivity'];
 

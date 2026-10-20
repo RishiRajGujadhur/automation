@@ -33,5 +33,24 @@ export function toggleWrap(mark: string) {
   };
 }
 const formatKeys = Prec.high(keymap.of([{ key: 'Mod-b', run: toggleWrap('**') }, { key: 'Mod-i', run: toggleWrap('*') }]));
+/** Enter in a list continues it (-, *, 1., - [ ]); Enter on an empty item ends the list. */
+export function continueList(view: EditorView) {
+  if (!featureOn('md-lists')) return false;
+  const { state } = view;
+  const s = state.selection.main;
+  if (!s.empty) return false;
+  const line = state.doc.lineAt(s.head);
+  const m = /^(\s*)([-*+]|(\d+)[.)])(\s+)(\[[ xX]\]\s+)?/.exec(line.text);
+  if (!m || s.head < line.from + m[0].length) return false;
+  if (line.text.slice(m[0].length).trim() === '' ) {
+    view.dispatch({ changes: { from: line.from, to: line.to, insert: '' }, userEvent: 'delete' });
+    return true;
+  }
+  const bullet = m[3] ? `${Number(m[3]) + 1}${m[2].slice(-1)}` : m[2];
+  const insert = `${state.lineBreak}${m[1]}${bullet}${m[4]}${m[5] ? '[ ] ' : ''}`;
+  view.dispatch({ changes: { from: s.head, to: s.head, insert }, selection: { anchor: s.head + insert.length }, scrollIntoView: true, userEvent: 'input' });
+  return true;
+}
+const listKeys = Prec.high(keymap.of([{ key: 'Enter', run: continueList }]));
 // markdown qol
-export const markdownQol: Extension[] = [formatKeys, linkOnPaste, ...(featureOn('md-wrap') ? [EditorView.lineWrapping] : []), ];
+export const markdownQol: Extension[] = [listKeys, formatKeys, linkOnPaste, ...(featureOn('md-wrap') ? [EditorView.lineWrapping] : []), ];
