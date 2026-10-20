@@ -7,6 +7,8 @@ Each is pushed on its own with a Settings ▸ Features switch, a native menu row
 | # | Feature | From | Essential | Status |
 | --- | --- | --- | --- | --- |
 | RC1 | Refactor This | Rider | yes | ✅ 2026-10-20 |
+| RC2 | Extract Method (Ctrl+Alt+M) | Rider | yes | ✅ 2026-10-20 |
 
 ## Progress log
 - 2026-10-20 RC1: Ctrl+Alt+Shift+T: only the refactorings at the caret or selection.
+- 2026-10-20 RC2: Roslyn's Extract Method on the selection, applied directly.

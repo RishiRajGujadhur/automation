@@ -557,6 +557,7 @@ export const FEATURES: Feature[] = [
   { id: 'debug-last-run', label: 'Debug Last Test Run', group: 'Debugging', essential: true, vs: 'Test ▸ Debug Last Run', description: 'Ctrl+R, D (Tools ▸ Debug Last Test Run) runs the tests of the last run again under the debugger.', commands: ['debug-last-run'] },
   { id: 'tracepoint-macros', label: 'Tracepoint macros', group: 'Debugging', essential: true, vs: 'Tracepoints ▸ special keywords', description: 'Tracepoint messages can use $FUNCTION, $CALLER, $TID and $FILEPOS, like Visual Studio\'s.' },
   { id: 'refactor-this', label: 'Refactor This', group: 'Code intelligence', essential: true, vs: 'Quick Actions ▸ refactorings', description: 'Ctrl+Alt+Shift+T lists only the refactorings available at the caret or selection (Rider\'s Refactor This).', commands: ['refactor-this'] },
+  { id: 'extract-method', label: 'Extract Method', group: 'Code intelligence', essential: true, vs: 'Ctrl+R, Ctrl+M Extract Method', description: 'Ctrl+Alt+M turns the selected statements or expression into a new method (Roslyn\'s Extract Method).', commands: ['extract-method'] },
 ];
 export const GROUPS: FeatureGroup[] = ['Editing', 'Navigation', 'Code intelligence', 'Tool windows', 'Files', 'Git', 'Gherkin', 'View', 'Debugging', 'Help and productivity'];
 

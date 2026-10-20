@@ -304,6 +304,7 @@ export function riderKeys(file = ''): Extension {
     ['Home', false, 'related-files', () => runRider('related-files', 'key')],
     ['BracketRight', false, 'align-assignments', alignAssignments],
     ['KeyT', true, 'refactor-this', () => runRider('refactor-this', 'key')],
+    ['KeyM', false, 'extract-method', () => runRider('extract-method', 'key')],
     ['KeyZ', false, 'rollback-lines', (v) => { if (!rollbackLines(v)) runRider('rollback-lines', 'key'); return true; }],
   ];
   const ctrlAlt = EditorView.domEventHandlers({
