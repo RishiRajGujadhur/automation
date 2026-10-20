@@ -235,6 +235,7 @@ export const FEATURES: Feature[] = [
   { id: 'remove-blank-lines', label: 'Remove Blank Lines', group: 'Editing', essential: true, description: 'Removes empty lines (selection or file).', commands: ['remove-blank-lines'] },
   { id: 'sort-lines-desc', label: 'Sort Lines Descending', group: 'Editing', essential: true, description: 'Sorts the selected lines (or the file) Z to A, numbers naturally.', commands: ['sort-lines-desc'] },
   { id: 'centered-layout', label: 'Centered layout', group: 'View', essential: false, description: 'The editor text in a readable column in the middle of a wide window.', commands: ['centered-layout'] },
+  { id: 'do-not-disturb', label: 'Do Not Disturb', group: 'Help and productivity', essential: true, vs: 'Notifications ▸ Do Not Disturb', description: 'Hides the message pop-ups; they are still kept in the Notifications window.', commands: ['do-not-disturb'] },
 ];
 export const GROUPS: FeatureGroup[] = ['Editing', 'Navigation', 'Code intelligence', 'Tool windows', 'Files', 'Git', 'Gherkin', 'View', 'Debugging', 'Help and productivity'];
 

@@ -128,5 +128,6 @@ export function moreCommands(h: MoreHelpers): RiderCommand[] {
     { id: 'remove-blank-lines', label: 'Remove Blank Lines', menu: 'Edit', run: h.inEditor(removeBlankLines) },
     { id: 'sort-lines-desc', label: 'Sort Lines Descending', menu: 'Edit', run: h.inEditor(sortLines(true)) },
     { id: 'centered-layout', label: 'Centered Layout', menu: 'View', checked: () => !!viewOptions().centered, run: () => setViewOptions({ centered: !viewOptions().centered }) },
+    { id: 'do-not-disturb', label: 'Do Not Disturb', menu: 'View', checked: () => !!viewOptions().doNotDisturb, run: () => { const on = !viewOptions().doNotDisturb; setViewOptions({ doNotDisturb: on }); if (!on) h.notice('Notifications are shown again.'); } },
   ];
 }

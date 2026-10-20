@@ -34,6 +34,7 @@ import OutputPanel, { type OutputSource } from './OutputPanel';
 import TodoPanel from './TodoPanel';
 import { eolOf, withEol, SET_EOL_EVENT, type Eol } from './editor/lineSeparator';
 import RiderHost from './rider/RiderHost';
+import { useViewOptions } from './editor/viewOptions';
 import { recordNotice } from './rider/notifications';
 import RiderMenubar from './rider/RiderMenubar';
 import RiderToolWindow, { RIDER_TOOLS, type RiderTool } from './rider/RiderToolWindow';
@@ -246,6 +247,8 @@ export default function App() {
   const [modal, setModal] = useState<string>();
   const [error, setError] = useState('');
   const [notice, setNotice] = useState('');
+  // Do Not Disturb (VS Code / Visual Studio notifications): messages go to the Notifications window only.
+  const viewOpts = useViewOptions();
   // Notifications window: every notice is kept for the session.
   useEffect(() => { recordNotice(notice); }, [notice]);
   // Every notice also goes to Output ▸ Studio.
@@ -2252,7 +2255,7 @@ export default function App() {
         <Toast.Root
           key={toastKey}
           className="toast"
-          open={!!notice}
+          open={!!notice && !(viewOpts.doNotDisturb && featureOn('do-not-disturb'))}
           onOpenChange={(open) => { if (!open) { setNotice(''); setUndo(undefined); } }}
         >
           <Check size={17} />
