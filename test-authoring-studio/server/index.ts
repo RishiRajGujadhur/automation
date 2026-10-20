@@ -40,7 +40,7 @@ import { Builder } from './build.js';
 import { findInFiles, replaceInFiles, searchEditorText, parseSearchEditor, searchEditorName, SEARCH_EDITOR_DIR } from './search.js';
 import { values, render, parameterCount, replaceAttributePattern } from './stepRename.js';
 import { installed as nugetInstalled, updates as nugetUpdates, search as nugetSearch, versions as nugetVersions, install as nugetInstall, uninstall as nugetUninstall } from './nuget.js';
-import { commitTemplate, compareCommits, rebaseCommits, interactiveRebase, squashCommits } from './git2.js';
+import { commitTemplate, compareCommits, rebaseCommits, interactiveRebase, squashCommits, listWorktrees, addWorktree, removeWorktree } from './git2.js';
 import { status as gitStatus, stage as gitStage, unstage as gitUnstage, discard as gitDiscard, commit as gitCommit, headInfo, log as gitLog, branches as gitBranches, checkout as gitCheckout, createBranch as gitCreateBranch, sync as gitSync, merge as gitMerge, blame as gitBlame, clone as gitClone, shelves, shelve, unshelve, deleteShelf, lineHistory, commitDetails, graphLog, fileAt, commitAction, git, stageLines } from './git.js';
 import { readProperties, setProperties, evaluate, readEvents, setEvent, readUsings, setUsings, readReferences, setReferences, readFileItem, setFileItem, isExcluded, setExcluded } from './projectProps.js';
 import { findPattern, replacePattern } from '../src/search/ssr.js';
@@ -789,6 +789,17 @@ app.post('/api/git/squash', async (req, res) => {
   const head = await squashCommits(config.repositoryRoot, base, message);
   rescanSoon(500);
   res.json({ head });
+});
+// Worktrees: list, add next to the repository, remove (not the main one nor the open one).
+app.get('/api/git/worktrees', async (_req, res) => res.json(await listWorktrees(config.repositoryRoot)));
+app.post('/api/git/worktrees', async (req, res) => {
+  const { dir, branch, create } = z.object({ dir: z.string().trim().min(1).max(400), branch: z.string().trim().min(1).max(200).regex(/^[\w./-]+$/, 'Use letters, digits, - _ . /'), create: z.boolean() }).parse(req.body);
+  res.json({ path: await addWorktree(config.repositoryRoot, dir, branch, create) });
+});
+app.post('/api/git/worktrees/remove', async (req, res) => {
+  const { path: dir, force } = z.object({ path: z.string().min(1).max(500), force: z.boolean().optional() }).parse(req.body);
+  await removeWorktree(config.repositoryRoot, dir, !!force);
+  res.json({ ok: true });
 });
 // Compare two commits (Git Log: Ctrl+click a second commit).
 app.get('/api/git/compare', async (req, res) => {

@@ -182,7 +182,7 @@ Legend: `[x]` done · `[ ]` to do.
 - [x] 153. Line history inspection — Show History for Selection
 - [ ] 154. Three-way merge editor
 - [x] 155. Conflict resolution tools — merge conflict actions (current / incoming / both)
-- [ ] 156. Git worktree management
+- [x] 156. Git worktree management — Git Changes ▸ Worktrees: list, add (new / existing branch), open in the studio, remove (2026-10-21)
 - [x] 157. Git stash management — Shelf (stash)
 - [x] 158. Shelve changes — Shelf
 - [ ] 159. Changelist management
@@ -373,3 +373,4 @@ Legend: `[x]` done · `[ ]` to do.
 - 2026-10-21 162: Two commits compare in Git Log: the files that differ between them and the full patch.
 - 2026-10-21 146: Interactive rebase from a Git Log commit: each commit up to HEAD can be picked, reworded, squashed, fixed up, dropped or moved; the studio writes the todo list, uncommitted work is stashed around it and a conflict aborts the rebase.
 - 2026-10-21 147: The selected commit and every later one become one commit with a new message.
+- 2026-10-21 156: Worktrees of the repository in Git Changes: add one beside the repository, open it as the workspace, remove it (not the main or the open one).

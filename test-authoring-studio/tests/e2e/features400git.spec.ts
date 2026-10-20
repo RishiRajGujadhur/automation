@@ -105,3 +105,23 @@ test('147 Commit squashing', async ({ page }) => {
   await log.getByRole('button', { name: 'Squash to HEAD…' }).click();
   await expect.poll(logOf).toEqual(['B and C', 'Change A', 'Initial']);
 });
+
+test('156 Git worktree management', async ({ page }) => {
+  const name = `${path.basename(root)}-wt`;
+  await open(page);
+  const view = await gitChanges(page);
+  const wt = view.getByRole('region', { name: 'Worktrees' });
+  await wt.getByRole('button', { name: 'Add Worktree' }).click();
+  await wt.getByLabel('Worktree folder').fill(name);
+  await wt.getByLabel('Worktree branch').fill('feature-x');
+  await wt.getByRole('button', { name: 'Add', exact: true }).click();
+  await expect(wt.locator('li', { hasText: 'feature-x' })).toBeVisible();
+  expect(git('worktree', 'list')).toContain('feature-x');
+  // Outside the folder that holds the repository: refused.
+  const outside = await page.request.post('/api/git/worktrees', { data: { dir: '../../elsewhere-wt', branch: 'nope', create: true } });
+  expect(outside.ok()).toBe(false);
+  await wt.getByRole('button', { name: 'Remove worktree feature-x' }).click();
+  await page.getByRole('button', { name: 'Remove', exact: true }).click();
+  await expect(wt.locator('li', { hasText: 'feature-x' })).toHaveCount(0);
+  expect(git('worktree', 'list')).not.toContain('feature-x');
+});

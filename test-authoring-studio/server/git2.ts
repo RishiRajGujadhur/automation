@@ -92,3 +92,34 @@ export async function squashCommits(root: string, base: string, message: string)
   });
   return interactiveRebase(root, base, steps);
 }
+
+/** Worktrees (git worktree): every checkout of the repository, its branch and HEAD. */
+export type Worktree = { path: string; branch?: string; head: string; main: boolean; locked: boolean; current: boolean };
+export async function listWorktrees(root: string): Promise<Worktree[]> {
+  const { top } = await locate(root);
+  const out = await git(top, ['worktree', 'list', '--porcelain']);
+  const norm = (p: string) => path.resolve(p).toLowerCase();
+  return out.split(/\n\n+/).filter((b) => b.trim()).map((b, i) => {
+    const get = (k: string) => b.split('\n').find((l) => l.startsWith(`${k} `))?.slice(k.length + 1);
+    const p = get('worktree') ?? '';
+    return { path: path.resolve(p), branch: get('branch')?.replace(/^refs\/heads\//, ''), head: (get('HEAD') ?? '').slice(0, 10), main: i === 0, locked: b.includes('\nlocked'), current: norm(p) === norm(top) };
+  });
+}
+/** A new worktree at `dir` (next to the repository when relative) on an existing or a new branch. */
+export async function addWorktree(root: string, dir: string, branch: string, create: boolean) {
+  const { top } = await locate(root);
+  const parent = path.dirname(path.resolve(top));
+  const target = path.resolve(parent, dir);
+  // Only beside the repository (in the folder that holds it), not anywhere on disk.
+  if (path.relative(parent, target).startsWith('..') || path.isAbsolute(path.relative(parent, target))) throw new Error('A worktree goes in the folder that holds the repository.');
+  await git(top, ['worktree', 'add', ...(create ? ['-b', branch, target] : [target, branch])]);
+  return target;
+}
+export async function removeWorktree(root: string, dir: string, force: boolean) {
+  const { top } = await locate(root);
+  const list = await listWorktrees(root);
+  const w = list.find((x) => path.resolve(x.path).toLowerCase() === path.resolve(dir).toLowerCase());
+  if (!w) throw new Error('No such worktree.');
+  if (w.main || w.current) throw new Error('The main worktree and the one open in the studio cannot be removed.');
+  await git(top, ['worktree', 'remove', ...(force ? ['--force'] : []), w.path]);
+}

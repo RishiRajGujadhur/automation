@@ -7,6 +7,7 @@ import { useLocalState } from '../ui';
 import { useConfirm } from '../radix2';
 import { fileType } from '../files/fileTypes';
 import { FILES_CHANGED_EVENT, UNSAVED_REFRESH, GIT_CHANGED_EVENT } from '../editor/events';
+import Worktrees from './Worktrees';
 import { issueKey, withIssueKey, COMMIT_TYPES, withCommitType, withoutTemplateComments } from './commitTools';
 
 type GitFile = { file: string; staged: boolean; status: 'M' | 'A' | 'D' | 'R' | 'U' | '?'; from?: string };
@@ -186,6 +187,7 @@ export default function GitView({ onOpen, onNotice, onChanged }: { onOpen: (file
           <button className="icon-button" aria-label="Stage All Changes" title="Stage All" disabled={busy || !changes.length} onClick={() => void act(() => api('/git/stage', { files: changes.map((f) => f.file) }))}><Plus size={13} /></button>
         </>)}
         {st && !st.files.length && <p className="explorer-empty">No changes.</p>}
+        {featureOn('git-worktrees') && <Worktrees onNotice={onNotice} />}
         <section className="git-group" aria-label="History">
           <div className="git-group-head">
             <button className="se-twisty" aria-label={`${closed.has('history') ? 'Expand' : 'Collapse'} History`} aria-expanded={!closed.has('history')} onClick={() => toggle('history')}>{closed.has('history') ? <ChevronRight size={12} /> : <ChevronDown size={12} />}</button>
