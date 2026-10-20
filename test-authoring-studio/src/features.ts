@@ -258,6 +258,7 @@ export const FEATURES: Feature[] = [
   { id: 'sort-tabs', label: 'Sort Tabs by Name', group: 'Files', essential: false, vs: 'Editor Tabs ▸ Sort tabs alphabetically (Rider)', description: 'Orders the editor tabs alphabetically (pinned tabs stay first).', commands: ['sort-tabs'] },
   { id: 'fold-usings', label: 'Collapse Using Directives', group: 'Code intelligence', essential: true, vs: 'Outlining ▸ Collapse usings', description: 'Folds the using block at the top of a C# file.', commands: ['fold-usings'] },
   { id: 'find-step-usages', label: 'Find Step Usages (feature step)', group: 'Gherkin', essential: true, vs: 'Find Usages on a Gherkin step', description: 'Every feature step bound to the same step definition as the step at the caret.', commands: ['find-step-usages'] },
+  { id: 'copy-step-text', label: 'Copy Step Text', group: 'Gherkin', essential: true, description: 'Copies the step at the caret without its keyword (for the step catalogue or a binding).', commands: ['copy-step-text'] },
 ];
 export const GROUPS: FeatureGroup[] = ['Editing', 'Navigation', 'Code intelligence', 'Tool windows', 'Files', 'Git', 'Gherkin', 'View', 'Debugging', 'Help and productivity'];
 
