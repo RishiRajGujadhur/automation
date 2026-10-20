@@ -483,6 +483,7 @@ export const FEATURES: Feature[] = [
   { id: 'insert-data-table', label: 'Insert Data Table', group: 'Gherkin', essential: false, description: 'Code ▸ Gherkin adds a data table under the step at the caret, its first header selected.', commands: ['insert-data-table'] },
   { id: 'copy-tag-filter', label: 'Copy Test Filter for Tag', group: 'Gherkin', essential: false, description: 'Code ▸ Gherkin copies the dotnet test --filter that runs the scenarios of the @tag at the caret.', commands: ['copy-tag-filter'] },
   { id: 'unicode-escape', label: 'Unicode Escape / Unescape', group: 'Editing', essential: false, description: 'Edit ▸ Convert writes non-ASCII characters as \\uXXXX escapes, and turns escapes back into characters.', commands: ['unicode-escape', 'unicode-unescape'] },
+  { id: 'hex-decimal', label: 'Hex ⇄ Decimal', group: 'Editing', essential: false, description: 'Edit ▸ Convert turns the number at the caret from decimal to hexadecimal and back.', commands: ['hex-decimal'] },
 ];
 export const GROUPS: FeatureGroup[] = ['Editing', 'Navigation', 'Code intelligence', 'Tool windows', 'Files', 'Git', 'Gherkin', 'View', 'Debugging', 'Help and productivity'];
 

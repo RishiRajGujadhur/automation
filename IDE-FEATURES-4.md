@@ -97,6 +97,7 @@ has it on by default, so the desktop app starts with it on. The others start off
 | Y86 | Insert Data Table | Rider | no | ✅ 2026-10-20 |
 | Y87 | Copy Test Filter for Tag | Rider | no | ✅ 2026-10-20 |
 | Y88 | Unicode Escape / Unescape | Rider | no | ✅ 2026-10-20 |
+| Y89 | Hex ⇄ Decimal | Rider | no | ✅ 2026-10-20 |
 
 ## Progress log
 - 2026-10-20 Y1: Percent-encodes the selection (or line) and decodes it.
@@ -187,3 +188,4 @@ has it on by default, so the desktop app starts with it on. The others start off
 - 2026-10-20 Y86: A data table under the step at the caret.
 - 2026-10-20 Y87: Copies dotnet test --filter Category=<tag>.
 - 2026-10-20 Y88: Non-ASCII characters as \uXXXX escapes, and back.
+- 2026-10-20 Y89: The number at the caret between decimal and hexadecimal.

@@ -682,3 +682,11 @@ export function addBindingAttribute(text: string) {
 /** Unicode Escape / Unescape (Rider String Manipulation): non-ASCII characters as \uXXXX, and back. */
 export const unicodeEscape = mapSelections((t) => t.replace(/[^\x00-\x7f]/g, (c) => `\\u${c.charCodeAt(0).toString(16).toUpperCase().padStart(4, '0')}`), 'line');
 export const unicodeUnescape = mapSelections((t) => t.replace(/\\u([0-9a-fA-F]{4})/g, (_, h: string) => String.fromCharCode(parseInt(h, 16))), 'line');
+
+/** Hex ⇄ Decimal (Rider String Manipulation): 0x1F ↔ 31 for the number at the caret or in the selection. */
+export const hexDecimal = mapSelections((t) => {
+  const s = t.trim();
+  if (/^0x[0-9a-f]+$/i.test(s)) return String(BigInt(s));
+  if (/^\d+$/.test(s)) return `0x${BigInt(s).toString(16).toUpperCase()}`;
+  return null;
+}, 'word');
