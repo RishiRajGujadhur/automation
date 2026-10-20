@@ -100,7 +100,7 @@ export default function BuildPanel({ onOpen, onNotice, onClose }: { onOpen: (fil
                 <option value="current">Current Document</option>
               </select>
             )}
-            <label className="error-search"><Search size={12} /><input aria-label="Search Error List" placeholder="Search Error List" value={query} onChange={(e) => setQuery(e.target.value)} /></label>
+            <label className="error-search"><Search size={12} /><input aria-label="Search Error List" placeholder="Search Error List" value={query} onChange={(e) => setQuery(e.target.value)} onKeyDown={(e) => { if (e.key === 'Escape' && query && featureOn('search-escape')) { e.stopPropagation(); setQuery(''); } }} /></label>
             {/* Copy the rows shown (after filters) (QOL-50). */}
             {featureOn('error-list-copy-all') && <button className="icon-button" aria-label="Copy all errors" title="Copy all shown" disabled={!rows.length} onClick={() => void copyText(rows.map(errorText).join('\n')).then((ok) => onNotice(ok ? `Copied ${rows.length} item${rows.length === 1 ? '' : 's'}.` : 'Clipboard unavailable.'))}><Copy size={13} /></button>}
           </div>
