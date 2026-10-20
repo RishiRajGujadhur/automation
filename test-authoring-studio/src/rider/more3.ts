@@ -26,6 +26,7 @@ export function moreCommands3(h: MoreHelpers): RiderCommand[] {
     { id: 'secondary-sidebar', label: 'Secondary Side Bar', menu: 'View', shortcut: 'Ctrl Alt B', run: () => window.dispatchEvent(new Event('tas:secondary-sidebar')) },
     { id: 'move-editor-next-group', label: 'Move Editor into Next Group', menu: 'View', run: () => window.dispatchEvent(new CustomEvent('tas:move-editor', { detail: 'next' })) },
     { id: 'move-editor-previous-group', label: 'Move Editor into Previous Group', menu: 'View', run: () => window.dispatchEvent(new CustomEvent('tas:move-editor', { detail: 'previous' })) },
+    { id: 'open-floating', label: 'Open in New Window', menu: 'View', run: h.inEditor((_v, file) => { if (!window.open(`${location.origin}${location.pathname}#/float?file=${encodeURIComponent(file)}`, '_blank', 'popup,width=900,height=700')) h.notice('The window was blocked: allow pop-ups for the studio.'); }) },
     { id: 'next-todo', label: 'Next TODO', menu: 'Navigate', group: true, run: h.inEditor((v) => gotoTodo(tokens(), 1)(v) || h.notice(`No ${tokens().join(' / ')} comments in this file.`)) },
     { id: 'previous-todo', label: 'Previous TODO', menu: 'Navigate', run: h.inEditor((v) => gotoTodo(tokens(), -1)(v) || h.notice(`No ${tokens().join(' / ')} comments in this file.`)) },
     { id: 'previous-conflict', label: 'Previous Merge Conflict', menu: 'Navigate', run: h.inEditor((v) => prevConflict(v) || h.notice('This file has no merge conflicts.')) },

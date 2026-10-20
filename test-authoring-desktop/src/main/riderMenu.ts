@@ -123,6 +123,7 @@ const ROWS: Record<'edit' | 'view' | 'navigate' | 'code' | 'tools' | 'help', Row
     ['Secondary Side Bar', 'secondary-sidebar'],
     ['Move Editor into Next Group', 'move-editor-next-group'],
     ['Move Editor into Previous Group', 'move-editor-previous-group'],
+    ['Open in New Window', 'open-floating'],
     ['Window Layouts…', 'window-layouts'],
     ['Reset Window Layout', 'reset-layout'],
     ['Reopen Closed Tab', 'reopen-tab', 'CmdOrCtrl+Shift+T'],

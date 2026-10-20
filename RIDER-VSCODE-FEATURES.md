@@ -316,7 +316,7 @@ Legend: `[x]` done · `[ ]` to do.
 - [x] 384. Split editor horizontally — View ▸ Split Editor Down / Right (workbench.editor.openSideBySideDirection) (2026-10-21)
 - [x] 385. Split editor vertically — Split Right / Open to the Side
 - [x] 386. Move editors between groups — View ▸ Move Editor into Next / Previous Group (2026-10-21)
-- [ ] 387. Open files in a floating editor window
+- [x] 387. Open files in a floating editor window — View ▸ Open in New Window: the file alone in its own browser / desktop window (2026-10-21)
 - [x] 388. Zen Mode — View ▸ Zen Mode (Ctrl+K Z), Workbench ▸ Zen Mode settings (full screen, center, line numbers, status bar, tabs, silent notifications) (2026-10-21)
 - [x] 389. Distraction Free Mode
 - [x] 390. Centered editor layout
@@ -384,3 +384,4 @@ Legend: `[x]` done · `[ ]` to do.
 - 2026-10-21 383: The split editor became an editor group with its own tabs.
 - 2026-10-21 386: The active editor moves between the main tab group and the side group.
 - 2026-10-21 398: A locked side group takes no new editors; Open to the Side then opens in the main group.
+- 2026-10-21 387: A file opens in a floating window of its own (web pop-up, desktop window) with the same editor features and saving.

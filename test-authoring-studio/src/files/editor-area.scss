@@ -3961,3 +3961,8 @@ html[data-activity-bar='right'] .app-body > .activity-bar { order: 99; border-le
   &.active { background: var(--surface); color: var(--text-strong); box-shadow: inset 0 -2px 0 var(--accent); }
 }
 .split-head .icon-button.on { color: var(--accent-text); }
+
+/* Floating editor window (RIDER-VSCODE-FEATURES.md 387). */
+.floating-editor { display: flex; flex-direction: column; height: 100vh; background: var(--bg); color: var(--text); }
+.floating-head { display: flex; align-items: center; gap: 10px; padding: 4px 10px; border-bottom: 1px solid var(--border); font-size: 12px; }
+.floating-body { display: flex; flex: 1; min-height: 0; flex-direction: column; > * { flex: 1; min-height: 0; } }

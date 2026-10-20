@@ -587,3 +587,17 @@ test('383 Editor tab grouping; 386 Move editors between groups; 398 Editor group
   await expect(side.getByRole('tab')).toHaveText(['AuthSteps.cs']);
   await expect(page.getByText('The side editor group is locked').first()).toBeVisible();
 });
+
+test('387 Open files in a floating editor window', async ({ page, context }) => {
+  await open(page, CS);
+  const [win] = await Promise.all([context.waitForEvent('page'), menuItem(page, 'View', /^Open in New Window$/)]);
+  await win.waitForLoadState();
+  await expect(win.getByLabel(`Floating editor ${CS}`)).toBeVisible();
+  await expect(win.getByLabel(`Source of ${CS}`)).toContainText('class AuthSteps');
+  // Editing there and saving writes the file.
+  await win.getByLabel(`Source of ${CS}`).click();
+  await win.keyboard.press('Control+End');
+  await win.keyboard.type('// from the floating window');
+  await win.keyboard.press('Control+s');
+  await expect.poll(() => fs.readFile(path.join(temp, CS), 'utf8'), { timeout: 20_000 }).toContain('// from the floating window');
+});

@@ -56,7 +56,10 @@ export function lockDown(win: BrowserWindow) {
   const internal = (u: string) => u.startsWith(ctx.origin + '/') || u === ctx.origin || u.startsWith('data:text/html') || u.startsWith('blob:' + ctx.origin) || u === 'about:blank';
   win.webContents.setWindowOpenHandler(({ url }) => {
     if (safeUrl(url) && !internal(url)) shell.openExternal(url);
-    // The studio prints living docs through window.open('') — allow same-app blank windows only.
+    // The studio prints living docs through window.open('') — allow same-app blank windows only — and opens a file in a
+    // floating editor window (#/float?file=…), which is the app's own page.
+    const floating = url.startsWith(`${ctx.origin}/`) && /#\/float\?file=/.test(url);
+    if (floating) return { action: 'allow', overrideBrowserWindowOptions: { autoHideMenuBar: true, width: 900, height: 700, webPreferences: { sandbox: true, contextIsolation: true } } };
     return url === 'about:blank' || url === '' ? { action: 'allow', overrideBrowserWindowOptions: { autoHideMenuBar: true, webPreferences: { sandbox: true, contextIsolation: true } } } : { action: 'deny' };
   });
   win.webContents.on('will-navigate', (e, url) => { if (!internal(url)) { e.preventDefault(); if (safeUrl(url)) shell.openExternal(url); } });
