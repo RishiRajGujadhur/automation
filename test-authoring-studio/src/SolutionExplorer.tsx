@@ -105,6 +105,8 @@ export default function SolutionExplorer({ features, revision, activeFile, query
   const [renaming, setRenaming] = useState<string | null>(null);
   // Drag a file onto a folder to move it (QOL-50).
   const [dropOn, setDropOn] = useState<string | null>(null);
+  // Hovering a dragged file over a collapsed folder opens it (QOL-50).
+  const hoverOpen = useRef(0);
   const [clip, setClip] = useState(clipboard);
   const setClipboard = (c: typeof clipboard) => { clipboard = c; setClip(c); };
   const dirOf = (p: string) => (p.includes('/') ? p.slice(0, p.lastIndexOf('/')) : '');
@@ -409,8 +411,8 @@ export default function SolutionExplorer({ features, revision, activeFile, query
           ]}>
             <li>
               <div className={`explorer-folder-row ${activeFolder === n.path ? 'active-folder' : ''} ${dropOn === n.path ? 'drop-target' : ''}`}
-                onDragOver={(e) => { if (onFileOp && featureOn('drag-move') && e.dataTransfer.types.includes('application/x-tas-path')) { e.preventDefault(); e.dataTransfer.dropEffect = 'move'; setDropOn(n.path); } }}
-                onDragLeave={() => setDropOn(null)}
+                onDragOver={(e) => { if (onFileOp && featureOn('drag-move') && e.dataTransfer.types.includes('application/x-tas-path')) { e.preventDefault(); e.dataTransfer.dropEffect = 'move'; setDropOn(n.path); if (!expanded && featureOn('drag-expand') && !hoverOpen.current) hoverOpen.current = window.setTimeout(() => { toggle(n.path, true); hoverOpen.current = 0; }, 600); } }}
+                onDragLeave={() => { setDropOn(null); clearTimeout(hoverOpen.current); hoverOpen.current = 0; }}
                 onDrop={(e) => { setDropOn(null); const from = e.dataTransfer.getData('application/x-tas-path'); if (!from || !onFileOp || !featureOn('drag-move')) return; e.preventDefault(); const to = join(n.path, from.split('/').pop()!); if (to === from || dirOf(from) === n.path) return; void (onConfirm ? onConfirm({ title: `Move ${from.split('/').pop()}?`, description: `${from} moves to ${n.path}/.`, confirm: 'Move' }) : Promise.resolve(window.confirm(`Move ${from} to ${n.path}/?`))).then((ok) => { if (ok) void onFileOp({ kind: 'rename', from, to }); }); }}>
                 {renaming === n.path ? <span className="explorer-folder" style={{ paddingLeft: 4 + depth * 12 }}><Folder size={14} />{renameBox(n.path, true)}</span> : <button className={`explorer-folder ${clip?.mode === 'cut' && clip.path === n.path ? 'cut' : ''}`} style={{ paddingLeft: 4 + depth * 12 }} title={n.path} aria-label={`${expanded ? 'Collapse' : 'Expand'} folder ${n.path}`} aria-expanded={expanded}
                   onKeyDown={rowKeys(n.path, true)}

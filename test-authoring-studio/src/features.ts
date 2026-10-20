@@ -357,6 +357,7 @@ export const FEATURES: Feature[] = [
   { id: 'param-complete', label: 'Gherkin: <parameter> completion', group: 'Gherkin', essential: true, description: 'Typing < in an outline step suggests its Examples columns.' },
   { id: 'line-total', label: 'Line count in the status bar tooltip', group: 'Editing', essential: true, description: 'Hovering Ln, Col shows how many lines the file has.' },
   { id: 'new-file-existing', label: 'New File opens an existing file', group: 'Files', essential: true, description: 'New File with the name of an existing file opens that file instead of failing.' },
+  { id: 'drag-expand', label: 'Explorer: folders open while dragging', group: 'Files', essential: true, description: 'Holding a dragged file over a collapsed folder opens it after a moment.' },
 ];
 export const GROUPS: FeatureGroup[] = ['Editing', 'Navigation', 'Code intelligence', 'Tool windows', 'Files', 'Git', 'Gherkin', 'View', 'Debugging', 'Help and productivity'];
 
