@@ -495,3 +495,36 @@ export function removeUnusedColumns(view: EditorView) {
   view.dispatch({ changes, userEvent: 'delete' });
   return true;
 }
+
+/** Inline Background: its steps move to the start of every scenario (a scenario starting with Given then says And). */
+export function inlineBackground(view: EditorView) {
+  const { state } = view;
+  const doc = state.doc;
+  let bg = 0;
+  for (let n = 1; n <= doc.lines; n++) { if (/^\s*Background:/.test(doc.line(n).text)) { bg = n; break; } if (SCENARIO.test(doc.line(n).text)) break; }
+  if (!bg) return false;
+  const steps: number[] = [];
+  let k = bg + 1;
+  for (; k <= doc.lines; k++) { const t = doc.line(k).text; if (!t.trim()) continue; if (!STEP.test(t)) break; steps.push(k); }
+  const heads: number[] = [];
+  for (let n = bg + 1; n <= doc.lines; n++) if (SCENARIO.test(doc.line(n).text)) heads.push(n);
+  if (!steps.length || !heads.length) return false;
+  const lines = steps.map((n) => doc.line(n).text);
+  const changes: ChangeSpec[] = [];
+  // The Background, its steps and the blank lines after them.
+  let end = steps[steps.length - 1];
+  while (end + 1 <= doc.lines && !doc.line(end + 1).text.trim()) end++;
+  changes.push({ from: doc.line(bg).from, to: Math.min(doc.length, doc.line(end).to + state.lineBreak.length) });
+  for (const h of heads) {
+    changes.push({ from: doc.line(h).to, insert: state.lineBreak + lines.join(state.lineBreak) });
+    for (let n = h + 1; n <= doc.lines; n++) {
+      const t = doc.line(n).text;
+      if (!t.trim()) continue;
+      const m = /^(\s*)Given(?=\s)/.exec(t);
+      if (m) changes.push({ from: doc.line(n).from + m[1].length, to: doc.line(n).from + m[0].length, insert: 'And' });
+      break;
+    }
+  }
+  view.dispatch({ changes, userEvent: 'input' });
+  return true;
+}

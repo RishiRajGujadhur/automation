@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { EditorState, type TransactionSpec } from '@codemirror/state';
 import { EditorView } from '@codemirror/view';
-import { cycleStepKeyword, scenarioToOutline, tableInsertRow, tableAddColumn, tableDeleteColumn, tableSortByColumn, testFilter, selectScenario, renameTag, extractExamplesParameter, outlineToScenario, duplicateScenario, moveScenario, extractBackground, addExamplesTable, toggleTag, toggleScenarioComment, pasteAsTable, tableCsv, featureStats, renameExamplesParameter, removeUnusedColumns } from '../src/editor/gherkinTools';
+import { cycleStepKeyword, scenarioToOutline, tableInsertRow, tableAddColumn, tableDeleteColumn, tableSortByColumn, testFilter, selectScenario, renameTag, extractExamplesParameter, outlineToScenario, duplicateScenario, moveScenario, extractBackground, addExamplesTable, toggleTag, toggleScenarioComment, pasteAsTable, tableCsv, featureStats, renameExamplesParameter, removeUnusedColumns, inlineBackground } from '../src/editor/gherkinTools';
 
 /** Runs an editor command on `doc` with the selection between « and » (or a caret at ‸); with `caret`, the result marks the caret with ¦. */
 function run(doc: string, cmd: (v: EditorView) => boolean, caret = false) {
@@ -127,5 +127,10 @@ describe('Gherkin tools (IDE-FEATURES X49…)', () => {
     const doc = 'Scenario Outline: S‸\n  Given <user> signs in\n  Examples:\n    | user | old | note |\n    | ada  | x   | y    |';
     expect(run(doc, removeUnusedColumns)).toBe('Scenario Outline: S\n  Given <user> signs in\n  Examples:\n    | user |\n    | ada  |');
     expect(run('Scenario Outline: S‸\n  Given <a>\n  Examples:\n    | a |\n    | 1 |', removeUnusedColumns)).toBe('Scenario Outline: S\n  Given <a>\n  Examples:\n    | a |\n    | 1 |');
+  });
+  it('X132 Inline Background', () => {
+    const doc = 'Feature: F\n  Background:\n    Given the app is open\n\n  Scenario: A\n    Given x\n    When a\n\n  Scenario: B\n    When b';
+    expect(run(doc, inlineBackground)).toBe('Feature: F\n  Scenario: A\n    Given the app is open\n    And x\n    When a\n\n  Scenario: B\n    Given the app is open\n    When b');
+    expect(run('Feature: F\n  Scenario: A\n    Given x', inlineBackground)).toBe('Feature: F\n  Scenario: A\n    Given x');
   });
 });

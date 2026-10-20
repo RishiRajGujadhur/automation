@@ -169,6 +169,7 @@ const ROWS: Record<'edit' | 'view' | 'navigate' | 'code' | 'tools' | 'help', Row
       ['Copy Table as CSV', 'copy-table-csv'],
       ['Rename Examples Parameter…', 'rename-param'],
       ['Remove Unused Examples Columns', 'remove-unused-columns'],
+      ['Inline Background', 'inline-background'],
     ] },
   ],
   tools: [
