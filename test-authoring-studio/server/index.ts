@@ -958,6 +958,22 @@ app.post('/api/csharp/pattern', async (req, res) => {
   }
   res.json({ matches, previews: out });
 });
+// Code Cleanup in Solution (Rider): organize usings and format every C# file; one previewed diff per changed file.
+app.post('/api/csharp/cleanup-solution', async (_req, res) => {
+  const out: unknown[] = [];
+  for (const file of await repoCsFiles(400)) {
+    const target = await confined(config.repositoryRoot, file, false);
+    const text = await fs.readFile(target, 'utf8').catch(() => '');
+    if (!text) continue;
+    const organized = await lang.request<{ text: string }>(config.repositoryRoot, { op: 'organize', file, source: text }, 60_000).then((r) => r.text, () => text);
+    const formatted = await lang.request<{ text: string }>(config.repositoryRoot, { op: 'format', file, source: organized }, 60_000).then((r) => r.text, () => organized);
+    if (formatted === text) continue;
+    const id = randomUUID();
+    previews.set(id, { file, source: formatted, hash: hash(text), root: config.repositoryRoot });
+    out.push({ id, file, diff: createPatch(file, text, formatted, 'repository', 'proposed'), changed: true, changes: ['Organize usings and format'] });
+  }
+  res.json(out);
+});
 app.post('/api/csharp/actions', async (req, res) => {
   const body = csPosition.extend({ endLine: z.number().int().min(1).optional(), endColumn: z.number().int().min(1).optional() }).parse(req.body);
   await confined(config.repositoryRoot, body.file, false);

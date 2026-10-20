@@ -337,6 +337,7 @@ const ROWS: Record<'edit' | 'view' | 'navigate' | 'code' | 'tools' | 'help', Row
       ['Create Unit Tests…', 'create-unit-tests'],
       ['Configure Severity…', 'configure-severity'],
       ['Find NuGet Package for Missing Type', 'nuget-for-type'],
+      ['Code Cleanup in Solution', 'cleanup-solution'],
     ] },
   ],
   tools: [
