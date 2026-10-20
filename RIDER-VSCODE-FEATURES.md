@@ -278,7 +278,7 @@ Legend: `[x]` done · `[ ]` to do.
 - [x] 332. Navigate to previous occurrence — Find Previous Selected
 - [x] 333. Navigate to next code inspection — Next Problem in File
 - [x] 334. Navigate to next compiler warning — Navigate ▸ Next / Previous Warning; the C# editor now shows the compiler's semantic warnings and errors (2026-10-21)
-- [ ] 335. Navigate to next test failure
+- [x] 335. Navigate to next test failure — Navigate ▸ Next Test Failure (each failed test of the last run, with its message) (2026-10-21)
 - [ ] 336. Search within selected text
 - [x] 337. Search within open editors
 - [ ] 338. Search within ignored files
@@ -352,3 +352,4 @@ Legend: `[x]` done · `[ ]` to do.
 - 2026-10-21 324: Next / Previous TODO goes to the TODO, FIXME, HACK, BUG (or custom) keywords in comments; TODO filtering already existed in the TODO window.
 - 2026-10-21 330: Previous Merge Conflict added next to the existing Next Merge Conflict.
 - 2026-10-21 334: The C# editor shows the compiler's semantic diagnostics (unused variables, unknown names) live from the language server; Next / Previous Warning visits them.
+- 2026-10-21 335: Next Test Failure opens the failed tests of the last run one after another and shows the first line of the failure.

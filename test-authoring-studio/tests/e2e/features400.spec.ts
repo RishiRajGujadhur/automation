@@ -250,3 +250,28 @@ test('334 Navigate to next compiler warning', async ({ page }) => {
   await menuItem(page, 'Navigate', /^Previous Warning$/);
   expect(await caretOffset(page)).toBe(text.indexOf('a;'));
 });
+
+test('335 Navigate to next test failure', async ({ page, request }) => {
+  needsLang();
+  test.setTimeout(400_000);
+  const root = await fs.mkdtemp(path.join(os.tmpdir(), 'studio-f400-calc-'));
+  await fs.cp(path.resolve(import.meta.dirname, '../../samples/Calculator'), root, { recursive: true, filter: (s) => !/[\/](bin|obj)$/.test(s) });
+  const file = path.join(root, 'Tests/CalculatorTests.cs');
+  await fs.writeFile(file, (await fs.readFile(file, 'utf8')).replace(/\}\s*$/, '\n    [Test]\n    public void FailsOnPurpose()\n    {\n        Assert.That(1 + 1, Is.EqualTo(3));\n    }\n}\n'));
+  try {
+    expect((await request.post('/api/solution/open', { data: { path: path.join(root, 'Calculator.csproj') } })).ok()).toBe(true);
+    await open(page);
+    await page.getByRole('button', { name: 'Test Explorer' }).click();
+    const te = page.getByRole('region', { name: 'Test Explorer' });
+    await expect(te.getByRole('navigation', { name: 'Tests' }).locator('.t-label', { hasText: /FailsOnPurpose/ })).toBeVisible({ timeout: 60_000 });
+    await te.getByRole('button', { name: 'Run All Tests' }).click();
+    await expect(te.getByRole('status').getByTitle('Failed')).toHaveText('1', { timeout: 300_000 });
+    await menuItem(page, 'Navigate', /^Next Test Failure$/);
+    await expect(page.locator('.editor-tab-label[aria-current="true"]')).toHaveAttribute('title', 'Tests/CalculatorTests.cs');
+    await expect(page.getByText(/Failure 1 of 1: .*FailsOnPurpose/).first()).toBeVisible();
+    expect(await page.evaluate(() => { const v = (window as unknown as { __activeEditor: () => { view: { state: { doc: { lineAt(p: number): { text: string } }; selection: { main: { head: number } } } } } }).__activeEditor().view; return v.state.doc.lineAt(v.state.selection.main.head).text; })).toMatch(/FailsOnPurpose|\[Test\]/);
+  } finally {
+    await request.post('/api/tests/cancel').catch(() => {});
+    await fs.rm(root, { recursive: true, force: true, maxRetries: 5 }).catch(() => {});
+  }
+});
