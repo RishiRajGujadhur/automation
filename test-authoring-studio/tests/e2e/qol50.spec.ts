@@ -321,3 +321,71 @@ test('QL40 Recent Files kept after a reload', async ({ page }) => {
   await page.locator('body').press('Control+E');
   await expect(page.getByRole('dialog').getByText('AuthSteps.cs').first()).toBeVisible();
 });
+
+test('QL41 / QL42 / QL49 Status bar: unsaved count saves all; Auto Save mode; Save All reports', async ({ page }) => {
+  await openFeature(page);
+  await caretAt(page, 'Feature:');
+  await page.keyboard.type('x');
+  const unsaved = page.getByRole('button', { name: /^1 unsaved file: Save All/ });
+  await expect(unsaved).toBeVisible();
+  await unsaved.click();
+  await expect(unsaved).toHaveCount(0);
+  const auto = page.getByRole('button', { name: /^Auto Save: off/ });
+  await auto.click();
+  await expect(page.getByRole('button', { name: /^Auto Save: after a delay/ })).toBeVisible();
+  await page.getByRole('button', { name: /^Auto Save: after a delay/ }).click();
+  await page.getByRole('button', { name: /^Auto Save: on focus change/ }).click();
+  await expect(page.getByRole('button', { name: /^Auto Save: off/ })).toBeVisible();
+  await menuItem(page, 'Navigate', /^Clear Recent Files/);
+  await page.locator('body').press('Alt+S');
+  await expect(page.getByText(/^(Nothing to save\.|Saved \d+ files?\.)$/).first()).toBeVisible();
+});
+
+test('QL43 Explorer search marks the match', async ({ page }) => {
+  await openFeature(page);
+  await page.getByLabel('Search Explorer').fill('auth');
+  await expect(nav(page).locator('mark.list-match').first()).toHaveText(/auth/i);
+});
+
+test('QL44 Hovering a tag shows its scenario count', async ({ page }) => {
+  await openFeature(page);
+  await gherkin(page).locator('.cm-line', { hasText: '@authentication' }).getByText('@authentication').hover();
+  await expect(page.locator('.cm-tag-info')).toContainText('@authentication: 1 scenario');
+});
+
+test('QL45 / QL46 Notifications: badge in the status bar; kept after a reload', async ({ page }) => {
+  await openFeature(page);
+  await menuItem(page, 'Navigate', /^Clear Recent Files/);
+  const badge = page.getByRole('button', { name: /^1 new notification/ });
+  await expect(badge).toBeVisible();
+  await badge.click();
+  await expect(page.getByRole('list', { name: 'Notification history' })).toContainText('recent file');
+  await expect(badge).toHaveCount(0);
+  await page.reload();
+  await expect(page.getByText('Repository indexed')).toBeVisible();
+  await menuItem(page, 'View', /^Notifications/);
+  await expect(page.getByRole('list', { name: 'Notification history' })).toContainText('recent file');
+});
+
+test('QL47 / QL48 Explorer: Git status of files and folders', async ({ page }) => {
+  const { execFileSync } = await import('node:child_process');
+  const g = (...a: string[]) => execFileSync('git', ['-c', 'user.email=t@t', '-c', 'user.name=t', ...a], { cwd: root });
+  g('init', '-q'); g('add', '-A'); g('commit', '-qm', 'base');
+  await fs.appendFile(path.join(root, 'Steps/AuthSteps.cs'), '// changed\n');
+  await fs.writeFile(path.join(root, 'Steps/New.cs'), 'class N { }\n');
+  await reindex(page);
+  await openFeature(page);
+  await expect(nav(page).getByLabel('Git: modified')).toHaveCount(1);
+  await expect(nav(page).getByLabel('Git: untracked')).toHaveCount(1);
+  await expect(nav(page).getByLabel('Contains changed files').first()).toBeVisible();
+});
+
+test('QL50 Unsaved editors are saved before a build', async ({ page }) => {
+  await openFeature(page);
+  await caretAt(page, 'Feature:');
+  await page.keyboard.type('# saved by the build ');
+  await expect(page.getByRole('button', { name: /unsaved file/ })).toBeVisible();
+  await page.getByRole('button', { name: 'Build menu' }).click();
+  await page.getByRole('menuitem', { name: /^Build Solution/ }).click();
+  await expect.poll(() => fs.readFile(path.join(root, 'Features/Auth/Login.feature'), 'utf8')).toContain('# saved by the build');
+});

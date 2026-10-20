@@ -47,6 +47,7 @@ Every improvement is verified by a unit or Playwright test (`tests/e2e/qol50.spe
 | QL38 | Lists: Page Up / Page Down, Ctrl+Home / End | Popups | ✅ 2026-10-20 |
 | QL39 | Lists: matches highlighted | Popups | ✅ 2026-10-20 |
 | QL40 | Recent Files kept after a reload | Navigation | ✅ 2026-10-20 |
+| QL41 | Unsaved files in the status bar | Status bar | ✅ 2026-10-20 |
 
 ## Progress log
 - 2026-10-20 QL1: Title names the file and workspace folder
@@ -89,3 +90,4 @@ Every improvement is verified by a unit or Playwright test (`tests/e2e/qol50.spe
 - 2026-10-20 QL38: Paging in popup lists
 - 2026-10-20 QL39: Typed text marked in labels
 - 2026-10-20 QL40: Ctrl+E lists files after reload
+- 2026-10-20 QL41: Count; click saves all

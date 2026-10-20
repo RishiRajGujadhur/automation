@@ -2,6 +2,8 @@ import { useEffect, useState } from 'react';
 import { GitBranch, CircleX, TriangleAlert, ArrowUp, ArrowDown, Loader } from 'lucide-react';
 import { api } from './api';
 import { useBuild } from './build/store';
+import { SAVE_ALL_EVENT } from './editor/events';
+import { unsavedFiles, UNSAVED_EVENT } from './editor/autosave';
 import { useCursor } from './editor/cursor';
 import { GIT_CHANGED_EVENT } from './editor/events';
 import { Dropdown } from './radix';
@@ -20,6 +22,9 @@ import { wordCount } from './editor/docTools';
  */
 export default function StatusBarItems({ repository, onGit, onErrors }: { repository?: string; onGit: () => void; onErrors: () => void }) {
   const build = useBuild();
+  // Unsaved files: the count, a click saves them all (QOL-50).
+  const [unsaved, setUnsaved] = useState(unsavedFiles);
+  useEffect(() => { const h = () => setUnsaved(unsavedFiles()); window.addEventListener(UNSAVED_EVENT, h); return () => window.removeEventListener(UNSAVED_EVENT, h); }, []);
   // Elapsed build time (QOL-50).
   const [buildStart, setBuildStart] = useState(0);
   const [, tick] = useState(0);
@@ -74,6 +79,7 @@ export default function StatusBarItems({ repository, onGit, onErrors }: { reposi
         </>
       )}
       {featureOn('build-elapsed') && build.status === 'running' && <span className="status-item" aria-label="Build progress"><Loader size={12} className="spin" /> {build.action === 'clean' ? 'Cleaning' : 'Building'}… {Math.max(0, Math.round((Date.now() - (buildStart || Date.now())) / 1000))} s</span>}
+      {featureOn('unsaved-count') && unsaved.length > 0 && <button className="status-item" aria-label={`${unsaved.length} unsaved file${unsaved.length === 1 ? '' : 's'}: Save All`} title={`Unsaved: ${unsaved.join(', ')} — click to save all`} onClick={() => window.dispatchEvent(new Event(SAVE_ALL_EVENT))}>● {unsaved.length} unsaved</button>}
       {build.status !== 'idle' && (
         <button className="status-item" aria-label={`${errors} errors, ${warnings} warnings: open the Error List`} title="Error List" onClick={onErrors}>
           <CircleX size={12} />{errors} <TriangleAlert size={12} />{warnings}

@@ -337,6 +337,7 @@ export const FEATURES: Feature[] = [
   { id: 'list-keys', label: 'Lists: Page Up / Page Down, Ctrl+Home / End', group: 'Navigation', essential: true, description: 'Popups such as Go to, Switcher and File Structure page through long lists.' },
   { id: 'list-highlight', label: 'Lists: matches highlighted', group: 'Navigation', essential: true, description: 'The text you typed is marked in popup list labels.' },
   { id: 'recent-files-kept', label: 'Recent Files kept after a reload', group: 'Navigation', essential: true, description: 'Recent Files (Ctrl+E) still lists your files after a reload.' },
+  { id: 'unsaved-count', label: 'Unsaved files in the status bar', group: 'Files', essential: true, description: 'The status bar counts unsaved files; a click saves them all.' },
 ];
 export const GROUPS: FeatureGroup[] = ['Editing', 'Navigation', 'Code intelligence', 'Tool windows', 'Files', 'Git', 'Gherkin', 'View', 'Debugging', 'Help and productivity'];
 
