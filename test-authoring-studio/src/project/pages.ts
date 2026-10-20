@@ -46,4 +46,20 @@ export const PAGES: Page[] = [
       { name: 'OutputPath', label: 'Output path', kind: 'text', placeholder: 'bin\\$(Configuration)\\' },
     ],
   },
+  {
+    id: 'package',
+    title: 'Package',
+    feature: 'pp-package',
+    fields: [
+      { name: 'PackageId', label: 'Package ID', kind: 'text', placeholder: 'assembly name' },
+      { name: 'Version', label: 'Version', kind: 'text', placeholder: '1.0.0' },
+      { name: 'Authors', label: 'Authors', kind: 'text' },
+      { name: 'Company', label: 'Company', kind: 'text' },
+      { name: 'Description', label: 'Description', kind: 'text' },
+      { name: 'PackageTags', label: 'Tags', kind: 'text', placeholder: 'testing;playwright' },
+      { name: 'RepositoryUrl', label: 'Repository URL', kind: 'text' },
+      { name: 'PackageLicenseExpression', label: 'License expression', kind: 'text', placeholder: 'MIT' },
+      { name: 'GeneratePackageOnBuild', label: 'Generate NuGet package on build', kind: 'bool' },
+    ],
+  },
 ];

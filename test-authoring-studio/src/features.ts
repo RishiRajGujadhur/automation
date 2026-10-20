@@ -518,6 +518,7 @@ export const FEATURES: Feature[] = [
   { id: 'run-impacted', label: 'Run Impacted Tests', group: 'Tool windows', essential: true, vs: 'Test Impact Analysis', description: 'A Test Explorer button runs only the tests affected by uncommitted changes: changed test files and scenarios whose steps bind to changed step files (Test Impact Analysis).' },
   { id: 'project-properties', label: 'Project Properties', group: 'Code intelligence', essential: true, vs: 'Project ▸ Properties', description: 'The Explorer\'s project menu (and Tools ▸ Project Properties) opens property pages for the .csproj; changes are previewed as a diff before they are written.', commands: ['project-properties'] },
   { id: 'pp-build', label: 'Project Properties: Build page', group: 'Code intelligence', essential: true, vs: 'Project Properties ▸ Build', description: 'Nullable, implicit usings, language version, warnings as errors, suppressed warnings, symbols, optimisation, platform and output path.' },
+  { id: 'pp-package', label: 'Project Properties: Package page', group: 'Code intelligence', essential: true, vs: 'Project Properties ▸ Package', description: 'NuGet package metadata: ID, version, authors, company, description, tags, repository, license and pack on build.' },
 ];
 export const GROUPS: FeatureGroup[] = ['Editing', 'Navigation', 'Code intelligence', 'Tool windows', 'Files', 'Git', 'Gherkin', 'View', 'Debugging', 'Help and productivity'];
 
