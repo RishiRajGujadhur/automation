@@ -4,14 +4,14 @@ import { Decoration, EditorView, MatchDecorator, ViewPlugin, type DecorationSet,
 /** Ctrl+click opens links in the text (VS Code / Rider): web addresses, and `path/file.ext:line` references. */
 export const OPEN_LOCATION_EVENT = 'tas:open-location';
 const URL = /\bhttps?:\/\/[^\s"'<>)\]]+/g;
-// links: file references
+const FILE = /(?<![\w/.-])((?:[\w.-]+\/)*[\w.-]+\.(?:cs|feature|md|json|xml|csproj|config|ts|tsx|js|txt|ya?ml|props|targets)):(\d+)(?::(\d+))?/g;
 export const linkAt = (text: string, col: number) => {
   for (const m of text.matchAll(URL)) if (col >= m.index! && col <= m.index! + m[0].length) return { url: m[0].replace(/[.,;:]+$/, '') };
-  // links: file match
+  for (const m of text.matchAll(FILE)) if (col >= m.index! && col <= m.index! + m[0].length) return { file: m[1].replace(/\\/g, '/'), line: Number(m[2]), column: m[3] ? Number(m[3]) : 1 };
   return undefined;
 };
 const mark = Decoration.mark({ class: 'cm-link', attributes: { title: 'Ctrl+click to open' } });
-const decorator = new MatchDecorator({ regexp: new RegExp(URL.source, 'g'), decoration: () => mark });
+const decorator = new MatchDecorator({ regexp: new RegExp(`${URL.source}|${FILE.source}`, 'g'), decoration: () => mark });
 export const editorLinks = [
   ViewPlugin.fromClass(class {
     decorations: DecorationSet;
