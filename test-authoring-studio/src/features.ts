@@ -427,6 +427,7 @@ export const FEATURES: Feature[] = [
   { id: 'to-interpolation', label: 'Convert to Interpolated String', group: 'Code intelligence', essential: true, vs: 'Quick Actions: Convert to interpolated string', description: 'Code ▸ C# turns a selected "a" + b + "c" concatenation into $"a{b}c".', commands: ['to-interpolation'] },
   { id: 'table-delete-empty', label: 'Table: Delete Empty Rows', group: 'Gherkin', essential: false, description: 'Code ▸ Gherkin removes the table rows whose cells are all empty.', commands: ['table-delete-empty'] },
   { id: 'table-dedupe', label: 'Table: Remove Duplicate Rows', group: 'Gherkin', essential: false, description: 'Code ▸ Gherkin removes repeated rows of the table, keeping the first.', commands: ['table-dedupe'] },
+  { id: 'table-copy-markdown', label: 'Table: Copy as Markdown', group: 'Gherkin', essential: false, description: 'Code ▸ Gherkin copies the table at the caret as a Markdown table (for wikis and pull requests).', commands: ['table-copy-markdown'] },
 ];
 export const GROUPS: FeatureGroup[] = ['Editing', 'Navigation', 'Code intelligence', 'Tool windows', 'Files', 'Git', 'Gherkin', 'View', 'Debugging', 'Help and productivity'];
 

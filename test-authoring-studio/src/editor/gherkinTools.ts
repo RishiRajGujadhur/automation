@@ -732,3 +732,13 @@ export function tableRemoveDuplicateRows(view: EditorView) {
   if (rows.length === t.rows.length) return false;
   return writeTable(view, t, rows, Math.min(t.row, rows.length - 1), t.col);
 }
+
+/** Table ▸ Copy as Markdown: the table at the caret as a Markdown table (first row = header). */
+export function tableMarkdown(state: EditorState) {
+  const t = tableAt(state);
+  if (!t) return null;
+  const rows = t.rows.map((r) => Array.from({ length: t.cols }, (_, k) => (r[k] ?? '').replace(/\|/g, '\\|')));
+  const w = Array.from({ length: t.cols }, (_, k) => Math.max(3, ...rows.map((r) => r[k].length)));
+  const line = (r: string[]) => `| ${r.map((c, k) => c.padEnd(w[k])).join(' | ')} |`;
+  return [line(rows[0]), `| ${w.map((n) => '-'.repeat(n)).join(' | ')} |`, ...rows.slice(1).map(line)].join('\n');
+}

@@ -1,6 +1,7 @@
 import type { RiderCommand } from './commands';
 import type { MoreHelpers } from './more';
-import { tableDeleteEmptyRows, tableRemoveDuplicateRows } from '../editor/gherkinTools';
+import { copyText } from '../ui';
+import { tableDeleteEmptyRows, tableRemoveDuplicateRows, tableMarkdown } from '../editor/gherkinTools';
 import { urlEncode, urlDecode, base64Encode, base64Decode, escapeString, unescapeString, htmlEncode, htmlDecode, stepNumber, insertSequence, toggleQuotes, joinWith, splitAt, alignAssignments, swapSelections, countOccurrences, trimLines, stamp, insertText, LOREM, shuffleLines, reformatXml, minifyXml, jsonEscape, jsonUnescape, numberLines, mapDoc, toFileScopedNamespace, toBlockScopedNamespace, removeRegions, toRawString, toggleTask, formatMarkdownTable, tableOfContents, MARKDOWN_TABLE, removeComments, concatToInterpolationCmd } from '../editor/textTools2';
 
 /**
@@ -47,5 +48,6 @@ export function moreCommands2(h: MoreHelpers): RiderCommand[] {
     { id: 'to-interpolation', label: 'Convert to Interpolated String', menu: 'Code', submenu: 'C#', run: h.inEditor((v) => concatToInterpolationCmd(v) || h.notice('Select a string concatenation ("a" + b + "c").')) },
     { id: 'table-delete-empty', label: 'Table: Delete Empty Rows', menu: 'Code', submenu: 'Gherkin', run: h.inEditor((v) => tableDeleteEmptyRows(v) || h.notice('The table has no empty rows (or the caret is not in a table).')) },
     { id: 'table-dedupe', label: 'Table: Remove Duplicate Rows', menu: 'Code', submenu: 'Gherkin', run: h.inEditor((v) => tableRemoveDuplicateRows(v) || h.notice('The table has no repeated rows (or the caret is not in a table).')) },
+    { id: 'table-copy-markdown', label: 'Table: Copy as Markdown', menu: 'Code', submenu: 'Gherkin', run: h.inEditor((v) => { const md = tableMarkdown(v.state); if (!md) { h.notice('Put the caret in a table.'); return; } void copyText(md).then((ok) => h.notice(ok ? 'Copied the table as Markdown.' : 'Clipboard unavailable.')); }) },
   ];
 }
