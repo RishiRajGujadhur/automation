@@ -268,6 +268,27 @@ export default function SolutionExplorer({ features, revision, activeFile, query
   useEffect(() => { try { localStorage.setItem('tas:explorerTrack', String(track)); } catch { /* storage blocked */ } }, [track]);
   useEffect(() => { if (activeFile && (track || !featureOn('explorer-track'))) setCollapsed((prev) => { const next = new Set(prev); parentFolders(normalizeFeaturePath(activeFile)).forEach((p) => next.delete(p)); return next; }); }, [activeFile]); // eslint-disable-line react-hooks/exhaustive-deps
 
+  /** Keyboard in the Explorer tree (QOL-50): arrows, Home / End, type to select, Enter. */
+  const typed = useRef({ text: '', at: 0 });
+  const treeKeys = (e: React.KeyboardEvent) => {
+    const t = e.target as HTMLElement;
+    if (!tree.current || !t.matches('.explorer-file, .explorer-folder') || e.ctrlKey || e.metaKey || e.altKey) return;
+    const rows = [...tree.current.querySelectorAll<HTMLElement>('.explorer-file, .explorer-folder')].filter((r) => r.offsetParent !== null);
+    const i = rows.indexOf(t);
+    const focus = (r?: HTMLElement) => { if (r) { e.preventDefault(); r.focus(); r.scrollIntoView({ block: 'nearest' }); } };
+    if (e.key === 'ArrowDown') return focus(rows[i + 1]);
+    if (e.key === 'ArrowUp') return focus(rows[i - 1]);
+    if (e.key === 'Home') return focus(rows[0]);
+    if (e.key === 'End') return focus(rows[rows.length - 1]);
+    if (e.key === 'ArrowRight' && t.matches('.explorer-folder')) { e.preventDefault(); if (t.getAttribute('aria-expanded') === 'false') t.click(); else focus(rows[i + 1]); return; }
+    if (e.key === 'ArrowLeft') {
+      if (t.matches('.explorer-folder') && t.getAttribute('aria-expanded') === 'true') { e.preventDefault(); t.click(); return; }
+      // The folder this row is in.
+      const parent = t.closest('ul.folder-children')?.closest('li')?.querySelector<HTMLElement>(':scope > .explorer-folder-row .explorer-folder, :scope > div > .explorer-folder');
+      return focus(parent ?? undefined);
+    }
+    /* tree keys */
+  };
   const open = (file: string) => {
     const feature = featureByPath.get(file);
     if (feature) onSelect(feature);
@@ -454,7 +475,7 @@ export default function SolutionExplorer({ features, revision, activeFile, query
       <div className="explorer-summary" role="status">
         {pendingOnly ? `${files.length} file${files.length === 1 ? '' : 's'} with unsaved changes` : query.trim() ? `${files.length} matching file${files.length === 1 ? '' : 's'}` : `${features.length} feature file${features.length === 1 ? '' : 's'} · ${files.length} file${files.length === 1 ? '' : 's'}`}
       </div>
-      <nav className="folder-tree se-tree" ref={tree} aria-label="Solution">
+      <nav className="folder-tree se-tree" ref={tree} aria-label="Solution" onKeyDown={treeKeys}>
         <ul className="folder-children">
           <li>
             <RowMenu label="Solution" items={solution?.solutionFile && !browserSolution ? [

@@ -309,6 +309,7 @@ export const FEATURES: Feature[] = [
   { id: 'table-enter', label: 'Enter adds a table row', group: 'Gherkin', essential: true, description: 'Enter at the end of a table row adds an empty aligned row below.' },
   { id: 'paste-align', label: 'Align pasted table rows', group: 'Gherkin', essential: true, description: 'Pasting rows into a table aligns its columns.' },
   { id: 'explorer-remember', label: 'Explorer remembers collapsed folders', group: 'Files', essential: true, description: 'Collapsed folders stay collapsed after a reload (per workspace).' },
+  { id: 'explorer-arrows', label: 'Explorer arrow keys', group: 'Files', essential: true, description: 'Up / Down / Home / End move through the tree; Right / Left expand and collapse.' },
 ];
 export const GROUPS: FeatureGroup[] = ['Editing', 'Navigation', 'Code intelligence', 'Tool windows', 'Files', 'Git', 'Gherkin', 'View', 'Debugging', 'Help and productivity'];
 

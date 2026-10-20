@@ -19,6 +19,7 @@ Every improvement is verified by a unit or Playwright test (`tests/e2e/qol50.spe
 | QL10 | Enter adds a table row | Gherkin | ✅ 2026-10-20 |
 | QL11 | Align pasted table rows | Gherkin | ✅ 2026-10-20 |
 | QL12 | Explorer remembers collapsed folders | Explorer | ✅ 2026-10-20 |
+| QL13 | Explorer arrow keys | Explorer | ✅ 2026-10-20 |
 
 ## Progress log
 - 2026-10-20 QL1: Title names the file and workspace folder
@@ -33,3 +34,4 @@ Every improvement is verified by a unit or Playwright test (`tests/e2e/qol50.spe
 - 2026-10-20 QL10: Enter at row end adds an aligned row
 - 2026-10-20 QL11: Pasted rows aligned
 - 2026-10-20 QL12: Collapsed folders kept after reload
+- 2026-10-20 QL13: Up/Down/Home/End, Right/Left expand/collapse
