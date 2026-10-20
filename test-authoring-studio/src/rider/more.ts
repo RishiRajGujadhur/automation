@@ -25,7 +25,7 @@ import { renamePath } from '../files/provider';
 import { movedPath } from '../files/tabs';
 import { DEFAULT_TODO_TOKENS } from '../editor/todoHighlight';
 import { copyText as copyFilterText } from '../ui';
-import { cycleStepKeyword, scenarioToOutline, tableInsertRow, tableAddColumn, tableDeleteColumn, tableSortByColumn, testFilter, selectScenario, extractExamplesParameter, outlineToScenario, duplicateScenario, moveScenario, extractBackground, addExamplesTable, toggleTag, toggleScenarioComment, pasteAsTable, tableCsv, renameExamplesParameter, paramAt, removeUnusedColumns, inlineBackground, normalizeStepKeywords, addScenario, scenarioMarkdown, tableDuplicateRow, tableDeleteRow, tableMoveColumn, tableSelectColumn, tableTranspose, tableFillDown } from '../editor/gherkinTools';
+import { cycleStepKeyword, scenarioToOutline, tableInsertRow, tableAddColumn, tableDeleteColumn, tableSortByColumn, testFilter, selectScenario, extractExamplesParameter, outlineToScenario, duplicateScenario, moveScenario, extractBackground, addExamplesTable, toggleTag, toggleScenarioComment, pasteAsTable, tableCsv, renameExamplesParameter, paramAt, removeUnusedColumns, inlineBackground, normalizeStepKeywords, addScenario, scenarioMarkdown, tableDuplicateRow, tableDeleteRow, tableMoveColumn, tableSelectColumn, tableTranspose, tableFillDown, tableClearColumn } from '../editor/gherkinTools';
 import { unsavedFiles } from '../editor/autosave';
 import { getTabs, closeTab } from '../files/tabs';
 import { reopenClosed } from '../files/tabs';
@@ -186,5 +186,6 @@ export function moreCommands(h: MoreHelpers): RiderCommand[] {
     { id: 'current-scenario', label: 'Highlight Current Scenario', menu: 'View', checked: () => !viewOptions().noScenarioBand, run: () => setViewOptions({ noScenarioBand: !viewOptions().noScenarioBand }) },
     { id: 'table-transpose', label: 'Table: Transpose', menu: 'Code', submenu: 'Gherkin', run: h.inEditor((v) => tableTranspose(v) || h.notice('Put the caret in a table.')) },
     { id: 'table-fill-down', label: 'Table: Fill Down', menu: 'Code', submenu: 'Gherkin', run: h.inEditor((v) => tableFillDown(v) || h.notice('Put the caret in a table cell below another row.')) },
+    { id: 'table-clear-column', label: 'Table: Clear Column', menu: 'Code', submenu: 'Gherkin', run: h.inEditor((v) => tableClearColumn(v) || h.notice('Put the caret in a table with rows under its header.')) },
   ];
 }

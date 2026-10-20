@@ -666,3 +666,11 @@ export function tableFillDown(view: EditorView) {
   for (let r = first; r <= Math.max(first, last); r++) { while (rows[r].length <= t.col) rows[r].push(''); rows[r][t.col] = value; }
   return writeTable(view, t, rows, first, t.col);
 }
+
+/** Table ▸ Clear Column: empties the caret's column under the header. */
+export function tableClearColumn(view: EditorView) {
+  const t = tableAt(view.state);
+  if (!t || t.rows.length < 2) return false;
+  const rows = t.rows.map((r, i) => (i === 0 ? r : r.map((c, k) => (k === t.col ? '' : c))));
+  return writeTable(view, t, rows, Math.max(1, t.row), t.col);
+}

@@ -206,6 +206,7 @@ const ROWS: Record<'edit' | 'view' | 'navigate' | 'code' | 'tools' | 'help', Row
       ['Copy Step Definition Stub', 'copy-step-stub'],
       ['Table: Transpose', 'table-transpose'],
       ['Table: Fill Down', 'table-fill-down'],
+      ['Table: Clear Column', 'table-clear-column'],
     ] },
     ['Collapse Using Directives', 'fold-usings'],
     ['Sort JSON Keys', 'sort-json'],
