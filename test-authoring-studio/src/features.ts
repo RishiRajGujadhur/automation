@@ -254,6 +254,7 @@ export const FEATURES: Feature[] = [
   { id: 'git-file-history', label: 'Git: Show History for File', group: 'Git', essential: true, vs: 'Git ▸ View History', description: 'The Git Log of the active file only.', commands: ['git-file-history'] },
   { id: 'explorer-open-filter', label: 'Explorer: Open Files filter', group: 'Files', essential: true, vs: 'Solution Explorer ▸ Open Files Filter', description: 'Shows only the files open in editor tabs.' },
   { id: 'explorer-track', label: 'Explorer: Track Active Item toggle', group: 'Files', essential: true, vs: 'Options ▸ Track Active Item in Solution Explorer', description: 'Turns off revealing the active file in the Explorer (Sync stays one click away).' },
+  { id: 'unpin-all', label: 'Tabs: Unpin All', group: 'Files', essential: true, vs: 'Tab ▸ Unpin All', description: 'The tab menu unpins every pinned tab.' },
 ];
 export const GROUPS: FeatureGroup[] = ['Editing', 'Navigation', 'Code intelligence', 'Tool windows', 'Files', 'Git', 'Gherkin', 'View', 'Debugging', 'Help and productivity'];
 

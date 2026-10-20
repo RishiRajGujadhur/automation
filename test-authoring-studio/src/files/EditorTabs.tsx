@@ -7,7 +7,7 @@ import { RowMenu, copyText } from '../ui';
 import { Dropdown } from '../radix';
 import { UNSAVED_EVENT, unsavedFiles } from '../editor/autosave';
 import { SELECT_IN_EXPLORER } from '../SolutionExplorer';
-import { useTabs, activateTab, closeOthers, closeToRight, closeToLeft, closeAll, setPinned, keepTab, type EditorTab } from './tabs';
+import { useTabs, activateTab, closeOthers, closeToRight, closeToLeft, unpinAll, closeAll, setPinned, keepTab, type EditorTab } from './tabs';
 import { fileType } from './fileTypes';
 
 const base = (f: string) => f.split('/').pop()!;
@@ -77,6 +77,7 @@ export default function EditorTabs({ onClose, onSplit, children }: { onClose: (f
             return (
               [<RowMenu key={t.file} label={`${base(t.file)} tab`} items={[
                 { label: t.pinned ? 'Unpin' : 'Pin', icon: t.pinned ? PinOff : Pin, onSelect: () => setPinned(t.file, !t.pinned) },
+                ...(featureOn('unpin-all') && tabs.some((x) => x.pinned) ? [{ label: 'Unpin All', icon: PinOff, onSelect: () => unpinAll() }] : []),
                 'separator',
                 { label: 'Close', shortcut: 'Ctrl F4', onSelect: () => onClose(t.file) },
                 { label: 'Close Others', onSelect: () => closeOthers(t.file) },

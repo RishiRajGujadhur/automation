@@ -164,6 +164,7 @@ has it on by default, so the desktop app starts with it on. The others start off
 | X154 | Git: Show History for File | VS 2026 / Rider | yes | ✅ 2026-10-20 |
 | X155 | Explorer: Open Files filter | VS 2026 | yes | ✅ 2026-10-20 |
 | X156 | Explorer: Track Active Item toggle | VS 2026 / Rider | yes | ✅ 2026-10-20 |
+| X157 | Tabs: Unpin All | VS 2026 | yes | ✅ 2026-10-20 |
 
 ## Progress log
 - 2026-10-20 X1: Sort Lines: the selected lines (or the whole file) in natural, case-insensitive order, blank lines last. Third-batch plumbing: src/rider/more.ts, src/editor/textTools.ts, IDE-FEATURES.md.
@@ -322,3 +323,4 @@ has it on by default, so the desktop app starts with it on. The others start off
 - 2026-10-20 X154: Git Log of one file
 - 2026-10-20 X155: Only files open in tabs
 - 2026-10-20 X156: Reveal-on-open can be off
+- 2026-10-20 X157: Tab menu unpins everything
