@@ -332,6 +332,7 @@ export const FEATURES: Feature[] = [
   { id: 'notification-links', label: 'Clickable file:line in notifications', group: 'Help and productivity', essential: true, description: 'file:line references in the Notifications window open the file there.' },
   { id: 'shortcut-filter', label: 'Keyboard shortcuts: filter', group: 'Help and productivity', essential: true, description: 'The keyboard shortcuts dialog filters by key or action as you type.' },
   { id: 'settings-remember', label: 'Settings remembers its section', group: 'Help and productivity', essential: true, description: 'Settings reopens on the section you used last.' },
+  { id: 'settings-query', label: 'Settings remembers its search', group: 'Help and productivity', essential: true, description: 'The settings search stays until you clear it (this session).' },
 ];
 export const GROUPS: FeatureGroup[] = ['Editing', 'Navigation', 'Code intelligence', 'Tool windows', 'Files', 'Git', 'Gherkin', 'View', 'Debugging', 'Help and productivity'];
 

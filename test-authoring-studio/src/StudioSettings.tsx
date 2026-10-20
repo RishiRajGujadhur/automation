@@ -56,7 +56,8 @@ export default function StudioSettings({ onNotice, onWorkspace, shortcuts, onClo
   const confirm = useConfirm();
   // The last section comes back the next time Settings opens (QOL-50).
   const [section, setSection] = useLocalState('settingsSection', 'General');
-  const [query, setQuery] = useState('');
+  const [query, setQuery] = useState(() => { try { return sessionStorage.getItem('tas:settingsQuery') ?? ''; } catch { return ''; } });
+  useEffect(() => { try { sessionStorage.setItem('tas:settingsQuery', query); } catch { /* storage blocked */ } }, [query]);
   const [settings, setSettings] = useState<Settings & { running?: { webPort: number; apiPort: number } }>();
   const [traces, setTraces] = useState<Trace[]>([]);
   const [error, setError] = useState('');

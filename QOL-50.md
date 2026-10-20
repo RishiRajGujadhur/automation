@@ -42,6 +42,7 @@ Every improvement is verified by a unit or Playwright test (`tests/e2e/qol50.spe
 | QL33 | Clickable file:line in notifications | Notifications | ✅ 2026-10-20 |
 | QL34 | Keyboard shortcuts: filter | Help | ✅ 2026-10-20 |
 | QL35 | Settings remembers its section | Settings | ✅ 2026-10-20 |
+| QL36 | Settings remembers its search | Settings | ✅ 2026-10-20 |
 
 ## Progress log
 - 2026-10-20 QL1: Title names the file and workspace folder
@@ -79,3 +80,4 @@ Every improvement is verified by a unit or Playwright test (`tests/e2e/qol50.spe
 - 2026-10-20 QL33: file:line opens the file
 - 2026-10-20 QL34: Filter by key or action
 - 2026-10-20 QL35: Reopens on the last section
+- 2026-10-20 QL36: Search kept this session
