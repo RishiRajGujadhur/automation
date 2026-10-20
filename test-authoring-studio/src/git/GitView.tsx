@@ -2,6 +2,7 @@ import { useEffect, useState, type ReactNode } from 'react';
 import { GitBranch, Plus, Minus, Undo2, RefreshCw, ChevronDown, ChevronRight, ArrowUp, ArrowDown, Check, History, CloudDownload, GitBranchPlus, Cloud, GitMerge } from 'lucide-react';
 import { Dropdown } from '../radix';
 import { api } from '../api';
+import { useLocalState } from '../ui';
 import { useConfirm } from '../radix2';
 import { fileType } from '../files/fileTypes';
 import { FILES_CHANGED_EVENT, UNSAVED_REFRESH, GIT_CHANGED_EVENT } from '../editor/events';
@@ -18,7 +19,8 @@ const statusName: Record<GitFile['status'], string> = { M: 'Modified', A: 'Added
 export default function GitView({ onOpen, onNotice, onChanged }: { onOpen: (file: string) => void; onNotice: (m: string) => void; onChanged: () => void }) {
   const confirm = useConfirm();
   const [st, setSt] = useState<GitStatus>();
-  const [message, setMessage] = useState('');
+  // The commit message draft survives a reload (QOL-50).
+  const [message, setMessage] = useLocalState('gitCommitDraft', '');
   const [amend, setAmend] = useState(false);
   const [busy, setBusy] = useState(false);
   const [closed, setClosed] = useState<Set<string>>(new Set(['history']));

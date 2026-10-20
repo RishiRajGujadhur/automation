@@ -324,6 +324,7 @@ export const FEATURES: Feature[] = [
   { id: 'reveal-failure', label: 'Test Explorer shows the first failure', group: 'Tool windows', essential: true, description: 'After a run with failures the first failed test is selected with its details.' },
   { id: 'test-elapsed', label: 'Test run elapsed time', group: 'Tool windows', essential: true, description: 'While tests run, the Test Explorer shows for how long.' },
   { id: 'test-empty-help', label: 'Test Explorer explains an empty tree', group: 'Tool windows', essential: true, description: 'With no tests, the Test Explorer says why and offers Refresh.' },
+  { id: 'commit-draft', label: 'Commit message draft kept', group: 'Git', essential: true, description: 'The Git Changes commit message stays after a reload until you commit.' },
 ];
 export const GROUPS: FeatureGroup[] = ['Editing', 'Navigation', 'Code intelligence', 'Tool windows', 'Files', 'Git', 'Gherkin', 'View', 'Debugging', 'Help and productivity'];
 
