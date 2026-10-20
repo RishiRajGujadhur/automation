@@ -280,6 +280,7 @@ export const FEATURES: Feature[] = [
   { id: 'compact-mode', label: 'Compact mode', group: 'View', essential: false, vs: 'Appearance ▸ Compact mode (Rider)', description: 'Tighter rows in trees, tabs, menus and the status bar.', commands: ['compact-mode'] },
   { id: 'features-io', label: 'Export / Import Feature Settings', group: 'Help and productivity', essential: true, vs: 'Import and Export Settings', description: 'Copies the Settings ▸ Features switches as JSON, or applies pasted ones.', commands: ['export-features', 'import-features'] },
   { id: 'copy-env-info', label: 'Copy Environment Info', group: 'Help and productivity', essential: true, vs: 'Help ▸ About ▸ Copy Info', description: 'Copies the app version, browser and screen details for a bug report.', commands: ['copy-env-info'] },
+  { id: 'current-scenario', label: 'Highlight current scenario', group: 'Gherkin', essential: true, description: 'The scenario the caret is in gets a light background band.', commands: ['current-scenario'] },
 ];
 export const GROUPS: FeatureGroup[] = ['Editing', 'Navigation', 'Code intelligence', 'Tool windows', 'Files', 'Git', 'Gherkin', 'View', 'Debugging', 'Help and productivity'];
 
