@@ -303,7 +303,7 @@ Legend: `[x]` done · `[ ]` to do.
 - [x] 354. Convert string concatenation to interpolation — Quick Actions
 - [ ] 355. Convert interpolation to composite formatting
 - [x] 356. Convert anonymous objects to tuples — Quick Actions: Convert to tuple
-- [ ] 357. Convert tuples to named types
+- [x] 357. Convert tuples to named types — Quick Actions: Convert to struct / record struct (titles now complete) (2026-10-21)
 - [x] 358. Convert foreach loops to indexed loops — Quick Actions: Convert to 'for'
 - [x] 359. Convert indexed loops to foreach — Quick Actions: Convert to 'foreach'
 - [ ] 360. Generate switch cases for enum members
@@ -339,3 +339,4 @@ Legend: `[x]` done · `[ ]` to do.
 - 2026-10-21 108: Unused private fields, methods and unused parameters are faded.
 - 2026-10-21 109: Values assigned and never read are faded; Quick Actions remove the assignment.
 - 2026-10-21 110: Repeated types in declarations are suggested for simplification ('new' expression, var).
+- 2026-10-21 357: A tuple becomes a struct or record struct with its usages updated; the nested action titles now say which scope.

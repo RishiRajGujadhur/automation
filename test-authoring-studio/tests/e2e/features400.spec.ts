@@ -112,3 +112,36 @@ test('110 Redundant type declaration detection', async ({ page }) => {
   await analyzerFix(page, 'namespace Demo;\npublic class P\n{\n    public System.Text.StringBuilder M()\n    {\n        System.Text.StringBuilder b = new System.Text.StringBuilder();\n        return b;\n    }\n}\n',
     [{ cls: '.cm-lintRange-info', text: 'new' }], '= new', /^Use 'new\(\.\.\.\)'$/, (d) => d.includes('b = new();'));
 });
+
+/** Quick Action `fix` at `at` on `source`; `after` checks the result. */
+async function convert(page: Page, source: string, at: string, fix: RegExp, after: (doc: string) => boolean, offset = 1) {
+  needsLang();
+  await open(page, CS);
+  await setDoc(page, source);
+  await caretAt(page, at, offset);
+  await quickAction(page, fix);
+  await expect.poll(async () => after(await docText(page)), { timeout: 30_000 }).toBe(true);
+}
+test('92 Convert switch statements to expressions', async ({ page }) => {
+  await convert(page, 'namespace Demo;\npublic class P\n{\n    public string M(int x)\n    {\n        switch (x)\n        {\n            case 1: return "a";\n            case 2: return "b";\n            default: return "c";\n        }\n    }\n}\n',
+    'switch (x)', /^Convert switch statement to expression$/, (d) => /return x switch\s*\{/.test(d) && d.includes('_ => "c"'));
+});
+test('360 Generate switch cases for enum members', async ({ page }) => {
+  await convert(page, 'namespace Demo;\npublic enum Colour { Red, Green, Blue }\npublic class P\n{\n    public int M(Colour c)\n    {\n        switch (c)\n        {\n        }\n        return 0;\n    }\n}\n',
+    'switch (c)', /^Add missing cases$/, (d) => ['Colour.Red', 'Colour.Green', 'Colour.Blue'].every((x) => d.includes(`case ${x}:`)));
+});
+test('87 Convert anonymous functions to methods (local function, then method)', async ({ page }) => {
+  await convert(page, 'using System;\nnamespace Demo;\npublic class P\n{\n    public int M()\n    {\n        Func<int, int> twice = x => x * 2;\n        return twice(3);\n    }\n}\n',
+    'twice =', /^Use local function$/, (d) => /int twice\(int x\)/.test(d));
+  await caretAt(page, 'twice(int', 1);
+  await quickAction(page, /^Convert to method$/);
+  await expect.poll(() => docText(page), { timeout: 30_000 }).toMatch(/private (static )?int twice\(int x\)/);
+});
+test('357 Convert tuples to named types', async ({ page }) => {
+  await convert(page, 'namespace Demo;\npublic class P\n{\n    public int M()\n    {\n        var t = (a: 1, b: 2);\n        return t.a + t.b;\n    }\n}\n',
+    '(a: 1', /^Convert to struct updating usages in containing member$/, (d) => /struct NewStruct/.test(d) && d.includes('new NewStruct(a: 1, b: 2)'), 0);
+});
+test('350 Convert fields to auto-properties', async ({ page }) => {
+  await convert(page, 'namespace Demo;\npublic class P\n{\n    private int count;\n    public int Count { get { return count; } set { count = value; } }\n}\n',
+    'Count {', /^Use auto property$/, (d) => /public int Count \{ get; set; \}/.test(d) && !d.includes('private int count'));
+});
