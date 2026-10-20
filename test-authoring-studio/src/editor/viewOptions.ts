@@ -6,10 +6,11 @@ import { highlightSelectionMatches } from '@codemirror/search';
 import { featureOn, onFeaturesChanged } from '../features';
 import { todoHighlightFor } from './todoHighlight';
 import { bracketColors } from './bracketColors';
+import { scrollMarks } from './scrollMarks';
 import { EditorView, ViewPlugin, highlightWhitespace, highlightTrailingWhitespace, rectangularSelection, keymap } from '@codemirror/view';
 
 /** View ▸ Active Editor options (Rider): soft wraps, …, shared by every editor and remembered. */
-export type ViewOptions = { softWrap: boolean; whitespace: boolean; fontSize: number | null; columnMode?: boolean; hideLineNumbers?: boolean; hideIndentGuides?: boolean; noCaretUsages?: boolean; overtype?: boolean; noActiveLine?: boolean; multiRowTabs?: boolean; noBracketColors?: boolean; todoTokens?: string[]; rightMargin?: number; indent?: { tabs: boolean; size: number } };
+export type ViewOptions = { softWrap: boolean; whitespace: boolean; fontSize: number | null; columnMode?: boolean; hideLineNumbers?: boolean; hideIndentGuides?: boolean; noCaretUsages?: boolean; overtype?: boolean; noActiveLine?: boolean; multiRowTabs?: boolean; noBracketColors?: boolean; todoTokens?: string[]; rightMargin?: number; indent?: { tabs: boolean; size: number }; noScrollMarks?: boolean };
 const KEY = 'tas:rider:view';
 const DEFAULTS: ViewOptions = { softWrap: false, whitespace: false, fontSize: null };
 let options: ViewOptions = (() => { try { return { ...DEFAULTS, ...JSON.parse(localStorage.getItem(KEY) ?? '{}') }; } catch { return DEFAULTS; } })();
@@ -105,6 +106,8 @@ const EXTRA: [Compartment, (o: ViewOptions) => Extension][] = [
   [new Compartment(), (o) => (featureOn('right-margin') && (o.rightMargin ?? 120) > 0 ? marginGuide(o.rightMargin ?? 120) : [])],
   // Indentation (VS Code's status bar / Visual Studio's Tabs options): spaces or tabs, and the size.
   [new Compartment(), (o) => (o.indent && featureOn('indentation') ? Prec.high([indentUnit.of(o.indent.tabs ? '\t' : ' '.repeat(o.indent.size)), EditorState.tabSize.of(o.indent.size)]) : [])],
+  // Scroll bar annotations (Visual Studio): errors, warnings and the caret line over the scroll bar.
+  [new Compartment(), (o) => (o.noScrollMarks || !featureOn('scroll-marks') ? [] : scrollMarks)],
   // extra view options
 ];
 

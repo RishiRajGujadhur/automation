@@ -576,11 +576,11 @@ test('X117 / X118 Paste as Gherkin Table and Copy Table as CSV', async ({ page, 
 test('X119 Scroll bar annotations: errors and the caret line', async ({ page, request }) => {
   await fs.writeFile(path.join(root, 'Steps/Broken.cs'), ['namespace Demo;', 'public class Broken', '{', '    public void M() { int x = ; }', '}', ''].join('\n'));
   expect((await request.post('/api/workspace', { data: { repositoryRoot: root, targetProject: '.' } })).ok()).toBe(true);
-  const src = await openCs(page, 'Steps/Broken.cs', 'public class Broken');
-  await expect(src.locator('.cm-scroll-annotations .m-caret')).toHaveCount(1);
-  await expect(src.locator('.cm-scroll-annotations .m-error').first()).toBeAttached({ timeout: 30_000 });
-  await menuItem(page, 'View', /^Scroll Bar Annotations/);
-  await expect(src.locator('.cm-scroll-annotations')).toHaveCount(0);
+  await openCs(page, 'Steps/Broken.cs', 'public class Broken');
+  await expect(page.locator('.code-editor:not([hidden]) .cm-scroll-annotations .m-caret')).toHaveCount(1);
+  await expect(page.locator('.code-editor:not([hidden]) .cm-scroll-annotations .m-error').first()).toBeAttached({ timeout: 30_000 });
+  await menuItem(page, 'View', /Scroll Bar Annotations/);
+  await expect(page.locator('.code-editor:not([hidden]) .cm-scroll-annotations')).toHaveCount(0);
 });
 
 test('X120 Report a Problem opens a GitHub issue form', async ({ page, context }) => {
@@ -601,10 +601,10 @@ test('X121–X123 Tabs: pinned row, colorized tabs, Copy File Name', async ({ pa
   await expect(labels).toHaveCount(2);
   await labels.first().click({ button: 'right' });
   await page.getByRole('menuitem', { name: 'Pin', exact: true }).click();
-  await menuItem(page, 'View', /^Show Pinned Tabs in a Separate Row/);
+  await menuItem(page, 'View', /Show Pinned Tabs in a Separate Row/);
   await expect(page.locator('.editor-tabs')).toHaveClass(/pinned-row/);
   await expect(page.locator('.tab-row-break')).toHaveCount(1);
-  await menuItem(page, 'View', /^Colorize Document Tabs/);
+  await menuItem(page, 'View', /Colorize Document Tabs/);
   await expect(page.locator('.editor-tabs')).toHaveClass(/colorized/);
   await labels.last().click({ button: 'right' });
   await page.getByRole('menuitem', { name: 'Copy File Name' }).click();

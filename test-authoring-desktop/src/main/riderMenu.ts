@@ -87,6 +87,7 @@ const ROWS: Record<'edit' | 'view' | 'navigate' | 'code' | 'tools' | 'help', Row
     ['Bracket Pair Colorization', 'bracket-colors'],
     ['Right Margin Guide…', 'right-margin'],
     ['Tags', 'tool-tags'],
+    ['Scroll Bar Annotations', 'scroll-marks'],
   ],
   navigate: [
     ['Select In…', 'select-in', 'Alt+F1'],

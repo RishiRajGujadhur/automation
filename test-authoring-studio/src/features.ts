@@ -216,6 +216,7 @@ export const FEATURES: Feature[] = [
   { id: 'run-passed', label: 'Run Passed Tests', group: 'Debugging', essential: false, vs: 'Test Explorer ▸ Run Passed Tests', description: 'Runs the tests that passed last time (Test Explorer ▸ More run options).' },
   { id: 'paste-table', label: 'Paste as Gherkin Table', group: 'Gherkin', essential: true, description: 'Spreadsheet cells (TSV) or CSV from the clipboard become an aligned table.', commands: ['paste-table'] },
   { id: 'copy-table-csv', label: 'Copy Table as CSV', group: 'Gherkin', essential: true, description: 'Copies the table at the caret as CSV (for spreadsheets).', commands: ['copy-table-csv'] },
+  { id: 'scroll-marks', label: 'Scroll bar annotations', group: 'View', essential: true, vs: 'Scroll Bars ▸ Show annotations', description: 'Errors, warnings and the caret line marked over the scroll bar.', commands: ['scroll-marks'] },
 ];
 export const GROUPS: FeatureGroup[] = ['Editing', 'Navigation', 'Code intelligence', 'Tool windows', 'Files', 'Git', 'Gherkin', 'View', 'Debugging', 'Help and productivity'];
 

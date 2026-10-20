@@ -116,5 +116,6 @@ export function moreCommands(h: MoreHelpers): RiderCommand[] {
     { id: 'quick-info', label: 'Quick Info', menu: 'Edit', shortcut: 'Ctrl K, Ctrl I', run: h.inEditor((v, file) => { if (!file.endsWith('.cs')) { h.notice('Quick Info works in C# files.'); return; } void quickInfoAtCaret(v, file).then((ok) => { if (!ok) h.notice('No information for the symbol at the caret.'); }); }) },
     { id: 'paste-table', label: 'Paste as Gherkin Table', menu: 'Code', submenu: 'Gherkin', run: h.inEditor((v) => { void navigator.clipboard.readText().then((t) => { if (!pasteAsTable(t)(v)) h.notice('The clipboard has no rows to paste (copy cells from a spreadsheet or CSV).'); }, () => h.notice('Clipboard unavailable.')); }) },
     { id: 'copy-table-csv', label: 'Copy Table as CSV', menu: 'Code', submenu: 'Gherkin', run: h.inEditor((v) => { const csv = tableCsv(v.state); if (!csv) { h.notice('Put the caret in a table.'); return; } void copyText(csv).then((ok) => h.notice(ok ? `Copied ${csv.split('\n').length} rows as CSV.` : 'Clipboard unavailable.')); }) },
+    { id: 'scroll-marks', label: 'Scroll Bar Annotations', menu: 'View', checked: () => !viewOptions().noScrollMarks, run: () => setViewOptions({ noScrollMarks: !viewOptions().noScrollMarks }) },
   ];
 }
