@@ -132,7 +132,7 @@ Legend: `[x]` done · `[ ]` to do.
 - [x] 107. Dead code detection — IDE0035: unreachable code faded, Remove unreachable code (2026-10-21)
 - [x] 108. Unused symbol detection — IDE0051 / IDE0060: unused private members and parameters faded (2026-10-21)
 - [x] 109. Redundant assignment detection — IDE0059: faded, Remove redundant assignment (2026-10-21)
-- [ ] 110. Redundant type declaration detection
+- [x] 110. Redundant type declaration detection — IDE0090 / IDE0007: suggestions, Use 'new(...)' (2026-10-21)
 - [ ] 111. Code style enforcement
 - [x] 112. EditorConfig integration — EditorConfig designer, Gherkin formatting from .editorconfig
 - [x] 113. Roslyn analyzer integration — Roslyn IDE analyzers in the language server: suggestions, faded unused code, fixes in Quick Actions (2026-10-21)
@@ -338,3 +338,4 @@ Legend: `[x]` done · `[ ]` to do.
 - 2026-10-21 107: Unreachable code is faded in the C# editor and removed with a Quick Action.
 - 2026-10-21 108: Unused private fields, methods and unused parameters are faded.
 - 2026-10-21 109: Values assigned and never read are faded; Quick Actions remove the assignment.
+- 2026-10-21 110: Repeated types in declarations are suggested for simplification ('new' expression, var).
