@@ -107,6 +107,7 @@ const ROWS: Record<'edit' | 'view' | 'navigate' | 'code' | 'tools' | 'help', Row
     ['Reset IDE Zoom', 'zoom-ide-reset'],
     ['Compact Mode', 'compact-mode'],
     ['Highlight Current Scenario', 'current-scenario'],
+    ['Quick Switch Theme…', 'quick-theme'],
   ],
   navigate: [
     ['Select In…', 'select-in', 'Alt+F1'],
