@@ -131,7 +131,7 @@ Legend: `[x]` done · `[ ]` to do.
 - [x] 106. Unreachable code detection — compiler CS0162 in the editor and Problems
 - [x] 107. Dead code detection — IDE0035: unreachable code faded, Remove unreachable code (2026-10-21)
 - [x] 108. Unused symbol detection — IDE0051 / IDE0060: unused private members and parameters faded (2026-10-21)
-- [ ] 109. Redundant assignment detection
+- [x] 109. Redundant assignment detection — IDE0059: faded, Remove redundant assignment (2026-10-21)
 - [ ] 110. Redundant type declaration detection
 - [ ] 111. Code style enforcement
 - [x] 112. EditorConfig integration — EditorConfig designer, Gherkin formatting from .editorconfig
@@ -337,3 +337,4 @@ Legend: `[x]` done · `[ ]` to do.
 - 2026-10-21 113: The language server runs Roslyn's IDE analyzers (Visual Studio's IDE rules): suggestions and faded unused code in the C# editor, their fixes (Hidden rules too) in Quick Actions; nested action titles like 'updating usages' keep their parent.
 - 2026-10-21 107: Unreachable code is faded in the C# editor and removed with a Quick Action.
 - 2026-10-21 108: Unused private fields, methods and unused parameters are faded.
+- 2026-10-21 109: Values assigned and never read are faded; Quick Actions remove the assignment.
