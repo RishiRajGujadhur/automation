@@ -158,4 +158,11 @@ describe('text tools (IDE-FEATURES X1…)', () => {
   it('X136 Sort Lines Descending', () => {
     expect(run('«item2\nitem10\nItem1»', sortLines(true))).toBe('item10\nitem2\nItem1');
   });
+  it('QL76 notification times read as how long ago', async () => {
+    const { ago } = await import('../src/rider/NotificationsPanel');
+    const now = 10_000_000;
+    expect(ago(now - 5_000, now)).toBe('just now');
+    expect(ago(now - 5 * 60_000, now)).toBe('5 min ago');
+    expect(ago(now - 2 * 3_600_000, now)).toBe('2 h ago');
+  });
 });

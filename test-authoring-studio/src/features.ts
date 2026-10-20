@@ -372,6 +372,7 @@ export const FEATURES: Feature[] = [
   { id: 'toast-errors-longer', label: 'Error messages stay longer', group: 'Help and productivity', essential: true, description: 'Messages about failures stay up for 15 seconds instead of 6.' },
   { id: 'features-changed', label: 'Settings: changed switches marked', group: 'Help and productivity', essential: true, vs: 'Settings ▸ @modified', description: 'Feature switches you changed say "(changed)"; search @modified lists them.' },
   { id: 'notifications-filter', label: 'Notifications: filter', group: 'Tool windows', essential: true, description: 'A filter box in the Notifications window narrows the history by text.' },
+  { id: 'notification-ago', label: 'Notifications: relative times', group: 'Tool windows', essential: true, description: 'Notifications show how long ago they came ("5 min ago"); hover for the exact time.' },
 ];
 export const GROUPS: FeatureGroup[] = ['Editing', 'Navigation', 'Code intelligence', 'Tool windows', 'Files', 'Git', 'Gherkin', 'View', 'Debugging', 'Help and productivity'];
 
