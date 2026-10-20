@@ -298,6 +298,7 @@ export const FEATURES: Feature[] = [
   { id: 'copy-outline', label: 'Copy Feature Outline', group: 'Gherkin', essential: true, description: 'Copies the feature and its scenarios as a Markdown checklist.', commands: ['copy-outline'] },
   { id: 'test-summary', label: 'Test Explorer: Copy Results Summary', group: 'Tool windows', essential: true, vs: 'Test Explorer ▸ Copy summary', description: 'Copies the passed / failed / skipped counts and the failed tests.' },
   { id: 'toggle-breadcrumbs', label: 'Toggle Breadcrumbs', group: 'View', essential: true, vs: 'View ▸ Show Breadcrumbs', description: 'View ▸ Breadcrumbs shows or hides the Feature › Rule › Scenario bar.', commands: ['toggle-breadcrumbs'] },
+  { id: 'scroll-past-end', label: 'Scroll past the end', group: 'View', essential: true, vs: 'Editor ▸ Scroll beyond last line', description: 'The editors scroll until the last line is at the top.', commands: ['scroll-past-end'] },
 ];
 export const GROUPS: FeatureGroup[] = ['Editing', 'Navigation', 'Code intelligence', 'Tool windows', 'Files', 'Git', 'Gherkin', 'View', 'Debugging', 'Help and productivity'];
 

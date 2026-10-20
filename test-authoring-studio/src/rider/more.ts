@@ -192,5 +192,6 @@ export function moreCommands(h: MoreHelpers): RiderCommand[] {
     { id: 'sort-scenarios', label: 'Sort Scenarios by Name', menu: 'Code', submenu: 'Gherkin', run: h.inEditor((v) => sortScenarios(v) || h.notice('The scenarios are already in order (features with Rules are not sorted).')) },
     { id: 'copy-outline', label: 'Copy Feature Outline', menu: 'Code', submenu: 'Gherkin', run: h.inEditor((v) => { const md = featureOutline(v.state.doc.toString()); if (!md.includes('- [ ]')) { h.notice('This file has no scenarios.'); return; } void copyText(md).then((ok) => h.notice(ok ? 'Copied the feature outline (Markdown checklist).' : 'Clipboard unavailable.')); }) },
     { id: 'toggle-breadcrumbs', label: 'Breadcrumbs', menu: 'View', checked: () => featureOn('breadcrumbs'), run: () => setFeature('breadcrumbs', !featureOn('breadcrumbs')) },
+    { id: 'scroll-past-end', label: 'Scroll Past End', menu: 'View', checked: () => !viewOptions().noScrollPastEnd, run: () => setViewOptions({ noScrollPastEnd: !viewOptions().noScrollPastEnd }) },
   ];
 }

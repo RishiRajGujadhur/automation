@@ -109,6 +109,7 @@ const ROWS: Record<'edit' | 'view' | 'navigate' | 'code' | 'tools' | 'help', Row
     ['Highlight Current Scenario', 'current-scenario'],
     ['Quick Switch Theme…', 'quick-theme'],
     ['Breadcrumbs', 'toggle-breadcrumbs'],
+    ['Scroll Past End', 'scroll-past-end'],
   ],
   navigate: [
     ['Select In…', 'select-in', 'Alt+F1'],

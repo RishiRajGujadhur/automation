@@ -56,3 +56,96 @@ test('QL1 Window title: the active file and the workspace folder', async ({ page
   await page.keyboard.type('x');
   await expect(page).toHaveTitle(/^● Login\.feature/);
 });
+
+test('QL2 Scroll past the end: a short file still scrolls', async ({ page }) => {
+  await openFeature(page);
+  const scroll = () => page.evaluate(() => { const s = document.querySelector('.gherkin-editor .cm-scroller') as HTMLElement; return s.scrollHeight - s.clientHeight; });
+  await expect.poll(scroll).toBeGreaterThan(50);
+  await menuItem(page, 'View', /Scroll Past End/);
+  await expect.poll(scroll).toBeLessThan(5);
+});
+
+test('QL3 Find: match counter', async ({ page }) => {
+  await openFeature(page);
+  await caretAt(page, 'Feature:');
+  await page.keyboard.press('Control+F');
+  await page.keyboard.type('the');
+  await expect(page.locator('.gherkin-editor .cm-search-count')).toHaveText(/^(\d+ matches|\d+ of \d+)$/);
+  await page.keyboard.press('Enter');
+  await expect(page.locator('.gherkin-editor .cm-search-count')).toHaveText(/^1 of \d+$/);
+});
+
+test('QL4 / QL5 Ctrl+click links: web address and file:line', async ({ page, context }) => {
+  await context.route('https://example.com/**', (r) => r.fulfill({ status: 200, body: 'ok' }));
+  await openFeature(page);
+  await caretAt(page, 'Feature:');
+  await page.keyboard.press('End');
+  await page.keyboard.press('Enter');
+  await page.keyboard.type('# docs https://example.com/guide and Steps/AuthSteps.cs:5');
+  const link = gherkin(page).locator('.cm-link', { hasText: 'https://example.com/guide' });
+  await expect(link).toBeVisible();
+  const popup = page.waitForEvent('popup');
+  await link.click({ modifiers: ['Control'] });
+  expect((await popup).url()).toBe('https://example.com/guide');
+  await gherkin(page).locator('.cm-link', { hasText: 'Steps/AuthSteps.cs:5' }).click({ modifiers: ['Control'] });
+  await expect(page.locator('.editor-tab-label[aria-current="true"]')).toHaveAttribute('title', 'Steps/AuthSteps.cs');
+});
+
+test('QL6 Multi-caret count in the status bar', async ({ page }) => {
+  await openFeature(page);
+  await caretAt(page, 'Feature:');
+  await page.keyboard.press('Control+A');
+  await menuItem(page, 'Edit', /^Add Carets to Ends of Selected Lines/);
+  await expect(page.getByLabel('Cursor position')).toContainText(/· \d+ selections/);
+});
+
+test('QL7 Drag a file from the Explorer into the editor inserts its path', async ({ page }) => {
+  await openFeature(page);
+  await caretAt(page, 'Feature:');
+  await page.keyboard.press('End');
+  await page.keyboard.press('Enter');
+  await page.keyboard.type('# see ');
+  const target = gherkin(page).locator('.cm-line', { hasText: '# see' });
+  await nav(page).getByRole('button', { name: 'AuthSteps.cs', exact: true }).first().dragTo(target, { targetPosition: { x: 200, y: 5 } });
+  await expect.poll(() => doc(page)).toContain('Steps/AuthSteps.cs');
+});
+
+test('QL8 Files reopen where you left them (after a reload)', async ({ page }) => {
+  await openFeature(page);
+  await caretAt(page, 'the dashboard');
+  await expect(page.getByLabel('Cursor position')).toContainText('Ln 8');
+  await page.waitForTimeout(700);
+  await page.reload();
+  await expect(gherkin(page)).toContainText('Feature:');
+  await gherkin(page).focus();
+  await expect(page.getByLabel('Cursor position')).toContainText('Ln 8');
+});
+
+test('QL9 Gherkin smart indent after Scenario: and a step ending in ":"', async ({ page }) => {
+  await openFeature(page);
+  await caretAt(page, 'Scenario: Sign in');
+  await page.keyboard.press('End');
+  await page.keyboard.press('Enter');
+  await page.keyboard.type('Given the users:');
+  await page.keyboard.press('Enter');
+  await page.keyboard.type('| x |');
+  await expect.poll(() => doc(page)).toMatch(/\n {2}Scenario: Sign in\r?\n {4}Given the users:\r?\n {6}\| x \|/);
+});
+
+test('QL10 / QL11 Tables: Enter adds a row; pasted rows are aligned', async ({ page, request, context }) => {
+  await context.grantPermissions(['clipboard-read', 'clipboard-write']);
+  await fs.writeFile(path.join(root, 'Features/T.feature'), ['Feature: T', '  Scenario: S', '    Given the users:', '      | name | role  |', '      | ada  | admin |', ''].join('\n'));
+  await reindex(page);
+  await openFeature(page, 'T.feature');
+  await caretAt(page, '| ada');
+  await page.keyboard.press('End');
+  await page.keyboard.press('Enter');
+  await page.keyboard.type('bob');
+  await expect.poll(() => doc(page)).toMatch(/\| ada {2}\| admin \|\r?\n {6}\| bob/);
+  await caretAt(page, '| ada');
+  await page.keyboard.press('End');
+  await page.keyboard.press('Shift+Enter');
+  await page.evaluate(() => navigator.clipboard.writeText('| carol | guest |'));
+  await page.keyboard.press('Control+V');
+  await expect.poll(() => doc(page)).toMatch(/ {6}\| carol \| guest \|/);
+});

@@ -8,6 +8,8 @@ Every improvement is verified by a unit or Playwright test (`tests/e2e/qol50.spe
 | # | Improvement | Area | Status |
 | --- | --- | --- | --- |
 | QL1 | Window title: active file and folder, dot when unsaved | Window | ✅ 2026-10-20 |
+| QL2 | Scroll past the end | Editor | ✅ 2026-10-20 |
 
 ## Progress log
 - 2026-10-20 QL1: Title names the file and workspace folder
+- 2026-10-20 QL2: Last line can scroll to the top
