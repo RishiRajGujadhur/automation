@@ -54,6 +54,18 @@ export default function EditorTabs({ onClose, onSplit, children }: { onClose: (f
   }, [tabs.length]);
   // Keep the active tab in view.
   useEffect(() => { strip.current?.querySelector<HTMLElement>('[aria-current="true"]')?.scrollIntoView({ block: 'nearest', inline: 'nearest' }); measure(); }, [active, tabs.length]);
+  // Ctrl+1…Ctrl+8 go to that tab, Ctrl+9 to the last (browsers and VS Code) (QOL-50).
+  useEffect(() => {
+    const h = (e: KeyboardEvent) => {
+      if (!e.ctrlKey || e.shiftKey || e.altKey || e.metaKey || !/^[1-9]$/.test(e.key) || !featureOn('tab-number-keys')) return;
+      const t = e.key === '9' ? tabs.at(-1) : tabs[Number(e.key) - 1];
+      if (!t) return;
+      e.preventDefault();
+      activateTab(t.file);
+    };
+    window.addEventListener('keydown', h);
+    return () => window.removeEventListener('keydown', h);
+  }, [tabs]);
   /** Reveals the next tab hidden off the given edge. */
   const reveal = (dir: 1 | -1) => {
     const s = strip.current;
