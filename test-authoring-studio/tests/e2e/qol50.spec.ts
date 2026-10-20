@@ -547,3 +547,28 @@ test('QL81 Terminal: Clear button', async ({ page }) => {
   await panel.getByRole('button', { name: 'Clear terminal' }).click();
   await expect(screen).not.toContainText('clear-me-81');
 });
+
+test('QL82 Escape clears the Test Explorer search', async ({ page }) => {
+  await openFeature(page);
+  await menuItem(page, 'Test', /^Test Explorer/);
+  const search = page.getByLabel('Search Test Explorer');
+  await search.fill('nothing-like-this');
+  await search.press('Escape');
+  await expect(search).toHaveValue('');
+});
+
+test('QL84 / QL85 Terminal: Ctrl+wheel zoom; rename a tab', async ({ page }) => {
+  await openFeature(page);
+  await page.keyboard.press('Alt+F12');
+  const panel = page.getByRole('region', { name: 'Terminal' });
+  const host = panel.locator('.terminal-host:not([hidden])');
+  await expect(host.locator('.xterm-rows')).toContainText('PS ', { timeout: 30_000 });
+  await host.hover();
+  await page.keyboard.down('Control');
+  await page.mouse.wheel(0, -100);
+  await page.keyboard.up('Control');
+  await expect.poll(() => page.evaluate(() => localStorage.getItem('tas:terminalFont'))).toBe('14');
+  page.once('dialog', (d) => void d.accept('Server'));
+  await panel.getByRole('tab').first().dblclick();
+  await expect(panel.getByRole('tab').first()).toHaveText(/Server/);
+});

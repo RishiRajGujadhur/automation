@@ -88,6 +88,7 @@ Every improvement is verified by a unit or Playwright test (`tests/e2e/qol50.spe
 | QL79 | Escape clears the Error List search | Tool windows | ✅ 2026-10-20 |
 | QL80 | Gherkin keywords capitalised as you type | Gherkin | ✅ 2026-10-20 |
 | QL81 | Terminal Clear button | Tool windows | ✅ 2026-10-20 |
+| QL82 | Escape clears the Test Explorer search | Tool windows | ✅ 2026-10-20 |
 
 ## Progress log
 - 2026-10-20 QL1: Title names the file and workspace folder
@@ -171,3 +172,4 @@ Every improvement is verified by a unit or Playwright test (`tests/e2e/qol50.spe
 - 2026-10-20 QL79: Escape in the Error List search box clears it.
 - 2026-10-20 QL80: "given " becomes "Given ", "scenario:" becomes "Scenario:" at the start of a line.
 - 2026-10-20 QL81: A toolbar button clears the active terminal (same as Ctrl+L).
+- 2026-10-20 QL82: Escape in the Test Explorer search box clears it.

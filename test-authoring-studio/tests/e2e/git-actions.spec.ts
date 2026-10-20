@@ -232,3 +232,15 @@ test('QL72 Commit message history: up recalls the previous message', async ({ pa
   await box.press('ArrowUp');
   await expect(box).toHaveValue('First change');
 });
+
+test('QL83 Git Log remembers its filter; Escape clears it', async ({ page }) => {
+  await open(page);
+  await page.keyboard.press('Alt+9');
+  const filter = page.getByRole('region', { name: 'Git Log' }).getByLabel('Filter commits');
+  await filter.fill('admin');
+  await page.reload();
+  await page.keyboard.press('Alt+9').catch(() => {});
+  await expect(page.getByRole('region', { name: 'Git Log' }).getByLabel('Filter commits')).toHaveValue('admin');
+  await page.getByRole('region', { name: 'Git Log' }).getByLabel('Filter commits').press('Escape');
+  await expect(page.getByRole('region', { name: 'Git Log' }).getByLabel('Filter commits')).toHaveValue('');
+});

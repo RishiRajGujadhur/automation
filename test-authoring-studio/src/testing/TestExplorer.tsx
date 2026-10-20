@@ -197,7 +197,7 @@ export default function TestExplorer({ revision, onOpen, onDebug, onNotice }: { 
       )}
       <label className="search-box">
         <Search size={14} />
-        <input aria-label="Search Test Explorer" placeholder={featureOn('test-search-filters') ? featureOn('test-tag-filter') ? 'Search (outcome:failed tag:@smoke -name:…)' : 'Search (outcome:failed class:… -name:…)' : 'Search Test Explorer'} value={query} onChange={(e) => setQuery(e.target.value)} />
+        <input aria-label="Search Test Explorer" placeholder={featureOn('test-search-filters') ? featureOn('test-tag-filter') ? 'Search (outcome:failed tag:@smoke -name:…)' : 'Search (outcome:failed class:… -name:…)' : 'Search Test Explorer'} value={query} onChange={(e) => setQuery(e.target.value)} onKeyDown={(e) => { if (e.key === 'Escape' && query && featureOn('search-escape')) { e.stopPropagation(); setQuery(''); } }} />
         {query && <button className="icon-button" aria-label="Clear test search" onClick={() => setQuery('')}><X size={13} /></button>}
       </label>
       {featureOn('test-group-by') && (
