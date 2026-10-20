@@ -80,3 +80,24 @@ test('Y11–Y20 Swap Selections, Count Occurrences, Reformat XML, Insert Date an
   await convert(page, /^Swap Selections/);
   await expect.poll(() => doc(page)).toBe('right = left;');
 });
+
+const codeSub = async (page: Page, sub: string, item: RegExp) => { await page.getByRole('button', { name: 'Code menu' }).click(); await page.getByRole('menuitem', { name: sub, exact: true }).click(); await page.getByRole('menuitem', { name: item }).click(); };
+
+test('Y21–Y30 Code ▸ C#: namespaces, raw string, interpolation; Code ▸ Markdown; Remove Comments', async ({ page }) => {
+  await open(page, 'AuthSteps.cs');
+  await expect(page.getByLabel('Source of Steps/AuthSteps.cs')).toBeVisible();
+  await setDoc(page, 'namespace Demo\n{\n    class A\n    {\n    }\n}\n', 0);
+  await codeSub(page, 'C#', /^Convert to File-Scoped Namespace/);
+  await expect.poll(() => doc(page)).toBe('namespace Demo;\n\nclass A\n{\n}\n');
+  await codeSub(page, 'C#', /^Convert to Block-Scoped Namespace/);
+  await expect.poll(() => doc(page)).toBe('namespace Demo\n{\n    class A\n    {\n    }\n}\n');
+  await setDoc(page, 'var s = "Hi " + name;', 8, 20);
+  await codeSub(page, 'C#', /^Convert to Interpolated String/);
+  await expect.poll(() => doc(page)).toBe('var s = $"Hi {name}";');
+  await setDoc(page, 'buy milk', 0);
+  await codeSub(page, 'Markdown', /^Toggle Task/);
+  await expect.poll(() => doc(page)).toBe('- [ ] buy milk');
+  await setDoc(page, 'int a; // note\n// gone\nint b;', 0);
+  await menuItem(page, 'Code', /^Remove Comments/);
+  await expect.poll(() => doc(page)).toBe('int a;\nint b;');
+});

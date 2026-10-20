@@ -424,6 +424,7 @@ export const FEATURES: Feature[] = [
   { id: 'md-toc', label: 'Markdown: Table of Contents', group: 'Editing', essential: false, description: 'Code ▸ Markdown inserts a nested list of links to the file\'s headings.', commands: ['md-toc'] },
   { id: 'md-insert-table', label: 'Markdown: Insert Table', group: 'Editing', essential: false, description: 'Code ▸ Markdown inserts an empty two-column table.', commands: ['md-insert-table'] },
   { id: 'remove-comments', label: 'Remove Comments', group: 'Editing', essential: false, description: 'Code ▸ Remove Comments deletes the comments of the selection or file (strings and # language: lines are kept).', commands: ['remove-comments'] },
+  { id: 'to-interpolation', label: 'Convert to Interpolated String', group: 'Code intelligence', essential: true, vs: 'Quick Actions: Convert to interpolated string', description: 'Code ▸ C# turns a selected "a" + b + "c" concatenation into $"a{b}c".', commands: ['to-interpolation'] },
 ];
 export const GROUPS: FeatureGroup[] = ['Editing', 'Navigation', 'Code intelligence', 'Tool windows', 'Files', 'Git', 'Gherkin', 'View', 'Debugging', 'Help and productivity'];
 

@@ -380,3 +380,24 @@ export function removeComments(text: string, line = '//', block: [string, string
   const next = out.join('\n');
   return next === text ? null : next;
 }
+
+/** Convert Concatenation to Interpolated String (Visual Studio / Rider quick action): "a" + b + "c" → $"a{b}c". */
+export function concatToInterpolation(expr: string) {
+  const parts: string[] = [];
+  let cur = '', depth = 0, quote = false;
+  for (let i = 0; i < expr.length; i++) {
+    const c = expr[i];
+    if (quote) { cur += c; if (c === '\\') { cur += expr[++i] ?? ''; } else if (c === '"') quote = false; continue; }
+    if (c === '"') { quote = true; cur += c; continue; }
+    if ('([{'.includes(c)) depth++;
+    if (')]}'.includes(c)) depth--;
+    if (c === '+' && depth === 0) { parts.push(cur.trim()); cur = ''; continue; }
+    cur += c;
+  }
+  parts.push(cur.trim());
+  if (parts.length < 2 || parts.some((p) => !p)) return null;
+  const isStr = (p: string) => /^"(?:[^"\\]|\\.)*"$/.test(p);
+  if (!parts.some(isStr) || parts.every(isStr)) return null;
+  return `$"${parts.map((p) => (isStr(p) ? p.slice(1, -1).replace(/[{}]/g, (b) => b + b) : `{${p}}`)).join('')}"`;
+}
+export const concatToInterpolationCmd = mapSelections((t) => { const m = /^(\s*)([\s\S]*?)(;?\s*)$/.exec(t)!; const r = concatToInterpolation(m[2]); return r === null ? null : m[1] + r + m[3]; }, 'line');

@@ -38,6 +38,7 @@ has it on by default, so the desktop app starts with it on. The others start off
 | Y27 | Markdown: Insert Table of Contents | Rider | no | ✅ 2026-10-20 |
 | Y28 | Markdown: Insert Table | Rider | no | ✅ 2026-10-20 |
 | Y29 | Remove Comments | Rider | no | ✅ 2026-10-20 |
+| Y30 | Convert to Interpolated String | VS 2026 | yes | ✅ 2026-10-20 |
 
 ## Progress log
 - 2026-10-20 Y1: Percent-encodes the selection (or line) and decodes it.
@@ -69,3 +70,4 @@ has it on by default, so the desktop app starts with it on. The others start off
 - 2026-10-20 Y27: A nested list of links to the headings (code fences skipped).
 - 2026-10-20 Y28: An empty two-column table.
 - 2026-10-20 Y29: Comments of the selection or file removed; strings and # language: kept.
+- 2026-10-20 Y30: A selected "a" + b concatenation becomes $"a{b}".

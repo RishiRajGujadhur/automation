@@ -253,6 +253,7 @@ const ROWS: Record<'edit' | 'view' | 'navigate' | 'code' | 'tools' | 'help', Row
       ['Convert to Block-Scoped Namespace', 'block-scoped-namespace'],
       ['Remove #region Directives', 'remove-regions'],
       ['Convert to Raw String Literal', 'raw-string'],
+      ['Convert to Interpolated String', 'to-interpolation'],
     ] },
     null,
     { submenu: 'Markdown', rows: [

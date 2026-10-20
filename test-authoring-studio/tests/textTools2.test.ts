@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { EditorSelection, EditorState, type TransactionSpec } from '@codemirror/state';
 import type { EditorView } from '@codemirror/view';
-import { mapSelections, urlEncode, urlDecode, base64Encode, base64Decode, escapeString, unescapeString, htmlEncode, htmlDecode, stepNumber, insertSequence, toggleQuotes, joinWith, splitAt, alignAssignments, swapSelections, countOccurrences, trimLines, stamp, insertText, LOREM, shuffleLines, formatXml, minifyXml, jsonEscape, jsonUnescape, numberLines, toFileScopedNamespace, toBlockScopedNamespace, removeRegions, toRawString, toggleTask, formatMarkdownTable, tableOfContents, MARKDOWN_TABLE, removeComments } from '../src/editor/textTools2';
+import { mapSelections, urlEncode, urlDecode, base64Encode, base64Decode, escapeString, unescapeString, htmlEncode, htmlDecode, stepNumber, insertSequence, toggleQuotes, joinWith, splitAt, alignAssignments, swapSelections, countOccurrences, trimLines, stamp, insertText, LOREM, shuffleLines, formatXml, minifyXml, jsonEscape, jsonUnescape, numberLines, toFileScopedNamespace, toBlockScopedNamespace, removeRegions, toRawString, toggleTask, formatMarkdownTable, tableOfContents, MARKDOWN_TABLE, removeComments, concatToInterpolation, concatToInterpolationCmd } from '../src/editor/textTools2';
 
 /** Runs an editor command on `doc` with the selection between « and » (or a caret at |). */
 function run(doc: string, cmd: (v: EditorView) => boolean) {
@@ -138,5 +138,10 @@ describe('text tools, fourth batch (IDE-FEATURES-4 Y1…)', () => {
   it('Y29 Remove Comments', () => {
     expect(removeComments('// head\nvar a = "x // y"; // tail\n/* one\n two */ int b; /* c */\nint d;')).toBe('var a = "x // y";\n int b;\nint d;');
     expect(removeComments('# language: en\n# note\nFeature: A\n  # x\n  Given a #b', '#', null)).toBe('# language: en\nFeature: A\n  Given a #b');
+  });
+  it('Y30 Concatenation to interpolated string', () => {
+    expect(concatToInterpolation('"Hello " + user.Name + "! {x} " + Count(a, b + 1)')).toBe('$"Hello {user.Name}! {{x}} {Count(a, b + 1)}"');
+    expect(concatToInterpolation('a + b')).toBe(null);
+    expect(run('var s = «"a" + b»;', concatToInterpolationCmd)).toBe('var s = $"a{b}";');
   });
 });
