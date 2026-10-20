@@ -290,6 +290,7 @@ export const FEATURES: Feature[] = [
   { id: 'test-failed-only', label: 'Test Explorer: Failed tests only', group: 'Tool windows', essential: true, vs: 'Test Explorer ▸ Failed Tests filter', description: 'A toolbar toggle shows only the tests that failed.' },
   { id: 'notifications-copy', label: 'Notifications: Copy All', group: 'Tool windows', essential: true, description: 'Copies every message of the Notifications window.' },
   { id: 'reset-features', label: 'Reset Feature Settings', group: 'Help and productivity', essential: true, vs: 'Import and Export Settings ▸ Reset all settings', description: 'Turns Settings ▸ Features back to the app\'s default set.', commands: ['reset-features'] },
+  { id: 'status-goto-line', label: 'Status bar: Go to Line', group: 'Navigation', essential: true, vs: 'Status bar ▸ Go to Line', description: 'A click on "Ln, Col" in the status bar opens Go to Line.' },
 ];
 export const GROUPS: FeatureGroup[] = ['Editing', 'Navigation', 'Code intelligence', 'Tool windows', 'Files', 'Git', 'Gherkin', 'View', 'Debugging', 'Help and productivity'];
 
