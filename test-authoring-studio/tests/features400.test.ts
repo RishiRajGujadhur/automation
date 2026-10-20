@@ -145,3 +145,12 @@ describe('146 / 147 interactive rebase and squash', () => {
     await fsp.rm(dir, { recursive: true, force: true });
   }, 60_000);
 });
+import { sideBySide } from '../src/rider/SideBySide';
+describe('400 side-by-side diff rows', () => {
+  it('pairs removed and added lines, pads the shorter side', () => {
+    const rows = sideBySide('--- a\n+++ b\n@@ -1,3 +1,4 @@\n same\n-old\n+new\n+extra\n tail\n');
+    expect(rows.map(([l, r]) => `${l.kind}:${l.text}|${r.kind}:${r.text}`)).toEqual(['hunk:@@ -1,3 +1,4 @@|hunk:@@ -1,3 +1,4 @@', 'same:same|same:same', 'del:old|add:new', 'empty:|add:extra', 'same:tail|same:tail']);
+    expect(rows[4][0].n).toBe(3);
+    expect(rows[4][1].n).toBe(4);
+  });
+});

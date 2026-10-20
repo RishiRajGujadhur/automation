@@ -3939,3 +3939,16 @@ html[data-activity-bar='right'] .app-body > .activity-bar { order: 99; border-le
   .secondary-head { display: flex; padding: 4px 6px; border-bottom: 1px solid var(--border); select { flex: 1; height: 24px; } }
   > .debug-panel { flex: 1; height: auto; min-height: 0; border-top: 0; }
 }
+
+/* Side-by-side diff with synchronized scrolling (RIDER-VSCODE-FEATURES.md 400). */
+.segmented-mini { display: inline-flex; gap: 2px; margin: 4px 0; button { padding: 2px 8px; border: 1px solid var(--border); background: none; color: var(--text); border-radius: 4px; cursor: pointer; &[aria-checked='true'] { background: var(--accent-soft); } } }
+.sbs-panes { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+.sbs-pane { min-width: 0; border: 1px solid var(--border); border-radius: 4px; }
+.sbs-title { padding: 2px 8px; border-bottom: 1px solid var(--border); font-size: 12px; color: var(--text-muted); }
+.sbs-scroll { height: 50vh; overflow: auto; font-family: var(--font-mono, monospace); font-size: 12px; }
+.sbs-row { display: flex; white-space: pre; line-height: 18px; min-height: 18px; }
+.sbs-n { flex: none; width: 3.5em; padding-right: 6px; text-align: right; color: var(--text-muted); user-select: none; }
+.sbs-del { background: color-mix(in srgb, #f85149 20%, transparent); }
+.sbs-add { background: color-mix(in srgb, #2ea043 20%, transparent); }
+.sbs-empty { background: repeating-linear-gradient(135deg, transparent 0 4px, color-mix(in srgb, var(--text) 6%, transparent) 4px 8px); }
+.sbs-hunk { color: var(--text-muted); font-style: italic; }

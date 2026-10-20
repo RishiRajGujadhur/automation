@@ -329,7 +329,7 @@ Legend: `[x]` done · `[ ]` to do.
 - [x] 397. Maximize editor group — View ▸ Maximize Editor Group (Ctrl+K Ctrl+M) (2026-10-21)
 - [ ] 398. Editor group locking
 - [x] 399. Independent editor group scrolling — the split editor and the tab group scroll on their own (existing)
-- [ ] 400. Synchronized scrolling between diff panes
+- [x] 400. Synchronized scrolling between diff panes — Compare windows: Unified / Side by Side; the panes scroll together (Synchronized scrolling) (2026-10-21)
 
 ## Progress log
 - 2026-10-21 Created: existing features ticked.
@@ -380,3 +380,4 @@ Legend: `[x]` done · `[ ]` to do.
 - 2026-10-21 391: The activity bar can sit on the right edge of the window or be hidden (Workbench, Appearance).
 - 2026-10-21 392: The panel (Build, Debug, Output…) docks below, left or right of the editors; the place is a setting.
 - 2026-10-21 393: A second side bar on the right of the editors shows Structure, Problems, Git Log, Terminal or another tool window; the choice is remembered.
+- 2026-10-21 400: Differences can be shown side by side with aligned rows; both panes scroll together unless Synchronized scrolling is unticked.

@@ -543,3 +543,23 @@ test('393 Secondary sidebar', async ({ page }) => {
   await menuItem(page, 'View', /^Secondary Side Bar/);
   await expect(side).toHaveCount(0);
 });
+
+test('400 Synchronized scrolling between diff panes', async ({ page, context }) => {
+  await context.grantPermissions(['clipboard-read', 'clipboard-write']);
+  await open(page, CS);
+  const lines = Array.from({ length: 300 }, (_, i) => `line ${i}`);
+  await setDoc(page, lines.join('\n'));
+  await page.evaluate((t) => navigator.clipboard.writeText(t), lines.map((l, i) => (i % 40 === 0 ? `${l} changed` : l)).join('\n'));
+  await menuItem(page, 'Edit', /^Compare with Clipboard$/);
+  await page.getByRole('radio', { name: 'Side by Side' }).click();
+  const left = page.locator('.sbs-pane').first().locator('.sbs-scroll');
+  const right = page.locator('.sbs-pane').nth(1).locator('.sbs-scroll');
+  await expect(left).toBeVisible();
+  await left.evaluate((e) => { e.scrollTop = 400; });
+  await expect.poll(() => right.evaluate((e) => e.scrollTop)).toBe(400);
+  // Off: the panes scroll on their own.
+  await page.getByLabel('Synchronized scrolling').uncheck();
+  await left.evaluate((e) => { e.scrollTop = 0; });
+  await page.waitForTimeout(200);
+  expect(await right.evaluate((e) => e.scrollTop)).toBe(400);
+});
