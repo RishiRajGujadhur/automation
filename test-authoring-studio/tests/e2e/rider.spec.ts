@@ -815,13 +815,13 @@ test('J41 Next / Previous Change (Alt+F5 / Shift+Alt+F5): jumps between uncommit
   await caretAt(page, 'Feature:');
   const line = async () => { const s = await selection(page); return s.doc.slice(0, s.ranges[0].from).split('\n').length; };
   await page.keyboard.press('Alt+F5');
-  expect(await line()).toBe(4);
+  await expect.poll(line).toBe(4);
   await page.keyboard.press('Alt+F5');
-  expect(await line()).toBe(8);
+  await expect.poll(line).toBe(8);
   await page.keyboard.press('Alt+F5');
-  expect(await line()).toBe(4); // wraps
+  await expect.poll(line).toBe(4); // wraps
   await page.keyboard.press('Shift+Alt+F5');
-  expect(await line()).toBe(8);
+  await expect.poll(line).toBe(8);
 });
 
 test('J42 Rollback Lines (Ctrl+Alt+Z): the change at the caret goes back to the committed text, others stay', async ({ page }) => {
