@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { EditorState, type TransactionSpec } from '@codemirror/state';
 import { EditorView } from '@codemirror/view';
-import { cycleStepKeyword, scenarioToOutline, tableInsertRow, tableAddColumn, tableDeleteColumn, tableSortByColumn, testFilter, selectScenario, renameTag, extractExamplesParameter, outlineToScenario, duplicateScenario, moveScenario, extractBackground, addExamplesTable, toggleTag, toggleScenarioComment, pasteAsTable, tableCsv, featureStats, renameExamplesParameter, removeUnusedColumns, inlineBackground, normalizeStepKeywords, addScenario, scenarioMarkdown, tableDuplicateRow, tableDeleteRow, tableMoveColumn, tableSelectColumn, tableTranspose, tableFillDown, tableClearColumn, sortScenarios, featureOutline, tableDeleteEmptyRows, tableRemoveDuplicateRows, tableMarkdown, tagAllScenarios, removeTagEverywhere, sortTags } from '../src/editor/gherkinTools';
+import { cycleStepKeyword, scenarioToOutline, tableInsertRow, tableAddColumn, tableDeleteColumn, tableSortByColumn, testFilter, selectScenario, renameTag, extractExamplesParameter, outlineToScenario, duplicateScenario, moveScenario, extractBackground, addExamplesTable, toggleTag, toggleScenarioComment, pasteAsTable, tableCsv, featureStats, renameExamplesParameter, removeUnusedColumns, inlineBackground, normalizeStepKeywords, addScenario, scenarioMarkdown, tableDuplicateRow, tableDeleteRow, tableMoveColumn, tableSelectColumn, tableTranspose, tableFillDown, tableClearColumn, sortScenarios, featureOutline, tableDeleteEmptyRows, tableRemoveDuplicateRows, tableMarkdown, tagAllScenarios, removeTagEverywhere, sortTags, promoteCommonTags } from '../src/editor/gherkinTools';
 
 /** Runs an editor command on `doc` with the selection between « and » (or a caret at ‸); with `caret`, the result marks the caret with ¦. */
 function run(doc: string, cmd: (v: EditorView) => boolean, caret = false) {
@@ -201,5 +201,10 @@ describe('Gherkin tools (IDE-FEATURES X49…)', () => {
   });
   it('Y36 Sort Tags', () => {
     expect(run('@smoke @Auth @a10 @a9 @smoke\nFeature: F\n  @z @b # note\n  Scenario: s', sortTags)).toBe('@a9 @a10 @Auth @smoke\nFeature: F\n  @z @b # note\n  Scenario: s');
+  });
+  it('Y37 Promote Common Tags to Feature', () => {
+    expect(promoteCommonTags('Feature: F\n  @auth @smoke\n  Scenario: a\n  @auth\n  Scenario: b')).toBe('@auth\nFeature: F\n  @smoke\n  Scenario: a\n  Scenario: b');
+    expect(promoteCommonTags('@x\nFeature: F\n  @auth\n  Scenario: a')).toBe('@x @auth\nFeature: F\n  Scenario: a');
+    expect(promoteCommonTags('Feature: F\n  @a\n  Scenario: a\n  Scenario: b')).toBe(null);
   });
 });

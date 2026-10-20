@@ -800,3 +800,27 @@ export function sortTags(view: EditorView) {
   view.dispatch({ changes, userEvent: 'input' });
   return true;
 }
+
+/** Promote Common Tags to Feature: tags every scenario has move to the Feature's tag line. */
+export function promoteCommonTags(text: string) {
+  const lines = text.split('\n');
+  const feature = lines.findIndex((l) => /^\s*Feature:/.test(l));
+  if (feature < 0) return null;
+  const scen: number[][] = [];
+  lines.forEach((l, i) => { if (!SCENARIO.test(l)) return; const tags: number[] = []; for (let k = i - 1; k > feature && /^\s*@/.test(lines[k]); k--) tags.unshift(k); scen.push(tags); });
+  if (!scen.length) return null;
+  const tagsOf = (idx: number[]) => new Set(idx.flatMap((k) => lines[k].trim().split(/\s+/)).filter((t) => t.startsWith('@')));
+  let common = [...tagsOf(scen[0])];
+  for (const s of scen.slice(1)) { const t = tagsOf(s); common = common.filter((c) => t.has(c)); }
+  if (!common.length) return null;
+  const drop = new Set<number>();
+  for (const k of scen.flat()) {
+    const ind = /^\s*/.exec(lines[k])![0];
+    const rest = lines[k].trim().split(/\s+/).filter((t) => !common.includes(t));
+    if (rest.length) lines[k] = ind + rest.join(' '); else drop.add(k);
+  }
+  let k = feature - 1;
+  if (k >= 0 && /^\s*@/.test(lines[k])) { const have = lines[k].trim().split(/\s+/); lines[k] = `${lines[k].trimEnd()}${common.filter((c) => !have.includes(c)).map((c) => ` ${c}`).join('')}`; }
+  else { lines.splice(feature, 0, /^\s*/.exec(lines[feature])![0] + common.join(' ')); const shifted = new Set([...drop].map((d) => d + 1)); drop.clear(); shifted.forEach((d) => drop.add(d)); k = -1; }
+  return lines.filter((_, i) => !drop.has(i)).join('\n');
+}

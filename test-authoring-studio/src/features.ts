@@ -431,6 +431,7 @@ export const FEATURES: Feature[] = [
   { id: 'tag-all-scenarios', label: 'Tag All Scenarios', group: 'Gherkin', essential: false, description: 'Code ▸ Gherkin adds a tag to every scenario of the file that lacks it.', commands: ['tag-all-scenarios'] },
   { id: 'remove-tag-everywhere', label: 'Remove Tag Everywhere', group: 'Gherkin', essential: false, description: 'Code ▸ Gherkin removes a tag from every tag line of the file.', commands: ['remove-tag-everywhere'] },
   { id: 'sort-tags', label: 'Sort Tags', group: 'Gherkin', essential: false, description: 'Code ▸ Gherkin sorts the tags of each tag line (selection or file) and drops repeats.', commands: ['sort-tags'] },
+  { id: 'promote-tags', label: 'Promote Common Tags to Feature', group: 'Gherkin', essential: false, description: 'Code ▸ Gherkin moves the tags every scenario has up to the Feature (they are inherited).', commands: ['promote-tags'] },
 ];
 export const GROUPS: FeatureGroup[] = ['Editing', 'Navigation', 'Code intelligence', 'Tool windows', 'Files', 'Git', 'Gherkin', 'View', 'Debugging', 'Help and productivity'];
 

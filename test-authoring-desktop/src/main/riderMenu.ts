@@ -243,6 +243,7 @@ const ROWS: Record<'edit' | 'view' | 'navigate' | 'code' | 'tools' | 'help', Row
       ['Tag All Scenarios…', 'tag-all-scenarios'],
       ['Remove Tag Everywhere…', 'remove-tag-everywhere'],
       ['Sort Tags', 'sort-tags'],
+      ['Promote Common Tags to Feature', 'promote-tags'],
     ] },
     ['Collapse Using Directives', 'fold-usings'],
     ['Sort JSON Keys', 'sort-json'],
