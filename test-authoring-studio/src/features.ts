@@ -375,7 +375,7 @@ export const FEATURES: Feature[] = [
   { id: 'notification-ago', label: 'Notifications: relative times', group: 'Tool windows', essential: true, description: 'Notifications show how long ago they came ("5 min ago"); hover for the exact time.' },
   { id: 'notification-dismiss', label: 'Notifications: dismiss one', group: 'Tool windows', essential: true, description: 'Each notification has a × button that removes just that one.' },
   { id: 'error-list-copy-all', label: 'Error List: Copy All', group: 'Tool windows', essential: true, description: 'A button copies every row the Error List shows (after its filters).' },
-  { id: 'search-escape', label: 'Escape clears tool window searches', group: 'Tool windows', essential: true, description: 'Escape in the Error List and Test Explorer search boxes clears them (like the Output and Notifications filters).' },
+  { id: 'search-escape', label: 'Escape clears tool window searches', group: 'Tool windows', essential: true, description: 'Escape in the Error List, Test Explorer and Find in Files search boxes clears them (like the Output and Notifications filters).' },
   { id: 'gherkin-capitalise', label: 'Gherkin: capitalise keywords', group: 'Gherkin', essential: true, description: 'Typing "given " or "scenario:" at the start of a line capitalises the keyword.' },
   { id: 'terminal-clear', label: 'Terminal: Clear button', group: 'Tool windows', essential: true, description: 'A toolbar button clears the active terminal (same as Ctrl+L).' },
   { id: 'git-log-remember', label: 'Git Log remembers its filter', group: 'Git', essential: true, description: 'The Git Log filter is kept when the window closes and after a reload; Escape clears it.' },
