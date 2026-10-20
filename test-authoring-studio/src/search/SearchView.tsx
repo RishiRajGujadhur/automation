@@ -26,11 +26,11 @@ function selectWhenOpen(file: string, line: number, column: number, length: numb
   }
   if (tries < 40) setTimeout(() => selectWhenOpen(file, line, column, length, tries + 1), 75);
 }
-export default function SearchView({ initialReplace, initialInclude, onOpen, onNotice, onChanged }: { initialReplace?: boolean; initialInclude?: string; onOpen: (file: string, line: number, column: number) => void; onNotice: (m: string) => void; onChanged: () => void }) {
+export default function SearchView({ initialReplace, initialInclude, initialQuery, onOpen, onNotice, onChanged }: { initialReplace?: boolean; initialInclude?: string; initialQuery?: string; onOpen: (file: string, line: number, column: number) => void; onNotice: (m: string) => void; onChanged: () => void }) {
   const confirm = useConfirm();
   // The last search comes back after a reload (QOL-50).
   const last = (() => { try { return featureOn('search-remember') ? JSON.parse(sessionStorage.getItem('tas:lastSearch') ?? '{}') as { query?: string; include?: string; exclude?: string; matchCase?: boolean; wholeWord?: boolean; regex?: boolean } : {}; } catch { return {}; } })();
-  const [query, setQuery] = useState(last.query ?? '');
+  const [query, setQuery] = useState(initialQuery ?? last.query ?? '');
   const [replace, setReplace] = useState('');
   const [showReplace, setShowReplace] = useState(!!initialReplace);
   const [showFilters, setShowFilters] = useState(!!initialInclude);

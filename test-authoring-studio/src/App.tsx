@@ -34,6 +34,7 @@ import OutputPanel, { type OutputSource } from './OutputPanel';
 import TodoPanel from './TodoPanel';
 import { eolOf, withEol, SET_EOL_EVENT, type Eol } from './editor/lineSeparator';
 import RiderHost from './rider/RiderHost';
+import { activeEditor as focusedEditor } from './editor/activeEditor';
 import BusyTitle from './BusyTitle';
 import { setBaseTitle } from './windowTitle';
 import { useViewOptions } from './editor/viewOptions';
@@ -484,8 +485,15 @@ export default function App() {
   const [sidebarView, setSidebarView] = useLocalState<'explorer' | 'tests' | 'search' | 'git'>('sidebarView', 'explorer');
   const showGit = () => { setTab('Features'); if (view !== 'code' && view !== 'editor') setView('editor'); setSidebarView('git'); setPrefs({ sidebar: true }); };
   // Find in Files (Ctrl+Shift+F) / Replace in Files (Ctrl+Shift+H): the Search view; the key re-focuses it.
-  const [searchKey, setSearchKey] = useState<{ n: number; replace: boolean; include?: string }>({ n: 0, replace: false });
-  const showSearch = (replace = false, include?: string) => { setTab('Features'); if (view !== 'code' && view !== 'editor') setView('editor'); setSidebarView('search'); setPrefs({ sidebar: true }); setSearchKey((k) => ({ n: k.n + 1, replace, include })); };
+  const [searchKey, setSearchKey] = useState<{ n: number; replace: boolean; include?: string; query?: string }>({ n: 0, replace: false });
+  const showSearch = (replace = false, include?: string) => {
+    // The editor's selection (one line) becomes the search text (VS Code's Find in Files) (QOL-50).
+    const a = featureOn('search-selection') ? focusedEditor() : undefined;
+    const sel = a?.view.state.selection.main;
+    const picked = sel && !sel.empty ? a!.view.state.sliceDoc(sel.from, sel.to) : '';
+    const query = picked && !picked.includes('\n') && picked.length <= 200 ? picked : undefined;
+    setTab('Features'); if (view !== 'code' && view !== 'editor') setView('editor'); setSidebarView('search'); setPrefs({ sidebar: true }); setSearchKey((k) => ({ n: k.n + 1, replace, include, query }));
+  };
   // Explorer ▸ Find in Folder… (VS Code): the Search view with "files to include" set to the folder.
   const showSearchRef = useRef(showSearch);
   showSearchRef.current = showSearch;
@@ -1414,7 +1422,7 @@ export default function App() {
           {tab === 'Features' && sidebarView === 'git' ? (
             <GitView onOpen={(file) => editFile(file)} onNotice={setNotice} onChanged={() => { api('/scan', {}).then(setIndex, () => {}); }} />
           ) : tab === 'Features' && sidebarView === 'search' ? (
-            <SearchView key={searchKey.n} initialReplace={searchKey.replace} initialInclude={searchKey.include} onOpen={(file, line, column) => editFile(file, line, column)} onNotice={setNotice} onChanged={() => { api('/scan', {}).then(setIndex, () => {}); }} />
+            <SearchView key={searchKey.n} initialReplace={searchKey.replace} initialInclude={searchKey.include} initialQuery={searchKey.query} onOpen={(file, line, column) => editFile(file, line, column)} onNotice={setNotice} onChanged={() => { api('/scan', {}).then(setIndex, () => {}); }} />
           ) : tab === 'Features' && sidebarView === 'tests' ? (
             <TestExplorer revision={revision} onOpen={(file, line) => editFile(file, line)} onDebug={debugTest} onNotice={setNotice} />
           ) : <SolutionExplorer

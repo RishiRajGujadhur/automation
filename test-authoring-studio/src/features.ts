@@ -361,6 +361,7 @@ export const FEATURES: Feature[] = [
   { id: 'explorer-scroll', label: 'Explorer keeps its scroll position', group: 'Files', essential: true, description: 'After a reload the Explorer is scrolled where it was.' },
   { id: 'ctrl-click-side', label: 'Explorer: Ctrl+click opens to the side', group: 'Files', essential: true, vs: 'Open to the Side (Ctrl+click)', description: 'Ctrl+click on a file opens it in the split editor.' },
   { id: 'mru-close', label: 'Closing a tab goes back to the last one used', group: 'Files', essential: true, description: 'Closing the active tab shows the tab you used before it, not just its neighbour.' },
+  { id: 'search-selection', label: 'Find in Files starts with the selection', group: 'Navigation', essential: true, description: 'Ctrl+Shift+F with text selected searches for it.' },
 ];
 export const GROUPS: FeatureGroup[] = ['Editing', 'Navigation', 'Code intelligence', 'Tool windows', 'Files', 'Git', 'Gherkin', 'View', 'Debugging', 'Help and productivity'];
 
