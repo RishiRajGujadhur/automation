@@ -1,4 +1,5 @@
 import { useMemo, useState, type ReactNode } from 'react';
+import { featureOn } from '../features';
 
 export type ListItem = { key: string; label: string; detail?: string; icon?: ReactNode; indent?: number };
 
@@ -23,6 +24,9 @@ export default function ListPopup({ label, placeholder, empty, items, onPick, in
           if (e.key === 'ArrowDown') { e.preventDefault(); setIndex((i) => Math.min(shown.length - 1, i + 1)); }
           else if (e.key === 'ArrowUp') { e.preventDefault(); setIndex((i) => Math.max(0, i - 1)); }
           else if (e.key === 'Enter' && shown[index]) { e.preventDefault(); onPick(shown[index].key); }
+          // Page Up / Page Down / Home / End (QOL-50).
+          else if ((e.key === 'PageDown' || e.key === 'PageUp') && featureOn('list-keys')) { e.preventDefault(); setIndex((i) => Math.max(0, Math.min(shown.length - 1, i + (e.key === 'PageDown' ? 10 : -10)))); }
+          else if ((e.key === 'Home' || e.key === 'End') && e.ctrlKey && featureOn('list-keys')) { e.preventDefault(); setIndex(e.key === 'Home' ? 0 : shown.length - 1); }
         }}
       />
       <ul className="goto-results" role="listbox" aria-label={label}>
