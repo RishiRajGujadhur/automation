@@ -1,4 +1,6 @@
 import { useSyncExternalStore } from 'react';
+import { fileSource } from './files/provider';
+import { featureOn } from './features';
 
 /**
  * Navigation history (JetBrains Rider / Visual Studio): every cursor position that jumps more than a few lines or to
@@ -8,7 +10,12 @@ import { useSyncExternalStore } from 'react';
 export type NavLocation = { file: string; line: number; column: number; text?: string };
 let stack: NavLocation[] = [];
 let index = -1;
+// Recent Files survive a reload, per workspace (QOL-50): loaded for the workspace that is open when they are read.
+const recentKey = () => { const s = fileSource(); return `tas:recentFiles:${s.kind === 'browser' ? `browser:${s.name}` : s.root ?? ''}`; };
 let recent: string[] = [];
+let recentFor = '';
+const loadRecent = () => { const k = recentKey(); if (k === recentFor) return; recentFor = k; try { recent = featureOn('recent-files-kept') ? JSON.parse(localStorage.getItem(k) ?? '[]') as string[] : []; } catch { recent = []; } };
+const keepRecent = () => { try { if (featureOn('recent-files-kept')) localStorage.setItem(recentKey(), JSON.stringify(recent.slice(0, 50))); } catch { /* storage blocked */ } };
 let suppressed = 0;
 let version = 0;
 const listeners = new Set<() => void>();
@@ -16,8 +23,10 @@ const emit = () => { version++; for (const l of listeners) l(); };
 
 /** A file became active (opened or switched to): it moves to the top of Recent Files. */
 export function visitFile(file: string) {
+  loadRecent();
   if (!file || recent[0] === file) return;
   recent = [file, ...recent.filter((f) => f !== file)].slice(0, 50);
+  keepRecent();
   emit();
 }
 /** The cursor moved: a new history entry when it jumped (another file or more than 10 lines), else the entry moves. */
@@ -40,9 +49,9 @@ function move(step: number) {
 }
 export const back = () => move(-1);
 export const forward = () => move(1);
-export const recentFiles = () => recent;
+export const recentFiles = () => { loadRecent(); return recent; };
 /** Clear Recent Files (Visual Studio's File ▸ Recent Files ▸ clear, Rider's Clear Recent Files). */
-export function clearRecent() { recent = []; stack = stack.slice(index >= 0 ? index : 0, index + 1); index = stack.length - 1; emit(); }
+export function clearRecent() { recent = []; keepRecent(); stack = stack.slice(index >= 0 ? index : 0, index + 1); index = stack.length - 1; emit(); }
 /** Recent Locations: newest first, one per file and line. */
 export const recentLocations = () => {
   const seen = new Set<string>();
