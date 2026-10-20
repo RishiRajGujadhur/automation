@@ -33,7 +33,7 @@ function VariableRow({ v, depth, frameKey }: { v: { name: string; value: string;
   };
   return (
     <>
-      <RowMenu label={`${v.name} value`} items={[...(featureOn('visualizers') && /^".*"$/s.test(v.value) ? (['Text', 'JSON', 'XML'] as const).map((k) => ({ label: `${k} Visualizer`, onSelect: () => window.dispatchEvent(new CustomEvent('tas:visualize', { detail: { name: v.name, kind: k, value: v.value } })) })) : []), ...(featureOn('copy-value') ? [{ label: 'Copy Value', onSelect: () => void copyText(v.value) }, { label: 'Copy Expression', onSelect: () => void copyText(v.name) }, { label: 'Add Watch', onSelect: () => { const w = getSnapshot().watches; if (!w.includes(v.name)) setWatches([...w, v.name]); } }] : [])]}>
+      <RowMenu label={`${v.name} value`} items={[...(featureOn('table-visualizer') && v.variablesReference > 0 ? [{ label: 'View as Table', onSelect: () => window.dispatchEvent(new CustomEvent('tas:visualize-table', { detail: { name: v.name, ref: v.variablesReference } })) }] : []), ...(featureOn('visualizers') && /^".*"$/s.test(v.value) ? (['Text', 'JSON', 'XML'] as const).map((k) => ({ label: `${k} Visualizer`, onSelect: () => window.dispatchEvent(new CustomEvent('tas:visualize', { detail: { name: v.name, kind: k, value: v.value } })) })) : []), ...(featureOn('copy-value') ? [{ label: 'Copy Value', onSelect: () => void copyText(v.value) }, { label: 'Copy Expression', onSelect: () => void copyText(v.name) }, { label: 'Add Watch', onSelect: () => { const w = getSnapshot().watches; if (!w.includes(v.name)) setWatches([...w, v.name]); } }] : [])]}>
       <div className="dbg-row" data-menu-row role="row" aria-expanded={expandable ? open : undefined}>
         <span role="gridcell" className="dbg-name" style={{ paddingLeft: depth * 14 }}>
           {expandable ? <button className="se-twisty" aria-label={`${open ? 'Collapse' : 'Expand'} ${v.name}`} onClick={toggle}>{open ? <ChevronDown size={13} /> : <ChevronRight size={13} />}</button> : <span className="se-twisty-space" />}
@@ -84,6 +84,32 @@ export default function DebugPanel({ onOpen, onNotice, onClose, editingRequest =
     window.addEventListener('tas:visualize', h);
     return () => window.removeEventListener('tas:visualize', h);
   }, []);
+  // IEnumerable visualizer (Visual Studio 2022+): a collection's items as rows, their members as columns.
+  useEffect(() => {
+    const h = (e: Event) => {
+      const { name, ref } = (e as CustomEvent<{ name: string; ref: number }>).detail;
+      void (async () => {
+        // Arrays show [0], [1]…; a List<T> keeps them in _items (under Non-Public members), its Count says how many are used.
+        const itemsOf = async (r: number, depth = 0): Promise<Variable[]> => {
+          const kids = await api<Variable[]>('/debug/variables', { ref: r });
+          const idx = kids.filter((k) => /^\[\d+\]$/.test(k.name));
+          if (idx.length || depth > 2) return idx;
+          const count = Number(kids.find((k) => k.name === 'Count')?.value);
+          for (const k of kids) if (k.variablesReference > 0 && /^(_items|Non-Public members|Raw View|Results View)$/.test(k.name)) { const found = await itemsOf(k.variablesReference, depth + 1); if (found.length) return Number.isFinite(count) ? found.slice(0, count) : found; }
+          return [];
+        };
+        const items = (await itemsOf(ref)).slice(0, 200);
+        const rows = await Promise.all(items.map(async (it): Promise<Record<string, string>> => {
+          if (it.variablesReference <= 0) return { '#': it.name, Value: it.value };
+          const members = (await api<Variable[]>('/debug/variables', { ref: it.variablesReference }).catch(() => [])).filter((m) => !/(Raw View|Static members|Non-Public members)/.test(m.name));
+          return { '#': it.name, ...Object.fromEntries(members.map((m) => [m.name, m.value])) };
+        }));
+        setVisual({ kind: 'Table', name: `${name} (${items.length} item${items.length === 1 ? '' : 's'})`, rows: rows.length ? rows : [{ Value: 'No items.' }] });
+      })().catch((err) => onNotice((err as Error).message));
+    };
+    window.addEventListener('tas:visualize-table', h);
+    return () => window.removeEventListener('tas:visualize-table', h);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
   const [values, setValues] = useState<{ result?: string; type?: string; error?: string; variablesReference?: number }[]>([]);
   const [draft, setDraft] = useState('');
   // Exception Settings (kept per browser, sent to the server so the next session uses them too).
