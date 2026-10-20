@@ -553,6 +553,7 @@ export const FEATURES: Feature[] = [
   { id: 'threads-window', label: 'Threads window', group: 'Debugging', essential: true, vs: 'Debug ▸ Windows ▸ Threads', description: 'A Threads tab lists the debuggee\'s threads while paused; selecting one shows its call stack.' },
   { id: 'pinned-datatips', label: 'Pinned DataTips', group: 'Debugging', essential: true, vs: 'DataTips ▸ Pin to source', description: 'A variable\'s menu pins it to the current source line; the line shows its value whenever the debugger pauses (× unpins).' },
   { id: 'debug-output-tools', label: 'Debug Output: find, copy, clear, wrap', group: 'Debugging', essential: true, vs: 'Output window tools', description: 'The debugger\'s Output tab gets a find box (matching lines), Copy All, Clear All and word wrap.' },
+  { id: 'exception-types', label: 'Break on specific exception types', group: 'Debugging', essential: false, vs: 'Exception Settings ▸ per-type', description: 'With Break on: All thrown exceptions, a list of exception types (ArgumentException, …) limits the stops to those types.' },
 ];
 export const GROUPS: FeatureGroup[] = ['Editing', 'Navigation', 'Code intelligence', 'Tool windows', 'Files', 'Git', 'Gherkin', 'View', 'Debugging', 'Help and productivity'];
 

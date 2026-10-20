@@ -68,6 +68,13 @@ function connect() {
       if (top?.file && state.reason === 'breakpoint') for (const { file, b } of all) if (b.dependsOn === `${top.file}:${top.line}` && b.enabled === false) updateBreakpoint(file, b.line, { enabled: true });
       if (wasLive && !isLive(state.status)) for (const { file, b } of all) if (b.dependsOn && b.enabled !== false) updateBreakpoint(file, b.line, { enabled: false });
     }
+    // Exception Settings ▸ only these exception types (Visual Studio's per-type list): other exceptions continue.
+    if (featureOn('exception-types') && state.status === 'paused' && state.reason === 'exception' && state.exception) {
+      let only: string[] = [];
+      try { only = String(JSON.parse(localStorage.getItem('tas:exceptionTypes') ?? '""')).split(/[,;\s]+/).map((t) => t.trim()).filter(Boolean); } catch { /* storage blocked */ }
+      const type = state.exception.split(':')[0].trim();
+      if (only.length && !only.some((t) => type === t || type.endsWith(`.${t}`))) { void api('/debug/control', { action: 'continue' }).catch(() => {}); return; }
+    }
     // Disable once hit (Visual Studio's breakpoint action).
     if (top?.file && state.reason === 'breakpoint' && featureOn('bp-disable-once')) { const s = specAt(top.file, top.line); if (s?.disableOnceHit && s.enabled !== false) updateBreakpoint(top.file, top.line, { enabled: false }); }
     // The server forgets breakpoints when it restarts: push this browser's set once per connection.

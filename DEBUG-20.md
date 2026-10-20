@@ -23,6 +23,7 @@ a Settings ▸ Features switch and tests that drive a real debugging session of 
 | DB15 | Threads window | VS 2026 | yes | ✅ 2026-10-20 |
 | DB16 | Pinned DataTips | VS 2026 | yes | ✅ 2026-10-20 |
 | DB17 | Debug Output: find, copy, clear, wrap | VS 2026 | yes | ✅ 2026-10-20 |
+| DB18 | Break on specific exception types | VS 2026 | no | ✅ 2026-10-20 |
 
 ## Progress log
 - 2026-10-20 DB1: Filters breakpoints by file, line, condition, log message or label.
@@ -42,3 +43,4 @@ a Settings ▸ Features switch and tests that drive a real debugging session of 
 - 2026-10-20 DB15: Threads while paused; selecting one shows its call stack.
 - 2026-10-20 DB16: A variable pinned to a source line shows its value whenever the debugger pauses.
 - 2026-10-20 DB17: Filter lines, Copy All, Clear All and word wrap in the debugger's Output.
+- 2026-10-20 DB18: With Break on All, only the listed exception types stop.
