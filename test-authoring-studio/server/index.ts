@@ -40,7 +40,7 @@ import { findInFiles, replaceInFiles } from './search.js';
 import { values, render, parameterCount, replaceAttributePattern } from './stepRename.js';
 import { installed as nugetInstalled, updates as nugetUpdates, search as nugetSearch, versions as nugetVersions, install as nugetInstall, uninstall as nugetUninstall } from './nuget.js';
 import { status as gitStatus, stage as gitStage, unstage as gitUnstage, discard as gitDiscard, commit as gitCommit, headInfo, log as gitLog, branches as gitBranches, checkout as gitCheckout, createBranch as gitCreateBranch, sync as gitSync, merge as gitMerge, blame as gitBlame, clone as gitClone, shelves, shelve, unshelve, deleteShelf, lineHistory, commitDetails, graphLog, fileAt, commitAction, git, stageLines } from './git.js';
-import { readProperties, setProperties } from './projectProps.js';
+import { readProperties, setProperties, evaluate } from './projectProps.js';
 import { LanguageService } from './langService.js';
 import type { Index } from '../src/types.js';
 import { readSettings, writeSettings, settingsSchema, tracesDir, spySnapshotsDir } from './settings.js';
@@ -462,6 +462,10 @@ async function previewProject(project: string, edit: (xml: string) => string, ch
 app.get('/api/project/properties', async (req, res) => {
   const project = projectFile.parse(req.query.project);
   res.json({ project, ...readProperties(await fs.readFile(await confined(config.repositoryRoot, project, false), 'utf8')) });
+});
+app.post('/api/project/properties/evaluate', async (req, res) => {
+  const { project, names, configuration } = z.object({ project: projectFile, names: z.array(z.string().max(80)).max(60), configuration: z.string().regex(/^[\w.-]{1,40}$/).optional() }).parse(req.body);
+  res.json(await evaluate(await confined(config.repositoryRoot, project, false), names, config.repositoryRoot, configuration));
 });
 app.post('/api/project/properties/preview', async (req, res) => {
   const { project, set, config: cfg } = z.object({ project: projectFile, set: z.record(z.string().max(80), z.string().max(4000).nullable()), config: z.string().regex(/^[\w.-]{1,40}$/).optional() }).parse(req.body);

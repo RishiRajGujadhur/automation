@@ -3747,3 +3747,4 @@ html[data-features-off~='inlay-hints'] .cm-inlay {
 .project-props .pp-input input:not([type='checkbox']), .project-props .pp-input select, .project-props .pp-input textarea { flex: 1; min-width: 0; }
 .project-props .pp-footer { display: flex; gap: 8px; align-items: center; justify-content: flex-end; }
 .project-props .pp-footer small { margin-right: auto; }
+.project-props .pp-evaluated { color: var(--accent, #9270dd); font-size: 11px; }

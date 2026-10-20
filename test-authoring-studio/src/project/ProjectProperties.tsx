@@ -18,6 +18,14 @@ export default function ProjectProperties({ project, onNotice }: { project: stri
   const [data, setData] = useState<Props>();
   const [edits, setEdits] = useState<Record<string, string | null>>({});
   const [preview, setPreview] = useState<FilePreview>();
+  // Evaluated values (Visual Studio shows the effective value): SDK defaults, Directory.Build.props, imports.
+  const [evaluated, setEvaluated] = useState<Record<string, string>>({});
+  useEffect(() => {
+    if (!featureOn('pp-evaluated') || !data) return;
+    let live = true;
+    void api<Record<string, string>>('/project/properties/evaluate', { project, names: pages.flatMap((p) => p.fields.map((f) => f.name)), ...(config ? { configuration: config } : {}) }).then((r) => { if (live) setEvaluated(r); }, () => {});
+    return () => { live = false; };
+  }, [data, config]); // eslint-disable-line react-hooks/exhaustive-deps
   const load = () => api<Props>(`/project/properties?project=${encodeURIComponent(project)}`).then(setData, (e) => onNotice((e as Error).message));
   useEffect(() => { void load(); }, [project]); // eslint-disable-line react-hooks/exhaustive-deps
   const stored = (name: string) => (config ? data?.byConfig[config]?.[name] : data?.all[name]);
@@ -39,6 +47,7 @@ export default function ProjectProperties({ project, onNotice }: { project: stri
           {input}
           {(stored(f.name) !== undefined || f.name in edits) && <button className="icon-button" aria-label={`Reset ${f.label}`} title="Remove from the project file (use the default)" onClick={() => set(f.name, null)}><RotateCcw size={12} /></button>}
         </div>
+        {featureOn('pp-evaluated') && stored(f.name) === undefined && !(f.name in edits) && evaluated[f.name] ? <small className="pp-evaluated" title="The value the build uses (SDK default, Directory.Build.props or an import)">Effective: {evaluated[f.name]}</small> : null}
         {f.help && <small className="subtle">{f.help}</small>}
       </div>
     );

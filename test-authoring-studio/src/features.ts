@@ -520,6 +520,7 @@ export const FEATURES: Feature[] = [
   { id: 'pp-build', label: 'Project Properties: Build page', group: 'Code intelligence', essential: true, vs: 'Project Properties ▸ Build', description: 'Nullable, implicit usings, language version, warnings as errors, suppressed warnings, symbols, optimisation, platform and output path.' },
   { id: 'pp-package', label: 'Project Properties: Package page', group: 'Code intelligence', essential: true, vs: 'Project Properties ▸ Package', description: 'NuGet package metadata: ID, version, authors, company, description, tags, repository, license and pack on build.' },
   { id: 'pp-analysis', label: 'Project Properties: Code Analysis page', group: 'Code intelligence', essential: true, vs: 'Project Properties ▸ Code Analysis', description: '.NET analyzers, analysis level and mode, code style on build and documentation file.' },
+  { id: 'pp-evaluated', label: 'Project Properties: effective values', group: 'Code intelligence', essential: true, vs: 'Project Properties: evaluated values', description: 'Properties the project file does not set show the value the build really uses (SDK defaults, Directory.Build.props), evaluated by the .NET SDK.' },
 ];
 export const GROUPS: FeatureGroup[] = ['Editing', 'Navigation', 'Code intelligence', 'Tool windows', 'Files', 'Git', 'Gherkin', 'View', 'Debugging', 'Help and productivity'];
 
