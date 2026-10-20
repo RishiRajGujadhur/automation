@@ -10,8 +10,10 @@ Every improvement is verified by a unit or Playwright test (`tests/e2e/qol50.spe
 | QL1 | Window title: active file and folder, dot when unsaved | Window | ✅ 2026-10-20 |
 | QL2 | Scroll past the end | Editor | ✅ 2026-10-20 |
 | QL3 | Find: match counter | Editor | ✅ 2026-10-20 |
+| QL4 | Ctrl+click web links | Editor | ✅ 2026-10-20 |
 
 ## Progress log
 - 2026-10-20 QL1: Title names the file and workspace folder
 - 2026-10-20 QL2: Last line can scroll to the top
 - 2026-10-20 QL3: N of M in the find panel
+- 2026-10-20 QL4: Underlined URLs open on Ctrl+click

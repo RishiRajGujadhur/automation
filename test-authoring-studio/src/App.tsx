@@ -297,6 +297,9 @@ export default function App() {
       else setNotice(r?.status === 'Ambiguous' ? 'More than one binding matches this step.' : 'No step definition yet. Use “Create step definition” to add one.');
     } catch (e) { setNotice((e as Error).message); }
   };
+  // Ctrl+click on a file:line reference in an editor (QOL-50 QL49) opens it.
+  const editFileRef = useRef<(file: string, line?: number, column?: number) => void>(() => {});
+  useEffect(() => { const h = (e: Event) => { const d = (e as CustomEvent<{ file: string; line: number; column?: number }>).detail; editFileRef.current(d.file, d.line, d.column); }; window.addEventListener('tas:open-location', h); return () => window.removeEventListener('tas:open-location', h); }, []);
   const editFile = (file: string, line?: number, column?: number, preview = false) => {
     const kind = kindOf(file);
     if (line) setCodeLines((l) => ({ ...l, [file]: { line, column } }));
@@ -305,6 +308,7 @@ export default function App() {
     setView(kind === 'code' ? 'code' : 'editor');
     setModal(undefined);
   };
+  editFileRef.current = editFile;
   // File ▸ Open Folder…: the desktop app opens the folder natively and indexes it; a browser opens it with the
   // File System Access API (read and write in place, no upload) — indexing then needs the folder's path.
   const fileSrc = useFileSource();

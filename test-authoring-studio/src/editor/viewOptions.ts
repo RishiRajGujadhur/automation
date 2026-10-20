@@ -10,6 +10,7 @@ import { scrollMarks } from './scrollMarks';
 import { currentScenario as currentScenarioFor } from './currentScenario';
 import { scrollPastEnd } from '@codemirror/view';
 import { searchCount } from './searchCount';
+import { editorLinks } from './links';
 import { EditorView, ViewPlugin, highlightWhitespace, highlightTrailingWhitespace, rectangularSelection, keymap } from '@codemirror/view';
 
 /** View ▸ Active Editor options (Rider): soft wraps, …, shared by every editor and remembered. */
@@ -122,6 +123,8 @@ const EXTRA: [Compartment, (o: ViewOptions) => Extension][] = [
   [new Compartment(), (o) => (o.noScrollPastEnd || !featureOn('scroll-past-end') ? [] : scrollPastEnd())],
   // Find: "3 of 12" matches.
   [new Compartment(), () => (featureOn('search-count') ? searchCount : [])],
+  // Ctrl+click links (web addresses, file:line references).
+  [new Compartment(), () => (featureOn('editor-links') ? editorLinks : [])],
   // extra view options
 ];
 

@@ -300,6 +300,7 @@ export const FEATURES: Feature[] = [
   { id: 'toggle-breadcrumbs', label: 'Toggle Breadcrumbs', group: 'View', essential: true, vs: 'View ▸ Show Breadcrumbs', description: 'View ▸ Breadcrumbs shows or hides the Feature › Rule › Scenario bar.', commands: ['toggle-breadcrumbs'] },
   { id: 'scroll-past-end', label: 'Scroll past the end', group: 'View', essential: true, vs: 'Editor ▸ Scroll beyond last line', description: 'The editors scroll until the last line is at the top.', commands: ['scroll-past-end'] },
   { id: 'search-count', label: 'Find: match counter', group: 'Editing', essential: true, vs: 'Find widget match count', description: 'The find panel shows "3 of 12" for the current match.' },
+  { id: 'editor-links', label: 'Ctrl+click links in the editor', group: 'Editing', essential: true, vs: 'Editor ▸ Links', description: 'Web addresses in the text are underlined; Ctrl+click opens them.' },
 ];
 export const GROUPS: FeatureGroup[] = ['Editing', 'Navigation', 'Code intelligence', 'Tool windows', 'Files', 'Git', 'Gherkin', 'View', 'Debugging', 'Help and productivity'];
 
