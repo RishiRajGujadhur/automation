@@ -74,6 +74,7 @@ const ROWS: Record<'edit' | 'view' | 'navigate' | 'code' | 'tools' | 'help', Row
       ['Toggle Quotes', 'toggle-quotes'],
       ['Join Lines with Separator…', 'join-with'],
       ['Split at Separator…', 'split-at'],
+      ['Swap Selections', 'swap-selections'],
     ] },
     ['Align Assignments', 'align-assignments', 'CmdOrCtrl+Alt+]'],
   ],

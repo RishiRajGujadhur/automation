@@ -405,6 +405,7 @@ export const FEATURES: Feature[] = [
   { id: 'join-with', label: 'Join Lines with Separator', group: 'Editing', essential: false, description: 'Edit ▸ Convert joins the selected lines with a separator you choose (", " by default).', commands: ['join-with'] },
   { id: 'split-at', label: 'Split at Separator', group: 'Editing', essential: false, description: 'Edit ▸ Convert puts each part of the line (split at "," or your separator) on its own line.', commands: ['split-at'] },
   { id: 'align-assignments', label: 'Align Assignments', group: 'Editing', essential: false, vs: 'Productivity Power Tools: Align Assignments', description: 'Ctrl+Alt+] lines up the "=" of the selected lines or the block of assignments at the caret.', commands: ['align-assignments'] },
+  { id: 'swap-selections', label: 'Swap Selections', group: 'Editing', essential: false, description: 'With two selections, Edit ▸ Convert swaps their text.', commands: ['swap-selections'] },
 ];
 export const GROUPS: FeatureGroup[] = ['Editing', 'Navigation', 'Code intelligence', 'Tool windows', 'Files', 'Git', 'Gherkin', 'View', 'Debugging', 'Help and productivity'];
 

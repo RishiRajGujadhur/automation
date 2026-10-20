@@ -139,3 +139,14 @@ export function alignAssignments(view: EditorView) {
   view.dispatch({ changes: { from, to, insert: next }, userEvent: 'input.convert' });
   return true;
 }
+
+/** Swap Selections (Rider String Manipulation): the text of two selections changes places. */
+export function swapSelections(view: EditorView) {
+  const ranges = view.state.selection.ranges;
+  if (ranges.length !== 2 || ranges.some((r) => r.empty)) return false;
+  const [a, b] = [...ranges].sort((x, y) => x.from - y.from);
+  const ta = view.state.sliceDoc(a.from, a.to), tb = view.state.sliceDoc(b.from, b.to);
+  const shift = tb.length - ta.length;
+  view.dispatch({ changes: [{ from: a.from, to: a.to, insert: tb }, { from: b.from, to: b.to, insert: ta }], selection: EditorSelection.create([EditorSelection.range(a.from, a.from + tb.length), EditorSelection.range(b.from + shift, b.to + shift)]), userEvent: 'input.convert' });
+  return true;
+}

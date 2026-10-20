@@ -1,6 +1,6 @@
 import type { RiderCommand } from './commands';
 import type { MoreHelpers } from './more';
-import { urlEncode, urlDecode, base64Encode, base64Decode, escapeString, unescapeString, htmlEncode, htmlDecode, stepNumber, insertSequence, toggleQuotes, joinWith, splitAt, alignAssignments } from '../editor/textTools2';
+import { urlEncode, urlDecode, base64Encode, base64Decode, escapeString, unescapeString, htmlEncode, htmlDecode, stepNumber, insertSequence, toggleQuotes, joinWith, splitAt, alignAssignments, swapSelections } from '../editor/textTools2';
 
 /**
  * Fourth batch of Visual Studio 2026 / JetBrains Rider commands (IDE-FEATURES-4.md, Y1–Y100). RiderHost registers
@@ -23,5 +23,6 @@ export function moreCommands2(h: MoreHelpers): RiderCommand[] {
     { id: 'join-with', label: 'Join Lines with Separator…', menu: 'Edit', submenu: 'Convert', run: h.inEditor((v) => { if (v.state.selection.main.empty) { h.notice('Select the lines to join.'); return; } const sep = window.prompt('Join the selected lines with:', ', '); if (sep !== null) joinWith(sep)(v); }) },
     { id: 'split-at', label: 'Split at Separator…', menu: 'Edit', submenu: 'Convert', run: h.inEditor((v) => { const sep = window.prompt('Split the line (or selected lines) at:', ','); if (sep) splitAt(sep)(v); }) },
     { id: 'align-assignments', label: 'Align Assignments', menu: 'Edit', shortcut: 'Ctrl Alt ]', run: h.inEditor((v) => alignAssignments(v) || h.notice('Put the caret on an assignment (or select the lines to align).')) },
+    { id: 'swap-selections', label: 'Swap Selections', menu: 'Edit', submenu: 'Convert', run: h.inEditor((v) => swapSelections(v) || h.notice('Select exactly two pieces of text (Alt+drag or Ctrl+Alt+click) to swap.')) },
   ];
 }
