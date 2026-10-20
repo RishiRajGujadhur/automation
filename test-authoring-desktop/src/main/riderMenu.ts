@@ -331,6 +331,7 @@ const ROWS: Record<'edit' | 'view' | 'navigate' | 'code' | 'tools' | 'help', Row
       ['Inline', 'inline-symbol'],
       ['Introduce Parameter', 'introduce-parameter'],
       ['Generate…', 'generate-code'],
+      ['Move Type to Matching File', 'move-type-to-file'],
     ] },
   ],
   tools: [

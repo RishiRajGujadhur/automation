@@ -12,6 +12,7 @@ Each is pushed on its own with a Settings ▸ Features switch, a native menu row
 | RC4 | Inline (Ctrl+Alt+N) | Rider | yes | ✅ 2026-10-20 |
 | RC5 | Introduce Parameter (Ctrl+Alt+P) | Rider | yes | ✅ 2026-10-20 |
 | RC6 | Generate (Ctrl+Alt+G) | Rider | yes | ✅ 2026-10-20 |
+| RC7 | Move Type to Matching File | Rider | yes | ✅ 2026-10-20 |
 
 ## Progress log
 - 2026-10-20 RC1: Ctrl+Alt+Shift+T: only the refactorings at the caret or selection.
@@ -20,3 +21,4 @@ Each is pushed on its own with a Settings ▸ Features switch, a native menu row
 - 2026-10-20 RC4: A local (or method) replaced by its value or body.
 - 2026-10-20 RC5: The expression becomes a parameter, callers updated; nested Quick Actions keep their parent title.
 - 2026-10-20 RC6: Roslyn's generators at the caret, without the dialog-only ones.
+- 2026-10-20 RC7: A type moves to its own TypeName.cs.

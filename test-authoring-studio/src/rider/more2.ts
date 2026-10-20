@@ -145,5 +145,6 @@ export function moreCommands2(h: MoreHelpers): RiderCommand[] {
     { id: 'inline-symbol', label: 'Inline', menu: 'Code', submenu: 'Refactor', shortcut: 'Ctrl Alt N', run: h.inEditor((_v, file) => cs(file, { kind: 'refactor', title: '^Inline ', label: 'Inline refactoring at the caret', auto: true })) },
     { id: 'introduce-parameter', label: 'Introduce Parameter', menu: 'Code', submenu: 'Refactor', shortcut: 'Ctrl Alt P', run: h.inEditor((_v, file) => cs(file, { kind: 'refactor', title: '^Introduce parameter for .* and update call sites directly$', label: 'Introduce Parameter for this expression', auto: true })) },
     { id: 'generate-code', label: 'Generate…', menu: 'Code', submenu: 'Refactor', shortcut: 'Ctrl Alt G', run: h.inEditor((_v, file) => cs(file, { kind: 'refactor', title: '^(Generate|Implement|Add .DebuggerDisplay|Add null check)', label: 'generators here', noDialogs: true })) },
+    { id: 'move-type-to-file', label: 'Move Type to Matching File', menu: 'Code', submenu: 'Refactor', shortcut: 'Ctrl Alt Shift M', run: h.inEditor((_v, file) => cs(file, { kind: 'refactor', title: '^Move type to ', label: 'type to move (the file has one type only, or the caret is not on a type name)', auto: true })) },
   ];
 }
