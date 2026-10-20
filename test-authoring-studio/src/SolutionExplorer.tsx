@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { keepTab, useTabs } from './files/tabs';
 import {
   ChevronDown, ChevronRight, Folder, FolderOpen, FileCode2, FileText, FileCog, Braces, Plus, Search, X, Copy, ChevronsDownUp, ChevronsUpDown,
-  Eye, Package, Boxes, Link2, LocateFixed, PencilLine, Files, Layers, SquareStack, Scissors, ClipboardPaste, Trash2, TextCursorInput, Focus, House, FilePlus, GitCompare, BookOpen,
+  Eye, Package, Boxes, Link2, LocateFixed, PencilLine, Files, Layers, SquareStack, Scissors, ClipboardPaste, Trash2, TextCursorInput, Focus, House, FilePlus, GitCompare, BookOpen, Crosshair,
 } from 'lucide-react';
 import { fileType } from './files/fileTypes';
 import { featureOn } from './features';
@@ -259,7 +259,10 @@ export default function SolutionExplorer({ features, revision, activeFile, query
     return () => window.removeEventListener(SELECT_IN_EXPLORER, h);
   }, []);
   // Opening a file reveals it (like Visual Studio's "Track Active Item").
-  useEffect(() => { if (activeFile) setCollapsed((prev) => { const next = new Set(prev); parentFolders(normalizeFeaturePath(activeFile)).forEach((p) => next.delete(p)); return next; }); }, [activeFile]);
+  // Track Active Item can be turned off (Visual Studio's option; Rider's 'Always Select Opened File').
+  const [track, setTrack] = useState(() => { try { return localStorage.getItem('tas:explorerTrack') !== 'false'; } catch { return true; } });
+  useEffect(() => { try { localStorage.setItem('tas:explorerTrack', String(track)); } catch { /* storage blocked */ } }, [track]);
+  useEffect(() => { if (activeFile && (track || !featureOn('explorer-track'))) setCollapsed((prev) => { const next = new Set(prev); parentFolders(normalizeFeaturePath(activeFile)).forEach((p) => next.delete(p)); return next; }); }, [activeFile]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const open = (file: string) => {
     const feature = featureByPath.get(file);
@@ -428,6 +431,7 @@ export default function SolutionExplorer({ features, revision, activeFile, query
         <span>EXPLORER</span>
         <div className="se-tools">
           {tool('Sync with Active Document', LocateFixed, sync)}
+          {featureOn('explorer-track') && tool(track ? 'Track Active Item: on' : 'Track Active Item: off', Crosshair, () => setTrack(!track), track)}
           {tool(pendingOnly ? 'Show all changes filter off' : 'Pending changes filter', PencilLine, () => setPendingOnly(!pendingOnly), pendingOnly)}
           {featureOn('explorer-open-filter') && tool(openOnly ? 'Open files filter off' : 'Open files filter', BookOpen, () => setOpenOnly(!openOnly), openOnly)}
           {tool('Collapse all folders', ChevronsDownUp, collapseAll)}
