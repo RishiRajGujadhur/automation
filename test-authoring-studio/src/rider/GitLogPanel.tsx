@@ -4,6 +4,7 @@ import CodeMirror from '@uiw/react-codemirror';
 import { StreamLanguage } from '@codemirror/language';
 import { diff as diffMode } from '@codemirror/legacy-modes/mode/diff';
 import { api } from '../api';
+import { matchCommit } from './gitFilter';
 import { createTwoFilesPatch } from 'diff';
 import { readFile } from '../files/provider';
 import { copyText } from '../ui';
@@ -42,12 +43,12 @@ export default function GitLogPanel({ onOpen, onClose, onNotice }: { onOpen: (fi
   useEffect(() => { setCommit(undefined); setShownFile(undefined); if (selected) api<Commit>(`/git/commit?hash=${selected}`).then(setCommit, (e) => setError((e as Error).message)); }, [selected]);
   const shown = useMemo(() => {
     const q = query.trim().toLowerCase();
-    return (rows ?? []).filter((r) => !q || (r.hash && `${r.hash} ${r.subject} ${r.author} ${r.refs}`.toLowerCase().includes(q)));
+    return (rows ?? []).filter((r) => !q || (featureOn('git-log-filters') ? matchCommit(r, q) : !!r.hash && `${r.hash} ${r.subject} ${r.author} ${r.refs}`.toLowerCase().includes(q)));
   }, [rows, query]);
   return (
     <section className="debug-panel git-log-panel" aria-label="Git Log">
       <div className="debug-toolbar" role="toolbar" aria-label="Git Log">
-        <input className="shelf-name" aria-label="Filter commits" placeholder="Filter: text, hash, author, branch" value={query} onChange={(e) => setQuery(e.target.value)} />
+        <input className="shelf-name" aria-label="Filter commits" placeholder={featureOn('git-log-filters') ? 'Filter: words, author:…, branch:…, hash:…, -exclude' : 'Filter: text, hash, author, branch'} value={query} onChange={(e) => setQuery(e.target.value)} />
         <button className="icon-button" aria-label="Refresh log" title="Refresh" onClick={() => void load()}><RefreshCw size={14} /></button>
         <span className="debug-spacer" />
         <button className="icon-button" aria-label="Close Git Log" title="Close" onClick={onClose}><X size={14} /></button>
