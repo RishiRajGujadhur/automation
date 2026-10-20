@@ -34,6 +34,7 @@ export default function TestExplorer({ revision, onOpen, onDebug, onNotice }: { 
   const [playlists, setPlaylists] = useLocalState<Record<string, string[]>>('testPlaylists', {});
   const [playlist, setPlaylist] = useLocalState('testPlaylist', '');
   const [groupByPref, setGroupBy] = useLocalState<GroupBy>('testGroupBy', 'project');
+  const [failedOnly, setFailedOnly] = useState(false);
   const groupBy: GroupBy = featureOn('test-group-by') ? groupByPref : 'project';
   const [naming, setNaming] = useState<string[] | null>(null);
   const addTo = (name: string, ids: string[]) => setPlaylists({ ...playlists, [name]: [...new Set([...(playlists[name] ?? []), ...ids])] });
@@ -56,10 +57,12 @@ export default function TestExplorer({ revision, onOpen, onDebug, onNotice }: { 
   const visible = useMemo(() => {
     const q = query.trim().toLowerCase();
     const inList = playlist && playlists[playlist] ? new Set(playlists[playlist]) : null;
-    const pool = inList ? tests.filter((t) => inList.has(t.id)) : tests;
+    // Failed tests only (Visual Studio's Test Explorer filter button).
+    const all = inList ? tests.filter((t) => inList.has(t.id)) : tests;
+    const pool = failedOnly && featureOn('test-failed-only') ? all.filter((t) => outcomeOf(t, run) === 'failed') : all;
     if (!q) return pool;
     return featureOn('test-search-filters') ? pool.filter((t) => matchTest(t, q, outcomeOf(t, run), featureOn('test-tag-filter') ? tagsOf(t) : [])) : pool.filter((t) => `${t.project} ${t.className} ${t.name} ${t.feature ?? ''}`.toLowerCase().includes(q));
-  }, [tests, query, playlist, playlists, run, tagsOf]);
+  }, [tests, query, playlist, playlists, run, tagsOf, failedOnly]);
   const groups = useMemo(() => groupTests(visible, groupBy, (t) => outcomeOf(t, run), (t) => { const rs = resultsOf(t, run.results); return rs.length ? rs.reduce((n, r) => n + r.durationMs, 0) : undefined; }, tagsOf), [visible, groupBy, run, tagsOf]);
 
   const outcome = (t: DiscoveredTest) => outcomeOf(t, run);
@@ -152,6 +155,7 @@ export default function TestExplorer({ revision, onOpen, onDebug, onNotice }: { 
           <button className="icon-button" aria-label="Analyze Code Coverage for All Tests" title="Analyze Code Coverage for All Tests" disabled={running || !tests.length} onClick={() => void runTests('all', configuration, true).catch((e) => onNotice((e as Error).message))}><ShieldCheck size={14} /></button>
           <button className="icon-button" aria-label="Run Failed Tests" title="Run Failed Tests" disabled={running || !failed.length} onClick={() => void start(failed)}><RotateCcw size={14} /></button>
           {moreRuns.length > 0 && <Dropdown label="More run options" align="end" trigger={<button className="icon-button" aria-label="More run options" title="More run options" disabled={running}><ChevronDown size={14} /></button>} entries={moreRuns} />}
+          {featureOn('test-failed-only') && <button className={`icon-button ${failedOnly ? 'pressed' : ''}`} aria-label="Show only failed tests" aria-pressed={failedOnly} title="Failed tests only" onClick={() => setFailedOnly(!failedOnly)}><CircleX size={14} /></button>}
           {featureOn('test-collapse-all') && <button className="icon-button" aria-label={allCollapsed ? 'Expand All' : 'Collapse All'} title={allCollapsed ? 'Expand All' : 'Collapse All'} disabled={!groups.length} onClick={() => setCollapsed(allCollapsed ? new Set() : new Set(groupKeys(groups)))}>{allCollapsed ? <ChevronsUpDown size={14} /> : <ChevronsDownUp size={14} />}</button>}
           {running ? <button className="icon-button" aria-label="Cancel test run" title="Cancel" onClick={() => void cancelTests()}><Square size={13} /></button>
             : <button className="icon-button" aria-label="Refresh tests" title="Refresh (rediscover)" onClick={refresh}><RefreshCw size={14} className={loading ? 'spin' : ''} /></button>}
