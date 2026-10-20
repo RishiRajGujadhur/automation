@@ -166,3 +166,22 @@ test('V5 Cursor blinking and smooth caret animation', async ({ page }) => {
   await expect(view(page)).toHaveClass(/cm-vsc-typing/);
   await expect(view(page)).not.toHaveClass(/cm-vsc-typing/);
 });
+
+test('V6 Cursor surrounding lines', async ({ page }) => {
+  await open(page, 'Steps/AuthSteps.cs', { 'editor.cursorSurroundingLines': 5 });
+  await setDoc(page, longText(200));
+  await caretLine(page, 1);
+  const scroller = view(page).locator('.cm-scroller');
+  const lineH = await view(page).locator('.cm-line').first().evaluate((e) => e.getBoundingClientRect().height);
+  const visible = Math.floor((await scroller.evaluate((e) => e.clientHeight)) / lineH);
+  // Arrow down to the last visible line: the editor scrolls so that 5 lines stay below the caret.
+  for (let i = 1; i < visible - 2; i++) await page.keyboard.press('ArrowDown');
+  const top = await scroller.evaluate((e) => e.scrollTop);
+  expect(top).toBeGreaterThan(lineH * 2);
+  // Without the setting, the same moves do not scroll.
+  await setSettings(page, {});
+  await setDoc(page, longText(200));
+  await caretLine(page, 1);
+  for (let i = 1; i < visible - 2; i++) await page.keyboard.press('ArrowDown');
+  expect(await view(page).locator('.cm-scroller').evaluate((e) => e.scrollTop)).toBeLessThan(lineH);
+});

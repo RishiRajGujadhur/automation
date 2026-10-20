@@ -13,6 +13,7 @@ switch. Web and desktop share the implementation.
 | V3 | Minimap section headers | editor.minimap.showRegionSectionHeaders, showMarkSectionHeaders, markSectionHeaderRegex, sectionHeaderFontSize, sectionHeaderLetterSpacing | ✅ 2026-10-20 |
 | V4 | Cursor style and width | editor.cursorStyle, editor.cursorWidth | ✅ 2026-10-20 |
 | V5 | Cursor blinking and smooth caret animation | editor.cursorBlinking, editor.cursorSmoothCaretAnimation | ✅ 2026-10-20 |
+| V6 | Cursor surrounding lines | editor.cursorSurroundingLines, editor.cursorSurroundingLinesStyle | ✅ 2026-10-20 |
 
 ## Progress log
 - 2026-10-20 V1: Schema-driven VS Code settings with sub-categories, modified marker, reset, @modified and settings.json copy/import; editor.lineNumbers on / off / relative / interval; Ctrl+, opens Preferences in the web app.
@@ -20,3 +21,4 @@ switch. Web and desktop share the implementation.
 - 2026-10-20 V3: // MARK: comments (C#, Gherkin and XML comments) and named #region lines labelled in the minimap, a line above for MARK: -; the regex is configurable (label / separator groups).
 - 2026-10-20 V4: line, block, underline, line-thin, block-outline, underline-thin in the caret's theme colour; a line caret 1–10 px wide.
 - 2026-10-20 V5: blink, smooth, phase, expand or solid; the caret glides between positions (always, or only for explicit moves, not typing).
+- 2026-10-20 V6: Keeps n lines visible above and below the caret when it moves by keyboard (or, with all, also by mouse).

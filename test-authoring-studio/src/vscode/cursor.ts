@@ -75,3 +75,22 @@ settingsExtension(() => {
     s === 'off' ? [] : [EditorView.editorAttributes.of({ class: `cm-vsc-smooth-caret-${s}` }), glide, s === 'explicit' ? typing : []],
   ];
 });
+
+/* V6 Cursor surrounding lines: keep n lines above and below the caret visible. */
+export const surrounding = defineSetting<number>({ key: 'editor.cursorSurroundingLines', category: C, title: 'Cursor Surrounding Lines', type: 'number', default: 0, min: 0, max: 50, description: 'Controls the minimal number of visible leading lines (minimum 0) and trailing lines (minimum 1) surrounding the cursor. Known as \'scrollOff\' or \'scrollOffset\' in some other editors.' });
+export const surroundingStyle = defineSetting<'default' | 'all'>({
+  key: 'editor.cursorSurroundingLinesStyle', category: C, title: 'Cursor Surrounding Lines Style', type: 'enum', default: 'default', description: 'Controls when cursorSurroundingLines should be enforced.',
+  options: [{ value: 'default', description: 'cursorSurroundingLines is enforced only when triggered via the keyboard or API.' }, { value: 'all', description: 'cursorSurroundingLines is enforced always.' }],
+});
+settingsExtension(() => {
+  const n = surrounding();
+  if (!n) return [];
+  const margins = EditorView.scrollMargins.of((view) => { const px = n * view.defaultLineHeight; return { top: px, bottom: px }; });
+  if (surroundingStyle() !== 'all') return margins;
+  // "all": a click near the top or bottom edge scrolls too.
+  return [margins, EditorView.updateListener.of((u) => {
+    if (!u.transactions.some((t) => t.isUserEvent('select.pointer'))) return;
+    const head = u.state.selection.main.head;
+    queueMicrotask(() => { try { u.view.dispatch({ effects: EditorView.scrollIntoView(head, { y: 'nearest' }) }); } catch { /* destroyed */ } });
+  })];
+});
