@@ -310,6 +310,7 @@ export function riderKeys(file = ''): Extension {
     ['KeyP', false, 'introduce-parameter', () => runRider('introduce-parameter', 'key')],
     ['KeyG', false, 'generate-code', () => runRider('generate-code', 'key')],
     ['KeyM', true, 'move-type-to-file', () => runRider('move-type-to-file', 'key')],
+    ['KeyB', false, 'secondary-sidebar', () => runRider('secondary-sidebar', 'key')],
     ['KeyZ', false, 'rollback-lines', (v) => { if (!rollbackLines(v)) runRider('rollback-lines', 'key'); return true; }],
   ];
   const ctrlAlt = EditorView.domEventHandlers({

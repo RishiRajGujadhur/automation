@@ -529,3 +529,17 @@ test('391 Custom activity bar positioning; 392 Custom panel positioning', async 
   await expect(page.getByText('Repository indexed')).toBeVisible();
   await expect(bar).toHaveCount(0);
 });
+
+test('393 Secondary sidebar', async ({ page }) => {
+  await open(page, CS);
+  await page.getByLabel(`Source of ${CS}`).click();
+  await page.keyboard.press('Control+Alt+b');
+  const side = page.getByRole('complementary', { name: 'Secondary Side Bar' });
+  await expect(side).toBeVisible();
+  await expect(side.getByRole('region', { name: 'Structure' })).toBeVisible();
+  expect((await side.boundingBox())!.x).toBeGreaterThan((await page.getByLabel(`Source of ${CS}`).boundingBox())!.x);
+  await side.getByLabel('Secondary Side Bar view').selectOption('problems');
+  await expect(side.getByRole('region', { name: 'Problems' })).toBeVisible();
+  await menuItem(page, 'View', /^Secondary Side Bar/);
+  await expect(side).toHaveCount(0);
+});

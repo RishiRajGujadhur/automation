@@ -322,13 +322,13 @@ Legend: `[x]` done · `[ ]` to do.
 - [x] 390. Centered editor layout
 - [x] 391. Custom activity bar positioning — workbench.activityBar.location: left (default), right, hidden (2026-10-21)
 - [x] 392. Custom panel positioning — workbench.panel.defaultLocation: bottom, left, right; the panel's move button cycles them (2026-10-21)
-- [ ] 393. Secondary sidebar
+- [x] 393. Secondary sidebar — View ▸ Secondary Side Bar (Ctrl+Alt+B): a chosen tool window on the right (2026-10-21)
 - [x] 394. Hide or reveal individual tool windows
 - [x] 395. Save custom window layouts
 - [x] 396. Restore editor layout — reopen files where you left them
 - [x] 397. Maximize editor group — View ▸ Maximize Editor Group (Ctrl+K Ctrl+M) (2026-10-21)
 - [ ] 398. Editor group locking
-- [ ] 399. Independent editor group scrolling
+- [x] 399. Independent editor group scrolling — the split editor and the tab group scroll on their own (existing)
 - [ ] 400. Synchronized scrolling between diff panes
 
 ## Progress log
@@ -379,3 +379,4 @@ Legend: `[x]` done · `[ ]` to do.
 - 2026-10-21 154: A three-way merge editor for conflicted files: both sides read-only over the editable result; Complete Merge refuses while conflict markers remain.
 - 2026-10-21 391: The activity bar can sit on the right edge of the window or be hidden (Workbench, Appearance).
 - 2026-10-21 392: The panel (Build, Debug, Output…) docks below, left or right of the editors; the place is a setting.
+- 2026-10-21 393: A second side bar on the right of the editors shows Structure, Problems, Git Log, Terminal or another tool window; the choice is remembered.

@@ -1154,6 +1154,9 @@ export default function App() {
   // Bottom panel (Build / Debug windows): docked below the editors or on the right (Move Panel).
   // Its place is the workbench.panel.defaultLocation setting (bottom, left, right); the move button cycles it.
   const dockSide = panelLocation();
+  // Secondary Side Bar (VS Code, Ctrl+Alt+B): a tool window on the right of the editors, beside the panel.
+  const [secondary, setSecondary] = useLocalState<RiderTool | null>('secondarySideBar', null);
+  useEffect(() => { const h = () => setSecondary((s) => (s ? null : 'structure')); window.addEventListener('tas:secondary-sidebar', h); return () => window.removeEventListener('tas:secondary-sidebar', h); }, []); // eslint-disable-line react-hooks/exhaustive-deps
   const setDockSide = (side: 'bottom' | 'left' | 'right') => setSetting('workbench.panel.defaultLocation', side);
   const inEditor = tab === 'Features' && (view === 'code' || view === 'editor');
   const dock = inEditor && dockShows ? (
@@ -2269,6 +2272,14 @@ export default function App() {
             </section>
           )}
         </main>
+        {secondary && featureOn('secondary-sidebar') && (
+          <aside className="secondary-sidebar" aria-label="Secondary Side Bar">
+            <div className="secondary-head">
+              <select aria-label="Secondary Side Bar view" value={secondary} onChange={(e) => setSecondary(e.target.value as RiderTool)}>{Object.entries(RIDER_TOOLS).map(([k, l]) => <option key={k} value={k}>{l}</option>)}</select>
+            </div>
+            <RiderToolWindow tool={secondary} onOpen={(file, line, column) => navigateTo({ file, line, column })} onNotice={setNotice} onClose={() => setSecondary(null)} />
+          </aside>
+        )}
       </div>
       <nav className="bottom-nav" aria-label="Main (mobile)">
         {navTabs.map((t) => (

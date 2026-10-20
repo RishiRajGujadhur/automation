@@ -120,6 +120,7 @@ const ROWS: Record<'edit' | 'view' | 'navigate' | 'code' | 'tools' | 'help', Row
     ['Split Editor Right', 'split-right'],
     ['Split Editor Down', 'split-down'],
     ['Maximize Editor Group', 'maximize-group'],
+    ['Secondary Side Bar', 'secondary-sidebar'],
     ['Window Layouts…', 'window-layouts'],
     ['Reset Window Layout', 'reset-layout'],
     ['Reopen Closed Tab', 'reopen-tab', 'CmdOrCtrl+Shift+T'],

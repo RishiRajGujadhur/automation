@@ -3926,3 +3926,16 @@ html[data-rider-mode='vszen'] {
   > .debug-panel { flex: 1; height: auto; min-height: 0; border-top: 0; }
 }
 html[data-activity-bar='right'] .app-body > .activity-bar { order: 99; border-left: 1px solid var(--border); border-right: 0; }
+
+/* Secondary Side Bar (RIDER-VSCODE-FEATURES.md 393). */
+.secondary-sidebar {
+  display: flex;
+  flex: none;
+  flex-direction: column;
+  width: min(340px, 32vw);
+  min-height: 0;
+  border-left: 1px solid var(--border);
+  background: var(--surface-2);
+  .secondary-head { display: flex; padding: 4px 6px; border-bottom: 1px solid var(--border); select { flex: 1; height: 24px; } }
+  > .debug-panel { flex: 1; height: auto; min-height: 0; border-top: 0; }
+}

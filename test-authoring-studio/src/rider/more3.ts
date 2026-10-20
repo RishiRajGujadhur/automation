@@ -23,6 +23,7 @@ export function moreCommands3(h: MoreHelpers): RiderCommand[] {
     { id: 'split-right', label: 'Split Editor Right', menu: 'View', group: true, run: () => splitEditor('right') },
     { id: 'split-down', label: 'Split Editor Down', menu: 'View', run: () => splitEditor('down') },
     { id: 'maximize-group', label: 'Maximize Editor Group', menu: 'View', shortcut: 'Ctrl K, Ctrl M', run: () => toggleMaximizeGroup() },
+    { id: 'secondary-sidebar', label: 'Secondary Side Bar', menu: 'View', shortcut: 'Ctrl Alt B', run: () => window.dispatchEvent(new Event('tas:secondary-sidebar')) },
     { id: 'next-todo', label: 'Next TODO', menu: 'Navigate', group: true, run: h.inEditor((v) => gotoTodo(tokens(), 1)(v) || h.notice(`No ${tokens().join(' / ')} comments in this file.`)) },
     { id: 'previous-todo', label: 'Previous TODO', menu: 'Navigate', run: h.inEditor((v) => gotoTodo(tokens(), -1)(v) || h.notice(`No ${tokens().join(' / ')} comments in this file.`)) },
     { id: 'previous-conflict', label: 'Previous Merge Conflict', menu: 'Navigate', run: h.inEditor((v) => prevConflict(v) || h.notice('This file has no merge conflicts.')) },
