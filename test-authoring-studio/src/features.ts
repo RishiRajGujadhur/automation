@@ -306,6 +306,7 @@ export const FEATURES: Feature[] = [
   { id: 'drag-path', label: 'Drag files into the editor', group: 'Files', essential: true, description: 'Dragging a file from the Explorer into an editor inserts its path.' },
   { id: 'caret-restore', label: 'Reopen files where you left them', group: 'Editing', essential: true, vs: 'Restore editor view state', description: 'Each file remembers its caret, also after a reload.' },
   { id: 'gherkin-indent', label: 'Gherkin smart indent', group: 'Gherkin', essential: true, description: 'Enter after Scenario:, Examples: or a step ending in ":" indents one level more.' },
+  { id: 'table-enter', label: 'Enter adds a table row', group: 'Gherkin', essential: true, description: 'Enter at the end of a table row adds an empty aligned row below.' },
 ];
 export const GROUPS: FeatureGroup[] = ['Editing', 'Navigation', 'Code intelligence', 'Tool windows', 'Files', 'Git', 'Gherkin', 'View', 'Debugging', 'Help and productivity'];
 

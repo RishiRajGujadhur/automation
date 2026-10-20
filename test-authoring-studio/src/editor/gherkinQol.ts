@@ -18,5 +18,17 @@ export const gherkinIndent = indentService.of((ctx, pos) => {
   if (/^(Given|When|Then|And|But)\b.*:$/.test(t)) return ind + ctx.unit;
   return ind;
 });
+/** Enter at the end of a table row adds an empty, aligned row (Shift+Enter: a plain new line). */
+export const tableEnter = Prec.high(keymap.of([{
+  key: 'Enter',
+  run: (view) => {
+    if (!featureOn('table-enter')) return false;
+    const s = view.state.selection.main;
+    if (!s.empty || view.state.selection.ranges.length > 1) return false;
+    const line = view.state.doc.lineAt(s.head);
+    if (!/^\s*\|.*\|\s*$/.test(line.text) || s.head < line.from + line.text.trimEnd().length) return false;
+    return tableInsertRow(view);
+  },
+}]));
 // gherkin qol
-export const gherkinQol: Extension[] = [gherkinIndent, ];
+export const gherkinQol: Extension[] = [tableEnter, gherkinIndent, ];
