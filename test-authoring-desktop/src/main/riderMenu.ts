@@ -58,6 +58,11 @@ const ROWS: Record<'edit' | 'view' | 'navigate' | 'code' | 'tools' | 'help', Row
     ['Remove Blank Lines', 'remove-blank-lines'],
     ['Sort Lines Descending', 'sort-lines-desc'],
     ['Copy Problems in File', 'copy-problems'],
+    null,
+    { submenu: 'Convert', rows: [
+      ['URL Encode', 'url-encode'],
+      ['URL Decode', 'url-decode'],
+    ] },
   ],
   view: [
     null,

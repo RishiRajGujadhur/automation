@@ -395,6 +395,7 @@ export const FEATURES: Feature[] = [
   { id: 'test-summary-notice', label: 'Test run result message', group: 'Tool windows', essential: true, description: 'When a test run ends a message says how many passed and failed, and how long it took.' },
   { id: 'status-tests', label: 'Test results in the status bar', group: 'Tool windows', essential: true, description: 'After a test run the status bar shows passed / failed counts; a click opens Test Explorer.' },
   // ── Fourth batch (IDE-FEATURES-4.md) ──
+  { id: 'url-encode', label: 'URL Encode / Decode', group: 'Editing', essential: false, description: 'Edit ▸ Convert percent-encodes the selection (or the line) and decodes it back.', commands: ['url-encode', 'url-decode'] },
 ];
 export const GROUPS: FeatureGroup[] = ['Editing', 'Navigation', 'Code intelligence', 'Tool windows', 'Files', 'Git', 'Gherkin', 'View', 'Debugging', 'Help and productivity'];
 

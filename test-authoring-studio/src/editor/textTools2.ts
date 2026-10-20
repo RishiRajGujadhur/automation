@@ -31,3 +31,7 @@ export function mapSelections(fn: (text: string) => string | null, empty: 'word'
   };
 }
 export { mapLines };
+
+/** URL Encode / Decode (Rider String Manipulation): percent-encoding of the selection. */
+export const urlEncode = mapSelections((t) => encodeURIComponent(t), 'line');
+export const urlDecode = mapSelections((t) => { try { return decodeURIComponent(t.replace(/\+/g, ' ')); } catch { return null; } }, 'line');

@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { EditorSelection, EditorState, type TransactionSpec } from '@codemirror/state';
 import type { EditorView } from '@codemirror/view';
-import { mapSelections } from '../src/editor/textTools2';
+import { mapSelections, urlEncode, urlDecode } from '../src/editor/textTools2';
 
 /** Runs an editor command on `doc` with the selection between « and » (or a caret at |). */
 function run(doc: string, cmd: (v: EditorView) => boolean) {
@@ -17,5 +17,9 @@ function run(doc: string, cmd: (v: EditorView) => boolean) {
 describe('text tools, fourth batch (IDE-FEATURES-4 Y1…)', () => {
   it('maps the word at the caret', () => {
     expect(run('a wo|rd b', mapSelections((t) => t.toUpperCase()))).toBe('a WORD b');
+  });
+  it('Y1 URL Encode / Decode', () => {
+    expect(run('«a b&c=d/é»', urlEncode)).toBe('a%20b%26c%3Dd%2F%C3%A9');
+    expect(run('«a%20b+c%26»', urlDecode)).toBe('a b c&');
   });
 });
