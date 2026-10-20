@@ -61,6 +61,13 @@ let clipboard: { mode: 'copy' | 'cut'; path: string } | null = null;
 const HIDDEN_LAYERS = new Set(['Output', 'Other']);
 const icon = (file: string) => (file.endsWith('.feature') ? FileText : file.endsWith('.xml') ? Braces : file.endsWith('.csproj') || file.endsWith('.json') || file.endsWith('.config') ? FileCog : FileCode2);
 
+/** The search terms marked in a name (QOL-50). */
+function markQuery(name: string, query: string) {
+  const t = query.trim().toLowerCase().split(/\s+/).find((w) => w && name.toLowerCase().includes(w));
+  if (!t) return name;
+  const at = name.toLowerCase().indexOf(t);
+  return <>{name.slice(0, at)}<mark className="list-match">{name.slice(at, at + t.length)}</mark>{name.slice(at + t.length)}</>;
+}
 /** Folder tree of a project's files, shown relative to the project folder (`prefix`), as in Visual Studio. */
 function buildTree(files: { file: string; layer: string }[], prefix = ''): Node[] {
   const roots: Node[] = [];
@@ -349,7 +356,7 @@ export default function SolutionExplorer({ features, revision, activeFile, query
               onAuxClick={(e) => { if (e.button === 1 && featureOn('explorer-middle-click')) { e.preventDefault(); open(path); setTimeout(() => keepTab(path)); } }}
             >
               <Icon size={14} aria-hidden="true" style={{ color: extra?.linked ? undefined : fileType(path).color }} />
-              <span>{name}</span>
+              <span>{featureOn('explorer-search-mark') ? markQuery(name, query) : name}</span>
               {extra?.note && <small>{extra.note}</small>}
             </button>}
             {unsaved && <span className="se-dirty" role="img" title="Unsaved changes" aria-label={`${name} has unsaved changes`}>●</span>}

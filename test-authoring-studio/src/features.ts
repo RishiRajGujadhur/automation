@@ -339,6 +339,7 @@ export const FEATURES: Feature[] = [
   { id: 'recent-files-kept', label: 'Recent Files kept after a reload', group: 'Navigation', essential: true, description: 'Recent Files (Ctrl+E) still lists your files after a reload.' },
   { id: 'unsaved-count', label: 'Unsaved files in the status bar', group: 'Files', essential: true, description: 'The status bar counts unsaved files; a click saves them all.' },
   { id: 'autosave-status', label: 'Auto Save in the status bar', group: 'Files', essential: true, description: 'Shows the auto-save mode; a click switches Off / After a delay / On focus change.' },
+  { id: 'explorer-search-mark', label: 'Explorer search: matches marked', group: 'Files', essential: true, description: 'Searching the Explorer marks the matching part of each file name.' },
 ];
 export const GROUPS: FeatureGroup[] = ['Editing', 'Navigation', 'Code intelligence', 'Tool windows', 'Files', 'Git', 'Gherkin', 'View', 'Debugging', 'Help and productivity'];
 
