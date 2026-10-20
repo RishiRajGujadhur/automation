@@ -27,6 +27,9 @@ switch. Web and desktop share the implementation.
 | V17 | Brackets: match and auto closing | editor.matchBrackets, editor.autoClosingBrackets, editor.autoClosingQuotes | ✅ 2026-10-20 |
 | V18 | Editor tabs (Workbench ▸ Editor Management) | workbench.editor.showTabs, tabActionLocation, highlightModifiedTabs, tabSizing, tabSizingFixedMaxWidth | ✅ 2026-10-21 |
 
+V19–V20 (Screencast and Zen Mode) moved to [RIDER-VSCODE-FEATURES.md](RIDER-VSCODE-FEATURES.md), which now tracks all
+remaining work.
+
 ## Progress log
 - 2026-10-20 V1: Schema-driven VS Code settings with sub-categories, modified marker, reset, @modified and settings.json copy/import; editor.lineNumbers on / off / relative / interval; Ctrl+, opens Preferences in the web app.
 - 2026-10-20 V2: A canvas minimap beside the code and Gherkin editors: click to jump, drag the slider, left or right, scale 1–3, column limit, characters or blocks, proportional / fill / fit, autohide on mouse over or scroll.

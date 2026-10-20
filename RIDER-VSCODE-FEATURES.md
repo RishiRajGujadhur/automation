@@ -1,0 +1,335 @@
+# Rider and VS Code features (1–400)
+
+The list of features asked for on 2026-10-21, numbered as given (gaps in the numbering are the list's own). Features
+that already existed are ticked with where they are; the rest are built one at a time, each pushed when done and
+ticked here with its date. Refactorings marked "Quick Actions" are Roslyn's own, offered by the language server
+(Ctrl+. / Alt+Enter); they were checked with a live probe of the server.
+
+Legend: `[x]` done · `[ ]` to do.
+
+## Settings (from the screenshots)
+
+- [x] S1. VS Code–style settings with ids, modified bar, reset, `@modified`, settings.json — VSCODE-20.md V1
+- [ ] S2. Settings categories as a collapsible tree (Text Editor ▸ Minimap, Workbench ▸ …), as in VS Code
+
+## Debugging
+
+- [x] 1. Conditional breakpoints — breakpoint Conditions (expression, "when changed")
+- [x] 2. Hit-count breakpoints — breakpoint hit count conditions; hit counts in the Breakpoints window
+- [x] 3. Logpoints — tracepoints with `{expr}` and `$FUNCTION`, `$CALLER`, `$TID`
+- [x] 4. Exception breakpoints — Exception Settings, break on specific exception types
+- [x] 5. Function breakpoints — Debug ▸ New Function Breakpoint
+- [ ] 6. Data breakpoints
+- [x] 7. Inline variable inspection — inline values while debugging
+- [x] 8. Expression evaluation — Evaluate Expression / Immediate
+- [x] 9. Watch expressions — Watch window, Add Watch
+- [ ] 10. Set next statement
+- [x] 11. Run to cursor
+- [x] 12. Force run to cursor — DB (DEBUG-20.md)
+- [ ] 13. Smart step into
+- [ ] 14. Step filters
+- [ ] 15. Async call stack navigation
+- [x] 16. Parallel thread debugging — Threads window (switch thread, frames per thread)
+- [ ] 17. Multi-process debugging
+- [ ] 18. Remote debugging
+- [ ] 19. Attach to running process
+- [x] 20. Debugger visualizers — Text / JSON / XML and IEnumerable (table)
+- [ ] 21. Debugger display attributes
+- [ ] 22. Custom variable formatting
+- [x] 23. Debugger expression pinning — pinned DataTips
+- [ ] 24. Breakpoint groups
+- [x] 25. Dependent breakpoints
+- [x] 26. Temporary breakpoints
+- [ ] 27. Breakpoint conditions based on object instances
+- [ ] 28. Edit and Continue
+- [ ] 29. Hot Reload
+- [ ] 30. Compound debug configurations
+
+## Code Navigation & Exploration
+
+- [x] 31. Call hierarchy — Ctrl+Alt+H
+- [x] 32. Type hierarchy — Ctrl+H
+- [ ] 33. Method hierarchy
+- [x] 34. Find usages — Shift+F12, Find Step Usages
+- [x] 35. Find derived types — Type Hierarchy (derived tree), inheritance gutter
+- [x] 36. Find implementations — Ctrl+F12
+- [x] 37. Go to declaration — F12
+- [x] 38. Go to implementation — Ctrl+F12
+- [x] 39. Go to base symbol — Go To Base
+- [x] 40. Navigate to symbol — Go to All / symbols
+- [x] 41. Navigate to file — Go to All / files
+- [x] 42. Navigate to recent files — Ctrl+E
+- [x] 43. Navigate to recently edited locations — Recent Locations, Go to Last Edit Location
+- [x] 44. Navigate to related files — Go to Related Files, Go to Test / Test Subject
+- [x] 45. File structure popup — Ctrl+Alt+F12
+- [x] 46. Breadcrumb navigation — breadcrumbs / navigation bar
+- [ ] 47. Semantic code search
+- [x] 48. Scoped search — Find in Folder, Search Only in Open Editors, Explorer: Scope to This
+- [x] 49. Structural search — Search with Pattern
+- [x] 50. Search Everywhere — Shift twice
+- [x] 51. Bookmarks with mnemonics — numbered bookmarks (Ctrl+Shift+digit)
+- [ ] 52. Named bookmark lists
+- [x] 53. Navigation history — Back / Forward
+- [x] 54. CodeLens references
+- [x] 55. Code Vision annotations — authors above scenarios, step usages
+- [x] 56. Peek definition — Alt+F12
+- [ ] 57. Peek references
+- [x] 58. Hierarchical symbol navigation — Structure window, breadcrumbs
+- [ ] 59. Decompiled source navigation
+- [ ] 60. External source navigation
+
+## Refactoring & Code Transformation
+
+- [ ] 61. Change method signature
+- [x] 62. Extract method — Ctrl+Alt+M
+- [x] 63. Extract interface
+- [ ] 64. Extract superclass
+- [x] 65. Extract local variable — Ctrl+Alt+V
+- [x] 66. Extract constant — Quick Actions: Introduce constant
+- [ ] 67. Extract field
+- [ ] 68. Extract property
+- [x] 69. Extract parameter — Ctrl+Alt+P
+- [x] 70. Inline method — Ctrl+Alt+N
+- [x] 71. Inline variable — Ctrl+Alt+N
+- [ ] 72. Inline field
+- [x] 73. Move type — Move Type to Matching File
+- [ ] 74. Move members
+- [ ] 75. Pull members up
+- [ ] 76. Push members down
+- [x] 77. Safe symbol rename — F2 (Roslyn Renamer, across files)
+- [x] 78. Change namespace — Sync Namespace with Folder
+- [x] 79. Convert method to property — Quick Actions: Replace 'GetX' with property
+- [x] 80. Convert property to method — Quick Actions: Replace 'X' with methods
+- [x] 81. Encapsulate field — Quick Actions
+- [ ] 82. Introduce factory method
+- [ ] 83. Replace constructor with factory
+- [x] 84. Convert loops to LINQ — Quick Actions: Convert to LINQ
+- [ ] 85. Convert LINQ to loops
+- [x] 86. Convert anonymous types to named types — Quick Actions: Convert to class / record
+- [ ] 87. Convert anonymous functions to methods
+- [ ] 88. Convert methods to local functions
+- [x] 89. Convert local functions to methods — Quick Actions: Convert to method
+- [x] 90. Convert class to record — Quick Actions: Convert to positional record
+- [ ] 91. Convert record to class
+- [ ] 92. Convert switch statements to expressions
+- [x] 93. Convert if statements to switch — Quick Actions
+- [x] 94. Invert conditional — Quick Actions: Invert if
+- [x] 95. Merge nested conditionals — Quick Actions
+- [x] 96. Split conditional expressions — Quick Actions: Split into nested 'if'
+- [x] 97. Replace magic values with constants — Quick Actions: Introduce constant for all occurrences
+- [ ] 98. Reorder method parameters
+- [ ] 99. Remove unused parameters
+- [x] 100. Batch code cleanup — Code Cleanup in Solution
+
+## Code Analysis & Quality
+
+- [x] 101. Solution-wide code inspections — Problems (Alt+Shift+6)
+- [x] 102. Custom inspection severity levels — Configure Severity
+- [x] 103. Nullability analysis — compiler nullable warnings in the editor and Problems
+- [ ] 104. Control-flow analysis
+- [ ] 105. Data-flow analysis
+- [x] 106. Unreachable code detection — compiler CS0162 in the editor and Problems
+- [ ] 107. Dead code detection
+- [ ] 108. Unused symbol detection
+- [ ] 109. Redundant assignment detection
+- [ ] 110. Redundant type declaration detection
+- [ ] 111. Code style enforcement
+- [x] 112. EditorConfig integration — EditorConfig designer, Gherkin formatting from .editorconfig
+- [ ] 113. Roslyn analyzer integration
+- [ ] 114. Custom analyzer configuration
+- [x] 115. Suppression of individual inspections — Error List: Suppress in Project File
+- [ ] 116. Inspection exclusion scopes
+- [ ] 117. Quick-fix previews
+- [ ] 118. Bulk quick-fix application
+- [ ] 119. Duplicate code detection
+- [ ] 120. Structural Search and Replace templates
+- [ ] 121. Dependency cycle detection
+- [ ] 122. Layer dependency rules
+- [ ] 123. Namespace consistency inspections
+- [ ] 124. API compatibility inspections
+- [ ] 125. Public API change tracking
+
+## Testing
+
+- [x] 126. Test discovery — NUnit / xUnit / MSTest and scenarios
+- [x] 127. Test Explorer
+- [x] 128. Parameterized test execution — test cases and Scenario Outline rows
+- [x] 129. Test case filtering — search filters, `tag:`, failed only
+- [x] 130. Test category grouping — Group By (category / tag)
+- [x] 131. Test session management — playlists
+- [x] 132. Continuous testing — failed tests on save
+- [x] 133. Run failed tests
+- [x] 134. Rerun affected tests — Run Impacted Tests
+- [x] 135. Debug individual tests
+- [x] 136. Test result navigation — failure details, go to the failing line
+- [x] 137. Test execution history — Test history
+- [x] 138. Test output capture — test details: output, message, stack trace
+- [x] 139. Test fixture navigation — Go To Hooks, Go to Test / Test Subject
+- [x] 140. Test framework integration — NUnit, xUnit, MSTest, Reqnroll / SpecFlow
+- [x] 141. Test coverage highlighting
+- [ ] 142. Branch coverage visualization
+- [x] 143. Test coverage gutters
+
+## Git & Version Control
+
+- [ ] 146. Interactive rebase
+- [ ] 147. Commit squashing
+- [x] 148. Commit cherry-picking — Git Log: Cherry-Pick
+- [x] 149. Partial staging — Stage Selected Lines
+- [x] 150. Git blame annotations — inline blame
+- [x] 151. Git history graph — Git Log
+- [x] 152. File history inspection — Show History for File
+- [x] 153. Line history inspection — Show History for Selection
+- [ ] 154. Three-way merge editor
+- [x] 155. Conflict resolution tools — merge conflict actions (current / incoming / both)
+- [ ] 156. Git worktree management
+- [x] 157. Git stash management — Shelf (stash)
+- [x] 158. Shelve changes — Shelf
+- [ ] 159. Changelist management
+- [x] 160. Local History
+- [x] 161. Compare branches — Compare with Branch
+- [ ] 162. Compare commits
+- [x] 163. Revert individual hunks — Rollback Lines, change gutter
+- [ ] 164. Git bisect integration
+- [ ] 165. Commit message templates
+
+## Editor Productivity & Customization
+
+- [x] 166. Multiple carets
+- [x] 167. Column selection mode
+- [x] 168. Expand selection
+- [x] 169. Shrink selection
+- [x] 170. Surround with templates
+- [x] 171. Live Templates
+- [x] 172. Postfix completion templates
+- [x] 173. Custom code snippets — Save as Live Template
+- [ ] 174. Snippet placeholder transformations
+- [ ] 175. Linked editing
+- [x] 176. Code folding regions — `#region` folding
+- [ ] 177. Custom folding patterns
+- [x] 178. Sticky scroll
+- [ ] 179. Semantic syntax highlighting
+- [x] 180. Inlay hints
+- [x] 181. Parameter name hints
+- [x] 182. Type hints
+- [x] 183. Custom file templates — New File from Template
+- [x] 184. Custom keymaps — keyboard shortcut editor
+- [x] 185. Context-aware intentions — Quick Actions (Alt+Enter / Ctrl+.)
+
+## Advanced Editor Features
+
+- [x] 201. Regex-based find and replace
+- [x] 202. Multi-file regex replacement — Search: Replace with regex
+- [ ] 203. Search result editor
+- [ ] 204. Search editor result persistence
+- [x] 205. Search exclusion patterns — files to include / exclude
+- [ ] 206. Case-preserving replacement
+- [ ] 207. Unicode character highlighting
+- [x] 208. Invisible character rendering — editor.renderWhitespace (VSCODE-20.md V9)
+- [x] 209. Indentation guides
+- [x] 210. Bracket pair colorization
+- [ ] 211. Bracket pair guides
+- [x] 212. Automatic import organization — Organize Usings
+- [x] 213. Automatic import removal — remove unused usings
+- [ ] 214. Import alias generation
+- [x] 215. Namespace import optimization — Organize Usings, Code Cleanup
+- [ ] 216. Code formatting on save
+- [ ] 217. Code actions on save
+- [ ] 218. Format modified lines only
+- [x] 219. Language-specific formatting rules — .editorconfig
+- [ ] 220. Custom language injection
+
+## Advanced Project & Solution Management
+
+- [ ] 241. Solution filter support
+- [x] 242. Solution configuration switching — Build configuration (Debug / Release)
+- [ ] 243. Project configuration switching
+- [ ] 244. Conditional compilation symbol management
+- [x] 245. Project reference management — Project Properties: Project References
+- [x] 246. NuGet package management
+- [ ] 247. NuGet package source configuration
+- [ ] 248. Central package version management
+- [ ] 249. MSBuild target inspection
+- [x] 250. MSBuild property evaluation — Project Properties: effective values
+- [ ] 251. Custom MSBuild task execution
+- [ ] 252. Project template creation
+- [ ] 253. Solution template creation
+- [ ] 254. Shared project support
+- [ ] 255. Linked file management
+- [ ] 256. Generated source inspection
+- [ ] 257. Source generator output navigation
+- [ ] 258. Source generator debugging
+- [ ] 259. Conditional compilation branch highlighting
+- [x] 260. Target framework switching — Upgrade Target Framework
+
+## Advanced Navigation & Search
+
+- [x] 321. Navigate to matching brace
+- [x] 322. Navigate to next highlighted error
+- [x] 323. Navigate to previous highlighted error
+- [ ] 324. Navigate between TODO comments
+- [x] 325. Custom TODO patterns
+- [ ] 326. TODO comment filtering
+- [x] 327. Navigate to next method
+- [x] 328. Navigate to previous method
+- [x] 329. Navigate between changed lines
+- [ ] 330. Navigate between merge conflicts
+- [x] 331. Navigate to next occurrence — Find Next Selected
+- [x] 332. Navigate to previous occurrence — Find Previous Selected
+- [x] 333. Navigate to next code inspection — Next Problem in File
+- [ ] 334. Navigate to next compiler warning
+- [ ] 335. Navigate to next test failure
+- [ ] 336. Search within selected text
+- [x] 337. Search within open editors
+- [ ] 338. Search within ignored files
+- [x] 339. Search using glob patterns
+- [ ] 340. Search with multiline regular expressions
+
+## Advanced C# Development
+
+- [x] 341. Generate XML documentation stubs — `///`
+- [ ] 342. Inherit XML documentation from base members
+- [x] 343. Generate `ToString()` implementations
+- [ ] 344. Generate comparison members
+- [ ] 345. Generate `IEquatable<T>` implementations
+- [x] 346. Generate `IDisposable` implementation patterns — Quick Actions: Implement interface with Dispose pattern
+- [ ] 347. Generate `IAsyncDisposable` implementation patterns
+- [x] 348. Generate null argument guards — Add Null Checks for Parameters
+- [x] 349. Generate constructor parameter assignments — Generate Constructor
+- [ ] 350. Convert fields to auto-properties
+- [x] 351. Convert auto-properties to full properties — Quick Actions
+- [x] 352. Convert properties to expression-bodied members — Convert to Expression Body
+- [x] 353. Convert expression-bodied members to block bodies — Convert to Block Body
+- [x] 354. Convert string concatenation to interpolation — Quick Actions
+- [ ] 355. Convert interpolation to composite formatting
+- [x] 356. Convert anonymous objects to tuples — Quick Actions: Convert to tuple
+- [ ] 357. Convert tuples to named types
+- [x] 358. Convert foreach loops to indexed loops — Quick Actions: Convert to 'for'
+- [x] 359. Convert indexed loops to foreach — Quick Actions: Convert to 'foreach'
+- [ ] 360. Generate switch cases for enum members
+
+## Advanced IDE Windows & Layouts
+
+- [x] 381. Editor tab pinning
+- [x] 382. Editor tab preview mode
+- [ ] 383. Editor tab grouping
+- [ ] 384. Split editor horizontally
+- [x] 385. Split editor vertically — Split Right / Open to the Side
+- [ ] 386. Move editors between groups
+- [ ] 387. Open files in a floating editor window
+- [ ] 388. Zen Mode
+- [x] 389. Distraction Free Mode
+- [x] 390. Centered editor layout
+- [ ] 391. Custom activity bar positioning
+- [ ] 392. Custom panel positioning
+- [ ] 393. Secondary sidebar
+- [x] 394. Hide or reveal individual tool windows
+- [x] 395. Save custom window layouts
+- [x] 396. Restore editor layout — reopen files where you left them
+- [ ] 397. Maximize editor group
+- [ ] 398. Editor group locking
+- [ ] 399. Independent editor group scrolling
+- [ ] 400. Synchronized scrolling between diff panes
+
+## Progress log
+- 2026-10-21 Created: existing features ticked.
