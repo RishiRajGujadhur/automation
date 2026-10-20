@@ -98,6 +98,12 @@ export default function DebugPanel({ onOpen, onNotice, onClose, editingRequest =
     }, () => {});
     return () => { live = false; };
   }, [frameKey, pins.map((p) => `${p.file}:${p.line}:${p.expr}`).join('|')]); // eslint-disable-line react-hooks/exhaustive-deps
+  // Debug Output tools (Visual Studio's Output window): find (matching lines), Copy All, Clear All, word wrap.
+  const [outFind, setOutFind] = useState('');
+  const [outCleared, setOutCleared] = useState(0);
+  const [outWrap, setOutWrap] = useLocalState('debugOutputWrap', false);
+  const outBody = outCleared <= state.output.length ? state.output.slice(outCleared) : state.output;
+  const outShown = outFind.trim() ? outBody.split('\n').filter((l) => l.toLowerCase().includes(outFind.trim().toLowerCase())).join('\n') : outBody;
   // Threads window.
   const [threads, setThreads] = useState<{ id: number; name: string }[]>([]);
   useEffect(() => { if (!featureOn('threads-window') || state.status !== 'paused' || tab !== 'threads') { setThreads([]); return; } void api<{ id: number; name: string }[]>('/debug/threads').then(setThreads, () => setThreads([])); }, [state.version, tab]); // eslint-disable-line react-hooks/exhaustive-deps
@@ -382,7 +388,8 @@ export default function DebugPanel({ onOpen, onNotice, onClose, editingRequest =
           ) : <p className="subtle debug-empty">Threads appear when the debugger is paused.</p>}
         </Tabs.Content>}
         <Tabs.Content value="output" className="debug-body">
-          <pre className="debug-output" aria-label="Debug output">{state.output || 'No output yet.'}</pre>
+          {featureOn('debug-output-tools') && <div className="output-tools"><label className="error-search output-find"><input aria-label="Filter output lines" placeholder="Find in output (matching lines)" value={outFind} onChange={(e) => setOutFind(e.target.value)} onKeyDown={(e) => { if (e.key === 'Escape' && outFind) { e.stopPropagation(); setOutFind(''); } }} /></label><button className="link-button" disabled={!outShown} onClick={() => void copyText(outShown).then((ok) => onNotice(ok ? 'Copied the debug output.' : 'Clipboard unavailable.'))}>Copy All</button><button className="link-button" disabled={!outShown} onClick={() => setOutCleared(state.output.length)}>Clear All</button><label className="build-on-save"><input type="checkbox" aria-label="Word wrap" checked={outWrap} onChange={(e) => setOutWrap(e.target.checked)} /> Wrap</label></div>}
+          <pre className={`debug-output ${outWrap ? 'wrap' : ''}`} aria-label="Debug output">{(featureOn('debug-output-tools') ? outShown : state.output) || 'No output yet.'}</pre>
         </Tabs.Content>
       </Tabs.Root>
     </section>

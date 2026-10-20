@@ -3792,3 +3792,4 @@ html[data-features-off~='inlay-hints'] .cm-inlay {
 .cm-pinned-tips { margin-left: 1.5em; display: inline-flex; gap: 6px; }
 .cm-pinned-tip { padding: 0 4px 0 6px; border: 1px solid var(--accent, #9270dd); border-radius: 4px; font-size: 0.88em; background: color-mix(in srgb, var(--accent, #9270dd) 10%, var(--panel, #fff)); }
 .cm-pinned-close { margin-left: 4px; border: 0; background: none; color: inherit; cursor: pointer; padding: 0 2px; }
+.debug-output.wrap { white-space: pre-wrap; word-break: break-word; }
