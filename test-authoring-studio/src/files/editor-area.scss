@@ -3724,3 +3724,5 @@ html[data-features-off~='inlay-hints'] .cm-inlay {
 .cm-unused-step { opacity: 0.55; }
 
 .cm-same-binding { background: color-mix(in srgb, var(--accent, #9270dd) 18%, transparent); border-radius: 2px; }
+
+.cm-param-hint { margin-right: 3px; padding: 0 4px; border-radius: 3px; font-size: 0.82em; color: var(--muted, #888); background: color-mix(in srgb, var(--muted, #888) 14%, transparent); }

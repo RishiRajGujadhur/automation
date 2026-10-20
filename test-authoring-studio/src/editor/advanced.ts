@@ -258,3 +258,26 @@ const sameBindingField = StateField.define<DecorationSet>({
   provide: (f) => EditorView.decorations.from(f),
 });
 registerAdvanced((_file, kind) => (kind === 'gherkin' ? sameBindingField : []));
+
+/* Z14 Parameter name hints in feature files (Rider shows step parameter names): "userName:" before each argument of a
+   bound step. */
+class ParamHint extends WidgetType {
+  constructor(readonly name: string) { super(); }
+  eq(o: ParamHint) { return o.name === this.name; }
+  toDOM() { const el = document.createElement('span'); el.className = 'cm-param-hint'; el.textContent = `${this.name}:`; return el; }
+}
+function paramHints(state: EditorState) {
+  if (!featureOn('step-param-hints')) return Decoration.none;
+  const all = state.field(stepBindings, false) ?? [];
+  const ranges = all.flatMap((b) => b.params.filter((p) => p.name && p.to > p.from).map((p) => {
+    const quoted = state.sliceDoc(p.from - 1, p.from) === '"' ? p.from - 1 : p.from;
+    return Decoration.widget({ widget: new ParamHint(p.name!), side: -1 }).range(quoted);
+  }));
+  return Decoration.set(ranges, true);
+}
+const paramHintField = StateField.define<DecorationSet>({
+  create: (s) => paramHints(s),
+  update: (v, tr) => (tr.effects.some((e) => e.is(setStepBindings)) ? paramHints(tr.state) : tr.docChanged ? v.map(tr.changes) : v),
+  provide: (f) => EditorView.decorations.from(f),
+});
+registerAdvanced((_file, kind) => (kind === 'gherkin' ? paramHintField : []));

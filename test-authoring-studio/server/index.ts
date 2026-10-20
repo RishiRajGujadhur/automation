@@ -136,7 +136,7 @@ app.post('/api/generator/plan',async(req,res)=>{
 app.post('/api/steps/match',async(req,res)=>{
  const {steps}=z.object({steps:z.array(z.object({keyword:z.enum(['Given','When','Then']),text:z.string().max(2000),tags:z.array(z.string().max(200)).max(50).optional(),feature:z.string().max(500).optional(),scenario:z.string().max(500).optional()})).max(300)}).parse(req.body);
  const i=await ensure();
- res.json(steps.map(s=>{const r=resolveStep(i.stepDefinitions,s);const b=r.bindings[0];return {status:r.status,params:r.params,binding:b?{pattern:b.pattern,file:b.file,line:b.line}:null};}));
+ res.json(steps.map(s=>{const r=resolveStep(i.stepDefinitions,s);const b=r.bindings[0];return {status:r.status,params:r.params,names:b?.parameters?.map(p=>p.name),binding:b?{pattern:b.pattern,file:b.file,line:b.line}:null};}));
 });
 app.get('/api/dictionary/tree',async(_req,res)=>{
  const i=await ensure();const tree=new Map<string,{page:string;section:string;fields:Set<string>}>();
