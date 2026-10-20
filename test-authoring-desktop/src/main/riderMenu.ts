@@ -252,6 +252,7 @@ const ROWS: Record<'edit' | 'view' | 'navigate' | 'code' | 'tools' | 'help', Row
       ['Table: Insert Row Above', 'table-row-above'],
       ['Add Scenario Outline', 'add-outline'],
       ['Table: Column Statistics', 'table-column-stats'],
+      ['Table: Copy Column', 'table-copy-column'],
     ] },
     ['Collapse Using Directives', 'fold-usings'],
     ['Sort JSON Keys', 'sort-json'],

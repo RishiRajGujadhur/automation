@@ -55,6 +55,7 @@ has it on by default, so the desktop app starts with it on. The others start off
 | Y44 | Warn on duplicate scenario names | Rider | yes | ✅ 2026-10-20 |
 | Y45 | Add Scenario Outline | Rider | no | ✅ 2026-10-20 |
 | Y46 | Table: Column Statistics | Rider | no | ✅ 2026-10-20 |
+| Y47 | Table: Copy Column | Rider | no | ✅ 2026-10-20 |
 
 ## Progress log
 - 2026-10-20 Y1: Percent-encodes the selection (or line) and decodes it.
@@ -103,3 +104,4 @@ has it on by default, so the desktop app starts with it on. The others start off
 - 2026-10-20 Y44: Same-named scenarios in a file get a warning.
 - 2026-10-20 Y45: A new outline with an Examples table after the caret's scenario.
 - 2026-10-20 Y46: Count, sum, average, min, max of the caret's column.
+- 2026-10-20 Y47: The caret column's values, one per line.

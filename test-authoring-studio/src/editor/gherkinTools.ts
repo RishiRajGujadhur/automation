@@ -951,3 +951,9 @@ export function tableColumnStats(state: EditorState) {
   const sum = vals.reduce((a, b) => a + b, 0);
   return { column: t.rows[0][t.col] ?? '', count: vals.length, sum, average: sum / vals.length, min: Math.min(...vals), max: Math.max(...vals) };
 }
+
+/** Table ▸ Copy Column: the values under the caret's column header, one per line. */
+export function tableColumnValues(state: EditorState) {
+  const t = tableAt(state);
+  return t ? t.rows.slice(1).map((r) => (r[t.col] ?? '').trim()).join('\n') : null;
+}
