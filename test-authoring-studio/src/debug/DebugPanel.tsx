@@ -62,6 +62,8 @@ export default function DebugPanel({ onOpen, onNotice, onClose, editingRequest =
   // Exception Settings (kept per browser, sent to the server so the next session uses them too).
   const [breakOn, setBreakOn] = useLocalState<'unhandled' | 'all' | 'never'>('breakOn', 'unhandled');
   useEffect(() => { void api('/debug/exceptions', { breakOn }).catch(() => {}); }, [breakOn]);
+  const [justMyCode, setJustMyCode] = useLocalState('justMyCode', true);
+  useEffect(() => { if (featureOn('just-my-code')) void api('/debug/options', { justMyCode }).catch(() => {}); }, [justMyCode]);
   // Autos: variables used on the current and previous line (Visual Studio's Autos window).
   const [autos, setAutos] = useState<{ name: string; value: string; type?: string; variablesReference: number }[]>([]);
   useEffect(() => {
@@ -167,6 +169,7 @@ export default function DebugPanel({ onOpen, onNotice, onClose, editingRequest =
             <option value="never">Never</option>
           </select>
         </label>
+        {featureOn('just-my-code') && <label className="debug-breakon" title="Just My Code: step and stop only in the solution's code (applies to the next session)"><input type="checkbox" aria-label="Just My Code" checked={justMyCode} onChange={(e) => setJustMyCode(e.target.checked)} /> Just My Code</label>}
         <span className="toolbar-spacer" />
         {state.target && <span className="meta debug-target" title={state.target.filter}>{state.target.label}</span>}
         <IconButton label="Close debug windows" onClick={onClose}><X size={14} /></IconButton>

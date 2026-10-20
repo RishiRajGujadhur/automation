@@ -545,6 +545,7 @@ export const FEATURES: Feature[] = [
   { id: 'force-run-to-cursor', label: 'Force Run to Cursor', group: 'Debugging', essential: true, vs: 'Debug ▸ Force Run to Cursor', description: 'Ctrl+Shift+F10 (Tools ▸ Force Run to Cursor) runs to the caret\'s line without stopping at breakpoints on the way.', commands: ['force-run-to-cursor'] },
   { id: 'step-out-to', label: 'Call Stack: Step Out to Here', group: 'Debugging', essential: true, vs: 'Call Stack ▸ Run To Cursor', description: 'The Call Stack\'s row menu steps out until the chosen frame is on top (Visual Studio\'s Run to Cursor on a frame).' },
   { id: 'function-breakpoints', label: 'Function breakpoints', group: 'Debugging', essential: true, vs: 'New ▸ Function Breakpoint', description: 'New Function Breakpoint… in the Breakpoints window stops in a method by name (Calculator.Add), wherever it is called from.' },
+  { id: 'just-my-code', label: 'Just My Code', group: 'Debugging', essential: true, vs: 'Options ▸ Debugging ▸ Enable Just My Code', description: 'A Just My Code switch in the debug toolbar: off, the debugger also steps into and stops in framework and package code (next session).' },
 ];
 export const GROUPS: FeatureGroup[] = ['Editing', 'Navigation', 'Code intelligence', 'Tool windows', 'Files', 'Git', 'Gherkin', 'View', 'Debugging', 'Help and productivity'];
 

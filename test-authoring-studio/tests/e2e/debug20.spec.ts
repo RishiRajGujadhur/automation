@@ -52,6 +52,7 @@ async function pausedAt(page: Page, request: APIRequestContext, line: number) {
   await expect.poll(async () => { const s = await debugState(request); return s.status === 'paused' ? `${s.frames.find((f: { external: boolean }) => !f.external)?.file}:${s.frames.find((f: { external: boolean }) => !f.external)?.line}` : s.status; }, { timeout: 240_000, intervals: [1000] }).toBe(`${STEPS}:${line}`);
 }
 const go = async (page: Page) => { await page.keyboard.press('F5'); };
+const menuItem = async (page: Page, menu: string, item: RegExp) => { await page.getByRole('button', { name: `${menu} menu` }).click(); await page.getByRole('menuitem', { name: item }).click(); };
 
 test('DB1–DB5 Breakpoints window: search, labels, hit counts; disable once hit; dependent breakpoints', async ({ page, request }) => {
   await openSteps(page);
@@ -89,4 +90,49 @@ test('DB1–DB5 Breakpoints window: search, labels, hit counts; disable once hit
   await expect.poll(async () => (await debugState(request)).status, { timeout: 120_000 }).toMatch(/ended|idle/);
   // A new session waits for line 27 again.
   await expect(panel(page).getByLabel(`Enable breakpoint ${STEPS}:15`)).not.toBeChecked();
+});
+
+const top = async (request: APIRequestContext) => { const s = await debugState(request); const f = s.frames.find((x: { external: boolean }) => !x.external); return { status: s.status as string, at: f ? `${f.file}:${f.line}` : '', name: f?.name as string, hits: (s.hits ?? {}) as Record<string, number> }; };
+
+test('DB6–DB10 When-changed condition, Step Out to Here, Force Run to Cursor, function breakpoint, Just My Code', async ({ page, request }) => {
+  const src = await openSteps(page);
+  // DB6: stops at Add's body only when First differs from the last hit (the first hit only records it).
+  await breakpointAt(page, request, 44);
+  const form = await settings(page, 44);
+  await form.getByLabel('Condition mode').selectOption('changed');
+  await form.getByLabel('Condition', { exact: true }).fill('First');
+  await form.getByRole('button', { name: 'Close' }).click();
+  // The whole project (three unit tests and the scenario call Add four times).
+  expect((await request.post('/api/debug/start', { data: { project: 'Calculator.csproj' } })).ok()).toBe(true);
+  await pausedAt(page, request, 44);
+  expect((await top(request)).hits[`${STEPS}:44`]).toBe(2);
+  // DB8: Step Out to the caller's frame.
+  await panel(page).getByRole('tab', { name: 'Call Stack' }).click();
+  const caller = panel(page).getByRole('list', { name: 'Call Stack' }).locator('li').nth(1);
+  const callerName = (await caller.locator('.dbg-frame-name').textContent())!;
+  await caller.locator('button').click({ button: 'right' });
+  await page.getByRole('menuitem', { name: 'Step Out to Here' }).click();
+  await expect.poll(async () => (await top(request)).name, { timeout: 60_000 }).toBe(callerName);
+  // DB7: Force Run to Cursor to line 45 skips the breakpoint on 44 on the way.
+  const hits = (await top(request)).hits[`${STEPS}:44`];
+  await page.getByRole('navigation').getByRole('button', { name: 'CalculatorSteps.cs', exact: true }).first().click();
+  await src.locator('.cm-line').nth(44).click();
+  await menuItem(page, 'Tools', /^Force Run to Cursor/);
+  await expect.poll(async () => (await top(request)).at, { timeout: 60_000 }).toBe(`${STEPS}:45`);
+  expect((await top(request)).hits[`${STEPS}:44`]).toBe(hits);
+  await request.post('/api/debug/control', { data: { action: 'stop' } });
+  await expect.poll(async () => (await debugState(request)).status, { timeout: 30_000 }).toMatch(/ended|idle/);
+  // DB9: a function breakpoint on Add, the line breakpoint removed.
+  await panel(page).getByRole('tab', { name: /^Breakpoints/ }).click();
+  await panel(page).getByRole('button', { name: 'Delete all breakpoints' }).click();
+  page.once('dialog', (d) => void d.accept('Calculator.Add'));
+  await panel(page).getByRole('button', { name: 'New Function Breakpoint…' }).click();
+  await expect(panel(page).getByRole('list', { name: 'Function breakpoints' })).toContainText('Calculator.Add()');
+  expect((await request.post('/api/debug/start', { data: { project: 'Calculator.csproj' } })).ok()).toBe(true);
+  await expect.poll(async () => { const s = await debugState(request); return s.status === 'paused' ? JSON.stringify(s.frames.slice(0, 2).map((f: { name: string; file?: string; line: number }) => `${f.name}@${f.file}:${f.line}`)) : s.status; }, { timeout: 240_000, intervals: [1000] }).toMatch(/Calculator\.Add\(\)@Steps\/CalculatorSteps\.cs:4[34]/);
+  await panel(page).getByRole('button', { name: 'Delete function breakpoint Calculator.Add' }).click();
+  // DB10
+  await panel(page).getByLabel('Just My Code').uncheck();
+  await expect.poll(async () => (await (await request.get('/api/debug/options')).json()).justMyCode).toBe(false);
+  await panel(page).getByLabel('Just My Code').check();
 });

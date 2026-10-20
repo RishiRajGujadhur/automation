@@ -70,6 +70,8 @@ export class Debugger extends EventEmitter {
   private forceRun = false;
   /** Exception Settings: break when user code leaves an exception unhandled (default), on every throw, or never. */
   breakOn: 'unhandled' | 'all' | 'never' = 'unhandled';
+  /** Just My Code (Visual Studio): step and stop only in the project's own code. */
+  justMyCode = true;
 
   private update(patch: Partial<DebugState>) {
     this.state = { ...this.state, ...patch, version: this.state.version + 1 };
@@ -165,7 +167,7 @@ export class Debugger extends EventEmitter {
     // The debugger can go before `dotnet test` reports: wait for its exit (Tests passed / failed) in that case.
     dap.on('exit', () => { if (generation === this.generation && this.active) this.detached(); });
     await dap.request('initialize', { clientID: 'tas', adapterID: 'coreclr', linesStartAt1: true, columnsStartAt1: true, pathFormat: 'path' });
-    await dap.request('attach', { processId: pid, justMyCode: true });
+    await dap.request('attach', { processId: pid, justMyCode: this.justMyCode });
     for (const file of Object.keys(this.state.breakpoints)) await this.send(file);
     await this.sendFunctions();
     await this.sendExceptions();
