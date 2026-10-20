@@ -25,6 +25,7 @@ switch. Web and desktop share the implementation.
 | V15 | Mouse wheel and smooth scrolling | editor.mouseWheelScrollSensitivity, editor.fastScrollSensitivity, editor.smoothScrolling | ✅ 2026-10-20 |
 | V16 | Folding | editor.folding, editor.showFoldingControls, editor.foldingHighlight | ✅ 2026-10-20 |
 | V17 | Brackets: match and auto closing | editor.matchBrackets, editor.autoClosingBrackets, editor.autoClosingQuotes | ✅ 2026-10-20 |
+| V18 | Editor tabs (Workbench ▸ Editor Management) | workbench.editor.showTabs, tabActionLocation, highlightModifiedTabs, tabSizing, tabSizingFixedMaxWidth | ✅ 2026-10-21 |
 
 ## Progress log
 - 2026-10-20 V1: Schema-driven VS Code settings with sub-categories, modified marker, reset, @modified and settings.json copy/import; editor.lineNumbers on / off / relative / interval; Ctrl+, opens Preferences in the web app.
@@ -44,3 +45,4 @@ switch. Web and desktop share the implementation.
 - 2026-10-20 V15: Wheel scrolling multiplied by the sensitivity, Alt+wheel by the fast sensitivity, and an animated scroll when smooth scrolling is on.
 - 2026-10-20 V16: Fold arrows shown on gutter hover (VS Code's default), always or never; folded lines tinted; folding off removes the arrows and ignores fold commands.
 - 2026-10-20 V17: The bracket pair around the caret is highlighted (always), only next to it (near) or never; brackets and quotes close themselves always, only before whitespace, or never.
+- 2026-10-21 V18: Tabs shown as many, one large tab or none; close button on the right or left; an amber top border on unsaved tabs; tabs fit, shrink or fixed width.

@@ -3799,3 +3799,18 @@ html[data-features-off~='inlay-hints'] .cm-inlay {
 .cm-inherit-gutter { width: 18px; }
 .cm-inherit { display: inline-flex; gap: 1px; }
 .cm-inherit button { border: 0; background: none; padding: 0 1px; cursor: pointer; font-size: 11px; line-height: 1; color: var(--accent, #9270dd); }
+
+/* Workbench ▸ Editor Management settings (VSCODE-20.md V18). */
+.editor-tabs[data-show-tabs='single'] .editor-tab:not(.active) { display: none; }
+.editor-tabs[data-show-tabs='single'] .editor-tab.active { flex: 1 1 auto; max-width: none; }
+.editor-tabs[data-show-tabs='none'] {
+  .tab-strip, .tab-scroll { display: none; }
+  .editor-tab-actions { margin-left: auto; }
+}
+.editor-tabs[data-tab-actions='left'] .editor-tab-close { order: -1; }
+.editor-tabs.highlight-modified .editor-tab.unsaved { box-shadow: inset 0 2px 0 #d4a72c; }
+.editor-tabs[data-tab-sizing='shrink'] .editor-tab { flex: 0 1 auto; min-width: 80px; overflow: hidden; }
+.editor-tabs[data-tab-sizing='fixed'] .editor-tab { flex: 0 1 var(--tab-fixed-width); width: var(--tab-fixed-width); min-width: 38px; overflow: hidden; }
+.editor-tabs[data-tab-sizing='shrink'], .editor-tabs[data-tab-sizing='fixed'] {
+  .editor-tab-label { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+}

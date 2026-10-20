@@ -7,6 +7,8 @@ import { ChevronLeft, ChevronRight, ChevronDown, X, Copy, XCircle, Pin, PinOff }
 import { RowMenu, copyText } from '../ui';
 import { Dropdown } from '../radix';
 import { UNSAVED_EVENT, unsavedFiles } from '../editor/autosave';
+import { tabs as tabSettings } from '../vscode/workbenchTabs';
+import { useSettings } from '../vscode/settings';
 import { SELECT_IN_EXPLORER } from '../SolutionExplorer';
 import { useTabs, activateTab, closeOthers, closeToRight, closeToLeft, unpinAll, sortTabs, closeOfType, closeAll, closeSaved, moveTabTo, setPinned, keepTab, type EditorTab } from './tabs';
 import { fileType } from './fileTypes';
@@ -31,6 +33,8 @@ export default function EditorTabs({ onClose, onSplit, children }: { onClose: (f
   // Visual Studio's 'Show tabs in multiple rows': no scrolling strip, every tab visible.
   const vo = useViewOptions();
   const multiRow = !!vo.multiRowTabs && featureOn('multi-row-tabs');
+  // Workbench ▸ Editor Management settings.
+  useSettings();
   // Show pinned tabs in a separate row (Visual Studio): a row break after the last pinned tab.
   const pinnedRow = !!vo.pinnedRow && featureOn('pinned-row');
   const { tabs, active } = useTabs();
@@ -84,7 +88,7 @@ export default function EditorTabs({ onClose, onSplit, children }: { onClose: (f
 
   return (
     <ActionsSlot.Provider value={slot}>
-      <div className={`editor-tabs ${multiRow ? 'multi-row' : ''} ${pinnedRow && lastPinned >= 0 && lastPinned < tabs.length - 1 ? 'pinned-row' : ''} ${vo.colorTabs && featureOn('color-tabs') ? 'colorized' : ''}`} onDoubleClick={(e) => { if (featureOn('tabstrip-new') && !(e.target as HTMLElement).closest('.editor-tab, button, a, input, [role="toolbar"]')) runRider('new-scratch', 'menu'); }}>
+      <div data-show-tabs={tabSettings.show()} data-tab-actions={tabSettings.actionLocation()} data-tab-sizing={tabSettings.sizing()} style={{ '--tab-fixed-width': `${tabSettings.fixedWidth()}px` } as React.CSSProperties} className={`editor-tabs ${tabSettings.highlightModified() ? 'highlight-modified' : ''} ${multiRow ? 'multi-row' : ''} ${pinnedRow && lastPinned >= 0 && lastPinned < tabs.length - 1 ? 'pinned-row' : ''} ${vo.colorTabs && featureOn('color-tabs') ? 'colorized' : ''}`} onDoubleClick={(e) => { if (featureOn('tabstrip-new') && !(e.target as HTMLElement).closest('.editor-tab, button, a, input, [role="toolbar"]')) runRider('new-scratch', 'menu'); }}>
         {overflow.left && <button className="tab-scroll" aria-label="Show previous tabs" onClick={() => reveal(-1)}><ChevronLeft size={14} /></button>}
         <div className="tab-strip" role="group" aria-label="Open editors" ref={strip} onScroll={measure} onWheel={(e) => { if (strip.current && e.deltaY) strip.current.scrollLeft += e.deltaY; }}>
           {tabs.map((t: EditorTab, i: number) => {

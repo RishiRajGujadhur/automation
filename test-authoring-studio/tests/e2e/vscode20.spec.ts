@@ -392,3 +392,31 @@ test('V17 Brackets: match always, auto closing never / before whitespace', async
   await caretLine(page, 1);
   await expect(view(page).locator('.cm-vsc-enclosing')).toHaveCount(0);
 });
+
+test('V18 Editor tabs: show tabs single / none, action location, modified highlight, sizing', async ({ page }) => {
+  await open(page, 'Steps/AuthSteps.cs', { 'workbench.editor.showTabs': 'single', 'workbench.editor.highlightModifiedTabs': true, 'workbench.editor.tabActionLocation': 'left' });
+  await page.getByRole('navigation').getByRole('button', { name: 'SearchSteps.cs', exact: true }).first().click();
+  const strip = page.getByRole('group', { name: 'Open editors' });
+  const tabs = strip.locator('.editor-tab');
+  expect(await tabs.count()).toBeGreaterThanOrEqual(2);
+  await expect(tabs.filter({ visible: true })).toHaveCount(1);
+  await expect(tabs.filter({ visible: true })).toContainText('SearchSteps.cs');
+  // The close button is on the left of the label.
+  const active = tabs.filter({ visible: true });
+  expect((await active.locator('.editor-tab-close').boundingBox())!.x).toBeLessThan((await active.locator('.editor-tab-label').boundingBox())!.x);
+  // Unsaved: an amber top border.
+  await page.locator('.cm-content[contenteditable=true]').filter({ visible: true }).first().click();
+  await page.keyboard.type('changed');
+  await expect(active).toHaveClass(/unsaved/);
+  expect(await active.evaluate((e) => getComputedStyle(e).boxShadow)).toContain('rgb(212, 167, 44)');
+  // None: no tabs, the editor stays.
+  await page.evaluate(() => localStorage.setItem('tas:settings', JSON.stringify({ 'workbench.editor.showTabs': 'none' })));
+  await page.reload();
+  await expect(page.getByText('Repository indexed')).toBeVisible();
+  await expect(page.getByRole('group', { name: 'Open editors' })).toBeHidden();
+  // Fixed: tabs 100 px wide.
+  await page.evaluate(() => localStorage.setItem('tas:settings', JSON.stringify({ 'workbench.editor.tabSizing': 'fixed', 'workbench.editor.tabSizingFixedMaxWidth': 100 })));
+  await page.reload();
+  await expect(page.getByText('Repository indexed')).toBeVisible();
+  expect(Math.round((await page.getByRole('group', { name: 'Open editors' }).locator('.editor-tab').first().boundingBox())!.width)).toBe(100);
+});
