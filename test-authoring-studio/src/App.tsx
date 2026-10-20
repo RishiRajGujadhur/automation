@@ -1164,7 +1164,7 @@ export default function App() {
             {dockOpen.map((d) => <button key={d} role="tab" aria-selected={dockShows === d} onClick={() => setDockTab(d)}>{d === 'build' ? 'Build' : d === 'debug' ? 'Debug' : d === 'todo' ? 'TODO' : d === 'output' ? 'Output' : RIDER_TOOLS[d]}</button>)}
           </div>
         )}
-        <button className="icon-button dock-move" aria-label={dockSide === 'bottom' ? 'Move panel right' : dockSide === 'right' ? 'Move panel left' : 'Move panel to the bottom'} title={dockSide === 'bottom' ? 'Move panel right' : dockSide === 'right' ? 'Move panel left' : 'Move panel to the bottom'} onClick={() => setDockSide(dockSide === 'bottom' ? 'right' : dockSide === 'right' ? 'left' : 'bottom')}>{dockSide === 'bottom' ? <PanelRight size={13} /> : <PanelBottom size={13} />}</button>
+        <button className="icon-button dock-move" aria-label={dockSide === 'bottom' ? 'Move panel right' : 'Move panel to the bottom'} title={dockSide === 'bottom' ? 'Move panel right' : 'Move panel to the bottom'} onClick={() => setDockSide(dockSide === 'bottom' ? 'right' : 'bottom')}>{dockSide === 'bottom' ? <PanelRight size={13} /> : <PanelBottom size={13} />}</button>
       </div>
       {dockShows === 'build' && <BuildPanel onOpen={(file, line, column) => editFile(file, line, column)} onNotice={setNotice} onClose={() => setBuildOpen(false)} />}
       {dockShows && dockShows in RIDER_TOOLS && <RiderToolWindow tool={dockShows as RiderTool} onOpen={(file, line, column) => navigateTo({ file, line, column })} onNotice={setNotice} onClose={() => closeRiderTool(dockShows as RiderTool)} />}
