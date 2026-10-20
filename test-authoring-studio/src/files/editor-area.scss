@@ -3680,3 +3680,14 @@ html[data-features-off~='inlay-hints'] .cm-inlay {
   font-size: 11.5px;
   margin: 2px 0;
 }
+
+.error-group {
+  font-weight: 600;
+  .error-group-name {
+    grid-column: 1 / -1;
+    small {
+      font-weight: normal;
+      opacity: 0.7;
+    }
+  }
+}

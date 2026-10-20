@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { Fragment, useEffect, useMemo, useRef, useState } from 'react';
 import * as Tabs from '@radix-ui/react-tabs';
 import { CircleX, TriangleAlert, Hammer, RotateCw, Eraser, Square, X, Loader, Search, WrapText } from 'lucide-react';
 import { IconButton } from '../radix2';
@@ -44,7 +44,10 @@ export default function BuildPanel({ onOpen, onNotice, onClose }: { onOpen: (fil
   const configs = useMemo(() => [...new Set(configurations.map((c) => c.split('|')[0].trim()).concat(['Debug', 'Release']))], [configurations]);
   const errors = b.diagnostics.filter((d) => d.severity === 'error').length;
   const warnings = b.diagnostics.length - errors;
-  const rows = sortErrors(errorRows(b.diagnostics, { errors: showErrors, warnings: showWarnings, query, scope: featureOn('error-list-scope') ? scope : 'solution', open: tabs.tabs.map((t) => t.file), current: tabs.active }), featureOn('error-list-sort') ? sort : null);
+  // Group by file (Visual Studio's Error List grouping) (QOL-50).
+  const [byFile, setByFile] = useLocalState('errorListByFile', false);
+  const grouped = byFile && featureOn('error-list-group');
+  const rows = sortErrors(errorRows(b.diagnostics, { errors: showErrors, warnings: showWarnings, query, scope: featureOn('error-list-scope') ? scope : 'solution', open: tabs.tabs.map((t) => t.file), current: tabs.active }), grouped ? { key: 'file', desc: false } : featureOn('error-list-sort') ? sort : null);
   // Output follows the build like Visual Studio's, unless scrolled up.
   useEffect(() => { const el = output.current; if (el && el.scrollHeight - el.scrollTop - el.clientHeight < 60) el.scrollTop = el.scrollHeight; }, [b.output]);
   // A failed build brings the Error List forward.
@@ -88,6 +91,7 @@ export default function BuildPanel({ onOpen, onNotice, onClose }: { onOpen: (fil
         <Tabs.Content value="errors" className="debug-body">
           <div className="error-list-tools">
             <button className={`chip ${showErrors ? 'on' : ''}`} aria-pressed={showErrors} onClick={() => setShowErrors(!showErrors)}><CircleX size={12} className="sev-error" />{errors} Error{errors === 1 ? '' : 's'}</button>
+            {featureOn('error-list-group') && <button className={`chip ${byFile ? 'on' : ''}`} aria-pressed={byFile} onClick={() => setByFile(!byFile)}>Group by file</button>}
             <button className={`chip ${showWarnings ? 'on' : ''}`} aria-pressed={showWarnings} onClick={() => setShowWarnings(!showWarnings)}><TriangleAlert size={12} className="sev-warning" />{warnings} Warning{warnings === 1 ? '' : 's'}</button>
             {featureOn('error-list-scope') && (
               <select className="build-config" aria-label="Error List scope" value={scope} onChange={(e) => setScope(e.target.value as ErrorScope)}>
@@ -102,7 +106,9 @@ export default function BuildPanel({ onOpen, onNotice, onClose }: { onOpen: (fil
             <div className="dbg-grid error-grid" role="grid" aria-label="Error List">
               <div className="dbg-row dbg-head" role="row"><span role="columnheader" />{([['code', 'Code'], ['message', 'Description'], ['project', 'Project'], ['file', 'File'], ['line', 'Line']] as const).map(([key, label]) => <span key={key} role="columnheader" aria-sort={sort?.key === key ? (sort.desc ? 'descending' : 'ascending') : undefined}>{featureOn('error-list-sort') ? <button className="link-button col-sort" onClick={() => setSort(nextSort(sort, key))}>{label}{sort?.key === key ? (sort.desc ? ' ▼' : ' ▲') : ''}</button> : label}</span>)}</div>
               {rows.map((d, i) => (
-                <div key={i} className={`dbg-row error-row ${d.file ? 'navigable' : ''}`} role="row" tabIndex={0} onDoubleClick={() => go(i)} onKeyDown={(e) => { if (e.key === 'Enter') go(i); else if (featureOn('error-list-copy') && (e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'c') { e.preventDefault(); void copyText(errorText(d)).then((ok) => onNotice(ok ? `Copied ${d.code}.` : 'Clipboard unavailable.')); } else if (featureOn('error-list-copy') && e.key === 'F1') { e.preventDefault(); window.open(errorHelpUrl(d.code), '_blank', 'noopener'); } }} title={d.file ? 'Double-click to go to the line' : undefined}>
+                <Fragment key={i}>
+                {grouped && (i === 0 || rows[i - 1].file !== d.file) && <div className="dbg-row error-group" role="row"><span role="gridcell" className="error-group-name">{d.file ?? '(no file)'} <small>{rows.filter((x) => x.file === d.file).length}</small></span></div>}
+                <div className={`dbg-row error-row ${d.file ? 'navigable' : ''}`} role="row" tabIndex={0} onDoubleClick={() => go(i)} onKeyDown={(e) => { if (e.key === 'Enter') go(i); else if (featureOn('error-list-copy') && (e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'c') { e.preventDefault(); void copyText(errorText(d)).then((ok) => onNotice(ok ? `Copied ${d.code}.` : 'Clipboard unavailable.')); } else if (featureOn('error-list-copy') && e.key === 'F1') { e.preventDefault(); window.open(errorHelpUrl(d.code), '_blank', 'noopener'); } }} title={d.file ? 'Double-click to go to the line' : undefined}>
                   <span role="gridcell">{d.severity === 'error' ? <CircleX size={13} className="sev-error" aria-label="Error" /> : <TriangleAlert size={13} className="sev-warning" aria-label="Warning" />}</span>
                   <span role="gridcell">{featureOn('error-list-copy') && d.code ? <a href={errorHelpUrl(d.code)} target="_blank" rel="noreferrer" title="Show Error Help (F1)">{d.code}</a> : d.code}</span>
                   <span role="gridcell" className="error-message" title={d.message}>{d.message}</span>
@@ -110,6 +116,7 @@ export default function BuildPanel({ onOpen, onNotice, onClose }: { onOpen: (fil
                   <span role="gridcell" title={d.file}>{d.file?.split('/').pop() ?? ''}</span>
                   <span role="gridcell">{d.line ?? ''}</span>
                 </div>
+                </Fragment>
               ))}
             </div>
           ) : <p className="subtle debug-empty">{b.status === 'idle' ? 'Build the solution (Ctrl+Shift+B) to see errors and warnings.' : running ? 'Building…' : 'No errors or warnings.'}</p>}

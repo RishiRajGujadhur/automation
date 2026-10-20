@@ -47,7 +47,7 @@ test('X102–X104 Next Error goes to the compiler error; Output Clear All and Wo
 test('QL70 / QL71 Error List grouped by file; the build result message', async ({ page, request }) => {
   const previous = (await (await request.get('/api/workspace')).json()).config;
   const root = await fs.mkdtemp(path.join(os.tmpdir(), 'studio-build-group-'));
-  await fs.cp(path.resolve(import.meta.dirname, '../../samples/Calculator'), root, { recursive: true, filter: (s) => !/[\/](bin|obj)$/.test(s) });
+  await fs.cp(path.resolve(import.meta.dirname, '../../samples/Calculator'), root, { recursive: true, filter: (s) => !/[\\/](bin|obj)$/.test(s) });
   const steps = path.join(root, 'Steps/CalculatorSteps.cs');
   await fs.writeFile(steps, (await fs.readFile(steps, 'utf8')).replace('result = calculator.Add();', 'result = calculator.Add() + missingName;'));
   try {
