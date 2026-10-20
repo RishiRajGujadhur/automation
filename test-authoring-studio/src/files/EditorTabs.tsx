@@ -33,6 +33,8 @@ export default function EditorTabs({ onClose, onSplit, children }: { onClose: (f
   const { tabs, active } = useTabs();
   const lastPinned = tabs.map((t) => !!t.pinned).lastIndexOf(true);
   const strip = useRef<HTMLDivElement>(null);
+  // The active tab is scrolled into view whenever it changes (QOL-50).
+  useEffect(() => { if (featureOn('reveal-tab')) requestAnimationFrame(() => strip.current?.querySelector<HTMLElement>('.editor-tab.active')?.scrollIntoView({ block: 'nearest', inline: 'nearest' })); }, [active]); // eslint-disable-line react-hooks/exhaustive-deps
   const [overflow, setOverflow] = useState({ left: false, right: false });
   const [slot, setSlot] = useState<HTMLElement | null>(null);
   const [dirty, setDirty] = useState<string[]>(unsavedFiles);
