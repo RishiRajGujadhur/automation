@@ -678,3 +678,7 @@ export function addBindingAttribute(text: string) {
   while (before.length && /^\s*\[.*\]\s*$/.test(before.at(-1)!)) { at -= before.pop()!.length + 1; }
   return `${text.slice(0, at)}${m[1]}[Binding]\n${text.slice(at)}`;
 }
+
+/** Unicode Escape / Unescape (Rider String Manipulation): non-ASCII characters as \uXXXX, and back. */
+export const unicodeEscape = mapSelections((t) => t.replace(/[^\x00-\x7f]/g, (c) => `\\u${c.charCodeAt(0).toString(16).toUpperCase().padStart(4, '0')}`), 'line');
+export const unicodeUnescape = mapSelections((t) => t.replace(/\\u([0-9a-fA-F]{4})/g, (_, h: string) => String.fromCharCode(parseInt(h, 16))), 'line');

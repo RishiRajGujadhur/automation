@@ -81,6 +81,8 @@ const ROWS: Record<'edit' | 'view' | 'navigate' | 'code' | 'tools' | 'help', Row
       ['Number Lines', 'number-lines'],
       ['Unix Timestamp ⇄ Date', 'timestamp'],
       ['Sort Tokens', 'sort-tokens'],
+      ['Unicode Escape', 'unicode-escape'],
+      ['Unicode Unescape', 'unicode-unescape'],
     ] },
     ['Align Assignments', 'align-assignments', 'CmdOrCtrl+Alt+]'],
     ['Count Occurrences', 'count-occurrences'],
