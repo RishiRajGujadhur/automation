@@ -2,13 +2,17 @@ import { useEffect, useRef } from 'react';
 import { useBuild } from './build/store';
 import { useTestRun } from './testing/store';
 import { featureOn } from './features';
+import { useDebug } from './debug/store';
 import { setBusyTitle } from './windowTitle';
 
 /** "Building" / "Running tests" in the window title (and taskbar), so a long run is visible from another window. */
 export default function BusyTitle() {
   const build = useBuild();
   const tests = useTestRun();
-  const text = !featureOn('busy-title') ? '' : build.status === 'running' ? (build.action === 'clean' ? '⏳ Cleaning' : '⏳ Building') : tests.status === 'running' ? '▶ Running tests' : '';
+  // Visual Studio's "(Debugging)" title while a debug session runs (QOL-50).
+  const debug = useDebug().state;
+  const debugging = featureOn('debug-title') ? (debug.status === 'paused' ? '⏸ Debugging (paused)' : ['building', 'starting', 'running'].includes(debug.status) ? '🐞 Debugging' : '') : '';
+  const text = !featureOn('busy-title') ? debugging : build.status === 'running' ? (build.action === 'clean' ? '⏳ Cleaning' : '⏳ Building') : tests.status === 'running' ? '▶ Running tests' : debugging;
   useEffect(() => { setBusyTitle(text); }, [text]);
   // A finished build says how it went (QOL-50): duration, errors and warnings.
   const was = useRef(build.status);

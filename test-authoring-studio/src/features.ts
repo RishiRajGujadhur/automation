@@ -391,6 +391,7 @@ export const FEATURES: Feature[] = [
   { id: 'tab-number-keys', label: 'Ctrl+1…9 go to a tab', group: 'Files', essential: true, description: 'Ctrl+1 to Ctrl+8 activate that editor tab; Ctrl+9 the last one.' },
   { id: 'tab-copy-full', label: 'Tab menu: Copy Full Path', group: 'Files', essential: true, description: 'The editor tab menu copies the file\'s absolute path.' },
   { id: 'output-copy', label: 'Build Output: Copy All', group: 'Tool windows', essential: true, description: 'A button copies the whole build output.' },
+  { id: 'debug-title', label: 'Debugging in the window title', group: 'Debugging', essential: true, description: 'The window title says "Debugging" (or "paused") while a debug session runs.' },
 ];
 export const GROUPS: FeatureGroup[] = ['Editing', 'Navigation', 'Code intelligence', 'Tool windows', 'Files', 'Git', 'Gherkin', 'View', 'Debugging', 'Help and productivity'];
 
