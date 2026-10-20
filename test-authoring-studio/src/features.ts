@@ -355,6 +355,7 @@ export const FEATURES: Feature[] = [
   { id: 'md-lists', label: 'Markdown: lists continue on Enter', group: 'Editing', essential: true, description: 'Enter in a Markdown list adds the next bullet or number; on an empty item it ends the list.' },
   { id: 'tag-complete', label: 'Gherkin: tag completion', group: 'Gherkin', essential: true, description: 'Typing @ on a tag line suggests the repository\'s tags with their scenario counts.' },
   { id: 'param-complete', label: 'Gherkin: <parameter> completion', group: 'Gherkin', essential: true, description: 'Typing < in an outline step suggests its Examples columns.' },
+  { id: 'line-total', label: 'Line count in the status bar tooltip', group: 'Editing', essential: true, description: 'Hovering Ln, Col shows how many lines the file has.' },
 ];
 export const GROUPS: FeatureGroup[] = ['Editing', 'Navigation', 'Code intelligence', 'Tool windows', 'Files', 'Git', 'Gherkin', 'View', 'Debugging', 'Help and productivity'];
 

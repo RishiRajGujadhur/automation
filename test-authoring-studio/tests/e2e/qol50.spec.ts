@@ -441,3 +441,58 @@ test('QL57 / QL58 Gherkin: tag and <parameter> completion', async ({ page, reque
   await page.keyboard.press('Enter');
   await expect.poll(() => doc(page)).toContain('started as <role>');
 });
+
+test('QL59 Ln, Col tooltip shows the line count', async ({ page }) => {
+  await openFeature(page);
+  await caretAt(page, 'Feature:');
+  await expect(page.getByRole('button', { name: 'Cursor position' })).toHaveAttribute('title', /· \d+ lines/);
+});
+
+test('QL60 New File with an existing name opens it', async ({ page }) => {
+  await openFeature(page);
+  await nav(page).getByRole('button', { name: 'Collapse folder Steps', exact: true }).click({ button: 'right' });
+  page.once('dialog', (d) => void d.accept('AuthSteps.cs'));
+  await page.getByRole('menuitem', { name: 'New File…' }).click();
+  await expect(page.getByText('Steps/AuthSteps.cs already exists; opened it.').first()).toBeVisible();
+  await expect(page.locator('.editor-tab-label[aria-current="true"]')).toHaveAttribute('title', 'Steps/AuthSteps.cs');
+});
+
+test('QL62 Explorer keeps its scroll position after a reload', async ({ page }) => {
+  await page.setViewportSize({ width: 1200, height: 420 });
+  await openFeature(page);
+  const tree = nav(page);
+  await tree.evaluate((el) => { el.scrollTop = 80; el.dispatchEvent(new Event('scroll')); });
+  await page.waitForTimeout(400);
+  await page.reload();
+  await expect(page.getByText('Repository indexed')).toBeVisible();
+  await expect.poll(() => tree.evaluate((el) => el.scrollTop)).toBeGreaterThan(40);
+});
+
+test('QL63 Explorer Ctrl+click opens to the side', async ({ page }) => {
+  await openFeature(page);
+  await nav(page).getByRole('button', { name: 'AuthSteps.cs', exact: true }).first().click({ modifiers: ['Control'] });
+  await expect(page.getByRole('region', { name: 'Split editor Steps/AuthSteps.cs' })).toBeVisible();
+});
+
+test('QL64 Closing a tab goes back to the tab used before', async ({ page }) => {
+  await openFeature(page);
+  await nav(page).getByRole('button', { name: 'AuthSteps.cs', exact: true }).first().dblclick();
+  await nav(page).getByRole('button', { name: 'SearchSteps.cs', exact: true }).first().dblclick();
+  await page.locator('.editor-tab-label', { hasText: 'Login.feature' }).click();
+  await page.locator('.editor-tab-label', { hasText: 'AuthSteps.cs' }).click();
+  await page.getByRole('button', { name: 'Close AuthSteps.cs' }).click();
+  await expect(page.locator('.editor-tab-label[aria-current="true"]')).toHaveText(/Login\.feature/);
+});
+
+test('QL65 / QL66 Find in Files starts with the selection; Go to All remembers its query', async ({ page }) => {
+  await openFeature(page);
+  await caretAt(page, 'dashboard');
+  await page.keyboard.press('Shift+End');
+  await page.keyboard.press('Control+Shift+F');
+  await expect(page.getByRole('region', { name: 'Search' }).getByLabel('Search in files')).toHaveValue('dashboard is displayed');
+  await page.keyboard.press('Control+P');
+  await page.keyboard.type('login');
+  await page.keyboard.press('Escape');
+  await page.keyboard.press('Control+P');
+  await expect(page.getByRole('dialog').locator('input').first()).toHaveValue('login');
+});
