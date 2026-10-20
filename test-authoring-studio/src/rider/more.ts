@@ -1,5 +1,6 @@
 import type { EditorView } from '@codemirror/view';
 import type { RiderCommand } from './commands';
+import { clearBookmarks, getBookmarks } from '../editor/bookmarks';
 import { clearRecent, recentFiles as recentList } from '../navHistory';
 import { sortJsonKeys, jsonPointerAt, xpathAt } from '../editor/docTools';
 import { foldEffect, foldedRanges } from '@codemirror/language';
@@ -167,5 +168,6 @@ export function moreCommands(h: MoreHelpers): RiderCommand[] {
     { id: 'table-column-right', label: 'Table: Move Column Right', menu: 'Code', submenu: 'Gherkin', run: h.inEditor((v) => tableMoveColumn(1)(v) || h.notice('No column to the right.')) },
     { id: 'table-select-column', label: 'Table: Select Column', menu: 'Code', submenu: 'Gherkin', run: h.inEditor((v) => tableSelectColumn(v) || h.notice('Put the caret in a table.')) },
     { id: 'clear-recent', label: 'Clear Recent Files', menu: 'Navigate', run: () => { const n = recentList().length; clearRecent(); h.notice(n ? `Cleared ${n} recent file${n === 1 ? '' : 's'}.` : 'No recent files.'); } },
+    { id: 'clear-bookmarks', label: 'Clear All Bookmarks…', menu: 'Navigate', run: () => { const n = getBookmarks().length; if (!n) { h.notice('No bookmarks.'); return; } if (!window.confirm(`Delete all ${n} bookmark${n === 1 ? '' : 's'}?`)) return; clearBookmarks(); h.notice(`Deleted ${n} bookmark${n === 1 ? '' : 's'}.`); } },
   ];
 }

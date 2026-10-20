@@ -181,6 +181,7 @@ has it on by default, so the desktop app starts with it on. The others start off
 | X171 | Table: Move Column | Rider | yes | ✅ 2026-10-20 |
 | X172 | Table: Select Column | Rider | yes | ✅ 2026-10-20 |
 | X173 | Clear Recent Files | VS 2026 / Rider | yes | ✅ 2026-10-20 |
+| X174 | Clear All Bookmarks | VS 2026 | yes | ✅ 2026-10-20 |
 
 ## Progress log
 - 2026-10-20 X1: Sort Lines: the selected lines (or the whole file) in natural, case-insensitive order, blank lines last. Third-batch plumbing: src/rider/more.ts, src/editor/textTools.ts, IDE-FEATURES.md.
@@ -356,3 +357,4 @@ has it on by default, so the desktop app starts with it on. The others start off
 - 2026-10-20 X171: Column left / right
 - 2026-10-20 X172: Carets in every cell of a column
 - 2026-10-20 X173: Empty Recent Files
+- 2026-10-20 X174: Delete every bookmark

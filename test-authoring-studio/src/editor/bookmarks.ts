@@ -20,6 +20,8 @@ export const getBookmarks = () => marks;
 export const useBookmarks = () => useSyncExternalStore((l) => { listeners.add(l); return () => listeners.delete(l); }, () => marks);
 export const removeBookmark = (b: Bookmark) => save(marks.filter((m) => !(m.file === b.file && m.line === b.line)));
 export const bookmarkByDigit = (digit: string) => marks.find((m) => m.digit === digit);
+/** Clear All Bookmarks (Visual Studio's Bookmarks window ▸ Delete All). */
+export const clearBookmarks = () => save([]);
 
 class Mark extends GutterMarker {
   constructor(readonly digit?: string) { super(); }
