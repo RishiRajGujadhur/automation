@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { findPattern, replacePattern } from '../src/search/ssr';
 import { EditorState } from '@codemirror/state';
 import { extractInterface, unitTestsFor } from '../src/editor/textTools2';
 
@@ -16,5 +17,11 @@ describe('Rider C# features (RIDER-CS-15)', () => {
     expect(r.name).toBe('CalcTests');
     expect(r.text).toContain('using Xunit;\n\nnamespace Demo.Tests;\n\npublic class CalcTests\n{\n    [Fact]\n    public void Add_Works()');
     expect(r.text.match(/\[Fact\]/g)).toHaveLength(2);
+  });
+  it('RC13 Search with Pattern', () => {
+    const src = 'if (user == null) return;\nif (a.B() == null) x();\nvar s = Equals(page.Title, page.Title);\nEquals(a, b);';
+    expect(findPattern(src, '$x$ == null').map((m) => m.text)).toEqual(['user == null', 'a.B() == null']);
+    expect(findPattern(src, 'Equals($a$, $a$)').map((m) => m.line)).toEqual([3]);
+    expect(replacePattern(src, '$x$ == null', '$x$ is null')).toEqual({ text: 'if (user is null) return;\nif (a.B() is null) x();\nvar s = Equals(page.Title, page.Title);\nEquals(a, b);', count: 2 });
   });
 });

@@ -568,6 +568,7 @@ export const FEATURES: Feature[] = [
   { id: 'exit-points', label: 'Highlight exit points', group: 'Code intelligence', essential: true, vs: 'Highlight exit points', description: 'With the caret on return or throw, every exit point of the method is highlighted (Rider\'s exit points).' },
   { id: 'configure-severity', label: 'Configure Severity', group: 'Code intelligence', essential: true, vs: 'Quick Actions ▸ Configure severity', description: 'Code ▸ Refactor ▸ Configure Severity sets the severity of the diagnostic at the caret in .editorconfig (previewed), like Rider\'s "Configure inspection severity".', commands: ['configure-severity'] },
   { id: 'nuget-for-type', label: 'Find NuGet Package for Missing Type', group: 'Code intelligence', essential: false, vs: 'Install package (Quick Action)', description: 'For a type the compiler does not know (CS0246), Code ▸ Refactor searches nuget.org and installs the package you pick into the file\'s project.', commands: ['nuget-for-type'] },
+  { id: 'search-pattern', label: 'Search with Pattern (structural)', group: 'Navigation', essential: true, vs: 'Structural Search and Replace', description: 'Navigate ▸ Search with Pattern finds C# code by a pattern with $placeholders$ ($x$ == null) across the solution and replaces it with one previewed diff per file.', commands: ['search-pattern'] },
 ];
 export const GROUPS: FeatureGroup[] = ['Editing', 'Navigation', 'Code intelligence', 'Tool windows', 'Files', 'Git', 'Gherkin', 'View', 'Debugging', 'Help and productivity'];
 

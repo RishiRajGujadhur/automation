@@ -181,6 +181,7 @@ const ROWS: Record<'edit' | 'view' | 'navigate' | 'code' | 'tools' | 'help', Row
     ['Clear All Bookmarks…', 'clear-bookmarks'],
     ['Go to Offset…', 'goto-offset'],
     ['Next Merge Conflict', 'next-conflict'],
+    ['Search with Pattern…', 'search-pattern'],
   ],
   code: [
     ['Insert Live Template…', 'live-template', 'CmdOrCtrl+J'],

@@ -42,6 +42,7 @@ import { values, render, parameterCount, replaceAttributePattern } from './stepR
 import { installed as nugetInstalled, updates as nugetUpdates, search as nugetSearch, versions as nugetVersions, install as nugetInstall, uninstall as nugetUninstall } from './nuget.js';
 import { status as gitStatus, stage as gitStage, unstage as gitUnstage, discard as gitDiscard, commit as gitCommit, headInfo, log as gitLog, branches as gitBranches, checkout as gitCheckout, createBranch as gitCreateBranch, sync as gitSync, merge as gitMerge, blame as gitBlame, clone as gitClone, shelves, shelve, unshelve, deleteShelf, lineHistory, commitDetails, graphLog, fileAt, commitAction, git, stageLines } from './git.js';
 import { readProperties, setProperties, evaluate, readEvents, setEvent, readUsings, setUsings, readReferences, setReferences, readFileItem, setFileItem, isExcluded, setExcluded } from './projectProps.js';
+import { findPattern, replacePattern } from '../src/search/ssr.js';
 import { LanguageService } from './langService.js';
 import type { Index } from '../src/types.js';
 import { readSettings, writeSettings, settingsSchema, tracesDir, spySnapshotsDir } from './settings.js';
@@ -922,6 +923,41 @@ app.post('/api/csharp/format', async (req, res) => {
   res.json(await lang.request(config.repositoryRoot, { op: 'format', ...body }, 60_000));
 });
 /** Quick Actions and Refactorings (Ctrl+.): Roslyn's code fixes for diagnostics at the cursor and refactorings for the selection. */
+/** The repository's C# files (bin / obj / tool folders skipped), at most `limit`. */
+async function repoCsFiles(limit = 3000) {
+  const out: string[] = [];
+  const skip = new Set(['bin', 'obj', 'node_modules', '.git', '.vs', '.idea', 'TestResults', 'packages']);
+  const walk = async (dir: string) => {
+    for (const e of await fs.readdir(path.join(config.repositoryRoot, dir), { withFileTypes: true }).catch(() => [])) {
+      if (out.length >= limit) return;
+      const rel = dir ? `${dir}/${e.name}` : e.name;
+      if (e.isDirectory()) { if (!skip.has(e.name) && !e.name.startsWith('.')) await walk(rel); } else if (e.name.endsWith('.cs')) out.push(rel);
+    }
+  };
+  await walk('');
+  return out;
+}
+// Search with Pattern (Rider's Structural Search and Replace): matches across the C# files; replacing gives one previewed diff per file.
+app.post('/api/csharp/pattern', async (req, res) => {
+  const { pattern, replace } = z.object({ pattern: z.string().min(1).max(500), replace: z.string().max(500).optional() }).parse(req.body);
+  const matches: { file: string; line: number; text: string }[] = [];
+  const out: unknown[] = [];
+  for (const file of await repoCsFiles()) {
+    const target = await confined(config.repositoryRoot, file, false);
+    const text = await fs.readFile(target, 'utf8').catch(() => '');
+    const found = findPattern(text, pattern);
+    if (!found.length) continue;
+    matches.push(...found.slice(0, 50).map((m) => ({ file, line: m.line, text: m.text })));
+    if (replace !== undefined) {
+      const r = replacePattern(text, pattern, replace);
+      const id = randomUUID();
+      previews.set(id, { file, source: r.text, hash: hash(text), root: config.repositoryRoot });
+      out.push({ id, file, diff: createPatch(file, text, r.text, 'repository', 'proposed'), changed: r.text !== text, changes: [`${r.count} replacement${r.count === 1 ? '' : 's'}`] });
+    }
+    if (matches.length >= 500) break;
+  }
+  res.json({ matches, previews: out });
+});
 app.post('/api/csharp/actions', async (req, res) => {
   const body = csPosition.extend({ endLine: z.number().int().min(1).optional(), endColumn: z.number().int().min(1).optional() }).parse(req.body);
   await confined(config.repositoryRoot, body.file, false);

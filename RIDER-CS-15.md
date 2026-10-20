@@ -18,6 +18,7 @@ Each is pushed on its own with a Settings ▸ Features switch, a native menu row
 | RC10 | Highlight exit points | Rider | yes | ✅ 2026-10-20 |
 | RC11 | Configure Severity | Rider | yes | ✅ 2026-10-20 |
 | RC12 | Find NuGet Package for Missing Type | Rider | no | ✅ 2026-10-20 |
+| RC13 | Search with Pattern (structural) | Rider | yes | ✅ 2026-10-20 |
 
 ## Progress log
 - 2026-10-20 RC1: Ctrl+Alt+Shift+T: only the refactorings at the caret or selection.
@@ -32,3 +33,4 @@ Each is pushed on its own with a Settings ▸ Features switch, a native menu row
 - 2026-10-20 RC10: Caret on return / throw highlights every exit of the method.
 - 2026-10-20 RC11: Severity of the diagnostic at the caret (or on its line) in .editorconfig, previewed.
 - 2026-10-20 RC12: Searches nuget.org for an unknown type and installs the chosen package.
+- 2026-10-20 RC13: $placeholder$ patterns across C# files; replace as previewed diffs.
