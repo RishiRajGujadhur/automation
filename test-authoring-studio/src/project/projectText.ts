@@ -7,3 +7,22 @@ export function addNoWarn(current: string | undefined, code: string) {
   const rest = parts.filter((p) => p !== '$(NoWarn)');
   return ['$(NoWarn)', ...rest, code].join(';');
 }
+
+/**
+ * Tidy Project File: PackageReference / ProjectReference / Using items sorted by Include inside each ItemGroup (one-line
+ * items only), empty groups removed, trailing spaces trimmed, blank-line runs collapsed, one final newline.
+ */
+export function tidyProject(xml: string) {
+  const eol = xml.includes('\r\n') ? '\r\n' : '\n';
+  let out = xml.replace(/[ \t]+(\r?\n)/g, '$1');
+  out = out.replace(/(<ItemGroup[^>]*>)([\s\S]*?)(\n[ \t]*<\/ItemGroup>)/g, (all, open: string, body: string, close: string) => {
+    const lines = body.split(/\r?\n/).slice(1);
+    const sortable = lines.length > 1 && lines.every((l) => /^\s*<(PackageReference|ProjectReference|Using)\s+Include="[^"]*"[^>]*\/>\s*$/.test(l));
+    if (!sortable) return all;
+    const key = (l: string) => /Include="([^"]*)"/.exec(l)![1].toLowerCase();
+    return `${open}${eol}${[...lines].sort((a, b) => key(a).localeCompare(key(b))).join(eol)}${close}`;
+  });
+  out = out.replace(/[ \t]*<(ItemGroup|PropertyGroup)(\s[^>]*)?>\s*<\/\1>[ \t]*\r?\n?/g, '');
+  out = out.replace(/(\r?\n){3,}/g, `${eol}${eol}`);
+  return out.replace(/\s*$/, '') + eol;
+}

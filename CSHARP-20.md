@@ -23,6 +23,7 @@ Earlier batches: [ADVANCED-20.md](ADVANCED-20.md), [IDE-FEATURES-4.md](IDE-FEATU
 | C14 | Project Properties: Debug (launch profiles) | VS 2026 | yes | ✅ 2026-10-20 |
 | C15 | Manage User Secrets | VS 2026 | yes | ✅ 2026-10-20 |
 | C16 | EditorConfig designer | VS 2026 | yes | ✅ 2026-10-20 |
+| C17 | Tidy Project File | Rider | no | ✅ 2026-10-20 |
 
 ## Progress log
 - 2026-10-20 C1: Property pages for a .csproj from the Explorer's project menu or Tools; changes previewed as a diff, then written.
@@ -41,3 +42,4 @@ Earlier batches: [ADVANCED-20.md](ADVANCED-20.md), [IDE-FEATURES-4.md](IDE-FEATU
 - 2026-10-20 C14: Launch profiles in Properties/launchSettings.json: kind, args, working dir, environment.
 - 2026-10-20 C15: secrets.json in the user profile; a UserSecretsId is added (previewed) first.
 - 2026-10-20 C16: Whitespace / C# code style options and rule severities in .editorconfig (previewed).
+- 2026-10-20 C17: Sorts references and usings, removes empty groups and stray blank lines.

@@ -384,6 +384,7 @@ const ROWS: Record<'edit' | 'view' | 'navigate' | 'code' | 'tools' | 'help', Row
     ['Project Properties…', 'project-properties'],
     ['Upgrade Target Framework…', 'upgrade-framework'],
     ['EditorConfig…', 'editorconfig-designer'],
+    ['Tidy Project File', 'tidy-project'],
   ],
   help: [
     null,

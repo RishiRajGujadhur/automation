@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { readEditorConfig, setEditorConfig } from '../src/project/editorconfig';
-import { addNoWarn } from '../src/project/projectText';
+import { addNoWarn, tidyProject } from '../src/project/projectText';
 import { configOf, readProperties, setProperty, setProperties, readEvents, setEvent, readUsings, setUsings, readReferences, setReferences, relativeProjectPath, readFileItem, setFileItem, isExcluded, setExcluded } from '../server/projectProps';
 
 const CSPROJ = `<Project Sdk="Microsoft.NET.Sdk">
@@ -100,5 +100,12 @@ describe('.editorconfig designer (CSHARP-20)', () => {
     expect(setEditorConfig(EC, '*.cs', 'csharp_prefer_braces', null)).toBe('root = true\n\n[*]\nindent_style = space\n# comment\n\n[*.cs]\n');
     expect(setEditorConfig(EC, '*.cs', 'dotnet_diagnostic.CA1707.severity', 'none')).toContain('[*.cs]\ncsharp_prefer_braces = true:warning\ndotnet_diagnostic.CA1707.severity = none\n');
     expect(setEditorConfig('', '*.feature', 'indent_size', '2')).toBe('[*.feature]\nindent_size = 2\n');
+  });
+});
+
+describe('Tidy Project File (CSHARP-20)', () => {
+  it('C17 sorts references, drops empty groups, trims', () => {
+    const messy = '<Project Sdk="Microsoft.NET.Sdk">   \n  <PropertyGroup>\n  </PropertyGroup>\n\n\n\n  <ItemGroup>\n    <PackageReference Include="NUnit" Version="4.2.2" />\n    <PackageReference Include="coverlet.collector" Version="6.0.2" />\n  </ItemGroup>\n</Project>\n\n';
+    expect(tidyProject(messy)).toBe('<Project Sdk="Microsoft.NET.Sdk">\n\n  <ItemGroup>\n    <PackageReference Include="coverlet.collector" Version="6.0.2" />\n    <PackageReference Include="NUnit" Version="4.2.2" />\n  </ItemGroup>\n</Project>\n');
   });
 });
