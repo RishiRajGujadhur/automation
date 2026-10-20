@@ -181,7 +181,11 @@ test('QL24–QL26 Test Explorer: remembers its view, shows the first failure, el
   const te = page.getByRole('region', { name: 'Test Explorer' });
   const tree = te.getByRole('navigation', { name: 'Tests' });
   await expect(tree.locator('.t-label', { hasText: /FailsOnPurpose/ })).toBeVisible({ timeout: 60_000 });
-  await te.getByRole('button', { name: 'Run All Tests' }).click();
+  // The tree refreshes after discovery: retry the click until the run starts.
+  await expect(async () => {
+    await te.getByRole('button', { name: 'Run All Tests' }).click();
+    await expect.poll(() => status(page), { timeout: 5_000 }).toBe('running');
+  }).toPass({ timeout: 60_000 });
   await expect(te.getByRole('status')).toContainText(/running \d+ s/, { timeout: 30_000 });
   await expect(te.getByRole('region', { name: 'Test details' })).toContainText('FailsOnPurpose', { timeout: 240_000 });
   // QL24: collapse a group and search; both come back after a reload.
@@ -190,3 +194,4 @@ test('QL24–QL26 Test Explorer: remembers its view, shows the first failure, el
   await page.getByRole('button', { name: 'Test Explorer' }).click();
   await expect(te.getByLabel('Search Test Explorer')).toHaveValue('Adds');
 });
+

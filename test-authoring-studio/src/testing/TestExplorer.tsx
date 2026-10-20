@@ -84,6 +84,10 @@ export default function TestExplorer({ revision, onOpen, onDebug, onNotice }: { 
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [tests, run]);
   const running = run.status === 'running';
+  // Elapsed time while tests run (QOL-50).
+  const [startedAt, setStartedAt] = useState(0);
+  const [, tick] = useState(0);
+  useEffect(() => { if (!running) return; setStartedAt(Date.now()); const t = setInterval(() => tick((n) => n + 1), 1000); return () => clearInterval(t); }, [running]);
   const start = (which: DiscoveredTest[] | 'all') => runTests(which, configuration).catch((e) => onNotice((e as Error).message));
   const selectedTests = tests.filter((t) => selected.includes(t.id));
   const failed = tests.filter((t) => outcome(t) === 'failed');
@@ -212,7 +216,7 @@ export default function TestExplorer({ revision, onOpen, onDebug, onNotice }: { 
         <span title="Failed"><CircleX size={12} className="t-fail" />{counts.failed}</span>
         <span title="Skipped"><CircleSlash size={12} className="t-skip" />{counts.skipped}</span>
         <span title="Not run"><Circle size={12} className="t-none" />{counts.none}</span>
-        <small>{tests.length} test{tests.length === 1 ? '' : 's'}{run.summary && run.status !== 'running' ? ` · last run ${ms(run.summary.durationMs)}` : ''}</small>
+        <small>{tests.length} test{tests.length === 1 ? '' : 's'}{run.summary && run.status !== 'running' ? ` · last run ${ms(run.summary.durationMs)}` : ''}{running && featureOn('test-elapsed') && startedAt ? ` · running ${Math.round((Date.now() - startedAt) / 1000)} s` : ''}</small>
       </div>
       {run.coverage && (
         <div className="t-coverage" role="note" aria-label="Code coverage">

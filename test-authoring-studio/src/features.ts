@@ -322,6 +322,7 @@ export const FEATURES: Feature[] = [
   { id: 'search-select', label: 'Search: the found text is selected', group: 'Navigation', essential: true, description: 'Opening a search result selects the match in the editor.' },
   { id: 'test-remember', label: 'Test Explorer remembers its view', group: 'Tool windows', essential: true, description: 'Collapsed groups and the search stay after a reload.' },
   { id: 'reveal-failure', label: 'Test Explorer shows the first failure', group: 'Tool windows', essential: true, description: 'After a run with failures the first failed test is selected with its details.' },
+  { id: 'test-elapsed', label: 'Test run elapsed time', group: 'Tool windows', essential: true, description: 'While tests run, the Test Explorer shows for how long.' },
 ];
 export const GROUPS: FeatureGroup[] = ['Editing', 'Navigation', 'Code intelligence', 'Tool windows', 'Files', 'Git', 'Gherkin', 'View', 'Debugging', 'Help and productivity'];
 
