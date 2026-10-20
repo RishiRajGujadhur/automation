@@ -13,6 +13,9 @@ export function git(cwd: string, args: string[], input?: string): Promise<string
   });
 }
 
+/** yyyy-MM-dd in local time (blame dates are compared with today's local date: UTC would say yesterday after midnight). */
+export const localDay = (ms: number) => { const d = new Date(ms); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`; };
+
 export type GitFile = { file: string; staged: boolean; status: 'M' | 'A' | 'D' | 'R' | 'U' | '?'; from?: string };
 export type GitStatus = { repo: boolean; branch?: string; upstream?: string; ahead: number; behind: number; files: GitFile[]; top?: string };
 
@@ -120,7 +123,7 @@ export async function blame(root: string, file: string) {
     if (l.startsWith('author ')) i.author = l.slice(7);
     else if (l.startsWith('author-time ')) i.time = Number(l.slice(12));
     else if (l.startsWith('summary ')) i.summary = l.slice(8);
-    else if (l.startsWith('\t')) lines.push({ hash: cur, author: i.author, when: new Date(i.time * 1000).toISOString().slice(0, 10), summary: i.summary });
+    else if (l.startsWith('\t')) lines.push({ hash: cur, author: i.author, when: localDay(i.time * 1000), summary: i.summary });
   }
   return lines;
 }
