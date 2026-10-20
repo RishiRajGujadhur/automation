@@ -263,3 +263,6 @@ export function toBlockScopedNamespace(text: string) {
   const body = rest.split(/\r?\n/).map((l) => (l.trim() ? `    ${l}` : '')).join(eol);
   return `${text.slice(0, m.index)}namespace ${m[2]}${eol}{${eol}${body}${eol}}${eol}`;
 }
+
+/** Remove #region Directives (Rider): every #region / #endregion line goes, the code between stays. */
+export const removeRegions = (text: string) => { const next = text.replace(/^[ \t]*#(?:end)?region\b.*(?:\r?\n|$)/gm, ''); return next === text ? null : next; };

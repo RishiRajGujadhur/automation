@@ -251,6 +251,7 @@ const ROWS: Record<'edit' | 'view' | 'navigate' | 'code' | 'tools' | 'help', Row
     { submenu: 'C#', rows: [
       ['Convert to File-Scoped Namespace', 'file-scoped-namespace'],
       ['Convert to Block-Scoped Namespace', 'block-scoped-namespace'],
+      ['Remove #region Directives', 'remove-regions'],
     ] },
   ],
   tools: [
