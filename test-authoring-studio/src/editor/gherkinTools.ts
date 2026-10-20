@@ -765,3 +765,20 @@ export const tagAllScenarios = (raw: string) => (view: EditorView) => {
   view.dispatch({ changes, userEvent: 'input' });
   return true;
 };
+
+/** Remove Tag Everywhere: a tag goes from every tag line of the file; lines left empty are deleted. */
+export function removeTagEverywhere(text: string, raw: string) {
+  const tag = tagToken(raw.trim());
+  const lines = text.split(/(?<=\n)/);
+  let changed = false;
+  const out = lines.flatMap((l) => {
+    if (!/^\s*@/.test(l) || !hasTag(l.replace(/\r?\n$/, ''), tag)) return [l];
+    changed = true;
+    const eol = /\r?\n$/.exec(l)?.[0] ?? '';
+    const body = l.slice(0, l.length - eol.length);
+    const indent = /^\s*/.exec(body)![0];
+    const rest = body.trim().split(/\s+/).filter((t) => t !== tag);
+    return rest.length ? [indent + rest.join(' ') + eol] : [];
+  });
+  return changed ? out.join('') : null;
+}

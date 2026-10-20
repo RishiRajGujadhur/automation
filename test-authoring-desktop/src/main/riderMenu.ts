@@ -241,6 +241,7 @@ const ROWS: Record<'edit' | 'view' | 'navigate' | 'code' | 'tools' | 'help', Row
       ['Table: Remove Duplicate Rows', 'table-dedupe'],
       ['Table: Copy as Markdown', 'table-copy-markdown'],
       ['Tag All Scenarios…', 'tag-all-scenarios'],
+      ['Remove Tag Everywhere…', 'remove-tag-everywhere'],
     ] },
     ['Collapse Using Directives', 'fold-usings'],
     ['Sort JSON Keys', 'sort-json'],

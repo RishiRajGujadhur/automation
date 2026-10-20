@@ -43,6 +43,7 @@ has it on by default, so the desktop app starts with it on. The others start off
 | Y32 | Table: Remove Duplicate Rows | Rider | no | ✅ 2026-10-20 |
 | Y33 | Table: Copy as Markdown | Rider | no | ✅ 2026-10-20 |
 | Y34 | Tag All Scenarios… | Rider | no | ✅ 2026-10-20 |
+| Y35 | Remove Tag Everywhere… | Rider | no | ✅ 2026-10-20 |
 
 ## Progress log
 - 2026-10-20 Y1: Percent-encodes the selection (or line) and decodes it.
@@ -79,3 +80,4 @@ has it on by default, so the desktop app starts with it on. The others start off
 - 2026-10-20 Y32: Repeated rows removed, the first kept.
 - 2026-10-20 Y33: The table at the caret copied as a Markdown table.
 - 2026-10-20 Y34: A tag added to every scenario of the file that lacks it.
+- 2026-10-20 Y35: A tag removed from every tag line; empty tag lines deleted.
