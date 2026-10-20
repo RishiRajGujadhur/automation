@@ -157,6 +157,19 @@ export function selectFrame(frameIndex: number) { set({ frameIndex }); }
 export function currentFrame() { const s = snapshot; return s.state.status === 'paused' ? s.state.frames[s.frameIndex] : undefined; }
 
 export const startDebugging = (target: { file?: string; scenario?: string; project?: string; filter?: string }) => api<DebugState>('/debug/start', target);
+/** Step Out to a frame of the call stack (Visual Studio's Run to Cursor on a frame): Step Out until it is on top. */
+export async function stepOutTo(depth: number) {
+  for (let i = 0; i < depth; i++) {
+    const before = snapshot.state.version;
+    await api('/debug/control', { action: 'stepOut' });
+    await new Promise<void>((resolve, reject) => {
+      const t = setTimeout(() => { listeners.delete(check); reject(new Error('Step Out did not stop.')); }, 60_000);
+      const check = () => { if (snapshot.state.version > before && snapshot.state.status !== 'running') { clearTimeout(t); listeners.delete(check); resolve(); } };
+      listeners.add(check);
+    });
+    if (snapshot.state.status !== 'paused') return;
+  }
+}
 export const debugControl = (action: 'continue' | 'next' | 'stepIn' | 'stepOut' | 'pause' | 'stop') => api<DebugState>('/debug/control', { action });
 export const isLive = (s: DebugStatus) => s === 'building' || s === 'starting' || s === 'running' || s === 'paused';
 

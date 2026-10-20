@@ -13,6 +13,7 @@ a Settings ▸ Features switch and tests that drive a real debugging session of 
 | DB5 | Dependent breakpoints | VS 2026 | yes | ✅ 2026-10-20 |
 | DB6 | Conditional breakpoints: when changed | VS 2026 | yes | ✅ 2026-10-20 |
 | DB7 | Force Run to Cursor | VS 2026 | yes | ✅ 2026-10-20 |
+| DB8 | Call Stack: Step Out to Here | VS 2026 | yes | ✅ 2026-10-20 |
 
 ## Progress log
 - 2026-10-20 DB1: Filters breakpoints by file, line, condition, log message or label.
@@ -22,3 +23,4 @@ a Settings ▸ Features switch and tests that drive a real debugging session of 
 - 2026-10-20 DB5: Only enabled after another breakpoint is hit; re-armed for the next session.
 - 2026-10-20 DB6: Stops only when the condition's value differs from the previous hit.
 - 2026-10-20 DB7: Ctrl+Shift+F10 runs to the caret without stopping at breakpoints.
+- 2026-10-20 DB8: Steps out until the chosen frame is on top.

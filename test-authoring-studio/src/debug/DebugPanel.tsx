@@ -5,7 +5,7 @@ import { IconButton } from '../radix2';
 import { api } from '../api';
 import { RowMenu, copyText } from '../ui';
 import { featureOn } from '../features';
-import { useDebug, debugControl, selectFrame, setWatches, getSnapshot, setBreakpoints, clearBreakpoints, startDebugging, isLive, breakpointsOf, updateBreakpoint, enableAllBreakpoints, type Variable, type DebugFrame } from './store';
+import { useDebug, debugControl, selectFrame, setWatches, getSnapshot, setBreakpoints, clearBreakpoints, startDebugging, isLive, breakpointsOf, updateBreakpoint, enableAllBreakpoints, stepOutTo, type Variable, type DebugFrame } from './store';
 import { useLocalState } from '../ui';
 import { readFile } from '../files/provider';
 
@@ -228,11 +228,13 @@ export default function DebugPanel({ onOpen, onNotice, onClose, editingRequest =
                 <li key={f.id}><span className="dbg-frame external"><span className="dbg-frame-mark" />[External Code]</span></li>
               ) : (
                 <li key={f.id}>
+                  <RowMenu label={`${f.name} frame`} items={featureOn('step-out-to') && i > 0 && f.file ? [{ label: 'Step Out to Here', onSelect: () => void stepOutTo(state.frames.slice(0, i).filter((x, k) => !x.external || k === 0).length).catch((e) => onNotice((e as Error).message)) }] : []}>
                   <button className={`dbg-frame ${i === frameIndex ? 'current' : ''} ${f.external ? 'external' : ''}`} aria-current={i === frameIndex ? 'true' : undefined} disabled={f.external && !f.file} onClick={() => { selectFrame(i); if (f.file) onOpen(f.file, f.line); }}>
                     <span className="dbg-frame-mark">{i === 0 ? '➜' : i === frameIndex ? '▸' : ''}</span>
                     <span className="dbg-frame-name">{f.name}</span>
                     {f.file && <span className="meta">{f.file}:{f.line}</span>}
                   </button>
+                  </RowMenu>
                 </li>
               )))}
             </ul>
