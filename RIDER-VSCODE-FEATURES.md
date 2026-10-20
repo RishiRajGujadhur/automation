@@ -273,7 +273,7 @@ Legend: `[x]` done · `[ ]` to do.
 - [x] 327. Navigate to next method
 - [x] 328. Navigate to previous method
 - [x] 329. Navigate between changed lines
-- [ ] 330. Navigate between merge conflicts
+- [x] 330. Navigate between merge conflicts — Navigate ▸ Next / Previous Merge Conflict (2026-10-21)
 - [x] 331. Navigate to next occurrence — Find Next Selected
 - [x] 332. Navigate to previous occurrence — Find Previous Selected
 - [x] 333. Navigate to next code inspection — Next Problem in File
@@ -350,3 +350,4 @@ Legend: `[x]` done · `[ ]` to do.
 - 2026-10-21 117: The highlighted Quick Action shows removed and added lines (and other files it touches) before it is applied.
 - 2026-10-21 118: Each fix offers Fix All in the document, the project or the solution (Roslyn's FixAllProvider over compiler and IDE analyzer diagnostics).
 - 2026-10-21 324: Next / Previous TODO goes to the TODO, FIXME, HACK, BUG (or custom) keywords in comments; TODO filtering already existed in the TODO window.
+- 2026-10-21 330: Previous Merge Conflict added next to the existing Next Merge Conflict.
