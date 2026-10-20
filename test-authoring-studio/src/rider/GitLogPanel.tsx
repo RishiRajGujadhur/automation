@@ -22,6 +22,8 @@ export default function GitLogPanel({ onOpen, onClose, onNotice }: { onOpen: (fi
   const [query, setQuery] = useState('');
   const [selected, setSelected] = useState<string>();
   const [commit, setCommit] = useState<Commit>();
+  // A file at the selected revision, or its difference from the working copy, instead of the commit's patch.
+  const [shownFile, setShownFile] = useState<{ title: string; text: string; diff: boolean }>();
   /** Runs a commit action on the server, then refreshes the log (and editors / Git views when files changed). */
   const act = async (action: string, extra: Record<string, string> = {}, done = '') => {
     if (!commit) return;
@@ -35,7 +37,7 @@ export default function GitLogPanel({ onOpen, onClose, onNotice }: { onOpen: (fi
   };
   const load = () => api<Row[]>('/git/graph').then((r) => { setRows(r); setError(''); }, (e) => setError((e as Error).message));
   useEffect(() => { void load(); }, []);
-  useEffect(() => { setCommit(undefined); if (selected) api<Commit>(`/git/commit?hash=${selected}`).then(setCommit, (e) => setError((e as Error).message)); }, [selected]);
+  useEffect(() => { setCommit(undefined); setShownFile(undefined); if (selected) api<Commit>(`/git/commit?hash=${selected}`).then(setCommit, (e) => setError((e as Error).message)); }, [selected]);
   const shown = useMemo(() => {
     const q = query.trim().toLowerCase();
     return (rows ?? []).filter((r) => !q || (r.hash && `${r.hash} ${r.subject} ${r.author} ${r.refs}`.toLowerCase().includes(q)));
@@ -78,9 +80,14 @@ export default function GitLogPanel({ onOpen, onClose, onNotice }: { onOpen: (fi
               {featureOn('git-copy-revision') && <button className="button" onClick={() => void copyText(commit.hash).then((ok) => onNotice(ok ? `Copied ${commit.hash.slice(0, 10)}.` : 'Clipboard unavailable.'))}>Copy Revision</button>}
               </div>
               <ul className="git-commit-files" aria-label="Changed files">
-                {commit.files.map((f) => <li key={f.file}><span className={`git-status s-${f.status}`}>{f.status}</span> <button className="link-button" onClick={() => onOpen(f.file)}>{f.file}</button></li>)}
+                {commit.files.map((f) => <li key={f.file}><span className={`git-status s-${f.status}`}>{f.status}</span> <button className="link-button" onClick={() => onOpen(f.file)}>{f.file}</button>{featureOn('git-view-revision') && f.status !== 'D' && <button className="link-button git-file-action" aria-label={`View ${f.file} at this revision`} onClick={() => void api<{ text: string | null }>(`/git/at?file=${encodeURIComponent(f.file)}&ref=${commit.hash}`).then((r) => setShownFile({ title: `${f.file} @ ${commit.hash.slice(0, 7)}`, text: r.text ?? '', diff: false }), (e) => onNotice((e as Error).message))}>view</button>}</li>)}
               </ul>
-              <CodeMirror value={commit.patch} theme={theme} editable={false} basicSetup={SETUP} extensions={DIFF} height="220px" aria-label="Patch" />
+              {shownFile ? (
+                <>
+                  <div className="git-shown-file"><strong>{shownFile.title}</strong><button className="link-button" onClick={() => setShownFile(undefined)}>Back to the patch</button></div>
+                  <CodeMirror value={shownFile.text} theme={theme} editable={false} basicSetup={SETUP} extensions={shownFile.diff ? DIFF : []} height="220px" aria-label={shownFile.diff ? 'Difference from the working copy' : 'File at revision'} />
+                </>
+              ) : <CodeMirror value={commit.patch} theme={theme} editable={false} basicSetup={SETUP} extensions={DIFF} height="220px" aria-label="Patch" />}
             </>
           )}
         </div>

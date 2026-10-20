@@ -138,3 +138,37 @@ test('X108 Undo Last Commit: the commit goes, its changes stay staged', async ({
   expect(g('log', '-1', '--format=%s')).toBe('base');
   expect(g('diff', '--cached', '--name-only')).toContain('Login.feature');
 });
+
+test('X124–X128 Git Log: view at revision, compare with local, copy message, filters, current branch only', async ({ page, context }) => {
+  await context.grantPermissions(['clipboard-read', 'clipboard-write']);
+  g('checkout', '-qb', 'side', 'HEAD~1');
+  await fs.writeFile(path.join(root, 'NOTES.md'), 'side\n');
+  g('add', 'NOTES.md'); g('commit', '-qm', 'Side notes');
+  g('checkout', '-q', 'main');
+  const login = path.join(root, 'Features/Auth/Login.feature');
+  await fs.writeFile(login, (await fs.readFile(login, 'utf8')).replace('"admin"', '"root"'));
+  await open(page);
+  const actions = await selectCommit(page, 'Sign in as admin');
+  const panel = page.getByRole('region', { name: 'Git Log' });
+  // X124 view at revision.
+  await panel.getByRole('button', { name: 'View Features/Auth/Login.feature at this revision' }).click();
+  await expect(panel.getByLabel('File at revision')).toContainText('"admin"');
+  // X125 compare with the working copy.
+  await panel.getByRole('button', { name: 'Compare Features/Auth/Login.feature with the working copy' }).click();
+  await expect(panel.getByLabel('Difference from the working copy')).toContainText('+    When the user signs in as "root"');
+  // X126 copy message.
+  await actions.getByRole('button', { name: 'Copy Message' }).click();
+  await expect.poll(() => page.evaluate(() => navigator.clipboard.readText())).toBe('Sign in as admin');
+  // X127 filter syntax.
+  const list = panel.getByRole('listbox', { name: 'Commits' });
+  await expect(list.getByRole('option')).toHaveCount(3);
+  await panel.getByLabel('Filter commits').fill('branch:side');
+  await expect(list.getByRole('option')).toHaveCount(1);
+  await panel.getByLabel('Filter commits').fill('author:ada -side');
+  await expect(list.getByRole('option')).toHaveCount(2);
+  await panel.getByLabel('Filter commits').fill('');
+  // X128 current branch only.
+  await panel.getByLabel('Current branch only').check();
+  await expect(list.getByRole('option')).toHaveCount(2);
+  await expect(list).not.toContainText('Side notes');
+});

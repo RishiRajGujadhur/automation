@@ -610,3 +610,9 @@ test('X121–X123 Tabs: pinned row, colorized tabs, Copy File Name', async ({ pa
   await page.getByRole('menuitem', { name: 'Copy File Name' }).click();
   await expect.poll(() => page.evaluate(() => navigator.clipboard.readText())).toMatch(/\.(cs|feature)$/);
 });
+
+test('X129 Feature statistics in the status bar', async ({ page }) => {
+  await openFeature(page);
+  await caretAt(page, 'Feature:');
+  await expect(page.getByLabel('Feature statistics')).toHaveText('1 scenario · 4 steps');
+});

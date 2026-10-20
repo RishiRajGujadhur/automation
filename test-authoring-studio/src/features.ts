@@ -221,6 +221,7 @@ export const FEATURES: Feature[] = [
   { id: 'pinned-row', label: 'Pinned tabs in a separate row', group: 'View', essential: false, vs: 'Tabs ▸ Show pinned tabs in a separate row', description: 'Pinned tabs get their own row above the others.', commands: ['pinned-row'] },
   { id: 'color-tabs', label: 'Colorize document tabs', group: 'View', essential: false, vs: 'Tabs ▸ Colorize document tabs', description: 'Tabs are tinted with their file type\'s colour.', commands: ['color-tabs'] },
   { id: 'tab-copy-name', label: 'Tab: Copy File Name', group: 'Files', essential: true, vs: 'Tab ▸ Copy File Name', description: 'The tab menu copies the file name.' },
+  { id: 'git-view-revision', label: 'Git Log: View File at Revision', group: 'Git', essential: true, vs: 'Git History ▸ View file at this commit', description: 'Shows a changed file as it was in the selected commit.' },
 ];
 export const GROUPS: FeatureGroup[] = ['Editing', 'Navigation', 'Code intelligence', 'Tool windows', 'Files', 'Git', 'Gherkin', 'View', 'Debugging', 'Help and productivity'];
 

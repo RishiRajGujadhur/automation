@@ -3534,3 +3534,15 @@ html[data-features-off~='inlay-hints'] .cm-inlay {
     background: color-mix(in srgb, var(--file-color, transparent) 28%, transparent);
   }
 }
+
+.git-shown-file {
+  display: flex;
+  gap: 10px;
+  align-items: baseline;
+  margin: 4px 0;
+  font-size: 12px;
+}
+.git-file-action {
+  margin-left: 8px;
+  font-size: 11px;
+}
