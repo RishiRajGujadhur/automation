@@ -463,6 +463,7 @@ export const FEATURES: Feature[] = [
   { id: 'sort-tokens', label: 'Sort Tokens', group: 'Editing', essential: false, description: 'Edit ▸ Convert sorts the comma- or space-separated values of the selection.', commands: ['sort-tokens'] },
   { id: 'copy-markdown-block', label: 'Copy as Markdown Code Block', group: 'Editing', essential: false, description: 'Edit ▸ Copy as Markdown Code Block copies the selection (or file) inside a fenced block with its language (for tickets and chats).', commands: ['copy-markdown-block'] },
   { id: 'file-statistics', label: 'File Statistics', group: 'Help and productivity', essential: false, description: 'Tools ▸ File Statistics counts the code, comment and blank lines of the active file.', commands: ['file-statistics'] },
+  { id: 'copy-scenario-steps', label: 'Copy Scenario Steps', group: 'Gherkin', essential: false, description: 'Code ▸ Gherkin copies the steps of the scenario at the caret (tables included), to reuse them.', commands: ['copy-scenario-steps'] },
 ];
 export const GROUPS: FeatureGroup[] = ['Editing', 'Navigation', 'Code intelligence', 'Tool windows', 'Files', 'Git', 'Gherkin', 'View', 'Debugging', 'Help and productivity'];
 

@@ -3,7 +3,7 @@ import type { MoreHelpers } from './more';
 import { api } from '../api';
 import { getTabs, setPinned } from '../files/tabs';
 import { copyText } from '../ui';
-import { tableDeleteEmptyRows, tableRemoveDuplicateRows, tableMarkdown, tagAllScenarios, removeTagEverywhere, sortTags, promoteCommonTags, insertDocString, expandOutline, wrapInRule, setLanguageHeader, scenarioName, tableInsertRowAbove, addScenarioOutline, tableColumnStats, tableColumnValues, tableFillSeries, mergeExamples } from '../editor/gherkinTools';
+import { tableDeleteEmptyRows, tableRemoveDuplicateRows, tableMarkdown, tagAllScenarios, removeTagEverywhere, sortTags, promoteCommonTags, insertDocString, expandOutline, wrapInRule, setLanguageHeader, scenarioName, tableInsertRowAbove, addScenarioOutline, tableColumnStats, tableColumnValues, tableFillSeries, mergeExamples, scenarioSteps } from '../editor/gherkinTools';
 import { urlEncode, urlDecode, base64Encode, base64Decode, escapeString, unescapeString, htmlEncode, htmlDecode, stepNumber, insertSequence, toggleQuotes, joinWith, splitAt, alignAssignments, swapSelections, countOccurrences, trimLines, stamp, insertText, LOREM, shuffleLines, reformatXml, minifyXml, jsonEscape, jsonUnescape, numberLines, mapDoc, toFileScopedNamespace, toBlockScopedNamespace, removeRegions, toRawString, toggleTask, formatMarkdownTable, tableOfContents, MARKDOWN_TABLE, removeComments, concatToInterpolationCmd, gotoOffset, timestampCmd, sha256Hex, decodeJwt, jwtAt, sortTokens, markdownCodeBlock, fileStatistics } from '../editor/textTools2';
 
 /**
@@ -79,5 +79,6 @@ export function moreCommands2(h: MoreHelpers): RiderCommand[] {
     { id: 'sort-tokens', label: 'Sort Tokens', menu: 'Edit', submenu: 'Convert', run: h.inEditor((v) => sortTokens(v) || h.notice('Select a list of values (comma or space separated).')) },
     { id: 'copy-markdown-block', label: 'Copy as Markdown Code Block', menu: 'Edit', run: h.inEditor((v, file) => { const s = v.state.selection.main; const text = s.empty ? v.state.doc.toString() : v.state.sliceDoc(s.from, s.to); void copyText(markdownCodeBlock(text, file)).then((ok) => h.notice(ok ? `Copied the ${s.empty ? 'file' : 'selection'} as a Markdown code block.` : 'Clipboard unavailable.')); }) },
     { id: 'file-statistics', label: 'File Statistics', menu: 'Tools', run: h.inEditor((v, file) => { const s = fileStatistics(v.state.doc.toString(), file); h.notice(`${file.split('/').pop()}: ${s.lines} lines — ${s.code} code, ${s.comments} comment, ${s.blank} blank; ${v.state.doc.length} characters.`); }) },
+    { id: 'copy-scenario-steps', label: 'Copy Scenario Steps', menu: 'Code', submenu: 'Gherkin', run: h.inEditor((v) => { const s = scenarioSteps(v.state); if (!s) { h.notice('Put the caret in a scenario with steps.'); return; } void copyText(s).then((ok) => h.notice(ok ? `Copied ${s.split('\n').filter((l) => !l.startsWith(' ')).length} steps.` : 'Clipboard unavailable.')); }) },
   ];
 }

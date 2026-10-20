@@ -1008,3 +1008,18 @@ export function mergeExamples(view: EditorView) {
   view.dispatch({ changes, userEvent: 'input' });
   return true;
 }
+
+/** Copy Scenario Steps: the steps of the scenario at the caret (with their tables), without the title — to reuse them. */
+export function scenarioSteps(state: EditorState) {
+  const b = scenarioBlock(state, state.doc.lineAt(state.selection.main.head).number);
+  if (!b) return null;
+  const out: string[] = [];
+  let inSteps = false;
+  for (let n = b.head + 1; n <= b.end; n++) {
+    const t = state.doc.line(n).text;
+    if (/^\s*(Examples|Scenarios):/.test(t)) break;
+    if (STEP.test(t)) inSteps = true;
+    if (inSteps && t.trim()) out.push(t.trim().startsWith('|') || /^\s*("{3}|`{3})/.test(t) ? `  ${t.trim()}` : t.trim());
+  }
+  return out.length ? out.join('\n') : null;
+}

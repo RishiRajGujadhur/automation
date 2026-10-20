@@ -261,6 +261,7 @@ const ROWS: Record<'edit' | 'view' | 'navigate' | 'code' | 'tools' | 'help', Row
       ['Table: Copy Column', 'table-copy-column'],
       ['Table: Fill Series', 'table-fill-series'],
       ['Merge Examples Tables', 'merge-examples'],
+      ['Copy Scenario Steps', 'copy-scenario-steps'],
     ] },
     ['Collapse Using Directives', 'fold-usings'],
     ['Sort JSON Keys', 'sort-json'],

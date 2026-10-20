@@ -77,6 +77,7 @@ has it on by default, so the desktop app starts with it on. The others start off
 | Y66 | Sort Tokens | Rider | no | ✅ 2026-10-20 |
 | Y67 | Copy as Markdown Code Block | Rider | no | ✅ 2026-10-20 |
 | Y68 | File Statistics | Rider | no | ✅ 2026-10-20 |
+| Y69 | Copy Scenario Steps | Rider | no | ✅ 2026-10-20 |
 
 ## Progress log
 - 2026-10-20 Y1: Percent-encodes the selection (or line) and decodes it.
@@ -147,3 +148,4 @@ has it on by default, so the desktop app starts with it on. The others start off
 - 2026-10-20 Y66: Sorts the comma- or space-separated values of the selection.
 - 2026-10-20 Y67: Copies the selection or file in a fenced block with its language.
 - 2026-10-20 Y68: Code, comment and blank line counts of the active file.
+- 2026-10-20 Y69: The steps of the scenario at the caret, tables included.
