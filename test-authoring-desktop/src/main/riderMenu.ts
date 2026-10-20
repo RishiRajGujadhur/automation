@@ -244,6 +244,7 @@ const ROWS: Record<'edit' | 'view' | 'navigate' | 'code' | 'tools' | 'help', Row
     ['Tip of the Day', 'tip-of-the-day'],
     null,
     ['Report a Problem…', 'report-problem'],
+    ['What\'s New', 'whats-new'],
   ],
 };
 

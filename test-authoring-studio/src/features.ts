@@ -265,6 +265,7 @@ export const FEATURES: Feature[] = [
   { id: 'md-word-count', label: 'Word count (Markdown)', group: 'Editing', essential: true, description: 'The status bar counts the words of a Markdown or text file (or the selection).' },
   { id: 'toggle-status-bar', label: 'Toggle Status Bar', group: 'View', essential: true, vs: 'View ▸ Status Bar', description: 'Hides or shows the status bar.', commands: ['toggle-status-bar'] },
   { id: 'toggle-activity-bar', label: 'Toggle Activity Bar', group: 'View', essential: true, vs: 'View ▸ Appearance ▸ Activity Bar', description: 'Hides or shows the activity bar (VS Code layout).', commands: ['toggle-activity-bar'] },
+  { id: 'whats-new', label: 'What\'s New', group: 'Help and productivity', essential: true, vs: 'Help ▸ What\'s New', description: 'Lists the latest IDE features with their switches (Help ▸ What\'s New).', commands: ['whats-new'] },
 ];
 export const GROUPS: FeatureGroup[] = ['Editing', 'Navigation', 'Code intelligence', 'Tool windows', 'Files', 'Git', 'Gherkin', 'View', 'Debugging', 'Help and productivity'];
 

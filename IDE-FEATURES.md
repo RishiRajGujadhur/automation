@@ -175,6 +175,7 @@ has it on by default, so the desktop app starts with it on. The others start off
 | X165 | Word count (Markdown) | VS Code | yes | ✅ 2026-10-20 |
 | X166 | Toggle Status Bar | VS Code / VS 2026 | yes | ✅ 2026-10-20 |
 | X167 | Toggle Activity Bar | VS Code | yes | ✅ 2026-10-20 |
+| X168 | What's New | VS 2026 / Rider | yes | ✅ 2026-10-20 |
 
 ## Progress log
 - 2026-10-20 X1: Sort Lines: the selected lines (or the whole file) in natural, case-insensitive order, blank lines last. Third-batch plumbing: src/rider/more.ts, src/editor/textTools.ts, IDE-FEATURES.md.
@@ -344,3 +345,4 @@ has it on by default, so the desktop app starts with it on. The others start off
 - 2026-10-20 X165: Status bar word count
 - 2026-10-20 X166: Hide or show the status bar
 - 2026-10-20 X167: Hide or show the activity bar
+- 2026-10-20 X168: Latest features with switches

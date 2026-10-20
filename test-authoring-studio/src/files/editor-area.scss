@@ -3573,3 +3573,24 @@ html[data-features-off~='inlay-hints'] .cm-inlay {
 .status-bar.status-bar-hidden {
   display: none !important;
 }
+
+.whats-new {
+  display: grid;
+  gap: 8px;
+  min-width: min(620px, 90vw);
+  ul {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    max-height: 60vh;
+    overflow: auto;
+  }
+  li label {
+    display: flex;
+    gap: 8px;
+    align-items: flex-start;
+    padding: 4px 2px;
+    font-size: 12.5px;
+    cursor: pointer;
+  }
+}
