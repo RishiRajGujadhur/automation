@@ -348,6 +348,7 @@ export const FEATURES: Feature[] = [
   { id: 'save-all-count', label: 'Save All reports what it saved', group: 'Files', essential: true, description: 'Save All says how many files it wrote (or that nothing needed saving).' },
   { id: 'save-before-run', label: 'Save before build and test runs', group: 'Files', essential: true, vs: 'Projects and Solutions ▸ Save all changes before build', description: 'Building or running tests saves the unsaved editors first, so they run what you see.' },
   { id: 'md-wrap', label: 'Markdown wraps long lines', group: 'Editing', essential: true, description: 'Markdown and text files soft-wrap by default, like VS Code.' },
+  { id: 'find-memory', label: 'Find remembers the last search', group: 'Editing', essential: true, description: 'Ctrl+F in another file starts with what you searched last (nothing selected).' },
 ];
 export const GROUPS: FeatureGroup[] = ['Editing', 'Navigation', 'Code intelligence', 'Tool windows', 'Files', 'Git', 'Gherkin', 'View', 'Debugging', 'Help and productivity'];
 

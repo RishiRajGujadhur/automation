@@ -10,6 +10,7 @@ import { scrollMarks } from './scrollMarks';
 import { currentScenario as currentScenarioFor } from './currentScenario';
 import { scrollPastEnd } from '@codemirror/view';
 import { searchCount } from './searchCount';
+import { findMemory } from './findMemory';
 import { editorLinks } from './links';
 import { EditorView, ViewPlugin, highlightWhitespace, highlightTrailingWhitespace, rectangularSelection, keymap } from '@codemirror/view';
 
@@ -125,6 +126,8 @@ const EXTRA: [Compartment, (o: ViewOptions) => Extension][] = [
   [new Compartment(), () => (featureOn('search-count') ? searchCount : [])],
   // Ctrl+click links (web addresses, file:line references).
   [new Compartment(), () => (featureOn('editor-links') ? editorLinks : [])],
+  // Find starts with the last search (QOL-50).
+  [new Compartment(), () => findMemory],
   // extra view options
 ];
 
