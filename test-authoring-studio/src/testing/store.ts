@@ -26,7 +26,7 @@ function connect() {
   source = new EventSource('/api/tests/events');
   heard = Date.now();
   source.addEventListener('ping', () => { heard = Date.now(); });
-  source.onmessage = (e) => { heard = Date.now(); state = JSON.parse(e.data) as TestRunState; for (const l of listeners) l(); };
+  source.onmessage = (e) => { heard = Date.now(); const before = state.status; state = JSON.parse(e.data) as TestRunState; if (before === 'running' && state.status !== 'running') recordHistory(state); for (const l of listeners) l(); };
 }
 if (typeof window !== 'undefined') setInterval(() => { if (source && Date.now() - heard > 25_000) { source.close(); source = undefined; connect(); } }, 5_000);
 export function useTestRun() { return useSyncExternalStore((l) => { listeners.add(l); connect(); return () => listeners.delete(l); }, () => state); }
@@ -82,4 +82,33 @@ export async function runUntilFailure(max: number, progress: (run: number) => vo
     if (done.status !== 'done' || (done.summary?.failed ?? 0) > 0 || done.results.some((r) => r.outcome === 'failed')) return { runs: i, failed: true };
   }
   return { runs: max, failed: false };
+}
+
+/** Test history (Visual Studio 2026 / Rider test session history): the last 10 outcomes of each test, newest last. */
+export type HistoryEntry = { at: number; outcome: 'passed' | 'failed' | 'skipped'; ms: number };
+const HISTORY_KEY = 'tas:testHistory';
+export function readHistory(): Record<string, HistoryEntry[]> { try { return JSON.parse(localStorage.getItem(HISTORY_KEY) ?? '{}') as Record<string, HistoryEntry[]>; } catch { return {}; } }
+/** Adds a finished run's results (one entry per test method; parameterized cases fold into one, failed if any failed). */
+export function addToHistory(history: Record<string, HistoryEntry[]>, results: TestResult[], at = Date.now()) {
+  const byTest = new Map<string, HistoryEntry>();
+  for (const r of results) {
+    const key = `${r.className}.${r.method.split('(')[0]}`;
+    const e = byTest.get(key);
+    const outcome = e?.outcome === 'failed' || r.outcome === 'failed' ? 'failed' : e?.outcome === 'passed' || r.outcome === 'passed' ? 'passed' : 'skipped';
+    byTest.set(key, { at, outcome, ms: (e?.ms ?? 0) + r.durationMs });
+  }
+  const next = { ...history };
+  for (const [k, e] of byTest) next[k] = [...(next[k] ?? []), e].slice(-10);
+  return next;
+}
+function recordHistory(s: TestRunState) {
+  if (!s.results.length) return;
+  try { localStorage.setItem(HISTORY_KEY, JSON.stringify(addToHistory(readHistory(), s.results))); } catch { /* storage blocked */ }
+}
+/** The history of a discovered test (its class may lack the namespace before the first build). */
+export function historyOf(t: DiscoveredTest, history = readHistory()) {
+  const exact = history[`${t.className}.${t.method}`];
+  if (exact) return exact;
+  const k = Object.keys(history).find((key) => key.endsWith(`.${t.className}.${t.method}`));
+  return k ? history[k] : [];
 }

@@ -6,6 +6,7 @@ import { api } from '../api';
 import { Dropdown, type MenuEntry } from '../radix';
 import { groupTests, type Group, type GroupBy, matchTest, testDetails } from './grouping';
 import { featureOn } from '../features';
+import { historyOf } from './store';
 import { useTestRun, discoverTests, runTests, cancelTests, resultsOf, outcomeOf, combine, type DiscoveredTest, type Outcome } from './store';
 
 const icon = (o: Outcome) =>
@@ -273,6 +274,7 @@ export default function TestExplorer({ revision, onOpen, onDebug, onNotice }: { 
             {featureOn('test-detail-run') && <button className="icon-button" aria-label="Debug this test" title="Debug" disabled={running} onClick={() => onDebug(detail)}><Bug size={13} /></button>}
           </div>
           <p className="meta">{detail.className}.{detail.method}</p>
+          {featureOn('test-history') && (() => { const hist = historyOf(detail); return hist.length > 0 && <p className="t-history" aria-label="Test history">History: {hist.map((h, i) => <span key={i} className={`t-hist ${h.outcome}`} title={`${new Date(h.at).toLocaleString()} · ${h.outcome} · ${ms(h.ms)}`}>{h.outcome === 'passed' ? '✓' : h.outcome === 'failed' ? '✗' : '–'}</span>)} <small>{Math.round((hist.filter((h) => h.outcome === 'passed').length / hist.length) * 100)}% passed</small></p>; })()}
           {!detailResults.length && <p className="meta">Not run yet.</p>}
           {detailResults.map((r, i) => (
             <div key={i} className="t-result">

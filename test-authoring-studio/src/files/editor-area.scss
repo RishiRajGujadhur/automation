@@ -3713,3 +3713,8 @@ html[data-features-off~='inlay-hints'] .cm-inlay {
 .cm-conflict-actions { display: flex; gap: 12px; padding: 1px 4px; font-size: 12px; font-family: var(--font-ui, inherit); }
 
 .text-preview { max-height: 60vh; overflow: auto; margin: 0; padding: 8px 12px; font-family: var(--font-mono, Consolas, monospace); font-size: 12px; white-space: pre; }
+
+.t-history { display: flex; gap: 3px; align-items: center; font-size: 12px; }
+.t-hist { font-weight: 700; }
+.t-hist.passed { color: var(--success, #2ea043); }
+.t-hist.failed { color: var(--danger, #d73a49); }

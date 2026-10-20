@@ -3,6 +3,7 @@ import { relativeDay, conflictsIn, resolveConflict, postfix } from '../src/edito
 import { selectHunks } from '../server/git';
 import { outlinePreview } from '../src/editor/gherkinTools';
 import { EditorState } from '@codemirror/state';
+import { addToHistory } from '../src/testing/store';
 
 describe('advanced features (ADVANCED-20)', () => {
   it('registry starts empty', () => { expect(true).toBe(true); });
@@ -44,5 +45,14 @@ describe('advanced features (ADVANCED-20)', () => {
     const state = EditorState.create({ doc: src, selection: { anchor: 15 } });
     expect(outlinePreview(state)).toBe('  Scenario: As a\n    Given I am a\n\n  Scenario: As b\n    Given I am b');
     expect(state.doc.toString()).toBe(src);
+  });
+  it('Z6 test history keeps the last 10 outcomes per test', () => {
+    let h = {};
+    for (let i = 0; i < 12; i++) h = addToHistory(h, [{ name: 'A', className: 'N.C', method: 'A', outcome: i % 2 ? 'failed' : 'passed', durationMs: 5 }], i);
+    const a = (h as Record<string, { outcome: string }[]>)['N.C.A'];
+    expect(a).toHaveLength(10);
+    expect(a.at(-1)!.outcome).toBe('failed');
+    const cases = addToHistory({}, [{ name: 'B(1)', className: 'N.C', method: 'B(1)', outcome: 'passed', durationMs: 1 }, { name: 'B(2)', className: 'N.C', method: 'B(2)', outcome: 'failed', durationMs: 2 }], 0);
+    expect(cases['N.C.B']).toEqual([{ at: 0, outcome: 'failed', ms: 3 }]);
   });
 });
