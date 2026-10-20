@@ -326,7 +326,7 @@ Legend: `[x]` done · `[ ]` to do.
 - [x] 394. Hide or reveal individual tool windows
 - [x] 395. Save custom window layouts
 - [x] 396. Restore editor layout — reopen files where you left them
-- [ ] 397. Maximize editor group
+- [x] 397. Maximize editor group — View ▸ Maximize Editor Group (Ctrl+K Ctrl+M) (2026-10-21)
 - [ ] 398. Editor group locking
 - [ ] 399. Independent editor group scrolling
 - [ ] 400. Synchronized scrolling between diff panes
@@ -368,3 +368,4 @@ Legend: `[x]` done · `[ ]` to do.
 - 2026-10-21 217: Saving a C# file can organize its usings first.
 - 2026-10-21 388: VS Code's Zen Mode: only the editor, with its zenMode.* settings; Escape twice or the Exit button leaves it.
 - 2026-10-21 384: The split editor opens below or beside the tab group; the direction is a setting.
+- 2026-10-21 397: The editor group with focus (tab group or split editor) fills the editor area until toggled back.
