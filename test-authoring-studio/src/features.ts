@@ -410,6 +410,7 @@ export const FEATURES: Feature[] = [
   { id: 'trim-lines', label: 'Trim Lines', group: 'Editing', essential: false, description: 'Edit ▸ Convert removes leading and trailing white space from the selected lines.', commands: ['trim-lines'] },
   { id: 'insert-date', label: 'Insert Date and Time', group: 'Editing', essential: false, description: 'Code ▸ Insert Date and Time writes the current local date and time (yyyy-MM-dd HH:mm).', commands: ['insert-date'] },
   { id: 'insert-lorem', label: 'Insert Lorem Ipsum', group: 'Editing', essential: false, description: 'Code ▸ Insert Lorem Ipsum writes a sentence of placeholder text (for test data).', commands: ['insert-lorem'] },
+  { id: 'shuffle-lines', label: 'Shuffle Lines', group: 'Editing', essential: false, description: 'Edit ▸ Shuffle Lines puts the selected lines in random order.', commands: ['shuffle-lines'] },
 ];
 export const GROUPS: FeatureGroup[] = ['Editing', 'Navigation', 'Code intelligence', 'Tool windows', 'Files', 'Git', 'Gherkin', 'View', 'Debugging', 'Help and productivity'];
 

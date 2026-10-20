@@ -185,3 +185,9 @@ export const insertText = (text: () => string) => (view: EditorView) => {
 
 /** Insert Lorem Ipsum (Rider): placeholder text for test data. */
 export const LOREM = 'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.';
+
+/** Shuffle Lines (Rider String Manipulation): the selected lines in random order (e.g. test data). */
+export const shuffleLines = (random = Math.random) => (view: EditorView) => {
+  if (view.state.selection.main.empty) return false;
+  return mapLines((lines) => { const a = [...lines]; for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; }, false)(view);
+};
