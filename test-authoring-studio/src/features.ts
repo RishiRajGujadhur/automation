@@ -286,6 +286,7 @@ export const FEATURES: Feature[] = [
   { id: 'table-clear-column', label: 'Table: Clear Column', group: 'Gherkin', essential: true, description: 'Empties the caret\'s column (the header stays).', commands: ['table-clear-column'] },
   { id: 'explorer-copy-name', label: 'Explorer: Copy File Name', group: 'Files', essential: true, vs: 'Copy File Name', description: 'A file\'s context menu copies its name.' },
   { id: 'open-to-side', label: 'Explorer: Open to the Side', group: 'Files', essential: true, vs: 'Open to the Side', description: 'A file\'s context menu opens it in the split editor.' },
+  { id: 'test-copy-filter', label: 'Test Explorer: Copy dotnet test Filter', group: 'Tool windows', essential: true, description: 'Copies a dotnet test --filter for the selected tests (CI, the command line).' },
 ];
 export const GROUPS: FeatureGroup[] = ['Editing', 'Navigation', 'Code intelligence', 'Tool windows', 'Files', 'Git', 'Gherkin', 'View', 'Debugging', 'Help and productivity'];
 
