@@ -8,8 +8,9 @@ import { tableInsertRow } from './gherkinTools';
 /** Quality-of-life behaviour of the Gherkin editor (QOL-50.md). */
 /** Smart indent: a line after Feature / Rule / Background / Scenario / Examples, or after a step ending in ":" (its table), is indented one more. */
 export const gherkinIndent = indentService.of((ctx, pos) => {
+  // The nearest non-blank line before this one (each step goes one line up, so this always ends).
   let line = ctx.lineAt(pos, -1);
-  while (!line.text.trim() && line.from > 0) line = ctx.lineAt(line.from, -1);
+  for (let guard = 0; !line.text.trim() && line.from > 0 && guard < 500; guard++) line = ctx.lineAt(line.from - 1, -1);
   const text = line.text;
   const ind = /^\s*/.exec(text)![0].replace(/\t/g, ' '.repeat(ctx.unit)).length;
   const t = text.trim();
@@ -27,9 +28,21 @@ export const tableEnter = Prec.high(keymap.of([{
     if (!s.empty || view.state.selection.ranges.length > 1) return false;
     const line = view.state.doc.lineAt(s.head);
     if (!/^\s*\|.*\|\s*$/.test(line.text) || s.head < line.from + line.text.trimEnd().length) return false;
+    // Only once the table has a data row: a header typed by hand ends with a plain new line.
+    const b = block(view.state, line.number);
+    if (b.to === b.from) return false;
     return tableInsertRow(view);
   },
 }]));
+/** Typing "|" in the first cell of an added empty row turns it back into a plain line (you are typing the row yourself). */
+export const pipeInEmptyRow = EditorView.inputHandler.of((view, from, to, text) => {
+  if (text !== '|' || from !== to || !featureOn('table-enter')) return false;
+  const line = view.state.doc.lineAt(from);
+  if (!/^\s*\|[\s|]*\|\s*$/.test(line.text) || from - line.from !== line.text.indexOf('|') + 2) return false;
+  const indent = /^\s*/.exec(line.text)![0];
+  view.dispatch({ changes: { from: line.from, to: line.to, insert: `${indent}|` }, selection: { anchor: line.from + indent.length + 1 }, userEvent: 'input.type' });
+  return true;
+});
 /** Pasted table rows are aligned with the table they land in. */
 export const alignOnPaste = EditorView.updateListener.of((u) => {
   if (!featureOn('paste-align') || !u.docChanged || !u.transactions.some((t) => t.isUserEvent('input.paste'))) return;
@@ -55,4 +68,4 @@ export const alignOnPaste = EditorView.updateListener.of((u) => {
   });
 });
 // gherkin qol
-export const gherkinQol: Extension[] = [alignOnPaste, tableEnter, gherkinIndent, ];
+export const gherkinQol: Extension[] = [alignOnPaste, tableEnter, pipeInEmptyRow, gherkinIndent];

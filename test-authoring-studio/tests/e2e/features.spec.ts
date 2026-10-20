@@ -27,7 +27,7 @@ test('Features: the web app starts with everything on; VS essentials turns the R
   await page.getByRole('radio', { name: 'VS essentials' }).click();
   await expect(page.getByText(/^\d+ of \d+ features on\./)).not.toHaveText(`${total} of ${total} features on.`);
   // Essential: on. Optional: off.
-  await expect(page.getByRole('switch', { name: 'Terminal' })).toBeChecked();
+  await expect(page.getByRole('switch', { name: 'Terminal', exact: true })).toBeChecked();
   await expect(page.getByRole('switch', { name: 'Run Anything' })).not.toBeChecked();
   await close(page);
   // Off: hidden from the menus, its keys do nothing.

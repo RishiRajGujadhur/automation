@@ -148,7 +148,7 @@ test('Tabs: pin keeps a tab through Close All; closing the last tab closes the e
   expect(await color('SearchSteps.cs')).not.toBe(await color('common.xml'));
 
   await strip.locator('.editor-tab-label', { hasText: 'SearchSteps.cs' }).click({ button: 'right' });
-  await page.getByRole('menuitem', { name: 'Close All' }).click();
+  await page.getByRole('menuitem', { name: 'Close All', exact: true }).click();
   await expect(strip.locator('.editor-tab')).toHaveCount(1);
 
   // Saving shows no toast.
