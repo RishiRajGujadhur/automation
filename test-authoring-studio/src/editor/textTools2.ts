@@ -666,3 +666,15 @@ export function toBlockBody(view: EditorView) {
   view.dispatch({ changes: { from: line.from, to: line.to, insert: `${ind}${m[2]}\n${ind}{\n${ind}    ${isVoid ? '' : 'return '}${m[3]};\n${ind}}` }, userEvent: 'input' });
   return true;
 }
+
+/** Add Missing [Binding] (Reqnroll / SpecFlow quick fix): a class with [Given] / [When] / [Then] methods needs [Binding]. */
+export function addBindingAttribute(text: string) {
+  if (/\[\s*Binding\s*[\](]/.test(text) || !/\[\s*(Given|When|Then|StepDefinition)\s*\(/.test(text)) return null;
+  const m = /^([ \t]*)((?:public|internal|sealed|partial|static|abstract)\s+)*class\s+\w+/m.exec(text);
+  if (!m) return null;
+  let at = m.index;
+  const before = text.slice(0, at).split('\n');
+  before.pop();
+  while (before.length && /^\s*\[.*\]\s*$/.test(before.at(-1)!)) { at -= before.pop()!.length + 1; }
+  return `${text.slice(0, at)}${m[1]}[Binding]\n${text.slice(at)}`;
+}

@@ -289,6 +289,7 @@ const ROWS: Record<'edit' | 'view' | 'navigate' | 'code' | 'tools' | 'help', Row
       ['Add Null Checks for Parameters', 'add-null-checks'],
       ['Convert to Expression Body', 'expression-body'],
       ['Convert to Block Body', 'block-body'],
+      ['Add Missing [Binding]', 'add-binding'],
     ] },
     null,
     { submenu: 'Markdown', rows: [

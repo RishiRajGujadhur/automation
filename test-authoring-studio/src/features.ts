@@ -479,6 +479,7 @@ export const FEATURES: Feature[] = [
   { id: 'json-to-csv', label: 'Copy JSON as CSV', group: 'Editing', essential: false, description: 'Code ▸ Copy JSON as CSV copies a JSON array of objects as CSV (for test data and spreadsheets).', commands: ['json-to-csv'] },
   { id: 'expression-body', label: 'Convert to Expression Body', group: 'Code intelligence', essential: true, vs: 'Quick Actions: Use expression body', description: 'Code ▸ C# turns a one-statement method into an expression-bodied member (=> …;).', commands: ['expression-body'] },
   { id: 'block-body', label: 'Convert to Block Body', group: 'Code intelligence', essential: true, vs: 'Quick Actions: Use block body', description: 'Code ▸ C# turns an expression-bodied method back into a braced body.', commands: ['block-body'] },
+  { id: 'add-binding', label: 'Add Missing [Binding]', group: 'Code intelligence', essential: true, vs: 'Reqnroll: missing Binding attribute', description: 'Code ▸ C# adds [Binding] to a class with step definitions that lacks it (Reqnroll does not find its steps otherwise).', commands: ['add-binding'] },
 ];
 export const GROUPS: FeatureGroup[] = ['Editing', 'Navigation', 'Code intelligence', 'Tool windows', 'Files', 'Git', 'Gherkin', 'View', 'Debugging', 'Help and productivity'];
 
