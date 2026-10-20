@@ -3755,3 +3755,4 @@ html[data-features-off~='inlay-hints'] .cm-inlay {
 .project-props .pp-list li:hover { background: color-mix(in srgb, var(--accent, #9270dd) 8%, transparent); }
 .project-props .pp-add { display: flex; gap: 6px; align-items: center; }
 .project-props .pp-add input[name='ns'] { flex: 1; }
+.project-previews { gap: 14px; max-height: 70vh; overflow: auto; min-height: 0; }

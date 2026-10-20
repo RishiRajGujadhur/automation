@@ -16,6 +16,7 @@ Earlier batches: [ADVANCED-20.md](ADVANCED-20.md), [IDE-FEATURES-4.md](IDE-FEATU
 | C7 | Project Properties: Build Events | VS 2026 | yes | ✅ 2026-10-20 |
 | C8 | Project Properties: Global Usings | VS 2026 | yes | ✅ 2026-10-20 |
 | C9 | Project Properties: Project References | VS 2026 | yes | ✅ 2026-10-20 |
+| C10 | Upgrade Target Framework | VS 2026 | yes | ✅ 2026-10-20 |
 
 ## Progress log
 - 2026-10-20 C1: Property pages for a .csproj from the Explorer's project menu or Tools; changes previewed as a diff, then written.
@@ -27,3 +28,4 @@ Earlier batches: [ADVANCED-20.md](ADVANCED-20.md), [IDE-FEATURES-4.md](IDE-FEATU
 - 2026-10-20 C7: Pre/post-build command lines as PreBuild / PostBuild targets.
 - 2026-10-20 C8: Lists, adds and removes <Using> items (static too).
 - 2026-10-20 C9: Adds or removes references to the solution's other projects.
+- 2026-10-20 C10: One previewed diff per project whose TargetFramework differs.

@@ -491,6 +491,18 @@ app.post('/api/project/properties/preview', async (req, res) => {
     return out;
   }, notes));
 });
+// Upgrade Target Framework: one previewed diff per project file whose TargetFramework is another one.
+app.post('/api/project/retarget/preview', async (req, res) => {
+  const { projects, framework } = z.object({ projects: z.array(projectFile).max(200), framework: z.string().regex(/^net(\d+\.\d+|standard\d\.\d|\d{2,3})$/) }).parse(req.body);
+  const out = [];
+  for (const project of projects) {
+    const xml = await fs.readFile(await confined(config.repositoryRoot, project, false), 'utf8').catch(() => '');
+    const { all } = readProperties(xml);
+    if (!xml || !all.TargetFramework || all.TargetFramework === framework) continue;
+    out.push(await previewProject(project, (x) => setProperties(x, { TargetFramework: framework }), [`TargetFramework ${all.TargetFramework} → ${framework}`]));
+  }
+  res.json(out);
+});
 app.get('/api/project/model',async(_req,res)=>{res.json(await projectModel(config,await ensure()));});
 app.get('/api/project/files',async(req,res)=>{const folder=z.string().default('.').parse(req.query.folder);const dir=await confined(config.repositoryRoot,folder);const entries=await fs.readdir(dir,{withFileTypes:true});const {offset,limit}=paging.parse(req.query);const filtered=entries.filter(e=>!e.isSymbolicLink()&&!e.name.startsWith('.')&&!ignoredDirsFor(config).includes(e.name)).sort((a,b)=>Number(b.isDirectory())-Number(a.isDirectory())||a.name.localeCompare(b.name));res.json({folder,items:filtered.slice(offset,offset+limit).map(e=>({name:e.name,file:path.relative(config.repositoryRoot,path.join(dir,e.name)).replaceAll('\\','/'),directory:e.isDirectory()})),total:filtered.length,hasNext:offset+limit<filtered.length});});
 app.post('/api/workspace', async (req, res) => {

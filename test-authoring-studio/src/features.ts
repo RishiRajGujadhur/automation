@@ -525,6 +525,7 @@ export const FEATURES: Feature[] = [
   { id: 'pp-events', label: 'Project Properties: Build Events', group: 'Code intelligence', essential: true, vs: 'Project Properties ▸ Build ▸ Events', description: 'Pre-build and post-build command lines, written as Visual Studio\'s PreBuild / PostBuild targets.' },
   { id: 'pp-usings', label: 'Project Properties: Global Usings', group: 'Code intelligence', essential: true, vs: 'Project Properties ▸ Global Usings', description: 'The Global Usings page lists, adds and removes the project\'s <Using> items (static usings too).' },
   { id: 'pp-references', label: 'Project Properties: Project References', group: 'Code intelligence', essential: true, vs: 'Add ▸ Project Reference', description: 'The Project References page adds or removes references to the solution\'s other projects (relative paths, like Visual Studio).' },
+  { id: 'upgrade-framework', label: 'Upgrade Target Framework', group: 'Code intelligence', essential: true, vs: 'Upgrade Assistant: target framework', description: 'Tools ▸ Upgrade Target Framework previews the TargetFramework change of every project (one diff each) and writes the ones you approve.', commands: ['upgrade-framework'] },
 ];
 export const GROUPS: FeatureGroup[] = ['Editing', 'Navigation', 'Code intelligence', 'Tool windows', 'Files', 'Git', 'Gherkin', 'View', 'Debugging', 'Help and productivity'];
 

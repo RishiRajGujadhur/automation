@@ -382,6 +382,7 @@ const ROWS: Record<'edit' | 'view' | 'navigate' | 'code' | 'tools' | 'help', Row
     ['Toggle Temporary Breakpoint', 'temporary-breakpoint', 'CmdOrCtrl+Alt+Shift+F8'],
     ['Export Living Documentation…', 'living-doc'],
     ['Project Properties…', 'project-properties'],
+    ['Upgrade Target Framework…', 'upgrade-framework'],
   ],
   help: [
     null,
