@@ -1,5 +1,6 @@
-import { useEffect, useMemo, useState, type ReactNode } from 'react';
-import { ChevronDown, ChevronRight, Play, PlayCircle, Bug, RefreshCw, Square, CircleCheck, CircleX, CircleSlash, Circle, Loader, Search, X, FileText, FlaskConical, Boxes, RotateCcw, Navigation, ListPlus, ListMinus, Trash2, ShieldCheck, Copy, ChevronsDownUp, ChevronsUpDown, Hash, ClipboardList, Download, Timer } from 'lucide-react';
+import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
+import { FILE_SAVED_EVENT } from '../editor/events';
+import { ChevronDown, ChevronRight, Play, PlayCircle, Bug, RefreshCw, Square, CircleCheck, CircleX, CircleSlash, Circle, Loader, Search, X, FileText, FlaskConical, Boxes, RotateCcw, Navigation, ListPlus, ListMinus, Trash2, ShieldCheck, Copy, ChevronsDownUp, ChevronsUpDown, Hash, ClipboardList, Download, Timer, Repeat } from 'lucide-react';
 import { RowMenu, useLocalState, copyText } from '../ui';
 import { api } from '../api';
 import { Dropdown, type MenuEntry } from '../radix';
@@ -108,6 +109,17 @@ export default function TestExplorer({ revision, onOpen, onDebug, onNotice }: { 
     ...Object.keys(playlists).filter((n) => n !== playlist).map((n) => ({ label: `Add to Playlist ${n}`, icon: ListPlus, onSelect: () => addTo(n, ts.map((t) => t.id)) })),
     ...(playlist && playlists[playlist] ? [{ label: `Remove from Playlist ${playlist}`, icon: ListMinus, onSelect: () => removeFrom(playlist, ts.map((t) => t.id)) }] : []),
   ];
+  // Continuous testing (Rider): after each save the failed tests run again (when no run is going on).
+  const [continuous, setContinuous] = useLocalState('continuousTesting', false);
+  const live = useRef({ failed, running, start });
+  live.current = { failed, running, start };
+  useEffect(() => {
+    if (!continuous || !featureOn('continuous-testing')) return;
+    let t = 0;
+    const h = () => { clearTimeout(t); t = window.setTimeout(() => { const l = live.current; if (!l.running && l.failed.length) { onNotice(`Continuous testing: running ${l.failed.length} failed test${l.failed.length === 1 ? '' : 's'} again…`); void l.start(l.failed); } }, 800); };
+    window.addEventListener(FILE_SAVED_EVENT, h);
+    return () => { clearTimeout(t); window.removeEventListener(FILE_SAVED_EVENT, h); };
+  }, [continuous]); // eslint-disable-line react-hooks/exhaustive-deps
   // Collapse All / Expand All (Visual Studio's Test Explorer toolbar).
   const groupKeys = (gs: Group[]): string[] => gs.flatMap((g) => [g.key, ...groupKeys(g.children)]);
   const allCollapsed = groups.length > 0 && groupKeys(groups).every((k) => collapsed.has(k));
@@ -173,6 +185,7 @@ export default function TestExplorer({ revision, onOpen, onDebug, onNotice }: { 
           <button className="icon-button" aria-label="Run Failed Tests" title="Run Failed Tests" disabled={running || !failed.length} onClick={() => void start(failed)}><RotateCcw size={14} /></button>
           {moreRuns.length > 0 && <Dropdown label="More run options" align="end" trigger={<button className="icon-button" aria-label="More run options" title="More run options" disabled={running}><ChevronDown size={14} /></button>} entries={moreRuns} />}
           {featureOn('slowest-tests') && <button className="icon-button" aria-label="Slowest tests" title="Slowest tests" disabled={!run.results.length} onClick={() => { const top = tests.map((t) => ({ t, ms: resultsOf(t, run.results).reduce((n, r) => n + r.durationMs, 0) })).filter((x) => x.ms > 0).sort((a, b) => b.ms - a.ms).slice(0, 5); onNotice(top.length ? `Slowest: ${top.map((x) => `${x.t.method} ${ms(x.ms)}`).join(', ')}.` : 'Run the tests first.'); }}><Timer size={14} /></button>}
+          {featureOn('continuous-testing') && <button className={`icon-button ${continuous ? 'pressed' : ''}`} aria-label="Continuous testing" aria-pressed={continuous} title="Continuous testing: run failed tests again after each save" onClick={() => setContinuous(!continuous)}><Repeat size={14} /></button>}
           {featureOn('test-export') && <button className="icon-button" aria-label="Export results as CSV" title="Export results (CSV)" disabled={!tests.length} onClick={() => { const q = (v: string) => (/[",\n]/.test(v) ? `"${v.replace(/"/g, '""')}"` : v); const rows = [['Test', 'Project', 'Outcome', 'Duration (ms)', 'Message'], ...tests.map((t) => { const rs = resultsOf(t, run.results); return [`${t.className}.${t.method}`, t.project, outcome(t) ?? 'not run', rs.length ? String(rs.reduce((n, r) => n + r.durationMs, 0)) : '', rs.find((r) => r.message)?.message ?? '']; })]; const url = URL.createObjectURL(new Blob([rows.map((r) => r.map(q).join(',')).join('\r\n')], { type: 'text/csv' })); const a = document.createElement('a'); a.href = url; a.download = 'test-results.csv'; a.click(); setTimeout(() => URL.revokeObjectURL(url), 1000); }}><Download size={14} /></button>}
           {featureOn('test-summary') && <button className="icon-button" aria-label="Copy results summary" title="Copy results summary" disabled={!tests.length} onClick={() => { const failedNames = tests.filter((t) => outcome(t) === 'failed').map((t) => `- ${t.className}.${t.method}`); const text = [`Passed ${counts.passed}, failed ${counts.failed}, skipped ${counts.skipped}, not run ${counts.none} (${tests.length} tests)`, ...(failedNames.length ? ['', 'Failed:', ...failedNames] : [])].join('\n'); void copyText(text).then((ok) => onNotice(ok ? 'Copied the test results summary.' : 'Clipboard unavailable.')); }}><ClipboardList size={14} /></button>}
           {featureOn('test-failed-only') && <button className={`icon-button ${failedOnly ? 'pressed' : ''}`} aria-label="Show only failed tests" aria-pressed={failedOnly} title="Failed tests only" onClick={() => setFailedOnly(!failedOnly)}><CircleX size={14} /></button>}

@@ -488,6 +488,7 @@ export const FEATURES: Feature[] = [
   { id: 'new-file-here', label: 'New File Next to Active', group: 'Files', essential: true, vs: 'Rider: New ▸ File (Alt+Insert)', description: 'Code ▸ New File Next to Active creates a file in the active file\'s folder and opens it.', commands: ['new-file-here'] },
   { id: 'rename-active-file', label: 'Rename Active File', group: 'Files', essential: true, vs: 'File ▸ Rename (Shift+F6 in Rider)', description: 'Code ▸ Rename Active File renames the file of the active editor (its tab follows).', commands: ['rename-active-file'] },
   { id: 'slowest-tests', label: 'Test Explorer: Slowest Tests', group: 'Tool windows', essential: false, description: 'A Test Explorer button names the five slowest tests of the last run.' },
+  { id: 'continuous-testing', label: 'Continuous testing (failed tests on save)', group: 'Tool windows', essential: false, vs: 'Live Unit Testing', description: 'A Test Explorer toggle runs the failed tests again after each save (Rider\'s continuous testing).' },
 ];
 export const GROUPS: FeatureGroup[] = ['Editing', 'Navigation', 'Code intelligence', 'Tool windows', 'Files', 'Git', 'Gherkin', 'View', 'Debugging', 'Help and productivity'];
 
