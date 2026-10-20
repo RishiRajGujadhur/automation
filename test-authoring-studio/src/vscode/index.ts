@@ -3,4 +3,5 @@ import './lineNumbers';
 import './minimap';
 import './sectionHeaders';
 import './cursor';
+import './font';
 export { SETTINGS } from './settings';

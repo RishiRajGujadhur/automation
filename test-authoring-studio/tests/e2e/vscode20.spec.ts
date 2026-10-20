@@ -185,3 +185,18 @@ test('V6 Cursor surrounding lines', async ({ page }) => {
   for (let i = 1; i < visible - 2; i++) await page.keyboard.press('ArrowDown');
   expect(await view(page).locator('.cm-scroller').evaluate((e) => e.scrollTop)).toBeLessThan(lineH);
 });
+
+test('V7 Font family, weight and ligatures', async ({ page }) => {
+  await open(page, 'Steps/AuthSteps.cs', { 'editor.fontFamily': 'Courier New, monospace', 'editor.fontWeight': '600', 'editor.fontLigatures': true });
+  const content = view(page).locator('.cm-content');
+  const s = await content.evaluate((e) => { const c = getComputedStyle(e); return { family: c.fontFamily, weight: c.fontWeight, liga: c.fontFeatureSettings }; });
+  expect(s.family).toBe('"Courier New", monospace');
+  expect(s.weight).toBe('600');
+  expect(s.liga).toContain('liga');
+  expect(await view(page).locator('.cm-gutters').evaluate((e) => getComputedStyle(e).fontFamily)).toBe('"Courier New", monospace');
+  // Settings ▸ Text Editor ▸ Font lists them.
+  const d = await openSettings(page);
+  await d.getByRole('navigation', { name: 'Settings categories' }).getByRole('button', { name: 'Font', exact: true }).click();
+  await expect(d.locator('[data-setting-id="editor.fontFamily"]')).toHaveClass(/modified/);
+  await expect(d.getByRole('textbox', { name: 'Font Family' })).toHaveValue('Courier New, monospace');
+});

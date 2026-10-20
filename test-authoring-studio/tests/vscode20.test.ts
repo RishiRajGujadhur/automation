@@ -61,3 +61,10 @@ describe('V3 minimap section headers', () => {
     expect(findSectionHeaders(['// MARK: x'], { region: true, mark: true, regex: '(' })).toEqual([]);
   });
 });
+import { fontFamilyCss } from '../src/vscode/font';
+describe('V7 font family', () => {
+  it('quotes names, keeps generic families', () => {
+    expect(fontFamilyCss("Cascadia Code, 'Fira Code',monospace")).toBe('"Cascadia Code", "Fira Code", monospace');
+    expect(fontFamilyCss('')).toBe('');
+  });
+});
