@@ -300,6 +300,7 @@ test('V13 Files: trim trailing whitespace, insert final newline, trim final newl
   // Off (the default): the text is written as it is.
   await setSettings(page, {});
   await setDoc(page, 'class B {  \n}');
+  await expect(page.getByRole('button', { name: 'Close AuthSteps.cs (unsaved)' })).toBeVisible();
   await page.keyboard.press('Control+s');
   await expect.poll(disk, { timeout: 20_000 }).toBe('class B {  \n}');
 });
