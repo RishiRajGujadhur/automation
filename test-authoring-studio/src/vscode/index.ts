@@ -8,6 +8,7 @@ import './whitespace';
 import './wordWrap';
 import './rulers';
 import './unicode';
+import './bracketGuides';
 import './lineHighlight';
 import './filesOnSave';
 import './suggestions';

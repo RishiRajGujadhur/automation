@@ -76,3 +76,12 @@ describe('207 unicode highlighting', () => {
     expect(unicodeHits('say “hi”', o).map((h) => h.like)).toEqual(['"', '"']);
   });
 });
+import { bracketPairs } from '../src/vscode/bracketGuides';
+describe('211 bracket pair guides', () => {
+  it('multi-line pairs with the closing column and depth, strings skipped', () => {
+    const t = 'class A\n{\n    void M()\n    {\n        var s = "}";\n    }\n}\n';
+    expect(bracketPairs(t).map((p) => [p.openLine, p.closeLine, p.column, p.depth])).toEqual([[4, 6, 4, 1], [2, 7, 0, 0]]);
+    expect(bracketPairs('f(a,\n  b)')).toHaveLength(1);
+    expect(bracketPairs('x = [1, 2]; // {')).toHaveLength(0);
+  });
+});

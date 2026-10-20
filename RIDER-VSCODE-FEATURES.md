@@ -228,7 +228,7 @@ Legend: `[x]` done · `[ ]` to do.
 - [x] 208. Invisible character rendering — editor.renderWhitespace (VSCODE-20.md V9)
 - [x] 209. Indentation guides
 - [x] 210. Bracket pair colorization
-- [ ] 211. Bracket pair guides
+- [x] 211. Bracket pair guides — editor.guides.bracketPairs (true / active / false), editor.guides.highlightActiveBracketPair (2026-10-21)
 - [x] 212. Automatic import organization — Organize Usings
 - [x] 213. Automatic import removal — remove unused usings
 - [ ] 214. Import alias generation
@@ -359,3 +359,4 @@ Legend: `[x]` done · `[ ]` to do.
 - 2026-10-21 203: Find in Files results open as a search editor document (VS Code's format) whose result lines open their location.
 - 2026-10-21 204: Search editors are saved under .tas/searches (kept out of Git) and rerun from their # header when opened from the Search view's history.
 - 2026-10-21 207: Look-alike characters in mixed words (Cyrillic а in admin, typographic quotes) and invisible characters get a box with an explanation; prose files skip look-alikes.
+- 2026-10-21 211: Bracket pairs over several lines get a vertical guide at the closing bracket's column, coloured by depth; the pair around the caret is brighter; 'active' shows only that one.

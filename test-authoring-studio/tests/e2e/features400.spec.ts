@@ -354,3 +354,21 @@ test('207 Unicode character highlighting', async ({ page }) => {
   await page.keyboard.press('Escape');
   await expect(hits).toHaveCount(0);
 });
+
+test('211 Bracket pair guides (all, active)', async ({ page }) => {
+  await open(page, CS, { 'editor.guides.bracketPairs': 'true' });
+  await setDoc(page, 'class A\n{\n    void M()\n    {\n        int x = 1;\n    }\n}\n');
+  const guided = page.locator('.cm-line.cm-bracket-guide');
+  await expect(guided).toHaveCount(4);
+  await expect(page.locator('.cm-line', { hasText: 'int x = 1;' })).toHaveAttribute('data-guides', '4,0');
+  // Active: only the pair around the caret.
+  const d = await openSettings(page);
+  await d.getByRole('searchbox', { name: 'Search settings' }).fill('editor.guides.bracketPairs');
+  await d.getByRole('combobox', { name: 'Guides: Bracket Pairs' }).click();
+  await page.getByRole('option', { name: 'active' }).click();
+  await page.keyboard.press('Escape');
+  await page.keyboard.press('Escape');
+  await caretAt(page, 'int x', 0);
+  await expect(page.locator('.cm-line', { hasText: 'int x = 1;' })).toHaveAttribute('data-guides', '4');
+  await expect(guided).toHaveCount(1);
+});
