@@ -294,6 +294,14 @@ export default function SolutionExplorer({ features, revision, activeFile, query
       const order = [...rows.slice(i + (q.length === 1 ? 1 : 0)), ...rows.slice(0, i + (q.length === 1 ? 1 : 0))];
       return focus(order.find((r) => (r.textContent ?? '').trim().toLowerCase().startsWith(q)));
     }
+    if (e.key === 'Enter' && t.matches('.explorer-file') && featureOn('explorer-enter')) {
+      e.preventDefault();
+      const path = t.dataset.path;
+      if (!path) return;
+      open(path);
+      setTimeout(() => { keepTab(path); requestAnimationFrame(() => requestAnimationFrame(() => document.querySelector<HTMLElement>('.gherkin-editor .cm-content, .code-editor:not([hidden]) .cm-content')?.focus())); });
+      return;
+    }
     /* tree keys */
   };
   const open = (file: string) => {
