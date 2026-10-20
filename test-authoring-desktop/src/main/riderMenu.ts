@@ -287,6 +287,7 @@ const ROWS: Record<'edit' | 'view' | 'navigate' | 'code' | 'tools' | 'help', Row
       ['Generate Equality Members', 'generate-equality'],
       ['Generate ToString()', 'generate-tostring'],
       ['Add Null Checks for Parameters', 'add-null-checks'],
+      ['Convert to Expression Body', 'expression-body'],
     ] },
     null,
     { submenu: 'Markdown', rows: [

@@ -638,3 +638,19 @@ export function jsonToCsv(text: string) {
   const cell = (v: unknown) => { const s = v === undefined || v === null ? '' : typeof v === 'object' ? JSON.stringify(v) : String(v); return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s; };
   return [keys.map(cell).join(','), ...rows.map((r) => keys.map((k) => cell(r[k])).join(','))].join('\n');
 }
+
+/** Convert to Expression Body (Visual Studio / Rider): a method whose body is one statement becomes `=> …;`. */
+export function toExpressionBody(view: EditorView) {
+  const doc = view.state.doc;
+  const here = doc.lineAt(view.state.selection.main.head).number;
+  for (let n = Math.min(here, doc.lines); n >= Math.max(1, here - 3); n--) {
+    const head = doc.line(n).text;
+    if (!/\)\s*$/.test(head) || !/\w+\s*\(/.test(head) || /^\s*(if|for|foreach|while|switch|using|lock|catch)\b/.test(head) || n + 3 > doc.lines) continue;
+    const [open, stmt, close] = [doc.line(n + 1).text.trim(), doc.line(n + 2).text.trim(), doc.line(n + 3).text.trim()];
+    if (open !== '{' || close !== '}' || !stmt.endsWith(';') || stmt.includes('{')) continue;
+    const expr = stmt.replace(/^return\s+/, '').replace(/;$/, '');
+    view.dispatch({ changes: { from: doc.line(n).to, to: doc.line(n + 3).to, insert: ` => ${expr};` }, userEvent: 'input' });
+    return true;
+  }
+  return false;
+}
