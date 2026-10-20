@@ -297,6 +297,7 @@ export const FEATURES: Feature[] = [
   { id: 'close-type', label: 'Close All Tabs of This Type', group: 'Files', essential: true, description: 'The tab menu closes every tab with the same extension (pinned ones stay).' },
   { id: 'copy-outline', label: 'Copy Feature Outline', group: 'Gherkin', essential: true, description: 'Copies the feature and its scenarios as a Markdown checklist.', commands: ['copy-outline'] },
   { id: 'test-summary', label: 'Test Explorer: Copy Results Summary', group: 'Tool windows', essential: true, vs: 'Test Explorer ▸ Copy summary', description: 'Copies the passed / failed / skipped counts and the failed tests.' },
+  { id: 'toggle-breadcrumbs', label: 'Toggle Breadcrumbs', group: 'View', essential: true, vs: 'View ▸ Show Breadcrumbs', description: 'View ▸ Breadcrumbs shows or hides the Feature › Rule › Scenario bar.', commands: ['toggle-breadcrumbs'] },
 ];
 export const GROUPS: FeatureGroup[] = ['Editing', 'Navigation', 'Code intelligence', 'Tool windows', 'Files', 'Git', 'Gherkin', 'View', 'Debugging', 'Help and productivity'];
 

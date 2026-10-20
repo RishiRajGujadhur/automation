@@ -207,6 +207,7 @@ has it on by default, so the desktop app starts with it on. The others start off
 | X197 | Close All Tabs of This Type | VS Code / Rider | yes | ✅ 2026-10-20 |
 | X198 | Copy Feature Outline | Rider | yes | ✅ 2026-10-20 |
 | X199 | Test Explorer: Copy Results Summary | VS 2026 | yes | ✅ 2026-10-20 |
+| X200 | Toggle Breadcrumbs | VS Code / VS 2026 | yes | ✅ 2026-10-20 |
 
 ## Progress log
 - 2026-10-20 X1: Sort Lines: the selected lines (or the whole file) in natural, case-insensitive order, blank lines last. Third-batch plumbing: src/rider/more.ts, src/editor/textTools.ts, IDE-FEATURES.md.
@@ -408,3 +409,4 @@ has it on by default, so the desktop app starts with it on. The others start off
 - 2026-10-20 X197: Close tabs with the same extension
 - 2026-10-20 X198: Scenarios as a Markdown checklist
 - 2026-10-20 X199: Counts and failed tests
+- 2026-10-20 X200: View ▸ Breadcrumbs
