@@ -125,6 +125,7 @@ has it on by default, so the desktop app starts with it on. The others start off
 | X115 | Run Not Run Tests | VS 2026 | yes | ✅ 2026-10-20 |
 | X116 | Run Passed Tests | VS 2026 | no | ✅ 2026-10-20 |
 | X117 | Paste as Gherkin Table | Rider | yes | ✅ 2026-10-20 |
+| X118 | Copy Table as CSV | Rider | yes | ✅ 2026-10-20 |
 
 ## Progress log
 - 2026-10-20 X1: Sort Lines: the selected lines (or the whole file) in natural, case-insensitive order, blank lines last. Third-batch plumbing: src/rider/more.ts, src/editor/textTools.ts, IDE-FEATURES.md.
@@ -244,3 +245,4 @@ has it on by default, so the desktop app starts with it on. The others start off
 - 2026-10-20 X115: More run options: tests without a result
 - 2026-10-20 X116: More run options: passed tests
 - 2026-10-20 X117: TSV/CSV clipboard to aligned table
+- 2026-10-20 X118: Table at caret to CSV

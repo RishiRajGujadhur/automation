@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { EditorState, type TransactionSpec } from '@codemirror/state';
 import { EditorView } from '@codemirror/view';
-import { cycleStepKeyword, scenarioToOutline, tableInsertRow, tableAddColumn, tableDeleteColumn, tableSortByColumn, testFilter, selectScenario, renameTag, extractExamplesParameter, outlineToScenario, duplicateScenario, moveScenario, extractBackground, addExamplesTable, toggleTag, toggleScenarioComment, pasteAsTable } from '../src/editor/gherkinTools';
+import { cycleStepKeyword, scenarioToOutline, tableInsertRow, tableAddColumn, tableDeleteColumn, tableSortByColumn, testFilter, selectScenario, renameTag, extractExamplesParameter, outlineToScenario, duplicateScenario, moveScenario, extractBackground, addExamplesTable, toggleTag, toggleScenarioComment, pasteAsTable, tableCsv } from '../src/editor/gherkinTools';
 
 /** Runs an editor command on `doc` with the selection between « and » (or a caret at ‸); with `caret`, the result marks the caret with ¦. */
 function run(doc: string, cmd: (v: EditorView) => boolean, caret = false) {
@@ -107,5 +107,11 @@ describe('Gherkin tools (IDE-FEATURES X49…)', () => {
   it('X117 Paste as Gherkin Table: TSV or CSV, aligned, below a step', () => {
     expect(run('  Given the users:‸', pasteAsTable('name\tage\nAda\t36\r\nBob\t4\n'))).toBe('  Given the users:\n    | name | age |\n    | Ada  | 36  |\n    | Bob  | 4   |');
     expect(run('    ‸', pasteAsTable('a,"b, c","d""e"\n1,2,3'))).toBe('    | a | b, c | d"e |\n    | 1 | 2    | 3   |');
+  });
+  it('X118 Copy Table as CSV', () => {
+    const state = EditorState.create({ doc: '  | name | note        |\n  | Ada  | a, "quoted" |\n  | Bob  | x \\| y      |', selection: { anchor: 5 } });
+    const q = '"';
+    expect(tableCsv(state)).toBe(`name,note\nAda,${q}a, ${q}${q}quoted${q}${q}${q}\nBob,x | y`);
+    expect(tableCsv(EditorState.create({ doc: 'Given x' }))).toBeUndefined();
   });
 });

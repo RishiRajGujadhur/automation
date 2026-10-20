@@ -10,7 +10,7 @@ import { renamePath } from '../files/provider';
 import { movedPath } from '../files/tabs';
 import { DEFAULT_TODO_TOKENS } from '../editor/todoHighlight';
 import { copyText as copyFilterText } from '../ui';
-import { cycleStepKeyword, scenarioToOutline, tableInsertRow, tableAddColumn, tableDeleteColumn, tableSortByColumn, testFilter, selectScenario, extractExamplesParameter, outlineToScenario, duplicateScenario, moveScenario, extractBackground, addExamplesTable, toggleTag, toggleScenarioComment, pasteAsTable } from '../editor/gherkinTools';
+import { cycleStepKeyword, scenarioToOutline, tableInsertRow, tableAddColumn, tableDeleteColumn, tableSortByColumn, testFilter, selectScenario, extractExamplesParameter, outlineToScenario, duplicateScenario, moveScenario, extractBackground, addExamplesTable, toggleTag, toggleScenarioComment, pasteAsTable, tableCsv } from '../editor/gherkinTools';
 import { unsavedFiles } from '../editor/autosave';
 import { getTabs, closeTab } from '../files/tabs';
 import { reopenClosed } from '../files/tabs';
@@ -115,5 +115,6 @@ export function moreCommands(h: MoreHelpers): RiderCommand[] {
     { id: 'comment-scenario', label: 'Comment / Uncomment Scenario', menu: 'Code', submenu: 'Gherkin', run: h.inEditor((v) => toggleScenarioComment(v) || h.notice('Put the caret in a scenario.')) },
     { id: 'quick-info', label: 'Quick Info', menu: 'Edit', shortcut: 'Ctrl K, Ctrl I', run: h.inEditor((v, file) => { if (!file.endsWith('.cs')) { h.notice('Quick Info works in C# files.'); return; } void quickInfoAtCaret(v, file).then((ok) => { if (!ok) h.notice('No information for the symbol at the caret.'); }); }) },
     { id: 'paste-table', label: 'Paste as Gherkin Table', menu: 'Code', submenu: 'Gherkin', run: h.inEditor((v) => { void navigator.clipboard.readText().then((t) => { if (!pasteAsTable(t)(v)) h.notice('The clipboard has no rows to paste (copy cells from a spreadsheet or CSV).'); }, () => h.notice('Clipboard unavailable.')); }) },
+    { id: 'copy-table-csv', label: 'Copy Table as CSV', menu: 'Code', submenu: 'Gherkin', run: h.inEditor((v) => { const csv = tableCsv(v.state); if (!csv) { h.notice('Put the caret in a table.'); return; } void copyText(csv).then((ok) => h.notice(ok ? `Copied ${csv.split('\n').length} rows as CSV.` : 'Clipboard unavailable.')); }) },
   ];
 }

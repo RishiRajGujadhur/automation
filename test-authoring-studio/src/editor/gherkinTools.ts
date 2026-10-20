@@ -406,3 +406,11 @@ export function pasteAsTable(text: string) {
     return true;
   };
 }
+
+/** Copy Table as CSV: the table at the caret, cells quoted when they need it. */
+export function tableCsv(state: EditorState) {
+  const t = tableAt(state);
+  if (!t) return undefined;
+  const cell = (c: string) => { const v = c.replace(/\\\|/g, '|'); return /[",\n]/.test(v) ? `"${v.replace(/"/g, '""')}"` : v; };
+  return t.rows.map((r) => r.map(cell).join(',')).join('\n');
+}

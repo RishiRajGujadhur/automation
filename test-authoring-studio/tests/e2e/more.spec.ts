@@ -569,7 +569,8 @@ test('X117 / X118 Paste as Gherkin Table and Copy Table as CSV', async ({ page, 
   await expect.poll(() => doc(page)).toMatch(/\| name \| age \|\r?\n\s+\| Ada {2}\| 36 {2}\|/);
   await caretAt(page, '| Ada');
   await gherkinItem(page, /^Copy Table as CSV/);
-  await expect.poll(() => page.evaluate(() => navigator.clipboard.readText())).toBe('name,age\nAda,36');
+  // The Windows clipboard turns \n into \r\n.
+  await expect.poll(() => page.evaluate(async () => (await navigator.clipboard.readText()).replace(/\r\n/g, '\n'))).toBe('name,age\nAda,36');
 });
 
 test('X119 Scroll bar annotations: errors and the caret line', async ({ page, request }) => {
