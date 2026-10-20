@@ -294,6 +294,7 @@ export const FEATURES: Feature[] = [
   { id: 'status-file-props', label: 'Status bar: File Properties', group: 'Files', essential: true, description: 'A click on the encoding in the status bar shows the file\'s properties.' },
   { id: 'sort-scenarios', label: 'Sort Scenarios by Name', group: 'Gherkin', essential: false, description: 'Orders the scenarios of a feature by title (tags and Examples move with them).', commands: ['sort-scenarios'] },
   { id: 'quick-theme', label: 'Quick Switch Theme', group: 'View', essential: true, vs: 'Quick Switch Scheme (Rider)', description: 'A list of the app themes to switch to (View ▸ Quick Switch Theme).', commands: ['quick-theme'] },
+  { id: 'close-type', label: 'Close All Tabs of This Type', group: 'Files', essential: true, description: 'The tab menu closes every tab with the same extension (pinned ones stay).' },
 ];
 export const GROUPS: FeatureGroup[] = ['Editing', 'Navigation', 'Code intelligence', 'Tool windows', 'Files', 'Git', 'Gherkin', 'View', 'Debugging', 'Help and productivity'];
 

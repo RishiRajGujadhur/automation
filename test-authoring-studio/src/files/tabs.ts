@@ -65,6 +65,14 @@ export function sortTabs() {
   const rest = state.tabs.filter((t) => !t.pinned).sort((a, b) => name(a.file).localeCompare(name(b.file)) || a.file.localeCompare(b.file));
   set({ ...state, tabs: [...state.tabs.filter((t) => t.pinned), ...rest] });
 }
+/** Close All Tabs of This Type (the same extension); pinned tabs stay. */
+export function closeOfType(file: string) {
+  const ext = file.slice(file.lastIndexOf('.')).toLowerCase();
+  const gone = state.tabs.filter((t) => !t.pinned && t.file.toLowerCase().endsWith(ext)).map((t) => t.file);
+  remember(gone);
+  const tabs = state.tabs.filter((t) => !gone.includes(t.file));
+  set({ tabs, active: tabs.some((t) => t.file === state.active) ? state.active : tabs[0]?.file });
+}
 export function closeAll() { remember(state.tabs.filter((t) => !t.pinned).map((t) => t.file)); const tabs = state.tabs.filter((t) => t.pinned); set({ tabs, active: tabs.some((t) => t.file === state.active) ? state.active : tabs[0]?.file }); }
 /** Pinned tabs move to the front (in pin order) and survive Close Others / Close All. */
 export function setPinned(file: string, pinned: boolean) {
