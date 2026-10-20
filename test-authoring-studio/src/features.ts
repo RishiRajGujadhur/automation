@@ -381,6 +381,7 @@ export const FEATURES: Feature[] = [
   { id: 'git-log-remember', label: 'Git Log remembers its filter', group: 'Git', essential: true, description: 'The Git Log filter is kept when the window closes and after a reload; Escape clears it.' },
   { id: 'terminal-zoom', label: 'Terminal: Ctrl+wheel zoom', group: 'Tool windows', essential: true, description: 'Ctrl+mouse wheel over a terminal makes its text bigger or smaller; the size is kept.' },
   { id: 'terminal-rename', label: 'Terminal: rename a tab', group: 'Tool windows', essential: true, description: 'Double-click a terminal tab to give it a name (an empty name goes back to the default).' },
+  { id: 'close-saved', label: 'Close Saved Tabs', group: 'Files', essential: true, vs: 'Close All But Modified', description: 'The tab menu closes every tab without unsaved changes (pinned tabs stay).' },
 ];
 export const GROUPS: FeatureGroup[] = ['Editing', 'Navigation', 'Code intelligence', 'Tool windows', 'Files', 'Git', 'Gherkin', 'View', 'Debugging', 'Help and productivity'];
 

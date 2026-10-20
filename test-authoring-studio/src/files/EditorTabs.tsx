@@ -8,7 +8,7 @@ import { RowMenu, copyText } from '../ui';
 import { Dropdown } from '../radix';
 import { UNSAVED_EVENT, unsavedFiles } from '../editor/autosave';
 import { SELECT_IN_EXPLORER } from '../SolutionExplorer';
-import { useTabs, activateTab, closeOthers, closeToRight, closeToLeft, unpinAll, sortTabs, closeOfType, closeAll, setPinned, keepTab, type EditorTab } from './tabs';
+import { useTabs, activateTab, closeOthers, closeToRight, closeToLeft, unpinAll, sortTabs, closeOfType, closeAll, closeSaved, setPinned, keepTab, type EditorTab } from './tabs';
 import { fileType } from './fileTypes';
 
 const base = (f: string) => f.split('/').pop()!;
@@ -87,6 +87,7 @@ export default function EditorTabs({ onClose, onSplit, children }: { onClose: (f
                 ...(featureOn('close-left') ? [{ label: 'Close to the Left', onSelect: () => closeToLeft(t.file) }] : []),
                 { label: 'Close to the Right', onSelect: () => closeToRight(t.file) },
                 { label: 'Close All', icon: XCircle, onSelect: () => closeAll() },
+                ...(featureOn('close-saved') ? [{ label: 'Close Saved Tabs', onSelect: () => closeSaved(dirty) }] : []),
                 ...(featureOn('sort-tabs') ? [{ label: 'Sort Tabs by Name', onSelect: () => sortTabs() }] : []),
                 ...(featureOn('close-type') && t.file.includes('.') ? [{ label: `Close All ${t.file.slice(t.file.lastIndexOf('.'))} Tabs`, onSelect: () => closeOfType(t.file) }] : []),
                 'separator',

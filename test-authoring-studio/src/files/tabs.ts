@@ -79,6 +79,8 @@ export function closeOfType(file: string) {
   const tabs = state.tabs.filter((t) => !gone.includes(t.file));
   set({ tabs, active: tabs.some((t) => t.file === state.active) ? state.active : tabs[0]?.file });
 }
+/** Closes the tabs without unsaved changes (Rider's Close Unmodified) (QOL-50). */
+export function closeSaved(dirty: string[]) { const gone = state.tabs.filter((t) => !t.pinned && !dirty.includes(t.file)); remember(gone.map((t) => t.file)); const tabs = state.tabs.filter((t) => !gone.includes(t)); set({ tabs, active: tabs.some((t) => t.file === state.active) ? state.active : tabs[0]?.file }); }
 export function closeAll() { remember(state.tabs.filter((t) => !t.pinned).map((t) => t.file)); const tabs = state.tabs.filter((t) => t.pinned); set({ tabs, active: tabs.some((t) => t.file === state.active) ? state.active : tabs[0]?.file }); }
 /** Pinned tabs move to the front (in pin order) and survive Close Others / Close All. */
 export function setPinned(file: string, pinned: boolean) {

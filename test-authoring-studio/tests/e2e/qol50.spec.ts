@@ -572,3 +572,53 @@ test('QL84 / QL85 Terminal: Ctrl+wheel zoom; rename a tab', async ({ page }) => 
   await panel.getByRole('tab').first().dblclick();
   await expect(panel.getByRole('tab').first()).toHaveText(/Server/);
 });
+
+test('QL86 / QL87 Close Saved Tabs; Close to the Right can be reopened', async ({ page }) => {
+  await openFeature(page);
+  await nav(page).getByRole('button', { name: 'AuthSteps.cs', exact: true }).first().dblclick();
+  await nav(page).getByRole('button', { name: 'SearchSteps.cs', exact: true }).first().dblclick();
+  // QL87: closing to the right of AuthSteps.cs, then Reopen Closed Tab.
+  await page.locator('.editor-tab-label', { hasText: 'AuthSteps.cs' }).click({ button: 'right' });
+  await page.getByRole('menuitem', { name: 'Close to the Right' }).click();
+  await expect(page.locator('.editor-tab-label', { hasText: 'SearchSteps.cs' })).toHaveCount(0);
+  await menuItem(page, 'View', /^Reopen Closed Tab/);
+  await expect(page.locator('.editor-tab-label', { hasText: 'SearchSteps.cs' })).toHaveCount(1);
+  // QL86: only the unsaved Login.feature stays.
+  await page.locator('.editor-tab-label', { hasText: 'Login.feature' }).click();
+  await caretAt(page, 'Feature:');
+  await page.keyboard.type('x');
+  await page.locator('.editor-tab-label', { hasText: 'AuthSteps.cs' }).click({ button: 'right' });
+  await page.getByRole('menuitem', { name: 'Close Saved Tabs' }).click();
+  await expect(page.locator('.editor-tab-label')).toHaveCount(1);
+  await expect(page.locator('.editor-tab-label')).toHaveText(/Login\.feature/);
+});
+
+test('QL88 / QL89 Gherkin: < closes with >; Examples header from the outline', async ({ page }) => {
+  await openFeature(page);
+  await caretAt(page, 'Feature:');
+  await page.keyboard.press('Control+End');
+  await page.keyboard.press('Enter');
+  await page.keyboard.press('Enter');
+  await page.keyboard.type('  Scenario Outline: Roles');
+  await page.keyboard.press('Enter');
+  await page.keyboard.type('Given the user signs in as <role');
+  await expect.poll(() => doc(page)).toContain('signs in as <role>');
+  await page.keyboard.press('End');
+  await page.keyboard.press('Enter');
+  await page.keyboard.type('Examples:');
+  await page.keyboard.press('Enter');
+  await expect.poll(() => doc(page)).toMatch(/Examples:\n\s+\| role \|\n\s+\| $/);
+});
+
+test('QL90 Terminal: right-click pastes', async ({ page, context }) => {
+  await context.grantPermissions(['clipboard-read', 'clipboard-write']);
+  await openFeature(page);
+  await page.keyboard.press('Alt+F12');
+  const panel = page.getByRole('region', { name: 'Terminal' });
+  const host = panel.locator('.terminal-host:not([hidden])');
+  await expect(host.locator('.xterm-rows')).toContainText('PS ', { timeout: 30_000 });
+  await page.evaluate(() => navigator.clipboard.writeText('Write-Output pasted-90'));
+  await host.click({ button: 'right' });
+  await expect(host.locator('.xterm-rows')).toContainText('Write-Output pasted-90');
+  await expect(host.locator('.xterm-rows')).not.toContainText(/pasted-90[\s\S]*pasted-90/);
+});

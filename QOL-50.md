@@ -92,6 +92,7 @@ Every improvement is verified by a unit or Playwright test (`tests/e2e/qol50.spe
 | QL83 | Git Log remembers its filter | Git | ✅ 2026-10-20 |
 | QL84 | Terminal Ctrl+wheel zoom | Tool windows | ✅ 2026-10-20 |
 | QL85 | Rename a terminal tab | Tool windows | ✅ 2026-10-20 |
+| QL86 | Close Saved Tabs | Files | ✅ 2026-10-20 |
 
 ## Progress log
 - 2026-10-20 QL1: Title names the file and workspace folder
@@ -179,3 +180,4 @@ Every improvement is verified by a unit or Playwright test (`tests/e2e/qol50.spe
 - 2026-10-20 QL83: The Git Log filter is kept across closing and reloads; Escape clears it.
 - 2026-10-20 QL84: Ctrl+wheel over a terminal changes its font size for all terminals; kept.
 - 2026-10-20 QL85: Double-click a terminal tab to name it; the name is no longer replaced by the folder.
+- 2026-10-20 QL86: The tab menu closes every tab without unsaved changes; pinned tabs stay.
