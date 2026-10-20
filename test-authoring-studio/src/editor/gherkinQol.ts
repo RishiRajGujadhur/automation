@@ -44,6 +44,19 @@ export const pipeInEmptyRow = EditorView.inputHandler.of((view, from, to, text) 
   view.dispatch({ changes: { from: line.from, to: line.to, insert: `${indent}|` }, selection: { anchor: line.from + indent.length + 1 }, userEvent: 'input.type' });
   return true;
 });
+/** A lowercase keyword at the start of a line is capitalised as you finish it: "given " → "Given ", "scenario:" → "Scenario:" (QOL-50). */
+const STEP_WORDS = /^(\s*)(given|when|then|and|but)$/;
+const BLOCK_WORDS = /^(\s*)(feature|rule|background|scenario|scenario outline|scenario template|example|examples|scenarios)$/;
+export const capitaliseKeywords = EditorView.inputHandler.of((view, from, to, text) => {
+  if ((text !== ' ' && text !== ':') || from !== to || !featureOn('gherkin-capitalise')) return false;
+  const line = view.state.doc.lineAt(from);
+  const before = line.text.slice(0, from - line.from);
+  const m = (text === ' ' ? STEP_WORDS : BLOCK_WORDS).exec(before);
+  if (!m) return false;
+  const word = m[2][0].toUpperCase() + m[2].slice(1);
+  view.dispatch({ changes: { from: line.from + m[1].length, to: from, insert: word + text }, selection: { anchor: from + 1 }, userEvent: 'input.type' });
+  return true;
+});
 /** Pasted table rows are aligned with the table they land in. */
 export const alignOnPaste = EditorView.updateListener.of((u) => {
   if (!featureOn('paste-align') || !u.docChanged || !u.transactions.some((t) => t.isUserEvent('input.paste'))) return;
@@ -83,4 +96,4 @@ export const tagHover = hoverTooltip(async (view, pos) => {
   return { pos: line.from + m.index!, end: line.from + m.index! + m[0].length, above: true, create: () => { const dom = document.createElement('div'); dom.className = 'cm-tag-info'; dom.textContent = `${m[0]}: ${n} scenario${n === 1 ? '' : 's'} in the repository${row ? '' : ' (save to count this file)'}`; return { dom }; } };
 });
 // gherkin qol
-export const gherkinQol: Extension[] = [tagHover, alignOnPaste, tableEnter, pipeInEmptyRow, gherkinIndent];
+export const gherkinQol: Extension[] = [tagHover, alignOnPaste, tableEnter, pipeInEmptyRow, gherkinIndent, capitaliseKeywords];
