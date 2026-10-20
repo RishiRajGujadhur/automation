@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { EditorState, type TransactionSpec } from '@codemirror/state';
 import type { EditorView } from '@codemirror/view';
-import { sortJsonKeys, jsonPointerAt, xpathAt } from '../src/editor/docTools';
+import { sortJsonKeys, jsonPointerAt, xpathAt, wordCount } from '../src/editor/docTools';
 
 const apply = (doc: string, cmd: (v: EditorView) => boolean) => {
   let state = EditorState.create({ doc });
@@ -27,5 +27,8 @@ describe('document tools (X162…)', () => {
     expect(xpathAt(xml, xml.indexOf('"user"'))).toBe("/Dictionary/Page[@name='Login']/Field[@id='user']");
     expect(xpathAt(xml, xml.indexOf('here'))).toBe('/Dictionary/Page[2]/Item[2]');
     expect(xpathAt(xml, 0)).toBeUndefined();
+  });
+  it('X165 word count', () => {
+    expect(wordCount('# Title here\n\nIt\'s *two* [links](x) and `code`.\n\n```\nignored words\n```')).toBe(8);
   });
 });

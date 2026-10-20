@@ -80,3 +80,6 @@ export function xpathAt(text: string, pos: number) {
   if (!path.length) return undefined;
   return path.map((e) => `/${e.name}${e.attr ?? (e.index > 1 ? `[${e.index}]` : '')}`).join('');
 }
+
+/** Words in Markdown text (status bar), code fences and markup aside. */
+export const wordCount = (text: string) => (text.replace(/```[\s\S]*?```/g, ' ').replace(/[#>*_`|\[\]()!-]/g, ' ').match(/[\p{L}\p{N}][\p{L}\p{N}'’]*/gu) ?? []).length;

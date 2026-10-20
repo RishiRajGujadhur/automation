@@ -11,6 +11,7 @@ import { runRider } from './rider/commands';
 import { featureOn } from './features';
 import { activeEditor } from './editor/activeEditor';
 import { featureStats } from './editor/gherkinTools';
+import { wordCount } from './editor/docTools';
 
 /**
  * Right side of the status bar, like Visual Studio's: Git branch (with ↑/↓), errors and warnings of the last build,
@@ -46,6 +47,7 @@ export default function StatusBarItems({ repository, onGit, onErrors }: { reposi
             ]}
           />
           <span className="status-item" title="Encoding">UTF-8</span>
+          {featureOn('md-word-count') && /\.(md|markdown|txt)$/i.test(cursor.file) && (() => { const a = activeEditor(); if (!a || a.file !== cursor.file) return null; const s = a.view.state.selection.main; const n = wordCount(s.empty ? a.view.state.doc.toString() : a.view.state.sliceDoc(s.from, s.to)); return <span className="status-item" aria-label="Word count">{n} word{n === 1 ? '' : 's'}{s.empty ? '' : ' selected'}</span>; })()}
           {featureOn('feature-stats') && cursor.file.endsWith('.feature') && (() => { const a = activeEditor(); if (!a || a.file !== cursor.file) return null; const s = featureStats(a.view.state.doc.toString()); return <span className="status-item" aria-label="Feature statistics" title={`${s.scenarios} scenario${s.scenarios === 1 ? '' : 's'}, ${s.examples} example row${s.examples === 1 ? '' : 's'}, ${s.steps} step${s.steps === 1 ? '' : 's'}`}>{s.scenarios} scenario{s.scenarios === 1 ? '' : 's'} · {s.steps} step{s.steps === 1 ? '' : 's'}</span>; })()}
           {featureOn('indentation') && (
             <Dropdown
