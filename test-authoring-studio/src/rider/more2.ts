@@ -2,7 +2,7 @@ import type { RiderCommand } from './commands';
 import type { MoreHelpers } from './more';
 import { copyText } from '../ui';
 import { tableDeleteEmptyRows, tableRemoveDuplicateRows, tableMarkdown, tagAllScenarios, removeTagEverywhere, sortTags, promoteCommonTags, insertDocString, expandOutline, wrapInRule, setLanguageHeader, scenarioName, tableInsertRowAbove, addScenarioOutline, tableColumnStats, tableColumnValues, tableFillSeries, mergeExamples } from '../editor/gherkinTools';
-import { urlEncode, urlDecode, base64Encode, base64Decode, escapeString, unescapeString, htmlEncode, htmlDecode, stepNumber, insertSequence, toggleQuotes, joinWith, splitAt, alignAssignments, swapSelections, countOccurrences, trimLines, stamp, insertText, LOREM, shuffleLines, reformatXml, minifyXml, jsonEscape, jsonUnescape, numberLines, mapDoc, toFileScopedNamespace, toBlockScopedNamespace, removeRegions, toRawString, toggleTask, formatMarkdownTable, tableOfContents, MARKDOWN_TABLE, removeComments, concatToInterpolationCmd } from '../editor/textTools2';
+import { urlEncode, urlDecode, base64Encode, base64Decode, escapeString, unescapeString, htmlEncode, htmlDecode, stepNumber, insertSequence, toggleQuotes, joinWith, splitAt, alignAssignments, swapSelections, countOccurrences, trimLines, stamp, insertText, LOREM, shuffleLines, reformatXml, minifyXml, jsonEscape, jsonUnescape, numberLines, mapDoc, toFileScopedNamespace, toBlockScopedNamespace, removeRegions, toRawString, toggleTask, formatMarkdownTable, tableOfContents, MARKDOWN_TABLE, removeComments, concatToInterpolationCmd, gotoOffset } from '../editor/textTools2';
 
 /**
  * Fourth batch of Visual Studio 2026 / JetBrains Rider commands (IDE-FEATURES-4.md, Y1–Y100). RiderHost registers
@@ -64,5 +64,6 @@ export function moreCommands2(h: MoreHelpers): RiderCommand[] {
     { id: 'table-copy-column', label: 'Table: Copy Column', menu: 'Code', submenu: 'Gherkin', run: h.inEditor((v) => { const t = tableColumnValues(v.state); if (t === null) { h.notice('Put the caret in a table.'); return; } void copyText(t).then((ok) => h.notice(ok ? `Copied ${t ? t.split('\n').length : 0} values.` : 'Clipboard unavailable.')); }) },
     { id: 'table-fill-series', label: 'Table: Fill Series', menu: 'Code', submenu: 'Gherkin', run: h.inEditor((v) => tableFillSeries(v) || h.notice('Put the caret in a table cell below the header.')) },
     { id: 'merge-examples', label: 'Merge Examples Tables', menu: 'Code', submenu: 'Gherkin', run: h.inEditor((v) => mergeExamples(v) || h.notice('The outline needs two Examples tables with the same columns.')) },
+    { id: 'goto-offset', label: 'Go to Offset…', menu: 'Navigate', run: h.inEditor((v) => { const t = window.prompt(`Character offset (0–${v.state.doc.length}):`, String(v.state.selection.main.head)); if (t === null) return; if (!gotoOffset(Number(t.trim()))(v)) h.notice('Type a whole number.'); }) },
   ];
 }

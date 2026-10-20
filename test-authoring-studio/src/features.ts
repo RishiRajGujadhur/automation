@@ -447,6 +447,7 @@ export const FEATURES: Feature[] = [
   { id: 'duplicate-examples-rows', label: 'Warn on duplicate Examples rows', group: 'Gherkin', essential: true, vs: 'Reqnroll: duplicate examples', description: 'A row repeated in an Examples table gets a warning (it runs the same test twice).' },
   { id: 'move-tab', label: 'Tab menu: Move to Start / End', group: 'Files', essential: false, description: 'The editor tab menu moves a tab to the start or the end of the strip (pinned tabs stay first).' },
   { id: 'memory-indicator', label: 'Memory indicator (status bar)', group: 'View', essential: false, description: 'The status bar shows how much memory the page uses (Rider\'s memory indicator).' },
+  { id: 'goto-offset', label: 'Go to Offset', group: 'Navigation', essential: false, description: 'Navigate ▸ Go to Offset puts the caret at a character offset of the file.', commands: ['goto-offset'] },
 ];
 export const GROUPS: FeatureGroup[] = ['Editing', 'Navigation', 'Code intelligence', 'Tool windows', 'Files', 'Git', 'Gherkin', 'View', 'Debugging', 'Help and productivity'];
 

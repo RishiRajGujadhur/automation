@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { EditorSelection, EditorState, type TransactionSpec } from '@codemirror/state';
 import type { EditorView } from '@codemirror/view';
-import { mapSelections, urlEncode, urlDecode, base64Encode, base64Decode, escapeString, unescapeString, htmlEncode, htmlDecode, stepNumber, insertSequence, toggleQuotes, joinWith, splitAt, alignAssignments, swapSelections, countOccurrences, trimLines, stamp, insertText, LOREM, shuffleLines, formatXml, minifyXml, jsonEscape, jsonUnescape, numberLines, toFileScopedNamespace, toBlockScopedNamespace, removeRegions, toRawString, toggleTask, formatMarkdownTable, tableOfContents, MARKDOWN_TABLE, removeComments, concatToInterpolation, concatToInterpolationCmd } from '../src/editor/textTools2';
+import { mapSelections, urlEncode, urlDecode, base64Encode, base64Decode, escapeString, unescapeString, htmlEncode, htmlDecode, stepNumber, insertSequence, toggleQuotes, joinWith, splitAt, alignAssignments, swapSelections, countOccurrences, trimLines, stamp, insertText, LOREM, shuffleLines, formatXml, minifyXml, jsonEscape, jsonUnescape, numberLines, toFileScopedNamespace, toBlockScopedNamespace, removeRegions, toRawString, toggleTask, formatMarkdownTable, tableOfContents, MARKDOWN_TABLE, removeComments, concatToInterpolation, concatToInterpolationCmd, gotoOffset } from '../src/editor/textTools2';
 
 /** Runs an editor command on `doc` with the selection between « and » (or a caret at |). */
 function run(doc: string, cmd: (v: EditorView) => boolean) {
@@ -143,5 +143,12 @@ describe('text tools, fourth batch (IDE-FEATURES-4 Y1…)', () => {
     expect(concatToInterpolation('"Hello " + user.Name + "! {x} " + Count(a, b + 1)')).toBe('$"Hello {user.Name}! {{x}} {Count(a, b + 1)}"');
     expect(concatToInterpolation('a + b')).toBe(null);
     expect(run('var s = «"a" + b»;', concatToInterpolationCmd)).toBe('var s = $"a{b}";');
+  });
+  it('Y53 Go to Offset', () => {
+    let state = EditorState.create({ doc: 'abc\ndef' });
+    const view = { get state() { return state; }, dispatch: (spec: TransactionSpec) => { state = state.update(spec).state; } };
+    expect(gotoOffset(5)(view as unknown as EditorView)).toBe(true);
+    expect(state.selection.main.head).toBe(5);
+    expect(gotoOffset(-1)(view as unknown as EditorView)).toBe(false);
   });
 });

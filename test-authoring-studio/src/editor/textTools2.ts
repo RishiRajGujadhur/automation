@@ -401,3 +401,11 @@ export function concatToInterpolation(expr: string) {
   return `$"${parts.map((p) => (isStr(p) ? p.slice(1, -1).replace(/[{}]/g, (b) => b + b) : `{${p}}`)).join('')}"`;
 }
 export const concatToInterpolationCmd = mapSelections((t) => { const m = /^(\s*)([\s\S]*?)(;?\s*)$/.exec(t)!; const r = concatToInterpolation(m[2]); return r === null ? null : m[1] + r + m[3]; }, 'line');
+
+/** Go to Offset (Rider Navigate ▸ Offset): the caret at a character offset of the file (from a stack trace or tool). */
+export const gotoOffset = (offset: number) => (view: EditorView) => {
+  if (!Number.isInteger(offset) || offset < 0) return false;
+  const at = Math.min(offset, view.state.doc.length);
+  view.dispatch({ selection: { anchor: at }, scrollIntoView: true });
+  return true;
+};

@@ -167,6 +167,7 @@ const ROWS: Record<'edit' | 'view' | 'navigate' | 'code' | 'tools' | 'help', Row
     ['Go to Test / Test Subject', 'goto-test'],
     ['Clear Recent Files', 'clear-recent'],
     ['Clear All Bookmarks…', 'clear-bookmarks'],
+    ['Go to Offset…', 'goto-offset'],
   ],
   code: [
     ['Insert Live Template…', 'live-template', 'CmdOrCtrl+J'],
