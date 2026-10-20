@@ -1377,8 +1377,8 @@ app.post('/api/debug/exceptions', async (req, res) => {
   res.json({ breakOn });
 });
 app.post('/api/debug/run-to', async (req, res) => {
-  const { file, line } = z.object({ file: repoFile, line: z.number().int().min(1) }).parse(req.body);
-  await debug.runToCursor(file.replaceAll('\\', '/'), line);
+  const { file, line, force } = z.object({ file: repoFile, line: z.number().int().min(1), force: z.boolean().optional() }).parse(req.body);
+  await debug.runToCursor(file.replaceAll('\\', '/'), line, force);
   res.json(debug.state);
 });
 app.post('/api/debug/immediate', async (req, res) => {

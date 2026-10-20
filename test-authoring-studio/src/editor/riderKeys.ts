@@ -338,6 +338,7 @@ export function riderKeys(file = ''): Extension {
     keyed('Mod-}', 'select-brace', selectMatchingBracket),
     keyed('Mod-Shift-]', 'select-brace', selectMatchingBracket),
     keyed('Mod-]', 'goto-brace', cursorMatchingBracket),
+    opens('Mod-Shift-F10', 'force-run-to-cursor'),
     opens('Mod-k Shift-Enter', 'pin-active-tab'),
     keyed('Shift-Alt-t', 'transpose-line', transposeLine),
     keyed('Mod-k Mod-\\', 'delete-whitespace', deleteHorizontalWhiteSpace),

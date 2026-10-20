@@ -387,6 +387,7 @@ const ROWS: Record<'edit' | 'view' | 'navigate' | 'code' | 'tools' | 'help', Row
     ['Tidy Project File', 'tidy-project'],
     ['Open Directory.Build.props', 'directory-build-props'],
     ['Project Dependency Graph', 'project-graph'],
+    ['Force Run to Cursor', 'force-run-to-cursor', 'CmdOrCtrl+Shift+F10'],
   ],
   help: [
     null,

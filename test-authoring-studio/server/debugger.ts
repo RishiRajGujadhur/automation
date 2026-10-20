@@ -64,6 +64,8 @@ export class Debugger extends EventEmitter {
   private changed = new Map<string, string>();
   /** Run to Cursor: a one-shot breakpoint, removed at the next stop (netcoredbg has no native "run to"). */
   private runTo?: { file: string; line: number };
+  /** Force Run to Cursor: breakpoints are set aside until the next stop. */
+  private forceRun = false;
   /** Exception Settings: break when user code leaves an exception unhandled (default), on every throw, or never. */
   breakOn: 'unhandled' | 'all' | 'never' = 'unhandled';
 
@@ -93,7 +95,7 @@ export class Debugger extends EventEmitter {
   private async send(file: string) {
     const all = this.state.breakpoints[file] ?? [];
     // Disabled breakpoints stay listed but are not set; conditions go to the debugger, hit counts and log messages are ours.
-    const active = all.filter((b) => b.enabled !== false);
+    const active = this.forceRun ? [] : all.filter((b) => b.enabled !== false);
     try {
       const oneShot = this.runTo?.file === file && !active.some((b) => b.line === this.runTo!.line) ? [{ line: this.runTo.line }] : [];
       const r = await this.dap!.request<{ breakpoints: { line?: number; verified: boolean }[] }>('setBreakpoints', { source: { path: path.resolve(this.root, file) }, breakpoints: [...active.map((b) => ({ line: b.line, ...(b.condition?.trim() && !b.whenChanged ? { condition: b.condition.trim() } : {}) })), ...oneShot] });
@@ -176,6 +178,7 @@ export class Debugger extends EventEmitter {
       const threadId = body.threadId ?? this.state.threadId;
       // Any stop ends a Run to Cursor: take its one-shot breakpoint out again.
       if (this.runTo) { const done = this.runTo; this.runTo = undefined; await this.send(done.file); }
+      if (this.forceRun) { this.forceRun = false; for (const f of Object.keys(this.state.breakpoints)) await this.send(f); }
       if (body.reason === 'breakpoint' && (await this.tracepointOrSkip(threadId))) return;
       let exception: string | undefined;
       if (body.reason === 'exception') exception = await this.dap!.request('exceptionInfo', { threadId }).then((r: any) => `${r.details?.typeName ?? r.exceptionId}: ${r.description ?? r.details?.message ?? ''}`, () => body.text);
@@ -250,9 +253,12 @@ export class Debugger extends EventEmitter {
   async setBreakOn(mode: 'unhandled' | 'all' | 'never') { this.breakOn = mode; await this.sendExceptions(); }
 
   /** Run to Cursor (Ctrl+F10): continue until the given line (or an earlier breakpoint). */
-  async runToCursor(file: string, line: number) {
+  async runToCursor(file: string, line: number, force = false) {
     if (!this.dap || this.state.status !== 'paused') throw new Error('The debugger is not paused.');
     this.runTo = { file, line };
+    // Force Run to Cursor (Visual Studio): no breakpoint stops on the way.
+    this.forceRun = force;
+    if (force) for (const f of Object.keys(this.state.breakpoints)) if (f !== file) await this.send(f);
     await this.send(file);
     await this.control('continue');
   }
