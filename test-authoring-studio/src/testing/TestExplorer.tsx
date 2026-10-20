@@ -243,6 +243,8 @@ export default function TestExplorer({ revision, onOpen, onDebug, onNotice }: { 
         <section className="t-detail" aria-label="Test details">
           <div className="t-detail-head">{icon(outcome(detail))}<strong>{detail.name}</strong>
             <button className="icon-button" aria-label="Go to test" title="Go To Test" onClick={() => onOpen(detail.file, detail.line)}><Navigation size={13} /></button>
+            {featureOn('test-detail-run') && <button className="icon-button" aria-label="Run this test" title="Run" disabled={running} onClick={() => void start([detail])}><Play size={13} /></button>}
+            {featureOn('test-detail-run') && <button className="icon-button" aria-label="Debug this test" title="Debug" disabled={running} onClick={() => onDebug(detail)}><Bug size={13} /></button>}
           </div>
           <p className="meta">{detail.className}.{detail.method}</p>
           {!detailResults.length && <p className="meta">Not run yet.</p>}

@@ -74,6 +74,7 @@ Every improvement is verified by a unit or Playwright test (`tests/e2e/qol50.spe
 | QL65 | Find in Files starts with the selection | Search | ✅ 2026-10-20 |
 | QL66 | Go to All remembers the last query | Navigation | ✅ 2026-10-20 |
 | QL67 | Test details: Copy message / stack trace | Test Explorer | ✅ 2026-10-20 |
+| QL68 | Test details: Run / Debug | Test Explorer | ✅ 2026-10-20 |
 
 ## Progress log
 - 2026-10-20 QL1: Title names the file and workspace folder
@@ -143,3 +144,4 @@ Every improvement is verified by a unit or Playwright test (`tests/e2e/qol50.spe
 - 2026-10-20 QL65: Selection seeds the search
 - 2026-10-20 QL66: Last query back, selected
 - 2026-10-20 QL67: Copy buttons in details
+- 2026-10-20 QL68: Run / Debug the selected test
