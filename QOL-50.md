@@ -101,6 +101,7 @@ Every improvement is verified by a unit or Playwright test (`tests/e2e/qol50.spe
 | QL92 | Terminal Ctrl+Shift+C / Ctrl+Shift+V | Tool windows | ✅ 2026-10-20 |
 | QL93 | Folder tooltips show a file count | Files | ✅ 2026-10-20 |
 | QL94 | Ctrl+1…9 go to a tab | Files | ✅ 2026-10-20 |
+| QL95 | Tab menu: Copy Full Path | Files | ✅ 2026-10-20 |
 
 ## Progress log
 - 2026-10-20 QL1: Title names the file and workspace folder
@@ -197,3 +198,4 @@ Every improvement is verified by a unit or Playwright test (`tests/e2e/qol50.spe
 - 2026-10-20 QL92: Ctrl+Shift+C copies the terminal selection; Ctrl+Shift+V pastes.
 - 2026-10-20 QL93: Hovering an Explorer folder shows how many files it holds.
 - 2026-10-20 QL94: Ctrl+1 to Ctrl+8 activate that editor tab; Ctrl+9 the last one.
+- 2026-10-20 QL95: The editor tab menu copies the absolute path.
