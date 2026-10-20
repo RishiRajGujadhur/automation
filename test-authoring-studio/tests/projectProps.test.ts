@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { configOf, readProperties, setProperty, setProperties, readEvents, setEvent, readUsings, setUsings, readReferences, setReferences, relativeProjectPath, readFileItem, setFileItem } from '../server/projectProps';
+import { configOf, readProperties, setProperty, setProperties, readEvents, setEvent, readUsings, setUsings, readReferences, setReferences, relativeProjectPath, readFileItem, setFileItem, isExcluded, setExcluded } from '../server/projectProps';
 
 const CSPROJ = `<Project Sdk="Microsoft.NET.Sdk">
   <!-- comment kept -->
@@ -70,5 +70,14 @@ describe('project file items (CSHARP-20)', () => {
     expect(readFileItem(embedded, 'Data/users.json')).toEqual({ action: 'EmbeddedResource', copy: 'Never' });
     expect(embedded).toContain('<None Remove="Data\\users.json" />');
     expect(setFileItem(embedded, 'Data/users.json', { action: 'None', copy: 'Never' })).toBe(CSPROJ);
+  });
+});
+
+describe('exclude from project (CSHARP-20)', () => {
+  it('C12 excludes and includes a file again', () => {
+    const x = setExcluded(CSPROJ, 'Steps/Old.cs', true);
+    expect(x).toContain('<Compile Remove="Steps\\Old.cs" />');
+    expect(isExcluded(x, 'Steps/Old.cs')).toBe(true);
+    expect(setExcluded(x, 'Steps/Old.cs', false)).toBe(CSPROJ);
   });
 });

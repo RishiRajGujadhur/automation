@@ -197,3 +197,15 @@ export function setFileItem(xml: string, rel: string, item: FileItem) {
     : [`<${def} Remove="${xmlAttr(r)}" />`, copy ? `<${item.action} Include="${xmlAttr(r)}">${copy}</${item.action}>` : `<${item.action} Include="${xmlAttr(r)}" />`];
   return addItemGroup(out, lines);
 }
+
+/** Exclude From Project (SDK-style): a Remove item for the file's default item type, nothing else about it. */
+export function isExcluded(xml: string, rel: string) {
+  const r = reEsc(rel.replace(/\//g, '\\'));
+  return new RegExp(`<(Compile|None|Content)\\s+Remove="${r}"\\s*/>`, 'i').test(xml) && !new RegExp(`<\\w+\\s+Include="${r}"`, 'i').test(xml);
+}
+export function setExcluded(xml: string, rel: string, excluded: boolean) {
+  const r = rel.replace(/\//g, '\\');
+  const def = /\.cs$/i.test(r) ? 'Compile' : 'None';
+  const cleared = setFileItem(xml, rel, { action: def, copy: 'Never' });
+  return excluded ? addItemGroup(cleared, [`<${def} Remove="${xmlAttr(r)}" />`]) : cleared;
+}

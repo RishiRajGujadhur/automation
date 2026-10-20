@@ -358,6 +358,7 @@ export default function SolutionExplorer({ features, revision, activeFile, query
         { label: 'Open', icon: FileCode2, onSelect: () => open(path) },
         ...(onSource ? [{ label: 'View source', icon: Eye, onSelect: () => onSource(path, 1) }] : []),
         { label: 'Copy path', icon: Copy, onSelect: () => copied(path) },
+        ...(featureOn('exclude-from-project') && !browserSolution && !/\.(cs|fs|vb)proj$/i.test(path) && ownerProject(path) ? [{ label: 'Exclude From Project…', icon: FileCog, onSelect: () => window.dispatchEvent(new CustomEvent('tas:file-item', { detail: { project: ownerProject(path)!, file: path, exclude: true } })) }] : []),
         ...(featureOn('file-build-action') && !browserSolution && !/\.(cs|fs|vb)proj$/i.test(path) && ownerProject(path) ? [{ label: 'Build Action…', icon: FileCog, onSelect: () => window.dispatchEvent(new CustomEvent('tas:file-item', { detail: { project: ownerProject(path)!, file: path } })) }] : []),
         ...(featureOn('open-to-side') && !path.endsWith('.feature') && !browserSolution ? [{ label: 'Open to the Side', icon: Columns2, onSelect: () => window.dispatchEvent(new CustomEvent('tas:open-split', { detail: path })) }] : []),
         ...(featureOn('explorer-copy-name') ? [{ label: 'Copy file name', icon: Copy, onSelect: () => copied(path.split('/').pop()!) }] : []),
