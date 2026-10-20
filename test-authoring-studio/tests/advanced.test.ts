@@ -3,7 +3,7 @@ import { relativeDay, conflictsIn, resolveConflict, postfix } from '../src/edito
 import { selectHunks } from '../server/git';
 import { outlinePreview } from '../src/editor/gherkinTools';
 import { EditorState } from '@codemirror/state';
-import { addToHistory } from '../src/testing/store';
+import { addToHistory, repeatSummary } from '../src/testing/store';
 
 describe('advanced features (ADVANCED-20)', () => {
   it('registry starts empty', () => { expect(true).toBe(true); });
@@ -54,5 +54,8 @@ describe('advanced features (ADVANCED-20)', () => {
     expect(a.at(-1)!.outcome).toBe('failed');
     const cases = addToHistory({}, [{ name: 'B(1)', className: 'N.C', method: 'B(1)', outcome: 'passed', durationMs: 1 }, { name: 'B(2)', className: 'N.C', method: 'B(2)', outcome: 'failed', durationMs: 2 }], 0);
     expect(cases['N.C.B']).toEqual([{ at: 0, outcome: 'failed', ms: 3 }]);
+  });
+  it('Z7 repeat summary marks flaky tests', () => {
+    expect(repeatSummary(new Map([['A', { passed: 3, runs: 3 }], ['B', { passed: 1, runs: 3 }], ['C', { passed: 0, runs: 3 }]]))).toBe('A 3/3 passed; B 1/3 passed (flaky); C 0/3 passed');
   });
 });

@@ -112,3 +112,21 @@ export function historyOf(t: DiscoveredTest, history = readHistory()) {
   const k = Object.keys(history).find((key) => key.endsWith(`.${t.className}.${t.method}`));
   return k ? history[k] : [];
 }
+
+/** Run Repeatedly (flaky test check, Rider "Run until failure" / VS repeat): the tests n times; per test, how many runs passed. */
+export async function runRepeatedly(tests: DiscoveredTest[], n: number, configuration: string, progress: (run: number) => void) {
+  const tally = new Map<string, { passed: number; runs: number }>();
+  for (let i = 1; i <= n; i++) {
+    progress(i);
+    const done = await finished(await runTests(tests, configuration, false));
+    for (const t of tests) {
+      const rs = resultsOf(t, done.results);
+      const e = tally.get(t.method) ?? { passed: 0, runs: 0 };
+      tally.set(t.method, { passed: e.passed + (rs.length && rs.every((r) => r.outcome === 'passed') ? 1 : 0), runs: e.runs + 1 });
+    }
+    if (done.status === 'cancelled') break;
+  }
+  return tally;
+}
+/** "AddsTwoNumbers 3/3 passed; DividesByZero 2/3 passed (flaky)". */
+export const repeatSummary = (tally: Map<string, { passed: number; runs: number }>) => [...tally].map(([name, t]) => `${name} ${t.passed}/${t.runs} passed${t.passed && t.passed < t.runs ? ' (flaky)' : ''}`).join('; ');

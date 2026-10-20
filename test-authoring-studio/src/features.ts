@@ -502,6 +502,7 @@ export const FEATURES: Feature[] = [
   { id: 'postfix-templates', label: 'Postfix templates (C#)', group: 'Code intelligence', essential: false, description: 'In C#, expr.var, .if, .not, .null, .notnull, .foreach, .return, .await, .throw or .par then Tab rewrites the expression (Rider).' },
   { id: 'outline-preview', label: 'Preview Expanded Outline', group: 'Gherkin', essential: true, vs: 'Rider: Scenario Outline preview', description: 'Code ▸ Gherkin shows the plain scenarios a Scenario Outline runs (one per Examples row), without changing the file.', commands: ['outline-preview'] },
   { id: 'test-history', label: 'Test history', group: 'Tool windows', essential: true, vs: 'Test Explorer ▸ test history', description: 'Test Explorer\'s details show the last 10 outcomes of a test (✓ ✗) and its pass rate.' },
+  { id: 'run-repeatedly', label: 'Test Explorer: Run Repeatedly', group: 'Tool windows', essential: false, description: 'The Test Explorer menu runs the selected tests n times and reports each one\'s pass count (flaky tests stand out).' },
 ];
 export const GROUPS: FeatureGroup[] = ['Editing', 'Navigation', 'Code intelligence', 'Tool windows', 'Files', 'Git', 'Gherkin', 'View', 'Debugging', 'Help and productivity'];
 

@@ -6,7 +6,7 @@ import { api } from '../api';
 import { Dropdown, type MenuEntry } from '../radix';
 import { groupTests, type Group, type GroupBy, matchTest, testDetails } from './grouping';
 import { featureOn } from '../features';
-import { historyOf } from './store';
+import { historyOf, runRepeatedly, repeatSummary } from './store';
 import { useTestRun, discoverTests, runTests, cancelTests, resultsOf, outcomeOf, combine, type DiscoveredTest, type Outcome } from './store';
 
 const icon = (o: Outcome) =>
@@ -103,6 +103,7 @@ export default function TestExplorer({ revision, onOpen, onDebug, onNotice }: { 
     ...(featureOn('coverage-selected') ? [{ label: 'Analyze Code Coverage', icon: ShieldCheck, disabled: running, onSelect: () => void runTests(ts, configuration, true).catch((e) => onNotice((e as Error).message)) }] : []),
     ...(go ? ['separator' as const, { label: 'Go To Test', icon: Navigation, onSelect: () => onOpen(go.file, go.line) }] : []),
     ...(featureOn('test-copy-filter') ? [{ label: 'Copy dotnet test Filter', icon: Copy, onSelect: () => { const f = `dotnet test --filter "${ts.map((t) => t.filter).join('|')}"`; void copyText(f).then((ok) => onNotice(ok ? `Copied: ${f.length > 120 ? `${f.slice(0, 117)}…` : f}` : 'Clipboard unavailable.')); } }] : []),
+    ...(featureOn('run-repeatedly') ? [{ label: 'Run Repeatedly…', icon: RotateCcw, disabled: running, onSelect: () => { const n = Number(window.prompt('Run the selected tests how many times?', '5')); if (!Number.isInteger(n) || n < 1 || n > 100) return; void runRepeatedly(ts, n, configuration, (i) => onNotice(`Run ${i} of ${n}…`)).then((t) => onNotice(`Repeated ${n}×: ${repeatSummary(t)}.`), (e) => onNotice((e as Error).message)); } }] : []),
     ...(featureOn('test-copy-name') ? [{ label: 'Copy Test Name', icon: Copy, onSelect: () => { const n = ts.map((t) => `${t.className}.${t.method}`).join('\n'); void copyText(n).then((ok) => onNotice(ok ? `Copied ${ts.length === 1 ? n : `${ts.length} test names`}.` : 'Clipboard unavailable.')); } }] : []),
     ...(featureOn('test-copy') ? [{ label: 'Copy', icon: Copy, onSelect: () => void copyText(ts.map((t) => testDetails(t, outcomeOf(t, run), resultsOf(t, run.results))).join('\n\n')).then((ok) => onNotice(ok ? `Copied ${ts.length === 1 ? ts[0].name : `${ts.length} tests`}.` : 'Clipboard unavailable.')) }] : []),
     'separator' as const,
