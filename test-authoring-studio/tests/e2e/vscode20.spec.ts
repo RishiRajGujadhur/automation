@@ -200,3 +200,16 @@ test('V7 Font family, weight and ligatures', async ({ page }) => {
   await expect(d.locator('[data-setting-id="editor.fontFamily"]')).toHaveClass(/modified/);
   await expect(d.getByRole('textbox', { name: 'Font Family' })).toHaveValue('Courier New, monospace');
 });
+
+test('V8 Line height and letter spacing', async ({ page }) => {
+  await open(page, 'Steps/AuthSteps.cs', { 'editor.lineHeight': 30, 'editor.letterSpacing': 1.5 });
+  const line = view(page).locator('.cm-line').nth(1);
+  expect(await line.evaluate((e) => getComputedStyle(e).lineHeight)).toBe('30px');
+  expect(await line.evaluate((e) => getComputedStyle(e).letterSpacing)).toBe('1.5px');
+  // The gutter follows (line numbers stay level with their lines).
+  const n = view(page).locator('.cm-lineNumbers .cm-gutterElement').filter({ hasText: /^2$/ });
+  await expect.poll(async () => Math.abs((await n.boundingBox())!.y - (await line.boundingBox())!.y)).toBeLessThan(2);
+  await setSettings(page, { 'editor.lineHeight': 2 });
+  const fs = await view(page).locator('.cm-line').nth(1).evaluate((e) => parseFloat(getComputedStyle(e).fontSize));
+  expect(parseFloat(await view(page).locator('.cm-line').nth(1).evaluate((e) => getComputedStyle(e).lineHeight))).toBeCloseTo(fs * 2, 0);
+});

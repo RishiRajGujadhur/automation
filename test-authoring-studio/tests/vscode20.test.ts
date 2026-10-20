@@ -68,3 +68,11 @@ describe('V7 font family', () => {
     expect(fontFamilyCss('')).toBe('');
   });
 });
+import { lineHeightCss } from '../src/vscode/font';
+describe('V8 line height', () => {
+  it('auto, multiplier or pixels', () => {
+    expect(lineHeightCss(0)).toBe('');
+    expect(lineHeightCss(1.8)).toBe('1.8');
+    expect(lineHeightCss(24)).toBe('24px');
+  });
+});

@@ -21,3 +21,16 @@ settingsExtension(() => {
   if (liga) { style.fontVariantLigatures = 'normal'; style.fontFeatureSettings = '"liga" 1, "calt" 1'; }
   return Object.keys(style).length ? EditorView.theme({ '.cm-content, .cm-gutters': style }) : [];
 });
+
+/* V8 Line height and letter spacing. */
+export const lineHeight = defineSetting<number>({ key: 'editor.lineHeight', category: C, title: 'Line Height', type: 'number', default: 0, min: 0, max: 150, step: 0.1, description: 'Controls the line height. Use 0 to automatically compute the line height from the font size. Values between 0 and 8 will be used as a multiplier with the font size. Values greater than or equal to 8 will be used as effective values.' });
+export const letterSpacing = defineSetting<number>({ key: 'editor.letterSpacing', category: C, title: 'Letter Spacing', type: 'number', default: 0, min: -5, max: 20, step: 0.1, description: 'Controls the letter spacing in pixels.' });
+/** CSS line-height for the setting: '' (the theme's), a multiplier, or pixels. */
+export const lineHeightCss = (v: number) => (!v ? '' : v < 8 ? String(v) : `${v}px`);
+settingsExtension(() => {
+  const lh = lineHeightCss(lineHeight()), ls = letterSpacing();
+  const style: Record<string, string> = {};
+  if (lh) style.lineHeight = `${lh} !important`;
+  if (ls) style.letterSpacing = `${ls}px`;
+  return Object.keys(style).length ? EditorView.theme({ '.cm-content, .cm-gutters, .cm-line, .cm-gutterElement': style }) : [];
+});
