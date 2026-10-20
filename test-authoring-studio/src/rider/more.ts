@@ -1,7 +1,7 @@
 import type { EditorView } from '@codemirror/view';
 import type { RiderCommand } from './commands';
 import { FEATURES, featureOn } from '../features';
-import { exportFeatures, importFeatures } from '../features';
+import { exportFeatures, importFeatures, resetFeatures } from '../features';
 import { saveUserTemplate } from '../editor/snippets';
 import { clearBookmarks, getBookmarks } from '../editor/bookmarks';
 import { clearRecent, recentFiles as recentList } from '../navHistory';
@@ -187,5 +187,6 @@ export function moreCommands(h: MoreHelpers): RiderCommand[] {
     { id: 'table-transpose', label: 'Table: Transpose', menu: 'Code', submenu: 'Gherkin', run: h.inEditor((v) => tableTranspose(v) || h.notice('Put the caret in a table.')) },
     { id: 'table-fill-down', label: 'Table: Fill Down', menu: 'Code', submenu: 'Gherkin', run: h.inEditor((v) => tableFillDown(v) || h.notice('Put the caret in a table cell below another row.')) },
     { id: 'table-clear-column', label: 'Table: Clear Column', menu: 'Code', submenu: 'Gherkin', run: h.inEditor((v) => tableClearColumn(v) || h.notice('Put the caret in a table with rows under its header.')) },
+    { id: 'reset-features', label: 'Reset Feature Settings…', menu: 'Tools', run: () => { if (!window.confirm('Turn every feature back to the default set of this app? Your own switches are forgotten.')) return; resetFeatures(); h.notice('Feature settings are back to the defaults.'); } },
   ];
 }

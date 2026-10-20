@@ -289,6 +289,7 @@ export const FEATURES: Feature[] = [
   { id: 'test-copy-filter', label: 'Test Explorer: Copy dotnet test Filter', group: 'Tool windows', essential: true, description: 'Copies a dotnet test --filter for the selected tests (CI, the command line).' },
   { id: 'test-failed-only', label: 'Test Explorer: Failed tests only', group: 'Tool windows', essential: true, vs: 'Test Explorer ▸ Failed Tests filter', description: 'A toolbar toggle shows only the tests that failed.' },
   { id: 'notifications-copy', label: 'Notifications: Copy All', group: 'Tool windows', essential: true, description: 'Copies every message of the Notifications window.' },
+  { id: 'reset-features', label: 'Reset Feature Settings', group: 'Help and productivity', essential: true, vs: 'Import and Export Settings ▸ Reset all settings', description: 'Turns Settings ▸ Features back to the app\'s default set.', commands: ['reset-features'] },
 ];
 export const GROUPS: FeatureGroup[] = ['Editing', 'Navigation', 'Code intelligence', 'Tool windows', 'Files', 'Git', 'Gherkin', 'View', 'Debugging', 'Help and productivity'];
 
@@ -332,6 +333,8 @@ export function importFeatures(json: string) {
 export function setFeature(id: string, on: boolean) { saved = { ...saved, overrides: { ...saved.overrides, [id]: on } }; changed(); }
 export function setFeatures(values: Record<string, boolean>) { saved = { ...saved, overrides: { ...saved.overrides, ...values } }; changed(); }
 /** A preset clears the individual switches. */
+/** Reset Feature Settings: the default preset of this app (desktop: essentials, web: all), no individual switches. */
+export function resetFeatures() { saved = {}; changed(); }
 export function setFeaturePreset(preset: 'essentials' | 'all') { saved = { preset, overrides: {} }; changed(); }
 export const onFeaturesChanged = (l: () => void) => { listeners.add(l); return () => { listeners.delete(l); }; };
 export const useFeatures = () => { useSyncExternalStore((l) => { listeners.add(l); return () => listeners.delete(l); }, () => version); return featureOn; };

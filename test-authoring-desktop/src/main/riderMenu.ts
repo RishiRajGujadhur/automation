@@ -259,6 +259,7 @@ const ROWS: Record<'edit' | 'view' | 'navigate' | 'code' | 'tools' | 'help', Row
     null,
     ['Export Feature Settings', 'export-features'],
     ['Import Feature Settings…', 'import-features'],
+    ['Reset Feature Settings…', 'reset-features'],
   ],
   help: [
     null,

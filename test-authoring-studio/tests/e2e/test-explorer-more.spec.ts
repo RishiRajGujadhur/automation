@@ -161,3 +161,13 @@ test('X189 / X190 Test Explorer: Copy dotnet test Filter, failed tests only', as
   await te.getByRole('button', { name: 'Show only failed tests' }).click();
   await expect(tree.locator('.t-label', { hasText: /AddsTwoNumbers/ })).toBeVisible();
 });
+
+test('X199 Test Explorer: Copy Results Summary', async ({ page, context }) => {
+  await context.grantPermissions(['clipboard-read', 'clipboard-write']);
+  await start(page);
+  await page.getByRole('button', { name: 'Test Explorer' }).click();
+  const te = page.getByRole('region', { name: 'Test Explorer' });
+  await expect(te.getByRole('navigation', { name: 'Tests' }).locator('.t-label', { hasText: /AddsTwoNumbers/ })).toBeVisible({ timeout: 60_000 });
+  await te.getByRole('button', { name: 'Copy results summary' }).click();
+  await expect.poll(() => page.evaluate(() => navigator.clipboard.readText())).toMatch(/^Passed \d+, failed \d+, skipped \d+, not run \d+ \(\d+ tests\)/);
+});

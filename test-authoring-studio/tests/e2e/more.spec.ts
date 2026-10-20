@@ -958,3 +958,39 @@ test('X191 Notifications: Copy All', async ({ page, context }) => {
   await page.getByRole('button', { name: 'Copy all notifications' }).click();
   await expect.poll(() => page.evaluate(() => navigator.clipboard.readText())).toMatch(/recent file/);
 });
+
+test('X192–X194 Reset Feature Settings, status bar Go to Line and File Properties', async ({ page }) => {
+  await openFeature(page);
+  await menuItem(page, 'View', /Breadcrumbs/);
+  page.once('dialog', (d) => void d.accept());
+  await menuItem(page, 'Tools', /^Reset Feature Settings/);
+  await expect(page.getByText('Feature settings are back to the defaults.').first()).toBeVisible();
+  await caretAt(page, 'Feature:');
+  await page.getByRole('button', { name: 'Cursor position' }).click();
+  await expect(page.locator('.cm-panel input[name="line"], .cm-gotoLine input').first()).toBeVisible();
+  await page.keyboard.press('Escape');
+  await caretAt(page, 'Feature:');
+  await page.getByRole('button', { name: /^Encoding: UTF-8/ }).click();
+  await expect(page.getByRole('dialog', { name: 'Properties' })).toBeVisible();
+});
+
+test('X195–X198 Sort Scenarios, Quick Switch Theme, Close Tabs of This Type, Copy Feature Outline', async ({ page, request, context }) => {
+  await context.grantPermissions(['clipboard-read', 'clipboard-write']);
+  await fs.writeFile(path.join(root, 'Features/Sorted.feature'), ['Feature: Sorted', '  Scenario: Zeta', '    Given z', '', '  Scenario: Alpha', '    Given a', ''].join('\n'));
+  expect((await request.post('/api/workspace', { data: { repositoryRoot: root, targetProject: '.' } })).ok()).toBe(true);
+  await openFeature(page, 'Sorted.feature');
+  await caretAt(page, 'Zeta');
+  await gherkinItem(page, /^Sort Scenarios by Name/);
+  await expect.poll(async () => (await doc(page)).indexOf('Alpha') < (await doc(page)).indexOf('Zeta')).toBe(true);
+  await gherkinItem(page, /^Copy Feature Outline/);
+  await expect.poll(() => page.evaluate(() => navigator.clipboard.readText())).toBe('## Sorted\n\n- [ ] Alpha\n- [ ] Zeta');
+  await menuItem(page, 'View', /^Quick Switch Theme/);
+  await page.getByRole('dialog', { name: 'Quick Switch Theme' }).getByRole('option').last().click();
+  await expect(page.getByText(/^Theme: /).first()).toBeVisible();
+  await page.getByRole('navigation').getByRole('button', { name: 'Login.feature', exact: true }).first().dblclick();
+  await page.getByRole('navigation').getByRole('button', { name: 'AuthSteps.cs', exact: true }).first().dblclick();
+  await page.locator('.editor-tab-label', { hasText: 'Sorted.feature' }).click({ button: 'right' });
+  await page.getByRole('menuitem', { name: 'Close All .feature Tabs' }).click();
+  await expect(page.locator('.editor-tab-label', { hasText: '.feature' })).toHaveCount(0);
+  await expect(page.locator('.editor-tab-label', { hasText: 'AuthSteps.cs' })).toBeVisible();
+});
