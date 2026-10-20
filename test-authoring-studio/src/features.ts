@@ -475,6 +475,7 @@ export const FEATURES: Feature[] = [
   { id: 'validate-json', label: 'Validate JSON', group: 'Editing', essential: true, vs: 'JSON editor validation', description: 'Code ▸ Validate JSON checks the file and puts the caret where the first error is.', commands: ['validate-json'] },
   { id: 'copy-curl', label: 'HTTP Client: Copy Request as cURL', group: 'Tool windows', essential: false, description: 'Tools ▸ Copy Request as cURL turns the .http request at the caret into a curl command.', commands: ['copy-curl'] },
   { id: 'compare-saved', label: 'Compare with Saved', group: 'Files', essential: true, vs: 'File ▸ Compare with Unmodified', description: 'Edit ▸ Compare with Saved shows the unsaved changes of the file as a diff against the saved copy.', commands: ['compare-saved'] },
+  { id: 'curl-to-request', label: 'HTTP Client: Convert cURL to Request', group: 'Tool windows', essential: false, description: 'Tools ▸ Convert cURL to Request turns a pasted curl command into an .http request.', commands: ['curl-to-request'] },
 ];
 export const GROUPS: FeatureGroup[] = ['Editing', 'Navigation', 'Code intelligence', 'Tool windows', 'Files', 'Git', 'Gherkin', 'View', 'Debugging', 'Help and productivity'];
 

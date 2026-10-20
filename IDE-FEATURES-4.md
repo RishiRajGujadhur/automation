@@ -89,6 +89,7 @@ has it on by default, so the desktop app starts with it on. The others start off
 | Y78 | Validate JSON | VS 2026 | yes | ✅ 2026-10-20 |
 | Y79 | HTTP Client: Copy Request as cURL | Rider | no | ✅ 2026-10-20 |
 | Y80 | Compare with Saved | VS 2026 | yes | ✅ 2026-10-20 |
+| Y81 | HTTP Client: Convert cURL to Request | Rider | no | ✅ 2026-10-20 |
 
 ## Progress log
 - 2026-10-20 Y1: Percent-encodes the selection (or line) and decodes it.
@@ -171,3 +172,4 @@ has it on by default, so the desktop app starts with it on. The others start off
 - 2026-10-20 Y78: Checks the JSON and puts the caret at the first error.
 - 2026-10-20 Y79: The .http request at the caret as a curl command.
 - 2026-10-20 Y80: The unsaved changes as a diff against the saved file.
+- 2026-10-20 Y81: A curl command becomes an .http request.

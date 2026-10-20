@@ -589,3 +589,41 @@ export function requestAsCurl(text: string, offset: number) {
   const body = lines.slice(i + 1).join('\n').trim();
   return ['curl', ...(method !== 'GET' || body ? ['-X', method] : []), q(req[2]), ...headers.flatMap((h) => ['-H', q(h)]), ...(body ? ['--data-raw', q(body)] : [])].join(' ');
 }
+
+/** Splits a shell command line into words (single / double quotes, backslash line continuations). */
+function shellWords(cmd: string) {
+  const out: string[] = [];
+  let cur = '', q = '', has = false;
+  const s = cmd.replace(/\\\r?\n/g, ' ');
+  for (let i = 0; i < s.length; i++) {
+    const c = s[i];
+    if (q) { if (c === q) q = ''; else if (c === '\\' && q === '"' && i + 1 < s.length) cur += s[++i]; else cur += c; continue; }
+    if (c === "'" || c === '"') { q = c; has = true; continue; }
+    if (/\s/.test(c)) { if (cur || has) out.push(cur); cur = ''; has = false; continue; }
+    if (c === '\\' && i + 1 < s.length) { cur += s[++i]; continue; }
+    cur += c;
+  }
+  if (cur || has) out.push(cur);
+  return out;
+}
+/** Convert cURL to HTTP Request (Rider HTTP Client: paste a cURL): a curl command as an .http request. */
+export function curlToRequest(cmd: string) {
+  const w = shellWords(cmd.trim());
+  if (w[0] !== 'curl') return null;
+  let method = '', url = '';
+  const headers: string[] = [];
+  let body = '';
+  for (let i = 1; i < w.length; i++) {
+    const a = w[i];
+    if (a === '-X' || a === '--request') method = w[++i] ?? '';
+    else if (a === '-H' || a === '--header') headers.push(w[++i] ?? '');
+    else if (/^(-d|--data|--data-raw|--data-binary|--json)$/.test(a)) { body = w[++i] ?? ''; if (a === '--json') headers.push('Content-Type: application/json'); }
+    else if (a === '-u' || a === '--user') headers.push(`Authorization: Basic ${btoa(w[++i] ?? '')}`);
+    else if (/^-(-compressed|L|s|S|k|i|v|-location|-silent|-insecure)$/.test(a)) continue;
+    else if (!a.startsWith('-') && !url) url = a;
+  }
+  if (!url) return null;
+  if (!method) method = body ? 'POST' : 'GET';
+  return [`${method.toUpperCase()} ${url}`, ...headers, ...(body ? ['', body] : [])].join('\n');
+}
+export const curlToRequestCmd = mapSelections((t) => curlToRequest(t), 'line');

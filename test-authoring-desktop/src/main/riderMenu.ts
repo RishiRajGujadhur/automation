@@ -350,6 +350,7 @@ const ROWS: Record<'edit' | 'view' | 'navigate' | 'code' | 'tools' | 'help', Row
     ['Decode JWT', 'decode-jwt'],
     ['File Statistics', 'file-statistics'],
     ['Copy Request as cURL', 'copy-curl'],
+    ['Convert cURL to Request', 'curl-to-request'],
   ],
   help: [
     null,
