@@ -312,7 +312,7 @@ Legend: `[x]` done · `[ ]` to do.
 
 - [x] 381. Editor tab pinning
 - [x] 382. Editor tab preview mode
-- [ ] 383. Editor tab grouping
+- [x] 383. Editor tab grouping — The side editor group has its own tab strip (several files, switch, close) (2026-10-21)
 - [x] 384. Split editor horizontally — View ▸ Split Editor Down / Right (workbench.editor.openSideBySideDirection) (2026-10-21)
 - [x] 385. Split editor vertically — Split Right / Open to the Side
 - [ ] 386. Move editors between groups
@@ -381,3 +381,4 @@ Legend: `[x]` done · `[ ]` to do.
 - 2026-10-21 392: The panel (Build, Debug, Output…) docks below, left or right of the editors; the place is a setting.
 - 2026-10-21 393: A second side bar on the right of the editors shows Structure, Problems, Git Log, Terminal or another tool window; the choice is remembered.
 - 2026-10-21 400: Differences can be shown side by side with aligned rows; both panes scroll together unless Synchronized scrolling is unticked.
+- 2026-10-21 383: The split editor became an editor group with its own tabs.

@@ -3952,3 +3952,12 @@ html[data-activity-bar='right'] .app-body > .activity-bar { order: 99; border-le
 .sbs-add { background: color-mix(in srgb, #2ea043 20%, transparent); }
 .sbs-empty { background: repeating-linear-gradient(135deg, transparent 0 4px, color-mix(in srgb, var(--text) 6%, transparent) 4px 8px); }
 .sbs-hunk { color: var(--text-muted); font-style: italic; }
+
+/* Editor groups: the side group's own tabs and its lock (RIDER-VSCODE-FEATURES.md 383, 386, 398). */
+.split-tabs { display: flex; flex: 1; min-width: 0; gap: 2px; overflow-x: auto; }
+.split-tab {
+  display: inline-flex; align-items: center; gap: 2px; padding: 0 2px 0 6px; border-radius: 3px; color: var(--text-muted);
+  > button[role='tab'] { border: 0; background: none; color: inherit; font-size: 12px; cursor: pointer; white-space: nowrap; }
+  &.active { background: var(--surface); color: var(--text-strong); box-shadow: inset 0 -2px 0 var(--accent); }
+}
+.split-head .icon-button.on { color: var(--accent-text); }

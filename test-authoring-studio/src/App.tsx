@@ -147,6 +147,8 @@ import {
   FolderTree,
   Keyboard,
   Command as CommandIcon,
+  Unlock,
+  Lock,
   SlidersHorizontal,
   Link2,
   Maximize2,
@@ -459,14 +461,44 @@ export default function App() {
     return () => { clearTimeout(t); window.removeEventListener(FILE_SAVED_EVENT, h); };
   }, []);
   // Split editor (Window ▸ Split / tab ▸ Split Right): a second editor beside the tab group.
-  const [splitFile, setSplitFile] = useLocalState<string | null>('splitFile', null);
+  const [splitFile, setSplitActive] = useLocalState<string | null>('splitFile', null);
+  // The side group has its own tabs (editor groups); a locked group takes no new editors (Open to the Side opens in the main group).
+  const [splitTabs, setSplitTabs] = useLocalState<string[]>('splitTabs', []);
+  const [splitLocked, setSplitLocked] = useLocalState('splitLocked', false);
+  const splitLockedRef = useRef(splitLocked);
+  splitLockedRef.current = splitLocked;
+  const setSplitFile = (f: string | null) => {
+    if (f === null) { setSplitTabs([]); setSplitActive(null); setSplitLocked(false); return; }
+    setSplitTabs((t) => (t.includes(f) ? t : [...t, f]));
+    setSplitActive(f);
+  };
+  const closeSplitTab = (f: string) => {
+    const rest = (splitTabs.length ? splitTabs : splitFile ? [splitFile] : []).filter((x) => x !== f);
+    setSplitTabs(rest);
+    if (splitFile === f) setSplitActive(rest[rest.length - 1] ?? null);
+    if (!rest.length) setSplitLocked(false);
+  };
+  // Move Editor into the Next / Previous Group (VS Code).
+  useEffect(() => {
+    const h = (e: Event) => {
+      const dir = (e as CustomEvent<'next' | 'previous'>).detail;
+      if (dir === 'next') { const f = getTabs().active; if (!f) return; if (splitLockedRef.current) { setNotice('The side editor group is locked.'); return; } setSplitFile(f); closeTab(f); }
+      else { const f = splitFileRef.current; if (!f) return; openTab(f); closeSplitTabRef.current(f); }
+    };
+    window.addEventListener('tas:move-editor', h);
+    return () => window.removeEventListener('tas:move-editor', h);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  const splitFileRef = useRef(splitFile);
+  splitFileRef.current = splitFile;
+  const closeSplitTabRef = useRef(closeSplitTab);
+  closeSplitTabRef.current = closeSplitTab;
   // Split Editor Right / Down (workbench.editor.openSideBySideDirection) and Maximize Editor Group.
   useSettings();
   const sideBySideDir = sideBySide();
   const maximizedGroup = useMaximizedGroup();
   useEffect(() => { const h = () => { const f = getTabs().active; if (f) setSplitFile(f); }; window.addEventListener('tas:split-active', h); return () => window.removeEventListener('tas:split-active', h); }, []); // eslint-disable-line react-hooks/exhaustive-deps
   // Explorer ▸ Open to the Side (VS Code): the file in the split editor.
-  useEffect(() => { const h = (e: Event) => setSplitFile((e as CustomEvent<string>).detail); window.addEventListener('tas:open-split', h); return () => window.removeEventListener('tas:open-split', h); }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => { const h = (e: Event) => { const f = (e as CustomEvent<string>).detail; if (splitLockedRef.current && featureOn('editor-groups')) { openTab(f); setNotice('The side editor group is locked: opened in the main group.'); return; } setSplitFile(f); }; window.addEventListener('tas:open-split', h); return () => window.removeEventListener('tas:open-split', h); }, []); // eslint-disable-line react-hooks/exhaustive-deps
   // One docked bottom panel (as in Visual Studio / VS Code): Build and Debug windows share it as tabs.
   const [dockTab, setDockTab] = useLocalState<'build' | 'debug' | 'output' | 'todo' | RiderTool>('dockTab', 'build');
   // Rider tool windows (Structure, Problems, Hierarchy, Terminal…): more tabs of the same panel.
@@ -2053,7 +2085,17 @@ export default function App() {
             {splitFile && (
               <section className="editor-area split-pane" aria-label={`Split editor ${splitFile}`}>
                 <div className="split-head">
-                  <span title={splitFile}>{splitFile.split('/').pop()}</span>
+                  {featureOn('editor-groups') ? (
+                    <span className="split-tabs" role="tablist" aria-label="Side group tabs">
+                      {(splitTabs.length ? splitTabs : [splitFile]).map((f) => (
+                        <span key={f} className={`split-tab ${f === splitFile ? 'active' : ''}`}>
+                          <button role="tab" aria-selected={f === splitFile} title={f} onClick={() => setSplitActive(f)}>{f.split('/').pop()}</button>
+                          <button className="icon-button" aria-label={`Close ${f.split('/').pop()} in the side group`} onClick={() => closeSplitTab(f)}><X size={11} /></button>
+                        </span>
+                      ))}
+                    </span>
+                  ) : <span title={splitFile}>{splitFile.split('/').pop()}</span>}
+                  {featureOn('editor-groups') && <button className={`icon-button ${splitLocked ? 'on' : ''}`} aria-label="Lock Group" aria-pressed={splitLocked} title={splitLocked ? 'Unlock Group' : 'Lock Group (new editors open in the main group)'} onClick={() => setSplitLocked(!splitLocked)}>{splitLocked ? <Lock size={12} /> : <Unlock size={12} />}</button>}
                   <button className="icon-button" aria-label="Close split editor" title="Close split editor" onClick={() => setSplitFile(null)}><X size={13} /></button>
                 </div>
                 <CodeEditor key={`split:${splitFile}`} file={splitFile} onOpen={editFile} active onNotice={setNotice} onIndex={setIndex} />

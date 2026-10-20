@@ -563,3 +563,27 @@ test('400 Synchronized scrolling between diff panes', async ({ page, context }) 
   await page.waitForTimeout(200);
   expect(await right.evaluate((e) => e.scrollTop)).toBe(400);
 });
+
+test('383 Editor tab grouping; 386 Move editors between groups; 398 Editor group locking', async ({ page }) => {
+  await open(page, CS);
+  await page.getByRole('navigation').getByRole('button', { name: 'SearchSteps.cs', exact: true }).first().click();
+  // SearchSteps.cs (active) into the side group; then AuthSteps.cs too: the side group has two tabs.
+  await menuItem(page, 'View', /^Move Editor into Next Group$/);
+  const side = page.getByRole('tablist', { name: 'Side group tabs' });
+  await expect(side.getByRole('tab')).toHaveText(['SearchSteps.cs']);
+  await expect(page.getByRole('group', { name: 'Open editors' }).locator('.editor-tab-label', { hasText: 'SearchSteps.cs' })).toHaveCount(0);
+  await page.getByRole('group', { name: 'Open editors' }).locator('.editor-tab-label', { hasText: 'AuthSteps.cs' }).click();
+  await menuItem(page, 'View', /^Move Editor into Next Group$/);
+  await expect(side.getByRole('tab')).toHaveText(['SearchSteps.cs', 'AuthSteps.cs']);
+  await side.getByRole('tab', { name: 'SearchSteps.cs' }).click();
+  await expect(page.getByRole('region', { name: 'Split editor Steps/SearchSteps.cs' })).toBeVisible();
+  // Back into the main group.
+  await menuItem(page, 'View', /^Move Editor into Previous Group$/);
+  await expect(side.getByRole('tab')).toHaveText(['AuthSteps.cs']);
+  await expect(page.getByRole('group', { name: 'Open editors' }).locator('.editor-tab-label', { hasText: 'SearchSteps.cs' })).toHaveCount(1);
+  // Locked: Open to the Side opens in the main group instead.
+  await page.getByRole('button', { name: 'Lock Group' }).click();
+  await page.evaluate(() => window.dispatchEvent(new CustomEvent('tas:open-split', { detail: 'Steps/SearchSteps.cs' })));
+  await expect(side.getByRole('tab')).toHaveText(['AuthSteps.cs']);
+  await expect(page.getByText('The side editor group is locked').first()).toBeVisible();
+});
