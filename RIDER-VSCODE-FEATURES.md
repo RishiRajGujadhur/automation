@@ -283,7 +283,7 @@ Legend: `[x]` done · `[ ]` to do.
 - [x] 337. Search within open editors
 - [ ] 338. Search within ignored files
 - [x] 339. Search using glob patterns
-- [ ] 340. Search with multiline regular expressions
+- [x] 340. Search with multiline regular expressions — Find in Files / Replace All: regex with \n matches across lines (2026-10-21)
 
 ## Advanced C# Development
 
@@ -354,3 +354,4 @@ Legend: `[x]` done · `[ ]` to do.
 - 2026-10-21 334: The C# editor shows the compiler's semantic diagnostics (unused variables, unknown names) live from the language server; Next / Previous Warning visits them.
 - 2026-10-21 335: Next Test Failure opens the failed tests of the last run one after another and shows the first line of the failure.
 - 2026-10-21 206: Replace All keeps each match's case (foo → bar, Foo → Bar, FOO → BAR, camelCase / PascalCase).
+- 2026-10-21 340: A regular expression containing a line break searches whole files; replacements keep CRLF line ends.
