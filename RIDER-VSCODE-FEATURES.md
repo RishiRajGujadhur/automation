@@ -306,7 +306,7 @@ Legend: `[x]` done · `[ ]` to do.
 - [x] 357. Convert tuples to named types — Quick Actions: Convert to struct / record struct (titles now complete) (2026-10-21)
 - [x] 358. Convert foreach loops to indexed loops — Quick Actions: Convert to 'for'
 - [x] 359. Convert indexed loops to foreach — Quick Actions: Convert to 'foreach'
-- [ ] 360. Generate switch cases for enum members
+- [x] 360. Generate switch cases for enum members — Quick Actions (IDE0010): Add missing cases / default / both (2026-10-21)
 
 ## Advanced IDE Windows & Layouts
 
@@ -341,3 +341,4 @@ Legend: `[x]` done · `[ ]` to do.
 - 2026-10-21 110: Repeated types in declarations are suggested for simplification ('new' expression, var).
 - 2026-10-21 357: A tuple becomes a struct or record struct with its usages updated; the nested action titles now say which scope.
 - 2026-10-21 92: Switch statements become switch expressions (the IDE analyzer's fix).
+- 2026-10-21 360: A switch over an enum gets a case per missing member.
