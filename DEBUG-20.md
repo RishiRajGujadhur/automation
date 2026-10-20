@@ -1,0 +1,12 @@
+# Advanced Visual Studio 2026 debugging features for C# (DB1–DB20)
+
+Twenty debugger features after [CSHARP-20.md](CSHARP-20.md), on the studio's netcoredbg (Debug Adapter Protocol)
+session: breakpoint management, execution control, variable inspection and visualizers. Each is pushed on its own, with
+a Settings ▸ Features switch and tests that drive a real debugging session of `samples/Calculator`.
+
+| # | Feature | From | Essential | Status |
+| --- | --- | --- | --- | --- |
+| DB1 | Breakpoints window: search | VS 2026 | yes | ✅ 2026-10-20 |
+
+## Progress log
+- 2026-10-20 DB1: Filters breakpoints by file, line, condition, log message or label.

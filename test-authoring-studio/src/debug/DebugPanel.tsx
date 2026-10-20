@@ -129,7 +129,11 @@ export default function DebugPanel({ onOpen, onNotice, onClose, editingRequest =
     if (live) await debugControl('stop').catch(() => {});
     if (target) startDebugging({ project: target.project, filter: target.filter }).catch((e) => onNotice((e as Error).message));
   };
+  const [bpQuery, setBpQuery] = useState('');
   const bpList = Object.entries(breakpoints).flatMap(([file, specs]) => specs.map((b) => ({ ...b, file, verified: state.breakpoints[file]?.find((x) => x.line === b.line)?.verified })));
+  // Search in the Breakpoints window (Visual Studio): file, line, condition, log message, labels.
+  const bpText = (b: (typeof bpList)[number]) => `${b.file}:${b.line} ${b.condition ?? ''} ${b.hitCondition ?? ''} ${b.logMessage ?? ''} ${(b as { labels?: string[] }).labels?.join(' ') ?? ''}`.toLowerCase();
+  const shownBps = featureOn('bp-search') && bpQuery.trim() ? bpList.filter((b) => bpQuery.toLowerCase().split(/\s+/).filter(Boolean).every((t) => bpText(b).includes(t))) : bpList;
   // Breakpoint Settings being edited (Visual Studio's peek under the breakpoint): file:line.
   const [editing, setEditing] = useState<string | null>(editingRequest);
   useEffect(() => { if (editingRequest) { setTab('breakpoints'); setEditing(editingRequest); } }, [editingNonce]); // eslint-disable-line react-hooks/exhaustive-deps
@@ -238,11 +242,12 @@ export default function DebugPanel({ onOpen, onNotice, onClose, editingRequest =
           <div className="dbg-list-tools">
             <IconButton label="Delete all breakpoints" disabled={!bpList.length} onClick={clearBreakpoints}><Trash2 size={13} /></IconButton>
             <IconButton label="Disable all breakpoints" disabled={!bpList.some((b) => b.enabled !== false)} onClick={() => enableAllBreakpoints(false)}><CircleOff size={13} /></IconButton>
+            {featureOn('bp-search') && <input className="dbg-bp-search" type="search" aria-label="Search breakpoints" placeholder="Search" value={bpQuery} onChange={(e) => setBpQuery(e.target.value)} />}
             <IconButton label="Enable all breakpoints" disabled={!bpList.some((b) => b.enabled === false)} onClick={() => enableAllBreakpoints(true)}><CircleDot size={13} /></IconButton>
           </div>
           {bpList.length ? (
             <ul className="dbg-list" aria-label="Breakpoints">
-              {bpList.map((b) => {
+              {shownBps.map((b) => {
                 const key = `${b.file}:${b.line}`;
                 const detail = [b.condition?.trim() && `when ${b.condition.trim()}`, b.hitCondition?.trim() && `hit count ${b.hitCondition.trim()}`, b.logMessage?.trim() && `log "${b.logMessage.trim()}"`].filter(Boolean).join(' · ');
                 return (
