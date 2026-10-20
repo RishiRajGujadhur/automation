@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { EditorSelection, EditorState, type TransactionSpec } from '@codemirror/state';
 import type { EditorView } from '@codemirror/view';
-import { mapSelections, urlEncode, urlDecode, base64Encode, base64Decode, escapeString, unescapeString, htmlEncode, htmlDecode, stepNumber, insertSequence, toggleQuotes, joinWith, splitAt, alignAssignments, swapSelections, countOccurrences, trimLines, stamp, insertText, LOREM, shuffleLines, formatXml, minifyXml, jsonEscape, jsonUnescape, numberLines, toFileScopedNamespace, toBlockScopedNamespace, removeRegions, toRawString, toggleTask, formatMarkdownTable, tableOfContents, MARKDOWN_TABLE, removeComments, concatToInterpolation, concatToInterpolationCmd, gotoOffset, convertTimestamp, timestampCmd, sha256Hex, decodeJwt, jwtAt, sortTokens, markdownCodeBlock, fileStatistics, todoComment, generateEquality, generateToString, addNullChecks, validateJson, requestAsCurl, curlToRequest, jsonToCsv, toExpressionBody, toBlockBody, addBindingAttribute, unicodeEscape, unicodeUnescape, hexDecimal, testData, reverseText } from '../src/editor/textTools2';
+import { mapSelections, urlEncode, urlDecode, base64Encode, base64Decode, escapeString, unescapeString, htmlEncode, htmlDecode, stepNumber, insertSequence, toggleQuotes, joinWith, splitAt, alignAssignments, swapSelections, countOccurrences, trimLines, stamp, insertText, LOREM, shuffleLines, formatXml, minifyXml, jsonEscape, jsonUnescape, numberLines, toFileScopedNamespace, toBlockScopedNamespace, removeRegions, toRawString, toggleTask, formatMarkdownTable, tableOfContents, MARKDOWN_TABLE, removeComments, concatToInterpolation, concatToInterpolationCmd, gotoOffset, convertTimestamp, timestampCmd, sha256Hex, decodeJwt, jwtAt, sortTokens, markdownCodeBlock, fileStatistics, todoComment, generateEquality, generateToString, addNullChecks, validateJson, requestAsCurl, curlToRequest, jsonToCsv, toExpressionBody, toBlockBody, addBindingAttribute, unicodeEscape, unicodeUnescape, hexDecimal, testData, reverseText, fillParagraph } from '../src/editor/textTools2';
 
 /** Runs an editor command on `doc` with the selection between « and » (or a caret at |). */
 function run(doc: string, cmd: (v: EditorView) => boolean) {
@@ -241,5 +241,8 @@ describe('text tools, fourth batch (IDE-FEATURES-4 Y1…)', () => {
   });
   it('Y95 Reverse Text', () => {
     expect(run('«abc😀»', reverseText)).toBe('😀cba');
+  });
+  it('Y96 Fill Paragraph', () => {
+    expect(run('    // one two three four\n    // five six|\n\nx', fillParagraph(20))).toBe('    // one two three\n    // four five six\n\nx');
   });
 });

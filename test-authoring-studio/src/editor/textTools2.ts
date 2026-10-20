@@ -705,3 +705,32 @@ export function testData(kind: 'email' | 'name' | 'number' | 'date', random = Ma
 
 /** Reverse Text (Rider String Manipulation): the characters of the selection in reverse order (surrogate pairs kept). */
 export const reverseText = mapSelections((t) => [...t].reverse().join(''), 'word');
+
+/** Fill Paragraph (Rider): the paragraph at the caret (or the selected lines) re-wrapped at `width` columns, keeping its
+ * indentation and comment prefix (//, ///, #, *, -). */
+export const fillParagraph = (width = 80) => (view: EditorView) => {
+  const { state } = view;
+  const r = state.selection.main;
+  let first = state.doc.lineAt(r.from).number, last = state.doc.lineAt(r.to).number;
+  const prefixOf = (t: string) => /^\s*(\/\/\/?|#|\*|-)?\s*/.exec(t)![0];
+  const bare = (t: string) => t.slice(prefixOf(t).length).trim();
+  if (r.empty) {
+    if (!bare(state.doc.line(first).text)) return false;
+    const p = prefixOf(state.doc.line(first).text).trimEnd();
+    const same = (n: number) => bare(state.doc.line(n).text) !== '' && prefixOf(state.doc.line(n).text).trimEnd() === p;
+    while (first > 1 && same(first - 1)) first--;
+    while (last < state.doc.lines && same(last + 1)) last++;
+  }
+  const lines = Array.from({ length: last - first + 1 }, (_, i) => state.doc.line(first + i).text);
+  const prefix = prefixOf(lines[0]);
+  const words = lines.map(bare).join(' ').split(/\s+/).filter(Boolean);
+  const out: string[] = [];
+  let cur = '';
+  for (const w of words) { if (cur && prefix.length + cur.length + 1 + w.length > width) { out.push(prefix + cur); cur = w; } else cur = cur ? `${cur} ${w}` : w; }
+  if (cur) out.push(prefix + cur);
+  const next = out.join(state.lineBreak);
+  const from = state.doc.line(first).from, to = state.doc.line(last).to;
+  if (next === state.sliceDoc(from, to)) return true;
+  view.dispatch({ changes: { from, to, insert: next }, userEvent: 'input.format' });
+  return true;
+};

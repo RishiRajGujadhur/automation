@@ -91,6 +91,7 @@ const ROWS: Record<'edit' | 'view' | 'navigate' | 'code' | 'tools' | 'help', Row
     ['Shuffle Lines', 'shuffle-lines'],
     ['Copy as Markdown Code Block', 'copy-markdown-block'],
     ['Compare with Saved', 'compare-saved'],
+    ['Fill Paragraph', 'fill-paragraph'],
   ],
   view: [
     null,
