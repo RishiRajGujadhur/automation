@@ -133,7 +133,7 @@ Legend: `[x]` done · `[ ]` to do.
 - [x] 108. Unused symbol detection — IDE0051 / IDE0060: unused private members and parameters faded (2026-10-21)
 - [x] 109. Redundant assignment detection — IDE0059: faded, Remove redundant assignment (2026-10-21)
 - [x] 110. Redundant type declaration detection — IDE0090 / IDE0007: suggestions, Use 'new(...)' (2026-10-21)
-- [ ] 111. Code style enforcement
+- [x] 111. Code style enforcement — .editorconfig code style options (e.g. var preferences) as warnings, fix in Quick Actions (2026-10-21)
 - [x] 112. EditorConfig integration — EditorConfig designer, Gherkin formatting from .editorconfig
 - [x] 113. Roslyn analyzer integration — Roslyn IDE analyzers in the language server: suggestions, faded unused code, fixes in Quick Actions (2026-10-21)
 - [x] 114. Custom analyzer configuration — .editorconfig dotnet_diagnostic.<id>.severity drives the IDE analyzers (warning stays faded) (2026-10-21)
@@ -345,3 +345,4 @@ Legend: `[x]` done · `[ ]` to do.
 - 2026-10-21 87: A lambda becomes a local function (IDE0039) and then a method.
 - 2026-10-21 350: A field with a trivial property becomes an auto-property.
 - 2026-10-21 114: Rule severities from .editorconfig (error, warning, suggestion, none) apply to the analyzers in the editor; unused code raised to a warning is both squiggled and faded.
+- 2026-10-21 111: Code style options with a severity in .editorconfig are enforced in the editor.
