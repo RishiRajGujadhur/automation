@@ -2,6 +2,7 @@ import { test, expect, type Page } from '@playwright/test';
 import fs from 'node:fs/promises';
 import { existsSync } from 'node:fs';
 import os from 'node:os';
+import { execFileSync } from 'node:child_process';
 import path from 'node:path';
 
 // Test Explorer features of the third batch (IDE-FEATURES.md X71–X75) on the runnable Calculator sample.
@@ -303,4 +304,29 @@ test('Z6 / Z7 Test history; Run Repeatedly', async ({ page }) => {
   await test1.click();
   await expect(te.getByLabel('Test history')).toContainText('✓✓');
   await expect(te.getByLabel('Test history')).toContainText('100% passed');
+});
+
+test('Z17 / Z20 Test environment variables; Run Impacted Tests', async ({ page }) => {
+  const git = (...a: string[]) => execFileSync('git', ['-c', 'user.email=t@t', '-c', 'user.name=Ada', ...a], { cwd: root, encoding: 'utf8' });
+  git('init', '-q'); git('add', '-A'); git('commit', '-qm', 'base');
+  await fs.appendFile(path.join(root, 'Steps/CalculatorSteps.cs'), '\n// changed\n');
+  await start(page);
+  await page.getByRole('button', { name: 'Test Explorer' }).click();
+  const te = page.getByRole('region', { name: 'Test Explorer' });
+  await expect(te.getByRole('navigation', { name: 'Tests' }).locator('.t-label', { hasText: /AddsTwoNumbers/ })).toBeVisible({ timeout: 60_000 });
+  // Z17
+  page.once('dialog', (d) => void d.accept('TAS_PROBE=42'));
+  await te.getByRole('button', { name: 'Test environment variables' }).click();
+  await expect(te.getByRole('button', { name: 'Test environment variables' })).toHaveAttribute('aria-pressed', 'true');
+  // Z20: the changed step file affects the scenarios only.
+  const runs: string[] = [];
+  page.on('request', (r) => { if (r.method() === 'POST' && r.url().endsWith('/api/tests/run')) runs.push(r.postData() ?? ''); });
+  await te.getByRole('button', { name: 'Run impacted tests' }).click();
+  await expect.poll(() => runs.length, { timeout: 30_000 }).toBe(1);
+  const body = JSON.parse(runs[0]);
+  const all = (await (await page.request.get('/api/tests')).json()).tests as { id: string; kind: string }[];
+  expect(body.ids).toEqual(all.filter((t) => t.kind === 'scenario').map((t) => t.id));
+  expect(body.env).toEqual({ TAS_PROBE: '42' });
+  await expect.poll(async () => (await (await page.request.get('/api/tests/run')).json()).output as string, { timeout: 60_000 }).toContain('(environment: TAS_PROBE)');
+  await expect.poll(() => status(page), { timeout: 240_000, intervals: [2000] }).toMatch(/done|failed/);
 });

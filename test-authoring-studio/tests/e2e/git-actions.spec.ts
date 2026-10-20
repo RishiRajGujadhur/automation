@@ -287,3 +287,8 @@ test('Z1 / Z3 Inline blame on the caret line; Stage Selected Lines', async ({ pa
   expect(staged).not.toContain('(two)');
   expect(g('diff')).toContain('(two)');
 });
+
+test('Z18 Code Vision: who changed each scenario', async ({ page }) => {
+  await open(page);
+  await expect(page.locator('.cm-code-vision').first()).toHaveText(/^Ada · today$/);
+});

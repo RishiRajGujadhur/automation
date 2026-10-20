@@ -108,3 +108,21 @@ test('Z11 / Z13 / Z14 / Z15 Same-definition highlight, Go to All calculator, par
   await page.keyboard.press('Enter');
   await expect.poll(() => page.evaluate(() => navigator.clipboard.readText())).toBe('14');
 });
+
+test('Z16 / Z19 Living documentation export; step hover shows the definition docs', async ({ page }) => {
+  const steps = path.join(root, 'Steps/AuthSteps.cs');
+  await fs.writeFile(steps, (await fs.readFile(steps, 'utf8')).replace(' [Given("the login page is open")]', ' /// <summary>Opens the sign-in page of the app.</summary>\n [Given("the login page is open")]'));
+  expect((await page.request.post('/api/workspace', { data: { repositoryRoot: root, targetProject: '.' } })).ok()).toBe(true);
+  await open(page);
+  await expect(page.getByLabel('Gherkin source')).toContainText('Feature:');
+  // Z19
+  await page.getByLabel('Gherkin source').locator('.cm-line', { hasText: 'the login page is open' }).hover({ position: { x: 120, y: 6 } });
+  await expect(page.locator('.cm-binding-doc')).toHaveText('Opens the sign-in page of the app.', { timeout: 10_000 });
+  await expect(page.locator('.cm-binding-method')).toHaveText(/OpenLogin\(\)$/);
+  // Z16
+  const download = page.waitForEvent('download');
+  await menuItem(page, 'Tools', /^Export Living Documentation/);
+  const html = await fs.readFile((await (await download).path())!, 'utf8');
+  expect(html).toContain('<h2>Authentication');
+  expect(html).toMatch(/not run<\/span> Sign in/);
+});

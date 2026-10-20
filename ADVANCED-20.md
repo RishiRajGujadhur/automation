@@ -24,6 +24,7 @@ web and desktop apps, each with a Settings ▸ Features switch and tests.
 | Z17 | Test run environment variables | Rider | yes | ✅ 2026-10-20 |
 | Z18 | Code Vision: authors of scenarios | Rider | no | ✅ 2026-10-20 |
 | Z19 | Step hover: definition docs | Rider | yes | ✅ 2026-10-20 |
+| Z20 | Run Impacted Tests | VS 2026 | yes | ✅ 2026-10-20 |
 
 ## Progress log
 - 2026-10-20 Z1: Who last changed the caret's line, when and the commit summary, at its end.
@@ -45,3 +46,4 @@ web and desktop apps, each with a Settings ▸ Features switch and tests.
 - 2026-10-20 Z17: NAME=value pairs passed to dotnet test; names shown in the output.
 - 2026-10-20 Z18: Who changed each Feature / Scenario block last, when, how many authors.
 - 2026-10-20 Z19: The bound method and its XML doc summary in the step hover.
+- 2026-10-20 Z20: Runs only tests affected by uncommitted changes (Test Impact Analysis).

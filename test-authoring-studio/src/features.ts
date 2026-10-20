@@ -515,6 +515,7 @@ export const FEATURES: Feature[] = [
   { id: 'test-env', label: 'Test run environment variables', group: 'Tool windows', essential: true, vs: '.runsettings environment variables', description: 'A Test Explorer button sets environment variables for test runs (BASE_URL=…, HEADED=1), like a run configuration.' },
   { id: 'code-vision-authors', label: 'Code Vision: authors of scenarios', group: 'Git', essential: false, description: 'Each Feature, Rule and Scenario line shows who changed the block last, when, and how many authors it has (from git).' },
   { id: 'step-hover-docs', label: 'Step hover: definition docs', group: 'Gherkin', essential: true, vs: 'Quick Info for steps', description: 'Hovering a step shows the bound method and its XML documentation summary (Quick Documentation).' },
+  { id: 'run-impacted', label: 'Run Impacted Tests', group: 'Tool windows', essential: true, vs: 'Test Impact Analysis', description: 'A Test Explorer button runs only the tests affected by uncommitted changes: changed test files and scenarios whose steps bind to changed step files (Test Impact Analysis).' },
 ];
 export const GROUPS: FeatureGroup[] = ['Editing', 'Navigation', 'Code intelligence', 'Tool windows', 'Files', 'Git', 'Gherkin', 'View', 'Debugging', 'Help and productivity'];
 
