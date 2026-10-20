@@ -373,6 +373,7 @@ export const FEATURES: Feature[] = [
   { id: 'features-changed', label: 'Settings: changed switches marked', group: 'Help and productivity', essential: true, vs: 'Settings ▸ @modified', description: 'Feature switches you changed say "(changed)"; search @modified lists them.' },
   { id: 'notifications-filter', label: 'Notifications: filter', group: 'Tool windows', essential: true, description: 'A filter box in the Notifications window narrows the history by text.' },
   { id: 'notification-ago', label: 'Notifications: relative times', group: 'Tool windows', essential: true, description: 'Notifications show how long ago they came ("5 min ago"); hover for the exact time.' },
+  { id: 'notification-dismiss', label: 'Notifications: dismiss one', group: 'Tool windows', essential: true, description: 'Each notification has a × button that removes just that one.' },
 ];
 export const GROUPS: FeatureGroup[] = ['Editing', 'Navigation', 'Code intelligence', 'Tool windows', 'Files', 'Git', 'Gherkin', 'View', 'Debugging', 'Help and productivity'];
 

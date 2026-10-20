@@ -16,5 +16,7 @@ export function recordNotice(text: string) {
 let seenAt = Date.now();
 export const markNoticesSeen = () => { if (notes[0] && notes[0].at > seenAt) { seenAt = notes[0].at; notes = [...notes]; for (const l of listeners) l(); } };
 export const unreadNotices = (list: Note[]) => list.filter((n) => n.at > seenAt).length;
+/** Removes one notification (its × button) (QOL-50). */
+export function dismissNotice(note: Note) { notes = notes.filter((n) => n !== note); keep(); for (const l of listeners) l(); }
 export function clearNotices() { notes = []; keep(); for (const l of listeners) l(); }
 export const useNotices = () => useSyncExternalStore((l) => { listeners.add(l); return () => listeners.delete(l); }, () => notes);

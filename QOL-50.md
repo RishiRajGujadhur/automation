@@ -83,6 +83,7 @@ Every improvement is verified by a unit or Playwright test (`tests/e2e/qol50.spe
 | QL74 | Settings: changed switches marked | Settings | ✅ 2026-10-20 |
 | QL75 | Notifications window filter | Tool windows | ✅ 2026-10-20 |
 | QL76 | Notifications show relative times | Tool windows | ✅ 2026-10-20 |
+| QL77 | Dismiss one notification | Tool windows | ✅ 2026-10-20 |
 
 ## Progress log
 - 2026-10-20 QL1: Title names the file and workspace folder
@@ -161,3 +162,4 @@ Every improvement is verified by a unit or Playwright test (`tests/e2e/qol50.spe
 - 2026-10-20 QL74: (changed) + @modified
 - 2026-10-20 QL75: A filter box narrows the Notifications history by text (Escape clears it).
 - 2026-10-20 QL76: Notifications read "just now", "5 min ago"; the exact time is the tooltip.
+- 2026-10-20 QL77: Each notification has a hover × that removes just that one.
