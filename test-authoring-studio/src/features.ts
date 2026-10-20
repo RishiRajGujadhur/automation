@@ -551,6 +551,7 @@ export const FEATURES: Feature[] = [
   { id: 'visualizers', label: 'Text / JSON / XML visualizers', group: 'Debugging', essential: true, vs: 'String visualizers', description: 'A string value\'s menu opens it in a Text, JSON (formatted) or XML (indented) visualizer, like Visual Studio\'s magnifier.' },
   { id: 'table-visualizer', label: 'IEnumerable visualizer (table)', group: 'Debugging', essential: true, vs: 'IEnumerable Visualizer', description: 'A collection\'s menu shows its items as a table, one column per member (Visual Studio\'s IEnumerable visualizer).' },
   { id: 'threads-window', label: 'Threads window', group: 'Debugging', essential: true, vs: 'Debug ▸ Windows ▸ Threads', description: 'A Threads tab lists the debuggee\'s threads while paused; selecting one shows its call stack.' },
+  { id: 'pinned-datatips', label: 'Pinned DataTips', group: 'Debugging', essential: true, vs: 'DataTips ▸ Pin to source', description: 'A variable\'s menu pins it to the current source line; the line shows its value whenever the debugger pauses (× unpins).' },
 ];
 export const GROUPS: FeatureGroup[] = ['Editing', 'Navigation', 'Code intelligence', 'Tool windows', 'Files', 'Git', 'Gherkin', 'View', 'Debugging', 'Help and productivity'];
 

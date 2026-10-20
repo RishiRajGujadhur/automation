@@ -318,3 +318,50 @@ registerAdvanced((file, kind) => (kind !== 'gherkin' || file.startsWith('untitle
     }));
   }
 }, { decorations: (p) => p.decorations })));
+
+/* DB16 Pinned DataTips (Visual Studio): "expr = value" pinned at the end of a source line, with × to unpin. */
+type Pin = { file: string; line: number; expr: string; value?: string };
+let pinned: Pin[] = [];
+const pinsChanged = StateEffect.define<null>();
+const pinViews = new Set<EditorView>();
+if (typeof window !== 'undefined') {
+  try { pinned = JSON.parse(localStorage.getItem('tas:pinnedDataTips') ?? '[]') as Pin[]; } catch { /* storage blocked */ }
+  window.addEventListener('tas:pinned-values', (e) => { pinned = (e as CustomEvent<Pin[]>).detail; for (const v of pinViews) v.dispatch({ effects: pinsChanged.of(null) }); });
+}
+class PinWidget extends WidgetType {
+  constructor(readonly pins: Pin[]) { super(); }
+  eq(o: PinWidget) { return JSON.stringify(o.pins) === JSON.stringify(this.pins); }
+  toDOM() {
+    const wrap = document.createElement('span');
+    wrap.className = 'cm-pinned-tips';
+    for (const p of this.pins) {
+      const el = document.createElement('span');
+      el.className = 'cm-pinned-tip';
+      el.textContent = `📌 ${p.expr} = ${p.value ?? '?'}`;
+      el.title = 'Pinned DataTip (updates when the debugger pauses)';
+      const x = document.createElement('button');
+      x.className = 'cm-pinned-close';
+      x.textContent = '×';
+      x.setAttribute('aria-label', `Unpin ${p.expr}`);
+      x.onmousedown = (e) => e.preventDefault();
+      x.onclick = () => window.dispatchEvent(new CustomEvent('tas:unpin', { detail: { file: p.file, line: p.line, expr: p.expr } }));
+      el.append(x);
+      wrap.append(el);
+    }
+    return wrap;
+  }
+  ignoreEvent() { return true; }
+}
+registerAdvanced((file) => ViewPlugin.fromClass(class {
+  decorations = Decoration.none;
+  constructor(readonly view: EditorView) { pinViews.add(view); this.decorations = this.build(); }
+  destroy() { pinViews.delete(this.view); }
+  update(u: ViewUpdate) { if (u.docChanged || u.transactions.some((t) => t.effects.some((e) => e.is(pinsChanged)))) this.decorations = this.build(); }
+  build() {
+    if (!featureOn('pinned-datatips')) return Decoration.none;
+    const doc = this.view.state.doc;
+    const mine = pinned.filter((p) => p.file === file && p.line <= doc.lines);
+    const lines = [...new Set(mine.map((p) => p.line))].sort((a, b) => a - b);
+    return Decoration.set(lines.map((l) => Decoration.widget({ widget: new PinWidget(mine.filter((p) => p.line === l)), side: 3 }).range(doc.line(l).to)));
+  }
+}, { decorations: (p) => p.decorations }));

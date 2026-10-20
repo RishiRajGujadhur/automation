@@ -33,7 +33,7 @@ function VariableRow({ v, depth, frameKey }: { v: { name: string; value: string;
   };
   return (
     <>
-      <RowMenu label={`${v.name} value`} items={[...(featureOn('table-visualizer') && v.variablesReference > 0 ? [{ label: 'View as Table', onSelect: () => window.dispatchEvent(new CustomEvent('tas:visualize-table', { detail: { name: v.name, ref: v.variablesReference } })) }] : []), ...(featureOn('visualizers') && /^".*"$/s.test(v.value) ? (['Text', 'JSON', 'XML'] as const).map((k) => ({ label: `${k} Visualizer`, onSelect: () => window.dispatchEvent(new CustomEvent('tas:visualize', { detail: { name: v.name, kind: k, value: v.value } })) })) : []), ...(featureOn('copy-value') ? [{ label: 'Copy Value', onSelect: () => void copyText(v.value) }, { label: 'Copy Expression', onSelect: () => void copyText(v.name) }, { label: 'Add Watch', onSelect: () => { const w = getSnapshot().watches; if (!w.includes(v.name)) setWatches([...w, v.name]); } }] : [])]}>
+      <RowMenu label={`${v.name} value`} items={[...(featureOn('pinned-datatips') && depth === 0 ? [{ label: 'Pin to Source', onSelect: () => window.dispatchEvent(new CustomEvent('tas:pin', { detail: v.name })) }] : []), ...(featureOn('table-visualizer') && v.variablesReference > 0 ? [{ label: 'View as Table', onSelect: () => window.dispatchEvent(new CustomEvent('tas:visualize-table', { detail: { name: v.name, ref: v.variablesReference } })) }] : []), ...(featureOn('visualizers') && /^".*"$/s.test(v.value) ? (['Text', 'JSON', 'XML'] as const).map((k) => ({ label: `${k} Visualizer`, onSelect: () => window.dispatchEvent(new CustomEvent('tas:visualize', { detail: { name: v.name, kind: k, value: v.value } })) })) : []), ...(featureOn('copy-value') ? [{ label: 'Copy Value', onSelect: () => void copyText(v.value) }, { label: 'Copy Expression', onSelect: () => void copyText(v.name) }, { label: 'Add Watch', onSelect: () => { const w = getSnapshot().watches; if (!w.includes(v.name)) setWatches([...w, v.name]); } }] : [])]}>
       <div className="dbg-row" data-menu-row role="row" aria-expanded={expandable ? open : undefined}>
         <span role="gridcell" className="dbg-name" style={{ paddingLeft: depth * 14 }}>
           {expandable ? <button className="se-twisty" aria-label={`${open ? 'Collapse' : 'Expand'} ${v.name}`} onClick={toggle}>{open ? <ChevronDown size={13} /> : <ChevronRight size={13} />}</button> : <span className="se-twisty-space" />}
@@ -77,6 +77,27 @@ export default function DebugPanel({ onOpen, onNotice, onClose, editingRequest =
   const frameKey = `${state.version}:${frame?.id ?? ''}`;
   const [locals, setLocals] = useState<Variable[]>([]);
   const [localsQuery, setLocalsQuery] = useState('');
+  // Pinned DataTips (Visual Studio): expressions pinned to a source line show their value there; kept between sessions.
+  const [pins, setPins] = useLocalState<{ file: string; line: number; expr: string; value?: string }[]>('pinnedDataTips', []);
+  useEffect(() => {
+    const pin = (e: Event) => { const expr = (e as CustomEvent<string>).detail; if (!frame?.file) return; if (!pins.some((p) => p.file === frame.file && p.line === frame.line && p.expr === expr)) setPins([...pins, { file: frame.file, line: frame.line, expr }]); };
+    const unpin = (e: Event) => { const d = (e as CustomEvent<{ file: string; line: number; expr: string }>).detail; setPins(pins.filter((p) => !(p.file === d.file && p.line === d.line && p.expr === d.expr))); };
+    window.addEventListener('tas:pin', pin);
+    window.addEventListener('tas:unpin', unpin);
+    return () => { window.removeEventListener('tas:pin', pin); window.removeEventListener('tas:unpin', unpin); };
+  }, [pins, frame?.file, frame?.line]); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => {
+    if (!featureOn('pinned-datatips')) return;
+    if (!frame || !pins.length) { window.dispatchEvent(new CustomEvent('tas:pinned-values', { detail: pins })); return; }
+    let live = true;
+    void api<{ result?: string; error?: string }[]>('/debug/evaluate', { expressions: pins.map((p) => p.expr), frameId: frame.id }).then((r) => {
+      if (!live) return;
+      const next = pins.map((p, i) => ({ ...p, value: r[i]?.error ? p.value : r[i]?.result ?? p.value }));
+      if (next.some((p, i) => p.value !== pins[i].value)) setPins(next);
+      window.dispatchEvent(new CustomEvent('tas:pinned-values', { detail: next }));
+    }, () => {});
+    return () => { live = false; };
+  }, [frameKey, pins.map((p) => `${p.file}:${p.line}:${p.expr}`).join('|')]); // eslint-disable-line react-hooks/exhaustive-deps
   // Threads window.
   const [threads, setThreads] = useState<{ id: number; name: string }[]>([]);
   useEffect(() => { if (!featureOn('threads-window') || state.status !== 'paused' || tab !== 'threads') { setThreads([]); return; } void api<{ id: number; name: string }[]>('/debug/threads').then(setThreads, () => setThreads([])); }, [state.version, tab]); // eslint-disable-line react-hooks/exhaustive-deps
