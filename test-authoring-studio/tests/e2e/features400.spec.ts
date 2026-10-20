@@ -432,12 +432,14 @@ test('336 Search within selected text', async ({ page }) => {
   await expect.poll(() => docText(page)).toBe(text.replace('int x = 2; int x2 = x;', 'int y = 2; int y2 = y;'));
 });
 
+/** Ctrl+S once the editor shows the edit as unsaved. */
+const saveNow = async (page: Page) => { await expect(page.getByRole('button', { name: /^Close AuthSteps\.cs \(unsaved\)$/ })).toBeVisible(); await page.keyboard.press('Control+s'); };
 const disk = (f: string) => fs.readFile(path.join(temp, f), 'utf8').then((t) => t.replace(/\r\n/g, '\n'));
 test('216 Code formatting on save; 218 format modified lines only', async ({ page }) => {
   needsLang();
   await open(page, CS, { 'editor.formatOnSave': true });
   await setDoc(page, 'namespace Demo;\npublic class P\n{\n    public int M(){return 1+2;}\n}\n');
-  await page.keyboard.press('Control+s');
+  await saveNow(page);
   await expect.poll(() => disk(CS), { timeout: 30_000 }).toContain('public int M() { return 1 + 2; }');
   await expect.poll(() => docText(page)).toContain('public int M() { return 1 + 2; }');
   // Modifications only: an untouched badly formatted line stays as it is.
@@ -450,7 +452,7 @@ test('216 Code formatting on save; 218 format modified lines only', async ({ pag
   await expect(page.getByLabel(`Source of ${CS}`)).toContainText('public int A()');
   await caretAt(page, 'return 3;', 8);
   await page.keyboard.type('0+4');
-  await page.keyboard.press('Control+s');
+  await saveNow(page);
   await expect.poll(() => disk(CS), { timeout: 30_000 }).toContain('return 30 + 4;');
   expect(await disk(CS)).toContain('public int A(){return 1+2;}');
 });
@@ -459,6 +461,6 @@ test('217 Code actions on save: organize imports', async ({ page }) => {
   await open(page, CS, { 'editor.codeActionsOnSave.organizeImports': true });
   // System.Globalization is unused; System.Text is used (System itself is an implicit global using).
   await setDoc(page, 'using System.Text;\nusing System.Globalization;\nnamespace Demo;\npublic class P\n{\n    public string M() => new StringBuilder().ToString();\n}\n');
-  await page.keyboard.press('Control+s');
+  await saveNow(page);
   await expect.poll(() => disk(CS), { timeout: 30_000 }).toMatch(/^using System\.Text;\nnamespace Demo;/);
 });
