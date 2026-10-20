@@ -8,4 +8,5 @@ import './whitespace';
 import './wordWrap';
 import './rulers';
 import './lineHighlight';
+import './filesOnSave';
 export { SETTINGS } from './settings';

@@ -105,3 +105,21 @@ describe('V11 rulers', () => {
     expect(img.indexOf('80ch')).toBeLessThan(img.indexOf('120ch'));
   });
 });
+import { textToSave, lineChanges } from '../src/vscode/filesOnSave';
+import { ChangeSet } from '@codemirror/state';
+describe('V13 files on save', () => {
+  const all = { trim: true, final: true, trimFinal: true };
+  it('trims, inserts and trims final newlines', () => {
+    expect(textToSave('a  \nb\t\n\n\n', all)).toBe('a\nb\n');
+    expect(textToSave('a  \r\nb', all)).toBe('a\r\nb\r\n');
+    expect(textToSave('a  \nb', { trim: false, final: true, trimFinal: false })).toBe('a  \nb\n');
+    expect(textToSave('a\n\n', { trim: false, final: false, trimFinal: true })).toBe('a\n');
+    expect(textToSave('', all)).toBe('');
+  });
+  it('line changes reproduce the new text', () => {
+    for (const [a, b] of [['a  \nb \nc', 'a\nb\nc\n'], ['x\n\n\n', 'x\n'], ['same', 'same']]) {
+      expect(ChangeSet.of(lineChanges(a, b), a.length).apply(Text.of(a.split('\n'))).toString()).toBe(b);
+    }
+  });
+});
+import { Text } from '@codemirror/state';

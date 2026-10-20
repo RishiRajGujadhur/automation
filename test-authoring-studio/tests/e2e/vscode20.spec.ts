@@ -286,3 +286,20 @@ test('V12 Render line highlight and only when focused', async ({ page }) => {
   await page.evaluate(() => (document.activeElement as HTMLElement).blur());
   await expect.poll(() => bg(view(page).locator('.cm-activeLineGutter').first())).toBe('rgba(0, 0, 0, 0)');
 });
+
+test('V13 Files: trim trailing whitespace, insert final newline, trim final newlines on save', async ({ page }) => {
+  await open(page, 'Steps/AuthSteps.cs', { 'files.trimTrailingWhitespace': true, 'files.insertFinalNewline': true, 'files.trimFinalNewlines': true });
+  await setDoc(page, 'class A {   \n  int x;\t\n}\n\n\n');
+  await caretLine(page, 2);
+  await page.keyboard.press('Control+s');
+  const disk = () => fs.readFile(path.join(temp, 'Steps/AuthSteps.cs'), 'utf8').then((t) => t.replace(/\r\n/g, '\n'));
+  await expect.poll(disk, { timeout: 20_000 }).toBe('class A {\n  int x;\n}\n');
+  // The editor shows the saved text and is not dirty.
+  await expect.poll(() => page.evaluate(() => (window as unknown as { __activeEditor: () => { view: { state: { doc: { toString(): string } } } } }).__activeEditor().view.state.doc.toString())).toBe('class A {\n  int x;\n}\n');
+  await expect(page.getByText('Saved', { exact: true }).first()).toBeVisible();
+  // Off (the default): the text is written as it is.
+  await setSettings(page, {});
+  await setDoc(page, 'class B {  \n}');
+  await page.keyboard.press('Control+s');
+  await expect.poll(disk, { timeout: 20_000 }).toBe('class B {  \n}');
+});
