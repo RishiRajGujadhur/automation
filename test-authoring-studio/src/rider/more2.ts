@@ -1,6 +1,6 @@
 import type { RiderCommand } from './commands';
 import type { MoreHelpers } from './more';
-import { urlEncode, urlDecode, base64Encode, base64Decode, escapeString, unescapeString, htmlEncode, htmlDecode, stepNumber, insertSequence, toggleQuotes, joinWith, splitAt, alignAssignments, swapSelections, countOccurrences, trimLines, stamp, insertText, LOREM, shuffleLines, reformatXml, minifyXml, jsonEscape, jsonUnescape, numberLines, mapDoc, toFileScopedNamespace } from '../editor/textTools2';
+import { urlEncode, urlDecode, base64Encode, base64Decode, escapeString, unescapeString, htmlEncode, htmlDecode, stepNumber, insertSequence, toggleQuotes, joinWith, splitAt, alignAssignments, swapSelections, countOccurrences, trimLines, stamp, insertText, LOREM, shuffleLines, reformatXml, minifyXml, jsonEscape, jsonUnescape, numberLines, mapDoc, toFileScopedNamespace, toBlockScopedNamespace } from '../editor/textTools2';
 
 /**
  * Fourth batch of Visual Studio 2026 / JetBrains Rider commands (IDE-FEATURES-4.md, Y1–Y100). RiderHost registers
@@ -35,5 +35,6 @@ export function moreCommands2(h: MoreHelpers): RiderCommand[] {
     { id: 'json-unescape', label: 'Unescape JSON String', menu: 'Edit', submenu: 'Convert', run: h.inEditor((v) => jsonUnescape(v) || h.notice('Select text (or put the caret on a line) to convert.')) },
     { id: 'number-lines', label: 'Number Lines', menu: 'Edit', submenu: 'Convert', run: h.inEditor((v) => numberLines(v) || h.notice('Select the lines to number.')) },
     { id: 'file-scoped-namespace', label: 'Convert to File-Scoped Namespace', menu: 'Code', submenu: 'C#', run: h.inEditor((v) => mapDoc(toFileScopedNamespace)(v) || h.notice('The file needs exactly one block-scoped namespace.')) },
+    { id: 'block-scoped-namespace', label: 'Convert to Block-Scoped Namespace', menu: 'Code', submenu: 'C#', run: h.inEditor((v) => mapDoc(toBlockScopedNamespace)(v) || h.notice('The file has no file-scoped namespace (namespace X;).')) },
   ];
 }

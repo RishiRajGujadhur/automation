@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { EditorSelection, EditorState, type TransactionSpec } from '@codemirror/state';
 import type { EditorView } from '@codemirror/view';
-import { mapSelections, urlEncode, urlDecode, base64Encode, base64Decode, escapeString, unescapeString, htmlEncode, htmlDecode, stepNumber, insertSequence, toggleQuotes, joinWith, splitAt, alignAssignments, swapSelections, countOccurrences, trimLines, stamp, insertText, LOREM, shuffleLines, formatXml, minifyXml, jsonEscape, jsonUnescape, numberLines, toFileScopedNamespace } from '../src/editor/textTools2';
+import { mapSelections, urlEncode, urlDecode, base64Encode, base64Decode, escapeString, unescapeString, htmlEncode, htmlDecode, stepNumber, insertSequence, toggleQuotes, joinWith, splitAt, alignAssignments, swapSelections, countOccurrences, trimLines, stamp, insertText, LOREM, shuffleLines, formatXml, minifyXml, jsonEscape, jsonUnescape, numberLines, toFileScopedNamespace, toBlockScopedNamespace } from '../src/editor/textTools2';
 
 /** Runs an editor command on `doc` with the selection between « and » (or a caret at |). */
 function run(doc: string, cmd: (v: EditorView) => boolean) {
@@ -105,5 +105,8 @@ describe('text tools, fourth batch (IDE-FEATURES-4 Y1…)', () => {
   it('Y21 Convert to File-Scoped Namespace', () => {
     expect(toFileScopedNamespace('using A;\n\nnamespace Demo.Steps\n{\n    public class X\n    {\n    }\n}\n')).toBe('using A;\n\nnamespace Demo.Steps;\n\npublic class X\n{\n}\n');
     expect(toFileScopedNamespace('namespace A;\nclass X {}')).toBe(null);
+  });
+  it('Y22 Convert to Block-Scoped Namespace', () => {
+    expect(toBlockScopedNamespace('using A;\n\nnamespace Demo;\n\npublic class X\n{\n\n}\n')).toBe('using A;\n\nnamespace Demo\n{\n    public class X\n    {\n\n    }\n}\n');
   });
 });

@@ -253,3 +253,13 @@ export function toFileScopedNamespace(text: string) {
   const body = text.slice(m.index + m[0].length, close).split(/\r?\n/).map((l) => l.replace(/^( {4}|\t)/, '')).join(eol).replace(/^(\s*\r?\n)+/, '').trimEnd();
   return `${text.slice(0, m.index)}namespace ${m[2]};${eol}${eol}${body}${eol}`;
 }
+
+/** Convert to Block-Scoped Namespace (Visual Studio / Rider): `namespace X;` → `namespace X { … }`, body indented. */
+export function toBlockScopedNamespace(text: string) {
+  const m = /^([ \t]*)namespace\s+([\w.]+)\s*;[ \t]*\r?$/m.exec(text);
+  if (!m) return null;
+  const eol = text.includes('\r\n') ? '\r\n' : '\n';
+  const rest = text.slice(m.index + m[0].length).replace(/^(\s*\r?\n)+/, '').trimEnd();
+  const body = rest.split(/\r?\n/).map((l) => (l.trim() ? `    ${l}` : '')).join(eol);
+  return `${text.slice(0, m.index)}namespace ${m[2]}${eol}{${eol}${body}${eol}}${eol}`;
+}

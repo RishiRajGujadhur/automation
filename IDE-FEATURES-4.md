@@ -30,6 +30,7 @@ has it on by default, so the desktop app starts with it on. The others start off
 | Y19 | Escape / Unescape JSON String | Rider | no | ✅ 2026-10-20 |
 | Y20 | Number Lines | Rider | no | ✅ 2026-10-20 |
 | Y21 | Convert to File-Scoped Namespace | VS 2026 | yes | ✅ 2026-10-20 |
+| Y22 | Convert to Block-Scoped Namespace | VS 2026 | yes | ✅ 2026-10-20 |
 
 ## Progress log
 - 2026-10-20 Y1: Percent-encodes the selection (or line) and decodes it.
@@ -53,3 +54,4 @@ has it on by default, so the desktop app starts with it on. The others start off
 - 2026-10-20 Y19: The selection as a JSON string body, and back.
 - 2026-10-20 Y20: 1., 2., 3.… before the selected lines.
 - 2026-10-20 Y21: namespace X { … } becomes namespace X; with the body unindented.
+- 2026-10-20 Y22: namespace X; becomes a namespace block with the body indented.
