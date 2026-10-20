@@ -3704,3 +3704,5 @@ html[data-features-off~='inlay-hints'] .cm-inlay {
 
 // Locals: Copy All as JSON (IDE-FEATURES-4).
 .debug-locals-tools { display: flex; justify-content: flex-end; padding: 2px 8px; font-size: 12px; }
+
+.cm-inline-blame { margin-left: 2.5em; color: var(--muted, #888); font-style: italic; opacity: 0.75; font-size: 0.92em; white-space: pre; }

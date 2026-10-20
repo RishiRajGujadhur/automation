@@ -496,6 +496,7 @@ export const FEATURES: Feature[] = [
   { id: 'char-info', label: 'Character Info at Caret', group: 'Help and productivity', essential: false, description: 'Tools ▸ Character Info shows the character at the caret, its Unicode code point and UTF-8 bytes (for invisible or look-alike characters).', commands: ['char-info'] },
   { id: 'close-lru-tabs', label: 'Close Least Recently Used Tabs', group: 'Files', essential: false, description: 'View ▸ Close Least Recently Used Tabs keeps the 5 tabs used last (and pinned or unsaved ones) and closes the rest.', commands: ['close-lru-tabs'] },
   // ── Advanced (ADVANCED-20.md) ──
+  { id: 'inline-blame', label: 'Inline Git blame (caret line)', group: 'Git', essential: true, vs: 'Git ▸ Line blame', description: 'The line with the caret shows who last changed it, when and the commit summary, at its end.' },
 ];
 export const GROUPS: FeatureGroup[] = ['Editing', 'Navigation', 'Code intelligence', 'Tool windows', 'Files', 'Git', 'Gherkin', 'View', 'Debugging', 'Help and productivity'];
 

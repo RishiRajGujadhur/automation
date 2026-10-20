@@ -5,5 +5,7 @@ web and desktop apps, each with a Settings ▸ Features switch and tests.
 
 | # | Feature | From | Essential | Status |
 | --- | --- | --- | --- | --- |
+| Z1 | Inline Git blame (caret line) | VS 2026 | yes | ✅ 2026-10-20 |
 
 ## Progress log
+- 2026-10-20 Z1: Who last changed the caret's line, when and the commit summary, at its end.
