@@ -277,6 +277,7 @@ export const FEATURES: Feature[] = [
   { id: 'ignore-scenario', label: 'Ignore / Unignore Scenario', group: 'Gherkin', essential: true, description: 'Toggles the @ignore tag (SpecFlow / Reqnroll skip the scenario).', commands: ['ignore-scenario'] },
   { id: 'copy-step-stub', label: 'Copy Step Definition Stub', group: 'Gherkin', essential: true, vs: 'Create Step (copy to clipboard)', description: 'Copies a C# binding method for the step at the caret.', commands: ['copy-step-stub'] },
   { id: 'zoom-ide', label: 'Zoom IDE', group: 'View', essential: true, vs: 'View ▸ Appearance ▸ Zoom IDE (Rider)', description: 'Zooms the whole window in or out (50–200 %), not only the editors.', commands: ['zoom-ide-in', 'zoom-ide-out', 'zoom-ide-reset'] },
+  { id: 'compact-mode', label: 'Compact mode', group: 'View', essential: false, vs: 'Appearance ▸ Compact mode (Rider)', description: 'Tighter rows in trees, tabs, menus and the status bar.', commands: ['compact-mode'] },
 ];
 export const GROUPS: FeatureGroup[] = ['Editing', 'Navigation', 'Code intelligence', 'Tool windows', 'Files', 'Git', 'Gherkin', 'View', 'Debugging', 'Help and productivity'];
 

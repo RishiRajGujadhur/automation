@@ -177,5 +177,6 @@ export function moreCommands(h: MoreHelpers): RiderCommand[] {
     { id: 'zoom-ide-in', label: 'Zoom IDE In', menu: 'View', group: true, run: () => setViewOptions({ uiZoom: Math.min(200, (viewOptions().uiZoom ?? 100) + 10) }) },
     { id: 'zoom-ide-out', label: 'Zoom IDE Out', menu: 'View', run: () => setViewOptions({ uiZoom: Math.max(50, (viewOptions().uiZoom ?? 100) - 10) }) },
     { id: 'zoom-ide-reset', label: 'Reset IDE Zoom', menu: 'View', run: () => setViewOptions({ uiZoom: undefined }) },
+    { id: 'compact-mode', label: 'Compact Mode', menu: 'View', checked: () => !!viewOptions().compact, run: () => setViewOptions({ compact: !viewOptions().compact }) },
   ];
 }

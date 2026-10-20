@@ -3594,3 +3594,21 @@ html[data-features-off~='inlay-hints'] .cm-inlay {
     cursor: pointer;
   }
 }
+
+// Compact mode (Rider's compact UI): tighter rows in trees, tabs, menus and the status bar.
+.compact-ui {
+  .explorer-folder, .explorer-file, .se-row, .t-row, .todo-item, .context-item {
+    padding-top: 1px !important;
+    padding-bottom: 1px !important;
+  }
+  .editor-tab {
+    min-height: 26px;
+  }
+  .status-bar {
+    min-height: 20px;
+    font-size: 11px;
+  }
+  .sidebar-heading {
+    min-height: 26px;
+  }
+}

@@ -105,6 +105,7 @@ const ROWS: Record<'edit' | 'view' | 'navigate' | 'code' | 'tools' | 'help', Row
     ['Zoom IDE In', 'zoom-ide-in'],
     ['Zoom IDE Out', 'zoom-ide-out'],
     ['Reset IDE Zoom', 'zoom-ide-reset'],
+    ['Compact Mode', 'compact-mode'],
   ],
   navigate: [
     ['Select In…', 'select-in', 'Alt+F1'],
