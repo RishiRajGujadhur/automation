@@ -296,7 +296,7 @@ Legend: `[x]` done · `[ ]` to do.
 - [ ] 347. Generate `IAsyncDisposable` implementation patterns
 - [x] 348. Generate null argument guards — Add Null Checks for Parameters
 - [x] 349. Generate constructor parameter assignments — Generate Constructor
-- [ ] 350. Convert fields to auto-properties
+- [x] 350. Convert fields to auto-properties — Quick Actions (IDE0032): Use auto property (2026-10-21)
 - [x] 351. Convert auto-properties to full properties — Quick Actions
 - [x] 352. Convert properties to expression-bodied members — Convert to Expression Body
 - [x] 353. Convert expression-bodied members to block bodies — Convert to Block Body
@@ -343,3 +343,4 @@ Legend: `[x]` done · `[ ]` to do.
 - 2026-10-21 92: Switch statements become switch expressions (the IDE analyzer's fix).
 - 2026-10-21 360: A switch over an enum gets a case per missing member.
 - 2026-10-21 87: A lambda becomes a local function (IDE0039) and then a method.
+- 2026-10-21 350: A field with a trivial property becomes an auto-property.
