@@ -3569,3 +3569,7 @@ html[data-features-off~='inlay-hints'] .cm-inlay {
   border-radius: 4px;
   background: var(--hover, rgba(127, 127, 127, 0.15));
 }
+
+.status-bar.status-bar-hidden {
+  display: none !important;
+}

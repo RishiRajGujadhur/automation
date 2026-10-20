@@ -2235,7 +2235,7 @@ export default function App() {
         ) : null}
         <AppMenuButton {...menuProps} />
       </nav>
-      <footer className="status-bar">
+      <footer className={`status-bar ${viewOpts.hideStatusBar && featureOn('toggle-status-bar') ? 'status-bar-hidden' : ''}`}>
         <span>
           <span className="status-dot" />
           {busy ? 'Working…' : 'Ready'}

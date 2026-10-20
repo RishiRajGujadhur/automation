@@ -98,6 +98,8 @@ const ROWS: Record<'edit' | 'view' | 'navigate' | 'code' | 'tools' | 'help', Row
     ['Do Not Disturb', 'do-not-disturb'],
     ['Toggle Read-Only (Session)', 'toggle-readonly'],
     ['Sort Tabs by Name', 'sort-tabs'],
+    null,
+    ['Status Bar', 'toggle-status-bar'],
   ],
   navigate: [
     ['Select In…', 'select-in', 'Alt+F1'],

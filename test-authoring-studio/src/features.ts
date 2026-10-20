@@ -263,6 +263,7 @@ export const FEATURES: Feature[] = [
   { id: 'copy-json-pointer', label: 'Copy JSON Pointer', group: 'Editing', essential: true, vs: 'JSON ▸ Copy JSON Pointer (Rider)', description: 'Copies the JSON Pointer (/a/0/b) of the value at the caret.', commands: ['copy-json-pointer'] },
   { id: 'copy-xpath', label: 'Copy XPath', group: 'Editing', essential: true, vs: 'XML ▸ Copy XPath (Rider)', description: 'Copies the XPath of the XML element at the caret (selector dictionaries, configs).', commands: ['copy-xpath'] },
   { id: 'md-word-count', label: 'Word count (Markdown)', group: 'Editing', essential: true, description: 'The status bar counts the words of a Markdown or text file (or the selection).' },
+  { id: 'toggle-status-bar', label: 'Toggle Status Bar', group: 'View', essential: true, vs: 'View ▸ Status Bar', description: 'Hides or shows the status bar.', commands: ['toggle-status-bar'] },
 ];
 export const GROUPS: FeatureGroup[] = ['Editing', 'Navigation', 'Code intelligence', 'Tool windows', 'Files', 'Git', 'Gherkin', 'View', 'Debugging', 'Help and productivity'];
 
