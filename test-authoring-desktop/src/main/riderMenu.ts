@@ -278,6 +278,7 @@ const ROWS: Record<'edit' | 'view' | 'navigate' | 'code' | 'tools' | 'help', Row
       ['Copy Test Filter for Tag', 'copy-tag-filter'],
       ['Fix Keyword Case', 'fix-keyword-case'],
       ['Preview Expanded Outline', 'outline-preview'],
+      ['Import CSV as Table…', 'import-csv'],
     ] },
     ['Collapse Using Directives', 'fold-usings'],
     ['Sort JSON Keys', 'sort-json'],

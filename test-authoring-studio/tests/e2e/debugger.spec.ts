@@ -169,3 +169,32 @@ test('Exception Settings: break on all thrown exceptions stops on a caught one; 
     await fs.rm(temp, { recursive: true, force: true, maxRetries: 5 }).catch(() => {});
   }
 });
+
+test('Z12 Temporary breakpoint: removed once the debugger stops on it', async ({ page, request }) => {
+  const previous = (await (await request.get('/api/workspace')).json()).config;
+  const temp = await fs.mkdtemp(path.join(os.tmpdir(), 'studio-debug-tmp-'));
+  await fs.cp(path.resolve(import.meta.dirname, '../../samples/Calculator'), temp, { recursive: true, filter: (s) => !/[\\/](bin|obj)$/.test(s) });
+  try {
+    expect((await request.post('/api/workspace', { data: { repositoryRoot: temp, targetProject: '.' } })).ok()).toBe(true);
+    await page.addInitScript(() => { if (!sessionStorage.getItem('seeded')) { localStorage.setItem('tas:prefs', JSON.stringify({ mode: 'advanced' })); sessionStorage.setItem('seeded', '1'); } });
+    await page.goto('/#/features/editor');
+    await page.getByRole('button', { name: 'Add.feature', exact: true }).first().click();
+    const line = page.locator('.gherkin-editor .cm-line', { hasText: 'the two numbers are added' });
+    await expect(line).toBeVisible({ timeout: 20_000 });
+    await line.click();
+    await page.getByRole('button', { name: 'Tools menu' }).click();
+    await page.getByRole('menuitem', { name: /^Toggle Temporary Breakpoint/ }).click();
+    const bps = async () => (await (await request.get('/api/debug')).json()).breakpoints['Features/Add.feature']?.map((b: { line: number }) => b.line) ?? [];
+    await expect.poll(bps).toEqual([6]);
+    await page.keyboard.press('F5');
+    const panel = page.getByRole('region', { name: 'Debugger' });
+    await expect(panel.getByRole('status')).toHaveText(/Paused · breakpoint/, { timeout: 180_000 });
+    await expect.poll(bps).toEqual([]);
+    await page.keyboard.press('F5');
+    await expect.poll(async () => (await (await request.get('/api/debug')).json()).state?.status ?? (await (await request.get('/api/debug')).json()).status, { timeout: 120_000 }).toMatch(/ended|idle/);
+  } finally {
+    await request.post('/api/debug/control', { data: { action: 'stop' } }).catch(() => {});
+    await request.post('/api/workspace', { data: previous });
+    await fs.rm(temp, { recursive: true, force: true, maxRetries: 5 }).catch(() => {});
+  }
+});

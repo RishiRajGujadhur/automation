@@ -84,3 +84,27 @@ test('Z8 / Z9 / Z10 Reformat on save, inline values, unused step definitions', a
   await expect.poll(() => doc(page)).toBe('Feature: F\n  Scenario: S\n    Given the login page is open\n');
   await expect.poll(async () => (await fs.readFile(path.join(root, 'Features/Auth/Login.feature'), 'utf8')).replace(/\r\n/g, '\n')).toBe('Feature: F\n  Scenario: S\n    Given the login page is open\n');
 });
+
+test('Z11 / Z13 / Z14 / Z15 Same-definition highlight, Go to All calculator, parameter hints, Import CSV', async ({ page, context }) => {
+  await context.grantPermissions(['clipboard-read', 'clipboard-write']);
+  await open(page);
+  await expect(page.getByLabel('Gherkin source')).toContainText('Feature:');
+  await setDoc(page, 'Feature: F\n  Scenario: S\n    When the user signs in as "a"\n    Then the dashboard is displayed\n    When the user signs in as "b"\n', 30);
+  // Z14: the parameter's name before the argument.
+  await expect(page.locator('.cm-param-hint').first()).toHaveText('userName:', { timeout: 15_000 });
+  // Z11: both sign-in steps share a definition.
+  await page.getByLabel('Gherkin source').locator('.cm-line', { hasText: '"a"' }).click();
+  await expect(page.getByLabel('Gherkin source').locator('.cm-line', { has: page.locator('.cm-same-binding') })).toHaveCount(2);
+  // Z15: a CSV file becomes a table under the caret.
+  await page.getByLabel('Gherkin source').locator('.cm-line', { hasText: 'dashboard' }).click();
+  const chooser = page.waitForEvent('filechooser');
+  await gherkinItem(page, /^Import CSV as Table/);
+  await (await chooser).setFiles({ name: 'users.csv', mimeType: 'text/csv', buffer: Buffer.from('name,role\nada,admin\n') });
+  await expect.poll(() => doc(page)).toContain('    Then the dashboard is displayed\n      | name | role  |\n      | ada  | admin |');
+  // Z13
+  await page.keyboard.press('Control+T');
+  await page.keyboard.type('2 * (3 + 4)');
+  await expect(page.getByRole('option', { name: /= 14/ })).toBeVisible();
+  await page.keyboard.press('Enter');
+  await expect.poll(() => page.evaluate(() => navigator.clipboard.readText())).toBe('14');
+});

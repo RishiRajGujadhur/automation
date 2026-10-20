@@ -19,6 +19,7 @@ web and desktop apps, each with a Settings ▸ Features switch and tests.
 | Z12 | Temporary breakpoints | Rider | no | ✅ 2026-10-20 |
 | Z13 | Calculator in Go to All | Rider | no | ✅ 2026-10-20 |
 | Z14 | Parameter name hints in steps | Rider | no | ✅ 2026-10-20 |
+| Z15 | Import CSV as Table | Rider | no | ✅ 2026-10-20 |
 
 ## Progress log
 - 2026-10-20 Z1: Who last changed the caret's line, when and the commit summary, at its end.
@@ -35,3 +36,4 @@ web and desktop apps, each with a Settings ▸ Features switch and tests.
 - 2026-10-20 Z12: A breakpoint that removes itself once the debugger stops on it.
 - 2026-10-20 Z13: Arithmetic in Ctrl+T shows the result; Enter copies it.
 - 2026-10-20 Z14: The step definition's parameter names before each argument.
+- 2026-10-20 Z15: A CSV/TSV file read into an aligned Gherkin table under the caret.

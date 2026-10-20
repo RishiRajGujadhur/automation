@@ -510,6 +510,7 @@ export const FEATURES: Feature[] = [
   { id: 'temporary-breakpoint', label: 'Temporary breakpoints', group: 'Debugging', essential: false, description: 'Tools ▸ Toggle Temporary Breakpoint sets a breakpoint that removes itself once the debugger stops on it (Rider\'s "Remove once hit").', commands: ['temporary-breakpoint'] },
   { id: 'goto-calculator', label: 'Calculator in Go to All', group: 'Navigation', essential: false, description: 'Typing arithmetic (2*(3+4)) in Go to All (Ctrl+T) shows the result first; Enter copies it.' },
   { id: 'step-param-hints', label: 'Parameter name hints in steps', group: 'Gherkin', essential: false, vs: 'Inlay hints', description: 'Feature files show the step definition\'s parameter name before each argument of a bound step (userName: "admin").' },
+  { id: 'import-csv', label: 'Import CSV as Table', group: 'Gherkin', essential: false, description: 'Code ▸ Gherkin reads a CSV (or TSV) file into an aligned Gherkin table under the caret, e.g. for Examples.', commands: ['import-csv'] },
 ];
 export const GROUPS: FeatureGroup[] = ['Editing', 'Navigation', 'Code intelligence', 'Tool windows', 'Files', 'Git', 'Gherkin', 'View', 'Debugging', 'Help and productivity'];
 
