@@ -108,6 +108,7 @@ has it on by default, so the desktop app starts with it on. The others start off
 | Y97 | Fix Keyword Case | Rider | no | ✅ 2026-10-20 |
 | Y98 | Delete Disabled Breakpoints | VS 2026 | no | ✅ 2026-10-20 |
 | Y99 | Character Info at Caret | Rider | no | ✅ 2026-10-20 |
+| Y100 | Close Least Recently Used Tabs | Rider | no | ✅ 2026-10-20 |
 
 ## Progress log
 - 2026-10-20 Y1: Percent-encodes the selection (or line) and decodes it.
@@ -209,3 +210,4 @@ has it on by default, so the desktop app starts with it on. The others start off
 - 2026-10-20 Y97: Gherkin keywords in the wrong case corrected in the whole file.
 - 2026-10-20 Y98: Removes every disabled breakpoint, keeps the enabled ones.
 - 2026-10-20 Y99: The character at the caret, its code point and UTF-8 bytes.
+- 2026-10-20 Y100: Keeps the 5 tabs used last (plus pinned / unsaved), closes the rest.

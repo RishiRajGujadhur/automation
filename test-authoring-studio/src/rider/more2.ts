@@ -7,7 +7,7 @@ import { readFile, isBrowser, renamePath } from '../files/provider';
 import { discoverTests, runTests } from '../testing/store';
 import { forEachDiagnostic } from '@codemirror/lint';
 import { api } from '../api';
-import { getTabs, setPinned, movedPath } from '../files/tabs';
+import { getTabs, setPinned, movedPath, closeLeastRecent } from '../files/tabs';
 import { copyText } from '../ui';
 import { tableDeleteEmptyRows, tableRemoveDuplicateRows, tableMarkdown, tagAllScenarios, removeTagEverywhere, sortTags, promoteCommonTags, insertDocString, expandOutline, wrapInRule, setLanguageHeader, scenarioName, tableInsertRowAbove, addScenarioOutline, tableColumnStats, tableColumnValues, tableFillSeries, mergeExamples, scenarioSteps, renameScenario, splitScenario, insertDataTable, tagAt, tagFilter, fixKeywordCase } from '../editor/gherkinTools';
 import { urlEncode, urlDecode, base64Encode, base64Decode, escapeString, unescapeString, htmlEncode, htmlDecode, stepNumber, insertSequence, toggleQuotes, joinWith, splitAt, alignAssignments, swapSelections, countOccurrences, trimLines, stamp, insertText, LOREM, shuffleLines, reformatXml, minifyXml, jsonEscape, jsonUnescape, numberLines, mapDoc, toFileScopedNamespace, toBlockScopedNamespace, removeRegions, toRawString, toggleTask, formatMarkdownTable, tableOfContents, MARKDOWN_TABLE, removeComments, concatToInterpolationCmd, gotoOffset, timestampCmd, sha256Hex, decodeJwt, jwtAt, sortTokens, markdownCodeBlock, fileStatistics, todoComment, generateEquality, generateToString, addNullChecks, validateJson, requestAsCurl, curlToRequestCmd, jsonToCsv, toExpressionBody, toBlockBody, addBindingAttribute, unicodeEscape, unicodeUnescape, hexDecimal, testData, reverseText, fillParagraph, charInfo } from '../editor/textTools2';
@@ -118,5 +118,6 @@ export function moreCommands2(h: MoreHelpers): RiderCommand[] {
     { id: 'fix-keyword-case', label: 'Fix Keyword Case', menu: 'Code', submenu: 'Gherkin', run: h.inEditor((v) => mapDoc(fixKeywordCase)(v) || h.notice('Every keyword is already in the right case.')) },
     { id: 'delete-disabled-breakpoints', label: 'Delete Disabled Breakpoints', menu: 'Tools', run: () => { const all = getSnapshot().breakpoints; let n = 0; for (const [file, specs] of Object.entries(all)) { const keep = specs.filter((b) => b.enabled !== false); if (keep.length !== specs.length) { n += specs.length - keep.length; setBreakpoints(file, keep.map((b) => b.line)); } } h.notice(n ? `Deleted ${n} disabled breakpoint${n === 1 ? '' : 's'}.` : 'No breakpoint is disabled.'); } },
     { id: 'char-info', label: 'Character Info at Caret', menu: 'Tools', run: h.inEditor((v) => h.notice(charInfo(v.state) ?? 'The caret is at the end of the file.')) },
+    { id: 'close-lru-tabs', label: 'Close Least Recently Used Tabs', menu: 'View', run: () => { const n = closeLeastRecent(5, unsavedFiles()); h.notice(n ? `Closed ${n} tab${n === 1 ? '' : 's'}; the 5 used last stay open.` : 'Nothing to close: at most 5 tabs (plus pinned and unsaved ones) are open.'); } },
   ];
 }

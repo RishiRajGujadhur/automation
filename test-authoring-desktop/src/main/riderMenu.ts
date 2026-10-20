@@ -146,6 +146,7 @@ const ROWS: Record<'edit' | 'view' | 'navigate' | 'code' | 'tools' | 'help', Row
     ['Scroll Past End', 'scroll-past-end'],
     ['Caret Blinking', 'caret-blink'],
     ['Pin / Unpin Active Tab', 'pin-active-tab'],
+    ['Close Least Recently Used Tabs', 'close-lru-tabs'],
   ],
   navigate: [
     ['Select In…', 'select-in', 'Alt+F1'],

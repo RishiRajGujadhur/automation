@@ -256,3 +256,35 @@ test('Y71 Run Scenarios with Tag at Caret', async ({ page }) => {
   expect(JSON.parse(runs[0]).ids).toEqual(all.filter((t) => t.kind === 'scenario').map((t) => t.id));
   await expect.poll(() => status(page), { timeout: 240_000, intervals: [2000] }).toMatch(/done|failed/);
 });
+
+test('Y93 / Y94 Slowest tests; continuous testing runs the failed tests again after a save', async ({ page }) => {
+  const tests = path.join(root, 'Tests/CalculatorTests.cs');
+  await fs.writeFile(tests, (await fs.readFile(tests, 'utf8')).replace('Is.EqualTo(5)', 'Is.EqualTo(6)'));
+  await start(page);
+  await page.getByRole('navigation').getByRole('button', { name: 'CalculatorTests.cs', exact: true }).first().click();
+  await page.getByRole('button', { name: 'Test Explorer' }).click();
+  const te = page.getByRole('region', { name: 'Test Explorer' });
+  const tree = te.getByRole('navigation', { name: 'Tests' });
+  await expect(tree.locator('.t-label', { hasText: /AddsTwoNumbers/ })).toBeVisible({ timeout: 60_000 });
+  await tree.locator('.t-label', { hasText: /AddsTwoNumbers/ }).click({ button: 'right' });
+  await page.getByRole('menuitem', { name: 'Run', exact: true }).click();
+  await expect(tree.locator('.t-label', { hasText: /AddsTwoNumbers/ }).getByLabel('Failed')).toBeVisible({ timeout: 240_000 });
+  // Y93
+  await te.getByRole('button', { name: 'Slowest tests' }).click();
+  await expect(page.getByText(/^Slowest: AddsTwoNumbers \d/).first()).toBeVisible();
+  // Y94: turn it on, save a file from the editor: the failed test runs again.
+  await te.getByRole('button', { name: 'Continuous testing' }).click();
+  await expect(te.getByRole('button', { name: 'Continuous testing' })).toHaveAttribute('aria-pressed', 'true');
+  const runs: string[] = [];
+  page.on('request', (r) => { if (r.method() === 'POST' && r.url().endsWith('/api/tests/run')) runs.push(r.postData() ?? ''); });
+  await page.locator('.editor-tab-label', { hasText: 'CalculatorTests.cs' }).click();
+  const src = page.getByLabel('Source of Tests/CalculatorTests.cs');
+  await src.locator('.cm-line', { hasText: /Is\.EqualTo\(\D*6\)/ }).click();
+  await page.keyboard.press('End');
+  await page.keyboard.type(' ');
+  await page.keyboard.press('Control+S');
+  await expect.poll(() => runs.length, { timeout: 30_000 }).toBe(1);
+  const all = (await (await page.request.get('/api/tests')).json()).tests as { id: string; method: string }[];
+  expect(JSON.parse(runs[0]).ids).toEqual(all.filter((t) => t.method === 'AddsTwoNumbers').map((t) => t.id));
+  await expect.poll(() => status(page), { timeout: 240_000, intervals: [2000] }).toMatch(/done|failed/);
+});

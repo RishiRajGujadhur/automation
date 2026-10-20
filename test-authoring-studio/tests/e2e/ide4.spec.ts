@@ -255,3 +255,60 @@ test('Y81–Y90 cURL, JSON as CSV, bodies, [Binding], data table, tag filter, es
   await gherkinItem(page, /^Insert Data Table/);
   await expect.poll(() => doc(page)).toContain('    Given the users\n      | column |\n      |        |');
 });
+
+test('Y91–Y100 New / rename file, Reverse Text, Fill Paragraph, Fix Keyword Case, breakpoints, character info, LRU tabs', async ({ page }) => {
+  await open(page, 'AuthSteps.cs');
+  await expect(page.getByLabel('Source of Steps/AuthSteps.cs')).toBeVisible();
+  // Y91 New File Next to Active
+  page.once('dialog', (d) => void d.accept('Extra.cs'));
+  await menuItem(page, 'Code', /^New File Next to Active/);
+  await expect(page.locator('.editor-tab-label[aria-current="true"]')).toHaveAttribute('title', 'Steps/Extra.cs');
+  await expect.poll(async () => fs.stat(path.join(root, 'Steps/Extra.cs')).then(() => true, () => false)).toBe(true);
+  // Y92 Rename Active File
+  page.once('dialog', (d) => void d.accept('Extra2.cs'));
+  await menuItem(page, 'Code', /^Rename Active File/);
+  await expect(page.locator('.editor-tab-label[aria-current="true"]')).toHaveAttribute('title', 'Steps/Extra2.cs');
+  await expect.poll(async () => fs.stat(path.join(root, 'Steps/Extra2.cs')).then(() => true, () => false)).toBe(true);
+  // Y95, Y96, Y99
+  await setDoc(page, 'abc', 0, 3);
+  await convert(page, /^Reverse Text/);
+  await expect.poll(() => doc(page)).toBe('cba');
+  await setDoc(page, `// ${'word '.repeat(30).trim()}`, 5);
+  await menuItem(page, 'Edit', /^Fill Paragraph/);
+  await expect.poll(async () => (await doc(page)).split('\n').every((l) => l.length <= 80 && l.startsWith('// '))).toBe(true);
+  await setDoc(page, 'café', 3);
+  await menuItem(page, 'Tools', /^Character Info at Caret/);
+  await expect(page.getByText('"é" U+00E9 · UTF-8 C3 A9').first()).toBeVisible();
+  // Y98: a disabled breakpoint goes, an enabled one stays.
+  const bps = async () => (await (await page.request.get('/api/debug')).json()).breakpoints['Steps/Extra2.cs']?.map((b: { line: number; enabled?: boolean }) => `${b.line}:${b.enabled !== false}`);
+  await setDoc(page, 'a\nb\n', 0);
+  await page.keyboard.press('F9');
+  await expect.poll(bps).toEqual(['1:true']);
+  await page.keyboard.press('Control+F9');
+  await expect.poll(bps).toEqual(['1:false']);
+  await page.getByLabel('Source of Steps/Extra2.cs').locator('.cm-line').nth(1).click();
+  await page.keyboard.press('F9');
+  await expect.poll(bps).toEqual(['1:false', '2:true']);
+  await menuItem(page, 'Tools', /^Delete Disabled Breakpoints/);
+  await expect(page.getByText('Deleted 1 disabled breakpoint.').first()).toBeVisible();
+  await expect.poll(bps).toEqual(['2:true']);
+  // Y97
+  await page.getByRole('navigation', { name: 'Solution' }).getByRole('button', { name: 'Login.feature', exact: true }).first().click();
+  await expect(page.getByLabel('Gherkin source')).toContainText('Feature:');
+  await setDoc(page, 'Feature: F\n  scenario: s\n    GIVEN a\n', 0);
+  await gherkinItem(page, /^Fix Keyword Case/);
+  await expect.poll(() => doc(page)).toBe('Feature: F\n  Scenario: s\n    Given a\n');
+  // Y100: with 7 tabs open, all but the 5 used last (and unsaved ones) close.
+  const nav = page.getByRole('navigation', { name: 'Solution' });
+  await nav.getByRole('button', { name: 'SearchSteps.cs', exact: true }).first().dblclick();
+  await page.locator('.editor-tab-label', { hasText: 'SearchSteps.cs' }).click();
+  for (const name of ['Extra3.cs', 'Extra4.cs', 'Extra5.cs']) {
+    page.once('dialog', (d) => void d.accept(name));
+    await menuItem(page, 'Code', /^New File Next to Active/);
+    await expect(page.locator('.editor-tab-label[aria-current="true"]')).toHaveAttribute('title', `Steps/${name}`);
+  }
+  expect(await page.locator('.editor-tab-label').count()).toBeGreaterThan(5);
+  await menuItem(page, 'View', /^Close Least Recently Used Tabs/);
+  await expect(page.getByText(/^Closed \d+ tabs?; the 5 used last stay open\.$/).first()).toBeVisible();
+  await expect(page.locator('.editor-tab-label', { hasText: 'Extra5.cs' })).toHaveCount(1);
+});

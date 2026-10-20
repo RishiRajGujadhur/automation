@@ -91,6 +91,16 @@ export function moveTabTo(file: string, where: 'start' | 'end') {
   rest.splice(at, 0, tab);
   set({ ...state, tabs: rest });
 }
+/** Close Least Recently Used Tabs (Rider's tab limit): all but the `keep` tabs used last, pinned and unsaved ones stay. */
+export function closeLeastRecent(keep: number, dirty: string[]) {
+  const recent = new Set(used.filter((f) => state.tabs.some((t) => t.file === f)).slice(0, keep));
+  const gone = state.tabs.filter((t) => !t.pinned && !recent.has(t.file) && !dirty.includes(t.file) && t.file !== state.active);
+  if (!gone.length) return 0;
+  remember(gone.map((t) => t.file));
+  const tabs = state.tabs.filter((t) => !gone.includes(t));
+  set({ tabs, active: state.active });
+  return gone.length;
+}
 export function closeAll() { remember(state.tabs.filter((t) => !t.pinned).map((t) => t.file)); const tabs = state.tabs.filter((t) => t.pinned); set({ tabs, active: tabs.some((t) => t.file === state.active) ? state.active : tabs[0]?.file }); }
 /** Pinned tabs move to the front (in pin order) and survive Close Others / Close All. */
 export function setPinned(file: string, pinned: boolean) {
