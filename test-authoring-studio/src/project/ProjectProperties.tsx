@@ -4,6 +4,7 @@ import { api, type FilePreview } from '../api';
 import DiffApproval from '../DiffApproval';
 import { featureOn } from '../features';
 import { PAGES, type Field } from './pages';
+import { relativeProjectPath } from '../solutionFormat';
 
 type Using = { include: string; static?: boolean; alias?: string };
 type Props = { all: Record<string, string>; byConfig: Record<string, Record<string, string>>; events: { pre: string; post: string }; usings: Using[]; references: string[] };
@@ -32,6 +33,9 @@ export default function ProjectProperties({ project, onNotice }: { project: stri
     void api<Record<string, string>>('/project/properties/evaluate', { project, names: pages.flatMap((p) => p.fields.map((f) => f.name)), ...(config ? { configuration: config } : {}) }).then((r) => { if (live) setEvaluated(r); }, () => {});
     return () => { live = false; };
   }, [data, config]); // eslint-disable-line react-hooks/exhaustive-deps
+  // Other projects of the solution (Project References page).
+  const [others, setOthers] = useState<string[]>([]);
+  useEffect(() => { void api<{ projects?: { file: string; missing?: boolean }[] }>('/solution').then((s) => setOthers((s.projects ?? []).filter((p) => /\.(cs|fs|vb)proj$/i.test(p.file) && !p.missing && p.file !== project).map((p) => p.file)), () => {}); }, [project]);
   const load = () => api<Props>(`/project/properties?project=${encodeURIComponent(project)}`).then(setData, (e) => onNotice((e as Error).message));
   useEffect(() => { void load(); }, [project]); // eslint-disable-line react-hooks/exhaustive-deps
   const stored = (name: string) => (config ? data?.byConfig[config]?.[name] : data?.all[name]);
@@ -88,6 +92,20 @@ export default function ProjectProperties({ project, onNotice }: { project: stri
           <label><input type="checkbox" name="static" /> static</label>
           <button className="button" type="submit">Add</button>
         </form>
+      </>
+    );
+  };
+  customPages.references = () => {
+    const refs = extra.references ?? data?.references ?? [];
+    const same = (a: string, b: string) => a.replace(/\//g, '\\').toLowerCase() === b.replace(/\//g, '\\').toLowerCase();
+    return (
+      <>
+        <p className="subtle">Projects this one references (<code>&lt;ProjectReference&gt;</code>).</p>
+        <ul className="pp-list" aria-label="Project references">
+          {others.map((o) => { const rel = relativeProjectPath(project, o); const on = refs.some((r) => same(r, rel)); return <li key={o}><label><input type="checkbox" checked={on} aria-label={`Reference ${o}`} onChange={() => setExtra((x) => ({ ...x, references: on ? refs.filter((r) => !same(r, rel)) : [...refs, rel] }))} /> {o}</label><small className="subtle">{rel}</small></li>; })}
+          {refs.filter((r) => !others.some((o) => same(relativeProjectPath(project, o), r))).map((r) => <li key={r}><span>{r} <small className="subtle">(not in the solution)</small></span><button className="icon-button" aria-label={`Remove reference ${r}`} onClick={() => setExtra((x) => ({ ...x, references: refs.filter((y) => y !== r) }))}>×</button></li>)}
+          {!others.length && !refs.length && <li className="subtle">No other projects in the solution.</li>}
+        </ul>
       </>
     );
   };

@@ -77,4 +77,5 @@ export const PAGES: Page[] = [
   },
   { id: 'events', title: 'Build Events', feature: 'pp-events', fields: [], custom: true },
   { id: 'usings', title: 'Global Usings', feature: 'pp-usings', fields: [], custom: true },
+  { id: 'references', title: 'Project References', feature: 'pp-references', fields: [], custom: true },
 ];
