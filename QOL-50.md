@@ -94,6 +94,7 @@ Every improvement is verified by a unit or Playwright test (`tests/e2e/qol50.spe
 | QL85 | Rename a terminal tab | Tool windows | ✅ 2026-10-20 |
 | QL86 | Close Saved Tabs | Files | ✅ 2026-10-20 |
 | QL87 | Close to the Right can be reopened | Files | ✅ 2026-10-20 |
+| QL88 | Gherkin < closes with > | Gherkin | ✅ 2026-10-20 |
 
 ## Progress log
 - 2026-10-20 QL1: Title names the file and workspace folder
@@ -183,3 +184,4 @@ Every improvement is verified by a unit or Playwright test (`tests/e2e/qol50.spe
 - 2026-10-20 QL85: Double-click a terminal tab to name it; the name is no longer replaced by the folder.
 - 2026-10-20 QL86: The tab menu closes every tab without unsaved changes; pinned tabs stay.
 - 2026-10-20 QL87: Bug fix: tabs closed with Close to the Right now go to Reopen Closed Tab (Ctrl+Shift+T).
+- 2026-10-20 QL88: Typing < adds the closing > of an outline parameter.

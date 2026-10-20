@@ -1,6 +1,6 @@
 import { EditorView, hoverTooltip, keymap } from '@codemirror/view';
 import { api } from '../api';
-import { Prec, type Extension } from '@codemirror/state';
+import { EditorState, Prec, type Extension } from '@codemirror/state';
 import { indentService } from '@codemirror/language';
 import { featureOn } from '../features';
 import { alignTable, block } from './gherkinTables';
@@ -96,4 +96,6 @@ export const tagHover = hoverTooltip(async (view, pos) => {
   return { pos: line.from + m.index!, end: line.from + m.index! + m[0].length, above: true, create: () => { const dom = document.createElement('div'); dom.className = 'cm-tag-info'; dom.textContent = `${m[0]}: ${n} scenario${n === 1 ? '' : 's'} in the repository${row ? '' : ' (save to count this file)'}`; return { dom }; } };
 });
 // gherkin qol
-export const gherkinQol: Extension[] = [tagHover, alignOnPaste, tableEnter, pipeInEmptyRow, gherkinIndent, capitaliseKeywords];
+/** "<" closes itself with ">" for Scenario Outline parameters (with the usual quotes and brackets) (QOL-50). */
+const angleBrackets = Prec.high(EditorState.languageData.of(() => (featureOn('gherkin-angle') ? [{ closeBrackets: { brackets: ['(', '[', '{', '"', '<'] } }] : [])));
+export const gherkinQol: Extension[] = [angleBrackets, tagHover, alignOnPaste, tableEnter, pipeInEmptyRow, gherkinIndent, capitaliseKeywords];

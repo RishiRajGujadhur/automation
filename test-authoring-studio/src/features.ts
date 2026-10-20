@@ -382,6 +382,7 @@ export const FEATURES: Feature[] = [
   { id: 'terminal-zoom', label: 'Terminal: Ctrl+wheel zoom', group: 'Tool windows', essential: true, description: 'Ctrl+mouse wheel over a terminal makes its text bigger or smaller; the size is kept.' },
   { id: 'terminal-rename', label: 'Terminal: rename a tab', group: 'Tool windows', essential: true, description: 'Double-click a terminal tab to give it a name (an empty name goes back to the default).' },
   { id: 'close-saved', label: 'Close Saved Tabs', group: 'Files', essential: true, vs: 'Close All But Modified', description: 'The tab menu closes every tab without unsaved changes (pinned tabs stay).' },
+  { id: 'gherkin-angle', label: 'Gherkin: < closes with >', group: 'Gherkin', essential: true, description: 'Typing "<" in a step adds the closing ">" of an outline parameter.' },
 ];
 export const GROUPS: FeatureGroup[] = ['Editing', 'Navigation', 'Code intelligence', 'Tool windows', 'Files', 'Git', 'Gherkin', 'View', 'Debugging', 'Help and productivity'];
 
