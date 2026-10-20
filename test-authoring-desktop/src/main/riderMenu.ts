@@ -78,6 +78,7 @@ const ROWS: Record<'edit' | 'view' | 'navigate' | 'code' | 'tools' | 'help', Row
       ['Trim Lines', 'trim-lines'],
       ['Escape JSON String', 'json-escape'],
       ['Unescape JSON String', 'json-unescape'],
+      ['Number Lines', 'number-lines'],
     ] },
     ['Align Assignments', 'align-assignments', 'CmdOrCtrl+Alt+]'],
     ['Count Occurrences', 'count-occurrences'],

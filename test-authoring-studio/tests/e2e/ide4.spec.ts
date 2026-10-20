@@ -32,6 +32,9 @@ const menuItem = async (page: Page, menu: string, item: RegExp) => { await page.
 const gherkinItem = async (page: Page, item: RegExp) => { await page.getByRole('button', { name: 'Code menu' }).click(); await page.getByRole('menuitem', { name: 'Gherkin', exact: true }).click(); await page.getByRole('menuitem', { name: item }).click(); };
 void gherkinItem; void menuItem;
 
+/** Several selections in the active editor (test setup only). */
+const select = (page: Page, ranges: [number, number][]) => page.evaluate((rs) => { type ES = { create(r: unknown[]): unknown; range(a: number, b: number): unknown }; const v = (window as unknown as { __activeEditor: () => { view: { state: { selection: { constructor: ES } }; dispatch(s: unknown): void } } }).__activeEditor().view; const E = v.state.selection.constructor; v.dispatch({ selection: E.create(rs.map(([a, b]) => E.range(a, b))) }); }, ranges);
+
 const convert = async (page: Page, item: RegExp) => { await page.getByRole('button', { name: 'Edit menu' }).click(); await page.getByRole('menuitem', { name: 'Convert', exact: true }).click(); await page.getByRole('menuitem', { name: item }).click(); };
 
 test('Y1–Y10 Edit ▸ Convert: encode / decode, numbers, quotes, join / split; Align Assignments', async ({ page }) => {
@@ -58,4 +61,22 @@ test('Y1–Y10 Edit ▸ Convert: encode / decode, numbers, quotes, join / split;
   await setDoc(page, 'var a = 1;\nvar longName=2;', 3);
   await page.keyboard.press('Control+Alt+BracketRight');
   await expect.poll(() => doc(page)).toBe('var a        = 1;\nvar longName = 2;');
+});
+
+test('Y11–Y20 Swap Selections, Count Occurrences, Reformat XML, Insert Date and Time', async ({ page }) => {
+  await open(page, 'AuthSteps.cs');
+  await expect(page.getByLabel('Source of Steps/AuthSteps.cs')).toBeVisible();
+  await setDoc(page, 'user = user + user;', 1);
+  await menuItem(page, 'Edit', /^Count Occurrences/);
+  await expect(page.getByText('"user": 3 occurrences on 1 line.').first()).toBeVisible();
+  await setDoc(page, '<a><b>x</b></a>', 0);
+  await menuItem(page, 'Code', /^Reformat XML/);
+  await expect.poll(() => doc(page)).toMatch(/^<a>\n( +|\t)<b>x<\/b>\n<\/a>$/);
+  await setDoc(page, 'on ', 3);
+  await menuItem(page, 'Code', /^Insert Date and Time/);
+  await expect.poll(() => doc(page)).toMatch(/^on \d{4}-\d\d-\d\d \d\d:\d\d$/);
+  await setDoc(page, 'left = right;', 0, 4);
+  await select(page, [[0, 4], [7, 12]]);
+  await convert(page, /^Swap Selections/);
+  await expect.poll(() => doc(page)).toBe('right = left;');
 });

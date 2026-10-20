@@ -226,3 +226,10 @@ export const minifyXml = mapSelections((t) => (formatXml(t) === null ? null : t.
 /** Escape / Unescape JSON String (Rider): the selection as the body of a JSON string, and back. */
 export const jsonEscape = mapSelections((t) => JSON.stringify(t).slice(1, -1), 'line');
 export const jsonUnescape = mapSelections((t) => { try { return JSON.parse(`"${t.replace(/(^|[^\\])"/g, '$1\\"')}"`) as string; } catch { return null; } }, 'line');
+
+/** Number Lines (Rider String Manipulation): "1. ", "2. "… before the selected lines, after their indentation. */
+export const numberLines = (view: EditorView) => {
+  if (view.state.selection.main.empty) return false;
+  let n = 0;
+  return mapLines((lines) => lines.map((l) => (l.trim() ? l.replace(/^(\s*)/, (_, ind: string) => `${ind}${++n}. `) : l)), false)(view);
+};

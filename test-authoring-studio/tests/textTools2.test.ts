@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { EditorSelection, EditorState, type TransactionSpec } from '@codemirror/state';
 import type { EditorView } from '@codemirror/view';
-import { mapSelections, urlEncode, urlDecode, base64Encode, base64Decode, escapeString, unescapeString, htmlEncode, htmlDecode, stepNumber, insertSequence, toggleQuotes, joinWith, splitAt, alignAssignments, swapSelections, countOccurrences, trimLines, stamp, insertText, LOREM, shuffleLines, formatXml, minifyXml, jsonEscape, jsonUnescape } from '../src/editor/textTools2';
+import { mapSelections, urlEncode, urlDecode, base64Encode, base64Decode, escapeString, unescapeString, htmlEncode, htmlDecode, stepNumber, insertSequence, toggleQuotes, joinWith, splitAt, alignAssignments, swapSelections, countOccurrences, trimLines, stamp, insertText, LOREM, shuffleLines, formatXml, minifyXml, jsonEscape, jsonUnescape, numberLines } from '../src/editor/textTools2';
 
 /** Runs an editor command on `doc` with the selection between « and » (or a caret at |). */
 function run(doc: string, cmd: (v: EditorView) => boolean) {
@@ -98,5 +98,8 @@ describe('text tools, fourth batch (IDE-FEATURES-4 Y1…)', () => {
   it('Y19 Escape / Unescape JSON String', () => {
     expect(run('«{"a": 1}\n»', jsonEscape)).toBe('{\\"a\\": 1}\\n');
     expect(run('«{\\"a\\": \\u00e9}»', jsonUnescape)).toBe('{"a": é}');
+  });
+  it('Y20 Number Lines', () => {
+    expect(run('«  apples\n\n  pears»', numberLines)).toBe('  1. apples\n\n  2. pears');
   });
 });

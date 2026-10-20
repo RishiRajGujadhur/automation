@@ -414,6 +414,7 @@ export const FEATURES: Feature[] = [
   { id: 'reformat-xml', label: 'Reformat XML', group: 'Editing', essential: true, vs: 'Format Document (XML)', description: 'Code ▸ Reformat XML puts each element on its own line, indented (the selection or the whole file).', commands: ['reformat-xml'] },
   { id: 'minify-xml', label: 'Minify XML', group: 'Editing', essential: false, description: 'Code ▸ Minify XML removes the white space between tags.', commands: ['minify-xml'] },
   { id: 'json-escape', label: 'Escape / Unescape JSON String', group: 'Editing', essential: false, description: 'Edit ▸ Convert turns the selection into the body of a JSON string (quotes, backslashes, new lines), and back.', commands: ['json-escape', 'json-unescape'] },
+  { id: 'number-lines', label: 'Number Lines', group: 'Editing', essential: false, description: 'Edit ▸ Convert puts 1., 2., 3.… before the selected lines.', commands: ['number-lines'] },
 ];
 export const GROUPS: FeatureGroup[] = ['Editing', 'Navigation', 'Code intelligence', 'Tool windows', 'Files', 'Git', 'Gherkin', 'View', 'Debugging', 'Help and productivity'];
 
