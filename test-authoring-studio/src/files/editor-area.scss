@@ -3915,3 +3915,14 @@ html[data-rider-mode='vszen'] {
   .merge-conflicts { display: flex; flex-wrap: wrap; gap: 4px 14px; margin-top: 6px; font-size: 12px; }
   .merge-conflict { display: inline-flex; gap: 6px; align-items: center; }
 }
+
+/* Panel on the left (workbench.panel.defaultLocation) and the activity bar on the right (RIDER-VSCODE-FEATURES.md 391, 392). */
+.dock-left {
+  order: -1;
+  width: min(460px, 40%);
+  min-height: 0;
+  border-right: 1px solid var(--border);
+  background: var(--surface-2);
+  > .debug-panel { flex: 1; height: auto; min-height: 0; border-top: 0; }
+}
+html[data-activity-bar='right'] .app-body > .activity-bar { order: 99; border-left: 1px solid var(--border); border-right: 0; }

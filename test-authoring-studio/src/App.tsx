@@ -46,7 +46,8 @@ import { menuEntries, runRider, useRiderCommands, commandOn, readUsage } from '.
 import { featureOn, disabledCommands, onFeaturesChanged } from './features';
 import { zenSilent } from './vscode/zenMode';
 import { sideBySide, useMaximizedGroup } from './vscode/editorGroups';
-import { useSettings } from './vscode/settings';
+import { useSettings, setSetting } from './vscode/settings';
+import { activityBarLocation, panelLocation } from './vscode/workbenchLayout';
 import { studioLog } from './outputLog';
 import RecentPopup from './RecentPopup';
 import LocalHistory from './LocalHistory';
@@ -1151,7 +1152,9 @@ export default function App() {
       ],
   };
   // Bottom panel (Build / Debug windows): docked below the editors or on the right (Move Panel).
-  const [dockSide, setDockSide] = useLocalState<'bottom' | 'right'>('dockSide', 'bottom');
+  // Its place is the workbench.panel.defaultLocation setting (bottom, left, right); the move button cycles it.
+  const dockSide = panelLocation();
+  const setDockSide = (side: 'bottom' | 'left' | 'right') => setSetting('workbench.panel.defaultLocation', side);
   const inEditor = tab === 'Features' && (view === 'code' || view === 'editor');
   const dock = inEditor && dockShows ? (
     <div className={`dock dock-${dockSide}`}>
@@ -1161,7 +1164,7 @@ export default function App() {
             {dockOpen.map((d) => <button key={d} role="tab" aria-selected={dockShows === d} onClick={() => setDockTab(d)}>{d === 'build' ? 'Build' : d === 'debug' ? 'Debug' : d === 'todo' ? 'TODO' : d === 'output' ? 'Output' : RIDER_TOOLS[d]}</button>)}
           </div>
         )}
-        <button className="icon-button dock-move" aria-label={dockSide === 'bottom' ? 'Move panel right' : 'Move panel to the bottom'} title={dockSide === 'bottom' ? 'Move panel right' : 'Move panel to the bottom'} onClick={() => setDockSide(dockSide === 'bottom' ? 'right' : 'bottom')}>{dockSide === 'bottom' ? <PanelRight size={13} /> : <PanelBottom size={13} />}</button>
+        <button className="icon-button dock-move" aria-label={dockSide === 'bottom' ? 'Move panel right' : dockSide === 'right' ? 'Move panel left' : 'Move panel to the bottom'} title={dockSide === 'bottom' ? 'Move panel right' : dockSide === 'right' ? 'Move panel left' : 'Move panel to the bottom'} onClick={() => setDockSide(dockSide === 'bottom' ? 'right' : dockSide === 'right' ? 'left' : 'bottom')}>{dockSide === 'bottom' ? <PanelRight size={13} /> : <PanelBottom size={13} />}</button>
       </div>
       {dockShows === 'build' && <BuildPanel onOpen={(file, line, column) => editFile(file, line, column)} onNotice={setNotice} onClose={() => setBuildOpen(false)} />}
       {dockShows && dockShows in RIDER_TOOLS && <RiderToolWindow tool={dockShows as RiderTool} onOpen={(file, line, column) => navigateTo({ file, line, column })} onNotice={setNotice} onClose={() => closeRiderTool(dockShows as RiderTool)} />}
@@ -1420,7 +1423,7 @@ export default function App() {
         </div>
       </nav>}
       <div className="app-body">
-        {vscode && !(viewOpts.hideActivityBar && featureOn('toggle-activity-bar')) && (
+        {vscode && !(viewOpts.hideActivityBar && featureOn('toggle-activity-bar')) && activityBarLocation() !== 'hidden' && (
           <ActivityBar
             active={tab === 'Features' && view === 'recorder' ? 'Recorder' : tab === 'Features' && sidebarView === 'tests' ? 'Testing' : tab === 'Features' && sidebarView === 'search' ? 'Search' : tab === 'Features' && sidebarView === 'git' ? 'Git' : tab}
             basic={basic}
@@ -1947,6 +1950,7 @@ export default function App() {
           )}
           {tab === 'Features' && (view === 'code' || view === 'editor') && (
             <div className={`${splitFile ? 'editor-split' : 'editor-split single'} ${splitFile && sideBySideDir === 'down' ? 'down' : ''}`} data-maximized={splitFile && maximizedGroup ? maximizedGroup : undefined}>
+            {dockSide === 'left' && dock}
             <div className="editor-area">
             <EditorTabs onClose={closeEditor} onSplit={fileSrc.kind === 'browser' ? undefined : (f) => setSplitFile(f)}>
             {!openEditors.tabs.length && (

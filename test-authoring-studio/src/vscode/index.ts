@@ -20,4 +20,5 @@ import './brackets';
 import './workbenchTabs';
 import '../search/searchEditor';
 import './zenMode';
+import './workbenchLayout';
 export { SETTINGS } from './settings';

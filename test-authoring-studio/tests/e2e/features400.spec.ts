@@ -509,3 +509,23 @@ test('384 Split editor horizontally (down); 397 Maximize editor group', async ({
   await expect(split).not.toHaveClass(/\bdown\b/);
   expect((await pane.boundingBox())!.x).toBeGreaterThan((await main.boundingBox())!.x + 50);
 });
+
+test('391 Custom activity bar positioning; 392 Custom panel positioning', async ({ page }) => {
+  await open(page, CS, { 'workbench.activityBar.location': 'right', 'workbench.panel.defaultLocation': 'left' });
+  const bar = page.locator('.activity-bar');
+  const editor = page.getByLabel(`Source of ${CS}`);
+  expect((await bar.boundingBox())!.x).toBeGreaterThan((await editor.boundingBox())!.x);
+  // The panel (Output) opens on the left of the editors; its button moves it to the bottom.
+  await page.keyboard.press('Control+Alt+o');
+  const dock = page.locator('.dock');
+  await expect(dock).toHaveClass(/dock-left/);
+  expect((await dock.boundingBox())!.x).toBeLessThan((await editor.boundingBox())!.x);
+  await dock.getByRole('button', { name: 'Move panel to the bottom' }).click();
+  await expect(dock).toHaveClass(/dock-bottom/);
+  expect(await page.evaluate(() => JSON.parse(localStorage.getItem('tas:settings') ?? '{}')['workbench.panel.defaultLocation'])).toBeUndefined();
+  // Hidden activity bar.
+  await page.evaluate(() => localStorage.setItem('tas:settings', JSON.stringify({ 'workbench.activityBar.location': 'hidden' })));
+  await page.reload();
+  await expect(page.getByText('Repository indexed')).toBeVisible();
+  await expect(bar).toHaveCount(0);
+});

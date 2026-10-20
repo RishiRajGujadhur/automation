@@ -320,7 +320,7 @@ Legend: `[x]` done · `[ ]` to do.
 - [x] 388. Zen Mode — View ▸ Zen Mode (Ctrl+K Z), Workbench ▸ Zen Mode settings (full screen, center, line numbers, status bar, tabs, silent notifications) (2026-10-21)
 - [x] 389. Distraction Free Mode
 - [x] 390. Centered editor layout
-- [ ] 391. Custom activity bar positioning
+- [x] 391. Custom activity bar positioning — workbench.activityBar.location: left (default), right, hidden (2026-10-21)
 - [ ] 392. Custom panel positioning
 - [ ] 393. Secondary sidebar
 - [x] 394. Hide or reveal individual tool windows
@@ -377,3 +377,4 @@ Legend: `[x]` done · `[ ]` to do.
 - 2026-10-21 164: git bisect from Git Log: mark a bad and a good commit, then test each commit git checks out until it names the first bad one; git commands also retry when the index is locked by a concurrent refresh.
 - 2026-10-21 159: Changed files can be grouped in named changelists (kept per repository); each changelist commits on its own, leaving the other changes uncommitted.
 - 2026-10-21 154: A three-way merge editor for conflicted files: both sides read-only over the editable result; Complete Merge refuses while conflict markers remain.
+- 2026-10-21 391: The activity bar can sit on the right edge of the window or be hidden (Workbench, Appearance).
