@@ -279,6 +279,7 @@ export const FEATURES: Feature[] = [
   { id: 'zoom-ide', label: 'Zoom IDE', group: 'View', essential: true, vs: 'View ▸ Appearance ▸ Zoom IDE (Rider)', description: 'Zooms the whole window in or out (50–200 %), not only the editors.', commands: ['zoom-ide-in', 'zoom-ide-out', 'zoom-ide-reset'] },
   { id: 'compact-mode', label: 'Compact mode', group: 'View', essential: false, vs: 'Appearance ▸ Compact mode (Rider)', description: 'Tighter rows in trees, tabs, menus and the status bar.', commands: ['compact-mode'] },
   { id: 'features-io', label: 'Export / Import Feature Settings', group: 'Help and productivity', essential: true, vs: 'Import and Export Settings', description: 'Copies the Settings ▸ Features switches as JSON, or applies pasted ones.', commands: ['export-features', 'import-features'] },
+  { id: 'copy-env-info', label: 'Copy Environment Info', group: 'Help and productivity', essential: true, vs: 'Help ▸ About ▸ Copy Info', description: 'Copies the app version, browser and screen details for a bug report.', commands: ['copy-env-info'] },
 ];
 export const GROUPS: FeatureGroup[] = ['Editing', 'Navigation', 'Code intelligence', 'Tool windows', 'Files', 'Git', 'Gherkin', 'View', 'Debugging', 'Help and productivity'];
 

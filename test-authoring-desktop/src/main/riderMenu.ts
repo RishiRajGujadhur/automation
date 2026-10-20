@@ -264,6 +264,7 @@ const ROWS: Record<'edit' | 'view' | 'navigate' | 'code' | 'tools' | 'help', Row
     null,
     ['Report a Problem…', 'report-problem'],
     ['What\'s New', 'whats-new'],
+    ['Copy Environment Info', 'copy-env-info'],
   ],
 };
 

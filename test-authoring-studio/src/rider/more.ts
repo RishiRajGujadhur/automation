@@ -1,5 +1,6 @@
 import type { EditorView } from '@codemirror/view';
 import type { RiderCommand } from './commands';
+import { FEATURES, featureOn } from '../features';
 import { exportFeatures, importFeatures } from '../features';
 import { saveUserTemplate } from '../editor/snippets';
 import { clearBookmarks, getBookmarks } from '../editor/bookmarks';
@@ -181,5 +182,6 @@ export function moreCommands(h: MoreHelpers): RiderCommand[] {
     { id: 'compact-mode', label: 'Compact Mode', menu: 'View', checked: () => !!viewOptions().compact, run: () => setViewOptions({ compact: !viewOptions().compact }) },
     { id: 'export-features', label: 'Export Feature Settings', menu: 'Tools', group: true, run: () => { void copyText(exportFeatures()).then((ok) => h.notice(ok ? 'Copied the feature settings (JSON) to the clipboard.' : 'Clipboard unavailable.')); } },
     { id: 'import-features', label: 'Import Feature Settings…', menu: 'Tools', run: () => { const json = window.prompt('Paste exported feature settings (JSON):', ''); if (!json) return; try { const n = importFeatures(json); h.notice(`Imported the feature settings (${n} switch${n === 1 ? '' : 'es'}).`); } catch { h.notice('That is not exported feature settings JSON.'); } } },
+    { id: 'copy-env-info', label: 'Copy Environment Info', menu: 'Help', run: () => { const d = (window as unknown as { desktop?: { version?: string } }).desktop; const lines = [`TestAuthoring Studio (${d ? 'desktop app' : 'web app'}${d?.version ? ` ${d.version}` : ''})`, `Browser: ${navigator.userAgent}`, `Platform: ${navigator.platform}`, `Language: ${navigator.language}`, `Screen: ${screen.width}×${screen.height} @${window.devicePixelRatio}x`, `Features on: ${FEATURES.filter((f) => featureOn(f.id)).length} of ${FEATURES.length}`]; void copyText(lines.join('\n')).then((ok) => h.notice(ok ? 'Copied the environment info (for a bug report).' : 'Clipboard unavailable.')); } },
   ];
 }
