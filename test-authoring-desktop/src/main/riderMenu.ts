@@ -333,6 +333,7 @@ const ROWS: Record<'edit' | 'view' | 'navigate' | 'code' | 'tools' | 'help', Row
     ['Import Feature Settings…', 'import-features'],
     ['Reset Feature Settings…', 'reset-features'],
     ['Copy Current Branch Name', 'copy-branch-name'],
+    ['Copy SHA-256 Hash', 'copy-sha256'],
   ],
   help: [
     null,

@@ -458,6 +458,7 @@ export const FEATURES: Feature[] = [
   { id: 'commit-issue-key', label: 'Commit message: issue key from the branch', group: 'Git', essential: false, description: 'Git Changes offers the branch\'s issue key (ABC-123, #42) to put in front of the commit message.' },
   { id: 'commit-type', label: 'Commit message: Conventional Commits type', group: 'Git', essential: false, description: 'A Type… list in Git Changes puts feat:, fix:, test:… in front of the commit message.' },
   { id: 'timestamp', label: 'Unix Timestamp ⇄ Date', group: 'Editing', essential: false, description: 'Edit ▸ Convert turns a Unix timestamp into an ISO date (UTC), and an ISO date into Unix seconds.', commands: ['timestamp'] },
+  { id: 'copy-sha256', label: 'Copy SHA-256 Hash', group: 'Help and productivity', essential: false, description: 'Tools ▸ Copy SHA-256 Hash copies the hash of the selection (or the file).', commands: ['copy-sha256'] },
 ];
 export const GROUPS: FeatureGroup[] = ['Editing', 'Navigation', 'Code intelligence', 'Tool windows', 'Files', 'Git', 'Gherkin', 'View', 'Debugging', 'Help and productivity'];
 
