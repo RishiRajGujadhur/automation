@@ -45,6 +45,7 @@ Every improvement is verified by a unit or Playwright test (`tests/e2e/qol50.spe
 | QL36 | Settings remembers its search | Settings | ✅ 2026-10-20 |
 | QL37 | Command palette remembers the last query | Palette | ✅ 2026-10-20 |
 | QL38 | Lists: Page Up / Page Down, Ctrl+Home / End | Popups | ✅ 2026-10-20 |
+| QL39 | Lists: matches highlighted | Popups | ✅ 2026-10-20 |
 
 ## Progress log
 - 2026-10-20 QL1: Title names the file and workspace folder
@@ -85,3 +86,4 @@ Every improvement is verified by a unit or Playwright test (`tests/e2e/qol50.spe
 - 2026-10-20 QL36: Search kept this session
 - 2026-10-20 QL37: Last query back, selected
 - 2026-10-20 QL38: Paging in popup lists
+- 2026-10-20 QL39: Typed text marked in labels

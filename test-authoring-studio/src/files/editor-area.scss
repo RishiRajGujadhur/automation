@@ -3649,3 +3649,11 @@ html[data-features-off~='inlay-hints'] .cm-inlay {
   width: 100%;
   margin-bottom: 8px;
 }
+
+.list-match {
+  background: none;
+  color: inherit;
+  font-weight: 700;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}

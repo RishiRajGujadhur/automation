@@ -1,6 +1,12 @@
 import { useMemo, useState, type ReactNode } from 'react';
 import { featureOn } from '../features';
 
+/** The typed text marked in a label (QOL-50). */
+function highlightMatch(label: string, query: string) {
+  const q = query.trim().toLowerCase();
+  const at = q ? label.toLowerCase().indexOf(q) : -1;
+  return at < 0 ? label : <>{label.slice(0, at)}<mark className="list-match">{label.slice(at, at + q.length)}</mark>{label.slice(at + q.length)}</>;
+}
 export type ListItem = { key: string; label: string; detail?: string; icon?: ReactNode; indent?: number };
 
 /** A filterable list for Rider popups (live templates, surround with, file structure…): type, ↑ / ↓, Enter. */
@@ -33,7 +39,7 @@ export default function ListPopup({ label, placeholder, empty, items, onPick, in
         {shown.map((it, i) => (
           <li key={it.key} role="option" aria-selected={i === index} className={i === index ? 'active' : ''} style={it.indent ? { paddingLeft: 8 + it.indent * 14 } : undefined} onMouseMove={() => { if (index !== i) setIndex(i); }} onMouseDown={(e) => { e.preventDefault(); onPick(it.key); }} ref={i === index ? (el) => el?.scrollIntoView({ block: 'nearest' }) : undefined}>
             {it.icon}
-            <span className="goto-label">{it.label}</span>
+            <span className="goto-label">{featureOn('list-highlight') ? highlightMatch(it.label, query) : it.label}</span>
             {it.detail && <small>{it.detail}</small>}
           </li>
         ))}

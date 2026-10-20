@@ -335,6 +335,7 @@ export const FEATURES: Feature[] = [
   { id: 'settings-query', label: 'Settings remembers its search', group: 'Help and productivity', essential: true, description: 'The settings search stays until you clear it (this session).' },
   { id: 'palette-last', label: 'Command palette remembers the last query', group: 'Help and productivity', essential: true, vs: 'Quick Open ▸ preserve input', description: 'Reopening the palette shows your last query, selected (typing replaces it).' },
   { id: 'list-keys', label: 'Lists: Page Up / Page Down, Ctrl+Home / End', group: 'Navigation', essential: true, description: 'Popups such as Go to, Switcher and File Structure page through long lists.' },
+  { id: 'list-highlight', label: 'Lists: matches highlighted', group: 'Navigation', essential: true, description: 'The text you typed is marked in popup list labels.' },
 ];
 export const GROUPS: FeatureGroup[] = ['Editing', 'Navigation', 'Code intelligence', 'Tool windows', 'Files', 'Git', 'Gherkin', 'View', 'Debugging', 'Help and productivity'];
 
