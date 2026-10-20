@@ -24,6 +24,8 @@ import { urlEncode, urlDecode, base64Encode, base64Decode, escapeString, unescap
 try { if (localStorage.getItem('tas:noBlink') === '1') document.documentElement.dataset.noBlink = ''; } catch { /* storage blocked */ }
 
 export function moreCommands2(h: MoreHelpers): RiderCommand[] {
+  /** Asks the C# editor of `file` for its Quick Actions, filtered (Rider's Refactor This and refactoring keys). */
+  const cs = (file: string, filter: { kind?: 'refactor' | 'fix'; title?: string; label: string; auto?: boolean; noDialogs?: boolean }) => { if (!file.endsWith('.cs')) { h.notice('Open a C# file (the language service works on .cs files).'); return; } window.dispatchEvent(new CustomEvent('tas:cs-actions', { detail: { file, ...filter } })); };
   return [
     { id: 'url-encode', label: 'URL Encode', menu: 'Edit', submenu: 'Convert', run: h.inEditor((v) => urlEncode(v) || h.notice('Select text (or put the caret on a word) to convert.')) },
     { id: 'url-decode', label: 'URL Decode', menu: 'Edit', submenu: 'Convert', run: h.inEditor((v) => urlDecode(v) || h.notice('Select text (or put the caret on a word) to convert.')) },
@@ -137,5 +139,6 @@ export function moreCommands2(h: MoreHelpers): RiderCommand[] {
     { id: 'project-graph', label: 'Project Dependency Graph', menu: 'Tools', run: () => window.dispatchEvent(new Event('tas:project-graph')) },
     { id: 'force-run-to-cursor', label: 'Force Run to Cursor', menu: 'Tools', shortcut: 'Ctrl Shift F10', run: h.inEditor((v, file) => { if (getSnapshot().state.status !== 'paused') { h.notice('Force Run to Cursor works while the debugger is paused.'); return; } void api('/debug/run-to', { file, line: v.state.doc.lineAt(v.state.selection.main.head).number, force: true }).catch((e) => h.notice((e as Error).message)); }) },
     { id: 'debug-last-run', label: 'Debug Last Test Run', menu: 'Tools', shortcut: 'Ctrl R, D', run: () => { const last = lastTestRun(); if (!last) { h.notice('Run some tests first (Test Explorer).'); return; } void (async () => { const tests = last.tests === 'all' ? (await discoverTests()).tests : last.tests; const project = tests.find((t) => t.projectFile)?.projectFile; if (!project) { h.notice('The last run\'s tests have no project file (build first).'); return; } const filter = last.tests === 'all' ? undefined : tests.map((t) => t.filter).join('|'); await startDebugging({ project, ...(filter ? { filter } : {}) }); h.notice(`Debugging the last test run (${last.tests === 'all' ? 'all tests' : `${tests.length} test${tests.length === 1 ? '' : 's'}`}).`); })().catch((e) => h.notice((e as Error).message)); } },
+    { id: 'refactor-this', label: 'Refactor This…', menu: 'Code', submenu: 'Refactor', shortcut: 'Ctrl Alt Shift T', run: h.inEditor((_v, file) => cs(file, { kind: 'refactor', label: 'refactorings' })) },
   ];
 }

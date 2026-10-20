@@ -323,6 +323,10 @@ const ROWS: Record<'edit' | 'view' | 'navigate' | 'code' | 'tools' | 'help', Row
     ] },
     ['New File Next to Active…', 'new-file-here'],
     ['Rename Active File…', 'rename-active-file'],
+    null,
+    { submenu: 'Refactor', rows: [
+      ['Refactor This…', 'refactor-this'],
+    ] },
   ],
   tools: [
     ['Run Anything… (Ctrl twice)', 'run-anything'],

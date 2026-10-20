@@ -8,6 +8,8 @@ import { inlayHints } from './inlayHints';
 
 export type CsLocation = { file: string; line: number; column: number; endLine?: number; endColumn?: number };
 type Item = { label: string; insert: string; filter: string; sort: string; kind: string; detail?: string; preselect?: boolean };
+/** Rider's refactoring keys over Quick Actions: only refactorings, or titles matching `title`; `auto` applies a single match. */
+export type ActionFilter = { kind?: 'refactor' | 'fix'; title?: string; label: string; auto?: boolean; noDialogs?: boolean };
 export type CsHandlers = {
   /** F12 / Ctrl+click: the definition(s) of the symbol at `pos`. */
   definition: (pos: number) => void;
@@ -16,7 +18,7 @@ export type CsHandlers = {
   /** F2: inline rename at `pos`. */
   rename: (pos: number) => void;
   /** Ctrl+.: Quick Actions and Refactorings for the selection. */
-  actions: (from: number, to: number) => void;
+  actions: (from: number, to: number, filter?: ActionFilter) => void;
   /** Shift+Alt+F / Ctrl+K, Ctrl+D: Format Document (or the selection). */
   format: () => void;
   /** Ctrl+F12: Go To Implementation. */

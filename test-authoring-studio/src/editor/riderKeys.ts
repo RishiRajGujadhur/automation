@@ -303,6 +303,7 @@ export function riderKeys(file = ''): Extension {
     ['KeyH', false, 'call-hierarchy', () => runRider('call-hierarchy', 'key')],
     ['Home', false, 'related-files', () => runRider('related-files', 'key')],
     ['BracketRight', false, 'align-assignments', alignAssignments],
+    ['KeyT', true, 'refactor-this', () => runRider('refactor-this', 'key')],
     ['KeyZ', false, 'rollback-lines', (v) => { if (!rollbackLines(v)) runRider('rollback-lines', 'key'); return true; }],
   ];
   const ctrlAlt = EditorView.domEventHandlers({

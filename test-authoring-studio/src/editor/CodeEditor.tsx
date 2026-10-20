@@ -7,7 +7,7 @@ import { forEachDiagnostic, linter, lintGutter, type Diagnostic } from '@codemir
 import { keymap, EditorView } from '@codemirror/view';
 import { History, Save, TriangleAlert, RotateCcw, CircleCheck, CloudOff, Loader, GitCompareArrows, Navigation, ListTree, TextCursorInput, ListOrdered, Scissors, Copy, ClipboardPaste, X, Lightbulb, Wrench, AlignLeft, Eye } from 'lucide-react';
 import { RowMenu } from '../ui';
-import { csharpLanguage, lineCol, offsetOf, replaceText, type CsHandlers, type CsLocation } from './csharp';
+import { csharpLanguage, lineCol, offsetOf, replaceText, type CsHandlers, type CsLocation, type ActionFilter } from './csharp';
 import { FILES_CHANGED_EVENT } from './events';
 import { markdownQol } from './markdownQol';
 import { stepLenses, setLenses, setRefLenses, type StepLens, type RefLens } from './lens';
@@ -309,14 +309,18 @@ export default function CodeEditor({ file, reveal, active = true, onNotice, onIn
         setPeek({ ...l, source: src, name: r.name, top: (box?.bottom ?? host.top) - host.top + 4 });
       } catch (e) { onNotice?.((e as Error).message); }
     },
-    actions: async (from, to) => {
+    actions: async (from, to, filter) => {
       const v = ref.current?.view;
       if (!v) return;
       setBusyOp('Finding quick actions…');
       try {
         const end = lineCol(v.state.doc, to);
         const items = await api<{ id: string; title: string; kind: string }[]>('/csharp/actions', { ...position(from), ...(to > from ? { endLine: end.line, endColumn: end.column } : {}) });
-        if (!items.length) { onNotice?.('No quick actions here.'); return; }
+        const re = filter?.title ? new RegExp(filter.title) : undefined;
+        const shown = !filter ? items : items.filter((a) => (!filter.kind || a.kind === filter.kind) && (!re || re.test(a.title)) && !(filter.noDialogs && /\.\.\.$/.test(a.title)));
+        if (!shown.length) { onNotice?.(filter ? `No ${filter.label} here.` : 'No quick actions here.'); return; }
+        if (filter?.auto && (shown.length === 1 || re)) { void applyQuick(shown[0].id); return; }
+        items.splice(0, items.length, ...shown);
         const box = v.coordsAtPos(from);
         const host = v.dom.getBoundingClientRect();
         setQuick({ items, index: 0, top: (box?.bottom ?? host.top) - host.top + 2, left: (box?.left ?? host.left) - host.left });
@@ -404,6 +408,12 @@ export default function CodeEditor({ file, reveal, active = true, onNotice, onIn
   eolRef.current = eol === '\r\n' ? 'CRLF' : 'LF';
   const saveRef = useRef(save);
   saveRef.current = save;
+  // Rider's refactoring commands (Code ▸ Refactor): Quick Actions filtered to the refactoring asked for.
+  useEffect(() => {
+    const h = (e: Event) => { const d = (e as CustomEvent<ActionFilter & { file: string }>).detail; const v = ref.current?.view; if (d.file !== file || !v) return; const r = v.state.selection.main; csHandlers.current.actions(r.from, r.to, d); };
+    window.addEventListener('tas:cs-actions', h);
+    return () => window.removeEventListener('tas:cs-actions', h);
+  }, [file]);
   useEffect(() => { const h = () => { if (auto.dirty) void auto.save(); }; window.addEventListener(SAVE_ALL_EVENT, h); return () => window.removeEventListener(SAVE_ALL_EVENT, h); });
   const extensions = useMemo(() => [
     ...languageOf(file, browser),
