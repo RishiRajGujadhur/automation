@@ -1,5 +1,6 @@
 import type { EditorView } from '@codemirror/view';
 import type { RiderCommand } from './commands';
+import { nextDiagnostic, previousDiagnostic } from '@codemirror/lint';
 import { quickInfoAtCaret } from '../editor/csharp';
 import { isBrowser } from '../files/provider';
 import { GIT_CHANGED_EVENT } from '../editor/events';
@@ -129,5 +130,7 @@ export function moreCommands(h: MoreHelpers): RiderCommand[] {
     { id: 'sort-lines-desc', label: 'Sort Lines Descending', menu: 'Edit', run: h.inEditor(sortLines(true)) },
     { id: 'centered-layout', label: 'Centered Layout', menu: 'View', checked: () => !!viewOptions().centered, run: () => setViewOptions({ centered: !viewOptions().centered }) },
     { id: 'do-not-disturb', label: 'Do Not Disturb', menu: 'View', checked: () => !!viewOptions().doNotDisturb, run: () => { const on = !viewOptions().doNotDisturb; setViewOptions({ doNotDisturb: on }); if (!on) h.notice('Notifications are shown again.'); } },
+    { id: 'next-problem', label: 'Next Problem in File', menu: 'Navigate', group: true, shortcut: 'F8', run: h.inEditor((v) => { if (!nextDiagnostic(v)) h.notice('No problems in this file.'); }) },
+    { id: 'previous-problem', label: 'Previous Problem in File', menu: 'Navigate', shortcut: 'Shift F8', run: h.inEditor((v) => { if (!previousDiagnostic(v)) h.notice('No problems in this file.'); }) },
   ];
 }

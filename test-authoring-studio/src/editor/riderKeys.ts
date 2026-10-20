@@ -1,3 +1,4 @@
+import { previousDiagnostic } from '@codemirror/lint';
 import { EditorSelection, Prec, StateEffect, StateField, type EditorState, type Extension } from '@codemirror/state';
 import { EditorView, keymap } from '@codemirror/view';
 import { insertNewlineAndIndent } from '@codemirror/commands';
@@ -326,6 +327,7 @@ export function riderKeys(file = ''): Extension {
     opens('Mod-Shift-Delete', 'unwrap'),
     opens('Mod-Shift-c', 'copy-path'),
     keyed('Alt-F5', 'next-change', gotoChange(1)),
+    keyed('Shift-F8', 'previous-problem', previousDiagnostic),
     keyed('Alt-PageUp', 'previous-member', (v) => gotoMember(file, -1)(v)),
     keyed('Alt-PageDown', 'next-member', (v) => gotoMember(file, 1)(v)),
     keyed('Alt-/', 'expand-word', cyclicExpandWord),

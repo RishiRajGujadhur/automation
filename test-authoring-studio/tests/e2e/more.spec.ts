@@ -644,3 +644,63 @@ test('X137 / X138 Centered Layout and Do Not Disturb', async ({ page }) => {
   await menuItem(page, 'View', /^Notifications/);
   await expect(page.getByRole('list', { name: 'Notification history' })).toContainText('Put the caret in a scenario');
 });
+
+test('X139 Next / Previous Problem in File', async ({ page, request }) => {
+  await fs.writeFile(path.join(root, 'Steps/Broken2.cs'), ['namespace Demo;', 'public class Broken2', '{', '    public void A() { }', '    public void M() { int x = ; }', '}', ''].join('\n'));
+  expect((await request.post('/api/workspace', { data: { repositoryRoot: root, targetProject: '.' } })).ok()).toBe(true);
+  await openCs(page, 'Steps/Broken2.cs', 'public class Broken2');
+  await expect(page.locator('.code-editor:not([hidden]) .cm-lintRange-error').first()).toBeAttached({ timeout: 30_000 });
+  await menuItem(page, 'Navigate', /^Next Problem in File/);
+  await expect(page.getByLabel('Cursor position')).toContainText('Ln 5');
+});
+
+test('X140 Go to Test / Test Subject', async ({ page, request }) => {
+  await fs.writeFile(path.join(root, 'Steps/Clock.cs'), ['namespace Demo;', 'public class Clock { }', ''].join('\n'));
+  await fs.writeFile(path.join(root, 'Steps/ClockTests.cs'), ['namespace Demo;', 'public class ClockTests { }', ''].join('\n'));
+  expect((await request.post('/api/workspace', { data: { repositoryRoot: root, targetProject: '.' } })).ok()).toBe(true);
+  await openCs(page, 'Steps/Clock.cs', 'public class Clock');
+  await menuItem(page, 'Navigate', /^Go to Test \/ Test Subject/);
+  await expect(page.locator('.editor-tab-label[aria-current="true"]')).toHaveAttribute('title', 'Steps/ClockTests.cs');
+  await menuItem(page, 'Navigate', /^Go to Test \/ Test Subject/);
+  await expect(page.locator('.editor-tab-label[aria-current="true"]')).toHaveAttribute('title', 'Steps/Clock.cs');
+});
+
+test('X141 Command palette: recently used commands first', async ({ page }) => {
+  await openFeature(page);
+  await caretAt(page, 'Feature:');
+  await menuItem(page, 'Edit', /^Remove Blank Lines/);
+  await page.keyboard.press('Control+Shift+P');
+  const first = page.locator('.command-palette [cmdk-group]').filter({ hasText: 'Commands' }).locator('[cmdk-item]').first();
+  await expect(first).toContainText('Remove Blank Lines');
+  await expect(first).toContainText('recent');
+});
+
+test('X142 Run Selected Text in Terminal', async ({ page, request }) => {
+  await fs.writeFile(path.join(root, 'Notes.md'), ['# Notes', 'echo terminal-ok-142', ''].join('\n'));
+  expect((await request.post('/api/workspace', { data: { repositoryRoot: root, targetProject: '.' } })).ok()).toBe(true);
+  const src = await openCs(page, 'Notes.md', 'echo terminal-ok-142');
+  await src.locator('.cm-line', { hasText: 'echo terminal-ok-142' }).click();
+  await menuItem(page, 'Tools', /^Run Selected Text in Terminal/);
+  await expect(page.getByLabel('Terminal output')).toContainText(/terminal-ok-142[\s\S]*terminal-ok-142/, { timeout: 30_000 });
+});
+
+test('X143 Selected lines in the status bar', async ({ page }) => {
+  await openFeature(page);
+  await caretAt(page, 'Scenario: Sign in');
+  await page.keyboard.press('Home');
+  await page.keyboard.press('Shift+ArrowDown');
+  await page.keyboard.press('Shift+ArrowDown');
+  await page.keyboard.press('Shift+End');
+  await expect(page.getByLabel('Cursor position')).toContainText('3 lines');
+});
+
+test('X146 Remove Breakpoints in File', async ({ page }) => {
+  await openFeature(page);
+  await caretAt(page, 'the login page is open');
+  await page.keyboard.press('F9');
+  await caretAt(page, 'the dashboard is displayed');
+  await page.keyboard.press('F9');
+  await expect(gherkin(page).locator('.cm-bp')).toHaveCount(2);
+  await menuItem(page, 'Tools', /^Remove Breakpoints in File/);
+  await expect(gherkin(page).locator('.cm-bp')).toHaveCount(0);
+});

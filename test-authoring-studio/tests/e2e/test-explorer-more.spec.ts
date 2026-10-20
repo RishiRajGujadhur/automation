@@ -126,3 +126,22 @@ test('X114–X116 Code coverage for selected tests; Run Not Run / Run Passed Tes
   expect(JSON.parse(runs[2]).ids).toContain(JSON.parse(runs[0]).ids[0]);
   await expect.poll(() => status(page), { timeout: 240_000, intervals: [2000] }).toMatch(/done|failed/);
 });
+
+test('X144 / X145 Test Explorer: Group by Tag and tag: filter', async ({ page }) => {
+  const feature = (await fs.readdir(path.join(root, 'Features'))).find((f) => f.endsWith('.feature'))!;
+  const file = path.join(root, 'Features', feature);
+  await fs.writeFile(file, (await fs.readFile(file, 'utf8')).replace('  Scenario:', '  @smoke\n  Scenario:'));
+  await page.request.post('/api/scan', { data: {} });
+  await start(page);
+  await page.getByRole('button', { name: 'Test Explorer' }).click();
+  const te = page.getByRole('region', { name: 'Test Explorer' });
+  const tree = te.getByRole('navigation', { name: 'Tests' });
+  await expect(tree.locator('.t-label', { hasText: /AddsTwoNumbers/ })).toBeVisible({ timeout: 60_000 });
+  await te.getByLabel('Group by').selectOption('tag');
+  await expect(tree.locator('.t-label', { hasText: /^@smoke/ })).toBeVisible();
+  await expect(tree.locator('.t-label', { hasText: /^No tags/ })).toBeVisible();
+  await te.getByLabel('Group by').selectOption('project');
+  await te.getByLabel('Search Test Explorer').fill('tag:@smoke');
+  await expect(tree.locator('.t-label', { hasText: /AddsTwoNumbers/ })).toHaveCount(0);
+  await expect(tree.locator('.t-label', { hasText: /Add two numbers/ })).toBeVisible();
+});
