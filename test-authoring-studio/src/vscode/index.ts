@@ -7,6 +7,7 @@ import './font';
 import './whitespace';
 import './wordWrap';
 import './rulers';
+import './unicode';
 import './lineHighlight';
 import './filesOnSave';
 import './suggestions';

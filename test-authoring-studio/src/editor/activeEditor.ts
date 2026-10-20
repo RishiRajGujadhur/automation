@@ -8,6 +8,8 @@ type Active = { view: EditorView; file: string };
 let last: Active | undefined;
 const files = new WeakMap<EditorView, string>();
 
+/** The file an editor shows (registered by trackActive). */
+export const fileOfView = (v: EditorView) => files.get(v);
 const visible = (v: EditorView) => v.dom.isConnected && v.dom.getClientRects().length > 0;
 
 /** Toggle Read-Only (VS Code's "Toggle Active Editor Read-only in Session"): files that refuse edits until toggled back. */

@@ -63,3 +63,16 @@ describe('203 / 204 search editor', () => {
     expect(searchEditorName('a b/c?')).toBe('a-b-c.code-search');
   });
 });
+import { unicodeHits } from '../src/vscode/unicode';
+describe('207 unicode highlighting', () => {
+  const o = { invisible: true, ambiguous: true, nonBasic: false, comments: false };
+  it('invisible, look-alikes in mixed words, comments skipped', () => {
+    expect(unicodeHits('var a​ = 1;', o).map((h) => h.kind)).toEqual(['invisible']);
+    expect(unicodeHits('var аdmin = "x";', o)).toEqual([{ at: 4, char: 'а', kind: 'ambiguous', like: 'a' }]);
+    expect(unicodeHits('Given привет мир', o)).toEqual([]);
+    expect(unicodeHits('x = 1; // аdmin', o)).toEqual([]);
+    expect(unicodeHits('x = 1; // аdmin', { ...o, comments: true })).toHaveLength(1);
+    expect(unicodeHits('café', { ...o, nonBasic: true }).map((h) => h.char)).toEqual(['é']);
+    expect(unicodeHits('say “hi”', o).map((h) => h.like)).toEqual(['"', '"']);
+  });
+});

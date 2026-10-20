@@ -337,3 +337,20 @@ test('203 Search result editor; 204 saved search editors run again', async ({ pa
   await page.getByRole('menuitem', { name: 'alpha' }).click();
   await expect.poll(() => fs.readFile(path.join(temp, '.tas/searches/alpha.code-search'), 'utf8')).toContain('3 results - 1 file');
 });
+
+test('207 Unicode character highlighting', async ({ page }) => {
+  await open(page, CS);
+  await setDoc(page, 'namespace Demo;\npublic class P\n{\n    string аdmin = "x";\n    int b​ = 1;\n}\n');
+  const hits = page.locator('.cm-unicode-ambiguous');
+  await expect(hits).toHaveCount(1);
+  await expect(hits).toHaveAttribute('title', /U\+0430 "а" could be confused with the ASCII character "a"/);
+  // Zero-width characters: drawn by the editor's special-character marker (or the box when it does not take them).
+  await expect(page.locator('.cm-line', { hasText: 'int b' }).locator('.cm-specialChar, .cm-unicode-invisible')).toHaveCount(1);
+  // Settings ▸ Text Editor: ambiguous characters off.
+  const d = await openSettings(page);
+  await d.getByRole('searchbox', { name: 'Search settings' }).fill('unicodeHighlight');
+  await d.locator('[data-setting-id="editor.unicodeHighlight.ambiguousCharacters"]').getByRole('checkbox').click();
+  await page.keyboard.press('Escape');
+  await page.keyboard.press('Escape');
+  await expect(hits).toHaveCount(0);
+});

@@ -224,7 +224,7 @@ Legend: `[x]` done · `[ ]` to do.
 - [x] 204. Search editor result persistence — Saved search editors (.tas/searches) listed in the Search view, run again when reopened (2026-10-21)
 - [x] 205. Search exclusion patterns — files to include / exclude
 - [x] 206. Case-preserving replacement — Search ▸ Replace: Preserve Case (AB) (2026-10-21)
-- [ ] 207. Unicode character highlighting
+- [x] 207. Unicode character highlighting — editor.unicodeHighlight.* (invisible, ambiguous, non-basic ASCII, comments) (2026-10-21)
 - [x] 208. Invisible character rendering — editor.renderWhitespace (VSCODE-20.md V9)
 - [x] 209. Indentation guides
 - [x] 210. Bracket pair colorization
@@ -358,3 +358,4 @@ Legend: `[x]` done · `[ ]` to do.
 - 2026-10-21 338: Turning the toggle off searches the ignored folders (bin, obj, node_modules…) too.
 - 2026-10-21 203: Find in Files results open as a search editor document (VS Code's format) whose result lines open their location.
 - 2026-10-21 204: Search editors are saved under .tas/searches (kept out of Git) and rerun from their # header when opened from the Search view's history.
+- 2026-10-21 207: Look-alike characters in mixed words (Cyrillic а in admin, typographic quotes) and invisible characters get a box with an explanation; prose files skip look-alikes.
