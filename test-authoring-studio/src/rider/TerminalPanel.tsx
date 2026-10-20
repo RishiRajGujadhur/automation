@@ -93,6 +93,14 @@ function Shell({ active, onTitle, onExit, takeCommand }: { active: boolean; onTi
       else void navigator.clipboard.readText().then((t) => { if (t) term.paste(t); }, () => {});
     };
     host.current!.addEventListener('contextmenu', rightClick);
+    // Ctrl+Shift+C copies the selection, Ctrl+Shift+V pastes (QOL-50).
+    term.attachCustomKeyEventHandler((e) => {
+      if (e.type !== 'keydown' || !e.ctrlKey || !e.shiftKey || e.altKey || !featureOn('terminal-copy-keys')) return true;
+      const k = e.key.toLowerCase();
+      if (k === 'c' && term.hasSelection()) { e.preventDefault(); void navigator.clipboard.writeText(term.getSelection()).catch(() => {}); return false; }
+      if (k === 'v') { e.preventDefault(); void navigator.clipboard.readText().then((t) => { if (t) term.paste(t); }, () => {}); return false; }
+      return true;
+    });
     clearRef.current = () => { term.clear(); redraw(); term.focus(); };
     // Ctrl+wheel changes the font size of every terminal (kept) (QOL-50).
     const zoom = (e: WheelEvent) => {
