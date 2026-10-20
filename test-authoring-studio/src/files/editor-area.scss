@@ -3761,3 +3761,14 @@ html[data-features-off~='inlay-hints'] .cm-inlay {
 .editorconfig-designer .ec-row { flex-direction: row; align-items: center; justify-content: space-between; gap: 12px; }
 .editorconfig-designer .ec-row select { min-width: 200px; }
 .editorconfig-designer .ec-head { font-size: 13px; margin: 8px 0 0; }
+
+// Project Dependency Graph (CSHARP-20).
+.rider-popup:has(.project-graph) { width: min(1000px, 96vw); max-width: none; }
+.project-graph { overflow: auto; max-height: 70vh; }
+.project-graph .pg-node rect { fill: var(--panel, #f6f6f6); stroke: var(--accent, #9270dd); stroke-width: 1.5; }
+.project-graph .pg-node { cursor: pointer; }
+.project-graph .pg-node:hover rect, .project-graph .pg-node:focus rect { fill: color-mix(in srgb, var(--accent, #9270dd) 14%, var(--panel, #fff)); }
+.project-graph .pg-name { font-weight: 600; font-size: 13px; fill: var(--text, #222); }
+.project-graph .pg-meta { font-size: 11px; fill: var(--muted, #777); }
+.project-graph .pg-edge { fill: none; stroke: var(--muted, #888); stroke-width: 1.4; }
+.project-graph .pg-arrowhead { fill: var(--muted, #888); }

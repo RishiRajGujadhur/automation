@@ -190,3 +190,36 @@ test('C12 / C14 / C15 / C16 Exclude From Project, launch profiles, user secrets,
   await ec.getByRole('button', { name: 'Approve and write .editorconfig' }).click();
   await expect.poll(() => fs.readFile(path.join(root, '.editorconfig'), 'utf8').catch(() => '')).toBe('[*]\nindent_size = 4\n\n[*.cs]\ndotnet_diagnostic.CA1707.severity = none\n');
 });
+
+test('C17–C20 Tidy Project File, value completions, Directory.Build.props, dependency graph', async ({ page }) => {
+  await fs.mkdir(path.join(root, 'Lib'), { recursive: true });
+  await fs.writeFile(path.join(root, 'Lib/Lib.csproj'), '<Project Sdk="Microsoft.NET.Sdk">\n  <PropertyGroup>\n    <TargetFramework>net8.0</TargetFramework>\n  </PropertyGroup>\n</Project>\n');
+  await fs.writeFile(path.join(root, 'Fixtures.csproj'), (await fs.readFile(path.join(root, 'Fixtures.csproj'), 'utf8')).replace('</Project>', '  <ItemGroup>\n    <ProjectReference Include="Lib/Lib.csproj" />\n  </ItemGroup>\n</Project>'));
+  expect((await page.request.post('/api/workspace', { data: { repositoryRoot: root, targetProject: '.' } })).ok()).toBe(true);
+  await open(page, 'AuthSteps.cs');
+  // C20
+  await menuItem(page, 'Tools', /^Project Dependency Graph/);
+  const graph = page.getByRole('img', { name: 'Project dependency graph' });
+  await expect(graph.getByRole('button', { name: 'Project Fixtures' })).toBeVisible();
+  await expect(graph.getByRole('button', { name: 'Project Lib' })).toBeVisible();
+  await expect(graph.locator('.pg-edge')).toHaveCount(1);
+  await graph.getByRole('button', { name: 'Project Lib' }).click();
+  await expect(page.locator('.editor-tab-label[aria-current="true"]')).toHaveAttribute('title', 'Lib/Lib.csproj');
+  // C17
+  await setDoc(page, '<Project Sdk="Microsoft.NET.Sdk">\n  <PropertyGroup>\n  </PropertyGroup>\n  <ItemGroup>\n    <PackageReference Include="NUnit" Version="4.2.2" />\n    <PackageReference Include="coverlet.collector" Version="6.0.2" />\n  </ItemGroup>\n</Project>\n', 0);
+  await menuItem(page, 'Tools', /^Tidy Project File/);
+  await expect.poll(() => doc(page)).toBe('<Project Sdk="Microsoft.NET.Sdk">\n  <ItemGroup>\n    <PackageReference Include="coverlet.collector" Version="6.0.2" />\n    <PackageReference Include="NUnit" Version="4.2.2" />\n  </ItemGroup>\n</Project>\n');
+  // C18
+  await setDoc(page, '<Project Sdk="Microsoft.NET.Sdk">\n  <PropertyGroup>\n    <Nullable></Nullable>\n  </PropertyGroup>\n</Project>\n', '<Project Sdk="Microsoft.NET.Sdk">\n  <PropertyGroup>\n    <Nullable>'.length);
+  await page.keyboard.press('Control+Space');
+  await expect(page.getByRole('option', { name: /^enable/ })).toBeVisible();
+  await page.keyboard.press('Escape');
+  // C19: none yet: previewed at the root; then it opens.
+  await menuItem(page, 'Tools', /^Open Directory\.Build\.props/);
+  const create = page.getByRole('dialog', { name: 'Create Directory.Build.props' });
+  await create.getByRole('button', { name: 'Approve and write Directory.Build.props' }).click();
+  await expect.poll(() => fs.readFile(path.join(root, 'Directory.Build.props'), 'utf8').catch(() => '')).toContain('<Project>');
+  await create.getByRole('button', { name: 'Close dialog' }).click();
+  await menuItem(page, 'Tools', /^Open Directory\.Build\.props/);
+  await expect(page.locator('.editor-tab-label[aria-current="true"]')).toHaveAttribute('title', 'Directory.Build.props');
+});

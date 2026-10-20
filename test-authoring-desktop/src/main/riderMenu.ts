@@ -386,6 +386,7 @@ const ROWS: Record<'edit' | 'view' | 'navigate' | 'code' | 'tools' | 'help', Row
     ['EditorConfig…', 'editorconfig-designer'],
     ['Tidy Project File', 'tidy-project'],
     ['Open Directory.Build.props', 'directory-build-props'],
+    ['Project Dependency Graph', 'project-graph'],
   ],
   help: [
     null,

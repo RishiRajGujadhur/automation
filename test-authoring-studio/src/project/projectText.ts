@@ -33,3 +33,22 @@ export function foldersUp(project: string) {
   return Array.from({ length: parts.length + 1 }, (_, i) => parts.slice(0, parts.length - i).join('/'));
 }
 export const DIRECTORY_BUILD_PROPS = '<Project>\n  <!-- Settings shared by every project in this folder and below (Directory.Build.props). -->\n  <PropertyGroup>\n  </PropertyGroup>\n</Project>\n';
+
+/** Layers of a project graph: projects nobody references last; each project to the right of what it references. */
+export function graphLayers(projects: { file: string; references?: string[] }[]) {
+  const files = new Set(projects.map((p) => p.file));
+  const refs = new Map(projects.map((p) => [p.file, (p.references ?? []).filter((r) => files.has(r) && r !== p.file)]));
+  const depth = new Map<string, number>();
+  const visit = (f: string, seen: Set<string>): number => {
+    if (depth.has(f)) return depth.get(f)!;
+    if (seen.has(f)) return 0;
+    seen.add(f);
+    const d = Math.max(-1, ...refs.get(f)!.map((r) => visit(r, seen))) + 1;
+    depth.set(f, d);
+    return d;
+  };
+  for (const p of projects) visit(p.file, new Set());
+  const layers: string[][] = [];
+  for (const [f, d] of depth) (layers[d] ??= []).push(f);
+  return { layers: layers.map((l) => l.sort()), edges: [...refs].flatMap(([from, to]) => to.map((t) => ({ from, to: t }))) };
+}

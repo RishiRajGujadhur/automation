@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { readEditorConfig, setEditorConfig } from '../src/project/editorconfig';
-import { addNoWarn, tidyProject, foldersUp } from '../src/project/projectText';
+import { addNoWarn, tidyProject, foldersUp, graphLayers } from '../src/project/projectText';
 import { configOf, readProperties, setProperty, setProperties, readEvents, setEvent, readUsings, setUsings, readReferences, setReferences, relativeProjectPath, readFileItem, setFileItem, isExcluded, setExcluded } from '../server/projectProps';
 
 const CSPROJ = `<Project Sdk="Microsoft.NET.Sdk">
@@ -114,5 +114,13 @@ describe('Directory.Build.props (CSHARP-20)', () => {
   it('C19 folders from the project up to the root', () => {
     expect(foldersUp('src/Tests/Tests.csproj')).toEqual(['src/Tests', 'src', '']);
     expect(foldersUp('Demo.csproj')).toEqual(['']);
+  });
+});
+
+describe('project dependency graph (CSHARP-20)', () => {
+  it('C20 layers projects by their references', () => {
+    const g = graphLayers([{ file: 'Tests/T.csproj', references: ['App/A.csproj', 'Lib/L.csproj'] }, { file: 'App/A.csproj', references: ['Lib/L.csproj'] }, { file: 'Lib/L.csproj' }]);
+    expect(g.layers).toEqual([['Lib/L.csproj'], ['App/A.csproj'], ['Tests/T.csproj']]);
+    expect(g.edges).toHaveLength(3);
   });
 });
