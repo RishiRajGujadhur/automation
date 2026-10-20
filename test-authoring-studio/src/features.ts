@@ -440,6 +440,7 @@ export const FEATURES: Feature[] = [
   { id: 'table-row-above', label: 'Table: Insert Row Above', group: 'Gherkin', essential: false, description: 'Code ▸ Gherkin adds an empty row above the caret\'s row.', commands: ['table-row-above'] },
   { id: 'duplicate-scenario-names', label: 'Warn on duplicate scenario names', group: 'Gherkin', essential: true, vs: 'Reqnroll: duplicate scenario name', description: 'Two scenarios with the same name in a file get a warning (reports and filters cannot tell them apart).' },
   { id: 'add-outline', label: 'Add Scenario Outline', group: 'Gherkin', essential: false, description: 'Code ▸ Gherkin adds a Scenario Outline with an Examples table after the scenario at the caret.', commands: ['add-outline'] },
+  { id: 'table-column-stats', label: 'Table: Column Statistics', group: 'Gherkin', essential: false, description: 'Code ▸ Gherkin shows the count, sum, average, min and max of the numbers in the caret\'s column.', commands: ['table-column-stats'] },
 ];
 export const GROUPS: FeatureGroup[] = ['Editing', 'Navigation', 'Code intelligence', 'Tool windows', 'Files', 'Git', 'Gherkin', 'View', 'Debugging', 'Help and productivity'];
 

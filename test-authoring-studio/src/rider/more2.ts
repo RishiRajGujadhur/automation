@@ -1,7 +1,7 @@
 import type { RiderCommand } from './commands';
 import type { MoreHelpers } from './more';
 import { copyText } from '../ui';
-import { tableDeleteEmptyRows, tableRemoveDuplicateRows, tableMarkdown, tagAllScenarios, removeTagEverywhere, sortTags, promoteCommonTags, insertDocString, expandOutline, wrapInRule, setLanguageHeader, scenarioName, tableInsertRowAbove, addScenarioOutline } from '../editor/gherkinTools';
+import { tableDeleteEmptyRows, tableRemoveDuplicateRows, tableMarkdown, tagAllScenarios, removeTagEverywhere, sortTags, promoteCommonTags, insertDocString, expandOutline, wrapInRule, setLanguageHeader, scenarioName, tableInsertRowAbove, addScenarioOutline, tableColumnStats } from '../editor/gherkinTools';
 import { urlEncode, urlDecode, base64Encode, base64Decode, escapeString, unescapeString, htmlEncode, htmlDecode, stepNumber, insertSequence, toggleQuotes, joinWith, splitAt, alignAssignments, swapSelections, countOccurrences, trimLines, stamp, insertText, LOREM, shuffleLines, reformatXml, minifyXml, jsonEscape, jsonUnescape, numberLines, mapDoc, toFileScopedNamespace, toBlockScopedNamespace, removeRegions, toRawString, toggleTask, formatMarkdownTable, tableOfContents, MARKDOWN_TABLE, removeComments, concatToInterpolationCmd } from '../editor/textTools2';
 
 /**
@@ -60,5 +60,6 @@ export function moreCommands2(h: MoreHelpers): RiderCommand[] {
     { id: 'copy-scenario-name', label: 'Copy Scenario Name', menu: 'Code', submenu: 'Gherkin', run: h.inEditor((v) => { const n = scenarioName(v.state); if (!n) { h.notice('Put the caret in a scenario.'); return; } void copyText(n).then((ok) => h.notice(ok ? `Copied: ${n}` : 'Clipboard unavailable.')); }) },
     { id: 'table-row-above', label: 'Table: Insert Row Above', menu: 'Code', submenu: 'Gherkin', run: h.inEditor((v) => tableInsertRowAbove(v) || h.notice('Put the caret in a table.')) },
     { id: 'add-outline', label: 'Add Scenario Outline', menu: 'Code', submenu: 'Gherkin', run: h.inEditor((v) => addScenarioOutline(v) || h.notice('Could not add an outline here.')) },
+    { id: 'table-column-stats', label: 'Table: Column Statistics', menu: 'Code', submenu: 'Gherkin', run: h.inEditor((v) => { const s = tableColumnStats(v.state); if (!s) { h.notice('Put the caret in a table.'); return; } const f = (n: number) => String(Math.round(n * 1000) / 1000); h.notice(s.count ? `${s.column}: ${s.count} numbers, sum ${f(s.sum!)}, average ${f(s.average!)}, min ${f(s.min!)}, max ${f(s.max!)}.` : `${s.column}: no numbers in this column.`); }) },
   ];
 }

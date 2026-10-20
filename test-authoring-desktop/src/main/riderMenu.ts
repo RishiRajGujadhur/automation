@@ -251,6 +251,7 @@ const ROWS: Record<'edit' | 'view' | 'navigate' | 'code' | 'tools' | 'help', Row
       ['Copy Scenario Name', 'copy-scenario-name'],
       ['Table: Insert Row Above', 'table-row-above'],
       ['Add Scenario Outline', 'add-outline'],
+      ['Table: Column Statistics', 'table-column-stats'],
     ] },
     ['Collapse Using Directives', 'fold-usings'],
     ['Sort JSON Keys', 'sort-json'],

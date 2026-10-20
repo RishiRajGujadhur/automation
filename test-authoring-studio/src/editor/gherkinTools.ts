@@ -941,3 +941,13 @@ export function addScenarioOutline(view: EditorView) {
   view.dispatch({ changes: { from: at, insert }, selection: { anchor: at + before.length + indent.length + 'Scenario Outline: '.length }, scrollIntoView: true, userEvent: 'input' });
   return true;
 }
+
+/** Table ▸ Column Statistics: count, sum, average, min and max of the numbers in the caret's column. */
+export function tableColumnStats(state: EditorState) {
+  const t = tableAt(state);
+  if (!t) return null;
+  const vals = t.rows.slice(1).map((r) => (r[t.col] ?? '').trim()).filter((v) => /^-?\d+(\.\d+)?$/.test(v)).map(Number);
+  if (!vals.length) return { column: t.rows[0][t.col] ?? '', count: 0 };
+  const sum = vals.reduce((a, b) => a + b, 0);
+  return { column: t.rows[0][t.col] ?? '', count: vals.length, sum, average: sum / vals.length, min: Math.min(...vals), max: Math.max(...vals) };
+}
