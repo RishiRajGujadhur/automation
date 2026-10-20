@@ -20,6 +20,7 @@ Each is pushed on its own with a Settings ▸ Features switch, a native menu row
 | RC12 | Find NuGet Package for Missing Type | Rider | no | ✅ 2026-10-20 |
 | RC13 | Search with Pattern (structural) | Rider | yes | ✅ 2026-10-20 |
 | RC14 | Code Cleanup in Solution | Rider | yes | ✅ 2026-10-20 |
+| RC15 | Inheritance gutter marks | Rider | yes | ✅ 2026-10-20 |
 
 ## Progress log
 - 2026-10-20 RC1: Ctrl+Alt+Shift+T: only the refactorings at the caret or selection.
@@ -36,3 +37,4 @@ Each is pushed on its own with a Settings ▸ Features switch, a native menu row
 - 2026-10-20 RC12: Searches nuget.org for an unknown type and installs the chosen package.
 - 2026-10-20 RC13: $placeholder$ patterns across C# files; replace as previewed diffs.
 - 2026-10-20 RC14: Organize usings and format every C# file, one previewed diff each.
+- 2026-10-20 RC15: ↑ overrides / implements, ↓ overridden / implemented; click to go there.

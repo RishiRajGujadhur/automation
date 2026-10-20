@@ -1,10 +1,11 @@
 import type { Extension } from '@codemirror/state';
-import { StateEffect, StateField, type EditorState, type Range, Prec } from '@codemirror/state';
-import { Decoration, EditorView, ViewPlugin, WidgetType, type ViewUpdate, type DecorationSet, keymap } from '@codemirror/view';
+import { StateEffect, StateField, type EditorState, type Range, Prec, RangeSet } from '@codemirror/state';
+import { Decoration, EditorView, ViewPlugin, WidgetType, type ViewUpdate, type DecorationSet, keymap, GutterMarker, gutter } from '@codemirror/view';
 import { api } from '../api';
 import { featureOn } from '../features';
 import { FILE_SAVED_EVENT } from './events';
 import { stepBindings, setStepBindings } from './gherkin';
+import { OPEN_LOCATION_EVENT } from './links';
 
 /**
  * Advanced Visual Studio 2026 / Rider editor features (ADVANCED-20.md, Z1–Z20). Each registers a factory here; the code
@@ -394,3 +395,44 @@ const exitField = StateField.define<DecorationSet>({
   provide: (f) => EditorView.decorations.from(f),
 });
 registerAdvanced((file, kind) => (kind === 'code' && file.endsWith('.cs') ? exitField : []));
+
+/* RC15 Inheritance gutter (Rider): ↑ overrides / implements (click: go to the base), ↓ is overridden / implemented (click: go there). */
+type Inherit = { line: number; up?: { kind: string; name: string; target?: { file: string; line: number } }; down?: { kind: string; name: string; target?: { file: string; line: number } } };
+const setInherit = StateEffect.define<Inherit[]>();
+const inheritField = StateField.define<Inherit[]>({ create: () => [], update: (v, tr) => { for (const e of tr.effects) if (e.is(setInherit)) return e.value; return v; } });
+class InheritMarker extends GutterMarker {
+  constructor(readonly i: Inherit) { super(); }
+  eq(o: InheritMarker) { return JSON.stringify(o.i) === JSON.stringify(this.i); }
+  toDOM() {
+    const wrap = document.createElement('span');
+    wrap.className = 'cm-inherit';
+    for (const [dir, info] of [['up', this.i.up], ['down', this.i.down]] as const) {
+      if (!info) continue;
+      const b = document.createElement('button');
+      b.className = `cm-inherit-${dir}`;
+      b.textContent = dir === 'up' ? '↑' : '↓';
+      const label = `${info.kind === 'overrides' ? 'Overrides' : info.kind === 'implements' ? 'Implements' : info.kind === 'overridden' ? 'Overridden in' : 'Implemented in'} ${info.name}`;
+      b.title = label;
+      b.setAttribute('aria-label', label);
+      b.onmousedown = (e) => e.preventDefault();
+      b.onclick = () => { if (info.target) window.dispatchEvent(new CustomEvent(OPEN_LOCATION_EVENT, { detail: { text: `${info.target.file}:${info.target.line}`, file: info.target.file, line: info.target.line } })); };
+      wrap.append(b);
+    }
+    return wrap;
+  }
+}
+registerAdvanced((file, kind) => (kind !== 'code' || !file.endsWith('.cs') || file.startsWith('untitled') ? [] : [
+  inheritField,
+  gutter({ class: 'cm-inherit-gutter', markers: (v) => { const list = v.state.field(inheritField, false) ?? []; return RangeSet.of(list.filter((i) => i.line <= v.state.doc.lines).map((i) => new InheritMarker(i).range(v.state.doc.line(i.line).from)), true); } }),
+  ViewPlugin.fromClass(class {
+    timer = 0;
+    constructor(readonly view: EditorView) { this.load(); }
+    update(u: ViewUpdate) { if (u.docChanged) { clearTimeout(this.timer); this.timer = window.setTimeout(() => this.load(), 1500); } }
+    destroy() { clearTimeout(this.timer); }
+    load() {
+      if (!featureOn('inheritance-gutter')) return;
+      const source = this.view.state.doc.toString();
+      void api<Inherit[]>('/csharp/inheritance', { file, source }).then((list) => { if (this.view.state.doc.toString() === source) this.view.dispatch({ effects: setInherit.of(list) }); }, () => {});
+    }
+  }),
+]));

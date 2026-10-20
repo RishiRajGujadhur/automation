@@ -74,3 +74,71 @@ test('RC1–RC7 Refactor This, Extract Method, Introduce Variable / Parameter, I
   await expect.poll(() => fs.readFile(path.join(temp, 'Steps/Other.cs'), 'utf8').catch(() => ''), { timeout: 60_000 }).toContain('class Other');
   await expect.poll(() => doc(page)).not.toContain('class Other');
 });
+
+const refactorItem = async (page: Page, item: RegExp) => { await page.getByRole('button', { name: 'Code menu' }).click(); await page.getByRole('menuitem', { name: 'Refactor', exact: true }).click(); await page.getByRole('menuitem', { name: item }).click(); };
+
+test('RC8–RC15 Extract Interface, Create Unit Tests, exit points, severity, NuGet for type, Search with Pattern, Cleanup, inheritance gutter', async ({ page }) => {
+  await fs.writeFile(path.join(temp, 'Steps/Shapes.cs'), 'namespace Demo;\npublic abstract class Shape\n{\n    public abstract double Area();\n}\npublic class Circle : Shape\n{\n    public override double Area() => 3;\n}\npublic class Guard\n{\n    public bool Check(string user) { if (user == null) return false; return true; }\n}\n');
+  expect((await page.request.post('/api/workspace', { data: { repositoryRoot: temp, targetProject: '.' } })).ok()).toBe(true);
+  await open(page);
+  // RC8 / RC9
+  await setDoc(page, 'namespace Demo;\npublic class Shop\n{\n    public string Name { get; set; } = "";\n    public int Buy(string item) { return 1; }\n}\n', 'Shop', true);
+  await refactorItem(page, /^Extract Interface/);
+  let dlg = page.getByRole('dialog', { name: 'Extract Interface: IShop.cs' });
+  await dlg.getByRole('button', { name: 'Approve and write IShop.cs' }).click();
+  await expect.poll(() => fs.readFile(path.join(temp, 'Steps/IShop.cs'), 'utf8').catch(() => '')).toContain('int Buy(string item);');
+  await dlg.getByRole('button', { name: 'Close dialog' }).click();
+  expect(await doc(page)).toContain('public class Shop : IShop');
+  await refactorItem(page, /^Create Unit Tests/);
+  dlg = page.getByRole('dialog', { name: 'Create Unit Tests (nunit): ShopTests.cs' });
+  await dlg.getByRole('button', { name: 'Approve and write ShopTests.cs' }).click();
+  await expect.poll(() => fs.readFile(path.join(temp, 'Steps/ShopTests.cs'), 'utf8').catch(() => '')).toContain('public void Buy_Works()');
+  await dlg.getByRole('button', { name: 'Close dialog' }).click();
+  // RC10
+  await setDoc(page, 'class A\n{\n    int M(int x)\n    {\n        if (x < 0) throw new System.Exception();\n        return x;\n    }\n}\n', 'return', true);
+  await expect(page.locator('.cm-exit-point')).toHaveCount(2);
+  // RC11 on a syntax error (CS1002 ; expected)
+  await setDoc(page, 'class A\n{\n    void M() { int x = 1 }\n}\n', '1 }', true);
+  await expect(page.locator('.cm-lintRange-error').first()).toBeVisible({ timeout: 30_000 });
+  page.once('dialog', (d) => void d.accept('warning'));
+  await refactorItem(page, /^Configure Severity/);
+  dlg = page.getByRole('dialog', { name: /^Configure CS\d+ severity: warning$/ });
+  await dlg.getByRole('button', { name: 'Approve and write .editorconfig' }).click();
+  await expect.poll(() => fs.readFile(path.join(temp, '.editorconfig'), 'utf8').catch(() => '')).toMatch(/\[\*\.cs\]\ndotnet_diagnostic\.CS\d+\.severity = warning/);
+  await dlg.getByRole('button', { name: 'Close dialog' }).click();
+  // RC12 (nuget.org mocked)
+  const installed: string[] = [];
+  await page.route('**/api/nuget/search*', (r) => r.fulfill({ json: [{ id: 'Newtonsoft.Json', version: '13.0.3', description: 'Json.NET', totalDownloads: 5, authors: [], verified: true }] }));
+  await page.route('**/api/nuget/install', (r) => { installed.push(r.request().postData() ?? ''); return r.fulfill({ json: { output: '', installed: [] } }); });
+  await setDoc(page, 'class A { JsonConvert c; }', 'JsonConvert', true);
+  await refactorItem(page, /^Find NuGet Package for Missing Type/);
+  await page.getByRole('option', { name: /^Newtonsoft\.Json 13\.0\.3/ }).click();
+  await expect.poll(() => installed.length).toBe(1);
+  expect(JSON.parse(installed[0])).toEqual({ project: 'Fixtures.csproj', id: 'Newtonsoft.Json' });
+  // RC13
+  await menuItem(page, 'Navigate', /^Search with Pattern/);
+  dlg = page.getByRole('dialog', { name: 'Search with Pattern' });
+  await dlg.getByLabel('Search pattern').fill('$x$ == null');
+  await dlg.getByRole('button', { name: 'Find' }).click();
+  await expect(dlg.getByRole('list', { name: 'Pattern matches' })).toContainText('Steps/Shapes.cs:12');
+  await dlg.getByLabel('Replace pattern').fill('$x$ is null');
+  await dlg.getByRole('button', { name: 'Preview replace' }).click();
+  dlg = page.getByRole('dialog', { name: 'Replace with Pattern: 1 file' });
+  await dlg.getByRole('button', { name: 'Approve and write Shapes.cs' }).click();
+  await expect.poll(() => fs.readFile(path.join(temp, 'Steps/Shapes.cs'), 'utf8')).toContain('if (user is null) return false;');
+  await dlg.getByRole('button', { name: 'Close dialog' }).click();
+  // RC14
+  await refactorItem(page, /^Code Cleanup in Solution/);
+  await expect(page.getByRole('dialog', { name: /^Code Cleanup in Solution: \d+ files?$/ }).getByRole('button', { name: /^Approve and write / }).first()).toBeVisible({ timeout: 120_000 });
+  await page.getByRole('dialog').getByRole('button', { name: 'Close dialog' }).click();
+  // RC15
+  await page.getByRole('navigation').getByRole('button', { name: 'Shapes.cs', exact: true }).first().click();
+  const shapes = page.getByLabel('Source of Steps/Shapes.cs');
+  await expect(page.locator('.cm-inherit button[aria-label^="Overrides "][aria-label$="Area()"]')).toBeVisible({ timeout: 60_000 });
+  await expect(page.locator('.cm-inherit button[aria-label^="Overridden in "][aria-label$="Area()"]')).toBeVisible();
+  await expect(page.locator('.cm-inherit button[aria-label="Overrides Shape"]')).toBeVisible();
+  // A click on ↑ goes to the base member.
+  await page.locator('.cm-inherit button[aria-label="Overrides Shape.Area()"]').click();
+  await expect.poll(() => page.evaluate(() => { const v = (window as unknown as { __activeEditor: () => { view: { state: { doc: { lineAt(p: number): { number: number } }; selection: { main: { head: number } } } } } }).__activeEditor().view; return v.state.doc.lineAt(v.state.selection.main.head).number; })).toBe(4);
+  void shapes;
+});

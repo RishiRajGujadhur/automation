@@ -570,6 +570,7 @@ export const FEATURES: Feature[] = [
   { id: 'nuget-for-type', label: 'Find NuGet Package for Missing Type', group: 'Code intelligence', essential: false, vs: 'Install package (Quick Action)', description: 'For a type the compiler does not know (CS0246), Code ▸ Refactor searches nuget.org and installs the package you pick into the file\'s project.', commands: ['nuget-for-type'] },
   { id: 'search-pattern', label: 'Search with Pattern (structural)', group: 'Navigation', essential: true, vs: 'Structural Search and Replace', description: 'Navigate ▸ Search with Pattern finds C# code by a pattern with $placeholders$ ($x$ == null) across the solution and replaces it with one previewed diff per file.', commands: ['search-pattern'] },
   { id: 'cleanup-solution', label: 'Code Cleanup in Solution', group: 'Code intelligence', essential: true, vs: 'Code Cleanup (solution)', description: 'Code ▸ Refactor ▸ Code Cleanup in Solution organizes usings and formats every C# file, as one previewed diff per changed file.', commands: ['cleanup-solution'] },
+  { id: 'inheritance-gutter', label: 'Inheritance gutter marks', group: 'Code intelligence', essential: true, vs: 'Inheritance margin', description: 'C# files show ↑ next to members and types that override or implement something and ↓ where they are overridden or implemented; a click goes there.' },
 ];
 export const GROUPS: FeatureGroup[] = ['Editing', 'Navigation', 'Code intelligence', 'Tool windows', 'Files', 'Git', 'Gherkin', 'View', 'Debugging', 'Help and productivity'];
 

@@ -95,6 +95,7 @@ sealed class LanguageService
             "actions" => await Actions(doc, Math.Min(Pos(text), text.Length), req["endLine"] is null ? null : text.Lines[Math.Clamp((int)req["endLine"]! - 1, 0, text.Lines.Count - 1)].Start + (int)req["endColumn"]! - 1),
             "metrics" => await Metrics(doc),
             "unnecessary" => await Unnecessary(doc),
+            "inheritance" => await Inheritance(doc),
             "applyAction" => await ApplyAction((string)req["actionId"]!),
             _ => throw new InvalidOperationException($"Unknown operation {op}."),
         };
@@ -425,6 +426,44 @@ sealed class LanguageService
             }
         // Same titles from several providers: keep the first.
         return list.GroupBy(x => ((dynamic)x).title as string).Select(g => g.First()).ToList();
+    }
+
+    /// <summary>Inheritance gutter (Rider): members and types that override / implement something (up) or are overridden / implemented (down).</summary>
+    async Task<object> Inheritance(Document doc)
+    {
+        var model = (await doc.GetSemanticModelAsync())!;
+        var root = (await doc.GetSyntaxRootAsync())!;
+        var text = await doc.GetTextAsync();
+        var solution = doc.Project.Solution;
+        var list = new List<object>();
+        object? Target(ISymbol? s) { var l = s?.Locations.FirstOrDefault(x => x.IsInSource && InRepo(x)); return l == null ? null : new { file = Rel(l.SourceTree!.FilePath), line = l.GetLineSpan().StartLinePosition.Line + 1 }; }
+        foreach (var decl in root.DescendantNodes().Where(n => n is Microsoft.CodeAnalysis.CSharp.Syntax.MemberDeclarationSyntax and not Microsoft.CodeAnalysis.CSharp.Syntax.BaseNamespaceDeclarationSyntax and not Microsoft.CodeAnalysis.CSharp.Syntax.FieldDeclarationSyntax))
+        {
+            var sym = model.GetDeclaredSymbol(decl);
+            if (sym is not (IMethodSymbol or IPropertySymbol or IEventSymbol or INamedTypeSymbol) || sym.IsImplicitlyDeclared) continue;
+            var line = text.Lines.GetLineFromPosition(sym.Locations[0].SourceSpan.Start).LineNumber + 1;
+            ISymbol? up = sym switch { IMethodSymbol m => m.OverriddenMethod, IPropertySymbol p => p.OverriddenProperty, IEventSymbol e => e.OverriddenEvent, INamedTypeSymbol t => t.BaseType is { SpecialType: SpecialType.None } b && b.Locations.Any(x => x.IsInSource) ? b : null, _ => null };
+            var upKind = up != null ? "overrides" : null;
+            if (up == null && sym is not INamedTypeSymbol && sym.ContainingType != null)
+                foreach (var i in sym.ContainingType.AllInterfaces)
+                    foreach (var im in i.GetMembers())
+                        if (up == null && SymbolEqualityComparer.Default.Equals(sym.ContainingType.FindImplementationForInterfaceMember(im), sym)) { up = im; upKind = "implements"; }
+            if (up == null && sym is INamedTypeSymbol nt && nt.Interfaces.FirstOrDefault(x => x.Locations.Any(l => l.IsInSource)) is { } iface) { up = iface; upKind = "implements"; }
+            ISymbol? down = null;
+            try
+            {
+                if (sym is INamedTypeSymbol t)
+                    down = t.TypeKind == TypeKind.Interface ? (await SymbolFinder.FindImplementationsAsync(t, solution)).FirstOrDefault() : (await SymbolFinder.FindDerivedClassesAsync(t, solution, transitive: false)).FirstOrDefault();
+                else if (sym.ContainingType?.TypeKind == TypeKind.Interface)
+                    down = (await SymbolFinder.FindImplementationsAsync(sym, solution)).FirstOrDefault();
+                else if (sym.IsVirtual || sym.IsAbstract || sym.IsOverride)
+                    down = (await SymbolFinder.FindOverridesAsync(sym, solution)).FirstOrDefault();
+            }
+            catch { }
+            if (up == null && down == null) continue;
+            list.Add(new { line, up = up == null ? null : new { kind = upKind, name = up.ToDisplayString(SymbolDisplayFormat.CSharpShortErrorMessageFormat), target = Target(up) }, down = down == null ? null : new { kind = sym is INamedTypeSymbol { TypeKind: TypeKind.Interface } || sym.ContainingType?.TypeKind == TypeKind.Interface ? "implemented" : "overridden", name = down.ToDisplayString(SymbolDisplayFormat.CSharpShortErrorMessageFormat), target = Target(down) } });
+        }
+        return list;
     }
 
     async Task<object> ApplyAction(string id)

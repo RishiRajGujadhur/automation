@@ -3795,3 +3795,7 @@ html[data-features-off~='inlay-hints'] .cm-inlay {
 .debug-output.wrap { white-space: pre-wrap; word-break: break-word; }
 
 .cm-exit-point { background: color-mix(in srgb, #e5534b 25%, transparent); border-radius: 2px; outline: 1px solid color-mix(in srgb, #e5534b 50%, transparent); }
+
+.cm-inherit-gutter { width: 18px; }
+.cm-inherit { display: inline-flex; gap: 1px; }
+.cm-inherit button { border: 0; background: none; padding: 0 1px; cursor: pointer; font-size: 11px; line-height: 1; color: var(--accent, #9270dd); }
