@@ -45,7 +45,7 @@ test.beforeAll(async () => {
   page = await app.firstWindow();
   await page.waitForURL(/127\.0\.0\.1:\d+\/#\//, { timeout: 30_000 });
   await app.evaluate(({ BrowserWindow }) => { const w = BrowserWindow.getAllWindows()[0]; w.unmaximize(); w.setContentSize(1440, 900); w.center(); });
-  // Every feature on for the screenshots (the desktop app starts with the Visual Studio essentials).
+  // Every feature on for the screenshots (the desktop app starts with the essentials).
   await page.evaluate(() => { localStorage.setItem('tas:prefs', JSON.stringify({ mode: 'advanced' })); localStorage.setItem('tas:features', JSON.stringify({ preset: 'all' })); });
   await call('/solution/open', { path: path.join(repo, 'Calculator.csproj') });
   await page.goto(page.url().replace(/#.*$/, '#/features/editor'));
@@ -60,7 +60,7 @@ test.afterAll(async () => {
 });
 
 test('README screenshots', async () => {
-  // 1. Feature editor beside the Visual Studio-style Explorer.
+  // 1. Feature editor beside the Explorer.
   await page.getByRole('navigation').getByRole('button', { name: 'Add.feature', exact: true }).first().click();
   await expect(page.getByLabel('Gherkin source')).toContainText('Feature:');
   await shot('feature-editor');
@@ -125,7 +125,7 @@ test('README screenshots', async () => {
   await shot('start-window');
 });
 
-test('README screenshots: JetBrains Rider features', async () => {
+test('README screenshots: productivity tools', async () => {
   // Files for the HTTP Client and Markdown preview (the Explorer re-reads the folder).
   const origin = new URL(page.url()).origin;
   fs.writeFileSync(path.join(repo, 'api.http'), [`@host = ${origin}`, '', '### Studio health', 'GET {{host}}/api/health', 'Accept: application/json', '', '### Workspace', 'GET {{host}}/api/workspace', ''].join('\n'));
@@ -145,7 +145,7 @@ test('README screenshots: JetBrains Rider features', async () => {
   await expect(page.getByRole('list', { name: 'Structure of the file' }).getByRole('button').first()).toBeVisible({ timeout: 60_000 });
   await page.keyboard.press('Control+Alt+F12');
   await expect(page.getByRole('listbox', { name: 'File structure' }).getByRole('option').first()).toBeVisible({ timeout: 60_000 });
-  await shot('rider-file-structure');
+  await shot('file-structure');
   await page.keyboard.press('Escape');
 
   // 2. Call Hierarchy of Calculator.Add.
@@ -154,7 +154,7 @@ test('README screenshots: JetBrains Rider features', async () => {
   for (let i = 0; i < 3; i++) await page.keyboard.press('Control+ArrowRight');
   await page.keyboard.press('Control+Alt+H');
   await expect(page.getByRole('list', { name: 'Callers' })).toContainText('WhenTheTwoNumbersAreAdded', { timeout: 60_000 });
-  await shot('rider-call-hierarchy');
+  await shot('call-hierarchy');
 
   // 3. Terminal.
   await page.keyboard.press('Control+`');
@@ -168,24 +168,24 @@ test('README screenshots: JetBrains Rider features', async () => {
   await page.keyboard.type('git --version');
   await page.keyboard.press('Enter');
   await page.waitForTimeout(1500);
-  await shot('rider-terminal');
+  await shot('terminal');
 
   // 4. Problems: solution-wide analysis.
   await app.evaluate(({ Menu }) => { const v = Menu.getApplicationMenu()!.items.find((x) => x.label.replace('&', '') === 'View')!; v.submenu!.items.find((x) => x.label === 'Problems')!.click(); });
   await expect(page.getByRole('region', { name: 'Problems' }).getByRole('toolbar').getByText(/error|warning/)).toBeVisible({ timeout: 120_000 });
-  await shot('rider-problems');
+  await shot('problems');
 
   // 5. HTTP Client: send a request from an .http file.
   await page.getByRole('button', { name: 'Show all files' }).click();
   await open('api.http');
   await page.locator('.code-editor:not([hidden]) .cm-http-send').first().click();
   await expect(page.getByRole('region', { name: 'Response' }).getByRole('status')).toHaveText(/^200/, { timeout: 30_000 });
-  await shot('rider-http-client');
+  await shot('http-client');
 
   // 6. Markdown preview.
   await open('NOTES.md');
   await expect(page.getByRole('article', { name: 'Markdown preview' }).getByRole('heading', { name: 'Calculator tests' })).toBeVisible();
-  await shot('rider-markdown-preview');
+  await shot('markdown-preview');
 
   // 7. Run Anything (Ctrl twice).
   await page.getByLabel('Source of NOTES.md').click();
@@ -193,7 +193,7 @@ test('README screenshots: JetBrains Rider features', async () => {
   await page.keyboard.press('Control');
   await expect(page.getByRole('listbox', { name: 'Run Anything' })).toContainText('dotnet test');
   await page.getByLabel('Command to run').fill('dotnet');
-  await shot('rider-run-anything');
+  await shot('run-anything');
   await page.keyboard.press('Escape');
 
   // 8. Git Log (Alt+9): the sample as a small Git history with a branch.
@@ -212,11 +212,74 @@ test('README screenshots: JetBrains Rider features', async () => {
   await expect(log.getByRole('listbox', { name: 'Commits' }).getByRole('option').first()).toBeVisible({ timeout: 30_000 });
   await log.getByRole('listbox', { name: 'Commits' }).getByRole('option').first().click();
   await expect(log.getByLabel('Patch')).toContainText('negative', { timeout: 15_000 });
-  await shot('rider-git-log');
+  await shot('git-log');
 
   // 9. Productivity Guide (from the native Help menu).
   await app.evaluate(({ Menu }) => { const help = Menu.getApplicationMenu()!.items.find((x) => x.label.replace('&', '') === 'Help')!; help.submenu!.items.find((x) => x.label === 'Productivity Guide')!.click(); });
   await expect(page.getByRole('table', { name: 'Feature usage' })).toBeVisible();
-  await shot('rider-productivity-guide');
+  await shot('productivity-guide');
   await page.keyboard.press('Escape');
+});
+
+test('README screenshots: advanced features', async () => {
+  // Sources for the shots: a small type hierarchy and a collection local for the visualizer.
+  fs.writeFileSync(path.join(repo, 'Steps', 'Shapes.cs'), ['namespace Calculator;', '', 'public abstract class Shape', '{', '    public abstract double Area();', '}', '', 'public class Circle : Shape', '{', '    public double Radius { get; init; }', '', '    public override double Area()', '    {', '        if (Radius < 0) throw new ArgumentOutOfRangeException(nameof(Radius));', '        var squared = Radius * Radius;', '        return Math.PI * squared;', '    }', '}', '', 'public class Square : Shape', '{', '    public double Side { get; init; }', '    public override double Area() => Side * Side;', '}', ''].join('\n'));
+  const steps = path.join(repo, 'Steps', 'CalculatorSteps.cs');
+  fs.writeFileSync(steps, fs.readFileSync(steps, 'utf8').replace('        var sum = First + Second;', '        var history = new List<Calculator> { new Calculator { First = 2, Second = 3 }, new Calculator { First = 50, Second = 70 }, new Calculator { First = -4, Second = 4 } };\n        var sum = First + Second;'));
+  await call('/scan', {});
+  await page.goto(page.url().replace(/#.*$/, '#/features/editor'));
+  await page.reload();
+  await expect(page.getByText('Repository indexed')).toBeVisible({ timeout: 60_000 });
+  const explorer = page.getByRole('navigation');
+
+  // 1. Project Properties: the Build page of the .csproj, effective values from the SDK.
+  await explorer.getByRole('button', { name: /project Calculator$/ }).first().click({ button: 'right' });
+  await page.getByRole('menuitem', { name: 'Properties', exact: true }).click();
+  const props = page.getByRole('dialog', { name: 'Project Properties' });
+  await props.getByRole('navigation', { name: 'Property pages' }).getByRole('button', { name: 'Build', exact: true }).click();
+  await expect(props.getByText(/^Effective: /).first()).toBeVisible({ timeout: 120_000 });
+  await props.getByLabel('Treat warnings as errors').check();
+  await props.getByRole('button', { name: 'Preview changes' }).click();
+  await expect(props.getByLabel('Diff for Calculator.csproj')).toBeVisible();
+  await shot('project-properties');
+  await page.keyboard.press('Escape');
+  await page.getByRole('dialog').getByRole('button', { name: 'Close dialog' }).click().catch(() => {});
+
+  // 2. C#: inheritance gutter, inline blame, exit points and Refactor This.
+  await explorer.getByRole('button', { name: 'Shapes.cs', exact: true }).first().click();
+  const src = page.getByLabel('Source of Steps/Shapes.cs');
+  await expect(page.locator('.cm-inherit button').first()).toBeVisible({ timeout: 120_000 });
+  await src.locator('.cm-line', { hasText: 'return Math.PI' }).click();
+  await page.keyboard.press('Home');
+  for (let i = 0; i < 4; i++) await page.keyboard.press('ArrowRight');
+  await page.keyboard.press('Shift+End');
+  await page.keyboard.press('Shift+ArrowLeft');
+  await page.keyboard.press('Control+Alt+Shift+T');
+  await expect(page.getByRole('listbox', { name: 'Quick Actions' }).getByRole('option').first()).toBeVisible({ timeout: 60_000 });
+  await shot('csharp-refactoring');
+  await page.keyboard.press('Escape');
+
+  // 3. Search with Pattern (structural search).
+  await app.evaluate(({ Menu }) => { const nav = Menu.getApplicationMenu()!.items.find((x) => x.label.replace('&', '') === 'Navigate')!; nav.submenu!.items.find((x) => x.label.startsWith('Search with Pattern'))!.click(); });
+  const ssr = page.getByRole('dialog', { name: 'Search with Pattern' });
+  await ssr.getByLabel('Search pattern').fill('$a$ * $a$');
+  await ssr.getByLabel('Replace pattern').fill('Math.Pow($a$, 2)');
+  await ssr.getByRole('button', { name: 'Find' }).click();
+  await expect(ssr.getByRole('list', { name: 'Pattern matches' }).getByRole('listitem').first()).toBeVisible();
+  await shot('search-pattern');
+  await ssr.getByRole('button', { name: 'Close dialog' }).click();
+
+  // 4. Debugger: a collection local in the table visualizer, breakpoint with a label and its hit count.
+  await explorer.getByRole('button', { name: 'CalculatorSteps.cs', exact: true }).first().click();
+  await call('/debug/breakpoints', { file: 'Steps/CalculatorSteps.cs', breakpoints: [{ line: 46 }] });
+  await call('/debug/start', { project: 'Calculator.csproj' });
+  await expect.poll(async () => (await call('/debug')).status, { timeout: 240_000, intervals: [1000] }).toBe('paused');
+  const dbg = page.getByRole('region', { name: 'Debugger' });
+  await dbg.getByRole('tab', { name: 'Locals' }).click();
+  const row = dbg.getByRole('treegrid', { name: 'Locals' }).getByRole('row').filter({ has: page.locator('.dbg-name', { hasText: /^history$/ }) }).first();
+  await row.click({ button: 'right' });
+  await page.getByRole('menuitem', { name: 'View as Table' }).click();
+  await expect(dbg.getByRole('table', { name: 'Visualizer table' }).locator('tbody tr')).toHaveCount(3, { timeout: 30_000 });
+  await shot('debugger-visualizer');
+  await call('/debug/control', { action: 'stop' });
 });

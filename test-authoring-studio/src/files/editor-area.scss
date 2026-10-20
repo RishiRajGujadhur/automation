@@ -3693,7 +3693,7 @@ html[data-features-off~='inlay-hints'] .cm-inlay {
 }
 
 // Notifications window: filter box and per-row dismiss (QOL-50).
-.todo-filter { width: 160px; height: 22px; padding: 0 6px; font: inherit; font-size: 12px; background: var(--input-bg, transparent); color: inherit; border: 1px solid var(--border, #8884); border-radius: 3px; }
+.todo-filter { width: 160px; height: 22px; padding: 0 6px; font: inherit; font-size: 12px; background: var(--bg); color: inherit; border: 1px solid var(--border, #8884); border-radius: 3px; }
 .todo-list li:has(.todo-dismiss) { display: flex; align-items: center; gap: 4px; }
 .todo-list li:has(.todo-dismiss) .todo-item { flex: 1; min-width: 0; }
 .todo-dismiss { opacity: 0; }
@@ -3765,9 +3765,9 @@ html[data-features-off~='inlay-hints'] .cm-inlay {
 // Project Dependency Graph (CSHARP-20).
 .rider-popup:has(.project-graph) { width: min(1000px, 96vw); max-width: none; }
 .project-graph { overflow: auto; max-height: 70vh; }
-.project-graph .pg-node rect { fill: var(--panel, #f6f6f6); stroke: var(--accent, #9270dd); stroke-width: 1.5; }
+.project-graph .pg-node rect { fill: var(--surface); stroke: var(--accent, #9270dd); stroke-width: 1.5; }
 .project-graph .pg-node { cursor: pointer; }
-.project-graph .pg-node:hover rect, .project-graph .pg-node:focus rect { fill: color-mix(in srgb, var(--accent, #9270dd) 14%, var(--panel, #fff)); }
+.project-graph .pg-node:hover rect, .project-graph .pg-node:focus rect { fill: color-mix(in srgb, var(--accent, #9270dd) 14%, var(--surface)); }
 .project-graph .pg-name { font-weight: 600; font-size: 13px; fill: var(--text, #222); }
 .project-graph .pg-meta { font-size: 11px; fill: var(--text-muted, #777); }
 .project-graph .pg-edge { fill: none; stroke: var(--text-muted, #888); stroke-width: 1.4; }
@@ -3779,9 +3779,9 @@ html[data-features-off~='inlay-hints'] .cm-inlay {
 .bp-label { font-size: 10px; padding: 0 5px; border-radius: 8px; background: color-mix(in srgb, var(--accent, #9270dd) 22%, transparent); }
 .bp-hits { font-size: 11px; color: var(--text-muted, #888); white-space: nowrap; }
 .bp-settings .bp-check { display: flex; gap: 6px; align-items: center; }
-.dbg-edit { width: 100%; font: inherit; padding: 0 3px; background: var(--input-bg, transparent); color: inherit; border: 1px solid var(--accent, #9270dd); }
+.dbg-edit { width: 100%; font: inherit; padding: 0 3px; background: var(--bg); color: inherit; border: 1px solid var(--accent, #9270dd); }
 .dbg-locals-search { margin: 4px 8px; display: block; }
-.dbg-visualizer { position: absolute; inset: 34px 12px 12px; z-index: 5; display: flex; flex-direction: column; background: var(--panel, #fff); border: 1px solid var(--border, #8886); border-radius: 6px; box-shadow: 0 6px 24px #0003; }
+.dbg-visualizer { position: absolute; inset: 34px 12px 12px; z-index: 5; display: flex; flex-direction: column; background: var(--surface); color: var(--text); border: 1px solid var(--border, #8886); border-radius: 6px; box-shadow: 0 6px 24px #0003; }
 .dbg-visualizer-head { display: flex; gap: 8px; align-items: center; padding: 4px 8px; border-bottom: 1px solid var(--border, #8884); }
 .dbg-visualizer-text { flex: 1; margin: 0; padding: 8px; overflow: auto; font-family: var(--font-mono, monospace); font-size: 12px; white-space: pre-wrap; }
 .dbg-visualizer-table { flex: 1; overflow: auto; }
@@ -3790,7 +3790,7 @@ html[data-features-off~='inlay-hints'] .cm-inlay {
 .debug-panel { position: relative; }
 
 .cm-pinned-tips { margin-left: 1.5em; display: inline-flex; gap: 6px; }
-.cm-pinned-tip { padding: 0 4px 0 6px; border: 1px solid var(--accent, #9270dd); border-radius: 4px; font-size: 0.88em; background: color-mix(in srgb, var(--accent, #9270dd) 10%, var(--panel, #fff)); }
+.cm-pinned-tip { padding: 0 4px 0 6px; border: 1px solid var(--accent, #9270dd); border-radius: 4px; font-size: 0.88em; background: color-mix(in srgb, var(--accent, #9270dd) 10%, var(--surface)); }
 .cm-pinned-close { margin-left: 4px; border: 0; background: none; color: inherit; cursor: pointer; padding: 0 2px; }
 .debug-output.wrap { white-space: pre-wrap; word-break: break-word; }
 
