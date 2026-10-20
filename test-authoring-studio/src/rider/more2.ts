@@ -8,6 +8,9 @@ import { urlEncode, urlDecode, base64Encode, base64Decode, escapeString, unescap
  * Fourth batch of Visual Studio 2026 / JetBrains Rider commands (IDE-FEATURES-4.md, Y1–Y100). RiderHost registers
  * them with the same helpers as the third batch; each command's feature switch is in src/features.ts.
  */
+// The caret blinking choice comes back on reload.
+try { if (localStorage.getItem('tas:noBlink') === '1') document.documentElement.dataset.noBlink = ''; } catch { /* storage blocked */ }
+
 export function moreCommands2(h: MoreHelpers): RiderCommand[] {
   return [
     { id: 'url-encode', label: 'URL Encode', menu: 'Edit', submenu: 'Convert', run: h.inEditor((v) => urlEncode(v) || h.notice('Select text (or put the caret on a word) to convert.')) },
@@ -65,5 +68,6 @@ export function moreCommands2(h: MoreHelpers): RiderCommand[] {
     { id: 'table-fill-series', label: 'Table: Fill Series', menu: 'Code', submenu: 'Gherkin', run: h.inEditor((v) => tableFillSeries(v) || h.notice('Put the caret in a table cell below the header.')) },
     { id: 'merge-examples', label: 'Merge Examples Tables', menu: 'Code', submenu: 'Gherkin', run: h.inEditor((v) => mergeExamples(v) || h.notice('The outline needs two Examples tables with the same columns.')) },
     { id: 'goto-offset', label: 'Go to Offset…', menu: 'Navigate', run: h.inEditor((v) => { const t = window.prompt(`Character offset (0–${v.state.doc.length}):`, String(v.state.selection.main.head)); if (t === null) return; if (!gotoOffset(Number(t.trim()))(v)) h.notice('Type a whole number.'); }) },
+    { id: 'caret-blink', label: 'Caret Blinking', menu: 'View', checked: () => document.documentElement.dataset.noBlink === undefined, run: () => { const off = document.documentElement.dataset.noBlink === undefined; if (off) document.documentElement.dataset.noBlink = ''; else delete document.documentElement.dataset.noBlink; try { localStorage.setItem('tas:noBlink', off ? '1' : ''); } catch { /* storage blocked */ } } },
   ];
 }

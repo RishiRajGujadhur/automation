@@ -3698,3 +3698,6 @@ html[data-features-off~='inlay-hints'] .cm-inlay {
 .todo-list li:has(.todo-dismiss) .todo-item { flex: 1; min-width: 0; }
 .todo-dismiss { opacity: 0; }
 .todo-list li:hover .todo-dismiss, .todo-dismiss:focus-visible { opacity: 1; }
+
+// Caret blinking off (View ▸ Caret Blinking) (IDE-FEATURES-4).
+:root[data-no-blink] .cm-cursorLayer { animation: none !important; }

@@ -62,6 +62,7 @@ has it on by default, so the desktop app starts with it on. The others start off
 | Y51 | Tab menu: Move Tab to Start / End | Rider | no | ✅ 2026-10-20 |
 | Y52 | Memory indicator (status bar) | Rider | no | ✅ 2026-10-20 |
 | Y53 | Go to Offset… | Rider | no | ✅ 2026-10-20 |
+| Y54 | Caret Blinking toggle | VS 2026 | yes | ✅ 2026-10-20 |
 
 ## Progress log
 - 2026-10-20 Y1: Percent-encodes the selection (or line) and decodes it.
@@ -117,3 +118,4 @@ has it on by default, so the desktop app starts with it on. The others start off
 - 2026-10-20 Y51: Moves a tab to either end of the strip; pinned tabs stay first.
 - 2026-10-20 Y52: The page's JavaScript heap in the status bar, every 5 s.
 - 2026-10-20 Y53: The caret at a character offset of the file.
+- 2026-10-20 Y54: View ▸ Caret Blinking; the choice is kept.

@@ -448,6 +448,7 @@ export const FEATURES: Feature[] = [
   { id: 'move-tab', label: 'Tab menu: Move to Start / End', group: 'Files', essential: false, description: 'The editor tab menu moves a tab to the start or the end of the strip (pinned tabs stay first).' },
   { id: 'memory-indicator', label: 'Memory indicator (status bar)', group: 'View', essential: false, description: 'The status bar shows how much memory the page uses (Rider\'s memory indicator).' },
   { id: 'goto-offset', label: 'Go to Offset', group: 'Navigation', essential: false, description: 'Navigate ▸ Go to Offset puts the caret at a character offset of the file.', commands: ['goto-offset'] },
+  { id: 'caret-blink', label: 'Caret Blinking toggle', group: 'View', essential: true, vs: 'Options: Text Editor ▸ caret blinking', description: 'View ▸ Caret Blinking turns the blinking of the text cursor on or off (Visual Studio Options ▸ Text Editor).', commands: ['caret-blink'] },
 ];
 export const GROUPS: FeatureGroup[] = ['Editing', 'Navigation', 'Code intelligence', 'Tool windows', 'Files', 'Git', 'Gherkin', 'View', 'Debugging', 'Help and productivity'];
 
