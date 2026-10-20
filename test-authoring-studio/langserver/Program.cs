@@ -99,6 +99,7 @@ sealed class LanguageService
             "inheritance" => await Inheritance(doc),
             "analyze" => await Analyze(doc),
             "applyAction" => await ApplyAction((string)req["actionId"]!),
+            "previewAction" => await PreviewAction((string)req["actionId"]!),
             _ => throw new InvalidOperationException($"Unknown operation {op}."),
         };
     }
@@ -466,15 +467,37 @@ sealed class LanguageService
         using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(8));
         // The IDE analyzers' diagnostics there too (Hidden ones included: they are Visual Studio's refactoring-like fixes).
         try { diagnostics.AddRange((await AnalyzerDiagnostics(doc, line, cts.Token)).Where(d => d.Id != "IDE0055" && (d.Location.SourceSpan.IntersectsWith(span) || d.Location.SourceSpan.IntersectsWith(line)))); } catch { }
+        var fixAll = new List<(CodeAction Action, string Kind)>();
         foreach (var d in diagnostics)
             foreach (var f in fixers!.Where(f => f.FixableDiagnosticIds.Contains(d.Id)))
             {
-                try { await f.RegisterCodeFixesAsync(new CodeFixContext(doc, d, (a, _) => found.Add((a, "fix")), cts.Token)); } catch { }
+                try
+                {
+                    var mine = new List<CodeAction>();
+                    await f.RegisterCodeFixesAsync(new CodeFixContext(doc, d, (a, _) => mine.Add(a), cts.Token));
+                    found.AddRange(mine.Select(a => (a, "fix")));
+                    // Fix All (Visual Studio's "Fix all occurrences in Document / Project / Solution").
+                    if (f.GetFixAllProvider() is { } all)
+                        foreach (var a in mine.SelectMany(a => Flatten(a)).Select(x => x.Action).Where(a => a.EquivalenceKey != null).Take(2))
+                            foreach (var scope in new[] { FixAllScope.Document, FixAllScope.Project, FixAllScope.Solution }.Where(sc => all.GetSupportedFixAllScopes().Contains(sc)))
+                            {
+                                var key = a.EquivalenceKey; var id = d.Id; var title = a.Title;
+                                fixAll.Add((CodeAction.Create($"{title} (fix all in {scope.ToString().ToLowerInvariant()})", async ct =>
+                                {
+                                    var ctx = new FixAllContext(doc, f, scope, key, [id], new FixAllDiagnostics(), ct);
+                                    var fix = await all.GetFixAsync(ctx) ?? throw new InvalidOperationException("Nothing to fix.");
+                                    var op = (await fix.GetOperationsAsync(ct)).OfType<ApplyChangesOperation>().FirstOrDefault() ?? throw new InvalidOperationException("Nothing to fix.");
+                                    return op.ChangedSolution;
+                                }, $"fixall:{key}:{scope}"), "fix"));
+                            }
+                }
+                catch { }
             }
         foreach (var r in refactorings!)
         {
             try { await r.ComputeRefactoringsAsync(new CodeRefactoringContext(doc, span, a => found.Add((a, "refactor")), cts.Token)); } catch { }
         }
+        found.AddRange(fixAll);
         var list = new List<object>();
         foreach (var (action, kind) in found)
             foreach (var (a, title) in Flatten(action))
@@ -524,6 +547,48 @@ sealed class LanguageService
             list.Add(new { line, up = up == null ? null : new { kind = upKind, name = up.ToDisplayString(SymbolDisplayFormat.CSharpShortErrorMessageFormat), target = Target(up) }, down = down == null ? null : new { kind = sym is INamedTypeSymbol { TypeKind: TypeKind.Interface } || sym.ContainingType?.TypeKind == TypeKind.Interface ? "implemented" : "overridden", name = down.ToDisplayString(SymbolDisplayFormat.CSharpShortErrorMessageFormat), target = Target(down) } });
         }
         return list;
+    }
+
+    /// <summary>Fix All's diagnostics: the compiler's and the IDE analyzers' for each document.</summary>
+    sealed class FixAllDiagnostics : FixAllContext.DiagnosticProvider
+    {
+        public override async Task<IEnumerable<Diagnostic>> GetDocumentDiagnosticsAsync(Document document, CancellationToken ct)
+        {
+            var model = await document.GetSemanticModelAsync(ct);
+            return (model?.GetDiagnostics(cancellationToken: ct) ?? []).Concat(await AnalyzerDiagnostics(document, null, ct));
+        }
+        public override Task<IEnumerable<Diagnostic>> GetProjectDiagnosticsAsync(Project project, CancellationToken ct) => Task.FromResult<IEnumerable<Diagnostic>>([]);
+        public override async Task<IEnumerable<Diagnostic>> GetAllDiagnosticsAsync(Project project, CancellationToken ct)
+        {
+            var all = new List<Diagnostic>();
+            foreach (var d in project.Documents.Where(d => d.FilePath != null && !d.FilePath.EndsWith(".g.cs"))) all.AddRange(await GetDocumentDiagnosticsAsync(d, ct));
+            return all;
+        }
+    }
+
+    /// <summary>What an action would change, file by file, without applying it (the Quick Actions preview).</summary>
+    async Task<object> PreviewAction(string id)
+    {
+        if (!actions.TryGetValue(id, out var action)) throw new InvalidOperationException("That action is no longer available. Press Ctrl+. again.");
+        var (changes, _) = await Changes(action);
+        return new { title = action.Title, changes };
+    }
+    async Task<(List<object> Changes, Solution Changed)> Changes(CodeAction action)
+    {
+        var solution = workspace!.CurrentSolution;
+        var ops = await action.GetOperationsAsync(CancellationToken.None);
+        var apply = ops.OfType<ApplyChangesOperation>().FirstOrDefault() ?? throw new InvalidOperationException("This action has no changes to apply here.");
+        var changed = apply.ChangedSolution;
+        var changes = new List<object>();
+        foreach (var p in changed.GetChanges(solution).GetProjectChanges())
+            foreach (var docId in p.GetChangedDocuments().Concat(p.GetAddedDocuments()))
+            {
+                var d = changed.GetDocument(docId);
+                if (d?.FilePath == null || d.FilePath.EndsWith("GlobalUsings.g.cs")) continue;
+                var before = solution.GetDocument(docId) is { } old ? (await old.GetTextAsync()).ToString() : "\n";
+                changes.Add(new { file = Rel(d.FilePath), before = solution.GetDocument(docId) is null ? "" : before, text = MatchEol(before, (await d.GetTextAsync()).ToString()) });
+            }
+        return (changes, changed);
     }
 
     async Task<object> ApplyAction(string id)

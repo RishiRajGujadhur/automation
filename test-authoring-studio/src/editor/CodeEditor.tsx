@@ -28,6 +28,7 @@ import { bookmarks } from './bookmarks';
 import { riderKeys } from './riderKeys';
 import { trackActive } from './activeEditor';
 import { viewOptionsExtension } from './viewOptions';
+import { QuickPreview } from './quickPreview';
 import { pushClipboard } from '../rider/clipboardRing';
 import { eolOf, toLF, withEol, SET_EOL_EVENT, type Eol } from './lineSeparator';
 import { xmlDocComments } from './xmlDoc';
@@ -539,12 +540,12 @@ export default function CodeEditor({ file, reveal, active = true, onNotice, onIn
             />
           )}
           {quick && (
+            <div className="cm-quick-wrap" style={{ top: quick.top, left: quick.left }}>
             <ul
               className="cm-quick-actions"
               role="listbox"
               aria-label="Quick Actions"
               tabIndex={-1}
-              style={{ top: quick.top, left: quick.left }}
               ref={(el) => el?.focus()}
               onKeyDown={(e) => {
                 e.stopPropagation();
@@ -561,6 +562,8 @@ export default function CodeEditor({ file, reveal, active = true, onNotice, onIn
                 </li>
               ))}
             </ul>
+            {featureOn('quick-action-preview') && quick.items[quick.index] && !isBrowser() && <QuickPreview file={file} actionId={quick.items[quick.index].id} source={ref.current?.view?.state.doc.toString() ?? ''} />}
+            </div>
           )}
           {peek && (
             <section className="cm-peek" aria-label={`Peek Definition: ${peek.name}`} style={{ top: peek.top }} onKeyDown={(e) => { if (e.key === 'Escape') { setPeek(undefined); ref.current?.view?.focus(); } }}>

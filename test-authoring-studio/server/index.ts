@@ -990,6 +990,11 @@ app.post('/api/csharp/actions', async (req, res) => {
   await confined(config.repositoryRoot, body.file, false);
   res.json(await lang.request(config.repositoryRoot, { op: 'actions', ...body }, 60_000));
 });
+/** What a Quick Action would change (the lightbulb preview); nothing is written. */
+app.post('/api/csharp/previewAction', async (req, res) => {
+  const body = z.object({ file: z.string().max(400).regex(/\.cs$/), actionId: z.string().max(40) }).parse(req.body);
+  res.json(await lang.request(config.repositoryRoot, { op: 'previewAction', ...body }, 60_000));
+});
 /** Applies a Quick Action: other files it changes are written; the edited file's new text goes back to the editor. */
 app.post('/api/csharp/applyAction', async (req, res) => {
   const body = z.object({ file: z.string().max(400).regex(/\.cs$/), actionId: z.string().max(40) }).parse(req.body);

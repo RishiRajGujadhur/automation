@@ -3814,3 +3814,30 @@ html[data-features-off~='inlay-hints'] .cm-inlay {
 .editor-tabs[data-tab-sizing='shrink'], .editor-tabs[data-tab-sizing='fixed'] {
   .editor-tab-label { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
 }
+
+/* Quick Actions with the preview of the highlighted action beside them (RIDER-VSCODE-FEATURES.md 117). */
+.cm-quick-wrap {
+  position: absolute;
+  z-index: 25;
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  .cm-quick-actions { position: static; }
+}
+.cm-quick-preview {
+  max-width: 560px;
+  max-height: 320px;
+  overflow: auto;
+  padding: 6px 8px;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  background: var(--surface);
+  color: var(--text);
+  box-shadow: 0 6px 24px #0009;
+  font-size: 12px;
+  pre { margin: 0; font-family: var(--font-mono, monospace); }
+  .diff-add { background: color-mix(in srgb, #2ea043 22%, transparent); }
+  .diff-del { background: color-mix(in srgb, #f85149 22%, transparent); }
+  .diff-ctx { color: var(--text-muted); }
+  .meta { display: block; margin-top: 4px; }
+}

@@ -184,3 +184,36 @@ test('116 Inspection exclusion scopes: a folder of generated code', async ({ pag
   await page.waitForTimeout(1500);
   await expect(page.locator('.cm-lintRange-warning, .cm-lintRange-info, .cm-unnecessary')).toHaveCount(0);
 });
+
+test('117 Quick-fix previews: the highlighted action shows its changes', async ({ page }) => {
+  needsLang();
+  await open(page, CS);
+  await setDoc(page, 'namespace Demo;\npublic class P\n{\n    public int Run(int a)\n    {\n        return a;\n        System.Console.WriteLine();\n    }\n}\n');
+  await caretAt(page, 'Console', 1);
+  await page.keyboard.press('Control+.');
+  const list = page.getByRole('listbox', { name: 'Quick Actions' });
+  await expect(list.getByRole('option', { name: /^Remove unreachable code$/ })).toBeVisible({ timeout: 60_000 });
+  await list.getByRole('option', { name: /^Remove unreachable code$/ }).hover();
+  const preview = page.getByLabel(/^Preview of Remove unreachable code/);
+  await expect(preview).toContainText('- ');
+  await expect(preview.locator('.diff-del')).toContainText('System.Console.WriteLine();');
+  // Nothing was applied.
+  expect(await docText(page)).toContain('WriteLine');
+});
+test('118 Bulk quick-fix application: fix all in document and in solution', async ({ page }) => {
+  needsLang();
+  // Another file with the same issue, for the solution scope.
+  await fs.writeFile(path.join(temp, 'Steps/Other.cs'), 'namespace Demo;\npublic class O\n{\n    public System.Text.StringBuilder M()\n    {\n        System.Text.StringBuilder b = new System.Text.StringBuilder();\n        return b;\n    }\n}\n');
+  expect((await page.request.post('/api/workspace', { data: { repositoryRoot: temp, targetProject: '.' } })).ok()).toBe(true);
+  await open(page, CS);
+  const src = 'namespace Demo;\npublic class P\n{\n    public void M()\n    {\n        System.Text.StringBuilder a = new System.Text.StringBuilder();\n        System.Text.StringBuilder b = new System.Text.StringBuilder();\n        a.Append(b);\n    }\n}\n';
+  await setDoc(page, src);
+  await caretAt(page, 'a = new', 5);
+  await quickAction(page, /^Use 'new\(\.\.\.\)' \(fix all in document\)$/);
+  await expect.poll(() => docText(page), { timeout: 30_000 }).toMatch(/a = new\(\);[\s\S]*b = new\(\);/);
+  await setDoc(page, src);
+  await caretAt(page, 'a = new', 5);
+  await quickAction(page, /^Use 'new\(\.\.\.\)' \(fix all in solution\)$/);
+  await expect.poll(() => docText(page), { timeout: 30_000 }).toMatch(/a = new\(\);[\s\S]*b = new\(\);/);
+  await expect.poll(() => fs.readFile(path.join(temp, 'Steps/Other.cs'), 'utf8'), { timeout: 30_000 }).toContain('b = new();');
+});
