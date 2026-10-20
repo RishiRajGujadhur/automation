@@ -556,3 +556,17 @@ export function normalizeStepKeywords(view: EditorView) {
   view.dispatch({ changes, userEvent: 'input' });
   return true;
 }
+
+/** Add Scenario: a new scenario after the one at the caret (else at the end), the caret on its title. */
+export function addScenario(view: EditorView) {
+  const { state } = view;
+  const doc = state.doc;
+  const b = scenarioBlock(state, doc.lineAt(state.selection.main.head).number);
+  const at = b ? doc.line(b.end).to : doc.length;
+  const indent = b ? /^\s*/.exec(doc.line(b.head).text)![0] : '  ';
+  const lb = state.lineBreak;
+  const before = at > 0 && doc.sliceString(at - 1, at) !== '\n' ? `${lb}${lb}` : at > 0 ? lb : '';
+  const insert = `${before}${indent}Scenario: ${lb}${indent}  Given `;
+  view.dispatch({ changes: { from: at, insert }, selection: { anchor: at + before.length + indent.length + 'Scenario: '.length }, scrollIntoView: true, userEvent: 'input' });
+  return true;
+}

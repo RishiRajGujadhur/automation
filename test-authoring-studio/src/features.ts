@@ -245,6 +245,7 @@ export const FEATURES: Feature[] = [
   { id: 'test-tag-filter', label: 'Test Explorer: tag: filter', group: 'Tool windows', essential: true, vs: 'Test Explorer ▸ Trait filter', description: 'tag:@smoke (or -tag:…) in the Test Explorer search.' },
   { id: 'clear-file-breakpoints', label: 'Remove Breakpoints in File', group: 'Debugging', essential: true, vs: 'Remove All Breakpoints in File (Rider)', description: 'Removes every breakpoint of the active file.', commands: ['clear-file-breakpoints'] },
   { id: 'toggle-readonly', label: 'Toggle Read-Only (session)', group: 'Editing', essential: true, vs: 'Toggle Active Editor Read-only in Session', description: 'Makes the active file refuse edits until toggled back.', commands: ['toggle-readonly'] },
+  { id: 'add-scenario', label: 'Add Scenario', group: 'Gherkin', essential: true, description: 'Starts a new scenario after the one at the caret.', commands: ['add-scenario'] },
 ];
 export const GROUPS: FeatureGroup[] = ['Editing', 'Navigation', 'Code intelligence', 'Tool windows', 'Files', 'Git', 'Gherkin', 'View', 'Debugging', 'Help and productivity'];
 

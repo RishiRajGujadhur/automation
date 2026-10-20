@@ -180,6 +180,7 @@ const ROWS: Record<'edit' | 'view' | 'navigate' | 'code' | 'tools' | 'help', Row
       ['Remove Unused Examples Columns', 'remove-unused-columns'],
       ['Inline Background', 'inline-background'],
       ['Normalize Step Keywords', 'normalize-keywords'],
+      ['Add Scenario', 'add-scenario'],
     ] },
   ],
   tools: [

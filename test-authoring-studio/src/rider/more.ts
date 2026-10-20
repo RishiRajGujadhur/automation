@@ -14,7 +14,7 @@ import { renamePath } from '../files/provider';
 import { movedPath } from '../files/tabs';
 import { DEFAULT_TODO_TOKENS } from '../editor/todoHighlight';
 import { copyText as copyFilterText } from '../ui';
-import { cycleStepKeyword, scenarioToOutline, tableInsertRow, tableAddColumn, tableDeleteColumn, tableSortByColumn, testFilter, selectScenario, extractExamplesParameter, outlineToScenario, duplicateScenario, moveScenario, extractBackground, addExamplesTable, toggleTag, toggleScenarioComment, pasteAsTable, tableCsv, renameExamplesParameter, paramAt, removeUnusedColumns, inlineBackground, normalizeStepKeywords } from '../editor/gherkinTools';
+import { cycleStepKeyword, scenarioToOutline, tableInsertRow, tableAddColumn, tableDeleteColumn, tableSortByColumn, testFilter, selectScenario, extractExamplesParameter, outlineToScenario, duplicateScenario, moveScenario, extractBackground, addExamplesTable, toggleTag, toggleScenarioComment, pasteAsTable, tableCsv, renameExamplesParameter, paramAt, removeUnusedColumns, inlineBackground, normalizeStepKeywords, addScenario } from '../editor/gherkinTools';
 import { unsavedFiles } from '../editor/autosave';
 import { getTabs, closeTab } from '../files/tabs';
 import { reopenClosed } from '../files/tabs';
@@ -139,5 +139,6 @@ export function moreCommands(h: MoreHelpers): RiderCommand[] {
     { id: 'run-selection-terminal', label: 'Run Selected Text in Terminal', menu: 'Tools', run: h.inEditor((v) => { const s = v.state.selection.main; const text = (s.empty ? v.state.doc.lineAt(s.head).text : v.state.sliceDoc(s.from, s.to)).trim(); if (!text) { h.notice('Select a command (or put the caret on its line).'); return; } const cmd = text.split(/\r?\n/).filter((l) => l.trim()).join('; '); if (document.querySelector('.terminal-host:not([hidden])')) runInTerminal(cmd); else queueTerminalCommand(cmd); runRider('tool-terminal', 'menu'); }) },
     { id: 'clear-file-breakpoints', label: 'Remove Breakpoints in File', menu: 'Tools', run: h.inEditor((_v, file) => { const n = breakpointsOf(file).length; if (!n) { h.notice('No breakpoints in this file.'); return; } setBreakpoints(file, []); h.notice(`Removed ${n} breakpoint${n === 1 ? '' : 's'}.`); }) },
     { id: 'toggle-readonly', label: 'Toggle Read-Only (Session)', menu: 'View', run: h.inEditor((_v, file) => { const on = !isReadOnlyFile(file); setReadOnlyFile(file, on); h.notice(on ? `${file.split('/').pop()} is read-only in this session.` : `${file.split('/').pop()} can be edited again.`); }) },
+    { id: 'add-scenario', label: 'Add Scenario', menu: 'Code', submenu: 'Gherkin', run: h.inEditor(addScenario) },
   ];
 }

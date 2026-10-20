@@ -155,6 +155,7 @@ has it on by default, so the desktop app starts with it on. The others start off
 | X145 | Test Explorer: tag: filter | VS 2026 | yes | ✅ 2026-10-20 |
 | X146 | Remove Breakpoints in File | Rider | yes | ✅ 2026-10-20 |
 | X147 | Toggle Read-Only (session) | VS Code | yes | ✅ 2026-10-20 |
+| X148 | Add Scenario | Rider | yes | ✅ 2026-10-20 |
 
 ## Progress log
 - 2026-10-20 X1: Sort Lines: the selected lines (or the whole file) in natural, case-insensitive order, blank lines last. Third-batch plumbing: src/rider/more.ts, src/editor/textTools.ts, IDE-FEATURES.md.
@@ -304,3 +305,4 @@ has it on by default, so the desktop app starts with it on. The others start off
 - 2026-10-20 X145: tag: search term
 - 2026-10-20 X146: Clear the file's breakpoints
 - 2026-10-20 X147: Per-file session read-only
+- 2026-10-20 X148: New scenario after the caret's
