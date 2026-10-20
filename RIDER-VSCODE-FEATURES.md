@@ -111,7 +111,7 @@ Legend: `[x]` done · `[ ]` to do.
 - [x] 89. Convert local functions to methods — Quick Actions: Convert to method
 - [x] 90. Convert class to record — Quick Actions: Convert to positional record
 - [ ] 91. Convert record to class
-- [ ] 92. Convert switch statements to expressions
+- [x] 92. Convert switch statements to expressions — Quick Actions (IDE0066): Convert switch statement to expression (2026-10-21)
 - [x] 93. Convert if statements to switch — Quick Actions
 - [x] 94. Invert conditional — Quick Actions: Invert if
 - [x] 95. Merge nested conditionals — Quick Actions
@@ -340,3 +340,4 @@ Legend: `[x]` done · `[ ]` to do.
 - 2026-10-21 109: Values assigned and never read are faded; Quick Actions remove the assignment.
 - 2026-10-21 110: Repeated types in declarations are suggested for simplification ('new' expression, var).
 - 2026-10-21 357: A tuple becomes a struct or record struct with its usages updated; the nested action titles now say which scope.
+- 2026-10-21 92: Switch statements become switch expressions (the IDE analyzer's fix).
