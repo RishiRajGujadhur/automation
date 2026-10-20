@@ -208,6 +208,7 @@ export const FEATURES: Feature[] = [
   { id: 'undo-commit', label: 'Undo Last Commit', group: 'Git', essential: true, vs: 'Git ▸ Undo Commit', description: 'Soft-resets the last commit: its changes stay staged.', commands: ['undo-commit'] },
   { id: 'save-as', label: 'Save As…', group: 'Files', essential: true, vs: 'File ▸ Save As', description: 'Writes the editor text to a new file and opens it (the original stays as it is on disk).', commands: ['save-as'] },
   { id: 'find-in-folder', label: 'Explorer: Find in Folder…', group: 'Navigation', essential: true, vs: 'Find in Files ▸ Look in: folder', description: 'A folder\'s context menu opens Search limited to that folder.' },
+  { id: 'copy-full-path', label: 'Explorer: Copy Full Path', group: 'Files', essential: true, vs: 'Copy Full Path', description: 'Copies the item\'s absolute path on disk.' },
 ];
 export const GROUPS: FeatureGroup[] = ['Editing', 'Navigation', 'Code intelligence', 'Tool windows', 'Files', 'Git', 'Gherkin', 'View', 'Debugging', 'Help and productivity'];
 

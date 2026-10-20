@@ -152,6 +152,8 @@ export default function SolutionExplorer({ features, revision, activeFile, query
     else if (mod && e.key.toLowerCase() === 'v') { e.preventDefault(); void paste(folder ? path : dirOf(path)); }
   };
   const [serverSolution, setSolution] = useState<Solution>();
+  // Copy Full Path (Visual Studio): the repository folder on disk plus the item's path.
+  const copyFull = (p: string) => void api<{ config: { repositoryRoot: string } }>('/workspace').then((w) => { const sep = w.config.repositoryRoot.includes('\\') ? '\\' : '/'; return copyText(`${w.config.repositoryRoot.replace(/[\\/]+$/, '')}${sep}${p.replaceAll('/', sep)}`); }).then((ok) => onNotice?.(ok ? 'Copied the full path.' : 'Clipboard unavailable.'), (e) => onNotice?.((e as Error).message));
   const [cmpLeft, setCmpLeft] = useState(compareLeft);
   // Add ▸ New Project / Existing Project; Remove from Solution (files stay on disk).
   const [adding, setAdding] = useState<{ kind: 'new'; template: string; name: string; folder: string } | { kind: 'existing'; path: string } | null>(null);
@@ -270,6 +272,7 @@ export default function SolutionExplorer({ features, revision, activeFile, query
         { label: 'Open', icon: FileCode2, onSelect: () => open(path) },
         ...(onSource ? [{ label: 'View source', icon: Eye, onSelect: () => onSource(path, 1) }] : []),
         { label: 'Copy path', icon: Copy, onSelect: () => copyText(path) },
+        ...(featureOn('copy-full-path') && !browserSolution ? [{ label: 'Copy Full Path', icon: Copy, onSelect: () => copyFull(path) }] : []),
         ...(featureOn('explorer-compare') ? [{ label: 'Select for Compare', icon: GitCompare, onSelect: () => { compareLeft = path; setCmpLeft(path); onNotice?.(`Selected ${path.split('/').pop()} for compare.`); } }, ...(cmpLeft && cmpLeft !== path ? [{ label: `Compare with ${cmpLeft.split('/').pop()}`, icon: GitCompare, onSelect: () => window.dispatchEvent(new CustomEvent(COMPARE_FILES_EVENT, { detail: { left: cmpLeft, right: path } })) }] : [])] : []),
         ...(path.endsWith('.feature') ? ['separator' as const, { label: 'New feature beside this', icon: Plus, onSelect: () => onNew(path.split('/').slice(0, -1).join('/')) }] : []),
         ...(extra?.linked ? [] : editItems(path, false)),
@@ -320,6 +323,7 @@ export default function SolutionExplorer({ features, revision, activeFile, query
             { label: 'Expand all folders', icon: ChevronsUpDown, onSelect: () => setCollapsed(new Set()) },
             'separator' as const,
             { label: 'Copy folder path', icon: Copy, onSelect: () => copyText(n.path) },
+            ...(featureOn('copy-full-path') && !browserSolution ? [{ label: 'Copy Full Path', icon: Copy, onSelect: () => copyFull(n.path) }] : []),
             ...(featureOn('find-in-folder') ? [{ label: 'Find in Folder…', icon: Search, onSelect: () => window.dispatchEvent(new CustomEvent('tas:find-in-folder', { detail: n.path })) }] : []),
             ...(featureOn('explorer-new-file') && !browserSolution ? [{ label: 'New File…', icon: FilePlus, onSelect: () => void newFile(n.path) }] : []),
             ...(featureOn('explorer-scope') ? [{ label: 'Scope to This', icon: Focus, onSelect: () => setScope(n.path) }] : []),
