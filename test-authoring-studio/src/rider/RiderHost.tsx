@@ -299,6 +299,12 @@ export default function RiderHost(props: RiderHostProps) {
     fn(a.view, a.file);
     focusKeepingSelection(a.view);
   };
+  // Edit ▸ Compare with Saved: the unsaved changes against the file on disk.
+  useEffect(() => {
+    const h = (e: Event) => setPopup({ kind: 'compare-file', patch: (e as CustomEvent<string>).detail, other: 'the saved file' });
+    window.addEventListener('tas:compare-saved', h);
+    return () => window.removeEventListener('tas:compare-saved', h);
+  }, []);
   // Explorer ▸ Open in Terminal: a terminal in that folder (QOL-50).
   useEffect(() => {
     const h = (e: Event) => { const cmd = `Set-Location "${(e as CustomEvent<string>).detail}"`; if (document.querySelector('.terminal-host:not([hidden])')) runInTerminal(cmd); else queueTerminalCommand(cmd); p.current.onTool('terminal'); };

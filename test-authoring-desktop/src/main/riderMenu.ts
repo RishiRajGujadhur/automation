@@ -86,6 +86,7 @@ const ROWS: Record<'edit' | 'view' | 'navigate' | 'code' | 'tools' | 'help', Row
     ['Count Occurrences', 'count-occurrences'],
     ['Shuffle Lines', 'shuffle-lines'],
     ['Copy as Markdown Code Block', 'copy-markdown-block'],
+    ['Compare with Saved', 'compare-saved'],
   ],
   view: [
     null,

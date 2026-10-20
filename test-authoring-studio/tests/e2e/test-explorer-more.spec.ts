@@ -235,3 +235,24 @@ test('QL67–QL69 Test details: Copy / Run / Debug; arrow keys in the tree', asy
   await details.getByRole('button', { name: 'Copy message' }).click();
   await expect.poll(() => page.evaluate(() => navigator.clipboard.readText())).toContain('Expected: 3');
 });
+
+test('Y71 Run Scenarios with Tag at Caret', async ({ page }) => {
+  const feature = (await fs.readdir(path.join(root, 'Features'))).find((f) => f.endsWith('.feature'))!;
+  const file = path.join(root, 'Features', feature);
+  await fs.writeFile(file, (await fs.readFile(file, 'utf8')).replace('  Scenario:', '  @smoke\n  Scenario:'));
+  await page.request.post('/api/scan', { data: {} });
+  await start(page);
+  const runs: string[] = [];
+  page.on('request', (r) => { if (r.method() === 'POST' && r.url().endsWith('/api/tests/run')) runs.push(r.postData() ?? ''); });
+  await page.getByRole('navigation').getByRole('button', { name: feature, exact: true }).first().click();
+  await page.getByLabel('Gherkin source').locator('.cm-line', { hasText: '@smoke' }).click();
+  await page.keyboard.press('End');
+  await page.keyboard.press('ArrowLeft');
+  await page.getByRole('button', { name: 'Code menu' }).click();
+  await page.getByRole('menuitem', { name: 'Gherkin', exact: true }).click();
+  await page.getByRole('menuitem', { name: /^Run Scenarios with Tag at Caret/ }).click();
+  await expect.poll(() => runs.length, { timeout: 30_000 }).toBe(1);
+  const all = (await (await page.request.get('/api/tests')).json()).tests as { id: string; kind: string }[];
+  expect(JSON.parse(runs[0]).ids).toEqual(all.filter((t) => t.kind === 'scenario').map((t) => t.id));
+  await expect.poll(() => status(page), { timeout: 240_000, intervals: [2000] }).toMatch(/done|failed/);
+});

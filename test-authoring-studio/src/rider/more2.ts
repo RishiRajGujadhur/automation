@@ -1,5 +1,7 @@
 import type { RiderCommand } from './commands';
 import type { MoreHelpers } from './more';
+import { createTwoFilesPatch } from 'diff';
+import { readFile } from '../files/provider';
 import { discoverTests, runTests } from '../testing/store';
 import { forEachDiagnostic } from '@codemirror/lint';
 import { api } from '../api';
@@ -92,5 +94,6 @@ export function moreCommands2(h: MoreHelpers): RiderCommand[] {
     { id: 'add-null-checks', label: 'Add Null Checks for Parameters', menu: 'Code', submenu: 'C#', run: h.inEditor((v) => addNullChecks(v) || h.notice('Put the caret in a method with reference-type parameters that are not checked yet.')) },
     { id: 'validate-json', label: 'Validate JSON', menu: 'Code', run: h.inEditor((v) => { const e = validateJson(v.state.doc.toString()); if (!e) { h.notice('The JSON is valid.'); return; } v.dispatch({ selection: { anchor: e.offset }, scrollIntoView: true }); const l = v.state.doc.lineAt(e.offset); h.notice(`Invalid JSON at line ${l.number}, column ${e.offset - l.from + 1}: ${e.message}`); }) },
     { id: 'copy-curl', label: 'Copy Request as cURL', menu: 'Tools', run: h.inEditor((v, file) => { if (!/\.(http|rest)$/i.test(file)) { h.notice('Open an .http file and put the caret in a request.'); return; } const c = requestAsCurl(v.state.doc.toString(), v.state.selection.main.head); if (!c) { h.notice('Put the caret in a request (METHOD URL).'); return; } void copyText(c).then((ok) => h.notice(ok ? 'Copied the request as a curl command.' : 'Clipboard unavailable.')); }) },
+    { id: 'compare-saved', label: 'Compare with Saved', menu: 'Edit', run: h.inEditor((v, file) => { void readFile(file).then((r) => { const norm = (t: string) => t.replace(/\r\n/g, '\n'); const mine = norm(v.state.doc.toString()), saved = norm(r.source); const patch = mine === saved ? '' : createTwoFilesPatch(`${file} (saved)`, file, saved, mine, '', '', { context: 3 }).split('\n').slice(2).join('\n'); window.dispatchEvent(new CustomEvent('tas:compare-saved', { detail: patch })); }, (e) => h.notice((e as Error).message)); }) },
   ];
 }

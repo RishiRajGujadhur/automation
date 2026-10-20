@@ -189,3 +189,35 @@ test('Y63–Y70 Timestamp, JWT, Sort Tokens, File Statistics, Next Unbound Step'
   await menuItem(page, 'Tools', /^Decode JWT/);
   await expect(page.getByText(/^JWT HS256 · sub 1234567890 iat 2018-01-18T01:30:22\.000Z/).first()).toBeVisible();
 });
+
+test('Y72–Y80 Rename / Split Scenario, TODO, C# generators, Validate JSON, Compare with Saved', async ({ page }) => {
+  await open(page, 'AuthSteps.cs');
+  await expect(page.getByLabel('Source of Steps/AuthSteps.cs')).toBeVisible();
+  const cls = 'public class User\n{\n    public string Name { get; set; } = "";\n\n    public void SignIn(string user)\n    {\n    }\n}\n';
+  await setDoc(page, cls, cls.indexOf('{\n    }') + 1);
+  await codeSub(page, 'C#', /^Add Null Checks/);
+  await expect.poll(() => doc(page)).toContain('    {\n        ArgumentNullException.ThrowIfNull(user);\n    }');
+  await codeSub(page, 'C#', /^Generate Equality Members/);
+  await expect.poll(() => doc(page)).toContain('public override bool Equals(object? obj) => obj is User other && Equals(Name, other.Name);');
+  await codeSub(page, 'C#', /^Generate ToString/);
+  await expect.poll(() => doc(page)).toContain('public override string ToString() => $"User {{ Name = {Name} }}";');
+  await setDoc(page, '{\n  "a": 1,\n}', 0);
+  await menuItem(page, 'Code', /^Validate JSON/);
+  await expect(page.getByText(/^Invalid JSON at line 3, column 1:/).first()).toBeVisible();
+  await setDoc(page, 'int a;', 6);
+  await menuItem(page, 'Code', /^Insert TODO Comment/);
+  await expect.poll(() => doc(page)).toMatch(/^int a;\/\/ TODO \(\d{4}-\d\d-\d\d\): $/);
+  await menuItem(page, 'Edit', /^Compare with Saved/);
+  await expect(page.locator('.compare-clipboard')).toContainText('+int a;');
+  await page.keyboard.press('Escape');
+  // Gherkin: rename and split.
+  await page.getByRole('navigation', { name: 'Solution' }).getByRole('button', { name: 'Login.feature', exact: true }).first().click();
+  await expect(page.getByLabel('Gherkin source')).toContainText('Feature:');
+  const feat = 'Feature: F\n  Scenario: Long\n    Given a\n    Then b\n';
+  await setDoc(page, feat, feat.indexOf('Then') + 1);
+  await gherkinItem(page, /^Split Scenario Here/);
+  await expect.poll(() => doc(page)).toBe('Feature: F\n  Scenario: Long\n    Given a\n\n  Scenario: Long (part 2)\n    Then b\n');
+  page.once('dialog', (d) => void d.accept('Second half'));
+  await gherkinItem(page, /^Rename Scenario/);
+  await expect.poll(() => doc(page)).toContain('  Scenario: Second half\n    Then b');
+});
