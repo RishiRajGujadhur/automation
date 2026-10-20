@@ -45,6 +45,8 @@ import RiderToolWindow, { RIDER_TOOLS, type RiderTool } from './rider/RiderToolW
 import { menuEntries, runRider, useRiderCommands, commandOn, readUsage } from './rider/commands';
 import { featureOn, disabledCommands, onFeaturesChanged } from './features';
 import { zenSilent } from './vscode/zenMode';
+import { sideBySide, useMaximizedGroup } from './vscode/editorGroups';
+import { useSettings } from './vscode/settings';
 import { studioLog } from './outputLog';
 import RecentPopup from './RecentPopup';
 import LocalHistory from './LocalHistory';
@@ -457,6 +459,11 @@ export default function App() {
   }, []);
   // Split editor (Window ▸ Split / tab ▸ Split Right): a second editor beside the tab group.
   const [splitFile, setSplitFile] = useLocalState<string | null>('splitFile', null);
+  // Split Editor Right / Down (workbench.editor.openSideBySideDirection) and Maximize Editor Group.
+  useSettings();
+  const sideBySideDir = sideBySide();
+  const maximizedGroup = useMaximizedGroup();
+  useEffect(() => { const h = () => { const f = getTabs().active; if (f) setSplitFile(f); }; window.addEventListener('tas:split-active', h); return () => window.removeEventListener('tas:split-active', h); }, []); // eslint-disable-line react-hooks/exhaustive-deps
   // Explorer ▸ Open to the Side (VS Code): the file in the split editor.
   useEffect(() => { const h = (e: Event) => setSplitFile((e as CustomEvent<string>).detail); window.addEventListener('tas:open-split', h); return () => window.removeEventListener('tas:open-split', h); }, []); // eslint-disable-line react-hooks/exhaustive-deps
   // One docked bottom panel (as in Visual Studio / VS Code): Build and Debug windows share it as tabs.
@@ -1939,7 +1946,7 @@ export default function App() {
             </>
           )}
           {tab === 'Features' && (view === 'code' || view === 'editor') && (
-            <div className={splitFile ? 'editor-split' : 'editor-split single'}>
+            <div className={`${splitFile ? 'editor-split' : 'editor-split single'} ${splitFile && sideBySideDir === 'down' ? 'down' : ''}`} data-maximized={splitFile && maximizedGroup ? maximizedGroup : undefined}>
             <div className="editor-area">
             <EditorTabs onClose={closeEditor} onSplit={fileSrc.kind === 'browser' ? undefined : (f) => setSplitFile(f)}>
             {!openEditors.tabs.length && (

@@ -3851,3 +3851,12 @@ html[data-rider-mode='vszen'] {
   &[data-zen-lines='hidden'] .cm-lineNumbers { display: none !important; }
   &[data-zen-center='false'] .cm-scroller { padding: 0; }
 }
+
+/* Split Editor Down and Maximize Editor Group (RIDER-VSCODE-FEATURES.md 384, 397). */
+.editor-split.down {
+  flex-direction: column;
+  > .split-pane { border-left: 0; border-top: 1px solid var(--border); }
+  > .editor-area, > .split-pane { min-height: 0; }
+}
+.editor-split[data-maximized='main'] > .split-pane,
+.editor-split[data-maximized='split'] > .editor-area:not(.split-pane) { display: none !important; }

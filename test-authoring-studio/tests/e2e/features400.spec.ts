@@ -485,3 +485,27 @@ test('388 Zen Mode (Ctrl+K Z) with its settings; Escape twice leaves it', async 
   await expect(html).not.toHaveAttribute('data-rider-mode', /.+/);
   await expect(page.locator('.activity-bar')).toBeVisible();
 });
+
+test('384 Split editor horizontally (down); 397 Maximize editor group', async ({ page }) => {
+  await open(page, CS);
+  await menuItem(page, 'View', /^Split Editor Down$/);
+  const split = page.locator('.editor-split');
+  await expect(split).toHaveClass(/\bdown\b/);
+  const pane = page.getByRole('region', { name: `Split editor ${CS}` });
+  await expect(pane).toBeVisible();
+  const main = page.locator('.editor-split > .editor-area').first();
+  // Below, not beside.
+  expect((await pane.boundingBox())!.y).toBeGreaterThan((await main.boundingBox())!.y + 50);
+  // Maximize the split group (it has focus), then back.
+  await pane.locator('.cm-content').click();
+  await page.keyboard.press('Control+k');
+  await page.keyboard.press('Control+m');
+  await expect(split).toHaveAttribute('data-maximized', 'split');
+  await expect(main).toBeHidden();
+  await menuItem(page, 'View', /^Maximize Editor Group/);
+  await expect(main).toBeVisible();
+  // Right again.
+  await menuItem(page, 'View', /^Split Editor Right$/);
+  await expect(split).not.toHaveClass(/\bdown\b/);
+  expect((await pane.boundingBox())!.x).toBeGreaterThan((await main.boundingBox())!.x + 50);
+});

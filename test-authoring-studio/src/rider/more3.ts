@@ -8,6 +8,7 @@ import { prevConflict } from '../editor/advanced';
 import { findInSelection } from '../editor/findInSelection';
 import { toggleZen } from '../vscode/zenMode';
 import { layoutState } from './layoutModes';
+import { splitEditor, toggleMaximizeGroup } from '../vscode/editorGroups';
 
 /**
  * Rider and VS Code features (RIDER-VSCODE-FEATURES.md): commands of the 2026-10-21 list. RiderHost registers them with
@@ -19,6 +20,9 @@ export function moreCommands3(h: MoreHelpers): RiderCommand[] {
   return [
     { id: 'find-in-selection', label: 'Find in Selection', menu: 'Edit', group: true, run: h.inEditor((v) => findInSelection(v) || h.notice('Select the text to search in first.')) },
     { id: 'vs-zen-mode', label: 'Zen Mode', menu: 'View', group: true, shortcut: 'Ctrl K, Z', checked: () => layoutState().mode === 'vszen', run: () => toggleZen() },
+    { id: 'split-right', label: 'Split Editor Right', menu: 'View', group: true, run: () => splitEditor('right') },
+    { id: 'split-down', label: 'Split Editor Down', menu: 'View', run: () => splitEditor('down') },
+    { id: 'maximize-group', label: 'Maximize Editor Group', menu: 'View', shortcut: 'Ctrl K, Ctrl M', run: () => toggleMaximizeGroup() },
     { id: 'next-todo', label: 'Next TODO', menu: 'Navigate', group: true, run: h.inEditor((v) => gotoTodo(tokens(), 1)(v) || h.notice(`No ${tokens().join(' / ')} comments in this file.`)) },
     { id: 'previous-todo', label: 'Previous TODO', menu: 'Navigate', run: h.inEditor((v) => gotoTodo(tokens(), -1)(v) || h.notice(`No ${tokens().join(' / ')} comments in this file.`)) },
     { id: 'previous-conflict', label: 'Previous Merge Conflict', menu: 'Navigate', run: h.inEditor((v) => prevConflict(v) || h.notice('This file has no merge conflicts.')) },
