@@ -356,6 +356,7 @@ export const FEATURES: Feature[] = [
   { id: 'tag-complete', label: 'Gherkin: tag completion', group: 'Gherkin', essential: true, description: 'Typing @ on a tag line suggests the repository\'s tags with their scenario counts.' },
   { id: 'param-complete', label: 'Gherkin: <parameter> completion', group: 'Gherkin', essential: true, description: 'Typing < in an outline step suggests its Examples columns.' },
   { id: 'line-total', label: 'Line count in the status bar tooltip', group: 'Editing', essential: true, description: 'Hovering Ln, Col shows how many lines the file has.' },
+  { id: 'new-file-existing', label: 'New File opens an existing file', group: 'Files', essential: true, description: 'New File with the name of an existing file opens that file instead of failing.' },
 ];
 export const GROUPS: FeatureGroup[] = ['Editing', 'Navigation', 'Code intelligence', 'Tool windows', 'Files', 'Git', 'Gherkin', 'View', 'Debugging', 'Help and productivity'];
 

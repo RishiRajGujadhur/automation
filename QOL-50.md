@@ -66,6 +66,7 @@ Every improvement is verified by a unit or Playwright test (`tests/e2e/qol50.spe
 | QL57 | Gherkin: tag completion | Gherkin | ✅ 2026-10-20 |
 | QL58 | Gherkin: <parameter> completion | Gherkin | ✅ 2026-10-20 |
 | QL59 | Line count in the status bar tooltip | Status bar | ✅ 2026-10-20 |
+| QL60 | New File opens an existing file | Explorer | ✅ 2026-10-20 |
 
 ## Progress log
 - 2026-10-20 QL1: Title names the file and workspace folder
@@ -127,3 +128,4 @@ Every improvement is verified by a unit or Playwright test (`tests/e2e/qol50.spe
 - 2026-10-20 QL57: @ suggests repository tags
 - 2026-10-20 QL58: < suggests Examples columns
 - 2026-10-20 QL59: Ln, Col tooltip: N lines
+- 2026-10-20 QL60: Existing name opens the file

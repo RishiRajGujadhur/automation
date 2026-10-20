@@ -140,7 +140,8 @@ export default function SolutionExplorer({ features, revision, activeFile, query
     if (!name) return;
     const file = join(folder, name);
     try { await api('/file/create', { file, source: '' }); loadSolution(); onOpenFile(file); }
-    catch (e) { onNotice?.((e as Error).message); }
+    // A file that already exists just opens (QOL-50).
+    catch (e) { if (featureOn('new-file-existing') && /already exists/.test((e as Error).message)) { onOpenFile(file); onNotice?.(`${file} already exists; opened it.`); } else onNotice?.((e as Error).message); }
   };
   /** Edit entries shared by file and folder context menus. */
   const editItems = (path: string, folder: boolean) => onFileOp ? [
