@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { keepTab, useTabs } from './files/tabs';
+import { fileSource } from './files/provider';
 import {
   ChevronDown, ChevronRight, Folder, FolderOpen, FileCode2, FileText, FileCog, Braces, Plus, Search, X, Copy, ChevronsDownUp, ChevronsUpDown,
   Eye, Package, Boxes, Link2, LocateFixed, PencilLine, Files, Layers, SquareStack, Scissors, ClipboardPaste, Trash2, TextCursorInput, Focus, House, FilePlus, GitCompare, BookOpen, Crosshair, Columns2,
@@ -180,7 +181,10 @@ export default function SolutionExplorer({ features, revision, activeFile, query
     catch (e) { onNotice?.((e as Error).message); }
   };
   const solution = browserSolution ?? serverSolution;
-  const [collapsed, setCollapsed] = useState<Set<string>>(() => new Set());
+  // Collapsed folders are remembered per workspace (QOL-50).
+  const collapsedKey = () => { const s = fileSource(); return `tas:explorerCollapsed:${s.kind === 'browser' ? `browser:${s.name}` : s.root ?? ''}`; };
+  const [collapsed, setCollapsed] = useState<Set<string>>(() => { try { return featureOn('explorer-remember') ? new Set(JSON.parse(localStorage.getItem(collapsedKey()) ?? '[]') as string[]) : new Set(); } catch { return new Set(); } });
+  useEffect(() => { if (featureOn('explorer-remember')) try { localStorage.setItem(collapsedKey(), JSON.stringify([...collapsed].filter((k) => !k.startsWith('@')))); } catch { /* storage blocked */ } }, [collapsed]); // eslint-disable-line react-hooks/exhaustive-deps
   const [openNests, setOpenNests] = useState<Set<string>>(new Set());
   const [showAll, setShowAll] = useState(false);
   const [pendingOnly, setPendingOnly] = useState(false);

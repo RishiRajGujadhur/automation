@@ -149,3 +149,61 @@ test('QL10 / QL11 Tables: Enter adds a row; pasted rows are aligned', async ({ p
   await page.keyboard.press('Control+V');
   await expect.poll(() => doc(page)).toMatch(/ {6}\| carol \| guest \|/);
 });
+
+test('QL12 Explorer remembers collapsed folders after a reload', async ({ page }) => {
+  await openFeature(page);
+  await nav(page).getByRole('button', { name: 'Collapse folder Steps', exact: true }).click();
+  await page.reload();
+  await expect(page.getByText('Repository indexed')).toBeVisible();
+  await expect(nav(page).getByRole('button', { name: 'Expand folder Steps', exact: true })).toBeVisible();
+});
+
+test('QL13 / QL14 / QL20 Explorer keyboard: arrows, type to select, Enter', async ({ page }) => {
+  await openFeature(page);
+  const steps = nav(page).getByRole('button', { name: 'Collapse folder Steps', exact: true });
+  await steps.focus();
+  await page.keyboard.press('ArrowLeft');
+  await expect(nav(page).getByRole('button', { name: 'Expand folder Steps', exact: true })).toBeFocused();
+  await page.keyboard.press('ArrowRight');
+  await expect(nav(page).getByRole('button', { name: 'Collapse folder Steps', exact: true })).toBeFocused();
+  await page.keyboard.press('ArrowDown');
+  await expect(nav(page).getByRole('button', { name: 'AuthSteps.cs', exact: true })).toBeFocused();
+  await page.keyboard.press('ArrowLeft');
+  await expect(nav(page).getByRole('button', { name: 'Collapse folder Steps', exact: true })).toBeFocused();
+  await page.keyboard.type('sea');
+  await expect(nav(page).getByRole('button', { name: 'SearchSteps.cs', exact: true })).toBeFocused();
+  await page.keyboard.press('Enter');
+  await expect(page.locator('.editor-tab-label[aria-current="true"]')).toHaveAttribute('title', 'Steps/SearchSteps.cs');
+  await expect(page.locator('.editor-tab.active')).not.toHaveClass(/preview/);
+  await expect.poll(() => page.evaluate(() => !!document.activeElement?.closest('.cm-editor'))).toBe(true);
+});
+
+test('QL15 Explorer middle-click opens a kept tab', async ({ page }) => {
+  await openFeature(page);
+  await nav(page).getByRole('button', { name: 'AuthSteps.cs', exact: true }).first().click({ button: 'middle' });
+  await expect(page.locator('.editor-tab.active')).toContainText('AuthSteps.cs');
+  await expect(page.locator('.editor-tab.active')).not.toHaveClass(/preview/);
+});
+
+test('QL16 Copy path says what it copied', async ({ page, context }) => {
+  await context.grantPermissions(['clipboard-read', 'clipboard-write']);
+  await openFeature(page);
+  await nav(page).getByRole('button', { name: 'AuthSteps.cs', exact: true }).first().click({ button: 'right' });
+  await page.getByRole('menuitem', { name: 'Copy path' }).click();
+  await expect(page.getByText('Copied Steps/AuthSteps.cs').first()).toBeVisible();
+});
+
+test('QL17 Drag a file onto a folder to move it', async ({ page }) => {
+  await openFeature(page);
+  await nav(page).getByRole('button', { name: 'SearchSteps.cs', exact: true }).first().dragTo(nav(page).getByRole('button', { name: 'Collapse folder Support', exact: true }));
+  await page.getByRole('button', { name: 'Move', exact: true }).click();
+  await expect.poll(() => fs.access(path.join(root, 'Support/SearchSteps.cs')).then(() => true, () => false)).toBe(true);
+});
+
+test('QL18 / QL19 Tab bar: double-click for a scratch file; the active tab is scrolled into view', async ({ page }) => {
+  await openFeature(page);
+  const strip = page.getByRole('group', { name: 'Open editors' });
+  const box = (await strip.boundingBox())!;
+  await page.mouse.dblclick(box.x + box.width - 20, box.y + box.height / 2);
+  await expect(page.getByRole('dialog', { name: 'New Scratch File' })).toBeVisible();
+});
