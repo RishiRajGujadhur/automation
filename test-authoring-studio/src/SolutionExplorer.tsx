@@ -342,6 +342,7 @@ export default function SolutionExplorer({ features, revision, activeFile, query
               aria-current={isActive(path) && !extra?.linked ? 'page' : undefined}
               onClick={() => open(path)}
               onDoubleClick={() => keepTab(path)}
+              onAuxClick={(e) => { if (e.button === 1 && featureOn('explorer-middle-click')) { e.preventDefault(); open(path); setTimeout(() => keepTab(path)); } }}
             >
               <Icon size={14} aria-hidden="true" style={{ color: extra?.linked ? undefined : fileType(path).color }} />
               <span>{name}</span>

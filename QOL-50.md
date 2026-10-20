@@ -22,6 +22,7 @@ Every improvement is verified by a unit or Playwright test (`tests/e2e/qol50.spe
 | QL13 | Explorer arrow keys | Explorer | ✅ 2026-10-20 |
 | QL14 | Explorer: type to select | Explorer | ✅ 2026-10-20 |
 | QL15 | Explorer: Enter opens and moves to the editor | Explorer | ✅ 2026-10-20 |
+| QL16 | Explorer: middle-click keeps the tab | Explorer | ✅ 2026-10-20 |
 
 ## Progress log
 - 2026-10-20 QL1: Title names the file and workspace folder
@@ -39,3 +40,4 @@ Every improvement is verified by a unit or Playwright test (`tests/e2e/qol50.spe
 - 2026-10-20 QL13: Up/Down/Home/End, Right/Left expand/collapse
 - 2026-10-20 QL14: Typing jumps to the matching row
 - 2026-10-20 QL15: Enter keeps the tab and focuses the editor
+- 2026-10-20 QL16: Middle-click opens a normal tab

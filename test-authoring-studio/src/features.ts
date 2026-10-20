@@ -312,6 +312,7 @@ export const FEATURES: Feature[] = [
   { id: 'explorer-arrows', label: 'Explorer arrow keys', group: 'Files', essential: true, description: 'Up / Down / Home / End move through the tree; Right / Left expand and collapse.' },
   { id: 'explorer-type-select', label: 'Explorer: type to select', group: 'Files', essential: true, description: 'Typing a name in the Explorer tree jumps to the matching row.' },
   { id: 'explorer-enter', label: 'Explorer: Enter opens and moves to the editor', group: 'Files', essential: true, description: 'Enter on a file keeps its tab and puts the keyboard in the editor.' },
+  { id: 'explorer-middle-click', label: 'Explorer: middle-click keeps the tab', group: 'Files', essential: true, description: 'A middle-click opens the file in a normal (not preview) tab.' },
 ];
 export const GROUPS: FeatureGroup[] = ['Editing', 'Navigation', 'Code intelligence', 'Tool windows', 'Files', 'Git', 'Gherkin', 'View', 'Debugging', 'Help and productivity'];
 
