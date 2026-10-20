@@ -297,7 +297,7 @@ export default function SolutionExplorer({ features, revision, activeFile, query
             {renaming === path && !extra?.linked ? renameBox(path, false) : <button
               className={`explorer-file ${isActive(path) && !extra?.linked ? 'selected' : ''} ${clip?.mode === 'cut' && clip.path === path ? 'cut' : ''}`}
               onKeyDown={extra?.linked ? undefined : rowKeys(path, false)}
-              data-path={extra?.linked ? undefined : path}
+              draggable={featureOn('drag-path')} onDragStart={(e) => { e.dataTransfer.setData('text/plain', path); e.dataTransfer.setData('application/x-tas-path', path); e.dataTransfer.effectAllowed = 'copyMove'; }} data-path={extra?.linked ? undefined : path}
               title={extra?.note ? `${path} · ${extra.note}` : path}
               aria-current={isActive(path) && !extra?.linked ? 'page' : undefined}
               onClick={() => open(path)}
