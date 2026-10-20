@@ -4,6 +4,8 @@ import CodeMirror from '@uiw/react-codemirror';
 import { StreamLanguage } from '@codemirror/language';
 import { diff as diffMode } from '@codemirror/legacy-modes/mode/diff';
 import { api } from '../api';
+import { createTwoFilesPatch } from 'diff';
+import { readFile } from '../files/provider';
 import { copyText } from '../ui';
 import { featureOn } from '../features';
 import { GIT_CHANGED_EVENT, FILES_CHANGED_EVENT } from '../editor/events';
@@ -80,7 +82,7 @@ export default function GitLogPanel({ onOpen, onClose, onNotice }: { onOpen: (fi
               {featureOn('git-copy-revision') && <button className="button" onClick={() => void copyText(commit.hash).then((ok) => onNotice(ok ? `Copied ${commit.hash.slice(0, 10)}.` : 'Clipboard unavailable.'))}>Copy Revision</button>}
               </div>
               <ul className="git-commit-files" aria-label="Changed files">
-                {commit.files.map((f) => <li key={f.file}><span className={`git-status s-${f.status}`}>{f.status}</span> <button className="link-button" onClick={() => onOpen(f.file)}>{f.file}</button>{featureOn('git-view-revision') && f.status !== 'D' && <button className="link-button git-file-action" aria-label={`View ${f.file} at this revision`} onClick={() => void api<{ text: string | null }>(`/git/at?file=${encodeURIComponent(f.file)}&ref=${commit.hash}`).then((r) => setShownFile({ title: `${f.file} @ ${commit.hash.slice(0, 7)}`, text: r.text ?? '', diff: false }), (e) => onNotice((e as Error).message))}>view</button>}</li>)}
+                {commit.files.map((f) => <li key={f.file}><span className={`git-status s-${f.status}`}>{f.status}</span> <button className="link-button" onClick={() => onOpen(f.file)}>{f.file}</button>{featureOn('git-view-revision') && f.status !== 'D' && <button className="link-button git-file-action" aria-label={`View ${f.file} at this revision`} onClick={() => void api<{ text: string | null }>(`/git/at?file=${encodeURIComponent(f.file)}&ref=${commit.hash}`).then((r) => setShownFile({ title: `${f.file} @ ${commit.hash.slice(0, 7)}`, text: r.text ?? '', diff: false }), (e) => onNotice((e as Error).message))}>view</button>}{featureOn('git-compare-local') && f.status !== 'D' && <button className="link-button git-file-action" aria-label={`Compare ${f.file} with the working copy`} onClick={() => void Promise.all([api<{ text: string | null }>(`/git/at?file=${encodeURIComponent(f.file)}&ref=${commit.hash}`), readFile(f.file).then((r) => r.source, () => '')]).then(([old, now]) => { const a = (old.text ?? '').replace(/\r\n/g, '\n'), b = now.replace(/\r\n/g, '\n'); setShownFile({ title: `${f.file}: ${commit.hash.slice(0, 7)} → working copy`, text: a === b ? '(no difference)' : createTwoFilesPatch(`${f.file} @ ${commit.hash.slice(0, 7)}`, `${f.file} (working copy)`, a, b, '', '', { context: 3 }).split('\n').slice(2).join('\n'), diff: true }); }, (e) => onNotice((e as Error).message))}>compare with local</button>}</li>)}
               </ul>
               {shownFile ? (
                 <>
