@@ -22,6 +22,7 @@ web and desktop apps, each with a Settings ▸ Features switch and tests.
 | Z15 | Import CSV as Table | Rider | no | ✅ 2026-10-20 |
 | Z16 | Export Living Documentation | Rider | no | ✅ 2026-10-20 |
 | Z17 | Test run environment variables | Rider | yes | ✅ 2026-10-20 |
+| Z18 | Code Vision: authors of scenarios | Rider | no | ✅ 2026-10-20 |
 
 ## Progress log
 - 2026-10-20 Z1: Who last changed the caret's line, when and the commit summary, at its end.
@@ -41,3 +42,4 @@ web and desktop apps, each with a Settings ▸ Features switch and tests.
 - 2026-10-20 Z15: A CSV/TSV file read into an aligned Gherkin table under the caret.
 - 2026-10-20 Z16: One HTML page of features, scenarios, tags, steps and last outcomes.
 - 2026-10-20 Z17: NAME=value pairs passed to dotnet test; names shown in the output.
+- 2026-10-20 Z18: Who changed each Feature / Scenario block last, when, how many authors.

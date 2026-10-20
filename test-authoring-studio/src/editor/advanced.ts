@@ -281,3 +281,40 @@ const paramHintField = StateField.define<DecorationSet>({
   provide: (f) => EditorView.decorations.from(f),
 });
 registerAdvanced((_file, kind) => (kind === 'gherkin' ? paramHintField : []));
+
+/* Z18 Code Vision authors (Rider): after each Feature / Rule / Scenario line, who changed the block last, when, and how
+   many people worked on it (from git blame). */
+/** The latest change of lines [from, to] (1-based) and the number of distinct authors. */
+export function blockAuthors(lines: Blame[], from: number, to: number) {
+  const slice = lines.slice(from - 1, to);
+  if (!slice.length) return null;
+  const mine = slice.some((b) => /^0+$/.test(b.hash));
+  const committed = slice.filter((b) => !/^0+$/.test(b.hash));
+  const latest = committed.reduce<Blame | null>((a, b) => (!a || b.when > a.when ? b : a), null);
+  const authors = new Set(committed.map((b) => b.author)).size;
+  if (mine) return { text: authors ? `You (changed) · ${authors} author${authors === 1 ? '' : 's'}` : 'You (not committed)' };
+  return latest ? { text: `${latest.author}${authors > 1 ? ` +${authors - 1}` : ''} · ${relativeDay(latest.when)}`, title: `${latest.hash.slice(0, 10)} — ${latest.summary}` } : null;
+}
+class VisionWidget extends WidgetType {
+  constructor(readonly text: string, readonly title = '') { super(); }
+  eq(o: VisionWidget) { return o.text === this.text; }
+  toDOM() { const el = document.createElement('span'); el.className = 'cm-code-vision'; el.textContent = this.text; if (this.title) el.title = this.title; return el; }
+}
+const BLOCK = /^\s*(Feature|Rule|Background|Scenario|Scenario Outline|Scenario Template|Example):/;
+registerAdvanced((file, kind) => (kind !== 'gherkin' || file.startsWith('untitled') ? [] : ViewPlugin.fromClass(class {
+  decorations = Decoration.none;
+  data: Blame[] | null = null;
+  constructor(readonly view: EditorView) { void blameOf(file).then((d) => { this.data = d; this.decorations = this.build(); queueMicrotask(() => { try { view.dispatch({ effects: blameReady.of(null) }); } catch { /* destroyed */ } }); }); }
+  update(u: ViewUpdate) { if (u.docChanged) this.decorations = this.build(); }
+  build() {
+    if (!this.data || !featureOn('code-vision-authors')) return Decoration.none;
+    const doc = this.view.state.doc;
+    const heads: number[] = [];
+    for (let n = 1; n <= doc.lines; n++) if (BLOCK.test(doc.line(n).text)) heads.push(n);
+    return Decoration.set(heads.flatMap((n, i) => {
+      const end = n === heads[0] && /^\s*Feature:/.test(doc.line(n).text) ? doc.lines : (heads[i + 1] ?? doc.lines + 1) - 1;
+      const a = blockAuthors(this.data!, n, end);
+      return a ? [Decoration.widget({ widget: new VisionWidget(a.text, a.title), side: 2 }).range(doc.line(n).to)] : [];
+    }));
+  }
+}, { decorations: (p) => p.decorations })));

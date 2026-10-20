@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { relativeDay, conflictsIn, resolveConflict, postfix, inlineValuesFor } from '../src/editor/advanced';
+import { relativeDay, conflictsIn, resolveConflict, postfix, inlineValuesFor, blockAuthors } from '../src/editor/advanced';
 import { selectHunks } from '../server/git';
 import { outlinePreview } from '../src/editor/gherkinTools';
 import { EditorState } from '@codemirror/state';
@@ -83,5 +83,11 @@ describe('advanced features (ADVANCED-20)', () => {
   });
   it('Z17 test environment variables', () => {
     expect(parseEnv('BASE_URL=https://x.test; HEADED = 1\nbad line\n1X=2')).toEqual({ BASE_URL: 'https://x.test', HEADED: '1' });
+  });
+  it('Z18 code vision authors of a block', () => {
+    const b = (hash: string, author: string, when: string) => ({ hash, author, when, summary: 's' });
+    const lines = [b('a1', 'Ada', '2026-10-01'), b('b2', 'Bo', '2026-10-15'), b('a1', 'Ada', '2026-10-01')];
+    expect(blockAuthors(lines, 1, 3)!.text).toMatch(/^Bo \+1 · /);
+    expect(blockAuthors([...lines, b('0000000000', 'Not Committed Yet', '2026-10-20')], 1, 4)!.text).toBe('You (changed) · 2 authors');
   });
 });
