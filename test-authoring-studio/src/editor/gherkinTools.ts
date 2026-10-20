@@ -627,3 +627,20 @@ export function tableMoveColumn(dir: 1 | -1) {
     return writeTable(view, t, rows, t.row, to);
   };
 }
+
+/** Table ▸ Select Column: every cell of the caret's column selected (multiple carets), to edit them together. */
+export function tableSelectColumn(view: EditorView) {
+  const t = tableAt(view.state);
+  if (!t) return false;
+  const ranges = [];
+  for (let n = t.from; n <= t.to; n++) {
+    const line = view.state.doc.line(n);
+    const start = cellStart(line.text, t.col + 1);
+    let end = start;
+    for (; end < line.text.length && line.text[end] !== '|'; end++) if (line.text[end] === '\\') end++;
+    while (end > start && line.text[end - 1] === ' ') end--;
+    ranges.push(EditorSelection.range(line.from + start, line.from + end));
+  }
+  view.dispatch({ selection: EditorSelection.create(ranges, t.row) });
+  return true;
+}

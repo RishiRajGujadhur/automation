@@ -269,6 +269,7 @@ export const FEATURES: Feature[] = [
   { id: 'table-duplicate-row', label: 'Table: Duplicate Row', group: 'Gherkin', essential: true, description: 'Copies the caret\'s table row below it.', commands: ['table-duplicate-row'] },
   { id: 'table-delete-row', label: 'Table: Delete Row', group: 'Gherkin', essential: true, description: 'Removes the caret\'s table row.', commands: ['table-delete-row'] },
   { id: 'table-move-column', label: 'Table: Move Column', group: 'Gherkin', essential: true, description: 'Moves the caret\'s table column left or right.', commands: ['table-column-left', 'table-column-right'] },
+  { id: 'table-select-column', label: 'Table: Select Column', group: 'Gherkin', essential: true, description: 'Selects every cell of the caret\'s column (one caret per row).', commands: ['table-select-column'] },
 ];
 export const GROUPS: FeatureGroup[] = ['Editing', 'Navigation', 'Code intelligence', 'Tool windows', 'Files', 'Git', 'Gherkin', 'View', 'Debugging', 'Help and productivity'];
 
