@@ -22,6 +22,7 @@ export default function GitView({ onOpen, onNotice, onChanged }: { onOpen: (file
   const [st, setSt] = useState<GitStatus>();
   // The commit message draft survives a reload (QOL-50).
   const [message, setMessage] = useLocalState('gitCommitDraft', '');
+  const [pastMessages, setPastMessages] = useLocalState<string[]>('gitCommitHistory', []);
   const [amend, setAmend] = useState(false);
   const [busy, setBusy] = useState(false);
   const [closed, setClosed] = useState<Set<string>>(new Set(['history']));
@@ -46,6 +47,8 @@ export default function GitView({ onOpen, onNotice, onChanged }: { onOpen: (file
   const changes = st?.files.filter((f) => !f.staged) ?? [];
   const doCommit = (all: boolean) => act(async () => {
     const r = await api<{ summary: string }>('/git/commit', { message, all, amend });
+    // Previous commit messages: ↑ in an empty box recalls them (QOL-50).
+    setPastMessages((h) => [message.trim(), ...h.filter((m) => m !== message.trim())].slice(0, 20));
     setMessage('');
     setAmend(false);
     window.dispatchEvent(new Event(GIT_CHANGED_EVENT));
@@ -150,7 +153,15 @@ export default function GitView({ onOpen, onNotice, onChanged }: { onOpen: (file
       )}
       <div className="git-commit">
         <textarea aria-label="Commit message" placeholder={`Message (Ctrl+Enter to commit${st?.branch ? ` on "${st.branch}"` : ''})`} value={message} onChange={(e) => setMessage(e.target.value)}
-          onKeyDown={(e) => { if ((e.ctrlKey || e.metaKey) && e.key === 'Enter' && message.trim()) { e.preventDefault(); void doCommit(!staged.length); } }} rows={3} />
+          onKeyDown={(e) => {
+            if ((e.ctrlKey || e.metaKey) && e.key === 'Enter' && message.trim()) { e.preventDefault(); void doCommit(!staged.length); return; }
+            if ((e.key === 'ArrowUp' || e.key === 'ArrowDown') && featureOn('commit-pastMessages') && pastMessages.length && (message === '' || pastMessages.includes(message)) && e.currentTarget.selectionStart === 0) {
+              e.preventDefault();
+              const at = message === '' ? -1 : pastMessages.indexOf(message);
+              const next = e.key === 'ArrowUp' ? Math.min(pastMessages.length - 1, at + 1) : at - 1;
+              setMessage(next < 0 ? '' : pastMessages[next]);
+            }
+          }} rows={3} />
         {featureOn('commit-length') && (message.split('\n')[0].length > 72 || (message.includes('\n') && message.split('\n')[1].trim() !== '')) && <p className="git-commit-hint" role="note">{message.split('\n')[0].length > 72 ? `The summary line has ${message.split('\n')[0].length} characters; keep it under 72.` : 'Leave the second line empty between the summary and the description.'}</p>}
         <div className="git-commit-row">
           <button className="button primary" disabled={busy || !message.trim() || (!staged.length && !changes.length && !amend)} onClick={() => void doCommit(!staged.length)}>

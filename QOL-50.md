@@ -78,6 +78,7 @@ Every improvement is verified by a unit or Playwright test (`tests/e2e/qol50.spe
 | QL69 | Test Explorer arrow keys | Test Explorer | ✅ 2026-10-20 |
 | QL70 | Error List: group by file | Error List | ✅ 2026-10-20 |
 | QL71 | Build result message | Build | ✅ 2026-10-20 |
+| QL72 | Commit message history | Git | ✅ 2026-10-20 |
 
 ## Progress log
 - 2026-10-20 QL1: Title names the file and workspace folder
@@ -151,3 +152,4 @@ Every improvement is verified by a unit or Playwright test (`tests/e2e/qol50.spe
 - 2026-10-20 QL69: Up/Down, Left/Right in the tree
 - 2026-10-20 QL70: Group errors under their file
 - 2026-10-20 QL71: Result, time and counts after a build
+- 2026-10-20 QL72: Up recalls previous messages

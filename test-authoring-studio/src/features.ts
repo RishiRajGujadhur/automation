@@ -368,6 +368,7 @@ export const FEATURES: Feature[] = [
   { id: 'test-tree-keys', label: 'Test Explorer arrow keys', group: 'Tool windows', essential: true, description: '↑ / ↓ move through the tests; ← / → collapse and expand groups.' },
   { id: 'error-list-group', label: 'Error List: group by file', group: 'Tool windows', essential: true, vs: 'Error List ▸ Group by', description: 'A toggle groups errors and warnings under their file.' },
   { id: 'build-summary', label: 'Build result message', group: 'Tool windows', essential: true, description: 'When a build ends, a message gives the result, the time and the error / warning counts.' },
+  { id: 'commit-history', label: 'Commit message history', group: 'Git', essential: true, description: '↑ in an empty commit message box recalls your previous messages.' },
 ];
 export const GROUPS: FeatureGroup[] = ['Editing', 'Navigation', 'Code intelligence', 'Tool windows', 'Files', 'Git', 'Gherkin', 'View', 'Debugging', 'Help and productivity'];
 
