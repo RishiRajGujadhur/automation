@@ -1,5 +1,6 @@
 import { useViewOptions } from '../editor/viewOptions';
 import { featureOn } from '../features';
+import { runRider } from '../rider/commands';
 import { createContext, useContext, useEffect, useLayoutEffect, useRef, useState, type ReactNode } from 'react';
 import { createPortal } from 'react-dom';
 import { ChevronLeft, ChevronRight, ChevronDown, X, Copy, XCircle, Pin, PinOff } from 'lucide-react';
@@ -69,7 +70,7 @@ export default function EditorTabs({ onClose, onSplit, children }: { onClose: (f
 
   return (
     <ActionsSlot.Provider value={slot}>
-      <div className={`editor-tabs ${multiRow ? 'multi-row' : ''} ${pinnedRow && lastPinned >= 0 && lastPinned < tabs.length - 1 ? 'pinned-row' : ''} ${vo.colorTabs && featureOn('color-tabs') ? 'colorized' : ''}`}>
+      <div className={`editor-tabs ${multiRow ? 'multi-row' : ''} ${pinnedRow && lastPinned >= 0 && lastPinned < tabs.length - 1 ? 'pinned-row' : ''} ${vo.colorTabs && featureOn('color-tabs') ? 'colorized' : ''}`} onDoubleClick={(e) => { if (featureOn('tabstrip-new') && !(e.target as HTMLElement).closest('.editor-tab, button, a, input, [role="toolbar"]')) runRider('new-scratch', 'menu'); }}>
         {overflow.left && <button className="tab-scroll" aria-label="Show previous tabs" onClick={() => reveal(-1)}><ChevronLeft size={14} /></button>}
         <div className="tab-strip" role="group" aria-label="Open editors" ref={strip} onScroll={measure} onWheel={(e) => { if (strip.current && e.deltaY) strip.current.scrollLeft += e.deltaY; }}>
           {tabs.map((t: EditorTab, i: number) => {

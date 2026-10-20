@@ -316,6 +316,7 @@ export const FEATURES: Feature[] = [
   { id: 'copy-feedback', label: 'Copy actions confirm what they copied', group: 'Files', essential: true, description: 'Copy path / file name in the Explorer and tab menus show a short message.' },
   { id: 'drag-move', label: 'Explorer: drag a file onto a folder to move it', group: 'Files', essential: true, description: 'Dropping a file on a folder moves it there (after a confirmation).' },
   { id: 'reveal-tab', label: 'Active tab scrolls into view', group: 'Files', essential: true, description: 'With many tabs, the active one is always scrolled into the tab bar.' },
+  { id: 'tabstrip-new', label: 'Double-click the tab bar for a new scratch file', group: 'Files', essential: true, vs: 'Double-click tab bar ▸ New file', description: 'Double-clicking empty space beside the tabs starts a scratch file.' },
 ];
 export const GROUPS: FeatureGroup[] = ['Editing', 'Navigation', 'Code intelligence', 'Tool windows', 'Files', 'Git', 'Gherkin', 'View', 'Debugging', 'Help and productivity'];
 

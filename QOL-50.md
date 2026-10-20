@@ -26,6 +26,7 @@ Every improvement is verified by a unit or Playwright test (`tests/e2e/qol50.spe
 | QL17 | Copy actions confirm what they copied | Explorer / Tabs | ✅ 2026-10-20 |
 | QL18 | Drag a file onto a folder to move it | Explorer | ✅ 2026-10-20 |
 | QL19 | Active tab scrolls into view | Tabs | ✅ 2026-10-20 |
+| QL20 | Double-click the tab bar for a scratch file | Tabs | ✅ 2026-10-20 |
 
 ## Progress log
 - 2026-10-20 QL1: Title names the file and workspace folder
@@ -47,3 +48,4 @@ Every improvement is verified by a unit or Playwright test (`tests/e2e/qol50.spe
 - 2026-10-20 QL17: Notice after Copy path / name
 - 2026-10-20 QL18: Drop on a folder moves (confirmed)
 - 2026-10-20 QL19: Active tab always visible
+- 2026-10-20 QL20: Tab bar double-click: New Scratch File
