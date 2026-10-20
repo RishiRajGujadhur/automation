@@ -230,6 +230,7 @@ export const FEATURES: Feature[] = [
   { id: 'rename-param', label: 'Rename Examples Parameter', group: 'Gherkin', essential: true, description: 'Renames a <parameter> in the outline\'s steps and its Examples column together.', commands: ['rename-param'] },
   { id: 'remove-unused-columns', label: 'Remove Unused Examples Columns', group: 'Gherkin', essential: true, description: 'Examples columns no <parameter> uses are removed.', commands: ['remove-unused-columns'] },
   { id: 'inline-background', label: 'Inline Background', group: 'Gherkin', essential: true, description: 'The Background\'s steps move into every scenario.', commands: ['inline-background'] },
+  { id: 'normalize-keywords', label: 'Normalize Step Keywords', group: 'Gherkin', essential: true, description: 'Repeated Given / When / Then become And; a scenario never starts with And.', commands: ['normalize-keywords'] },
 ];
 export const GROUPS: FeatureGroup[] = ['Editing', 'Navigation', 'Code intelligence', 'Tool windows', 'Files', 'Git', 'Gherkin', 'View', 'Debugging', 'Help and productivity'];
 

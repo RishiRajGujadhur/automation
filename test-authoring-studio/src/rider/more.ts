@@ -10,7 +10,7 @@ import { renamePath } from '../files/provider';
 import { movedPath } from '../files/tabs';
 import { DEFAULT_TODO_TOKENS } from '../editor/todoHighlight';
 import { copyText as copyFilterText } from '../ui';
-import { cycleStepKeyword, scenarioToOutline, tableInsertRow, tableAddColumn, tableDeleteColumn, tableSortByColumn, testFilter, selectScenario, extractExamplesParameter, outlineToScenario, duplicateScenario, moveScenario, extractBackground, addExamplesTable, toggleTag, toggleScenarioComment, pasteAsTable, tableCsv, renameExamplesParameter, paramAt, removeUnusedColumns, inlineBackground } from '../editor/gherkinTools';
+import { cycleStepKeyword, scenarioToOutline, tableInsertRow, tableAddColumn, tableDeleteColumn, tableSortByColumn, testFilter, selectScenario, extractExamplesParameter, outlineToScenario, duplicateScenario, moveScenario, extractBackground, addExamplesTable, toggleTag, toggleScenarioComment, pasteAsTable, tableCsv, renameExamplesParameter, paramAt, removeUnusedColumns, inlineBackground, normalizeStepKeywords } from '../editor/gherkinTools';
 import { unsavedFiles } from '../editor/autosave';
 import { getTabs, closeTab } from '../files/tabs';
 import { reopenClosed } from '../files/tabs';
@@ -123,5 +123,6 @@ export function moreCommands(h: MoreHelpers): RiderCommand[] {
     { id: 'rename-param', label: 'Rename Examples Parameter…', menu: 'Code', submenu: 'Gherkin', run: h.inEditor((v) => { const name = paramAt(v.state, v.state.selection.main.head); if (!name) { h.notice('Put the caret on a <parameter> or an Examples column header of a Scenario Outline.'); return; } const to = window.prompt(`Rename <${name}> to:`, name); if (!to) return; if (!renameExamplesParameter(to)(v)) h.notice('Use a name without <, > or |.'); }) },
     { id: 'remove-unused-columns', label: 'Remove Unused Examples Columns', menu: 'Code', submenu: 'Gherkin', run: h.inEditor((v) => removeUnusedColumns(v) || h.notice('No unused columns in this Scenario Outline.')) },
     { id: 'inline-background', label: 'Inline Background', menu: 'Code', submenu: 'Gherkin', run: h.inEditor((v) => inlineBackground(v) || h.notice('This feature has no Background with steps (or no scenarios).')) },
+    { id: 'normalize-keywords', label: 'Normalize Step Keywords', menu: 'Code', submenu: 'Gherkin', run: h.inEditor((v) => normalizeStepKeywords(v) || h.notice('The step keywords are already consistent.')) },
   ];
 }

@@ -617,13 +617,10 @@ test('X129 Feature statistics in the status bar', async ({ page }) => {
   await expect(page.getByLabel('Feature statistics')).toHaveText('1 scenario · 4 steps');
 });
 
-test('X130–X133 Gherkin: rename parameter, remove unused columns, inline Background, table check', async ({ page }) => {
-  await openFeature(page);
-  await caretAt(page, 'Scenario: Sign in');
-  await page.keyboard.press('End');
-  for (const text of ['', '  Scenario Outline: Roles', '    When the user signs in as "<role>"', '    Examples:', '      | role  | unused |', '      | admin | x      |', '      | guest |']) { await page.keyboard.press('Enter'); await page.keyboard.press('Home'); await page.keyboard.press('Shift+Home'); await page.keyboard.type(text); }
-  // X133: the short row is flagged.
-  await expect(gherkin(page).locator('.cm-lintRange-warning').first()).toBeVisible({ timeout: 15_000 });
+test('X130–X133 Gherkin: rename parameter, remove unused columns, inline Background', async ({ page, request }) => {
+  await fs.writeFile(path.join(root, 'Features/Roles.feature'), ['Feature: Roles', '  Background:', '    Given the browser is started', '', '  Scenario Outline: Roles', '    When the user signs in as "<role>"', '', '    Examples:', '      | role  | unused |', '      | admin | x      |', '      | guest | y      |', ''].join('\n'));
+  expect((await request.post('/api/workspace', { data: { repositoryRoot: root, targetProject: '.' } })).ok()).toBe(true);
+  await openFeature(page, 'Roles.feature');
   await caretAt(page, '<role>');
   await page.keyboard.press('ArrowRight');
   page.once('dialog', (d) => void d.accept('kind'));

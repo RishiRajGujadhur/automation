@@ -170,6 +170,7 @@ const ROWS: Record<'edit' | 'view' | 'navigate' | 'code' | 'tools' | 'help', Row
       ['Rename Examples Parameter…', 'rename-param'],
       ['Remove Unused Examples Columns', 'remove-unused-columns'],
       ['Inline Background', 'inline-background'],
+      ['Normalize Step Keywords', 'normalize-keywords'],
     ] },
   ],
   tools: [

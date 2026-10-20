@@ -528,3 +528,31 @@ export function inlineBackground(view: EditorView) {
   view.dispatch({ changes, userEvent: 'input' });
   return true;
 }
+
+/**
+ * Normalize Step Keywords (the usual Gherkin style): a step repeating the keyword of the step before it says And, and
+ * a scenario's first step never says And / But (it gets the keyword the steps it follows had, else Given).
+ */
+export function normalizeStepKeywords(view: EditorView) {
+  const { state } = view;
+  const doc = state.doc;
+  const sel = state.selection.main;
+  const first = sel.empty ? 1 : doc.lineAt(sel.from).number, last = sel.empty ? doc.lines : doc.lineAt(sel.to).number;
+  const changes: ChangeSpec[] = [];
+  let effective = '';
+  for (let n = first; n <= last; n++) {
+    const line = doc.line(n);
+    if (SCENARIO.test(line.text) || /^\s*(Background|Rule|Feature|Examples|Scenarios):/.test(line.text)) { effective = ''; continue; }
+    const m = STEP.exec(line.text);
+    if (!m) continue;
+    const kw = m[2];
+    let next = kw;
+    if (kw === 'And' || kw === 'But') { if (!effective) next = 'Given'; }
+    else if (kw === effective) next = 'And';
+    if (next !== 'And' && next !== 'But') effective = next;
+    if (next !== kw) changes.push({ from: line.from + m[1].length, to: line.from + m[1].length + kw.length, insert: next });
+  }
+  if (!changes.length) return false;
+  view.dispatch({ changes, userEvent: 'input' });
+  return true;
+}
