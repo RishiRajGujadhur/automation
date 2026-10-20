@@ -18,6 +18,7 @@ const TERMINAL_CLEAR_EVENT = 'tas:terminal-clear';
 type Tab = { key: number; title: string };
 type TermEvent = { kind: 'output'; text: string } | { kind: 'done'; cwd: string } | { kind: 'exit'; code: number | null };
 
+const termFont = () => { try { return Number(localStorage.getItem('tas:terminalFont')) || 13; } catch { return 13; } };
 const css = (name: string, fallback: string) => getComputedStyle(document.documentElement).getPropertyValue(name).trim() || fallback;
 
 /** One shell: xterm.js with a line editor (history, cursor keys, paste); Ctrl+C stops the command, Ctrl+L clears. */
@@ -27,7 +28,7 @@ function Shell({ active, onTitle, onExit, takeCommand }: { active: boolean; onTi
   const fitRef = useRef<FitAddon | undefined>(undefined);
   const clearRef = useRef<() => void>(() => {});
   useEffect(() => {
-    const term = new Terminal({ convertEol: true, cursorBlink: true, fontSize: 13, fontFamily: css('--font-mono', 'Consolas, monospace'), theme: { background: css('--panel', '#1e1e1e'), foreground: css('--text', '#ddd'), cursor: css('--accent', '#9270dd') }, scrollback: 5000 });
+    const term = new Terminal({ convertEol: true, cursorBlink: true, fontSize: featureOn('terminal-zoom') ? termFont() : 13, fontFamily: css('--font-mono', 'Consolas, monospace'), theme: { background: css('--panel', '#1e1e1e'), foreground: css('--text', '#ddd'), cursor: css('--accent', '#9270dd') }, scrollback: 5000 });
     const fit = new FitAddon();
     fitRef.current = fit;
     term.loadAddon(fit);
@@ -85,9 +86,21 @@ function Shell({ active, onTitle, onExit, takeCommand }: { active: boolean; onTi
       if (parts.length > 1) { const cmd = line; line = ''; pos = 0; submit(cmd); }
     });
     clearRef.current = () => { term.clear(); redraw(); term.focus(); };
+    // Ctrl+wheel changes the font size of every terminal (kept) (QOL-50).
+    const zoom = (e: WheelEvent) => {
+      if (!e.ctrlKey || !featureOn('terminal-zoom')) return;
+      e.preventDefault();
+      const size = Math.min(32, Math.max(8, termFont() + (e.deltaY < 0 ? 1 : -1)));
+      try { localStorage.setItem('tas:terminalFont', String(size)); } catch { /* storage blocked */ }
+      window.dispatchEvent(new Event('tas:terminal-font'));
+    };
+    const applyFont = () => { term.options.fontSize = termFont(); try { fit.fit(); } catch { /* hidden */ } };
+    const wheelHost = host.current!;
+    wheelHost.addEventListener('wheel', zoom, { passive: false });
+    window.addEventListener('tas:terminal-font', applyFont);
     const resize = new ResizeObserver(() => { try { fit.fit(); } catch { /* hidden */ } });
     resize.observe(host.current!);
-    return () => { live = false; resize.disconnect(); source?.close(); if (id) void api('/terminal/stop', { id }); term.dispose(); };
+    return () => { live = false; window.removeEventListener('tas:terminal-font', applyFont); wheelHost.removeEventListener('wheel', zoom); resize.disconnect(); source?.close(); if (id) void api('/terminal/stop', { id }); term.dispose(); };
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(() => { if (active) requestAnimationFrame(() => { try { fitRef.current?.fit(); } catch { /* hidden */ } }); }, [active]);
   useEffect(() => {
