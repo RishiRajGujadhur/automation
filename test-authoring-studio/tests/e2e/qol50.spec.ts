@@ -207,3 +207,42 @@ test('QL18 / QL19 Tab bar: double-click for a scratch file; the active tab is sc
   await page.mouse.dblclick(box.x + box.width - 20, box.y + box.height / 2);
   await expect(page.getByRole('dialog', { name: 'New Scratch File' })).toBeVisible();
 });
+
+test('QL21–QL23 Search: remembered after a reload, keyboard through results, the match is selected', async ({ page }) => {
+  await openFeature(page);
+  await page.keyboard.press('Control+Shift+F');
+  const view = page.getByRole('region', { name: 'Search' });
+  await view.getByLabel('Search in files').fill('dashboard');
+  await expect(view.getByRole('status')).toHaveText(/\d+ results? in/);
+  await page.reload();
+  await expect(page.getByText('Repository indexed')).toBeVisible();
+  await page.keyboard.press('Control+Shift+F');
+  await expect(view.getByLabel('Search in files')).toHaveValue('dashboard');
+  await expect(view.getByRole('status')).toHaveText(/\d+ results? in/);
+  await view.getByLabel('Search in files').press('ArrowDown');
+  await expect(view.locator('.search-match').first()).toBeFocused();
+  await page.keyboard.press('Enter');
+  await expect.poll(() => page.evaluate(() => { const a = (window as unknown as { __activeEditor: () => { view: { state: { selection: { main: { from: number; to: number } }; sliceDoc(a: number, b: number): string } } } | undefined }).__activeEditor(); const s = a?.view.state.selection.main; return s && a!.view.state.sliceDoc(s.from, s.to); })).toMatch(/^dashboard$/i);
+});
+
+test('QL27 Test Explorer explains an empty tree', async ({ page, request }) => {
+  const empty = await fs.mkdtemp(path.join(os.tmpdir(), 'studio-empty-'));
+  try {
+    expect((await request.post('/api/workspace', { data: { repositoryRoot: empty, targetProject: '.' } })).ok()).toBe(true);
+    await page.addInitScript(() => { if (!sessionStorage.getItem('seeded')) { localStorage.setItem('tas:prefs', JSON.stringify({ mode: 'advanced', autoSave: 'off' })); sessionStorage.setItem('seeded', '1'); } });
+    await page.goto('/#/features/editor');
+    await page.getByRole('button', { name: 'Test Explorer' }).click();
+    const note = page.getByRole('region', { name: 'Test Explorer' }).getByRole('note');
+    await expect(note).toContainText('build it (Ctrl+Shift+B), then refresh', { timeout: 60_000 });
+    await expect(note.getByRole('button', { name: 'Refresh' })).toBeVisible();
+  } finally {
+    await fs.rm(empty, { recursive: true, force: true }).catch(() => {});
+  }
+});
+
+test('QL30 Build time in the status bar', async ({ page }) => {
+  await openFeature(page);
+  await page.getByRole('button', { name: 'Build menu' }).click();
+  await page.getByRole('menuitem', { name: /^Build Solution/ }).click();
+  await expect(page.getByLabel('Build progress')).toContainText(/(Building|Cleaning)… \d+ s/);
+});

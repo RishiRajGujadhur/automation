@@ -17,15 +17,17 @@ type Result = { files: { file: string; matches: Match[] }[]; total: number; trun
  */
 export default function SearchView({ initialReplace, initialInclude, onOpen, onNotice, onChanged }: { initialReplace?: boolean; initialInclude?: string; onOpen: (file: string, line: number, column: number) => void; onNotice: (m: string) => void; onChanged: () => void }) {
   const confirm = useConfirm();
-  const [query, setQuery] = useState('');
+  // The last search comes back after a reload (QOL-50).
+  const last = (() => { try { return featureOn('search-remember') ? JSON.parse(sessionStorage.getItem('tas:lastSearch') ?? '{}') as { query?: string; include?: string; exclude?: string; matchCase?: boolean; wholeWord?: boolean; regex?: boolean } : {}; } catch { return {}; } })();
+  const [query, setQuery] = useState(last.query ?? '');
   const [replace, setReplace] = useState('');
   const [showReplace, setShowReplace] = useState(!!initialReplace);
   const [showFilters, setShowFilters] = useState(!!initialInclude);
-  const [include, setInclude] = useState(initialInclude ?? '');
-  const [exclude, setExclude] = useState('');
-  const [matchCase, setMatchCase] = useState(false);
-  const [wholeWord, setWholeWord] = useState(false);
-  const [regex, setRegex] = useState(false);
+  const [include, setInclude] = useState(initialInclude ?? last.include ?? '');
+  const [exclude, setExclude] = useState(last.exclude ?? '');
+  const [matchCase, setMatchCase] = useState(!!last.matchCase);
+  const [wholeWord, setWholeWord] = useState(!!last.wholeWord);
+  const [regex, setRegex] = useState(!!last.regex);
   // Search Only in Open Editors (VS Code's book toggle; Visual Studio's 'All open documents' scope).
   const [openOnly, setOpenOnly] = useState(false);
   const tabs = useTabs();
@@ -49,6 +51,7 @@ export default function SearchView({ initialReplace, initialInclude, onOpen, onN
   useEffect(() => { if (initialReplace) setShowReplace(true); input.current?.focus(); input.current?.select(); }, [initialReplace]);
 
   const options = useMemo(() => ({ query, regex, matchCase, wholeWord, include: (openOnly && featureOn('search-open-only') ? openFiles || '\u0000none' : include) || undefined, exclude: exclude || undefined }), [query, regex, matchCase, wholeWord, include, exclude, openOnly, openFiles]);
+  useEffect(() => { if (featureOn('search-remember')) try { sessionStorage.setItem('tas:lastSearch', JSON.stringify({ query, include, exclude, matchCase, wholeWord, regex })); } catch { /* storage blocked */ } }, [query, include, exclude, matchCase, wholeWord, regex]);
   const search = () => {
     if (!query) { setResult(undefined); setError(''); return; }
     setBusy(true);

@@ -171,3 +171,22 @@ test('X199 Test Explorer: Copy Results Summary', async ({ page, context }) => {
   await te.getByRole('button', { name: 'Copy results summary' }).click();
   await expect.poll(() => page.evaluate(() => navigator.clipboard.readText())).toMatch(/^Passed \d+, failed \d+, skipped \d+, not run \d+ \(\d+ tests\)/);
 });
+
+test('QL24–QL26 Test Explorer: remembers its view, shows the first failure, elapsed time', async ({ page }) => {
+  const file = path.join(root, 'Tests/CalculatorTests.cs');
+  await fs.writeFile(file, (await fs.readFile(file, 'utf8')).replace(/\}\s*$/, '\n    [Test]\n    public void FailsOnPurpose()\n    {\n        Assert.That(1 + 1, Is.EqualTo(3));\n    }\n}\n'));
+  await page.request.post('/api/scan', { data: {} });
+  await start(page);
+  await page.getByRole('button', { name: 'Test Explorer' }).click();
+  const te = page.getByRole('region', { name: 'Test Explorer' });
+  const tree = te.getByRole('navigation', { name: 'Tests' });
+  await expect(tree.locator('.t-label', { hasText: /FailsOnPurpose/ })).toBeVisible({ timeout: 60_000 });
+  await te.getByRole('button', { name: 'Run All Tests' }).click();
+  await expect(te.getByRole('status')).toContainText(/running \d+ s/, { timeout: 30_000 });
+  await expect(te.getByRole('region', { name: 'Test details' })).toContainText('FailsOnPurpose', { timeout: 240_000 });
+  // QL24: collapse a group and search; both come back after a reload.
+  await te.getByLabel('Search Test Explorer').fill('Adds');
+  await page.reload();
+  await page.getByRole('button', { name: 'Test Explorer' }).click();
+  await expect(te.getByLabel('Search Test Explorer')).toHaveValue('Adds');
+});

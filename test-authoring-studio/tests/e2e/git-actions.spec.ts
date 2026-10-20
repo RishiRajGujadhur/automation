@@ -200,3 +200,18 @@ test('X152–X154 Git: Stage File, Undo Changes in File, Show History for File',
   await page.getByRole('button', { name: 'Show every file' }).click();
   await expect(list.getByRole('option')).toHaveCount(2);
 });
+
+test('QL28 / QL29 Git Changes: the commit message draft survives a reload; summary length hint', async ({ page }) => {
+  await fs.appendFile(path.join(root, 'Steps/AuthSteps.cs'), '// change\n');
+  await page.addInitScript(() => { if (!sessionStorage.getItem('seeded')) { localStorage.setItem('tas:prefs', JSON.stringify({ mode: 'advanced', autoSave: 'off' })); sessionStorage.setItem('seeded', '1'); } });
+  await page.goto('/#/features/editor');
+  await expect(page.getByText('Repository indexed')).toBeVisible();
+  await page.getByRole('button', { name: 'Git Changes', exact: true }).click();
+  const view = page.getByRole('region', { name: 'Git Changes' });
+  await view.getByLabel('Commit message').fill(`Draft ${'x'.repeat(80)}`);
+  await expect(view.getByRole('note')).toContainText('keep it under 72');
+  await page.reload();
+  await expect(page.getByText('Repository indexed')).toBeVisible();
+  await page.getByRole('button', { name: 'Git Changes', exact: true }).click();
+  await expect(view.getByLabel('Commit message')).toHaveValue(/^Draft x+$/);
+});
