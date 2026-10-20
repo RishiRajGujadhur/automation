@@ -9,4 +9,5 @@ import './wordWrap';
 import './rulers';
 import './lineHighlight';
 import './filesOnSave';
+import './suggestions';
 export { SETTINGS } from './settings';

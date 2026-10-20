@@ -1,3 +1,4 @@
+import { gateSource } from '../vscode/suggestions';
 import { autocompletion, type Completion, type CompletionContext, type CompletionResult } from '@codemirror/autocomplete';
 import { featureOn } from '../features';
 import { EditorView, hoverTooltip, keymap, showTooltip, ViewPlugin, type Tooltip, type ViewUpdate } from '@codemirror/view';
@@ -201,7 +202,7 @@ function signatureHelp(file: string): Extension[] {
 export function csharpLanguage(file: string, handlers: { current: CsHandlers }): Extension[] {
   const at = (v: EditorView) => v.state.selection.main.head;
   return [
-    autocompletion({ override: [completionSource(file)], activateOnTyping: true, maxRenderedOptions: 80, icons: true, defaultKeymap: true }),
+    autocompletion({ override: [gateSource(completionSource(file))], activateOnTyping: true, maxRenderedOptions: 80, icons: true, defaultKeymap: true }),
     quickInfo(file),
     infoField,
     keymap.of([

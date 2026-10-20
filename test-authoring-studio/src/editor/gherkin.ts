@@ -1,3 +1,4 @@
+import { gateSource } from '../vscode/suggestions';
 import { featureOn } from '../features';
 import { Parser, AstBuilder, GherkinClassicTokenMatcher } from '@cucumber/gherkin';
 import { IdGenerator } from '@cucumber/messages';
@@ -468,7 +469,7 @@ export function gherkinExtensions(opts: { onSave?: () => void; onValidate?: () =
     duplicateStepLinter,
     smellLinter,
     gherkinLint2,
-    autocompletion({ override: [gherkinCompletions], activateOnTyping: true, maxRenderedOptions: 12, icons: true }),
+    autocompletion({ override: [gateSource(gherkinCompletions)], activateOnTyping: true, maxRenderedOptions: 12, icons: true }),
     stepHover,
     keymap.of([
       { key: 'Mod-s', preventDefault: true, run: () => { opts.onSave?.(); return true; } },
@@ -488,7 +489,7 @@ export function scenarioExtensions(label: string): Extension[] {
     bindingLinter,
     stepMarks,
     duplicateStepLinter,
-    autocompletion({ override: [gherkinCompletions], activateOnTyping: true, maxRenderedOptions: 10 }),
+    autocompletion({ override: [gateSource(gherkinCompletions)], activateOnTyping: true, maxRenderedOptions: 10 }),
     stepHover,
     EditorView.contentAttributes.of({ 'aria-label': label, 'aria-multiline': 'true', tabindex: '0' }),
     EditorView.lineWrapping,

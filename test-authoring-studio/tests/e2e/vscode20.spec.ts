@@ -303,3 +303,28 @@ test('V13 Files: trim trailing whitespace, insert final newline, trim final newl
   await page.keyboard.press('Control+s');
   await expect.poll(disk, { timeout: 20_000 }).toBe('class B {  \n}');
 });
+
+test('V14 Suggestions: quick suggestions, accept on Enter, Tab completion', async ({ page }) => {
+  const list = page.locator('.cm-tooltip-autocomplete li');
+  const text = () => page.evaluate(() => (window as unknown as { __activeEditor: () => { view: { state: { doc: { toString(): string } } } } }).__activeEditor().view.state.doc.toString());
+  await open(page, 'Features/Auth/Login.feature', { 'editor.quickSuggestions': false, 'editor.acceptSuggestionOnEnter': 'off' });
+  await view(page).locator('.cm-content').click();
+  await page.keyboard.press('Control+End');
+  await page.keyboard.type('\n    Given the login');
+  await page.waitForTimeout(600);
+  await expect(list).toHaveCount(0);
+  // Ctrl+Space still asks.
+  await page.keyboard.press('Control+Space');
+  await expect(list.first()).toContainText('the login page is open');
+  // Enter does not accept: a new line.
+  await page.keyboard.press('Enter');
+  await expect(list).toHaveCount(0);
+  expect(await text()).toMatch(/Given the login\n\s*$/);
+  // Tab accepts (editor.tabCompletion on).
+  await page.keyboard.press('Control+z');
+  await expect.poll(text).toMatch(/Given the login$/);
+  await page.keyboard.press('Control+Space');
+  await expect(list.first()).toContainText('the login page is open');
+  await page.keyboard.press('Tab');
+  await expect.poll(text).toContain('Given the login page is open');
+});

@@ -123,3 +123,12 @@ describe('V13 files on save', () => {
   });
 });
 import { Text } from '@codemirror/state';
+import { suggestAllowed } from '../src/vscode/suggestions';
+describe('V14 suggestions', () => {
+  it('explicit always; typing per quick / trigger', () => {
+    expect(suggestAllowed(true, 'x', { quick: false, trigger: false })).toBe(true);
+    expect(suggestAllowed(false, 'x', { quick: false, trigger: true })).toBe(false);
+    expect(suggestAllowed(false, '.', { quick: false, trigger: true })).toBe(true);
+    expect(suggestAllowed(false, '.', { quick: true, trigger: false })).toBe(false);
+  });
+});
