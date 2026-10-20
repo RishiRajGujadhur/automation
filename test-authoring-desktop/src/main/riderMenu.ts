@@ -265,6 +265,7 @@ const ROWS: Record<'edit' | 'view' | 'navigate' | 'code' | 'tools' | 'help', Row
       ['Next Unbound Step', 'list-unbound'],
       ['Run Scenarios with Tag at Caret', 'run-tag-at-caret'],
       ['Rename Scenario…', 'rename-scenario'],
+      ['Split Scenario Here', 'split-scenario'],
     ] },
     ['Collapse Using Directives', 'fold-usings'],
     ['Sort JSON Keys', 'sort-json'],

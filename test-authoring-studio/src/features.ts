@@ -467,6 +467,7 @@ export const FEATURES: Feature[] = [
   { id: 'list-unbound', label: 'Next Unbound Step', group: 'Gherkin', essential: true, vs: 'Reqnroll: unbound steps', description: 'Code ▸ Gherkin goes to the next step without a step definition and says how many the file has.', commands: ['list-unbound'] },
   { id: 'run-tag-at-caret', label: 'Run Scenarios with Tag at Caret', group: 'Gherkin', essential: true, vs: 'Test Explorer ▸ Run by Trait', description: 'Code ▸ Gherkin runs every scenario of the solution that has the @tag under the caret.', commands: ['run-tag-at-caret'] },
   { id: 'rename-scenario', label: 'Rename Scenario', group: 'Gherkin', essential: false, description: 'Code ▸ Gherkin gives the scenario at the caret a new title.', commands: ['rename-scenario'] },
+  { id: 'split-scenario', label: 'Split Scenario Here', group: 'Gherkin', essential: false, description: 'Code ▸ Gherkin moves the steps from the caret on into a new scenario (for scenarios that test two things).', commands: ['split-scenario'] },
 ];
 export const GROUPS: FeatureGroup[] = ['Editing', 'Navigation', 'Code intelligence', 'Tool windows', 'Files', 'Git', 'Gherkin', 'View', 'Debugging', 'Help and productivity'];
 

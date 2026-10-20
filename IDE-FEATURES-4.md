@@ -81,6 +81,7 @@ has it on by default, so the desktop app starts with it on. The others start off
 | Y70 | Next Unbound Step | Rider | yes | ✅ 2026-10-20 |
 | Y71 | Run Scenarios with Tag at Caret | VS 2026 | yes | ✅ 2026-10-20 |
 | Y72 | Rename Scenario… | Rider | no | ✅ 2026-10-20 |
+| Y73 | Split Scenario Here | Rider | no | ✅ 2026-10-20 |
 
 ## Progress log
 - 2026-10-20 Y1: Percent-encodes the selection (or line) and decodes it.
@@ -155,3 +156,4 @@ has it on by default, so the desktop app starts with it on. The others start off
 - 2026-10-20 Y70: Goes to the next step without a binding and counts them.
 - 2026-10-20 Y71: Runs every scenario that has the @tag under the caret.
 - 2026-10-20 Y72: A new title for the scenario at the caret.
+- 2026-10-20 Y73: Steps from the caret on become a new scenario.

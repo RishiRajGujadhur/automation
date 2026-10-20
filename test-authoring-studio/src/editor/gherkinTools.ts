@@ -1033,3 +1033,24 @@ export const renameScenario = (title: string) => (view: EditorView) => {
   view.dispatch({ changes: { from: line.from + m[1].length, to: line.to, insert: title.trim() }, userEvent: 'input' });
   return true;
 };
+
+/** Split Scenario Here: the steps from the caret's line on become a new scenario after it ("… (part 2)"). */
+export function splitScenario(view: EditorView) {
+  const { state } = view;
+  const doc = state.doc;
+  const here = doc.lineAt(state.selection.main.head).number;
+  const b = scenarioBlock(state, here);
+  if (!b || !STEP.test(doc.line(here).text) || /^\s*Scenario (Outline|Template):/.test(doc.line(b.head).text)) return false;
+  let firstStep = b.head + 1;
+  while (firstStep < here && !STEP.test(doc.line(firstStep).text)) firstStep++;
+  if (firstStep === here) return false;
+  const head = doc.line(b.head).text;
+  const indent = /^\s*/.exec(head)![0];
+  const title = head.replace(/^\s*[^:]+:\s*/, '');
+  const br = state.lineBreak;
+  let prev = here - 1;
+  while (prev > b.head && !doc.line(prev).text.trim()) prev--;
+  const insert = `${br}${br}${indent}Scenario: ${title} (part 2)${br}`;
+  view.dispatch({ changes: { from: doc.line(prev).to, to: doc.line(here).from, insert }, selection: EditorSelection.cursor(doc.line(prev).to + br.length * 2 + indent.length + 'Scenario: '.length), userEvent: 'input' });
+  return true;
+}
