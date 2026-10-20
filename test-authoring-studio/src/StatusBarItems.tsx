@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { GitBranch, CircleX, TriangleAlert, ArrowUp, ArrowDown } from 'lucide-react';
+import { GitBranch, CircleX, TriangleAlert, ArrowUp, ArrowDown, Loader } from 'lucide-react';
 import { api } from './api';
 import { useBuild } from './build/store';
 import { useCursor } from './editor/cursor';
@@ -20,6 +20,10 @@ import { wordCount } from './editor/docTools';
  */
 export default function StatusBarItems({ repository, onGit, onErrors }: { repository?: string; onGit: () => void; onErrors: () => void }) {
   const build = useBuild();
+  // Elapsed build time (QOL-50).
+  const [buildStart, setBuildStart] = useState(0);
+  const [, tick] = useState(0);
+  useEffect(() => { if (build.status !== 'running') return; setBuildStart(Date.now()); const t = setInterval(() => tick((n) => n + 1), 1000); return () => clearInterval(t); }, [build.status]);
   const cursor = useCursor();
   const view = useViewOptions();
   const [git, setGit] = useState<{ repo: boolean; branch?: string; ahead: number; behind: number; changes: number }>();
@@ -69,6 +73,7 @@ export default function StatusBarItems({ repository, onGit, onErrors }: { reposi
           {view.overtype && <button className="status-item" aria-label="Overtype mode: on" title="Overtype: typing replaces characters (Insert)" onClick={() => setViewOptions({ overtype: false })}>OVR</button>}
         </>
       )}
+      {featureOn('build-elapsed') && build.status === 'running' && <span className="status-item" aria-label="Build progress"><Loader size={12} className="spin" /> {build.action === 'clean' ? 'Cleaning' : 'Building'}… {Math.max(0, Math.round((Date.now() - (buildStart || Date.now())) / 1000))} s</span>}
       {build.status !== 'idle' && (
         <button className="status-item" aria-label={`${errors} errors, ${warnings} warnings: open the Error List`} title="Error List" onClick={onErrors}>
           <CircleX size={12} />{errors} <TriangleAlert size={12} />{warnings}
