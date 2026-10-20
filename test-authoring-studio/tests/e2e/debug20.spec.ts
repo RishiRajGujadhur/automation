@@ -176,3 +176,60 @@ test('DB11–DB15 Edit value, search Locals, JSON visualizer, table visualizer, 
   const threads = panel(page).getByRole('list', { name: 'Threads' });
   await expect(threads.locator('[aria-current="true"]')).toHaveCount(1);
 });
+
+test('DB16–DB18, DB20 Pinned DataTip, Debug Output tools, exception type filter, tracepoint macros', async ({ page, request }) => {
+  const steps = path.join(temp, STEPS);
+  await fs.writeFile(steps, (await fs.readFile(steps, 'utf8')).replace('        var sum = First + Second;', '        try { throw new System.InvalidOperationException("skip me"); } catch { } try { throw new System.ArgumentException("stop here"); } catch { } var sum = First + Second;'));
+  const src = await openSteps(page);
+  // DB20: a tracepoint with macros on line 45.
+  await breakpointAt(page, request, 45);
+  const form = await settings(page, 45);
+  await form.getByLabel('Log message').fill('sum={sum} in $FUNCTION from $CALLER');
+  await form.getByRole('button', { name: 'Close' }).click();
+  // DB18: break on thrown exceptions, ArgumentException only.
+  await panel(page).getByLabel('Break on exceptions').selectOption('all');
+  await panel(page).getByLabel('Exception types to break on').fill('ArgumentException');
+  expect((await request.post('/api/debug/start', { data: { project: 'Calculator.csproj' } })).ok()).toBe(true);
+  await expect.poll(async () => { const s = await debugState(request); return s.status === 'paused' ? s.exception ?? s.reason : s.status; }, { timeout: 240_000, intervals: [1000] }).toMatch(/^ArgumentException: .*stop here/);
+  // DB16: pin "First" to the current line; the editor shows it there.
+  await panel(page).getByRole('tab', { name: 'Locals' }).click();
+  const locals = panel(page).getByRole('treegrid', { name: 'Locals' });
+  await locals.getByRole('row').filter({ has: page.locator('.dbg-name', { hasText: /^this$/ }) }).first().click({ button: 'right' });
+  await page.getByRole('menuitem', { name: 'Pin to Source' }).click();
+  await expect(src.locator('.cm-pinned-tip')).toHaveText(/^📌 this = .+×$/);
+  await src.getByRole('button', { name: 'Unpin this' }).click();
+  await expect(src.locator('.cm-pinned-tip')).toHaveCount(0);
+  // Run on to the end (exceptions: unhandled only).
+  await panel(page).getByLabel('Break on exceptions').selectOption('unhandled');
+  await request.post('/api/debug/control', { data: { action: 'continue' } });
+  await expect.poll(async () => (await debugState(request)).status, { timeout: 120_000 }).toMatch(/ended|idle/);
+  // DB20 + DB17
+  await panel(page).getByRole('tab', { name: 'Output' }).click();
+  const out = panel(page).getByLabel('Debug output');
+  await expect(out).toContainText(/\[Tracepoint\] Steps\/CalculatorSteps\.cs:45: sum=\d+ in \S*Add\(\) from \S+/);
+  await panel(page).getByLabel('Filter output lines').fill('[Tracepoint]');
+  expect((await out.textContent())!.split('\n').every((l) => l.includes('[Tracepoint]'))).toBe(true);
+  await panel(page).getByLabel('Word wrap').check();
+  await expect(out).toHaveClass(/wrap/);
+  await panel(page).getByLabel('Filter output lines').fill('');
+  await panel(page).getByRole('button', { name: 'Clear All' }).click();
+  await expect(out).toHaveText('No output yet.');
+});
+
+test('DB19 Debug Last Test Run', async ({ page, request }) => {
+  await page.goto('/#/features/editor');
+  await expect(page.getByText('Repository indexed')).toBeVisible();
+  await expect.poll(async () => ((await (await request.get('/api/tests')).json()).tests ?? []).length, { timeout: 240_000, intervals: [3000] }).toBeGreaterThan(0);
+  await page.getByRole('navigation').getByRole('button', { name: 'CalculatorTests.cs', exact: true }).first().click();
+  const src = page.getByLabel('Source of Tests/CalculatorTests.cs');
+  await src.locator('.cm-line').nth(10).click();
+  await page.keyboard.press('F9');
+  await page.getByRole('button', { name: 'Test Explorer' }).click();
+  const tree = page.getByRole('region', { name: 'Test Explorer' }).getByRole('navigation', { name: 'Tests' });
+  await tree.locator('.t-label', { hasText: /AddsTwoNumbers/ }).click({ button: 'right' });
+  await page.getByRole('menuitem', { name: 'Run', exact: true }).click();
+  await expect.poll(async () => (await (await request.get('/api/tests/run')).json()).status, { timeout: 240_000, intervals: [2000] }).toMatch(/done|failed/);
+  await menuItem(page, 'Tools', /^Debug Last Test Run/);
+  await expect.poll(async () => { const s = await debugState(request); const f = s.frames.find((x: { external: boolean }) => !x.external); return s.status === 'paused' ? `${f?.file}:${f?.line}` : s.status; }, { timeout: 240_000, intervals: [1000] }).toBe('Tests/CalculatorTests.cs:11');
+  expect((await debugState(request)).target.filter).toContain('AddsTwoNumbers');
+});

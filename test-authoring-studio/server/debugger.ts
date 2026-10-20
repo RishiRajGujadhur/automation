@@ -12,6 +12,10 @@ export const netcoredbg = process.env.STUDIO_NETCOREDBG || (existsSync(localDebu
 
 /** A breakpoint as Visual Studio has it: condition, hit count ("5", ">= 5", "% 3"), log message (tracepoint), enabled. */
 export type BreakpointSpec = { line: number; condition?: string; hitCondition?: string; logMessage?: string; enabled?: boolean; whenChanged?: boolean };
+/** Tracepoint macros (Visual Studio): $FUNCTION, $CALLER, $TID and $FILEPOS in a log message. */
+export function expandMacros(message: string, c: { func: string; caller: string; tid: number; file: string; line: number }) {
+  return message.replace(/\$(FUNCTION|CALLER|TID|FILEPOS)\b/g, (_, m: string) => (m === 'FUNCTION' ? c.func : m === 'CALLER' ? c.caller || '<none>' : m === 'TID' ? String(c.tid) : `${c.file}(${c.line})`));
+}
 /** Whether the n-th hit satisfies a hit condition: "5" / "= 5" (equal), ">= 5", "% 3" (every third). */
 export function hitMatches(hits: number, condition?: string) {
   const c = (condition ?? '').trim();
@@ -198,7 +202,8 @@ export class Debugger extends EventEmitter {
    * (with {expressions} evaluated in the stopped frame) and continue without pausing when the breakpoint says so.
    */
   private async tracepointOrSkip(threadId: number) {
-    const top = (await this.frames(threadId)).find((f) => !f.external);
+    const stack = await this.frames(threadId);
+    const top = stack.find((f) => !f.external);
     const bp = top?.file ? this.state.breakpoints[top.file]?.find((b) => b.line === top.line) : undefined;
     if (!bp) return false;
     const key = `${top!.file}:${bp.line}`;
@@ -221,6 +226,8 @@ export class Debugger extends EventEmitter {
         const r = await this.dap!.request<{ result: string }>('evaluate', { expression: m[1], frameId: top!.id, context: 'watch' }, 10_000).then((x) => x.result, (e) => `<${(e as Error).message.replace(/^Failed command 'evaluate' : /, '')}>`);
         message = message.replace(m[0], r);
       }
+      // Visual Studio's tracepoint macros: $FUNCTION, $CALLER, $TID, $FILEPOS.
+      message = expandMacros(message, { func: top!.name, caller: stack[stack.indexOf(top!) + 1]?.name ?? '', tid: threadId, file: top!.file!, line: bp.line });
       this.log(`[Tracepoint] ${top!.file}:${bp.line}: ${message}\n`);
       await this.dap!.request('continue', { threadId }).catch(() => {});
       return true;
