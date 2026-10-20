@@ -2,7 +2,7 @@ import { Fragment, useEffect, useMemo, useRef, useState } from 'react';
 import * as Tabs from '@radix-ui/react-tabs';
 import { CircleX, TriangleAlert, Hammer, RotateCw, Eraser, Square, X, Loader, Search, WrapText, Copy } from 'lucide-react';
 import { IconButton } from '../radix2';
-import { useLocalState } from '../ui';
+import { RowMenu, useLocalState } from '../ui';
 import { useBuild, startBuild, cancelBuild } from './store';
 import { api } from '../api';
 import { errorRows, errorText, errorHelpUrl, sortErrors, nextSort, type ErrorScope, type ErrorSort } from './errorList';
@@ -110,6 +110,7 @@ export default function BuildPanel({ onOpen, onNotice, onClose }: { onOpen: (fil
               {rows.map((d, i) => (
                 <Fragment key={i}>
                 {grouped && (i === 0 || rows[i - 1].file !== d.file) && <div className="dbg-row error-group" role="row"><span role="gridcell" className="error-group-name">{d.file ?? '(no file)'} <small>{rows.filter((x) => x.file === d.file).length}</small></span></div>}
+                <RowMenu label={`${d.code} row`} items={featureOn('suppress-in-project') && d.code && d.project ? [{ label: `Suppress ${d.code} in Project File`, onSelect: () => window.dispatchEvent(new CustomEvent('tas:suppress-warning', { detail: { code: d.code, project: d.project } })) }] : []}>
                 <div className={`dbg-row error-row ${d.file ? 'navigable' : ''}`} role="row" tabIndex={0} onDoubleClick={() => go(i)} onKeyDown={(e) => { if (e.key === 'Enter') go(i); else if (featureOn('error-list-copy') && (e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'c') { e.preventDefault(); void copyText(errorText(d)).then((ok) => onNotice(ok ? `Copied ${d.code}.` : 'Clipboard unavailable.')); } else if (featureOn('error-list-copy') && e.key === 'F1') { e.preventDefault(); window.open(errorHelpUrl(d.code), '_blank', 'noopener'); } }} title={d.file ? 'Double-click to go to the line' : undefined}>
                   <span role="gridcell">{d.severity === 'error' ? <CircleX size={13} className="sev-error" aria-label="Error" /> : <TriangleAlert size={13} className="sev-warning" aria-label="Warning" />}</span>
                   <span role="gridcell">{featureOn('error-list-copy') && d.code ? <a href={errorHelpUrl(d.code)} target="_blank" rel="noreferrer" title="Show Error Help (F1)">{d.code}</a> : d.code}</span>
@@ -118,6 +119,7 @@ export default function BuildPanel({ onOpen, onNotice, onClose }: { onOpen: (fil
                   <span role="gridcell" title={d.file}>{d.file?.split('/').pop() ?? ''}</span>
                   <span role="gridcell">{d.line ?? ''}</span>
                 </div>
+                </RowMenu>
                 </Fragment>
               ))}
             </div>

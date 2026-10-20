@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { addNoWarn } from '../src/project/projectText';
 import { configOf, readProperties, setProperty, setProperties, readEvents, setEvent, readUsings, setUsings, readReferences, setReferences, relativeProjectPath, readFileItem, setFileItem, isExcluded, setExcluded } from '../server/projectProps';
 
 const CSPROJ = `<Project Sdk="Microsoft.NET.Sdk">
@@ -79,5 +80,13 @@ describe('exclude from project (CSHARP-20)', () => {
     expect(x).toContain('<Compile Remove="Steps\\Old.cs" />');
     expect(isExcluded(x, 'Steps/Old.cs')).toBe(true);
     expect(setExcluded(x, 'Steps/Old.cs', false)).toBe(CSPROJ);
+  });
+});
+
+describe('project text helpers (CSHARP-20)', () => {
+  it('C13 NoWarn gains a code once', () => {
+    expect(addNoWarn(undefined, 'CS0168')).toBe('$(NoWarn);CS0168');
+    expect(addNoWarn('CS1591', 'CA1707')).toBe('$(NoWarn);CS1591;CA1707');
+    expect(addNoWarn('$(NoWarn);CS0168', 'cs0168')).toBe(null);
   });
 });

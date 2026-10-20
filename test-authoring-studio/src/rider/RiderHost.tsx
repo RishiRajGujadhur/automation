@@ -28,6 +28,7 @@ import { moreCommands } from './more';
 import { moreCommands2 } from './more2';
 import ProjectProperties from '../project/ProjectProperties';
 import FileItemProperties from '../project/FileItemProperties';
+import { addNoWarn } from '../project/projectText';
 import DiffApproval from '../DiffApproval';
 import type { FilePreview } from '../api';
 import WindowLayouts from './WindowLayouts';
@@ -81,7 +82,7 @@ export type RiderHostProps = {
  * JetBrains Rider features: registers their commands (menus, palette, desktop menus) and hosts their popups, dialogs
  * and global keys. Editor keys live in editor/riderKeys.ts.
  */
-type Popup = { kind: 'file-item'; project: string; file: string; exclude?: boolean } | { kind: 'project-previews'; previews: FilePreview[] } | { kind: 'project-props'; project: string } | { kind: 'text-preview'; text: string } | { kind: 'themes' } | { kind: 'whats-new' } | { kind: 'step-usages'; title: string; items: { file: string; line: number; text: string; scenario: string }[] } | { kind: 'compare-pair'; patch: string; left: string; right: string } | { kind: 'metrics'; file: string; types: TypeMetrics[] } | { kind: 'branches' } | { kind: 'stack-trace'; text: string } | { kind: 'file-props'; info: Record<string, string | number | boolean> } | { kind: 'switcher'; items: { file: string; label: string }[] } | { kind: 'window-layouts' } | { kind: 'convert-case' } | { kind: 'new-from-template'; folder: string } | { kind: 'new-file-name'; folder: string; template: string } | { kind: 'external-tools' } | { kind: 'compare-branch'; branches: string[] } | { kind: 'line-history'; file: string; start: number; end: number } | { kind: 'copy-path'; items: { label: string; value: string }[] } | { kind: 'unwrap'; items: Unwrappable[] } | { kind: 'compare-with'; files: string[] } | { kind: 'compare-file'; patch: string; other: string } | { kind: 'select-in'; file: string } | { kind: 'scratch' } | { kind: 'scratches'; items: { file: string; modified: number }[] } | { kind: 'related'; items: { file: string; line: number; reason: string }[] } | { kind: 'recent-changes'; items: { file: string; id: string; at: string; reason: string }[] } | { kind: 'file-history'; file: string; current: string } | { kind: 'compare'; patch: string; what: string } | { kind: 'regexp'; initial: string } | { kind: 'evaluate'; initial: string } | { kind: 'tip' } | { kind: 'productivity' } | { kind: 'run' } | { kind: 'paste' } | { kind: 'template' } | { kind: 'surround' } | { kind: 'structure'; items: OutlineItem[]; current: number };
+type Popup = { kind: 'file-item'; project: string; file: string; exclude?: boolean } | { kind: 'project-previews'; previews: FilePreview[]; title?: string } | { kind: 'project-props'; project: string } | { kind: 'text-preview'; text: string } | { kind: 'themes' } | { kind: 'whats-new' } | { kind: 'step-usages'; title: string; items: { file: string; line: number; text: string; scenario: string }[] } | { kind: 'compare-pair'; patch: string; left: string; right: string } | { kind: 'metrics'; file: string; types: TypeMetrics[] } | { kind: 'branches' } | { kind: 'stack-trace'; text: string } | { kind: 'file-props'; info: Record<string, string | number | boolean> } | { kind: 'switcher'; items: { file: string; label: string }[] } | { kind: 'window-layouts' } | { kind: 'convert-case' } | { kind: 'new-from-template'; folder: string } | { kind: 'new-file-name'; folder: string; template: string } | { kind: 'external-tools' } | { kind: 'compare-branch'; branches: string[] } | { kind: 'line-history'; file: string; start: number; end: number } | { kind: 'copy-path'; items: { label: string; value: string }[] } | { kind: 'unwrap'; items: Unwrappable[] } | { kind: 'compare-with'; files: string[] } | { kind: 'compare-file'; patch: string; other: string } | { kind: 'select-in'; file: string } | { kind: 'scratch' } | { kind: 'scratches'; items: { file: string; modified: number }[] } | { kind: 'related'; items: { file: string; line: number; reason: string }[] } | { kind: 'recent-changes'; items: { file: string; id: string; at: string; reason: string }[] } | { kind: 'file-history'; file: string; current: string } | { kind: 'compare'; patch: string; what: string } | { kind: 'regexp'; initial: string } | { kind: 'evaluate'; initial: string } | { kind: 'tip' } | { kind: 'productivity' } | { kind: 'run' } | { kind: 'paste' } | { kind: 'template' } | { kind: 'surround' } | { kind: 'structure'; items: OutlineItem[]; current: number };
 const TITLES: Record<Popup['kind'], string> = { 'file-item': 'File Properties', 'project-previews': 'Upgrade Target Framework', 'project-props': 'Project Properties', 'text-preview': 'Preview', themes: 'Quick Switch Theme', 'whats-new': "What's New", 'step-usages': 'Step Usages', 'compare-pair': 'Compare Files', metrics: 'Code Metrics', branches: 'Branches', 'stack-trace': 'Analyze Stack Trace', 'file-props': 'Properties', 'switcher': 'Switcher', 'window-layouts': 'Window Layouts', 'convert-case': 'Convert Case', 'new-from-template': 'New from Template', 'new-file-name': 'New File', 'external-tools': 'External Tools', 'compare-branch': 'Compare with Branch', 'line-history': 'History for Selection', 'copy-path': 'Copy Path / Reference', unwrap: 'Unwrap / Remove', 'compare-with': 'Compare With…', 'compare-file': 'Compare Files', 'select-in': 'Select In', scratch: 'New Scratch File', scratches: 'Scratch Files', related: 'Related Files', 'recent-changes': 'Recent Changes', 'file-history': 'Local History', compare: 'Compare with Clipboard', regexp: 'Check RegExp', evaluate: 'Evaluate Expression', tip: 'Tip of the Day', productivity: 'Productivity Guide', run: 'Run Anything', paste: 'Paste from History', template: 'Insert Live Template', surround: 'Surround With', structure: 'File Structure' };
 
 function PowerSaveBadge() {
@@ -309,9 +310,27 @@ export default function RiderHost(props: RiderHostProps) {
     window.addEventListener('tas:file-item', h);
     return () => window.removeEventListener('tas:file-item', h);
   }, []);
+  // Error List ▸ Suppress in Project File: the warning's code added to the project's NoWarn (previewed).
+  useEffect(() => {
+    const h = (e: Event) => {
+      const { code, project } = (e as CustomEvent<{ code: string; project: string }>).detail;
+      void (async () => {
+        const s = await api<{ projects?: { file: string }[] }>('/solution');
+        const file = (s.projects ?? []).map((x) => x.file).find((f) => f.split('/').pop()!.replace(/\.\w+proj$/i, '') === project);
+        if (!file) { p.current.onNotice(`No project file for ${project}.`); return; }
+        const props = await api<{ all: Record<string, string> }>(`/project/properties?project=${encodeURIComponent(file)}`);
+        const next = addNoWarn(props.all.NoWarn, code);
+        if (!next) { p.current.onNotice(`${code} is already suppressed in ${file}.`); return; }
+        const pv = await api<FilePreview>('/project/properties/preview', { project: file, set: { NoWarn: next } });
+        setPopup({ kind: 'project-previews', previews: [pv], title: `Suppress ${code} in Project File` });
+      })().catch((err) => p.current.onNotice((err as Error).message));
+    };
+    window.addEventListener('tas:suppress-warning', h);
+    return () => window.removeEventListener('tas:suppress-warning', h);
+  }, []);
   // Tools ▸ Upgrade Target Framework: the previewed project files.
   useEffect(() => {
-    const h = (e: Event) => setPopup({ kind: 'project-previews', previews: (e as CustomEvent<FilePreview[]>).detail });
+    const h = (e: Event) => { const d = (e as CustomEvent<FilePreview[] | { title: string; previews: FilePreview[] }>).detail; setPopup(Array.isArray(d) ? { kind: 'project-previews', previews: d } : { kind: 'project-previews', previews: d.previews, title: d.title }); };
     window.addEventListener('tas:project-previews', h);
     return () => window.removeEventListener('tas:project-previews', h);
   }, []);
@@ -670,7 +689,7 @@ export default function RiderHost(props: RiderHostProps) {
   }
   if (popup?.kind === 'whats-new') body = <WhatsNew />;
   if (popup?.kind === 'file-item') body = <FileItemProperties project={popup.project} file={popup.file} exclude={popup.exclude} onNotice={(m) => p.current.onNotice(m)} />;
-  if (popup?.kind === 'project-previews') body = <div className="project-props project-previews">{popup.previews.map((pv) => <DiffApproval key={pv.id} preview={pv} height="140px" onApplied={() => { p.current.onNotice(`${pv.file} upgraded.`); window.dispatchEvent(new Event('tas:rescan')); }} />)}</div>;
+  if (popup?.kind === 'project-previews') body = <div className="project-props project-previews">{popup.previews.map((pv) => <DiffApproval key={pv.id} preview={pv} height="140px" onApplied={() => { p.current.onNotice(`${pv.file} written.`); window.dispatchEvent(new Event('tas:rescan')); }} />)}</div>;
   if (popup?.kind === 'project-props') body = <ProjectProperties project={popup.project} onNotice={(m) => p.current.onNotice(m)} />;
   if (popup?.kind === 'text-preview') body = <pre className="text-preview" aria-label="Preview text">{popup.text}</pre>;
   if (popup?.kind === 'themes') body = <ListPopup label="Themes" placeholder="Theme…" empty="No themes." items={appThemes.map((t) => ({ key: t.id, label: `${prefsCtx.prefs.theme === t.id ? '✓ ' : ''}${t.label}`, detail: t.description }))} onPick={(k) => { setPopup(null); prefsCtx.setPrefs({ theme: k as AppThemeId }); p.current.onNotice(`Theme: ${appThemes.find((t) => t.id === k)?.label}.`); }} />;
@@ -721,7 +740,7 @@ export default function RiderHost(props: RiderHostProps) {
         {popup && (
           <Dialog.Content className="modal rider-popup" aria-describedby={undefined} onCloseAutoFocus={(e) => e.preventDefault()}>
             <div className="modal-header">
-              <Dialog.Title asChild><h2>{TITLES[popup.kind]}</h2></Dialog.Title>
+              <Dialog.Title asChild><h2>{popup.kind === 'project-previews' && popup.title ? popup.title : TITLES[popup.kind]}</h2></Dialog.Title>
               <Dialog.Close className="icon-button" aria-label="Close dialog"><X size={19} /></Dialog.Close>
             </div>
             <div className="modal-body">{body}</div>
