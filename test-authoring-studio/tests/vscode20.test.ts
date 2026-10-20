@@ -140,3 +140,19 @@ describe('V15 wheel delta', () => {
     expect(wheelDelta(1, 2, 20, 600, 5)).toBe(3000);
   });
 });
+import { mayClose, enclosingPair } from '../src/vscode/brackets';
+import { EditorState as ES } from '@codemirror/state';
+describe('V17 brackets', () => {
+  it('auto closing modes', () => {
+    expect(mayClose('never', '')).toBe(false);
+    expect(mayClose('beforeWhitespace', ' ')).toBe(true);
+    expect(mayClose('beforeWhitespace', 'x')).toBe(false);
+    expect(mayClose('languageDefined', 'x')).toBe(true);
+  });
+  it('the pair around the caret', () => {
+    const s = ES.create({ doc: 'f(a, [b], c)' });
+    expect(enclosingPair(s, 4)).toEqual([1, 11]);
+    expect(enclosingPair(s, 7)).toEqual([5, 7]);
+    expect(enclosingPair(s, 0)).toBeNull();
+  });
+});

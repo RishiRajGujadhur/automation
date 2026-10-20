@@ -370,3 +370,25 @@ test('V16 Folding: controls on mouse over, folded highlight, folding off', async
   await page.waitForTimeout(300);
   await expect(view(page).locator('.cm-foldPlaceholder')).toHaveCount(0);
 });
+
+test('V17 Brackets: match always, auto closing never / before whitespace', async ({ page }) => {
+  const text = () => page.evaluate(() => (window as unknown as { __activeEditor: () => { view: { state: { doc: { toString(): string } } } } }).__activeEditor().view.state.doc.toString());
+  await open(page, 'Steps/AuthSteps.cs', { 'editor.autoClosingBrackets': 'never', 'editor.autoClosingQuotes': 'beforeWhitespace' });
+  await setDoc(page, 'Call(first, second);\n');
+  await page.evaluate(() => { const v = (window as unknown as { __activeEditor: () => { view: { dispatch(x: unknown): void; focus(): void } } }).__activeEditor().view; v.dispatch({ selection: { anchor: 8 } }); v.focus(); });
+  await expect(view(page).locator('.cm-vsc-enclosing')).toHaveCount(2);
+  await page.keyboard.press('End');
+  await page.keyboard.press('Enter');
+  await page.keyboard.type('x(');
+  expect(await text()).toMatch(/x\($/m);
+  await page.keyboard.type('"');
+  expect(await text()).toMatch(/x\(""$/m);
+  // Before a character: no closing quote.
+  await page.keyboard.press('Home');
+  await page.keyboard.type('"');
+  expect(await text()).toMatch(/^"x\(""$/m);
+  // Never: no highlight away from the brackets.
+  await setSettings(page, { 'editor.matchBrackets': 'never' });
+  await caretLine(page, 1);
+  await expect(view(page).locator('.cm-vsc-enclosing')).toHaveCount(0);
+});

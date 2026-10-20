@@ -12,4 +12,5 @@ import './filesOnSave';
 import './suggestions';
 import './scrolling';
 import './folding';
+import './brackets';
 export { SETTINGS } from './settings';
