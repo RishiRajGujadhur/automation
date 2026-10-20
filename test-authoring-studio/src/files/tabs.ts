@@ -1,5 +1,6 @@
 import { useSyncExternalStore } from 'react';
 import { fileSource, isBrowser } from './provider';
+import { featureOn } from '../features';
 
 /**
  * Open editors, like VS Code's editor tabs: one tab per file, the active one shown. Feature files from the
@@ -13,7 +14,10 @@ const read = (): State => { try { return JSON.parse(localStorage.getItem(key()) 
 let state: State = read();
 let loadedFor = key();
 const listeners = new Set<() => void>();
+// Most recently used tabs, newest first (for closing the active tab).
+let used: string[] = [];
 function set(next: State) {
+  if (next.active && next.active !== used[0]) used = [next.active, ...used.filter((f) => f !== next.active)].slice(0, 50);
   state = next;
   try { localStorage.setItem(key(), JSON.stringify(next)); } catch { /* storage blocked */ }
   for (const l of listeners) l();
@@ -49,7 +53,9 @@ export function closeTab(file: string) {
   if (i < 0) return;
   remember([file]);
   const tabs = state.tabs.filter((t) => t.file !== file);
-  const active = state.active === file ? (tabs[i] ?? tabs[i - 1])?.file : state.active;
+  // The tab used before this one becomes active (Visual Studio's 'activate most recently used'), else its neighbour.
+  const mru = featureOn('mru-close') ? used.find((f) => f !== file && tabs.some((t) => t.file === f)) : undefined;
+  const active = state.active === file ? mru ?? (tabs[i] ?? tabs[i - 1])?.file : state.active;
   set({ tabs, active });
 }
 // Bulk closes keep pinned tabs, as in VS Code / Visual Studio.
