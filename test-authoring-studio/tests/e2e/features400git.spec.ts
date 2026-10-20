@@ -174,3 +174,29 @@ test('159 Changelist management', async ({ page }) => {
   expect(git('show', '--name-only', '--format=', 'HEAD').trim()).toBe('Steps/AuthSteps.cs');
   expect(git('status', '--porcelain').trim()).toContain('Steps/SearchSteps.cs');
 });
+
+test('154 Three-way merge editor', async ({ page }) => {
+  const file = path.join(root, 'Steps/AuthSteps.cs');
+  const original = await fs.readFile(file, 'utf8');
+  git('checkout', '-q', '-b', 'other');
+  await fs.writeFile(file, original.replace('namespace Demo;', 'namespace Demo.Theirs;'));
+  git('commit', '-q', '-am', 'Theirs');
+  git('checkout', '-q', 'main');
+  await fs.writeFile(file, original.replace('namespace Demo;', 'namespace Demo.Ours;'));
+  git('commit', '-q', '-am', 'Ours');
+  try { git('merge', 'other'); } catch { /* conflict expected */ }
+  await open(page);
+  const view = await gitChanges(page);
+  await view.getByRole('button', { name: 'Open Merge Editor for Steps/AuthSteps.cs' }).click();
+  const me = page.getByRole('region', { name: 'Merge Editor Steps/AuthSteps.cs' });
+  await expect(me.getByLabel('Current')).toContainText('namespace Demo.Ours;');
+  await expect(me.getByLabel('Incoming')).toContainText('namespace Demo.Theirs;');
+  await expect(me).toContainText('1 conflict left');
+  await expect(me.getByRole('button', { name: 'Complete Merge' })).toBeDisabled();
+  await me.getByRole('button', { name: 'Accept Incoming' }).click();
+  await expect(me).toContainText('No conflicts left');
+  await me.getByRole('button', { name: 'Complete Merge' }).click();
+  await expect(me).toHaveCount(0);
+  expect((await fs.readFile(file, 'utf8')).replace(/\r\n/g, '\n')).toContain('namespace Demo.Theirs;');
+  expect(git('diff', '--name-only', '--diff-filter=U').trim()).toBe('');
+});

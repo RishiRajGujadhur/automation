@@ -140,3 +140,20 @@ export async function bisect(root: string, action: 'start' | 'good' | 'bad' | 's
   const found = /^([0-9a-f]{7,40}) is the first '?bad'? commit/m.exec(out);
   return { output: out.trim().split('\n').slice(0, 6).join('\n'), firstBad: found?.[1], ...(await bisectStatus(root)) };
 }
+
+/** Three-way merge of a conflicted file: base (:1), current (:2, ours), incoming (:3, theirs) and the working text. */
+export async function mergeSides(root: string, file: string) {
+  const { top, prefix } = await locate(root);
+  const rel = prefix ? `${prefix}/${file}` : file;
+  const stage = (n: number) => git(top, ['show', `:${n}:${rel}`]).catch(() => '');
+  const [base, current, incoming] = await Promise.all([stage(1), stage(2), stage(3)]);
+  const result = await fs.readFile(path.join(root, file), 'utf8').catch(() => '');
+  return { base, current, incoming, result };
+}
+/** Complete Merge: the result is written and staged (marked resolved). */
+export async function completeMerge(root: string, file: string, text: string) {
+  const { top, prefix } = await locate(root);
+  if (/^(<{7}|>{7}) /m.test(text)) throw new Error('The result still has conflict markers.');
+  await fs.writeFile(path.join(root, file), text, 'utf8');
+  await git(top, ['add', '--', prefix ? `${prefix}/${file}` : file]);
+}

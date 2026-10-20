@@ -8,6 +8,9 @@ import { useConfirm } from '../radix2';
 import { fileType } from '../files/fileTypes';
 import { FILES_CHANGED_EVENT, UNSAVED_REFRESH, GIT_CHANGED_EVENT } from '../editor/events';
 import Worktrees from './Worktrees';
+import MergeEditor from './MergeEditor';
+import { usePrefs } from '../radix2';
+import { resolveEditorTheme } from '../themes';
 import { issueKey, withIssueKey, COMMIT_TYPES, withCommitType, withoutTemplateComments } from './commitTools';
 
 type GitFile = { file: string; staged: boolean; status: 'M' | 'A' | 'D' | 'R' | 'U' | '?'; from?: string };
@@ -24,6 +27,9 @@ export default function GitView({ onOpen, onNotice, onChanged }: { onOpen: (file
   const [st, setSt] = useState<GitStatus>();
   // The commit message draft survives a reload (QOL-50).
   const [message, setMessage] = useLocalState('gitCommitDraft', '');
+  // Merge Editor for a conflicted file.
+  const [merging, setMerging] = useState<string>();
+  const { prefs } = usePrefs();
   // Changelists (Rider): named groups of changes per repository; a changelist commits on its own.
   const [allLists, setAllLists] = useLocalState<Record<string, Record<string, string[]>>>('changelists', {});
   // Commit message template (git's commit.template or .gitmessage): an empty box starts with it.
@@ -125,6 +131,7 @@ export default function GitView({ onOpen, onNotice, onChanged }: { onOpen: (file
           <small>{dir}</small>
         </button>
         <span className="git-actions">
+          {f.status === 'U' && featureOn('git-merge-editor') && <button className="icon-button" aria-label={`Open Merge Editor for ${f.file}`} title="Open Merge Editor" disabled={busy} onClick={() => setMerging(f.file)}><GitMerge size={13} /></button>}
           {!f.staged && featureOn('git-changelists') && <button className="icon-button" aria-label={`Move ${f.file} to changelist`} title="Move to Changelist…" disabled={busy} onClick={() => moveTo(f.file)}><ListPlus size={13} /></button>}
           {!f.staged && <button className="icon-button" aria-label={`Discard changes to ${f.file}`} title="Discard Changes" disabled={busy} onClick={() => void discard([f.file])}><Undo2 size={13} /></button>}
           {f.staged
@@ -219,6 +226,7 @@ export default function GitView({ onOpen, onNotice, onChanged }: { onOpen: (file
         </>)}
         {st && !st.files.length && <p className="explorer-empty">No changes.</p>}
         {featureOn('git-worktrees') && <Worktrees onNotice={onNotice} />}
+        {merging && <div className="merge-overlay"><MergeEditor file={merging} theme={resolveEditorTheme(prefs.editorTheme, prefs.theme).ext} onNotice={onNotice} onClose={() => setMerging(undefined)} onDone={() => { setMerging(undefined); window.dispatchEvent(new CustomEvent(FILES_CHANGED_EVENT, { detail: [merging] })); window.dispatchEvent(new Event(GIT_CHANGED_EVENT)); void refresh(); }} /></div>}
         <section className="git-group" aria-label="History">
           <div className="git-group-head">
             <button className="se-twisty" aria-label={`${closed.has('history') ? 'Expand' : 'Collapse'} History`} aria-expanded={!closed.has('history')} onClick={() => toggle('history')}>{closed.has('history') ? <ChevronRight size={12} /> : <ChevronDown size={12} />}</button>

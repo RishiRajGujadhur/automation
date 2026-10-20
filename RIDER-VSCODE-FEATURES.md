@@ -180,7 +180,7 @@ Legend: `[x]` done · `[ ]` to do.
 - [x] 151. Git history graph — Git Log
 - [x] 152. File history inspection — Show History for File
 - [x] 153. Line history inspection — Show History for Selection
-- [ ] 154. Three-way merge editor
+- [x] 154. Three-way merge editor — Git Changes: Open Merge Editor on a conflicted file (Current, Incoming, Result; Accept per conflict; Complete Merge stages it) (2026-10-21)
 - [x] 155. Conflict resolution tools — merge conflict actions (current / incoming / both)
 - [x] 156. Git worktree management — Git Changes ▸ Worktrees: list, add (new / existing branch), open in the studio, remove (2026-10-21)
 - [x] 157. Git stash management — Shelf (stash)
@@ -376,3 +376,4 @@ Legend: `[x]` done · `[ ]` to do.
 - 2026-10-21 156: Worktrees of the repository in Git Changes: add one beside the repository, open it as the workspace, remove it (not the main or the open one).
 - 2026-10-21 164: git bisect from Git Log: mark a bad and a good commit, then test each commit git checks out until it names the first bad one; git commands also retry when the index is locked by a concurrent refresh.
 - 2026-10-21 159: Changed files can be grouped in named changelists (kept per repository); each changelist commits on its own, leaving the other changes uncommitted.
+- 2026-10-21 154: A three-way merge editor for conflicted files: both sides read-only over the editable result; Complete Merge refuses while conflict markers remain.

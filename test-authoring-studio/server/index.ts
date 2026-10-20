@@ -40,7 +40,7 @@ import { Builder } from './build.js';
 import { findInFiles, replaceInFiles, searchEditorText, parseSearchEditor, searchEditorName, SEARCH_EDITOR_DIR } from './search.js';
 import { values, render, parameterCount, replaceAttributePattern } from './stepRename.js';
 import { installed as nugetInstalled, updates as nugetUpdates, search as nugetSearch, versions as nugetVersions, install as nugetInstall, uninstall as nugetUninstall } from './nuget.js';
-import { commitTemplate, compareCommits, rebaseCommits, interactiveRebase, squashCommits, listWorktrees, addWorktree, removeWorktree, bisectStatus, bisect } from './git2.js';
+import { commitTemplate, compareCommits, rebaseCommits, interactiveRebase, squashCommits, listWorktrees, addWorktree, removeWorktree, bisectStatus, bisect, mergeSides, completeMerge } from './git2.js';
 import { status as gitStatus, stage as gitStage, unstage as gitUnstage, discard as gitDiscard, commit as gitCommit, headInfo, log as gitLog, branches as gitBranches, checkout as gitCheckout, createBranch as gitCreateBranch, sync as gitSync, merge as gitMerge, blame as gitBlame, clone as gitClone, shelves, shelve, unshelve, deleteShelf, lineHistory, commitDetails, graphLog, fileAt, commitAction, git, stageLines } from './git.js';
 import { readProperties, setProperties, evaluate, readEvents, setEvent, readUsings, setUsings, readReferences, setReferences, readFileItem, setFileItem, isExcluded, setExcluded } from './projectProps.js';
 import { findPattern, replacePattern } from '../src/search/ssr.js';
@@ -808,6 +808,19 @@ app.post('/api/git/bisect', async (req, res) => {
   const r = await bisect(config.repositoryRoot, action, ref);
   rescanSoon(500);
   res.json(r);
+});
+// Merge Editor: the three sides of a conflicted file; Complete Merge writes the result and stages it.
+app.get('/api/git/merge-sides', async (req, res) => {
+  const file = z.string().min(1).max(400).parse(req.query.file);
+  await confined(config.repositoryRoot, file);
+  res.json(await mergeSides(config.repositoryRoot, file));
+});
+app.post('/api/git/merge-complete', async (req, res) => {
+  const { file, text } = z.object({ file: z.string().min(1).max(400), text: z.string().max(5_000_000) }).parse(req.body);
+  await confined(config.repositoryRoot, file);
+  await completeMerge(config.repositoryRoot, file, text);
+  rescanSoon(300);
+  res.json({ status: await gitStatus(config.repositoryRoot) });
 });
 // Compare two commits (Git Log: Ctrl+click a second commit).
 app.get('/api/git/compare', async (req, res) => {
