@@ -508,6 +508,7 @@ export const FEATURES: Feature[] = [
   { id: 'unused-steps', label: 'Fade unused step definitions', group: 'Code intelligence', essential: true, vs: 'Reqnroll: unused step definition', description: 'In C# step files, step definitions no feature uses are faded, with a tooltip saying so (Rider\'s Reqnroll support).' },
   { id: 'same-binding', label: 'Highlight steps with the same definition', group: 'Gherkin', essential: true, vs: 'Highlight references', description: 'With the caret on a step, the other steps of the file bound to the same step definition are highlighted.' },
   { id: 'temporary-breakpoint', label: 'Temporary breakpoints', group: 'Debugging', essential: false, description: 'Tools ▸ Toggle Temporary Breakpoint sets a breakpoint that removes itself once the debugger stops on it (Rider\'s "Remove once hit").', commands: ['temporary-breakpoint'] },
+  { id: 'goto-calculator', label: 'Calculator in Go to All', group: 'Navigation', essential: false, description: 'Typing arithmetic (2*(3+4)) in Go to All (Ctrl+T) shows the result first; Enter copies it.' },
 ];
 export const GROUPS: FeatureGroup[] = ['Editing', 'Navigation', 'Code intelligence', 'Tool windows', 'Files', 'Git', 'Gherkin', 'View', 'Debugging', 'Help and productivity'];
 

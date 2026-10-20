@@ -1,6 +1,8 @@
 import { useEffect, useMemo, useState } from 'react';
 import { featureOn } from '../features';
-import { FileCode2, Boxes, Braces, SquareFunction, Variable, FileText, ListTree, Zap, History } from 'lucide-react';
+import { calculate } from './calc';
+import { copyText } from '../ui';
+import { FileCode2, Boxes, Braces, SquareFunction, Variable, FileText, ListTree, Zap, History, Calculator } from 'lucide-react';
 import { recentFiles } from '../navHistory';
 import { api } from '../api';
 import { fileType } from '../files/fileTypes';
@@ -66,6 +68,9 @@ export default function GoToAll({ features, onOpen, onClose, actions = [] }: { f
         if (fs > 0) out.push({ key: `ft:${f.file}`, group: 'Features', label: f.name, detail: f.file, file: f.file, icon: FileText, color: fileType(f.file).color, score: fs });
         for (const sc of f.scenarios) { const s = fuzzy(sc.name, q); if (s > 0 && q) out.push({ key: `sc:${f.file}:${sc.name}`, group: 'Features', label: sc.name, detail: `scenario · ${f.file}`, file: f.file, line: sc.line, icon: ListTree, score: s }); }
       }
+    // Calculator (Rider's Search Everywhere): arithmetic shows its result first; Enter copies it.
+    const result = featureOn('goto-calculator') && (filter === 'All' || filter === 'Actions') ? calculate(q) : null;
+    if (result !== null) out.push({ key: 'calc', group: 'Calculator', label: `= ${result}`, detail: 'Enter copies the result', run: () => void copyText(String(result)).then((ok) => window.dispatchEvent(new CustomEvent('tas:notice', { detail: ok ? `Copied ${result}` : 'Clipboard unavailable.' }))), icon: Calculator, score: Number.MAX_SAFE_INTEGER } as never);
     return out.sort((a, b) => b.score - a.score).slice(0, 80);
   }, [files, symbols, features, query, filter, actions]);
   useEffect(() => setIndex(0), [query, filter]);

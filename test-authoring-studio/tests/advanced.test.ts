@@ -4,6 +4,7 @@ import { selectHunks } from '../server/git';
 import { outlinePreview } from '../src/editor/gherkinTools';
 import { EditorState } from '@codemirror/state';
 import { addToHistory, repeatSummary } from '../src/testing/store';
+import { calculate } from '../src/search/calc';
 
 describe('advanced features (ADVANCED-20)', () => {
   it('registry starts empty', () => { expect(true).toBe(true); });
@@ -62,5 +63,14 @@ describe('advanced features (ADVANCED-20)', () => {
     const lines = ['void M()', '{', '    var total = a + b;', '    Log("a total");', '    // b', '    return total;'];
     const m = inlineValuesFor(lines, 1, 6, [{ name: 'a', value: '2' }, { name: 'b', value: '3' }, { name: 'total', value: '5' }]);
     expect([...m]).toEqual([[3, 'a = 2, b = 3, total = 5'], [6, 'total = 5']]);
+  });
+  it('Z13 Search Everywhere calculator', () => {
+    expect(calculate('2 * (3 + 4)')).toBe(14);
+    expect(calculate('2^3^2')).toBe(512);
+    expect(calculate('-3 + 10 % 4')).toBe(-1);
+    expect(calculate('0.1 + 0.2')).toBe(0.3);
+    expect(calculate('1/0')).toBe(null);
+    expect(calculate('42')).toBe(null);
+    expect(calculate('login')).toBe(null);
   });
 });
