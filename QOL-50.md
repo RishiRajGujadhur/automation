@@ -69,6 +69,7 @@ Every improvement is verified by a unit or Playwright test (`tests/e2e/qol50.spe
 | QL60 | New File opens an existing file | Explorer | ✅ 2026-10-20 |
 | QL61 | Explorer: folders open while dragging | Explorer | ✅ 2026-10-20 |
 | QL62 | Explorer keeps its scroll position | Explorer | ✅ 2026-10-20 |
+| QL63 | Explorer: Ctrl+click opens to the side | Explorer | ✅ 2026-10-20 |
 
 ## Progress log
 - 2026-10-20 QL1: Title names the file and workspace folder
@@ -133,3 +134,4 @@ Every improvement is verified by a unit or Playwright test (`tests/e2e/qol50.spe
 - 2026-10-20 QL60: Existing name opens the file
 - 2026-10-20 QL61: Drag-hover expands folders
 - 2026-10-20 QL62: Scroll kept after reload
+- 2026-10-20 QL63: Ctrl+click opens in the split editor

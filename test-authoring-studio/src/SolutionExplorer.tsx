@@ -377,7 +377,7 @@ export default function SolutionExplorer({ features, revision, activeFile, query
               draggable={featureOn('drag-path')} onDragStart={(e) => { e.dataTransfer.setData('text/plain', path); e.dataTransfer.setData('application/x-tas-path', path); e.dataTransfer.effectAllowed = 'copyMove'; }} data-path={extra?.linked ? undefined : path}
               title={extra?.note ? `${path} · ${extra.note}` : path}
               aria-current={isActive(path) && !extra?.linked ? 'page' : undefined}
-              onClick={() => open(path)}
+              onClick={(e) => { if ((e.ctrlKey || e.metaKey) && featureOn('ctrl-click-side') && !path.endsWith('.feature') && !browserSolution) { window.dispatchEvent(new CustomEvent('tas:open-split', { detail: path })); return; } open(path); }}
               onDoubleClick={() => keepTab(path)}
               onAuxClick={(e) => { if (e.button === 1 && featureOn('explorer-middle-click')) { e.preventDefault(); open(path); setTimeout(() => keepTab(path)); } }}
             >

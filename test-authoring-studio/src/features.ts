@@ -359,6 +359,7 @@ export const FEATURES: Feature[] = [
   { id: 'new-file-existing', label: 'New File opens an existing file', group: 'Files', essential: true, description: 'New File with the name of an existing file opens that file instead of failing.' },
   { id: 'drag-expand', label: 'Explorer: folders open while dragging', group: 'Files', essential: true, description: 'Holding a dragged file over a collapsed folder opens it after a moment.' },
   { id: 'explorer-scroll', label: 'Explorer keeps its scroll position', group: 'Files', essential: true, description: 'After a reload the Explorer is scrolled where it was.' },
+  { id: 'ctrl-click-side', label: 'Explorer: Ctrl+click opens to the side', group: 'Files', essential: true, vs: 'Open to the Side (Ctrl+click)', description: 'Ctrl+click on a file opens it in the split editor.' },
 ];
 export const GROUPS: FeatureGroup[] = ['Editing', 'Navigation', 'Code intelligence', 'Tool windows', 'Files', 'Git', 'Gherkin', 'View', 'Debugging', 'Help and productivity'];
 
