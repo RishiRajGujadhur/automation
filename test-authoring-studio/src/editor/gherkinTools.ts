@@ -607,3 +607,11 @@ export function tableDuplicateRow(view: EditorView) {
   rows.splice(t.row + 1, 0, [...t.rows[t.row]]);
   return writeTable(view, t, rows, t.row + 1, t.col);
 }
+
+/** Table ▸ Delete Row: removes the caret's row (not the table's only row). */
+export function tableDeleteRow(view: EditorView) {
+  const t = tableAt(view.state);
+  if (!t || t.rows.length < 2) return false;
+  const rows = t.rows.filter((_, i) => i !== t.row);
+  return writeTable(view, t, rows, Math.min(t.row, rows.length - 1), t.col);
+}
