@@ -1,12 +1,13 @@
 import type { RiderCommand } from './commands';
 import type { MoreHelpers } from './more';
+import { livingDocHtml, type DocFeature } from '../testing/livingDoc';
 import { GIT_CHANGED_EVENT } from '../editor/events';
 import { nextConflict } from '../editor/advanced';
 import { getSnapshot, setBreakpoints, specAt, breakpointsOf, updateBreakpoint } from '../debug/store';
 import { unsavedFiles } from '../editor/autosave';
 import { createTwoFilesPatch } from 'diff';
 import { readFile, isBrowser, renamePath } from '../files/provider';
-import { discoverTests, runTests } from '../testing/store';
+import { discoverTests, runTests, getTestRun, outcomeOf } from '../testing/store';
 import { forEachDiagnostic } from '@codemirror/lint';
 import { api } from '../api';
 import { getTabs, setPinned, movedPath, closeLeastRecent } from '../files/tabs';
@@ -126,5 +127,6 @@ export function moreCommands2(h: MoreHelpers): RiderCommand[] {
     { id: 'outline-preview', label: 'Preview Expanded Outline', menu: 'Code', submenu: 'Gherkin', run: h.inEditor((v) => { const text = outlinePreview(v.state); if (!text) { h.notice('Put the caret in a Scenario Outline with Examples.'); return; } window.dispatchEvent(new CustomEvent('tas:text-preview', { detail: text })); }) },
     { id: 'temporary-breakpoint', label: 'Toggle Temporary Breakpoint', menu: 'Tools', shortcut: 'Ctrl Alt Shift F8', run: h.inEditor((v, file) => { const line = v.state.doc.lineAt(v.state.selection.main.head).number; const lines = breakpointsOf(file); if (lines.includes(line)) { setBreakpoints(file, lines.filter((l) => l !== line)); h.notice('Breakpoint removed.'); return; } setBreakpoints(file, [...lines, line]); updateBreakpoint(file, line, { temporary: true }); h.notice(`Temporary breakpoint on line ${line}: removed once hit.`); }) },
     { id: 'import-csv', label: 'Import CSV as Table…', menu: 'Code', submenu: 'Gherkin', run: h.inEditor((v) => { const input = document.createElement('input'); input.type = 'file'; input.accept = '.csv,.tsv,.txt,text/csv'; input.onchange = () => { const f = input.files?.[0]; if (!f) return; if (f.size > 2_000_000) { h.notice('The file is over 2 MB.'); return; } void f.text().then((t) => { if (!pasteAsTable(t)(v)) h.notice(`${f.name} has no rows.`); else h.notice(`Imported ${f.name} as a table.`); }); }; input.click(); }) },
+    { id: 'living-doc', label: 'Export Living Documentation…', menu: 'Tools', run: () => { void (async () => { const corpus = await api<{ features: DocFeature[] }>('/design/corpus'); const { tests } = await discoverTests().catch(() => ({ tests: [] as Awaited<ReturnType<typeof discoverTests>>['tests'] })); const run = getTestRun(); const outcome = (file: string, line: number, name: string) => { const t = tests.find((x) => x.kind === 'scenario' && x.file === file && (x.line === line || x.name === name)); const o = t ? outcomeOf(t, run) : 'none'; return o === 'passed' || o === 'failed' || o === 'skipped' ? o : 'none'; }; const html = livingDocHtml(corpus.features, outcome); const url = URL.createObjectURL(new Blob([html], { type: 'text/html' })); const a = document.createElement('a'); a.href = url; a.download = 'living-documentation.html'; a.click(); setTimeout(() => URL.revokeObjectURL(url), 1000); h.notice(`Exported ${corpus.features.length} features as living documentation.`); })().catch((e) => h.notice((e as Error).message)); } },
   ];
 }

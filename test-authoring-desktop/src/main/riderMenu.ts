@@ -380,6 +380,7 @@ const ROWS: Record<'edit' | 'view' | 'navigate' | 'code' | 'tools' | 'help', Row
     ['Character Info at Caret', 'char-info'],
     ['Stage Selected Lines', 'stage-lines'],
     ['Toggle Temporary Breakpoint', 'temporary-breakpoint', 'CmdOrCtrl+Alt+Shift+F8'],
+    ['Export Living Documentation…', 'living-doc'],
   ],
   help: [
     null,

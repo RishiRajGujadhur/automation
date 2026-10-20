@@ -511,6 +511,7 @@ export const FEATURES: Feature[] = [
   { id: 'goto-calculator', label: 'Calculator in Go to All', group: 'Navigation', essential: false, description: 'Typing arithmetic (2*(3+4)) in Go to All (Ctrl+T) shows the result first; Enter copies it.' },
   { id: 'step-param-hints', label: 'Parameter name hints in steps', group: 'Gherkin', essential: false, vs: 'Inlay hints', description: 'Feature files show the step definition\'s parameter name before each argument of a bound step (userName: "admin").' },
   { id: 'import-csv', label: 'Import CSV as Table', group: 'Gherkin', essential: false, description: 'Code ▸ Gherkin reads a CSV (or TSV) file into an aligned Gherkin table under the caret, e.g. for Examples.', commands: ['import-csv'] },
+  { id: 'living-doc', label: 'Export Living Documentation', group: 'Tool windows', essential: false, vs: 'Reqnroll LivingDoc', description: 'Tools ▸ Export Living Documentation saves one HTML page with every feature, scenario, tag and step and the last run\'s outcomes (like SpecFlow+ LivingDoc).', commands: ['living-doc'] },
 ];
 export const GROUPS: FeatureGroup[] = ['Editing', 'Navigation', 'Code intelligence', 'Tool windows', 'Files', 'Git', 'Gherkin', 'View', 'Debugging', 'Help and productivity'];
 

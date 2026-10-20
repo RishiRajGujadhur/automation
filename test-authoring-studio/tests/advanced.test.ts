@@ -5,6 +5,7 @@ import { outlinePreview } from '../src/editor/gherkinTools';
 import { EditorState } from '@codemirror/state';
 import { addToHistory, repeatSummary } from '../src/testing/store';
 import { calculate } from '../src/search/calc';
+import { livingDocHtml } from '../src/testing/livingDoc';
 
 describe('advanced features (ADVANCED-20)', () => {
   it('registry starts empty', () => { expect(true).toBe(true); });
@@ -72,5 +73,12 @@ describe('advanced features (ADVANCED-20)', () => {
     expect(calculate('1/0')).toBe(null);
     expect(calculate('42')).toBe(null);
     expect(calculate('login')).toBe(null);
+  });
+  it('Z16 living documentation HTML', () => {
+    const html = livingDocHtml([{ file: 'Features/A.feature', name: 'Sign <in>', tags: ['@auth'], scenarios: [{ name: 'Works', line: 3, steps: [{ keyword: 'Given ', text: 'a "user"' }] }, { name: 'Fails', line: 6, steps: [] }] }], (_f, line) => (line === 3 ? 'passed' : 'failed'), 'Docs', new Date(Date.UTC(2026, 9, 20, 9, 30)));
+    expect(html).toContain('<h2>Sign &lt;in&gt; <span class="tags">@auth</span></h2>');
+    expect(html).toContain('1 features · 2 scenarios · 1 passed · 1 failed · 0 skipped · 0 not run · 2026-10-20 09:30 UTC');
+    expect(html).toContain('<details open><summary><span class="o failed">failed</span> Fails');
+    expect(html).toContain('<li><b>Given</b> a &quot;user&quot;</li>');
   });
 });
