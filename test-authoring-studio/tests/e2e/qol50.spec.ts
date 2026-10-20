@@ -275,7 +275,7 @@ test('QL34 Keyboard shortcuts dialog: filter', async ({ page }) => {
   const all = await rows.count();
   await filter.fill('ctrl s');
   await expect.poll(() => rows.count()).toBeLessThan(all);
-  await expect(dlg.locator('.shortcut-list')).toContainText(/Ctrl.?S/i);
+  await expect(dlg.locator('.shortcut-list')).toContainText('Ctrl/Cmd + S');
 });
 
 test('QL35 / QL36 Settings remembers its section and search', async ({ page }) => {

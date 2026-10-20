@@ -330,6 +330,7 @@ export const FEATURES: Feature[] = [
   { id: 'busy-title', label: 'Busy window title', group: 'Help and productivity', essential: true, description: 'The window (and taskbar) title says "Building" or "Running tests" while they run.' },
   { id: 'toast-copy', label: 'Copy a message', group: 'Help and productivity', essential: true, description: 'Every message pop-up has a Copy button (for errors in a bug report).' },
   { id: 'notification-links', label: 'Clickable file:line in notifications', group: 'Help and productivity', essential: true, description: 'file:line references in the Notifications window open the file there.' },
+  { id: 'shortcut-filter', label: 'Keyboard shortcuts: filter', group: 'Help and productivity', essential: true, description: 'The keyboard shortcuts dialog filters by key or action as you type.' },
 ];
 export const GROUPS: FeatureGroup[] = ['Editing', 'Navigation', 'Code intelligence', 'Tool windows', 'Files', 'Git', 'Gherkin', 'View', 'Debugging', 'Help and productivity'];
 

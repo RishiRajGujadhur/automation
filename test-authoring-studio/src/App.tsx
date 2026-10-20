@@ -249,6 +249,7 @@ export default function App() {
   const [modal, setModal] = useState<string>();
   const [error, setError] = useState('');
   const [notice, setNotice] = useState('');
+  const [shortcutQuery, setShortcutQuery] = useState('');
   // Do Not Disturb (VS Code / Visual Studio notifications): messages go to the Notifications window only.
   const viewOpts = useViewOptions();
   // Notifications window: every notice is kept for the session.
@@ -2563,9 +2564,10 @@ export default function App() {
                   </>
                 )}
                 {modal === 'preferences' && <StudioSettings onNotice={setNotice} onWorkspace={() => setModal('settings')} shortcuts={shortcuts} onClose={() => setModal(undefined)} />}
+                {modal === 'shortcuts' && featureOn('shortcut-filter') && <input className="shortcut-filter" aria-label="Filter shortcuts" placeholder="Filter by key or action (e.g. ctrl k, save)" autoFocus value={shortcutQuery} onChange={(e) => setShortcutQuery(e.target.value)} />}
                 {modal === 'shortcuts' && (
                   <dl className="shortcut-list">
-                    {shortcuts.map(([k, d]) => (
+                    {shortcuts.filter(([k, d]) => { const q = shortcutQuery.trim().toLowerCase(); const words = q.split(/\s+/).filter(Boolean); const keys = k.toLowerCase().split(/[^a-z0-9]+/); return !words.length || words.every((w) => keys.includes(w)) || `${k} ${d}`.toLowerCase().includes(q); }).map(([k, d]) => (
                       <React.Fragment key={k}>
                         <dt><kbd>{k}</kbd></dt>
                         <dd>{d}</dd>
