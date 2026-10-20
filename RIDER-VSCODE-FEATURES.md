@@ -233,7 +233,7 @@ Legend: `[x]` done · `[ ]` to do.
 - [x] 213. Automatic import removal — remove unused usings
 - [ ] 214. Import alias generation
 - [x] 215. Namespace import optimization — Organize Usings, Code Cleanup
-- [ ] 216. Code formatting on save
+- [x] 216. Code formatting on save — editor.formatOnSave: C# (Roslyn + .editorconfig), feature files, JSON (2026-10-21)
 - [ ] 217. Code actions on save
 - [ ] 218. Format modified lines only
 - [x] 219. Language-specific formatting rules — .editorconfig
@@ -363,3 +363,4 @@ Legend: `[x]` done · `[ ]` to do.
 - 2026-10-21 177: Comment-marked regions fold (nested too); the start and end patterns are settings.
 - 2026-10-21 175: Typing in an opening or closing tag name renames its partner (comments, CDATA and self-closing tags skipped).
 - 2026-10-21 336: Find in Selection limits Enter, Shift+Enter, Select All and Replace All of the find panel to the selected text, shaded while it is the scope.
+- 2026-10-21 216: Saving formats the file first (C# with Roslyn and .editorconfig, Gherkin, JSON); the editor takes the formatted text.

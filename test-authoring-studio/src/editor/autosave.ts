@@ -2,7 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { FILE_SAVED_EVENT } from './events';
 import { saveFile } from '../files/provider';
 import { usePrefs } from '../radix2';
-import { applyOnSave, SAVED_TEXT_EVENT } from '../vscode/filesOnSave';
+import { transformOnSave, SAVED_TEXT_EVENT } from '../vscode/filesOnSave';
 
 /** SHA-256 hex, identical to the server's createHash('sha256') so the editor can prove what it loaded. */
 export async function sha256(text: string) {
@@ -66,7 +66,8 @@ export function useAutoSave({ file, value, loaded }: { file?: string; value: str
     setState('saving');
     try {
       // files.trimTrailingWhitespace / insertFinalNewline / trimFinalNewlines (Settings ▸ Text Editor ▸ Files).
-      const text = applyOnSave(value);
+      // editor.codeActionsOnSave / formatOnSave (Text Editor ▸ Formatting) first.
+      const text = await transformOnSave(file, value, base.current.source);
       const r = await saveFile(file, text, base.current.hash);
       base.current = { file, source: text, hash: r.hash };
       if (text !== value) window.dispatchEvent(new CustomEvent(SAVED_TEXT_EVENT, { detail: { file, from: value, text } }));

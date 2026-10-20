@@ -57,3 +57,62 @@ registerAdvanced((file) => ViewPlugin.fromClass(class {
   };
   destroy() { window.removeEventListener(SAVED_TEXT_EVENT, this.on); }
 }));
+
+/* Formatting on save (VS Code's editor.formatOnSave, editor.formatOnSaveMode, editor.codeActionsOnSave). */
+const F = 'Text Editor ▸ Formatting';
+export const formatting = {
+  onSave: defineSetting<boolean>({ key: 'editor.formatOnSave', category: F, title: 'Format On Save', type: 'boolean', default: false, description: 'Format a file on save (C# with Roslyn and .editorconfig, feature files, JSON).' }),
+  mode: defineSetting<'file' | 'modifications'>({
+    key: 'editor.formatOnSaveMode', category: F, title: 'Format On Save Mode', type: 'enum', default: 'file', description: 'Controls if format on save formats the whole file or only modifications.',
+    options: [{ value: 'file', description: 'Format the whole file.' }, { value: 'modifications', description: 'Format modifications (C#: the lines changed since the file was last saved).' }],
+  }),
+  organizeImports: defineSetting<boolean>({ key: 'editor.codeActionsOnSave.organizeImports', category: F, title: 'Code Actions On Save: Organize Imports', type: 'boolean', default: false, description: 'Sort usings and remove the unnecessary ones when a C# file is saved (source.organizeImports).' }),
+};
+/** Line ranges of `b` (1-based, inclusive) that differ from `a`. Pure, for the unit tests. */
+export function changedLineRanges(a: string, b: string): [number, number][] {
+  const x = a.replace(/\r\n/g, '\n').split('\n'), y = b.replace(/\r\n/g, '\n').split('\n');
+  // Longest common subsequence of lines (small files) or a prefix / suffix trim (large ones).
+  if (x.length * y.length > 4_000_000) {
+    let s = 0; while (s < x.length && s < y.length && x[s] === y[s]) s++;
+    let ex = x.length, ey = y.length; while (ex > s && ey > s && x[ex - 1] === y[ey - 1]) { ex--; ey--; }
+    return ey > s ? [[s + 1, ey]] : [];
+  }
+  const n = x.length, m = y.length;
+  const dp = Array.from({ length: n + 1 }, () => new Uint32Array(m + 1));
+  for (let i = n - 1; i >= 0; i--) for (let j = m - 1; j >= 0; j--) dp[i][j] = x[i] === y[j] ? dp[i + 1][j + 1] + 1 : Math.max(dp[i + 1][j], dp[i][j + 1]);
+  const changed: number[] = [];
+  let i = 0, j = 0;
+  while (j < m) {
+    if (i < n && x[i] === y[j]) { i++; j++; } else if (i < n && dp[i + 1][j] >= dp[i][j + 1]) i++; else { changed.push(j + 1); j++; }
+  }
+  const out: [number, number][] = [];
+  for (const l of changed) { const last = out[out.length - 1]; if (last && last[1] === l - 1) last[1] = l; else out.push([l, l]); }
+  return out;
+}
+/** Everything a save does to the text: code actions, formatting, then the Files settings. */
+export async function transformOnSave(file: string, text: string, saved: string): Promise<string> {
+  let t = text;
+  try {
+    const { api } = await import('../api');
+    const { isBrowser } = await import('../files/provider');
+    if (file.endsWith('.cs') && !isBrowser()) {
+      if (formatting.organizeImports()) t = (await api<{ text: string }>('/csharp/organize', { file, source: t })).text;
+      if (formatting.onSave()) {
+        if (formatting.mode() === 'modifications') {
+          // Bottom up, so the ranges above keep their line numbers.
+          for (const [a, b] of changedLineRanges(saved, t).reverse()) {
+            const lines = t.split(/\r?\n/);
+            t = (await api<{ text: string }>('/csharp/format', { file, source: t, selection: { line: a, column: 1, endLine: b, endColumn: (lines[b - 1]?.length ?? 0) + 1 } })).text;
+          }
+        } else t = (await api<{ text: string }>('/csharp/format', { file, source: t })).text;
+      }
+    } else if (formatting.onSave() && file.endsWith('.feature')) {
+      const { formatFeature } = await import('../editor/gherkin');
+      t = formatFeature(t, file);
+    } else if (formatting.onSave() && /\.json$/i.test(file)) {
+      const indent = /^( +|\t)"/m.exec(t)?.[1] ?? '  ';
+      t = JSON.stringify(JSON.parse(t), null, indent) + (t.endsWith('\n') ? '\n' : '');
+    }
+  } catch { t = text; /* the language service is not running, or the text does not parse: saved as it is */ }
+  return applyOnSave(t);
+}

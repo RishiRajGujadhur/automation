@@ -431,3 +431,34 @@ test('336 Search within selected text', async ({ page }) => {
   await panel.getByRole('button', { name: 'replace all', exact: true }).click();
   await expect.poll(() => docText(page)).toBe(text.replace('int x = 2; int x2 = x;', 'int y = 2; int y2 = y;'));
 });
+
+const disk = (f: string) => fs.readFile(path.join(temp, f), 'utf8').then((t) => t.replace(/\r\n/g, '\n'));
+test('216 Code formatting on save; 218 format modified lines only', async ({ page }) => {
+  needsLang();
+  await open(page, CS, { 'editor.formatOnSave': true });
+  await setDoc(page, 'namespace Demo;\npublic class P\n{\n    public int M(){return 1+2;}\n}\n');
+  await page.keyboard.press('Control+s');
+  await expect.poll(() => disk(CS), { timeout: 30_000 }).toContain('public int M() { return 1 + 2; }');
+  await expect.poll(() => docText(page)).toContain('public int M() { return 1 + 2; }');
+  // Modifications only: an untouched badly formatted line stays as it is.
+  await page.evaluate(() => localStorage.setItem('tas:settings', JSON.stringify({ 'editor.formatOnSave': true, 'editor.formatOnSaveMode': 'modifications' })));
+  await fs.writeFile(path.join(temp, CS), 'namespace Demo;\npublic class P\n{\n    public int A(){return 1+2;}\n    public int B() { return 3; }\n}\n');
+  expect((await page.request.post('/api/workspace', { data: { repositoryRoot: temp, targetProject: '.' } })).ok()).toBe(true);
+  await page.reload();
+  await expect(page.getByText('Repository indexed')).toBeVisible();
+  await page.getByRole('navigation').getByRole('button', { name: 'AuthSteps.cs', exact: true }).first().click();
+  await expect(page.getByLabel(`Source of ${CS}`)).toContainText('public int A()');
+  await caretAt(page, 'return 3;', 8);
+  await page.keyboard.type('0+4');
+  await page.keyboard.press('Control+s');
+  await expect.poll(() => disk(CS), { timeout: 30_000 }).toContain('return 30 + 4;');
+  expect(await disk(CS)).toContain('public int A(){return 1+2;}');
+});
+test('217 Code actions on save: organize imports', async ({ page }) => {
+  needsLang();
+  await open(page, CS, { 'editor.codeActionsOnSave.organizeImports': true });
+  // System.Globalization is unused; System.Text is used (System itself is an implicit global using).
+  await setDoc(page, 'using System.Text;\nusing System.Globalization;\nnamespace Demo;\npublic class P\n{\n    public string M() => new StringBuilder().ToString();\n}\n');
+  await page.keyboard.press('Control+s');
+  await expect.poll(() => disk(CS), { timeout: 30_000 }).toMatch(/^using System\.Text;\nnamespace Demo;/);
+});

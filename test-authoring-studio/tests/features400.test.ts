@@ -106,3 +106,11 @@ describe('175 linked editing', () => {
     expect(partner.has(1)).toBe(false);
   });
 });
+import { changedLineRanges } from '../src/vscode/filesOnSave';
+describe('218 changed line ranges', () => {
+  it('ranges of the new text that differ', () => {
+    expect(changedLineRanges('a\nb\nc\nd', 'a\nB\nc\nd')).toEqual([[2, 2]]);
+    expect(changedLineRanges('a\nb\nc', 'a\nx\ny\nb\nc\nz')).toEqual([[2, 3], [6, 6]]);
+    expect(changedLineRanges('same', 'same')).toEqual([]);
+  });
+});
