@@ -529,3 +529,10 @@ export function generateEquality(view: EditorView) {
     : [`${i}public override int GetHashCode()`, `${i}{`, `${i}    var hash = new HashCode();`, ...c.props.map((p) => `${i}    hash.Add(${p.name});`), `${i}    return hash.ToHashCode();`, `${i}}`];
   return addMembers(view, c.close, [`${i}public override bool Equals(object? obj) => obj is ${c.name} other && ${eq};`, '', ...hash]);
 }
+
+/** Generate ToString (Visual Studio / Rider): a record-style ToString of the public properties. */
+export function generateToString(view: EditorView) {
+  const c = classAt(view.state);
+  if (!c || !c.props.length || /override\s+string\s+ToString\s*\(/.test(view.state.doc.toString())) return false;
+  return addMembers(view, c.close, [`${c.indent}public override string ToString() => $"${c.name} {{ ${c.props.map((p) => `${p.name} = {${p.name}}`).join(', ')} }}";`]);
+}

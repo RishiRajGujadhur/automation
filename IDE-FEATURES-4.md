@@ -84,6 +84,7 @@ has it on by default, so the desktop app starts with it on. The others start off
 | Y73 | Split Scenario Here | Rider | no | ✅ 2026-10-20 |
 | Y74 | Insert TODO Comment | Rider | no | ✅ 2026-10-20 |
 | Y75 | Generate Equality Members | VS 2026 | yes | ✅ 2026-10-20 |
+| Y76 | Generate ToString() | VS 2026 | yes | ✅ 2026-10-20 |
 
 ## Progress log
 - 2026-10-20 Y1: Percent-encodes the selection (or line) and decodes it.
@@ -161,3 +162,4 @@ has it on by default, so the desktop app starts with it on. The others start off
 - 2026-10-20 Y73: Steps from the caret on become a new scenario.
 - 2026-10-20 Y74: A dated TODO comment with the file's comment token.
 - 2026-10-20 Y75: Equals and GetHashCode from the public properties.
+- 2026-10-20 Y76: A record-style ToString of the public properties.

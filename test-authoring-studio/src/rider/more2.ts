@@ -6,7 +6,7 @@ import { api } from '../api';
 import { getTabs, setPinned } from '../files/tabs';
 import { copyText } from '../ui';
 import { tableDeleteEmptyRows, tableRemoveDuplicateRows, tableMarkdown, tagAllScenarios, removeTagEverywhere, sortTags, promoteCommonTags, insertDocString, expandOutline, wrapInRule, setLanguageHeader, scenarioName, tableInsertRowAbove, addScenarioOutline, tableColumnStats, tableColumnValues, tableFillSeries, mergeExamples, scenarioSteps, renameScenario, splitScenario } from '../editor/gherkinTools';
-import { urlEncode, urlDecode, base64Encode, base64Decode, escapeString, unescapeString, htmlEncode, htmlDecode, stepNumber, insertSequence, toggleQuotes, joinWith, splitAt, alignAssignments, swapSelections, countOccurrences, trimLines, stamp, insertText, LOREM, shuffleLines, reformatXml, minifyXml, jsonEscape, jsonUnescape, numberLines, mapDoc, toFileScopedNamespace, toBlockScopedNamespace, removeRegions, toRawString, toggleTask, formatMarkdownTable, tableOfContents, MARKDOWN_TABLE, removeComments, concatToInterpolationCmd, gotoOffset, timestampCmd, sha256Hex, decodeJwt, jwtAt, sortTokens, markdownCodeBlock, fileStatistics, todoComment, generateEquality } from '../editor/textTools2';
+import { urlEncode, urlDecode, base64Encode, base64Decode, escapeString, unescapeString, htmlEncode, htmlDecode, stepNumber, insertSequence, toggleQuotes, joinWith, splitAt, alignAssignments, swapSelections, countOccurrences, trimLines, stamp, insertText, LOREM, shuffleLines, reformatXml, minifyXml, jsonEscape, jsonUnescape, numberLines, mapDoc, toFileScopedNamespace, toBlockScopedNamespace, removeRegions, toRawString, toggleTask, formatMarkdownTable, tableOfContents, MARKDOWN_TABLE, removeComments, concatToInterpolationCmd, gotoOffset, timestampCmd, sha256Hex, decodeJwt, jwtAt, sortTokens, markdownCodeBlock, fileStatistics, todoComment, generateEquality, generateToString } from '../editor/textTools2';
 
 /**
  * Fourth batch of Visual Studio 2026 / JetBrains Rider commands (IDE-FEATURES-4.md, Y1–Y100). RiderHost registers
@@ -88,5 +88,6 @@ export function moreCommands2(h: MoreHelpers): RiderCommand[] {
     { id: 'split-scenario', label: 'Split Scenario Here', menu: 'Code', submenu: 'Gherkin', run: h.inEditor((v) => splitScenario(v) || h.notice('Put the caret on a step after the first one of a scenario.')) },
     { id: 'insert-todo', label: 'Insert TODO Comment', menu: 'Code', run: h.inEditor((v, file) => { const t = todoComment(file); insertText(() => (t.startsWith('<!--') ? `${t} -->` : t))(v); }) },
     { id: 'generate-equality', label: 'Generate Equality Members', menu: 'Code', submenu: 'C#', run: h.inEditor((v) => generateEquality(v) || h.notice('Put the caret in a class with public properties (and no Equals yet).')) },
+    { id: 'generate-tostring', label: 'Generate ToString()', menu: 'Code', submenu: 'C#', run: h.inEditor((v) => generateToString(v) || h.notice('Put the caret in a class with public properties (and no ToString yet).')) },
   ];
 }

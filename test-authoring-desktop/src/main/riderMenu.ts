@@ -284,6 +284,7 @@ const ROWS: Record<'edit' | 'view' | 'navigate' | 'code' | 'tools' | 'help', Row
       ['Convert to Raw String Literal', 'raw-string'],
       ['Convert to Interpolated String', 'to-interpolation'],
       ['Generate Equality Members', 'generate-equality'],
+      ['Generate ToString()', 'generate-tostring'],
     ] },
     null,
     { submenu: 'Markdown', rows: [

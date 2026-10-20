@@ -470,6 +470,7 @@ export const FEATURES: Feature[] = [
   { id: 'split-scenario', label: 'Split Scenario Here', group: 'Gherkin', essential: false, description: 'Code ▸ Gherkin moves the steps from the caret on into a new scenario (for scenarios that test two things).', commands: ['split-scenario'] },
   { id: 'insert-todo', label: 'Insert TODO Comment', group: 'Editing', essential: false, description: 'Code ▸ Insert TODO Comment writes a dated TODO comment (it shows in the TODO window).', commands: ['insert-todo'] },
   { id: 'generate-equality', label: 'Generate Equality Members', group: 'Code intelligence', essential: true, vs: 'Quick Actions: Generate Equals and GetHashCode', description: 'Code ▸ C# writes Equals and GetHashCode from the class\'s public properties.', commands: ['generate-equality'] },
+  { id: 'generate-tostring', label: 'Generate ToString()', group: 'Code intelligence', essential: true, vs: 'Quick Actions: Generate overrides', description: 'Code ▸ C# writes a ToString override listing the public properties.', commands: ['generate-tostring'] },
 ];
 export const GROUPS: FeatureGroup[] = ['Editing', 'Navigation', 'Code intelligence', 'Tool windows', 'Files', 'Git', 'Gherkin', 'View', 'Debugging', 'Help and productivity'];
 
