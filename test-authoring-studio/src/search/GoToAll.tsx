@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
+import { featureOn } from '../features';
 import { FileCode2, Boxes, Braces, SquareFunction, Variable, FileText, ListTree, Zap, History } from 'lucide-react';
 import { recentFiles } from '../navHistory';
 import { api } from '../api';
@@ -33,7 +34,9 @@ function fuzzy(text: string, q: string) {
  * and scenarios, filtered by category like Visual Studio's Go To All.
  */
 export default function GoToAll({ features, onOpen, onClose, actions = [] }: { features: Feature[]; onOpen: (file: string, line?: number, column?: number) => void; onClose: () => void; actions?: SearchAction[] }) {
-  const [query, setQuery] = useState('');
+  // The last query comes back, selected, when Go to All reopens (QOL-50).
+  const [query, setQuery] = useState(() => { try { return featureOn('goto-last') ? sessionStorage.getItem('tas:gotoQuery') ?? '' : ''; } catch { return ''; } });
+  useEffect(() => { try { sessionStorage.setItem('tas:gotoQuery', query); } catch { /* storage blocked */ } }, [query]);
   const [filter, setFilter] = useState<(typeof filters)[number]>('All');
   const [files, setFiles] = useState<string[]>([]);
   const [symbols, setSymbols] = useState<Symbol[]>([]);
@@ -71,7 +74,7 @@ export default function GoToAll({ features, onOpen, onClose, actions = [] }: { f
   return (
     <div className="goto-all">
       <input
-        autoFocus
+        autoFocus onFocus={(e) => e.currentTarget.select()}
         aria-label="Go to All"
         placeholder="Search everywhere: files, types, members, features, actions (Shift Shift / Ctrl+T)"
         value={query}

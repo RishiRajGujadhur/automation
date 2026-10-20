@@ -72,6 +72,7 @@ Every improvement is verified by a unit or Playwright test (`tests/e2e/qol50.spe
 | QL63 | Explorer: Ctrl+click opens to the side | Explorer | ✅ 2026-10-20 |
 | QL64 | Closing a tab goes back to the last one used | Tabs | ✅ 2026-10-20 |
 | QL65 | Find in Files starts with the selection | Search | ✅ 2026-10-20 |
+| QL66 | Go to All remembers the last query | Navigation | ✅ 2026-10-20 |
 
 ## Progress log
 - 2026-10-20 QL1: Title names the file and workspace folder
@@ -139,3 +140,4 @@ Every improvement is verified by a unit or Playwright test (`tests/e2e/qol50.spe
 - 2026-10-20 QL63: Ctrl+click opens in the split editor
 - 2026-10-20 QL64: MRU tab after close
 - 2026-10-20 QL65: Selection seeds the search
+- 2026-10-20 QL66: Last query back, selected
