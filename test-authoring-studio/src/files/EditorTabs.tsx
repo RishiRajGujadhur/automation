@@ -87,7 +87,7 @@ export default function EditorTabs({ onClose, onSplit, children }: { onClose: (f
                 ...(featureOn('sort-tabs') ? [{ label: 'Sort Tabs by Name', onSelect: () => sortTabs() }] : []),
                 ...(featureOn('close-type') && t.file.includes('.') ? [{ label: `Close All ${t.file.slice(t.file.lastIndexOf('.'))} Tabs`, onSelect: () => closeOfType(t.file) }] : []),
                 'separator',
-                { label: 'Copy Relative Path', icon: Copy, onSelect: () => copyText(t.file) },
+                { label: 'Copy Relative Path', icon: Copy, onSelect: () => void copyText(t.file).then((ok) => { if (featureOn('copy-feedback')) window.dispatchEvent(new CustomEvent('tas:notice', { detail: ok ? `Copied ${t.file}` : 'Clipboard unavailable.' })); }) },
                 ...(featureOn('tab-copy-name') ? [{ label: 'Copy File Name', icon: Copy, onSelect: () => void copyText(base(t.file)) }] : []),
                 ...(featureOn('tab-reveal') ? [{ label: 'Reveal in Explorer', onSelect: () => { activateTab(t.file); requestAnimationFrame(() => window.dispatchEvent(new Event(SELECT_IN_EXPLORER))); } }] : []),
                 ...(onSplit && !t.file.endsWith('.feature') ? ['separator' as const, { label: 'Split Right', onSelect: () => onSplit(t.file) }] : []),
