@@ -1,6 +1,6 @@
 import type { Extension } from '@codemirror/state';
-import { StateEffect, StateField, type EditorState, type Range } from '@codemirror/state';
-import { Decoration, EditorView, ViewPlugin, WidgetType, type ViewUpdate, type DecorationSet } from '@codemirror/view';
+import { StateEffect, StateField, type EditorState, type Range, Prec } from '@codemirror/state';
+import { Decoration, EditorView, ViewPlugin, WidgetType, type ViewUpdate, type DecorationSet, keymap } from '@codemirror/view';
 import { api } from '../api';
 import { featureOn } from '../features';
 import { FILE_SAVED_EVENT } from './events';
@@ -138,3 +138,42 @@ export function nextConflict(view: EditorView) {
   view.dispatch({ selection: { anchor: at }, effects: EditorView.scrollIntoView(at, { y: 'center' }) });
   return true;
 }
+
+/* Z4 Postfix templates (Rider): `expr.var`, `.if`, `.not`, `.null`, `.notnull`, `.foreach`, `.return`, `.await`, `.throw`,
+   `.par` and Tab rewrite the expression. */
+const POSTFIX = /([A-Za-z_@][\w.]*(?:\([^()]*\))?(?:\.[A-Za-z_]\w*(?:\([^()]*\))?)*)\.(var|if|not|null|notnull|foreach|return|await|throw|par)$/;
+/** A name for a variable holding `expr`: the last identifier, Get/Find prefixes dropped, camelCase. */
+const varName = (expr: string) => { const id = (/(\w+)(?:\([^()]*\))?$/.exec(expr)?.[1] ?? 'value').replace(/^(Get|Find|Create|Load|Read)(?=[A-Z])/, ''); const n = id[0].toLowerCase() + id.slice(1); return /^(class|var|int|string|new|this|base|default)$/.test(n) ? `${n}Value` : n; };
+/** The text before the caret on a line → the replacement and where the caret goes (offset in the replacement). */
+export function postfix(before: string, indent: string, unit = '    ') {
+  const m = POSTFIX.exec(before);
+  if (!m) return null;
+  const expr = m[1], kind = m[2];
+  const from = before.length - m[0].length;
+  const block = (head: string) => { const text = `${head}\n${indent}{\n${indent}${unit}\n${indent}}`; return { from, text, caret: head.length + indent.length * 2 + unit.length + 3 }; };
+  switch (kind) {
+    case 'var': { const t = `var ${varName(expr)} = ${expr};`; return { from, text: t, caret: t.length }; }
+    case 'if': return block(`if (${expr})`);
+    case 'not': return { from, text: `!${expr}`, caret: expr.length + 1 };
+    case 'null': return block(`if (${expr} is null)`);
+    case 'notnull': return block(`if (${expr} is not null)`);
+    case 'foreach': return block(`foreach (var item in ${expr})`);
+    case 'return': return { from, text: `return ${expr};`, caret: expr.length + 8 };
+    case 'await': return { from, text: `await ${expr}`, caret: expr.length + 6 };
+    case 'throw': return { from, text: `throw ${expr};`, caret: expr.length + 7 };
+    default: return { from, text: `(${expr})`, caret: expr.length + 2 };
+  }
+}
+registerAdvanced((file, kind) => (kind !== 'code' || !file.endsWith('.cs') ? [] : Prec.highest(keymap.of([{
+  key: 'Tab',
+  run: (view) => {
+    if (!featureOn('postfix-templates')) return false;
+    const s = view.state.selection.main;
+    if (!s.empty) return false;
+    const line = view.state.doc.lineAt(s.head);
+    const r = postfix(line.text.slice(0, s.head - line.from), /^\s*/.exec(line.text)![0]);
+    if (!r) return false;
+    view.dispatch({ changes: { from: line.from + r.from, to: s.head, insert: r.text }, selection: { anchor: line.from + r.from + r.caret }, userEvent: 'input.complete' });
+    return true;
+  },
+}]))));

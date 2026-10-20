@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { relativeDay, conflictsIn, resolveConflict } from '../src/editor/advanced';
+import { relativeDay, conflictsIn, resolveConflict, postfix } from '../src/editor/advanced';
 import { selectHunks } from '../server/git';
 
 describe('advanced features (ADVANCED-20)', () => {
@@ -29,5 +29,12 @@ describe('advanced features (ADVANCED-20)', () => {
     expect(selectHunks(diff, 7, 7).hunks).toBe(1);
     expect(selectHunks(diff, 3, 4).hunks).toBe(0);
     expect(selectHunks(diff, 1, 9).hunks).toBe(2);
+  });
+  it('Z4 postfix templates', () => {
+    expect(postfix('        page.GetTitle().var', '        ')).toEqual({ from: 8, text: 'var title = page.GetTitle();', caret: 28 });
+    expect(postfix('    user.notnull', '    ')!.text).toBe('if (user is not null)\n    {\n        \n    }');
+    expect(postfix('    users.foreach', '    ')!.text.split('\n')[0]).toBe('foreach (var item in users)');
+    expect(postfix('    ok.not', '    ')!.text).toBe('!ok');
+    expect(postfix('    plain text', '    ')).toBe(null);
   });
 });
