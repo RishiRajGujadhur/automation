@@ -232,7 +232,7 @@ test('QL27 Test Explorer explains an empty tree', async ({ page, request }) => {
     await page.addInitScript(() => { if (!sessionStorage.getItem('seeded')) { localStorage.setItem('tas:prefs', JSON.stringify({ mode: 'advanced', autoSave: 'off' })); sessionStorage.setItem('seeded', '1'); } });
     await page.goto('/#/features/editor');
     await page.getByRole('button', { name: 'Test Explorer' }).click();
-    const note = page.getByRole('region', { name: 'Test Explorer' }).getByRole('note');
+    const note = page.getByRole('region', { name: 'Test Explorer' }).locator('.t-empty');
     await expect(note).toContainText('build it (Ctrl+Shift+B), then refresh', { timeout: 60_000 });
     await expect(note.getByRole('button', { name: 'Refresh' })).toBeVisible();
   } finally {

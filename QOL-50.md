@@ -33,6 +33,7 @@ Every improvement is verified by a unit or Playwright test (`tests/e2e/qol50.spe
 | QL24 | Test Explorer remembers its view | Test Explorer | ✅ 2026-10-20 |
 | QL25 | Test Explorer shows the first failure | Test Explorer | ✅ 2026-10-20 |
 | QL26 | Test run elapsed time | Test Explorer | ✅ 2026-10-20 |
+| QL27 | Test Explorer explains an empty tree | Test Explorer | ✅ 2026-10-20 |
 
 ## Progress log
 - 2026-10-20 QL1: Title names the file and workspace folder
@@ -61,3 +62,4 @@ Every improvement is verified by a unit or Playwright test (`tests/e2e/qol50.spe
 - 2026-10-20 QL24: Collapsed groups and search kept
 - 2026-10-20 QL25: First failed test selected after a run
 - 2026-10-20 QL26: running N s while tests run
+- 2026-10-20 QL27: Why no tests + Refresh

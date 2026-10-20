@@ -227,7 +227,17 @@ export default function TestExplorer({ revision, onOpen, onDebug, onNotice }: { 
       {run.error && <p className="field-error" role="alert">{run.error}</p>}
       <nav className="t-tree" aria-label="Tests">
         <ul>{groups.map((g) => groupRow(g, 0))}</ul>
-        {!loading && !tests.length && <p className="explorer-empty">No tests found. Add NUnit, xUnit or MSTest tests, or feature files.</p>}
+        {!loading && !tests.length && (featureOn('test-empty-help') ? (
+          <div className="explorer-empty t-empty" role="note">
+            <p>No tests found.</p>
+            <ul>
+              <li>Tests are NUnit, xUnit or MSTest methods, and feature files' scenarios.</li>
+              <li>Scenarios get their test names when the project builds: build it (Ctrl+Shift+B), then refresh.</li>
+              {warning && <li>Discovery said: {warning}</li>}
+            </ul>
+            <button className="button" onClick={refresh}><RefreshCw size={13} /> Refresh</button>
+          </div>
+        ) : <p className="explorer-empty">No tests found. Add NUnit, xUnit or MSTest tests, or feature files.</p>)}
       </nav>
       {detail && (
         <section className="t-detail" aria-label="Test details">

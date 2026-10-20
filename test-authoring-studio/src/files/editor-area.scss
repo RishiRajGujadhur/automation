@@ -3618,3 +3618,11 @@ html[data-features-off~='inlay-hints'] .cm-inlay {
   outline-offset: -1px;
   background: color-mix(in srgb, var(--accent, #4b8bf5) 12%, transparent);
 }
+
+.t-empty {
+  ul {
+    margin: 4px 0 8px;
+    padding-left: 18px;
+    font-size: 12px;
+  }
+}
