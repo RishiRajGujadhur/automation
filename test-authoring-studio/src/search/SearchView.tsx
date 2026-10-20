@@ -97,7 +97,7 @@ export default function SearchView({ initialReplace, initialInclude, onOpen, onN
         <button className="search-expand" aria-label={showReplace ? 'Hide replace' : 'Toggle replace'} aria-expanded={showReplace} title="Toggle Replace (Ctrl+Shift+H)" onClick={() => setShowReplace(!showReplace)}>{showReplace ? <ChevronDown size={14} /> : <ChevronRight size={14} />}</button>
         <div className="search-fields">
           <div className="search-input">
-            <input ref={input} aria-label="Search in files" placeholder="Search" value={query} onChange={(e) => setQuery(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter') search(); else if ((e.key === 'ArrowUp' || e.key === 'ArrowDown') && recall(e.key === 'ArrowUp' ? 1 : -1)) e.preventDefault(); }} title={featureOn('search-history') ? 'Search (↑ / ↓: history)' : undefined} spellCheck={false} />
+            <input ref={input} aria-label="Search in files" placeholder="Search" value={query} onChange={(e) => setQuery(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter') search(); else if (e.key === 'ArrowDown' && featureOn('search-keys') && result?.total && back.current < 0) { e.preventDefault(); document.querySelector<HTMLElement>('.search-view .search-match')?.focus(); } else if ((e.key === 'ArrowUp' || e.key === 'ArrowDown') && recall(e.key === 'ArrowUp' ? 1 : -1)) e.preventDefault(); }} title={featureOn('search-history') ? 'Search (↑ / ↓: history)' : undefined} spellCheck={false} />
             {toggle(matchCase, setMatchCase, 'Match Case', CaseSensitive, 'Alt+C')}
             {toggle(wholeWord, setWholeWord, 'Match Whole Word', WholeWord, 'Alt+W')}
             {toggle(regex, setRegex, 'Use Regular Expression', Regex, 'Alt+R')}
@@ -123,7 +123,7 @@ export default function SearchView({ initialReplace, initialInclude, onOpen, onN
           {result.total ? `${result.total} result${result.total === 1 ? '' : 's'} in ${result.files.length} file${result.files.length === 1 ? '' : 's'}${result.truncated ? ' (first results only — refine the search)' : ''}` : 'No results found.'}
         </p>
       )}
-      <nav className="search-results" aria-label="Search results">
+      <nav className="search-results" aria-label="Search results" onKeyDown={(e) => { if (!featureOn('search-keys') || (e.key !== 'ArrowDown' && e.key !== 'ArrowUp')) return; const all = [...e.currentTarget.querySelectorAll<HTMLElement>('.search-match')]; const i = all.indexOf(document.activeElement as HTMLElement); if (i < 0) return; e.preventDefault(); if (e.key === 'ArrowUp' && i === 0) input.current?.focus(); else all[Math.max(0, Math.min(all.length - 1, i + (e.key === 'ArrowDown' ? 1 : -1)))].focus(); }}>
         <ul>
           {result?.files.map((f) => {
             const open = !closed.has(f.file);
