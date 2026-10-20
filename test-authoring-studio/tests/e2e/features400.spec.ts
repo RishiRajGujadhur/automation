@@ -83,3 +83,32 @@ test('113 Roslyn analyzer integration: IDE suggestions in the editor, their fixe
   await quickAction(page, /^Remove unused member$/);
   await expect.poll(() => docText(page), { timeout: 30_000 }).not.toContain('Never');
 });
+
+/** Opens AuthSteps.cs with `source`, waits for the analyzer marks, then (when `at` is given) applies `fix` there. */
+async function analyzerFix(page: Page, source: string, marks: { cls: string; text: string }[], at = '', fix = /x/, after: (doc: string) => boolean = () => true) {
+  needsLang();
+  await open(page, CS);
+  await setDoc(page, source);
+  // The marks are split by syntax colouring: compare their joined text.
+  for (const m of marks) await expect.poll(async () => (await page.locator(m.cls).allTextContents()).join(''), { timeout: 60_000 }).toContain(m.text);
+  if (!at) return;
+  await caretAt(page, at, 1);
+  await quickAction(page, fix);
+  await expect.poll(async () => after(await docText(page)), { timeout: 30_000 }).toBe(true);
+}
+test('107 Dead code detection: unreachable code faded and removed', async ({ page }) => {
+  await analyzerFix(page, 'namespace Demo;\npublic class P\n{\n    public int Run(int a)\n    {\n        return a;\n        System.Console.WriteLine();\n    }\n}\n',
+    [{ cls: '.cm-unnecessary', text: 'System.Console.WriteLine();' }], 'Console', /^Remove unreachable code$/, (d) => !d.includes('WriteLine'));
+});
+test('108 Unused symbol detection: unused private members and parameters faded', async ({ page }) => {
+  await analyzerFix(page, 'namespace Demo;\npublic class P\n{\n    private int counter;\n    public int Run(int a, int unusedArg)\n    {\n        return a;\n    }\n    private void Helper() { }\n}\n',
+    [{ cls: '.cm-unnecessary', text: 'unusedArg' }, { cls: '.cm-unnecessary', text: 'Helper' }, { cls: '.cm-unnecessary', text: 'counter' }]);
+});
+test('109 Redundant assignment detection', async ({ page }) => {
+  await analyzerFix(page, 'namespace Demo;\npublic class P\n{\n    public int Run(int a)\n    {\n        var x = 1;\n        x = a;\n        return x;\n    }\n}\n',
+    [{ cls: '.cm-unnecessary', text: 'x' }], 'x = 1', /^Remove redundant assignment$/, (d) => !d.includes('x = 1'));
+});
+test('110 Redundant type declaration detection', async ({ page }) => {
+  await analyzerFix(page, 'namespace Demo;\npublic class P\n{\n    public System.Text.StringBuilder M()\n    {\n        System.Text.StringBuilder b = new System.Text.StringBuilder();\n        return b;\n    }\n}\n',
+    [{ cls: '.cm-lintRange-info', text: 'new' }], '= new', /^Use 'new\(\.\.\.\)'$/, (d) => d.includes('b = new();'));
+});
