@@ -308,6 +308,7 @@ export function riderKeys(file = ''): Extension {
     ['KeyV', false, 'introduce-variable', () => runRider('introduce-variable', 'key')],
     ['KeyN', false, 'inline-symbol', () => runRider('inline-symbol', 'key')],
     ['KeyP', false, 'introduce-parameter', () => runRider('introduce-parameter', 'key')],
+    ['KeyG', false, 'generate-code', () => runRider('generate-code', 'key')],
     ['KeyZ', false, 'rollback-lines', (v) => { if (!rollbackLines(v)) runRider('rollback-lines', 'key'); return true; }],
   ];
   const ctrlAlt = EditorView.domEventHandlers({

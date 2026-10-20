@@ -561,6 +561,7 @@ export const FEATURES: Feature[] = [
   { id: 'introduce-variable', label: 'Introduce Variable', group: 'Code intelligence', essential: true, vs: 'Introduce local', description: 'Ctrl+Alt+V puts the selected expression into a new local variable.', commands: ['introduce-variable'] },
   { id: 'inline-symbol', label: 'Inline Variable / Method', group: 'Code intelligence', essential: true, vs: 'Inline temporary variable / method', description: 'Ctrl+Alt+N replaces a local variable (or a method call) with its value or body.', commands: ['inline-symbol'] },
   { id: 'introduce-parameter', label: 'Introduce Parameter', group: 'Code intelligence', essential: true, vs: 'Introduce parameter', description: 'Ctrl+Alt+P turns the selected expression into a parameter of the method and updates its callers; nested Quick Actions now show their full titles.', commands: ['introduce-parameter'] },
+  { id: 'generate-code', label: 'Generate (C#)', group: 'Code intelligence', essential: true, vs: 'Quick Actions ▸ Generate', description: 'Ctrl+Alt+G lists what Roslyn can generate at the caret: constructors, Equals / GetHashCode, interface members, DebuggerDisplay… (Rider\'s Generate menu).', commands: ['generate-code'] },
 ];
 export const GROUPS: FeatureGroup[] = ['Editing', 'Navigation', 'Code intelligence', 'Tool windows', 'Files', 'Git', 'Gherkin', 'View', 'Debugging', 'Help and productivity'];
 
