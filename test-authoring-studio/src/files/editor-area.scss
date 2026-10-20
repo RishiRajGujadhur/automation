@@ -3879,3 +3879,13 @@ html[data-rider-mode='vszen'] {
     &.a-squash, &.a-fixup { padding-left: 18px; }
   }
 }
+.git-bisect {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 8px;
+  border-bottom: 1px solid var(--border);
+  background: color-mix(in srgb, #d4a72c 14%, transparent);
+  font-size: 12px;
+}

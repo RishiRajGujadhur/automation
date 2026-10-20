@@ -39,6 +39,10 @@ export default function GitLogPanel({ onOpen, onClose, onNotice }: { onOpen: (fi
   const [other, setOther] = useState<string>();
   // Interactive Rebase from the selected commit.
   const [rebaseFrom, setRebaseFrom] = useState<string>();
+  // Git bisect: in progress or not, and what git said last.
+  const [bisecting, setBisecting] = useState<{ active: boolean; head: string; firstBad?: string; output?: string }>();
+  useEffect(() => { if (featureOn('git-bisect')) api<{ active: boolean; head: string }>('/git/bisect').then(setBisecting, () => {}); }, []);
+  const bisectAct = (action: string, ref?: string) => void api<{ active: boolean; head: string; firstBad?: string; output: string }>('/git/bisect', { action, ...(ref ? { ref } : {}) }).then((r) => { setBisecting(r); onNotice(r.firstBad ? `First bad commit: ${r.firstBad}` : r.active ? `Bisecting: now at ${r.head}` : 'Bisect ended.'); window.dispatchEvent(new Event(GIT_CHANGED_EVENT)); void load(); }, (e) => onNotice((e as Error).message));
   const [comparison, setComparison] = useState<{ files: { file: string; status: string }[]; patch: string }>();
   useEffect(() => { setComparison(undefined); if (selected && other) api<{ files: { file: string; status: string }[]; patch: string }>(`/git/compare?from=${other}&to=${selected}`).then(setComparison, (e) => setError((e as Error).message)); }, [selected, other]);
   const [commit, setCommit] = useState<Commit>();
@@ -77,6 +81,13 @@ export default function GitLogPanel({ onOpen, onClose, onNotice }: { onOpen: (fi
         <span className="debug-spacer" />
         <button className="icon-button" aria-label="Close Git Log" title="Close" onClick={onClose}><X size={14} /></button>
       </div>
+      {featureOn('git-bisect') && bisecting?.active && (
+        <div className="git-bisect" role="status" aria-label="Bisect">
+          <span>{bisecting.firstBad ? <>First bad commit: <code>{bisecting.firstBad.slice(0, 10)}</code></> : <>Bisecting · at {bisecting.head}</>}</span>
+          {!bisecting.firstBad && <><button className="button" onClick={() => bisectAct('good')}>Good</button><button className="button" onClick={() => bisectAct('bad')}>Bad</button><button className="button" onClick={() => bisectAct('skip')}>Skip</button></>}
+          <button className="button" onClick={() => bisectAct('reset')}>Reset Bisect</button>
+        </div>
+      )}
       {error && <p className="subtle hierarchy-hint" role="alert">{error}</p>}
       <div className="git-log-body">
         <ul className="git-log-list" role="listbox" aria-label="Commits">
@@ -106,6 +117,7 @@ export default function GitLogPanel({ onOpen, onClose, onNotice }: { onOpen: (fi
               {commit.message.includes('\n') && <pre className="git-commit-body">{commit.message.split('\n').slice(1).join('\n').trim()}</pre>}
               <div className="git-commit-actions" role="toolbar" aria-label="Commit actions">
               {/* commit actions */}
+              {featureOn('git-bisect') && <><button className="button" onClick={() => bisectAct('bad', commit.hash)}>Bisect: Mark Bad</button><button className="button" onClick={() => bisectAct('good', commit.hash)}>Bisect: Mark Good</button></>}
               {featureOn('git-interactive-rebase') && <button className="button" onClick={() => setRebaseFrom(commit.hash)}>Interactively Rebase from Here…</button>}
               {featureOn('git-squash') && <button className="button" onClick={() => { void api<{ subject: string }[]>(`/git/rebase?base=${commit.hash}`).then((list) => { const message = window.prompt(`Squash ${list.length} commit${list.length === 1 ? '' : 's'} (this one up to HEAD) into one. Message:`, list.map((c) => c.subject).join('\n')); if (!message?.trim()) return; return api<{ head: string }>('/git/squash', { base: commit.hash, message }).then((r) => { onNotice(`Squashed: ${r.head}`); setSelected(undefined); window.dispatchEvent(new Event(GIT_CHANGED_EVENT)); void load(); }); }).catch((e) => onNotice((e as Error).message)); }}>Squash to HEAD…</button>}
               {featureOn('git-copy-message') && <button className="button" onClick={() => void copyText(commit.message.trim()).then((ok) => onNotice(ok ? 'Copied the commit message.' : 'Clipboard unavailable.'))}>Copy Message</button>}

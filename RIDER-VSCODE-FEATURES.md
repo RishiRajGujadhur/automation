@@ -190,7 +190,7 @@ Legend: `[x]` done · `[ ]` to do.
 - [x] 161. Compare branches — Compare with Branch
 - [x] 162. Compare commits — Git Log: Ctrl+click a second commit, files that differ and the patch (2026-10-21)
 - [x] 163. Revert individual hunks — Rollback Lines, change gutter
-- [ ] 164. Git bisect integration
+- [x] 164. Git bisect integration — Git Log: Bisect: Mark Bad / Mark Good; Good, Bad, Skip, Reset Bisect until the first bad commit (2026-10-21)
 - [x] 165. Commit message templates — Git Changes: the commit box starts with commit.template / .gitmessage; its # comments are left out (2026-10-21)
 
 ## Editor Productivity & Customization
@@ -374,3 +374,4 @@ Legend: `[x]` done · `[ ]` to do.
 - 2026-10-21 146: Interactive rebase from a Git Log commit: each commit up to HEAD can be picked, reworded, squashed, fixed up, dropped or moved; the studio writes the todo list, uncommitted work is stashed around it and a conflict aborts the rebase.
 - 2026-10-21 147: The selected commit and every later one become one commit with a new message.
 - 2026-10-21 156: Worktrees of the repository in Git Changes: add one beside the repository, open it as the workspace, remove it (not the main or the open one).
+- 2026-10-21 164: git bisect from Git Log: mark a bad and a good commit, then test each commit git checks out until it names the first bad one; git commands also retry when the index is locked by a concurrent refresh.

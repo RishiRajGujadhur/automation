@@ -2,8 +2,19 @@ import { execFile } from 'node:child_process';
 import fs from 'node:fs/promises';
 import path from 'node:path';
 
-/** Runs git in a folder; resolves stdout, rejects with git's message. */
-export function git(cwd: string, args: string[], input?: string): Promise<string> {
+/**
+ * Runs git in a folder; resolves stdout, rejects with git's message. A command that finds the index locked by another
+ * git process (the Git Changes refresh running at the same moment) is tried again a few times.
+ */
+export async function git(cwd: string, args: string[], input?: string): Promise<string> {
+  for (let attempt = 0; ; attempt++) {
+    try { return await gitOnce(cwd, args, input); } catch (e) {
+      if (attempt >= 5 || !/index\.lock/.test((e as Error).message)) throw e;
+      await new Promise((r) => setTimeout(r, 150 * (attempt + 1)));
+    }
+  }
+}
+function gitOnce(cwd: string, args: string[], input?: string): Promise<string> {
   return new Promise((resolve, reject) => {
     const p = execFile('git', ['-c', 'core.quotepath=off', ...args], { cwd, maxBuffer: 50 * 1024 * 1024, windowsHide: true, env: { ...process.env, GIT_TERMINAL_PROMPT: '0', LC_ALL: 'C' } }, (err, stdout, stderr) => {
       if (err) reject(new Error((stderr || err.message).trim()));

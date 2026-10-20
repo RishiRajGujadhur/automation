@@ -125,3 +125,35 @@ test('156 Git worktree management', async ({ page }) => {
   await expect(wt.locator('li', { hasText: 'feature-x' })).toHaveCount(0);
   expect(git('worktree', 'list')).not.toContain('feature-x');
 });
+
+test('164 Git bisect integration', async ({ page }) => {
+  // Five commits; the third brings the bug.
+  for (const n of [1, 2, 3, 4, 5]) { await fs.appendFile(path.join(root, 'Steps/AuthSteps.cs'), n === 3 ? '// BUG\n' : `// ${n}\n`); git('commit', '-q', '-am', `Commit ${n}`); }
+  const bad = git('log', '--format=%H', '--grep', 'Commit 3').trim();
+  await open(page);
+  await page.keyboard.press('Alt+9');
+  const log = page.getByRole('region', { name: 'Git Log' });
+  const commits = log.getByRole('listbox', { name: 'Commits' });
+  await commits.getByRole('option', { name: /Commit 5/ }).click();
+  await expect(log.locator('.git-commit-head strong')).toHaveText('Commit 5');
+  await log.getByRole('button', { name: 'Bisect: Mark Bad' }).click();
+  await commits.getByRole('option', { name: /Initial/ }).click();
+  await expect(log.locator('.git-commit-head strong')).toHaveText('Initial');
+  await log.getByRole('button', { name: 'Bisect: Mark Good' }).click();
+  const bar = log.getByRole('status', { name: 'Bisect' });
+  await expect(bar).toContainText('Bisecting');
+  // git has checked out a commit between the two.
+  await expect(bar).not.toContainText('Commit 5');
+  // Test each checked-out commit: the bug is in the file or not.
+  for (let i = 0; i < 6; i++) {
+    if (/First bad commit/.test(await bar.textContent() ?? '')) break;
+    const head = (await bar.textContent() ?? '').match(/at ([0-9a-f]{7})/)?.[1];
+    const text = await fs.readFile(path.join(root, 'Steps/AuthSteps.cs'), 'utf8');
+    await bar.getByRole('button', { name: text.includes('// BUG') ? 'Bad' : 'Good', exact: true }).click();
+    await expect(bar).not.toContainText(`at ${head}`);
+  }
+  await expect(bar).toContainText(`First bad commit: ${bad.slice(0, 10)}`);
+  await bar.getByRole('button', { name: 'Reset Bisect' }).click();
+  await expect(bar).toHaveCount(0);
+  expect(git('rev-parse', '--abbrev-ref', 'HEAD').trim()).toBe('main');
+});

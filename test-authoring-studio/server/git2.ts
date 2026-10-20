@@ -123,3 +123,20 @@ export async function removeWorktree(root: string, dir: string, force: boolean) 
   if (w.main || w.current) throw new Error('The main worktree and the one open in the studio cannot be removed.');
   await git(top, ['worktree', 'remove', ...(force ? ['--force'] : []), w.path]);
 }
+
+/** Git bisect: whether one is in progress, the commit checked out, and git's last word (e.g. the first bad commit). */
+export async function bisectStatus(root: string) {
+  const { top } = await locate(root);
+  const gitDir = path.resolve(top, (await git(top, ['rev-parse', '--git-dir'])).trim());
+  const active = await fs.stat(path.join(gitDir, 'BISECT_LOG')).then(() => true, () => false);
+  const head = (await git(top, ['log', '-1', '--format=%h %s']).catch(() => '')).trim();
+  return { active, head };
+}
+export async function bisect(root: string, action: 'start' | 'good' | 'bad' | 'skip' | 'reset', ref?: string) {
+  const { top } = await locate(root);
+  if (action !== 'start' && action !== 'reset' && !(await bisectStatus(root)).active) await git(top, ['bisect', 'start']);
+  const out = await git(top, ['bisect', action, ...(ref && action !== 'start' ? [ref] : [])]);
+  // Older git: "is the first bad commit"; newer: "is the first 'bad' commit".
+  const found = /^([0-9a-f]{7,40}) is the first '?bad'? commit/m.exec(out);
+  return { output: out.trim().split('\n').slice(0, 6).join('\n'), firstBad: found?.[1], ...(await bisectStatus(root)) };
+}
