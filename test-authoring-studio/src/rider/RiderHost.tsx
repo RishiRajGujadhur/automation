@@ -4,7 +4,7 @@ import { X } from 'lucide-react';
 import { EditorView } from '@codemirror/view';
 
 const EditorViewScroll = (at: number) => EditorView.scrollIntoView(at, { y: 'center' });
-import { activeEditor } from '../editor/activeEditor';
+import { activeEditor, focusKeepingSelection } from '../editor/activeEditor';
 import { moveStatement } from '../editor/moveStatement';
 import { completeStatement } from '../editor/completeStatement';
 import { unwrap, unwrappable, type Unwrappable } from '../editor/unwrap';
@@ -285,13 +285,13 @@ export default function RiderHost(props: RiderHostProps) {
       p.current.onNotice(`Created ${file}.`);
     } catch (e) { p.current.onNotice((e as Error).message); }
   };
-  const closeAndFocus = () => { setPopup(null); requestAnimationFrame(() => target.current?.view.focus()); };
+  const closeAndFocus = () => { setPopup(null); const v = target.current?.view; if (v) focusKeepingSelection(v, true); };
   /** Runs an editor action on the active editor (and gives it focus back). */
   const inEditor = (fn: (v: EditorView, file: string) => unknown) => () => {
     const a = activeEditor();
     if (!a) { p.current.onNotice('Open a file in the editor first.'); return; }
     fn(a.view, a.file);
-    a.view.focus();
+    focusKeepingSelection(a.view);
   };
   // Explorer ▸ Compare with Selected: the two files' unified diff.
   useEffect(() => {

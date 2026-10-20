@@ -554,7 +554,7 @@ test('X113 Quick Info (Ctrl+K, Ctrl+I): the hover information at the caret', asy
   await page.keyboard.press('ArrowRight');
   await page.keyboard.press('Control+K');
   await page.keyboard.press('Control+I');
-  await expect(page.locator('.cm-tooltip .cm-quickinfo')).toBeVisible({ timeout: 90_000 });
+  await expect(page.locator('.cm-tooltip.cm-quickinfo')).toBeVisible({ timeout: 90_000 });
   await page.keyboard.press('Escape');
-  await expect(page.locator('.cm-tooltip .cm-quickinfo')).toHaveCount(0);
+  await expect(page.locator('.cm-tooltip.cm-quickinfo')).toHaveCount(0);
 });

@@ -120,6 +120,7 @@ has it on by default, so the desktop app starts with it on. The others start off
 | X110 | Explorer: Find in Folder… | VS Code / VS 2026 | yes | ✅ 2026-10-20 |
 | X111 | Explorer: Copy Full Path | VS 2026 | yes | ✅ 2026-10-20 |
 | X112 | Comment / Uncomment Scenario | Rider | yes | ✅ 2026-10-20 |
+| X113 | Quick Info (Ctrl+K, Ctrl+I) | VS 2026 | yes | ✅ 2026-10-20 |
 
 ## Progress log
 - 2026-10-20 X1: Sort Lines: the selected lines (or the whole file) in natural, case-insensitive order, blank lines last. Third-batch plumbing: src/rider/more.ts, src/editor/textTools.ts, IDE-FEATURES.md.
@@ -234,3 +235,4 @@ has it on by default, so the desktop app starts with it on. The others start off
 - 2026-10-20 X110: Search limited to the folder
 - 2026-10-20 X111: Absolute path to the clipboard
 - 2026-10-20 X112: Whole scenario commented out or back
+- 2026-10-20 X113: Hover information from the keyboard; menu commands keep the caret

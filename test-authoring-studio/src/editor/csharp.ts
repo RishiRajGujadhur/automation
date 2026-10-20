@@ -88,6 +88,24 @@ const quickInfo = (file: string) => hoverTooltip(async (view, pos) => {
   };
 }, { hoverTime: 450 });
 
+// Quick Info from the keyboard (Visual Studio's Ctrl+K, Ctrl+I): the hover tooltip at the caret until it moves.
+const setInfo = StateEffect.define<Tooltip | null>();
+const infoField = StateField.define<Tooltip | null>({
+  create: () => null,
+  update: (t, tr) => { for (const e of tr.effects) if (e.is(setInfo)) return e.value; return tr.docChanged || tr.selection ? null : t; },
+  provide: (f) => showTooltip.from(f),
+});
+export async function quickInfoAtCaret(view: EditorView, file: string) {
+  const pos = view.state.selection.main.head;
+  const word = view.state.wordAt(pos) ?? view.state.wordAt(Math.max(0, pos - 1));
+  if (!word) return false;
+  const { line, column } = lineCol(view.state.doc, word.from);
+  const r = await api<{ sections: { kind: string; text: string }[] } | null>('/csharp/hover', { file, source: view.state.doc.toString(), line, column }).catch(() => null);
+  if (!r?.sections.length) return false;
+  view.dispatch({ effects: setInfo.of({ pos: word.from, end: word.to, create: () => { const dom = document.createElement('div'); dom.className = 'cm-quickinfo'; for (const s of r.sections) { const el = document.createElement(s.kind === 'Description' ? 'code' : 'p'); el.textContent = s.text; dom.append(el); } return { dom }; } }) });
+  return true;
+}
+
 // ------------------------------------------------------------------ signature help (parameter info)
 type Signatures = { signatures: { label: string; parameters: string[]; documentation?: string | null }[]; activeSignature: number; activeParameter: number };
 const setSignature = StateEffect.define<{ pos: number; data: Signatures } | null>();
@@ -183,7 +201,10 @@ export function csharpLanguage(file: string, handlers: { current: CsHandlers }):
   return [
     autocompletion({ override: [completionSource(file)], activateOnTyping: true, maxRenderedOptions: 80, icons: true, defaultKeymap: true }),
     quickInfo(file),
+    infoField,
     keymap.of([
+      { key: 'Mod-k Mod-i', preventDefault: true, run: (v) => { if (featureOn('quick-info-key')) void quickInfoAtCaret(v, file); return featureOn('quick-info-key'); } },
+      { key: 'Escape', run: (v) => { if (!v.state.field(infoField)) return false; v.dispatch({ effects: setInfo.of(null) }); return true; } },
       { key: 'F12', preventDefault: true, run: (v) => { handlers.current.definition(at(v)); return true; } },
       { key: 'Shift-F12', preventDefault: true, run: (v) => { handlers.current.references(at(v)); return true; } },
       { key: 'Mod-F12', preventDefault: true, run: (v) => { handlers.current.implementations(at(v)); return true; } },

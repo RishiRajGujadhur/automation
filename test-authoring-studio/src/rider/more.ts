@@ -1,5 +1,6 @@
 import type { EditorView } from '@codemirror/view';
 import type { RiderCommand } from './commands';
+import { quickInfoAtCaret } from '../editor/csharp';
 import { isBrowser } from '../files/provider';
 import { GIT_CHANGED_EVENT } from '../editor/events';
 import { buildDiagnostics, stepError } from '../build/store';
@@ -112,5 +113,6 @@ export function moreCommands(h: MoreHelpers): RiderCommand[] {
     { id: 'undo-commit', label: 'Undo Last Commit…', menu: 'Tools', run: () => { if (!window.confirm('Undo the last commit? Its changes stay staged; nothing is lost. (Not for commits already pushed.)')) return; void api<{ output: string }>('/git/undo-commit', {}).then((r) => { window.dispatchEvent(new Event(GIT_CHANGED_EVENT)); h.notice(r.output); }, (e) => h.notice((e as Error).message)); } },
     { id: 'save-as', label: 'Save As…', menu: 'Edit', group: true, run: h.inEditor((v, file) => { if (isBrowser()) { h.notice('Save As needs a folder indexed by the studio server.'); return; } const to = window.prompt('Save a copy as (repository path):', file)?.trim().replace(/\\/g, '/'); if (!to || to === file) return; void api('/file/create', { file: to, source: v.state.doc.toString() }).then(() => { h.notice(`Saved as ${to}.`); window.dispatchEvent(new CustomEvent('tas:rescan', { detail: () => h.navigate({ file: to }) })); }, (e) => h.notice((e as Error).message)); }) },
     { id: 'comment-scenario', label: 'Comment / Uncomment Scenario', menu: 'Code', submenu: 'Gherkin', run: h.inEditor((v) => toggleScenarioComment(v) || h.notice('Put the caret in a scenario.')) },
+    { id: 'quick-info', label: 'Quick Info', menu: 'Edit', shortcut: 'Ctrl K, Ctrl I', run: h.inEditor((v, file) => { if (!file.endsWith('.cs')) { h.notice('Quick Info works in C# files.'); return; } void quickInfoAtCaret(v, file).then((ok) => { if (!ok) h.notice('No information for the symbol at the caret.'); }); }) },
   ];
 }

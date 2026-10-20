@@ -31,5 +31,16 @@ export function trackActive(file: string) {
   });
 }
 
+/**
+ * Gives an editor focus back after a menu or popup without losing its caret: when a menu closes, the browser can move
+ * the DOM selection, and the editor would read it as a caret at the start of the file.
+ */
+export function focusKeepingSelection(view: EditorView, deferred = false) {
+  const { doc, selection } = view.state;
+  const restore = () => { if (view.state.doc === doc && !view.state.selection.eq(selection)) view.dispatch({ selection }); };
+  const focus = () => { view.focus(); restore(); requestAnimationFrame(restore); setTimeout(restore, 60); };
+  if (deferred) requestAnimationFrame(focus); else focus();
+}
+
 // e2e tests read the editor state through this (development builds only).
 if (import.meta.env?.DEV && typeof window !== 'undefined') (window as unknown as { __activeEditor: typeof activeEditor }).__activeEditor = activeEditor;

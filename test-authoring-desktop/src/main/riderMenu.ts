@@ -53,6 +53,7 @@ const ROWS: Record<'edit' | 'view' | 'navigate' | 'code' | 'tools' | 'help', Row
     ['Untabify Selected Lines', 'untabify'],
     null,
     ['Save As…', 'save-as'],
+    ['Quick Info (Ctrl+K, Ctrl+I)', 'quick-info'],
   ],
   view: [
     null,
