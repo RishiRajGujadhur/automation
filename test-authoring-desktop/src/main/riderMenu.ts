@@ -240,6 +240,7 @@ const ROWS: Record<'edit' | 'view' | 'navigate' | 'code' | 'tools' | 'help', Row
     ['Copy XPath', 'copy-xpath'],
     ['Toggle Ignore Test', 'toggle-ignore'],
     ['Insert Date and Time', 'insert-date'],
+    ['Insert Lorem Ipsum', 'insert-lorem'],
   ],
   tools: [
     ['Run Anything… (Ctrl twice)', 'run-anything'],

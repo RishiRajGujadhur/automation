@@ -182,3 +182,6 @@ export const insertText = (text: () => string) => (view: EditorView) => {
   view.dispatch({ ...view.state.changeByRange((r) => ({ changes: { from: r.from, to: r.to, insert: t }, range: EditorSelection.cursor(r.from + t.length) })), userEvent: 'input' });
   return true;
 };
+
+/** Insert Lorem Ipsum (Rider): placeholder text for test data. */
+export const LOREM = 'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.';

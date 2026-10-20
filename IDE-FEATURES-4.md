@@ -23,6 +23,7 @@ has it on by default, so the desktop app starts with it on. The others start off
 | Y12 | Count Occurrences | Rider | no | ✅ 2026-10-20 |
 | Y13 | Trim Lines | Rider | no | ✅ 2026-10-20 |
 | Y14 | Insert Date and Time | Rider | no | ✅ 2026-10-20 |
+| Y15 | Insert Lorem Ipsum | Rider | no | ✅ 2026-10-20 |
 
 ## Progress log
 - 2026-10-20 Y1: Percent-encodes the selection (or line) and decodes it.
@@ -39,3 +40,4 @@ has it on by default, so the desktop app starts with it on. The others start off
 - 2026-10-20 Y12: How often the selection or word at the caret appears, and on how many lines.
 - 2026-10-20 Y13: Leading and trailing white space of the selected lines removed.
 - 2026-10-20 Y14: Code menu: the local date and time at each caret.
+- 2026-10-20 Y15: Code menu: a sentence of placeholder text.
