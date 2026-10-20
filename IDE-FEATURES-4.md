@@ -86,6 +86,7 @@ has it on by default, so the desktop app starts with it on. The others start off
 | Y75 | Generate Equality Members | VS 2026 | yes | ✅ 2026-10-20 |
 | Y76 | Generate ToString() | VS 2026 | yes | ✅ 2026-10-20 |
 | Y77 | Add Null Checks for Parameters | Rider | yes | ✅ 2026-10-20 |
+| Y78 | Validate JSON | VS 2026 | yes | ✅ 2026-10-20 |
 
 ## Progress log
 - 2026-10-20 Y1: Percent-encodes the selection (or line) and decodes it.
@@ -165,3 +166,4 @@ has it on by default, so the desktop app starts with it on. The others start off
 - 2026-10-20 Y75: Equals and GetHashCode from the public properties.
 - 2026-10-20 Y76: A record-style ToString of the public properties.
 - 2026-10-20 Y77: ArgumentNullException.ThrowIfNull for reference parameters.
+- 2026-10-20 Y78: Checks the JSON and puts the caret at the first error.

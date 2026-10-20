@@ -296,6 +296,7 @@ const ROWS: Record<'edit' | 'view' | 'navigate' | 'code' | 'tools' | 'help', Row
     ] },
     ['Remove Comments', 'remove-comments'],
     ['Insert TODO Comment', 'insert-todo'],
+    ['Validate JSON', 'validate-json'],
   ],
   tools: [
     ['Run Anything… (Ctrl twice)', 'run-anything'],

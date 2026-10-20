@@ -559,3 +559,15 @@ export function addNullChecks(view: EditorView) {
   }
   return false;
 }
+
+/** Validate JSON (Rider): null when valid, else the error and its offset (from the parser's "position N"). */
+export function validateJson(text: string) {
+  try { JSON.parse(text); return null; } catch (e) {
+    const msg = (e as Error).message;
+    const pos = /position (\d+)/.exec(msg);
+    const lc = /line (\d+) column (\d+)/.exec(msg);
+    let offset = pos ? Number(pos[1]) : 0;
+    if (!pos && lc) { const lines = text.split('\n'); offset = lines.slice(0, Number(lc[1]) - 1).reduce((n, l) => n + l.length + 1, 0) + Number(lc[2]) - 1; }
+    return { message: msg.replace(/^JSON\.parse: /, ''), offset: Math.min(offset, text.length) };
+  }
+}
