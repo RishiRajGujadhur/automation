@@ -65,3 +65,29 @@ test('C1 Project Properties: Application page writes the .csproj through an appr
   await approve(page, dlg);
   await expect.poll(csproj).not.toContain('AssemblyName');
 });
+
+test('C2–C6 Build / Package / Code Analysis pages, effective values, per-configuration values', async ({ page }) => {
+  const dlg = await properties(page);
+  const pages = dlg.getByRole('navigation', { name: 'Property pages' });
+  // C5: values the file does not set show what the SDK uses.
+  await pages.getByRole('button', { name: 'Build', exact: true }).click();
+  await expect(dlg.getByText(/^Effective: /).first()).toBeVisible({ timeout: 60_000 });
+  // C2
+  await dlg.getByLabel('Nullable').selectOption('enable');
+  await dlg.getByLabel('Treat warnings as errors').check();
+  // C3
+  await pages.getByRole('button', { name: 'Package' }).click();
+  await dlg.getByLabel('Version').fill('2.1.0');
+  // C4
+  await pages.getByRole('button', { name: 'Code Analysis' }).click();
+  await dlg.getByLabel('Analysis level').selectOption('latest-recommended');
+  await approve(page, dlg);
+  const text = await csproj();
+  for (const s of ['<Nullable>enable</Nullable>', '<TreatWarningsAsErrors>true</TreatWarningsAsErrors>', '<Version>2.1.0</Version>', '<AnalysisLevel>latest-recommended</AnalysisLevel>']) expect(text).toContain(s);
+  // C6: a Release-only value goes in a conditioned group.
+  await dlg.getByLabel('Configuration').selectOption('Release');
+  await pages.getByRole('button', { name: 'Build', exact: true }).click();
+  await dlg.getByLabel('Optimize code').check();
+  await approve(page, dlg);
+  await expect.poll(csproj).toContain(`<PropertyGroup Condition="'$(Configuration)'=='Release'">\n    <Optimize>true</Optimize>\n  </PropertyGroup>`);
+});

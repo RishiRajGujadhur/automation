@@ -29,4 +29,21 @@ export const PAGES: Page[] = [
       { name: 'IsPackable', label: 'Packable', kind: 'bool', help: 'Whether dotnet pack produces a NuGet package.' },
     ],
   },
+  {
+    id: 'build',
+    title: 'Build',
+    feature: 'pp-build',
+    fields: [
+      { name: 'Nullable', label: 'Nullable', kind: 'select', options: ['enable', 'disable', 'warnings', 'annotations'], help: 'Nullable reference types for the whole project.' },
+      { name: 'ImplicitUsings', label: 'Implicit global usings', kind: 'bool', on: 'enable', off: 'disable' },
+      { name: 'LangVersion', label: 'C# language version', kind: 'select', options: ['latest', 'preview', 'default', '14', '13', '12', '11', '10'] },
+      { name: 'TreatWarningsAsErrors', label: 'Treat warnings as errors', kind: 'bool' },
+      { name: 'WarningLevel', label: 'Warning level', kind: 'select', options: ['0', '1', '2', '3', '4', '5', '9999'] },
+      { name: 'NoWarn', label: 'Suppress warnings', kind: 'text', placeholder: '$(NoWarn);CS1591', help: 'Warning codes separated by ";".' },
+      { name: 'DefineConstants', label: 'Conditional compilation symbols', kind: 'text', placeholder: '$(DefineConstants);MY_SYMBOL' },
+      { name: 'Optimize', label: 'Optimize code', kind: 'bool' },
+      { name: 'PlatformTarget', label: 'Platform target', kind: 'select', options: ['AnyCPU', 'x64', 'x86', 'ARM64'] },
+      { name: 'OutputPath', label: 'Output path', kind: 'text', placeholder: 'bin\\$(Configuration)\\' },
+    ],
+  },
 ];
