@@ -75,6 +75,7 @@ const ROWS: Record<'edit' | 'view' | 'navigate' | 'code' | 'tools' | 'help', Row
       ['Join Lines with Separator…', 'join-with'],
       ['Split at Separator…', 'split-at'],
       ['Swap Selections', 'swap-selections'],
+      ['Trim Lines', 'trim-lines'],
     ] },
     ['Align Assignments', 'align-assignments', 'CmdOrCtrl+Alt+]'],
     ['Count Occurrences', 'count-occurrences'],

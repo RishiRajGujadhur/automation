@@ -162,3 +162,15 @@ export function countOccurrences(state: EditorState) {
   for (let i = doc.indexOf(needle); i >= 0; i = doc.indexOf(needle, i + needle.length)) n++;
   return { needle, count: n, lines: new Set(Array.from(doc.matchAll(new RegExp(needle.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'g')), (m) => state.doc.lineAt(m.index!).number)).size };
 }
+
+/** Trim Lines (Rider String Manipulation): leading and trailing white space of the selected lines (or the caret's line). */
+export function trimLines(view: EditorView) {
+  const { state } = view;
+  const r = state.selection.main;
+  const first = state.doc.lineAt(r.from), last = state.doc.lineAt(r.to);
+  const text = state.sliceDoc(first.from, last.to);
+  const next = text.split('\n').map((l) => l.trim()).join('\n');
+  if (next === text) return false;
+  view.dispatch({ changes: { from: first.from, to: last.to, insert: next }, userEvent: 'input.convert' });
+  return true;
+}

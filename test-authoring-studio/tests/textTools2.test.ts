@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { EditorSelection, EditorState, type TransactionSpec } from '@codemirror/state';
 import type { EditorView } from '@codemirror/view';
-import { mapSelections, urlEncode, urlDecode, base64Encode, base64Decode, escapeString, unescapeString, htmlEncode, htmlDecode, stepNumber, insertSequence, toggleQuotes, joinWith, splitAt, alignAssignments, swapSelections, countOccurrences } from '../src/editor/textTools2';
+import { mapSelections, urlEncode, urlDecode, base64Encode, base64Decode, escapeString, unescapeString, htmlEncode, htmlDecode, stepNumber, insertSequence, toggleQuotes, joinWith, splitAt, alignAssignments, swapSelections, countOccurrences, trimLines } from '../src/editor/textTools2';
 
 /** Runs an editor command on `doc` with the selection between « and » (or a caret at |). */
 function run(doc: string, cmd: (v: EditorView) => boolean) {
@@ -72,5 +72,8 @@ describe('text tools, fourth batch (IDE-FEATURES-4 Y1…)', () => {
   it('Y12 Count Occurrences of the word at the caret', () => {
     const state = EditorState.create({ doc: 'user a user\nb\nuser', selection: { anchor: 1 } });
     expect(countOccurrences(state)).toEqual({ needle: 'user', count: 3, lines: 2 });
+  });
+  it('Y13 Trim Lines', () => {
+    expect(run('«  a  \n\tb »\n  c', trimLines)).toBe('a\nb\n  c');
   });
 });

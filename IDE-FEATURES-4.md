@@ -21,6 +21,7 @@ has it on by default, so the desktop app starts with it on. The others start off
 | Y10 | Align Assignments (Ctrl+Alt+]) | VS 2026 | no | ✅ 2026-10-20 |
 | Y11 | Swap Selections | Rider | no | ✅ 2026-10-20 |
 | Y12 | Count Occurrences | Rider | no | ✅ 2026-10-20 |
+| Y13 | Trim Lines | Rider | no | ✅ 2026-10-20 |
 
 ## Progress log
 - 2026-10-20 Y1: Percent-encodes the selection (or line) and decodes it.
@@ -35,3 +36,4 @@ has it on by default, so the desktop app starts with it on. The others start off
 - 2026-10-20 Y10: Lines up the = of the selected lines or the assignment block at the caret.
 - 2026-10-20 Y11: With two selections, their text changes places.
 - 2026-10-20 Y12: How often the selection or word at the caret appears, and on how many lines.
+- 2026-10-20 Y13: Leading and trailing white space of the selected lines removed.

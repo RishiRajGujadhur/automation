@@ -407,6 +407,7 @@ export const FEATURES: Feature[] = [
   { id: 'align-assignments', label: 'Align Assignments', group: 'Editing', essential: false, vs: 'Productivity Power Tools: Align Assignments', description: 'Ctrl+Alt+] lines up the "=" of the selected lines or the block of assignments at the caret.', commands: ['align-assignments'] },
   { id: 'swap-selections', label: 'Swap Selections', group: 'Editing', essential: false, description: 'With two selections, Edit ▸ Convert swaps their text.', commands: ['swap-selections'] },
   { id: 'count-occurrences', label: 'Count Occurrences', group: 'Editing', essential: false, description: 'Edit ▸ Count Occurrences says how often the selection or the word at the caret appears in the file.', commands: ['count-occurrences'] },
+  { id: 'trim-lines', label: 'Trim Lines', group: 'Editing', essential: false, description: 'Edit ▸ Convert removes leading and trailing white space from the selected lines.', commands: ['trim-lines'] },
 ];
 export const GROUPS: FeatureGroup[] = ['Editing', 'Navigation', 'Code intelligence', 'Tool windows', 'Files', 'Git', 'Gherkin', 'View', 'Debugging', 'Help and productivity'];
 
