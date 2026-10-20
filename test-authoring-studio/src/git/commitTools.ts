@@ -10,3 +10,12 @@ export function issueKey(branch?: string) {
 }
 /** The message with the key in front ("ABC-123: …"), unless it already mentions it. */
 export const withIssueKey = (message: string, key: string) => (message.includes(key) ? message : `${key}: ${message}`);
+
+export const COMMIT_TYPES = ['feat', 'fix', 'test', 'refactor', 'docs', 'chore', 'ci', 'perf', 'build', 'style'];
+/** Sets the Conventional Commits type of a message ("fix: …"), replacing a type already there; scope and "!" kept. */
+export function withCommitType(message: string, type: string) {
+  const m = /^(\w+)(\([^)]*\))?(!)?:\s*/.exec(message);
+  if (m && COMMIT_TYPES.includes(m[1])) return `${type}${m[2] ?? ''}${m[3] ?? ''}: ${message.slice(m[0].length)}`;
+  const key = /^([A-Z][A-Z0-9]+-\d+|#\d+):\s*/.exec(message);
+  return key ? `${key[0]}${type}: ${message.slice(key[0].length)}` : `${type}: ${message}`;
+}
