@@ -217,6 +217,7 @@ const ROWS: Record<'edit' | 'view' | 'navigate' | 'code' | 'tools' | 'help', Row
     ['Add Watch', 'add-watch'],
     ['Undo Last Commit…', 'undo-commit'],
     ['Run Selected Text in Terminal', 'run-selection-terminal'],
+    ['Remove Breakpoints in File', 'clear-file-breakpoints'],
   ],
   help: [
     null,

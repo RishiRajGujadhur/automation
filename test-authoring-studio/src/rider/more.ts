@@ -20,7 +20,7 @@ import { reopenClosed } from '../files/tabs';
 import { resetWindowLayout } from './layoutStore';
 import { exportBreakpoints, importBreakpoints } from '../debug/store';
 import { copyText } from '../ui';
-import { specAt, toggleBreakpoint, updateBreakpoint, currentFrame, getSnapshot, setWatches } from '../debug/store';
+import { specAt, toggleBreakpoint, updateBreakpoint, currentFrame, getSnapshot, setWatches, setBreakpoints, breakpointsOf } from '../debug/store';
 import { lastTestRun, runTests, runUntilFailure, discoverTests } from '../testing/store';
 import { jsonToClasses } from '../editor/jsonClasses';
 import { generateConstructor } from '../editor/generateCtor';
@@ -136,5 +136,6 @@ export function moreCommands(h: MoreHelpers): RiderCommand[] {
     { id: 'previous-problem', label: 'Previous Problem in File', menu: 'Navigate', shortcut: 'Shift F8', run: h.inEditor((v) => { if (!previousDiagnostic(v)) h.notice('No problems in this file.'); }) },
     { id: 'goto-test', label: 'Go to Test / Test Subject', menu: 'Navigate', run: h.inEditor((_v, file) => { if (!file.endsWith('.cs')) { h.notice('Open a C# class or its test class first.'); return; } const base = file.split('/').pop()!.replace(/\.cs$/, ''); const isTest = /Tests?$/.test(base); const subject = base.replace(/Tests?$/, ''); const names = isTest ? [`${subject}.cs`] : [`${base}Tests.cs`, `${base}Test.cs`]; void api<{ files: { file: string }[] }>('/solution').then((s) => { const hits = s.files.map((f) => f.file).filter((f) => f !== file && names.includes(f.split('/').pop()!)); if (!hits.length) h.notice(`No ${names.join(' or ')} in the solution.`); else h.navigate({ file: hits[0] }); }, (e) => h.notice((e as Error).message)); }) },
     { id: 'run-selection-terminal', label: 'Run Selected Text in Terminal', menu: 'Tools', run: h.inEditor((v) => { const s = v.state.selection.main; const text = (s.empty ? v.state.doc.lineAt(s.head).text : v.state.sliceDoc(s.from, s.to)).trim(); if (!text) { h.notice('Select a command (or put the caret on its line).'); return; } const cmd = text.split(/\r?\n/).filter((l) => l.trim()).join('; '); if (document.querySelector('.terminal-host:not([hidden])')) runInTerminal(cmd); else queueTerminalCommand(cmd); runRider('tool-terminal', 'menu'); }) },
+    { id: 'clear-file-breakpoints', label: 'Remove Breakpoints in File', menu: 'Tools', run: h.inEditor((_v, file) => { const n = breakpointsOf(file).length; if (!n) { h.notice('No breakpoints in this file.'); return; } setBreakpoints(file, []); h.notice(`Removed ${n} breakpoint${n === 1 ? '' : 's'}.`); }) },
   ];
 }

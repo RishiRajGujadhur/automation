@@ -700,7 +700,7 @@ test('X146 Remove Breakpoints in File', async ({ page }) => {
   await page.keyboard.press('F9');
   await caretAt(page, 'the dashboard is displayed');
   await page.keyboard.press('F9');
-  await expect(gherkin(page).locator('.cm-bp')).toHaveCount(2);
+  await expect(page.locator('.gherkin-editor .cm-bp:visible')).toHaveCount(2);
   await menuItem(page, 'Tools', /^Remove Breakpoints in File/);
-  await expect(gherkin(page).locator('.cm-bp')).toHaveCount(0);
+  await expect(page.locator('.gherkin-editor .cm-bp:visible')).toHaveCount(0);
 });
