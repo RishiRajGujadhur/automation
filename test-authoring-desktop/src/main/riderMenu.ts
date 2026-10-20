@@ -88,6 +88,7 @@ const ROWS: Record<'edit' | 'view' | 'navigate' | 'code' | 'tools' | 'help', Row
     ['Right Margin Guide…', 'right-margin'],
     ['Tags', 'tool-tags'],
     ['Scroll Bar Annotations', 'scroll-marks'],
+    ['Show Pinned Tabs in a Separate Row', 'pinned-row'],
   ],
   navigate: [
     ['Select In…', 'select-in', 'Alt+F1'],

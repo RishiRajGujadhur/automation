@@ -118,5 +118,6 @@ export function moreCommands(h: MoreHelpers): RiderCommand[] {
     { id: 'copy-table-csv', label: 'Copy Table as CSV', menu: 'Code', submenu: 'Gherkin', run: h.inEditor((v) => { const csv = tableCsv(v.state); if (!csv) { h.notice('Put the caret in a table.'); return; } void copyText(csv).then((ok) => h.notice(ok ? `Copied ${csv.split('\n').length} rows as CSV.` : 'Clipboard unavailable.')); }) },
     { id: 'scroll-marks', label: 'Scroll Bar Annotations', menu: 'View', checked: () => !viewOptions().noScrollMarks, run: () => setViewOptions({ noScrollMarks: !viewOptions().noScrollMarks }) },
     { id: 'report-problem', label: 'Report a Problem…', menu: 'Help', group: true, run: () => { const kind = (window as unknown as { desktop?: unknown }).desktop ? 'desktop app' : 'web app'; const body = `**What happened**\n\n\n**Steps to reproduce**\n1. \n\n**Expected**\n\n\n_TestAuthoring Studio (${kind})_`; window.open(`https://github.com/RishiRajGujadhur/automation/issues/new?title=${encodeURIComponent('Problem: ')}&body=${encodeURIComponent(body)}`, '_blank', 'noopener'); } },
+    { id: 'pinned-row', label: 'Show Pinned Tabs in a Separate Row', menu: 'View', checked: () => !!viewOptions().pinnedRow, run: () => setViewOptions({ pinnedRow: !viewOptions().pinnedRow }) },
   ];
 }

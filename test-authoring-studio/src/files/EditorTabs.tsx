@@ -26,8 +26,12 @@ export function EditorActions({ children, active = true }: { children: ReactNode
  */
 export default function EditorTabs({ onClose, onSplit, children }: { onClose: (file: string) => void; onSplit?: (file: string) => void; children?: ReactNode }) {
   // Visual Studio's 'Show tabs in multiple rows': no scrolling strip, every tab visible.
-  const multiRow = !!useViewOptions().multiRowTabs && featureOn('multi-row-tabs');
+  const vo = useViewOptions();
+  const multiRow = !!vo.multiRowTabs && featureOn('multi-row-tabs');
+  // Show pinned tabs in a separate row (Visual Studio): a row break after the last pinned tab.
+  const pinnedRow = !!vo.pinnedRow && featureOn('pinned-row');
   const { tabs, active } = useTabs();
+  const lastPinned = tabs.map((t) => !!t.pinned).lastIndexOf(true);
   const strip = useRef<HTMLDivElement>(null);
   const [overflow, setOverflow] = useState({ left: false, right: false });
   const [slot, setSlot] = useState<HTMLElement | null>(null);
@@ -63,15 +67,15 @@ export default function EditorTabs({ onClose, onSplit, children }: { onClose: (f
 
   return (
     <ActionsSlot.Provider value={slot}>
-      <div className={`editor-tabs ${multiRow ? 'multi-row' : ''}`}>
+      <div className={`editor-tabs ${multiRow ? 'multi-row' : ''} ${pinnedRow && lastPinned >= 0 && lastPinned < tabs.length - 1 ? 'pinned-row' : ''}`}>
         {overflow.left && <button className="tab-scroll" aria-label="Show previous tabs" onClick={() => reveal(-1)}><ChevronLeft size={14} /></button>}
         <div className="tab-strip" role="group" aria-label="Open editors" ref={strip} onScroll={measure} onWheel={(e) => { if (strip.current && e.deltaY) strip.current.scrollLeft += e.deltaY; }}>
-          {tabs.map((t: EditorTab) => {
+          {tabs.map((t: EditorTab, i: number) => {
             const { icon: Icon, color } = fileType(t.file);
             const selected = t.file === active;
             const unsaved = dirty.includes(t.file);
             return (
-              <RowMenu key={t.file} label={`${base(t.file)} tab`} items={[
+              [<RowMenu key={t.file} label={`${base(t.file)} tab`} items={[
                 { label: t.pinned ? 'Unpin' : 'Pin', icon: t.pinned ? PinOff : Pin, onSelect: () => setPinned(t.file, !t.pinned) },
                 'separator',
                 { label: 'Close', shortcut: 'Ctrl F4', onSelect: () => onClose(t.file) },
@@ -101,7 +105,7 @@ export default function EditorTabs({ onClose, onSplit, children }: { onClose: (f
                   )}
                 </div>
               </RowMenu>
-            );
+            , pinnedRow && i === lastPinned && i < tabs.length - 1 ? <span key="pinned-break" className="tab-row-break" aria-hidden="true" /> : null]);
           })}
         </div>
         {overflow.right && <button className="tab-scroll" aria-label="Show next tabs" onClick={() => reveal(1)}><ChevronRight size={14} /></button>}

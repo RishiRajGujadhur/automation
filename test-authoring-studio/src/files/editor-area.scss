@@ -3513,3 +3513,16 @@ html[data-features-off~='inlay-hints'] .cm-inlay {
   white-space: pre-wrap;
   word-break: break-word;
 }
+
+// Pinned tabs in a separate row (Visual Studio option)
+.editor-tabs.pinned-row .tab-strip {
+  flex-wrap: wrap;
+  overflow: visible;
+  .editor-tab {
+    flex: none;
+  }
+}
+.tab-row-break {
+  flex-basis: 100%;
+  height: 0;
+}
