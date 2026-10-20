@@ -302,6 +302,7 @@ export const FEATURES: Feature[] = [
   { id: 'search-count', label: 'Find: match counter', group: 'Editing', essential: true, vs: 'Find widget match count', description: 'The find panel shows "3 of 12" for the current match.' },
   { id: 'editor-links', label: 'Ctrl+click links in the editor', group: 'Editing', essential: true, vs: 'Editor ▸ Links', description: 'Web addresses in the text are underlined; Ctrl+click opens them.' },
   { id: 'editor-file-links', label: 'Ctrl+click file:line references', group: 'Navigation', essential: true, description: 'path/File.cs:12 in any editor opens at that line on Ctrl+click.' },
+  { id: 'selection-count', label: 'Multi-caret count in the status bar', group: 'Editing', essential: true, vs: 'Status bar ▸ selections', description: 'With several carets the status bar shows how many.' },
 ];
 export const GROUPS: FeatureGroup[] = ['Editing', 'Navigation', 'Code intelligence', 'Tool windows', 'Files', 'Git', 'Gherkin', 'View', 'Debugging', 'Help and productivity'];
 
