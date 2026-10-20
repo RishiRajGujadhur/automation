@@ -1,6 +1,6 @@
 import type { RiderCommand } from './commands';
 import type { MoreHelpers } from './more';
-import { urlEncode, urlDecode, base64Encode, base64Decode, escapeString, unescapeString, htmlEncode, htmlDecode, stepNumber, insertSequence, toggleQuotes, joinWith, splitAt, alignAssignments, swapSelections } from '../editor/textTools2';
+import { urlEncode, urlDecode, base64Encode, base64Decode, escapeString, unescapeString, htmlEncode, htmlDecode, stepNumber, insertSequence, toggleQuotes, joinWith, splitAt, alignAssignments, swapSelections, countOccurrences } from '../editor/textTools2';
 
 /**
  * Fourth batch of Visual Studio 2026 / JetBrains Rider commands (IDE-FEATURES-4.md, Y1–Y100). RiderHost registers
@@ -24,5 +24,6 @@ export function moreCommands2(h: MoreHelpers): RiderCommand[] {
     { id: 'split-at', label: 'Split at Separator…', menu: 'Edit', submenu: 'Convert', run: h.inEditor((v) => { const sep = window.prompt('Split the line (or selected lines) at:', ','); if (sep) splitAt(sep)(v); }) },
     { id: 'align-assignments', label: 'Align Assignments', menu: 'Edit', shortcut: 'Ctrl Alt ]', run: h.inEditor((v) => alignAssignments(v) || h.notice('Put the caret on an assignment (or select the lines to align).')) },
     { id: 'swap-selections', label: 'Swap Selections', menu: 'Edit', submenu: 'Convert', run: h.inEditor((v) => swapSelections(v) || h.notice('Select exactly two pieces of text (Alt+drag or Ctrl+Alt+click) to swap.')) },
+    { id: 'count-occurrences', label: 'Count Occurrences', menu: 'Edit', run: h.inEditor((v) => { const c = countOccurrences(v.state); h.notice(c ? `"${c.needle.length > 40 ? `${c.needle.slice(0, 37)}…` : c.needle}": ${c.count} occurrence${c.count === 1 ? '' : 's'} on ${c.lines} line${c.lines === 1 ? '' : 's'}.` : 'Select text (or put the caret on a word) to count.'); }) },
   ];
 }

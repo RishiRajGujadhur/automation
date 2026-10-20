@@ -77,6 +77,7 @@ const ROWS: Record<'edit' | 'view' | 'navigate' | 'code' | 'tools' | 'help', Row
       ['Swap Selections', 'swap-selections'],
     ] },
     ['Align Assignments', 'align-assignments', 'CmdOrCtrl+Alt+]'],
+    ['Count Occurrences', 'count-occurrences'],
   ],
   view: [
     null,

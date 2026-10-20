@@ -1,4 +1,4 @@
-import { EditorSelection } from '@codemirror/state';
+import { EditorSelection, type EditorState } from '@codemirror/state';
 import type { EditorView } from '@codemirror/view';
 import { mapLines } from './textTools';
 
@@ -149,4 +149,16 @@ export function swapSelections(view: EditorView) {
   const shift = tb.length - ta.length;
   view.dispatch({ changes: [{ from: a.from, to: a.to, insert: tb }, { from: b.from, to: b.to, insert: ta }], selection: EditorSelection.create([EditorSelection.range(a.from, a.from + tb.length), EditorSelection.range(b.from + shift, b.to + shift)]), userEvent: 'input.convert' });
   return true;
+}
+
+/** Count Occurrences (Rider): how often the selection (or the word at the caret) appears in the file. */
+export function countOccurrences(state: EditorState) {
+  const r = state.selection.main;
+  const w = r.empty ? state.wordAt(r.head) : r;
+  if (!w || w.from === w.to) return null;
+  const needle = state.sliceDoc(w.from, w.to);
+  const doc = state.doc.toString();
+  let n = 0;
+  for (let i = doc.indexOf(needle); i >= 0; i = doc.indexOf(needle, i + needle.length)) n++;
+  return { needle, count: n, lines: new Set(Array.from(doc.matchAll(new RegExp(needle.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'g')), (m) => state.doc.lineAt(m.index!).number)).size };
 }
