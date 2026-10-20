@@ -495,6 +495,7 @@ export const FEATURES: Feature[] = [
   { id: 'delete-disabled-breakpoints', label: 'Delete Disabled Breakpoints', group: 'Debugging', essential: false, description: 'Tools ▸ Delete Disabled Breakpoints removes every disabled breakpoint, keeping the enabled ones.', commands: ['delete-disabled-breakpoints'] },
   { id: 'char-info', label: 'Character Info at Caret', group: 'Help and productivity', essential: false, description: 'Tools ▸ Character Info shows the character at the caret, its Unicode code point and UTF-8 bytes (for invisible or look-alike characters).', commands: ['char-info'] },
   { id: 'close-lru-tabs', label: 'Close Least Recently Used Tabs', group: 'Files', essential: false, description: 'View ▸ Close Least Recently Used Tabs keeps the 5 tabs used last (and pinned or unsaved ones) and closes the rest.', commands: ['close-lru-tabs'] },
+  // ── Advanced (ADVANCED-20.md) ──
 ];
 export const GROUPS: FeatureGroup[] = ['Editing', 'Navigation', 'Code intelligence', 'Tool windows', 'Files', 'Git', 'Gherkin', 'View', 'Debugging', 'Help and productivity'];
 

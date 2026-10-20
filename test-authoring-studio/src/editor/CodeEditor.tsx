@@ -22,6 +22,7 @@ import { diff as diffMode } from '@codemirror/legacy-modes/mode/diff';
 import { vsKeys, commentTokenFor } from './vsKeys';
 import { braceFolding, braceRange } from './folding';
 import { stickyScroll } from './stickyScroll';
+import { advancedEditor } from './advanced';
 import { revealOn, cursorTracker } from './cursor';
 import { bookmarks } from './bookmarks';
 import { riderKeys } from './riderKeys';
@@ -416,6 +417,7 @@ export default function CodeEditor({ file, reveal, active = true, onNotice, onIn
     riderKeys(file), viewOptionsExtension(),
     caretTracker,
     blameGutter(),
+    ...advancedEditor(file, 'code'),
     coverageGutter(),
     ...(commentTokenFor(file) === '//' ? [braceFolding(), stickyScroll(braceRange)] : []),
     ...(commentTokenFor(file) ? [vsKeys(commentTokenFor(file))] : []),
