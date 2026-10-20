@@ -10,6 +10,8 @@ has it on by default, so the desktop app starts with it on. The others start off
 | # | Feature | From | Essential | Status |
 | --- | --- | --- | --- | --- |
 | Y1 | URL Encode / Decode (Edit ▸ Convert) | Rider | no | ✅ 2026-10-20 |
+| Y2 | Base64 Encode / Decode (Edit ▸ Convert) | Rider | no | ✅ 2026-10-20 |
 
 ## Progress log
 - 2026-10-20 Y1: Percent-encodes the selection (or line) and decodes it.
+- 2026-10-20 Y2: UTF-8 Base64 of the selection, and back.

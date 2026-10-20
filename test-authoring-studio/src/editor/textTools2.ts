@@ -35,3 +35,7 @@ export { mapLines };
 /** URL Encode / Decode (Rider String Manipulation): percent-encoding of the selection. */
 export const urlEncode = mapSelections((t) => encodeURIComponent(t), 'line');
 export const urlDecode = mapSelections((t) => { try { return decodeURIComponent(t.replace(/\+/g, ' ')); } catch { return null; } }, 'line');
+
+/** Base64 Encode / Decode (Rider String Manipulation), UTF-8. */
+export const base64Encode = mapSelections((t) => btoa(String.fromCharCode(...new TextEncoder().encode(t))), 'line');
+export const base64Decode = mapSelections((t) => { try { return new TextDecoder('utf-8', { fatal: true }).decode(Uint8Array.from(atob(t.trim()), (c) => c.charCodeAt(0))); } catch { return null; } }, 'line');

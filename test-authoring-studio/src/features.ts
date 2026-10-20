@@ -396,6 +396,7 @@ export const FEATURES: Feature[] = [
   { id: 'status-tests', label: 'Test results in the status bar', group: 'Tool windows', essential: true, description: 'After a test run the status bar shows passed / failed counts; a click opens Test Explorer.' },
   // ── Fourth batch (IDE-FEATURES-4.md) ──
   { id: 'url-encode', label: 'URL Encode / Decode', group: 'Editing', essential: false, description: 'Edit ▸ Convert percent-encodes the selection (or the line) and decodes it back.', commands: ['url-encode', 'url-decode'] },
+  { id: 'base64', label: 'Base64 Encode / Decode', group: 'Editing', essential: false, description: 'Edit ▸ Convert encodes the selection as Base64 (UTF-8) and decodes it back.', commands: ['base64-encode', 'base64-decode'] },
 ];
 export const GROUPS: FeatureGroup[] = ['Editing', 'Navigation', 'Code intelligence', 'Tool windows', 'Files', 'Git', 'Gherkin', 'View', 'Debugging', 'Help and productivity'];
 

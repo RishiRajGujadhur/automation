@@ -62,6 +62,8 @@ const ROWS: Record<'edit' | 'view' | 'navigate' | 'code' | 'tools' | 'help', Row
     { submenu: 'Convert', rows: [
       ['URL Encode', 'url-encode'],
       ['URL Decode', 'url-decode'],
+      ['Base64 Encode', 'base64-encode'],
+      ['Base64 Decode', 'base64-decode'],
     ] },
   ],
   view: [
