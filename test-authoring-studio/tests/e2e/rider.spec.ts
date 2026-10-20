@@ -249,7 +249,7 @@ test('J13 Copy Reference (Ctrl+Alt+Shift+C): fully qualified C# member, path:lin
   await page.getByRole('navigation').getByRole('button', { name: 'Login.feature', exact: true }).first().click();
   await caretAt(page, 'signs in');
   await page.keyboard.press('Control+Alt+Shift+C');
-  await expect(page.getByText('Copied reference: Features/Auth/Login.feature:7')).toBeVisible();
+  await expect(page.getByText('Copied reference: Features/Auth/Login.feature:7').first()).toBeVisible();
 });
 
 test('J14 Highlight Usages in File (Ctrl+Shift+F7): Roslyn references in C#, words in features; F3 moves, Esc clears', async ({ page }) => {
