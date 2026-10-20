@@ -290,3 +290,23 @@ export function toRawString(view: EditorView) {
   }
   return false;
 }
+
+/** Markdown: Toggle Task (Rider): "- [ ]" ↔ "- [x]" on the selected lines; a plain item or line becomes a task. */
+export function toggleTask(view: EditorView) {
+  const { state } = view;
+  const r = state.selection.main;
+  const first = state.doc.lineAt(r.from), last = state.doc.lineAt(r.to);
+  const text = state.sliceDoc(first.from, last.to);
+  const next = text.split('\n').map((l) => {
+    if (!l.trim()) return l;
+    const t = /^(\s*[-*+] )\[( |x|X)\] /.exec(l);
+    if (t) return l.slice(0, t[1].length) + (t[2] === ' ' ? '[x] ' : '[ ] ') + l.slice(t[0].length);
+    const item = /^(\s*[-*+] )/.exec(l);
+    if (item) return `${item[1]}[ ] ${l.slice(item[0].length)}`;
+    const ind = /^\s*/.exec(l)![0];
+    return `${ind}- [ ] ${l.slice(ind.length)}`;
+  }).join('\n');
+  if (next === text) return false;
+  view.dispatch({ changes: { from: first.from, to: last.to, insert: next }, userEvent: 'input.convert' });
+  return true;
+}

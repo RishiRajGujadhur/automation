@@ -419,6 +419,7 @@ export const FEATURES: Feature[] = [
   { id: 'block-scoped-namespace', label: 'Convert to Block-Scoped Namespace', group: 'Code intelligence', essential: true, vs: 'Quick Actions: Convert to block-scoped namespace', description: 'Code ▸ C# turns namespace X; back into a namespace block and indents the file.', commands: ['block-scoped-namespace'] },
   { id: 'remove-regions', label: 'Remove #region Directives', group: 'Code intelligence', essential: false, description: 'Code ▸ C# removes every #region and #endregion line, keeping the code.', commands: ['remove-regions'] },
   { id: 'raw-string', label: 'Convert to Raw String Literal', group: 'Code intelligence', essential: true, vs: 'Quick Actions: Convert to raw string', description: 'Code ▸ C# turns the string at the caret into a C# 11 raw string literal (escapes gone; multi-line when it has new lines).', commands: ['raw-string'] },
+  { id: 'md-toggle-task', label: 'Markdown: Toggle Task', group: 'Editing', essential: false, description: 'Code ▸ Markdown checks or unchecks "- [ ]" tasks (and turns a line into a task).', commands: ['md-toggle-task'] },
 ];
 export const GROUPS: FeatureGroup[] = ['Editing', 'Navigation', 'Code intelligence', 'Tool windows', 'Files', 'Git', 'Gherkin', 'View', 'Debugging', 'Help and productivity'];
 

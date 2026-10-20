@@ -254,6 +254,10 @@ const ROWS: Record<'edit' | 'view' | 'navigate' | 'code' | 'tools' | 'help', Row
       ['Remove #region Directives', 'remove-regions'],
       ['Convert to Raw String Literal', 'raw-string'],
     ] },
+    null,
+    { submenu: 'Markdown', rows: [
+      ['Toggle Task', 'md-toggle-task'],
+    ] },
   ],
   tools: [
     ['Run Anything… (Ctrl twice)', 'run-anything'],

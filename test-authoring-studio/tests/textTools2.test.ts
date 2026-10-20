@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { EditorSelection, EditorState, type TransactionSpec } from '@codemirror/state';
 import type { EditorView } from '@codemirror/view';
-import { mapSelections, urlEncode, urlDecode, base64Encode, base64Decode, escapeString, unescapeString, htmlEncode, htmlDecode, stepNumber, insertSequence, toggleQuotes, joinWith, splitAt, alignAssignments, swapSelections, countOccurrences, trimLines, stamp, insertText, LOREM, shuffleLines, formatXml, minifyXml, jsonEscape, jsonUnescape, numberLines, toFileScopedNamespace, toBlockScopedNamespace, removeRegions, toRawString } from '../src/editor/textTools2';
+import { mapSelections, urlEncode, urlDecode, base64Encode, base64Decode, escapeString, unescapeString, htmlEncode, htmlDecode, stepNumber, insertSequence, toggleQuotes, joinWith, splitAt, alignAssignments, swapSelections, countOccurrences, trimLines, stamp, insertText, LOREM, shuffleLines, formatXml, minifyXml, jsonEscape, jsonUnescape, numberLines, toFileScopedNamespace, toBlockScopedNamespace, removeRegions, toRawString, toggleTask } from '../src/editor/textTools2';
 
 /** Runs an editor command on `doc` with the selection between « and » (or a caret at |). */
 function run(doc: string, cmd: (v: EditorView) => boolean) {
@@ -118,5 +118,8 @@ describe('text tools, fourth batch (IDE-FEATURES-4 Y1…)', () => {
     expect(run('var s = "say \\"h|i\\"";', toRawString)).toBe('var s = "say \\"hi\\"";');
     expect(run('x = "a\\nb|";', toRawString)).toBe('x = """\n    a\n    b\n    """;');
     expect(run('x = @"a|";', toRawString)).toBe('x = @"a";');
+  });
+  it('Y25 Markdown Toggle Task', () => {
+    expect(run('«- [ ] a\n- [x] b\n- c\nd»', toggleTask)).toBe('- [x] a\n- [ ] b\n- [ ] c\n- [ ] d');
   });
 });
