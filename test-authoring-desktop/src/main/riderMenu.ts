@@ -334,6 +334,7 @@ const ROWS: Record<'edit' | 'view' | 'navigate' | 'code' | 'tools' | 'help', Row
       ['Move Type to Matching File', 'move-type-to-file'],
       ['Extract Interface…', 'extract-interface'],
       ['Create Unit Tests…', 'create-unit-tests'],
+      ['Configure Severity…', 'configure-severity'],
     ] },
   ],
   tools: [

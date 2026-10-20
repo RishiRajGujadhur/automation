@@ -566,6 +566,7 @@ export const FEATURES: Feature[] = [
   { id: 'extract-interface', label: 'Extract Interface', group: 'Code intelligence', essential: true, vs: 'Extract Interface', description: 'Code ▸ Refactor ▸ Extract Interface writes IClassName.cs with the public methods and properties (previewed) and makes the class implement it.', commands: ['extract-interface'] },
   { id: 'create-unit-tests', label: 'Create Unit Tests', group: 'Code intelligence', essential: true, vs: 'Create Unit Tests', description: 'Code ▸ Refactor ▸ Create Unit Tests previews a test class (NUnit, xUnit or MSTest, from the solution\'s packages) with a test per public method.', commands: ['create-unit-tests'] },
   { id: 'exit-points', label: 'Highlight exit points', group: 'Code intelligence', essential: true, vs: 'Highlight exit points', description: 'With the caret on return or throw, every exit point of the method is highlighted (Rider\'s exit points).' },
+  { id: 'configure-severity', label: 'Configure Severity', group: 'Code intelligence', essential: true, vs: 'Quick Actions ▸ Configure severity', description: 'Code ▸ Refactor ▸ Configure Severity sets the severity of the diagnostic at the caret in .editorconfig (previewed), like Rider\'s "Configure inspection severity".', commands: ['configure-severity'] },
 ];
 export const GROUPS: FeatureGroup[] = ['Editing', 'Navigation', 'Code intelligence', 'Tool windows', 'Files', 'Git', 'Gherkin', 'View', 'Debugging', 'Help and productivity'];
 
