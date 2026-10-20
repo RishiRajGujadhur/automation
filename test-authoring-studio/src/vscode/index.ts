@@ -19,4 +19,5 @@ import './folding';
 import './brackets';
 import './workbenchTabs';
 import '../search/searchEditor';
+import './zenMode';
 export { SETTINGS } from './settings';

@@ -44,6 +44,7 @@ import RiderMenubar from './rider/RiderMenubar';
 import RiderToolWindow, { RIDER_TOOLS, type RiderTool } from './rider/RiderToolWindow';
 import { menuEntries, runRider, useRiderCommands, commandOn, readUsage } from './rider/commands';
 import { featureOn, disabledCommands, onFeaturesChanged } from './features';
+import { zenSilent } from './vscode/zenMode';
 import { studioLog } from './outputLog';
 import RecentPopup from './RecentPopup';
 import LocalHistory from './LocalHistory';
@@ -2297,7 +2298,8 @@ export default function App() {
           // Problems stay up longer than confirmations (QOL-50).
           duration={featureOn('toast-errors-longer') && /\b(fail|failed|error|errors|cannot|could not|not found|invalid|refused|denied|unavailable)\b/i.test(notice) && !/\b0 errors\b/.test(notice) ? 15000 : undefined}
           className="toast"
-          open={!!notice && !(viewOpts.doNotDisturb && featureOn('do-not-disturb'))}
+          // Zen Mode's silent notifications (zenMode.silentNotifications) too.
+          open={!!notice && !(viewOpts.doNotDisturb && featureOn('do-not-disturb')) && !zenSilent()}
           onOpenChange={(open) => { if (!open) { setNotice(''); setUndo(undefined); } }}
         >
           <Check size={17} />

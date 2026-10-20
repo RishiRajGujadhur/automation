@@ -4,7 +4,7 @@ import { useSyncExternalStore } from 'react';
  * Rider's View ▸ Appearance modes: Distraction-Free (only the editor, centred), Presentation (that, full screen with a
  * large font) and Hide All Tool Windows. Applied as attributes on <html> so the shell's CSS hides the rest.
  */
-export type LayoutMode = 'normal' | 'zen' | 'presentation';
+export type LayoutMode = 'normal' | 'zen' | 'presentation' | 'vszen';
 type State = { mode: LayoutMode; toolsHidden: boolean };
 const KEY = 'tas:rider:layout';
 let state: State = (() => { try { return { mode: 'normal', toolsHidden: false, ...JSON.parse(sessionStorage.getItem(KEY) ?? '{}') } as State; } catch { return { mode: 'normal', toolsHidden: false } as State; } })();
@@ -34,3 +34,4 @@ export const useLayoutState = () => useSyncExternalStore((l) => { listeners.add(
 export const toggleMode = (mode: Exclude<LayoutMode, 'normal'>) => set({ mode: state.mode === mode ? 'normal' : mode });
 export const exitMode = () => set({ mode: 'normal' });
 export const toggleToolWindows = () => set({ toolsHidden: !state.toolsHidden });
+export const onLayoutChanged = (l: () => void) => { listeners.add(l); return () => { listeners.delete(l); }; };

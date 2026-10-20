@@ -464,3 +464,24 @@ test('217 Code actions on save: organize imports', async ({ page }) => {
   await saveNow(page);
   await expect.poll(() => disk(CS), { timeout: 30_000 }).toMatch(/^using System\.Text;\nnamespace Demo;/);
 });
+
+test('388 Zen Mode (Ctrl+K Z) with its settings; Escape twice leaves it', async ({ page }) => {
+  await open(page, CS, { 'zenMode.fullScreen': false, 'zenMode.showTabs': 'single', 'zenMode.hideStatusBar': false });
+  await page.getByLabel(`Source of ${CS}`).click();
+  await page.keyboard.press('Control+k');
+  await page.keyboard.press('z');
+  const html = page.locator('html');
+  await expect(html).toHaveAttribute('data-rider-mode', 'vszen');
+  await expect(page.locator('.activity-bar')).toBeHidden();
+  await expect(page.locator('.sidebar').first()).toBeHidden();
+  // Tabs: a single one; the status bar stays (hideStatusBar off); line numbers hidden.
+  await expect(page.getByRole('group', { name: 'Open editors' }).locator('.editor-tab').filter({ visible: true })).toHaveCount(1);
+  await expect(page.locator('.status-bar').first()).toBeVisible();
+  await expect(page.locator('.cm-lineNumbers').first()).toBeHidden();
+  // The z was not typed into the editor.
+  expect(await docText(page)).not.toMatch(/^z/);
+  await page.keyboard.press('Escape');
+  await page.keyboard.press('Escape');
+  await expect(html).not.toHaveAttribute('data-rider-mode', /.+/);
+  await expect(page.locator('.activity-bar')).toBeVisible();
+});

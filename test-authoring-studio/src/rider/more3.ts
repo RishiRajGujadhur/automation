@@ -6,6 +6,8 @@ import { viewOptions } from '../editor/viewOptions';
 import { discoverTests, getTestRun, resultsOf } from '../testing/store';
 import { prevConflict } from '../editor/advanced';
 import { findInSelection } from '../editor/findInSelection';
+import { toggleZen } from '../vscode/zenMode';
+import { layoutState } from './layoutModes';
 
 /**
  * Rider and VS Code features (RIDER-VSCODE-FEATURES.md): commands of the 2026-10-21 list. RiderHost registers them with
@@ -16,6 +18,7 @@ export function moreCommands3(h: MoreHelpers): RiderCommand[] {
   const tokens = () => viewOptions().todoTokens ?? DEFAULT_TODO_TOKENS;
   return [
     { id: 'find-in-selection', label: 'Find in Selection', menu: 'Edit', group: true, run: h.inEditor((v) => findInSelection(v) || h.notice('Select the text to search in first.')) },
+    { id: 'vs-zen-mode', label: 'Zen Mode', menu: 'View', group: true, shortcut: 'Ctrl K, Z', checked: () => layoutState().mode === 'vszen', run: () => toggleZen() },
     { id: 'next-todo', label: 'Next TODO', menu: 'Navigate', group: true, run: h.inEditor((v) => gotoTodo(tokens(), 1)(v) || h.notice(`No ${tokens().join(' / ')} comments in this file.`)) },
     { id: 'previous-todo', label: 'Previous TODO', menu: 'Navigate', run: h.inEditor((v) => gotoTodo(tokens(), -1)(v) || h.notice(`No ${tokens().join(' / ')} comments in this file.`)) },
     { id: 'previous-conflict', label: 'Previous Merge Conflict', menu: 'Navigate', run: h.inEditor((v) => prevConflict(v) || h.notice('This file has no merge conflicts.')) },

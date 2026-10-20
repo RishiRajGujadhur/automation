@@ -3842,3 +3842,12 @@ html[data-features-off~='inlay-hints'] .cm-inlay {
   .meta { display: block; margin-top: 4px; }
 }
 .search-ab { font-size: 10px; font-weight: 700; letter-spacing: -0.5px; }
+
+/* Zen Mode (VS Code, RIDER-VSCODE-FEATURES.md 388): the Distraction-Free rules, adjusted by the zenMode.* settings. */
+html[data-rider-mode='vszen'] {
+  &[data-zen-tabs='multiple'] .editor-tabs, &[data-zen-tabs='single'] .editor-tabs { display: flex !important; }
+  &[data-zen-tabs='single'] .editor-tab:not(.active) { display: none; }
+  &[data-zen-status='shown'] .status-bar { display: flex !important; }
+  &[data-zen-lines='hidden'] .cm-lineNumbers { display: none !important; }
+  &[data-zen-center='false'] .cm-scroller { padding: 0; }
+}

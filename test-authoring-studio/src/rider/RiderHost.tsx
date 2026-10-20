@@ -771,8 +771,8 @@ export default function RiderHost(props: RiderHostProps) {
     {/* Status bar badge while Power Save Mode is on (click to turn it off). */}
     <PowerSaveBadge />
     {layout.mode !== 'normal' && (
-      <button className="rider-exit-mode" onClick={() => { exitMode(); riderChanged(); }}>
-        Exit {layout.mode === 'zen' ? 'Distraction-Free' : 'Presentation'} Mode
+      <button className="rider-exit-mode" onClick={() => { exitMode(); if (document.fullscreenElement) void document.exitFullscreen().catch(() => {}); riderChanged(); }}>
+        Exit {layout.mode === 'zen' ? 'Distraction-Free' : layout.mode === 'vszen' ? 'Zen' : 'Presentation'} Mode
       </button>
     )}
     <Dialog.Root open={!!popup} onOpenChange={(o) => { if (!o) closeAndFocus(); }}>

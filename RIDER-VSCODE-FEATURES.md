@@ -317,7 +317,7 @@ Legend: `[x]` done · `[ ]` to do.
 - [x] 385. Split editor vertically — Split Right / Open to the Side
 - [ ] 386. Move editors between groups
 - [ ] 387. Open files in a floating editor window
-- [ ] 388. Zen Mode
+- [x] 388. Zen Mode — View ▸ Zen Mode (Ctrl+K Z), Workbench ▸ Zen Mode settings (full screen, center, line numbers, status bar, tabs, silent notifications) (2026-10-21)
 - [x] 389. Distraction Free Mode
 - [x] 390. Centered editor layout
 - [ ] 391. Custom activity bar positioning
@@ -366,3 +366,4 @@ Legend: `[x]` done · `[ ]` to do.
 - 2026-10-21 216: Saving formats the file first (C# with Roslyn and .editorconfig, Gherkin, JSON); the editor takes the formatted text.
 - 2026-10-21 218: Format on save can format only the lines changed since the file was last saved, leaving the rest as it is.
 - 2026-10-21 217: Saving a C# file can organize its usings first.
+- 2026-10-21 388: VS Code's Zen Mode: only the editor, with its zenMode.* settings; Escape twice or the Exit button leaves it.

@@ -95,6 +95,7 @@ const ROWS: Record<'edit' | 'view' | 'navigate' | 'code' | 'tools' | 'help', Row
     ['Fill Paragraph', 'fill-paragraph'],
   ],
   view: [
+    ['Zen Mode', 'vs-zen-mode'],
     null,
     ['Soft-Wrap (Active Editor)', 'soft-wrap'],
     ['Show Whitespaces', 'whitespace'],
