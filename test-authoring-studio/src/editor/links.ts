@@ -5,6 +5,14 @@ import { Decoration, EditorView, MatchDecorator, ViewPlugin, type DecorationSet,
 export const OPEN_LOCATION_EVENT = 'tas:open-location';
 const URL = /\bhttps?:\/\/[^\s"'<>)\]]+/g;
 const FILE = /(?<![\w/.-])((?:[\w.-]+\/)*[\w.-]+\.(?:cs|feature|md|json|xml|csproj|config|ts|tsx|js|txt|ya?ml|props|targets)):(\d+)(?::(\d+))?/g;
+/** The text split into plain parts and file:line references (Notifications window). */
+export function fileRefs(text: string) {
+  const parts: (string | { file: string; line: number; column: number; text: string })[] = [];
+  let at = 0;
+  for (const m of text.matchAll(FILE)) { if (m.index! > at) parts.push(text.slice(at, m.index)); parts.push({ file: m[1].replace(/\\/g, '/'), line: Number(m[2]), column: m[3] ? Number(m[3]) : 1, text: m[0] }); at = m.index! + m[0].length; }
+  if (at < text.length) parts.push(text.slice(at));
+  return parts;
+}
 export const linkAt = (text: string, col: number) => {
   for (const m of text.matchAll(URL)) if (col >= m.index! && col <= m.index! + m[0].length) return { url: m[0].replace(/[.,;:]+$/, '') };
   for (const m of text.matchAll(FILE)) if (col >= m.index! && col <= m.index! + m[0].length) return { file: m[1].replace(/\\/g, '/'), line: Number(m[2]), column: m[3] ? Number(m[3]) : 1 };

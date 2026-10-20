@@ -329,6 +329,7 @@ export const FEATURES: Feature[] = [
   { id: 'build-elapsed', label: 'Build time in the status bar', group: 'Tool windows', essential: true, description: 'While a build runs, the status bar shows for how long.' },
   { id: 'busy-title', label: 'Busy window title', group: 'Help and productivity', essential: true, description: 'The window (and taskbar) title says "Building" or "Running tests" while they run.' },
   { id: 'toast-copy', label: 'Copy a message', group: 'Help and productivity', essential: true, description: 'Every message pop-up has a Copy button (for errors in a bug report).' },
+  { id: 'notification-links', label: 'Clickable file:line in notifications', group: 'Help and productivity', essential: true, description: 'file:line references in the Notifications window open the file there.' },
 ];
 export const GROUPS: FeatureGroup[] = ['Editing', 'Navigation', 'Code intelligence', 'Tool windows', 'Files', 'Git', 'Gherkin', 'View', 'Debugging', 'Help and productivity'];
 

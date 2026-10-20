@@ -39,6 +39,7 @@ Every improvement is verified by a unit or Playwright test (`tests/e2e/qol50.spe
 | QL30 | Build time in the status bar | Build | ✅ 2026-10-20 |
 | QL31 | Busy window title | Window | ✅ 2026-10-20 |
 | QL32 | Copy a message | Notifications | ✅ 2026-10-20 |
+| QL33 | Clickable file:line in notifications | Notifications | ✅ 2026-10-20 |
 
 ## Progress log
 - 2026-10-20 QL1: Title names the file and workspace folder
@@ -73,3 +74,4 @@ Every improvement is verified by a unit or Playwright test (`tests/e2e/qol50.spe
 - 2026-10-20 QL30: Building… N s
 - 2026-10-20 QL31: Building / Running tests in the title
 - 2026-10-20 QL32: Copy button on message pop-ups
+- 2026-10-20 QL33: file:line opens the file

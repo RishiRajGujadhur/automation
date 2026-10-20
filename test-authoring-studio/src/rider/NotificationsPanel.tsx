@@ -1,6 +1,7 @@
 import { Bell, Copy, Trash2, X } from 'lucide-react';
 import { copyText } from '../ui';
 import { featureOn } from '../features';
+import { fileRefs, OPEN_LOCATION_EVENT } from '../editor/links';
 import { clearNotices, useNotices } from './notifications';
 
 /** Notifications tool window: the session's messages, newest first. */
@@ -16,7 +17,7 @@ export default function NotificationsPanel({ onClose }: { onClose: () => void })
         <button className="icon-button" aria-label="Close Notifications" title="Close" onClick={onClose}><X size={14} /></button>
       </div>
       <ul className="todo-list" aria-label="Notification history">
-        {notes.map((n, i) => <li key={`${n.at}-${i}`}><span className="todo-item"><small>{new Date(n.at).toLocaleTimeString()}</small> {n.text}</span></li>)}
+        {notes.map((n, i) => <li key={`${n.at}-${i}`}><span className="todo-item"><small>{new Date(n.at).toLocaleTimeString()}</small> {featureOn('notification-links') ? fileRefs(n.text).map((p, k) => (typeof p === 'string' ? p : <button key={k} className="link-button" title="Open" onClick={() => window.dispatchEvent(new CustomEvent(OPEN_LOCATION_EVENT, { detail: p }))}>{p.text}</button>)) : n.text}</span></li>)}
         {!notes.length && <li className="subtle">No notifications in this session.</li>}
       </ul>
     </section>
