@@ -295,6 +295,7 @@ export const FEATURES: Feature[] = [
   { id: 'sort-scenarios', label: 'Sort Scenarios by Name', group: 'Gherkin', essential: false, description: 'Orders the scenarios of a feature by title (tags and Examples move with them).', commands: ['sort-scenarios'] },
   { id: 'quick-theme', label: 'Quick Switch Theme', group: 'View', essential: true, vs: 'Quick Switch Scheme (Rider)', description: 'A list of the app themes to switch to (View ▸ Quick Switch Theme).', commands: ['quick-theme'] },
   { id: 'close-type', label: 'Close All Tabs of This Type', group: 'Files', essential: true, description: 'The tab menu closes every tab with the same extension (pinned ones stay).' },
+  { id: 'copy-outline', label: 'Copy Feature Outline', group: 'Gherkin', essential: true, description: 'Copies the feature and its scenarios as a Markdown checklist.', commands: ['copy-outline'] },
 ];
 export const GROUPS: FeatureGroup[] = ['Editing', 'Navigation', 'Code intelligence', 'Tool windows', 'Files', 'Git', 'Gherkin', 'View', 'Debugging', 'Help and productivity'];
 

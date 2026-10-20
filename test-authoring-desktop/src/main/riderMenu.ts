@@ -209,6 +209,7 @@ const ROWS: Record<'edit' | 'view' | 'navigate' | 'code' | 'tools' | 'help', Row
       ['Table: Fill Down', 'table-fill-down'],
       ['Table: Clear Column', 'table-clear-column'],
       ['Sort Scenarios by Name', 'sort-scenarios'],
+      ['Copy Feature Outline', 'copy-outline'],
     ] },
     ['Collapse Using Directives', 'fold-usings'],
     ['Sort JSON Keys', 'sort-json'],

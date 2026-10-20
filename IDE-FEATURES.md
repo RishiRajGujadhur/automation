@@ -205,6 +205,7 @@ has it on by default, so the desktop app starts with it on. The others start off
 | X195 | Sort Scenarios by Name | Rider | no | ✅ 2026-10-20 |
 | X196 | Quick Switch Theme | Rider | yes | ✅ 2026-10-20 |
 | X197 | Close All Tabs of This Type | VS Code / Rider | yes | ✅ 2026-10-20 |
+| X198 | Copy Feature Outline | Rider | yes | ✅ 2026-10-20 |
 
 ## Progress log
 - 2026-10-20 X1: Sort Lines: the selected lines (or the whole file) in natural, case-insensitive order, blank lines last. Third-batch plumbing: src/rider/more.ts, src/editor/textTools.ts, IDE-FEATURES.md.
@@ -404,3 +405,4 @@ has it on by default, so the desktop app starts with it on. The others start off
 - 2026-10-20 X195: Scenario blocks in title order
 - 2026-10-20 X196: Theme list popup
 - 2026-10-20 X197: Close tabs with the same extension
+- 2026-10-20 X198: Scenarios as a Markdown checklist

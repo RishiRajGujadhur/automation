@@ -983,7 +983,7 @@ test('X195–X198 Sort Scenarios, Quick Switch Theme, Close Tabs of This Type, C
   await gherkinItem(page, /^Sort Scenarios by Name/);
   await expect.poll(async () => (await doc(page)).indexOf('Alpha') < (await doc(page)).indexOf('Zeta')).toBe(true);
   await gherkinItem(page, /^Copy Feature Outline/);
-  await expect.poll(() => page.evaluate(() => navigator.clipboard.readText())).toBe('## Sorted\n\n- [ ] Alpha\n- [ ] Zeta');
+  await expect.poll(() => page.evaluate(async () => (await navigator.clipboard.readText()).replace(/\r\n/g, '\n'))).toBe('## Sorted\n\n- [ ] Alpha\n- [ ] Zeta');
   await menuItem(page, 'View', /^Quick Switch Theme/);
   await page.getByRole('dialog', { name: 'Quick Switch Theme' }).getByRole('option').last().click();
   await expect(page.getByText(/^Theme: /).first()).toBeVisible();

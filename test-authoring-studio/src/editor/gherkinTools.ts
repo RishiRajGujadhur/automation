@@ -696,3 +696,20 @@ export function sortScenarios(view: EditorView) {
   view.dispatch({ changes: { from, to, insert: sorted.map(text).join(state.lineBreak + state.lineBreak) }, userEvent: 'input' });
   return true;
 }
+
+/** Copy Feature Outline: the feature and its scenarios as a Markdown checklist (test plans, reviews). */
+export function featureOutline(text: string) {
+  const out: string[] = [];
+  let tags = '';
+  for (const line of text.split(/\r?\n/)) {
+    const t = line.trim();
+    if (t.startsWith('@')) { tags = t; continue; }
+    const f = /^Feature:\s*(.*)$/.exec(t);
+    if (f) { out.push(`## ${f[1]}${tags ? ` _${tags}_` : ''}`, ''); tags = ''; continue; }
+    const r = /^Rule:\s*(.*)$/.exec(t);
+    if (r) { out.push('', `### ${r[1]}`, ''); tags = ''; continue; }
+    if (SCENARIO.test(line)) { out.push(`- [ ] ${t.replace(/^[^:]*:\s*/, '')}${/Outline|Template/.test(t) ? ' (outline)' : ''}${tags ? ` _${tags}_` : ''}`); tags = ''; continue; }
+    if (t && !t.startsWith('#')) tags = '';
+  }
+  return out.join('\n').trim();
+}
