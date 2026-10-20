@@ -290,7 +290,19 @@ export async function gherkinCompletions(ctx: CompletionContext): Promise<Comple
     const rows = await api<{ tag: string; scenarios: unknown[] }[]>('/tags').catch(() => []);
     return { from: ctx.pos - tagTyped[2].length, options: rows.map((r) => ({ label: r.tag, detail: `${r.scenarios.length} scenario${r.scenarios.length === 1 ? '' : 's'}`, type: 'keyword' })), validFor: /^@[^\s@]*$/ };
   }
-  // gherkin completion: params
+  // <parameters> of the Scenario Outline from its Examples headers (QOL-50).
+  const paramTyped = /<([^<>\s]*)$/.exec(before);
+  if (paramTyped && featureOn('param-complete')) {
+    const lines = ctx.state.doc.toString().split(/\r?\n/);
+    let n = line.number - 1;
+    while (n > 0 && !/^\s*(Scenario|Scenario Outline|Scenario Template|Example|Background|Feature):/.test(lines[n - 1])) n--;
+    const names = new Set<string>();
+    for (let k = n; k < lines.length; k++) {
+      if (k > n && /^\s*(@|(Scenario|Scenario Outline|Scenario Template|Example|Background|Rule|Feature):)/.test(lines[k])) break;
+      if (/^\s*(Examples|Scenarios):/.test(lines[k])) { const head = lines.slice(k + 1).find((l) => l.trim()); if (head?.trim().startsWith('|')) for (const c of head.split('|').map((x) => x.trim()).filter(Boolean)) names.add(c); }
+    }
+    if (names.size) return { from: ctx.pos - paramTyped[1].length, options: [...names].map((p) => ({ label: p, apply: line.text[ctx.pos - line.from] === '>' ? p : `${p}>`, type: 'variable', detail: 'Examples column' })), validFor: /^[^<>\s]*$/ };
+  }
   const m = /^(\s*)(Given|When|Then|And|But|\*)\s+(.*)$/.exec(before);
   if (!m) {
     const word = /^\s*(\w*)$/.exec(before);

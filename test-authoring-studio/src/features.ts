@@ -354,6 +354,7 @@ export const FEATURES: Feature[] = [
   { id: 'md-format-keys', label: 'Markdown: Ctrl+B / Ctrl+I', group: 'Editing', essential: true, description: 'Bold and italic around the selection or word in Markdown files.' },
   { id: 'md-lists', label: 'Markdown: lists continue on Enter', group: 'Editing', essential: true, description: 'Enter in a Markdown list adds the next bullet or number; on an empty item it ends the list.' },
   { id: 'tag-complete', label: 'Gherkin: tag completion', group: 'Gherkin', essential: true, description: 'Typing @ on a tag line suggests the repository\'s tags with their scenario counts.' },
+  { id: 'param-complete', label: 'Gherkin: <parameter> completion', group: 'Gherkin', essential: true, description: 'Typing < in an outline step suggests its Examples columns.' },
 ];
 export const GROUPS: FeatureGroup[] = ['Editing', 'Navigation', 'Code intelligence', 'Tool windows', 'Files', 'Git', 'Gherkin', 'View', 'Debugging', 'Help and productivity'];
 
