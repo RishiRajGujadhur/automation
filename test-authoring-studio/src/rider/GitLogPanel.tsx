@@ -27,7 +27,12 @@ export default function GitLogPanel({ onOpen, onClose, onNotice }: { onOpen: (fi
   const theme = useEditorTheme();
   const [rows, setRows] = useState<Row[]>();
   const [error, setError] = useState('');
-  const [query, setQuery] = useState('');
+  // The filter is remembered (QOL-50).
+  const [savedQuery, setSavedQuery] = useLocalState('gitLogQuery', '');
+  const [plainQuery, setPlainQuery] = useState('');
+  const remember = featureOn('git-log-remember');
+  const query = remember ? savedQuery : plainQuery;
+  const setQuery = remember ? setSavedQuery : setPlainQuery;
   const [selected, setSelected] = useState<string>();
   const [commit, setCommit] = useState<Commit>();
   // A file at the selected revision, or its difference from the working copy, instead of the commit's patch.
@@ -58,7 +63,7 @@ export default function GitLogPanel({ onOpen, onClose, onNotice }: { onOpen: (fi
   return (
     <section className="debug-panel git-log-panel" aria-label="Git Log">
       <div className="debug-toolbar" role="toolbar" aria-label="Git Log">
-        <input className="shelf-name" aria-label="Filter commits" placeholder={featureOn('git-log-filters') ? 'Filter: words, author:…, branch:…, hash:…, -exclude' : 'Filter: text, hash, author, branch'} value={query} onChange={(e) => setQuery(e.target.value)} />
+        <input className="shelf-name" aria-label="Filter commits" placeholder={featureOn('git-log-filters') ? 'Filter: words, author:…, branch:…, hash:…, -exclude' : 'Filter: text, hash, author, branch'} value={query} onChange={(e) => setQuery(e.target.value)} onKeyDown={(e) => { if (e.key === 'Escape' && query && featureOn('search-escape')) { e.stopPropagation(); setQuery(''); } }} />
         {featureOn('git-log-current') && <label className="build-on-save" title="Show only the commits of the current branch"><input type="checkbox" checked={currentOnly} onChange={(e) => setCurrentOnly(e.target.checked)} /> Current branch only</label>}
         {ofFile && <span className="git-file-chip" title={ofFile}>History of {ofFile.split('/').pop()} <button className="icon-button" aria-label="Show every file" title="Every file" onClick={() => setOfFile(undefined)}><X size={12} /></button></span>}
         <button className="icon-button" aria-label="Refresh log" title="Refresh" onClick={() => void load()}><RefreshCw size={14} /></button>

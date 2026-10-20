@@ -378,6 +378,7 @@ export const FEATURES: Feature[] = [
   { id: 'search-escape', label: 'Escape clears tool window searches', group: 'Tool windows', essential: true, description: 'Escape in the Error List and Test Explorer search boxes clears them (like the Output and Notifications filters).' },
   { id: 'gherkin-capitalise', label: 'Gherkin: capitalise keywords', group: 'Gherkin', essential: true, description: 'Typing "given " or "scenario:" at the start of a line capitalises the keyword.' },
   { id: 'terminal-clear', label: 'Terminal: Clear button', group: 'Tool windows', essential: true, description: 'A toolbar button clears the active terminal (same as Ctrl+L).' },
+  { id: 'git-log-remember', label: 'Git Log remembers its filter', group: 'Git', essential: true, description: 'The Git Log filter is kept when the window closes and after a reload; Escape clears it.' },
 ];
 export const GROUPS: FeatureGroup[] = ['Editing', 'Navigation', 'Code intelligence', 'Tool windows', 'Files', 'Git', 'Gherkin', 'View', 'Debugging', 'Help and productivity'];
 
