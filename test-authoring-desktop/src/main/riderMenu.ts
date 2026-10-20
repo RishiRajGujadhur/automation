@@ -267,6 +267,7 @@ const ROWS: Record<'edit' | 'view' | 'navigate' | 'code' | 'tools' | 'help', Row
       ['Run Scenarios with Tag at Caret', 'run-tag-at-caret'],
       ['Rename Scenario…', 'rename-scenario'],
       ['Split Scenario Here', 'split-scenario'],
+      ['Insert Data Table', 'insert-data-table'],
     ] },
     ['Collapse Using Directives', 'fold-usings'],
     ['Sort JSON Keys', 'sort-json'],

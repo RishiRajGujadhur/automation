@@ -1054,3 +1054,17 @@ export function splitScenario(view: EditorView) {
   view.dispatch({ changes: { from: doc.line(prev).to, to: doc.line(here).from, insert }, selection: EditorSelection.cursor(doc.line(prev).to + br.length * 2 + indent.length + 'Scenario: '.length), userEvent: 'input' });
   return true;
 }
+
+/** Insert Data Table: a header and an empty row under the step at the caret, "column" selected. */
+export function insertDataTable(view: EditorView) {
+  const { state } = view;
+  const line = state.doc.lineAt(state.selection.main.head);
+  const m = STEP.exec(line.text);
+  if (!m) return false;
+  if (line.number < state.doc.lines && /^\s*\|/.test(state.doc.line(line.number + 1).text)) return false;
+  const ind = m[1] + '  ', br = state.lineBreak;
+  const insert = `${br}${ind}| column |${br}${ind}|        |`;
+  const at = line.to + br.length + ind.length + 2;
+  view.dispatch({ changes: { from: line.to, insert }, selection: EditorSelection.range(at, at + 'column'.length), userEvent: 'input' });
+  return true;
+}
