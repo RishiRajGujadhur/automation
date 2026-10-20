@@ -87,6 +87,7 @@ Every improvement is verified by a unit or Playwright test (`tests/e2e/qol50.spe
 | QL78 | Error List Copy All | Tool windows | ✅ 2026-10-20 |
 | QL79 | Escape clears the Error List search | Tool windows | ✅ 2026-10-20 |
 | QL80 | Gherkin keywords capitalised as you type | Gherkin | ✅ 2026-10-20 |
+| QL81 | Terminal Clear button | Tool windows | ✅ 2026-10-20 |
 
 ## Progress log
 - 2026-10-20 QL1: Title names the file and workspace folder
@@ -169,3 +170,4 @@ Every improvement is verified by a unit or Playwright test (`tests/e2e/qol50.spe
 - 2026-10-20 QL78: A button copies every row the Error List shows, after its filters.
 - 2026-10-20 QL79: Escape in the Error List search box clears it.
 - 2026-10-20 QL80: "given " becomes "Given ", "scenario:" becomes "Scenario:" at the start of a line.
+- 2026-10-20 QL81: A toolbar button clears the active terminal (same as Ctrl+L).

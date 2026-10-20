@@ -377,6 +377,7 @@ export const FEATURES: Feature[] = [
   { id: 'error-list-copy-all', label: 'Error List: Copy All', group: 'Tool windows', essential: true, description: 'A button copies every row the Error List shows (after its filters).' },
   { id: 'search-escape', label: 'Escape clears tool window searches', group: 'Tool windows', essential: true, description: 'Escape in the Error List search box clears it (like the Output and Notifications filters).' },
   { id: 'gherkin-capitalise', label: 'Gherkin: capitalise keywords', group: 'Gherkin', essential: true, description: 'Typing "given " or "scenario:" at the start of a line capitalises the keyword.' },
+  { id: 'terminal-clear', label: 'Terminal: Clear button', group: 'Tool windows', essential: true, description: 'A toolbar button clears the active terminal (same as Ctrl+L).' },
 ];
 export const GROUPS: FeatureGroup[] = ['Editing', 'Navigation', 'Code intelligence', 'Tool windows', 'Files', 'Git', 'Gherkin', 'View', 'Debugging', 'Help and productivity'];
 

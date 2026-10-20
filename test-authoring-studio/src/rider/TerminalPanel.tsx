@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
-import { Plus, X, SquareTerminal } from 'lucide-react';
+import { Plus, X, SquareTerminal, Eraser } from 'lucide-react';
+import { featureOn } from '../features';
 import { Terminal } from '@xterm/xterm';
 import { FitAddon } from '@xterm/addon-fit';
 import '@xterm/xterm/css/xterm.css';
@@ -11,6 +12,8 @@ export const runInTerminal = (command: string) => window.dispatchEvent(new Custo
 // A command asked for before the window existed (it opens the window, then runs it).
 let queued: string | null = null;
 export const queueTerminalCommand = (command: string) => { queued = command; };
+// Clears the active terminal (its toolbar button) (QOL-50).
+const TERMINAL_CLEAR_EVENT = 'tas:terminal-clear';
 
 type Tab = { key: number; title: string };
 type TermEvent = { kind: 'output'; text: string } | { kind: 'done'; cwd: string } | { kind: 'exit'; code: number | null };
@@ -22,6 +25,7 @@ function Shell({ active, onTitle, onExit, takeCommand }: { active: boolean; onTi
   const host = useRef<HTMLDivElement>(null);
   const runRef = useRef<(cmd: string) => void>(() => {});
   const fitRef = useRef<FitAddon | undefined>(undefined);
+  const clearRef = useRef<() => void>(() => {});
   useEffect(() => {
     const term = new Terminal({ convertEol: true, cursorBlink: true, fontSize: 13, fontFamily: css('--font-mono', 'Consolas, monospace'), theme: { background: css('--panel', '#1e1e1e'), foreground: css('--text', '#ddd'), cursor: css('--accent', '#9270dd') }, scrollback: 5000 });
     const fit = new FitAddon();
@@ -80,6 +84,7 @@ function Shell({ active, onTitle, onExit, takeCommand }: { active: boolean; onTi
       line = line.slice(0, pos) + parts[0] + line.slice(pos); pos += parts[0].length; redraw();
       if (parts.length > 1) { const cmd = line; line = ''; pos = 0; submit(cmd); }
     });
+    clearRef.current = () => { term.clear(); redraw(); term.focus(); };
     const resize = new ResizeObserver(() => { try { fit.fit(); } catch { /* hidden */ } });
     resize.observe(host.current!);
     return () => { live = false; resize.disconnect(); source?.close(); if (id) void api('/terminal/stop', { id }); term.dispose(); };
@@ -88,8 +93,10 @@ function Shell({ active, onTitle, onExit, takeCommand }: { active: boolean; onTi
   useEffect(() => {
     if (!active) return;
     const h = (e: Event) => runRef.current((e as CustomEvent<string>).detail);
+    const c = () => clearRef.current();
     window.addEventListener(TERMINAL_RUN_EVENT, h);
-    return () => window.removeEventListener(TERMINAL_RUN_EVENT, h);
+    window.addEventListener(TERMINAL_CLEAR_EVENT, c);
+    return () => { window.removeEventListener(TERMINAL_RUN_EVENT, h); window.removeEventListener(TERMINAL_CLEAR_EVENT, c); };
   }, [active]);
   return <div className="terminal-host" ref={host} hidden={!active} aria-label="Terminal output" />;
 }
@@ -114,6 +121,7 @@ export default function TerminalPanel({ onClose }: { onClose: () => void }) {
           ))}
         </div>
         <button className="icon-button" aria-label="New terminal" title="New terminal" onClick={add}><Plus size={14} /></button>
+        {featureOn('terminal-clear') && <button className="icon-button" aria-label="Clear terminal" title="Clear (Ctrl+L)" onClick={() => window.dispatchEvent(new Event(TERMINAL_CLEAR_EVENT))}><Eraser size={14} /></button>}
         <span className="debug-spacer" />
         <button className="icon-button" aria-label="Close Terminal" title="Close" onClick={onClose}><X size={14} /></button>
       </div>
