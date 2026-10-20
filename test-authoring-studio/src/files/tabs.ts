@@ -81,6 +81,16 @@ export function closeOfType(file: string) {
 }
 /** Closes the tabs without unsaved changes (Rider's Close Unmodified) (QOL-50). */
 export function closeSaved(dirty: string[]) { const gone = state.tabs.filter((t) => !t.pinned && !dirty.includes(t.file)); remember(gone.map((t) => t.file)); const tabs = state.tabs.filter((t) => !gone.includes(t)); set({ tabs, active: tabs.some((t) => t.file === state.active) ? state.active : tabs[0]?.file }); }
+/** Move Tab to Start / End (Rider's tab menu): pinned tabs stay first. */
+export function moveTabTo(file: string, where: 'start' | 'end') {
+  const tab = state.tabs.find((t) => t.file === file);
+  if (!tab) return;
+  const rest = state.tabs.filter((t) => t !== tab);
+  const pinned = rest.filter((t) => t.pinned).length;
+  const at = where === 'start' ? (tab.pinned ? 0 : pinned) : tab.pinned ? pinned : rest.length;
+  rest.splice(at, 0, tab);
+  set({ ...state, tabs: rest });
+}
 export function closeAll() { remember(state.tabs.filter((t) => !t.pinned).map((t) => t.file)); const tabs = state.tabs.filter((t) => t.pinned); set({ tabs, active: tabs.some((t) => t.file === state.active) ? state.active : tabs[0]?.file }); }
 /** Pinned tabs move to the front (in pin order) and survive Close Others / Close All. */
 export function setPinned(file: string, pinned: boolean) {

@@ -8,7 +8,7 @@ import { RowMenu, copyText } from '../ui';
 import { Dropdown } from '../radix';
 import { UNSAVED_EVENT, unsavedFiles } from '../editor/autosave';
 import { SELECT_IN_EXPLORER } from '../SolutionExplorer';
-import { useTabs, activateTab, closeOthers, closeToRight, closeToLeft, unpinAll, sortTabs, closeOfType, closeAll, closeSaved, setPinned, keepTab, type EditorTab } from './tabs';
+import { useTabs, activateTab, closeOthers, closeToRight, closeToLeft, unpinAll, sortTabs, closeOfType, closeAll, closeSaved, moveTabTo, setPinned, keepTab, type EditorTab } from './tabs';
 import { fileType } from './fileTypes';
 import { api } from '../api';
 import { isBrowser } from './provider';
@@ -103,6 +103,7 @@ export default function EditorTabs({ onClose, onSplit, children }: { onClose: (f
                 { label: 'Close All', icon: XCircle, onSelect: () => closeAll() },
                 ...(featureOn('close-saved') ? [{ label: 'Close Saved Tabs', onSelect: () => closeSaved(dirty) }] : []),
                 ...(featureOn('sort-tabs') ? [{ label: 'Sort Tabs by Name', onSelect: () => sortTabs() }] : []),
+                ...(featureOn('move-tab') ? [{ label: 'Move Tab to Start', onSelect: () => moveTabTo(t.file, 'start') }, { label: 'Move Tab to End', onSelect: () => moveTabTo(t.file, 'end') }] : []),
                 ...(featureOn('close-type') && t.file.includes('.') ? [{ label: `Close All ${t.file.slice(t.file.lastIndexOf('.'))} Tabs`, onSelect: () => closeOfType(t.file) }] : []),
                 'separator',
                 { label: 'Copy Relative Path', icon: Copy, onSelect: () => void copyText(t.file).then((ok) => { if (featureOn('copy-feedback')) window.dispatchEvent(new CustomEvent('tas:notice', { detail: ok ? `Copied ${t.file}` : 'Clipboard unavailable.' })); }) },
