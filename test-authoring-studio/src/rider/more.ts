@@ -1,5 +1,6 @@
 import type { EditorView } from '@codemirror/view';
 import type { RiderCommand } from './commands';
+import { forEachDiagnostic } from '@codemirror/lint';
 import { isReadOnlyFile, setReadOnlyFile } from '../editor/activeEditor';
 import { runRider } from './commands';
 import { queueTerminalCommand, runInTerminal } from './TerminalPanel';
@@ -141,5 +142,6 @@ export function moreCommands(h: MoreHelpers): RiderCommand[] {
     { id: 'toggle-readonly', label: 'Toggle Read-Only (Session)', menu: 'View', run: h.inEditor((_v, file) => { const on = !isReadOnlyFile(file); setReadOnlyFile(file, on); h.notice(on ? `${file.split('/').pop()} is read-only in this session.` : `${file.split('/').pop()} can be edited again.`); }) },
     { id: 'add-scenario', label: 'Add Scenario', menu: 'Code', submenu: 'Gherkin', run: h.inEditor(addScenario) },
     { id: 'copy-scenario-md', label: 'Copy Scenario as Markdown', menu: 'Code', submenu: 'Gherkin', run: h.inEditor((v) => { const md = scenarioMarkdown(v.state, v.state.doc.lineAt(v.state.selection.main.head).number); if (!md) { h.notice('Put the caret in a scenario.'); return; } void copyText(md).then((ok) => h.notice(ok ? 'Copied the scenario as Markdown.' : 'Clipboard unavailable.')); }) },
+    { id: 'copy-problems', label: 'Copy Problems in File', menu: 'Edit', run: h.inEditor((v, file) => { const lines: string[] = []; forEachDiagnostic(v.state, (d) => { const l = v.state.doc.lineAt(d.from); lines.push(`${file}:${l.number}:${d.from - l.from + 1}: ${d.severity}: ${d.message}`); }); if (!lines.length) { h.notice('No problems in this file.'); return; } void copyText(lines.join('\n')).then((ok) => h.notice(ok ? `Copied ${lines.length} problem${lines.length === 1 ? '' : 's'}.` : 'Clipboard unavailable.')); }) },
   ];
 }
