@@ -15,7 +15,7 @@ import { appThemes, editorThemes, resolveEditorTheme, type AppThemeId, type Edit
 import { labelled } from './editor/a11y';
 import { accents, contrast } from './accents';
 import { defaultPrefs } from './radix2';
-import { FEATURES, GROUPS, featureOn, featurePreset, setFeature, setFeaturePreset, setFeatures, useFeatures } from './features';
+import { FEATURES, GROUPS, featureOn, featurePreset, setFeature, setFeaturePreset, setFeatures, useFeatures, featureChanged } from './features';
 
 type Settings = { webPort: number; apiPort: number; tracing: { enabled: boolean; screenshots: boolean; snapshots: boolean; sources: boolean } };
 type Trace = { name: string; size: number; modified: string };
@@ -251,9 +251,9 @@ export default function StudioSettings({ onNotice, onWorkspace, shortcuts, onClo
       return [
         { id: `features-${g}`, section: 'Features', title: g, description: `${on} of ${list.length} on.`, keywords: list.map((f) => `${f.label} ${f.description}`).join(' '), control: sw(`features-group-${g.replace(/\W/g, '')}`, on === list.length, (v) => setFeatures(Object.fromEntries(list.map((f) => [f.id, v]))), `All ${g} features`) },
         ...list.map((f): Row => ({
-          id: `feature-${f.id}`, section: 'Features', sub: true, title: f.label,
+          id: `feature-${f.id}`, section: 'Features', sub: true, title: `${f.label}${featureChanged(f.id) ? ' (changed)' : ''}`,
           description: `${f.description}${f.essential ? ` Visual Studio: ${f.vs ?? 'on by default'}.` : ''}`,
-          keywords: `${f.id} ${f.group} ${f.essential ? 'essential visual studio' : 'rider optional'} ${f.vs ?? ''}`,
+          keywords: `${f.id} ${f.group} ${f.essential ? 'essential visual studio' : 'rider optional'} ${f.vs ?? ''}${featureChanged(f.id) ? ' @modified changed' : ''}`,
           tip: f.essential ? 'Essential: on by default in Visual Studio 2026' : 'Optional: off by default in the desktop app',
           control: sw(`feature-${f.id}`, featureOn(f.id), (v) => setFeature(f.id, v), f.label),
         })),
