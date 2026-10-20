@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { EditorSelection, EditorState, type TransactionSpec } from '@codemirror/state';
 import type { EditorView } from '@codemirror/view';
-import { mapSelections, urlEncode, urlDecode, base64Encode, base64Decode, escapeString, unescapeString, htmlEncode, htmlDecode, stepNumber, insertSequence, toggleQuotes, joinWith, splitAt, alignAssignments, swapSelections, countOccurrences, trimLines, stamp, insertText, LOREM, shuffleLines, formatXml, minifyXml, jsonEscape, jsonUnescape, numberLines, toFileScopedNamespace, toBlockScopedNamespace, removeRegions, toRawString, toggleTask, formatMarkdownTable, tableOfContents, MARKDOWN_TABLE, removeComments, concatToInterpolation, concatToInterpolationCmd, gotoOffset, convertTimestamp, timestampCmd, sha256Hex, decodeJwt, jwtAt } from '../src/editor/textTools2';
+import { mapSelections, urlEncode, urlDecode, base64Encode, base64Decode, escapeString, unescapeString, htmlEncode, htmlDecode, stepNumber, insertSequence, toggleQuotes, joinWith, splitAt, alignAssignments, swapSelections, countOccurrences, trimLines, stamp, insertText, LOREM, shuffleLines, formatXml, minifyXml, jsonEscape, jsonUnescape, numberLines, toFileScopedNamespace, toBlockScopedNamespace, removeRegions, toRawString, toggleTask, formatMarkdownTable, tableOfContents, MARKDOWN_TABLE, removeComments, concatToInterpolation, concatToInterpolationCmd, gotoOffset, convertTimestamp, timestampCmd, sha256Hex, decodeJwt, jwtAt, sortTokens } from '../src/editor/textTools2';
 
 /** Runs an editor command on `doc` with the selection between « and » (or a caret at |). */
 function run(doc: string, cmd: (v: EditorView) => boolean) {
@@ -166,5 +166,9 @@ describe('text tools, fourth batch (IDE-FEATURES-4 Y1…)', () => {
     expect(decodeJwt(`Bearer ${tok}`)).toEqual({ header: { alg: 'HS256', typ: 'JWT' }, payload: { sub: '1234567890', name: 'John Doe', iat: 1516239022 } });
     expect(jwtAt(EditorState.create({ doc: `token = "${tok}";`, selection: { anchor: 15 } }))).toBe(tok);
     expect(decodeJwt('a.b')).toBe(null);
+  });
+  it('Y66 Sort Tokens', () => {
+    expect(run('«pear, apple, Banana10, banana9»', sortTokens)).toBe('apple, banana9, Banana10, pear');
+    expect(run('«c b a»', sortTokens)).toBe('a b c');
   });
 });

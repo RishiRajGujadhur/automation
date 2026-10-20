@@ -80,6 +80,7 @@ const ROWS: Record<'edit' | 'view' | 'navigate' | 'code' | 'tools' | 'help', Row
       ['Unescape JSON String', 'json-unescape'],
       ['Number Lines', 'number-lines'],
       ['Unix Timestamp ⇄ Date', 'timestamp'],
+      ['Sort Tokens', 'sort-tokens'],
     ] },
     ['Align Assignments', 'align-assignments', 'CmdOrCtrl+Alt+]'],
     ['Count Occurrences', 'count-occurrences'],

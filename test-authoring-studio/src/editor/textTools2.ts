@@ -442,3 +442,12 @@ export function jwtAt(state: EditorState) {
   for (const m of line.text.matchAll(/[\w-]+\.[\w-]+\.[\w-]*/g)) { const from = line.from + m.index!; if (r.head >= from && r.head <= from + m[0].length) return m[0]; }
   return '';
 }
+
+/** Sort Tokens (Rider String Manipulation): the comma-separated (else space-separated) values of the selection, sorted. */
+export const sortTokens = mapSelections((t) => {
+  const sep = t.includes(',') ? ',' : /\s/.test(t.trim()) ? ' ' : null;
+  if (!sep) return null;
+  const parts = t.split(sep === ' ' ? /\s+/ : ',').map((p) => p.trim()).filter(Boolean);
+  const sorted = [...parts].sort(new Intl.Collator(undefined, { numeric: true, sensitivity: 'base' }).compare);
+  return sorted.join(sep === ',' ? (/,\s/.test(t) ? ', ' : ',') : ' ');
+}, 'line');
