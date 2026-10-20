@@ -271,3 +271,18 @@ test('V11 Rulers', async ({ page }) => {
   const img = await view(page).locator('.cm-content').evaluate((e) => getComputedStyle(e).backgroundImage);
   expect(img.match(/linear-gradient/g)!.length).toBeGreaterThanOrEqual(2);
 });
+
+test('V12 Render line highlight and only when focused', async ({ page }) => {
+  const bg = (l: import('@playwright/test').Locator) => l.evaluate((e) => getComputedStyle(e).backgroundColor);
+  await open(page, 'Steps/AuthSteps.cs', { 'editor.renderLineHighlight': 'all' });
+  await caretLine(page, 2);
+  expect(await bg(view(page).locator('.cm-activeLine').first())).not.toBe('rgba(0, 0, 0, 0)');
+  expect(await bg(view(page).locator('.cm-activeLineGutter').first())).not.toBe('rgba(0, 0, 0, 0)');
+  await setSettings(page, { 'editor.renderLineHighlight': 'gutter', 'editor.renderLineHighlightOnlyWhenFocus': true });
+  await caretLine(page, 2);
+  expect(await bg(view(page).locator('.cm-activeLine').first())).toBe('rgba(0, 0, 0, 0)');
+  expect(await bg(view(page).locator('.cm-activeLineGutter').first())).not.toBe('rgba(0, 0, 0, 0)');
+  // Leaving the editor removes it.
+  await page.evaluate(() => (document.activeElement as HTMLElement).blur());
+  await expect.poll(() => bg(view(page).locator('.cm-activeLineGutter').first())).toBe('rgba(0, 0, 0, 0)');
+});

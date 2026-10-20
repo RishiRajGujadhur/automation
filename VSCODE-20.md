@@ -19,6 +19,7 @@ switch. Web and desktop share the implementation.
 | V9 | Render whitespace | editor.renderWhitespace | ✅ 2026-10-20 |
 | V10 | Word wrap | editor.wordWrap, editor.wordWrapColumn, editor.wrappingIndent | ✅ 2026-10-20 |
 | V11 | Rulers | editor.rulers | ✅ 2026-10-20 |
+| V12 | Render line highlight | editor.renderLineHighlight, editor.renderLineHighlightOnlyWhenFocus | ✅ 2026-10-20 |
 
 ## Progress log
 - 2026-10-20 V1: Schema-driven VS Code settings with sub-categories, modified marker, reset, @modified and settings.json copy/import; editor.lineNumbers on / off / relative / interval; Ctrl+, opens Preferences in the web app.
@@ -32,3 +33,4 @@ switch. Web and desktop share the implementation.
 - 2026-10-20 V9: Spaces and tabs drawn as · and → in the selection (VS Code's default), at boundaries, trailing only, everywhere or nowhere.
 - 2026-10-20 V10: Wrap off, at the viewport, at a column or bounded by both; wrapped rows keep the line's indent, one more or two more (or none).
 - 2026-10-20 V11: Vertical rulers after the listed columns (80, 120…), drawn together with the right margin guide.
+- 2026-10-20 V12: The current line highlighted in the text (VS Code's default), the gutter, both or neither; optionally only while the editor has focus.

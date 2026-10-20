@@ -7,4 +7,5 @@ import './font';
 import './whitespace';
 import './wordWrap';
 import './rulers';
+import './lineHighlight';
 export { SETTINGS } from './settings';
