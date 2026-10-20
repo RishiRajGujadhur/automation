@@ -127,5 +127,6 @@ export function moreCommands(h: MoreHelpers): RiderCommand[] {
     { id: 'remove-duplicate-lines', label: 'Remove Duplicate Lines', menu: 'Edit', run: h.inEditor(removeDuplicateLines) },
     { id: 'remove-blank-lines', label: 'Remove Blank Lines', menu: 'Edit', run: h.inEditor(removeBlankLines) },
     { id: 'sort-lines-desc', label: 'Sort Lines Descending', menu: 'Edit', run: h.inEditor(sortLines(true)) },
+    { id: 'centered-layout', label: 'Centered Layout', menu: 'View', checked: () => !!viewOptions().centered, run: () => setViewOptions({ centered: !viewOptions().centered }) },
   ];
 }

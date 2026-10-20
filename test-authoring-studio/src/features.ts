@@ -234,6 +234,7 @@ export const FEATURES: Feature[] = [
   { id: 'remove-duplicate-lines', label: 'Remove Duplicate Lines', group: 'Editing', essential: true, description: 'Removes repeated lines (selection or file).', commands: ['remove-duplicate-lines'] },
   { id: 'remove-blank-lines', label: 'Remove Blank Lines', group: 'Editing', essential: true, description: 'Removes empty lines (selection or file).', commands: ['remove-blank-lines'] },
   { id: 'sort-lines-desc', label: 'Sort Lines Descending', group: 'Editing', essential: true, description: 'Sorts the selected lines (or the file) Z to A, numbers naturally.', commands: ['sort-lines-desc'] },
+  { id: 'centered-layout', label: 'Centered layout', group: 'View', essential: false, description: 'The editor text in a readable column in the middle of a wide window.', commands: ['centered-layout'] },
 ];
 export const GROUPS: FeatureGroup[] = ['Editing', 'Navigation', 'Code intelligence', 'Tool windows', 'Files', 'Git', 'Gherkin', 'View', 'Debugging', 'Help and productivity'];
 

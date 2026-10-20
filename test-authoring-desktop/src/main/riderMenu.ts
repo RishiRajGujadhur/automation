@@ -93,6 +93,7 @@ const ROWS: Record<'edit' | 'view' | 'navigate' | 'code' | 'tools' | 'help', Row
     ['Scroll Bar Annotations', 'scroll-marks'],
     ['Show Pinned Tabs in a Separate Row', 'pinned-row'],
     ['Colorize Document Tabs', 'color-tabs'],
+    ['Centered Layout', 'centered-layout'],
   ],
   navigate: [
     ['Select In…', 'select-in', 'Alt+F1'],

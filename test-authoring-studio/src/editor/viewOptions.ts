@@ -10,7 +10,7 @@ import { scrollMarks } from './scrollMarks';
 import { EditorView, ViewPlugin, highlightWhitespace, highlightTrailingWhitespace, rectangularSelection, keymap } from '@codemirror/view';
 
 /** View ▸ Active Editor options (Rider): soft wraps, …, shared by every editor and remembered. */
-export type ViewOptions = { softWrap: boolean; whitespace: boolean; fontSize: number | null; columnMode?: boolean; hideLineNumbers?: boolean; hideIndentGuides?: boolean; noCaretUsages?: boolean; overtype?: boolean; noActiveLine?: boolean; multiRowTabs?: boolean; noBracketColors?: boolean; todoTokens?: string[]; rightMargin?: number; indent?: { tabs: boolean; size: number }; noScrollMarks?: boolean; pinnedRow?: boolean; colorTabs?: boolean };
+export type ViewOptions = { softWrap: boolean; whitespace: boolean; fontSize: number | null; columnMode?: boolean; hideLineNumbers?: boolean; hideIndentGuides?: boolean; noCaretUsages?: boolean; overtype?: boolean; noActiveLine?: boolean; multiRowTabs?: boolean; noBracketColors?: boolean; todoTokens?: string[]; rightMargin?: number; indent?: { tabs: boolean; size: number }; noScrollMarks?: boolean; pinnedRow?: boolean; colorTabs?: boolean; centered?: boolean };
 const KEY = 'tas:rider:view';
 const DEFAULTS: ViewOptions = { softWrap: false, whitespace: false, fontSize: null };
 let options: ViewOptions = (() => { try { return { ...DEFAULTS, ...JSON.parse(localStorage.getItem(KEY) ?? '{}') }; } catch { return DEFAULTS; } })();
@@ -108,6 +108,8 @@ const EXTRA: [Compartment, (o: ViewOptions) => Extension][] = [
   [new Compartment(), (o) => (o.indent && featureOn('indentation') ? Prec.high([indentUnit.of(o.indent.tabs ? '\t' : ' '.repeat(o.indent.size)), EditorState.tabSize.of(o.indent.size)]) : [])],
   // Scroll bar annotations (Visual Studio): errors, warnings and the caret line over the scroll bar.
   [new Compartment(), (o) => (o.noScrollMarks || !featureOn('scroll-marks') ? [] : scrollMarks)],
+  // Centered layout (VS Code): the text in a readable column in the middle of a wide editor.
+  [new Compartment(), (o) => (o.centered && featureOn('centered-layout') ? [EditorView.editorAttributes.of({ class: 'cm-centered' }), EditorView.theme({ '.cm-content': { maxWidth: 'min(120ch, 100%)', marginLeft: 'auto !important', marginRight: 'auto !important' } })] : [])],
   // extra view options
 ];
 
