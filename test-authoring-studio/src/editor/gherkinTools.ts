@@ -713,3 +713,12 @@ export function featureOutline(text: string) {
   }
   return out.join('\n').trim();
 }
+
+/** Table ▸ Delete Empty Rows: data rows whose cells are all empty go (the header stays). */
+export function tableDeleteEmptyRows(view: EditorView) {
+  const t = tableAt(view.state);
+  if (!t) return false;
+  const rows = t.rows.filter((r, i) => i === 0 || r.some((c) => c.trim()));
+  if (rows.length === t.rows.length) return false;
+  return writeTable(view, t, rows, Math.min(t.row, rows.length - 1), t.col);
+}

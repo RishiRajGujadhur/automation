@@ -237,6 +237,7 @@ const ROWS: Record<'edit' | 'view' | 'navigate' | 'code' | 'tools' | 'help', Row
       ['Table: Clear Column', 'table-clear-column'],
       ['Sort Scenarios by Name', 'sort-scenarios'],
       ['Copy Feature Outline', 'copy-outline'],
+      ['Table: Delete Empty Rows', 'table-delete-empty'],
     ] },
     ['Collapse Using Directives', 'fold-usings'],
     ['Sort JSON Keys', 'sort-json'],
