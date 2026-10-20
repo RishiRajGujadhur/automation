@@ -94,7 +94,10 @@ sealed partial class LanguageService
             ups.Insert(0, o);
             s = o;
         }
-        var ifaces = symbol.ContainingType.AllInterfaces.SelectMany(i => i.GetMembers()).Where(i => SymbolEqualityComparer.Default.Equals(symbol.ContainingType.FindImplementationForInterfaceMember(i), symbol)).ToList();
+        // Interface members implemented by the member or by one it overrides (the interface slot belongs to the base).
+        var chain = ups.Append(symbol).ToList();
+        var ifaces = chain.SelectMany(c => c.ContainingType.AllInterfaces.SelectMany(i => i.GetMembers()).Where(i => SymbolEqualityComparer.Default.Equals(c.ContainingType.FindImplementationForInterfaceMember(i), c)))
+            .Distinct<ISymbol>(SymbolEqualityComparer.Default).ToList();
         foreach (var i in ifaces) items.Add(Item(i, 0, "interface"));
         for (var k = 0; k < ups.Count; k++) items.Add(Item(ups[k], k, "base"));
         var self = ups.Count;

@@ -49,7 +49,7 @@ Legend: `[x]` done · `[ ]` to do.
 
 - [x] 31. Call hierarchy — Ctrl+Alt+H
 - [x] 32. Type hierarchy — Ctrl+H
-- [ ] 33. Method hierarchy
+- [x] 33. Method hierarchy — Navigate ▸ Method Hierarchy (interface members, overridden bases, this, overrides below) (2026-10-21)
 - [x] 34. Find usages — Shift+F12, Find Step Usages
 - [x] 35. Find derived types — Type Hierarchy (derived tree), inheritance gutter
 - [x] 36. Find implementations — Ctrl+F12
@@ -389,3 +389,4 @@ Legend: `[x]` done · `[ ]` to do.
 - 2026-10-21 179: Semantic highlighting from the language service colours types, interfaces, methods, properties, fields, locals and parameters; a setting turns it off.
 - 2026-10-21 104: Roslyn's control-flow analysis of the selected statements as a report.
 - 2026-10-21 105: Roslyn's data-flow analysis of the selected statements or expression as a report.
+- 2026-10-21 33: The overrides tree of a C# method: what it overrides or implements above, every override below, to jump through.

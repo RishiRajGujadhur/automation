@@ -655,3 +655,19 @@ test('105 Data-flow analysis', async ({ page }) => {
   await expect(dlg).toContainText(/Written inside:\s+y/);
   await expect(dlg).toContainText(/Always assigned:\s+y/);
 });
+
+test('33 Method hierarchy', async ({ page }) => {
+  needsLang();
+  await open(page, CS);
+  await setDoc(page, 'namespace Demo;\npublic interface IRun { void Run(); }\npublic class Base : IRun { public virtual void Run() { } }\npublic class Mid : Base { public override void Run() { } }\npublic class Leaf : Mid { public override void Run() { } }\npublic class Other : Base { public override void Run() { } }\n');
+  await caretAt(page, 'override void Run() { } }\npublic class Leaf', 15);
+  await menuItem(page, 'Navigate', /^Method Hierarchy$/);
+  const list = page.getByRole('dialog', { name: /Method Hierarchy/ });
+  await expect(list).toContainText('Mid.Run', { timeout: 60_000 });
+  const labels = await list.getByRole('option').allTextContents();
+  const order = (n: string) => labels.findIndex((l) => l.includes(n));
+  expect(order('IRun.Run')).toBeGreaterThanOrEqual(0);
+  expect(order('Base.Run')).toBeLessThan(order('Mid.Run'));
+  expect(order('Mid.Run')).toBeLessThan(order('Leaf.Run'));
+  expect(order('Other.Run')).toBe(-1);
+});

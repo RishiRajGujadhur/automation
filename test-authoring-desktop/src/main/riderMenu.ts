@@ -169,6 +169,7 @@ const ROWS: Record<'edit' | 'view' | 'navigate' | 'code' | 'tools' | 'help', Row
     null,
     ['Type Hierarchy', 'type-hierarchy', 'CmdOrCtrl+H'],
     ['Call Hierarchy', 'call-hierarchy', 'CmdOrCtrl+Alt+H'],
+    ['Method Hierarchy', 'method-hierarchy'],
     null,
     ['Go to Matching Brace', 'goto-brace', 'CmdOrCtrl+]'],
     ['Select to Matching Brace', 'select-brace', 'CmdOrCtrl+Shift+]'],
