@@ -16,6 +16,9 @@ test.beforeEach(async ({ request }) => {
   expect((await request.post('/api/workspace', { data: { repositoryRoot: root, targetProject: '.' } })).ok()).toBe(true);
 });
 test.afterEach(async ({ request }) => {
+  // A build a test started must not finish against the restored workspace (it would write bin/obj into fixtures).
+  await request.post('/api/build/cancel').catch(() => {});
+  await expect.poll(async () => (await (await request.get('/api/build')).json()).status, { timeout: 60_000 }).not.toBe('running');
   await request.post('/api/workspace', { data: previous });
   await fs.rm(root, { recursive: true, force: true, maxRetries: 5 }).catch(() => {});
 });

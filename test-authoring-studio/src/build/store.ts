@@ -1,5 +1,6 @@
 import { useSyncExternalStore } from 'react';
 import { api } from '../api';
+import { saveBeforeRun } from '../editor/saveFirst';
 
 export type BuildDiagnostic = { severity: 'error' | 'warning'; code: string; message: string; file?: string; line?: number; column?: number; project?: string };
 export type BuildState = {
@@ -31,7 +32,7 @@ export function useBuild() {
   return useSyncExternalStore((l) => { listeners.add(l); connect(); return () => listeners.delete(l); }, () => state);
 }
 export const getBuild = () => state;
-export const startBuild = (action: 'build' | 'rebuild' | 'clean', configuration: string, project?: string) => api<BuildState>('/build', { action, configuration, project });
+export const startBuild = async (action: 'build' | 'rebuild' | 'clean', configuration: string, project?: string) => { if (action !== 'clean') await saveBeforeRun(); return api<BuildState>('/build', { action, configuration, project }); };
 export const cancelBuild = () => api<BuildState>('/build/cancel', {});
 
 /** The build's diagnostics (connecting to the build stream when nothing else has). */

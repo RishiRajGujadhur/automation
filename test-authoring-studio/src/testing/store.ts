@@ -1,5 +1,6 @@
 import { useSyncExternalStore } from 'react';
 import { api } from '../api';
+import { saveBeforeRun } from '../editor/saveFirst';
 
 export type DiscoveredTest = { id: string; kind: 'test' | 'scenario'; project: string; projectFile?: string; className: string; method: string; name: string; file: string; line: number; filter: string; feature?: string; cases?: number };
 export type TestResult = { name: string; className: string; method: string; outcome: 'passed' | 'failed' | 'skipped'; durationMs: number; message?: string; stackTrace?: string; output?: string; traces?: string[] };
@@ -58,8 +59,8 @@ export const discoverTests = () => api<{ tests: DiscoveredTest[]; warning?: stri
 // Repeat Last Test Run (Visual Studio Ctrl+R, L): the last selection run again.
 let lastRun: { tests: DiscoveredTest[] | 'all'; configuration: string; coverage: boolean } | null = null;
 export const lastTestRun = () => lastRun;
-export const runTests = (tests: DiscoveredTest[] | 'all', configuration = 'Debug', coverage = false) =>
-  (lastRun = { tests, configuration, coverage }, api<TestRunState>('/tests/run', tests === 'all' ? { configuration, coverage } : { ids: tests.map((t) => t.id), filters: tests.map((t) => t.filter), configuration, coverage }));
+export const runTests = async (tests: DiscoveredTest[] | 'all', configuration = 'Debug', coverage = false) =>
+  (lastRun = { tests, configuration, coverage }, await saveBeforeRun(), api<TestRunState>('/tests/run', tests === 'all' ? { configuration, coverage } : { ids: tests.map((t) => t.id), filters: tests.map((t) => t.filter), configuration, coverage }));
 export const cancelTests = () => api<TestRunState>('/tests/cancel', {});
 
 /** Resolves when the run that `started` belongs to has finished. */
