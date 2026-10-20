@@ -70,6 +70,7 @@ const ROWS: Record<'edit' | 'view' | 'navigate' | 'code' | 'tools' | 'help', Row
       ['HTML Decode', 'html-decode'],
       ['Increment Number', 'increment-number'],
       ['Decrement Number', 'decrement-number'],
+      ['Insert Sequence (1, 2, 3…)', 'insert-sequence'],
     ] },
   ],
   view: [

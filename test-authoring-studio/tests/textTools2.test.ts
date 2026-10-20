@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { EditorSelection, EditorState, type TransactionSpec } from '@codemirror/state';
 import type { EditorView } from '@codemirror/view';
-import { mapSelections, urlEncode, urlDecode, base64Encode, base64Decode, escapeString, unescapeString, htmlEncode, htmlDecode, stepNumber } from '../src/editor/textTools2';
+import { mapSelections, urlEncode, urlDecode, base64Encode, base64Decode, escapeString, unescapeString, htmlEncode, htmlDecode, stepNumber, insertSequence } from '../src/editor/textTools2';
 
 /** Runs an editor command on `doc` with the selection between « and » (or a caret at |). */
 function run(doc: string, cmd: (v: EditorView) => boolean) {
@@ -40,5 +40,11 @@ describe('text tools, fourth batch (IDE-FEATURES-4 Y1…)', () => {
     expect(run('v|009', stepNumber(1))).toBe('v010');
     expect(run('x = |0', stepNumber(-1))).toBe('x = -1');
     expect(run('no |number', stepNumber(1))).toBe('no number');
+  });
+  it('Y6 Insert Sequence at several carets', () => {
+    let state = EditorState.create({ doc: 'a\nb\nc', selection: EditorSelection.create([EditorSelection.cursor(1), EditorSelection.cursor(3), EditorSelection.cursor(5)]), extensions: EditorState.allowMultipleSelections.of(true) });
+    const view = { get state() { return state; }, dispatch: (spec: TransactionSpec) => { state = state.update(spec).state; } };
+    expect(insertSequence(view as unknown as EditorView)).toBe(true);
+    expect(state.doc.toString()).toBe('a1\nb2\nc3');
   });
 });

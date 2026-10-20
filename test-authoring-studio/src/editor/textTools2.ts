@@ -75,3 +75,15 @@ export function stepNumber(by: number) {
     return true;
   };
 }
+
+/** Insert Sequence (Rider "Increment Duplicates", VS multi-caret numbering): 1, 2, 3… at the carets, in document order,
+ * starting from the first selection's number when it is one. */
+export function insertSequence(view: EditorView) {
+  const ranges = [...view.state.selection.ranges].sort((a, b) => a.from - b.from);
+  if (ranges.length < 2) return false;
+  const first = view.state.sliceDoc(ranges[0].from, ranges[0].to).trim();
+  const start = /^-?\d+$/.test(first) ? Number(first) : 1;
+  const order = new Map(ranges.map((r, i) => [r.from, i]));
+  view.dispatch({ ...view.state.changeByRange((r) => { const text = String(start + order.get(r.from)!); return { changes: { from: r.from, to: r.to, insert: text }, range: EditorSelection.cursor(r.from + text.length) }; }), userEvent: 'input.convert' });
+  return true;
+}
