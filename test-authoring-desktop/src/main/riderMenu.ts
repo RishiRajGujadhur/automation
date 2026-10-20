@@ -79,6 +79,7 @@ const ROWS: Record<'edit' | 'view' | 'navigate' | 'code' | 'tools' | 'help', Row
       ['Escape JSON String', 'json-escape'],
       ['Unescape JSON String', 'json-unescape'],
       ['Number Lines', 'number-lines'],
+      ['Unix Timestamp ⇄ Date', 'timestamp'],
     ] },
     ['Align Assignments', 'align-assignments', 'CmdOrCtrl+Alt+]'],
     ['Count Occurrences', 'count-occurrences'],

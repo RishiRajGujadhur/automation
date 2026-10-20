@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { EditorSelection, EditorState, type TransactionSpec } from '@codemirror/state';
 import type { EditorView } from '@codemirror/view';
-import { mapSelections, urlEncode, urlDecode, base64Encode, base64Decode, escapeString, unescapeString, htmlEncode, htmlDecode, stepNumber, insertSequence, toggleQuotes, joinWith, splitAt, alignAssignments, swapSelections, countOccurrences, trimLines, stamp, insertText, LOREM, shuffleLines, formatXml, minifyXml, jsonEscape, jsonUnescape, numberLines, toFileScopedNamespace, toBlockScopedNamespace, removeRegions, toRawString, toggleTask, formatMarkdownTable, tableOfContents, MARKDOWN_TABLE, removeComments, concatToInterpolation, concatToInterpolationCmd, gotoOffset } from '../src/editor/textTools2';
+import { mapSelections, urlEncode, urlDecode, base64Encode, base64Decode, escapeString, unescapeString, htmlEncode, htmlDecode, stepNumber, insertSequence, toggleQuotes, joinWith, splitAt, alignAssignments, swapSelections, countOccurrences, trimLines, stamp, insertText, LOREM, shuffleLines, formatXml, minifyXml, jsonEscape, jsonUnescape, numberLines, toFileScopedNamespace, toBlockScopedNamespace, removeRegions, toRawString, toggleTask, formatMarkdownTable, tableOfContents, MARKDOWN_TABLE, removeComments, concatToInterpolation, concatToInterpolationCmd, gotoOffset, convertTimestamp, timestampCmd } from '../src/editor/textTools2';
 
 /** Runs an editor command on `doc` with the selection between « and » (or a caret at |). */
 function run(doc: string, cmd: (v: EditorView) => boolean) {
@@ -150,5 +150,12 @@ describe('text tools, fourth batch (IDE-FEATURES-4 Y1…)', () => {
     expect(gotoOffset(5)(view as unknown as EditorView)).toBe(true);
     expect(state.selection.main.head).toBe(5);
     expect(gotoOffset(-1)(view as unknown as EditorView)).toBe(false);
+  });
+  it('Y63 Unix Timestamp ⇄ Date', () => {
+    expect(convertTimestamp('1700000000')).toBe('2023-11-14T22:13:20Z');
+    expect(convertTimestamp('1700000000123')).toBe('2023-11-14T22:13:20.123Z');
+    expect(convertTimestamp('2023-11-14T22:13:20Z')).toBe('1700000000');
+    expect(convertTimestamp('hello')).toBe(null);
+    expect(run('at 17000000|00 ok', timestampCmd)).toBe('at 2023-11-14T22:13:20Z ok');
   });
 });

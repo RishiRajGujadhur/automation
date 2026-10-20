@@ -409,3 +409,14 @@ export const gotoOffset = (offset: number) => (view: EditorView) => {
   view.dispatch({ selection: { anchor: at }, scrollIntoView: true });
   return true;
 };
+
+/** Unix Timestamp ⇄ Date (Rider String Manipulation): 10 digits (seconds) or 13 (milliseconds) become an ISO date in UTC;
+ * an ISO date becomes Unix seconds. */
+export function convertTimestamp(text: string) {
+  const t = text.trim();
+  if (/^\d{10}$/.test(t)) return new Date(Number(t) * 1000).toISOString().replace('.000Z', 'Z');
+  if (/^\d{13}$/.test(t)) return new Date(Number(t)).toISOString();
+  if (/^\d{4}-\d\d-\d\d([T ][\d:.]+)?(Z|[+-]\d\d:?\d\d)?$/.test(t)) { const ms = Date.parse(/[Z+-]\d*:?\d*$/.test(t.slice(10)) || t.length === 10 ? t : `${t}Z`); return Number.isNaN(ms) ? null : String(Math.floor(ms / 1000)); }
+  return null;
+}
+export const timestampCmd = mapSelections(convertTimestamp, 'word');

@@ -457,6 +457,7 @@ export const FEATURES: Feature[] = [
   { id: 'copy-branch-name', label: 'Copy Current Branch Name', group: 'Git', essential: false, description: 'Tools ▸ Copy Current Branch Name copies the checked-out branch (for commit messages and tickets).', commands: ['copy-branch-name'] },
   { id: 'commit-issue-key', label: 'Commit message: issue key from the branch', group: 'Git', essential: false, description: 'Git Changes offers the branch\'s issue key (ABC-123, #42) to put in front of the commit message.' },
   { id: 'commit-type', label: 'Commit message: Conventional Commits type', group: 'Git', essential: false, description: 'A Type… list in Git Changes puts feat:, fix:, test:… in front of the commit message.' },
+  { id: 'timestamp', label: 'Unix Timestamp ⇄ Date', group: 'Editing', essential: false, description: 'Edit ▸ Convert turns a Unix timestamp into an ISO date (UTC), and an ISO date into Unix seconds.', commands: ['timestamp'] },
 ];
 export const GROUPS: FeatureGroup[] = ['Editing', 'Navigation', 'Code intelligence', 'Tool windows', 'Files', 'Git', 'Gherkin', 'View', 'Debugging', 'Help and productivity'];
 
