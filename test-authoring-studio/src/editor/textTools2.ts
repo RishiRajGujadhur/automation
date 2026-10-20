@@ -1,5 +1,6 @@
 import { EditorSelection, type EditorState } from '@codemirror/state';
 import type { EditorView } from '@codemirror/view';
+import { indentUnit } from '@codemirror/language';
 import { mapLines } from './textTools';
 
 /**
@@ -191,3 +192,30 @@ export const shuffleLines = (random = Math.random) => (view: EditorView) => {
   if (view.state.selection.main.empty) return false;
   return mapLines((lines) => { const a = [...lines]; for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; }, false)(view);
 };
+
+/** XML tokens: comments, CDATA, processing instructions and tags, with the text between them. */
+const xmlTokens = (src: string) => src.split(/(<!--[\s\S]*?-->|<!\[CDATA\[[\s\S]*?\]\]>|<[^>]+>)/).map((t) => t.trim()).filter(Boolean);
+/** Reformat XML (Rider / Visual Studio Format Document for XML): one element per line, indented; short text stays inline. */
+export function formatXml(src: string, unit = '  ') {
+  const toks = xmlTokens(src);
+  if (!toks.length || !toks[0].startsWith('<')) return null;
+  const out: string[] = [];
+  let depth = 0;
+  const isOpen = (t?: string) => !!t && t.startsWith('<') && !/^<[/?!]/.test(t) && !t.endsWith('/>');
+  for (let i = 0; i < toks.length; i++) {
+    const t = toks[i];
+    if (t.startsWith('</')) { depth = Math.max(0, depth - 1); out.push(unit.repeat(depth) + t); continue; }
+    if (isOpen(t)) {
+      const next = toks[i + 1], after = toks[i + 2];
+      if (next && !next.startsWith('<') && after?.startsWith('</')) { out.push(unit.repeat(depth) + t + next + after); i += 2; continue; }
+      if (next?.startsWith('</')) { out.push(unit.repeat(depth) + t + next); i += 1; continue; }
+      out.push(unit.repeat(depth) + t);
+      depth++;
+      continue;
+    }
+    out.push(unit.repeat(depth) + t);
+  }
+  return depth === 0 ? out.join('\n') : null;
+}
+/** Uses the editor's indent unit (Tab or spaces). */
+export const reformatXml = (view: EditorView) => mapSelections((t) => formatXml(t, view.state.facet(indentUnit)), 'doc')(view);

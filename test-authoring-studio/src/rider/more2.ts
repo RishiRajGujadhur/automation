@@ -1,6 +1,6 @@
 import type { RiderCommand } from './commands';
 import type { MoreHelpers } from './more';
-import { urlEncode, urlDecode, base64Encode, base64Decode, escapeString, unescapeString, htmlEncode, htmlDecode, stepNumber, insertSequence, toggleQuotes, joinWith, splitAt, alignAssignments, swapSelections, countOccurrences, trimLines, stamp, insertText, LOREM, shuffleLines } from '../editor/textTools2';
+import { urlEncode, urlDecode, base64Encode, base64Decode, escapeString, unescapeString, htmlEncode, htmlDecode, stepNumber, insertSequence, toggleQuotes, joinWith, splitAt, alignAssignments, swapSelections, countOccurrences, trimLines, stamp, insertText, LOREM, shuffleLines, reformatXml } from '../editor/textTools2';
 
 /**
  * Fourth batch of Visual Studio 2026 / JetBrains Rider commands (IDE-FEATURES-4.md, Y1–Y100). RiderHost registers
@@ -29,5 +29,6 @@ export function moreCommands2(h: MoreHelpers): RiderCommand[] {
     { id: 'insert-date', label: 'Insert Date and Time', menu: 'Code', run: h.inEditor(insertText(() => stamp())) },
     { id: 'insert-lorem', label: 'Insert Lorem Ipsum', menu: 'Code', run: h.inEditor(insertText(() => LOREM)) },
     { id: 'shuffle-lines', label: 'Shuffle Lines', menu: 'Edit', run: h.inEditor((v) => shuffleLines()(v) || h.notice('Select the lines to shuffle.')) },
+    { id: 'reformat-xml', label: 'Reformat XML', menu: 'Code', run: h.inEditor((v) => reformatXml(v) || h.notice('The file (or selection) is not well-formed XML, or is already formatted.')) },
   ];
 }

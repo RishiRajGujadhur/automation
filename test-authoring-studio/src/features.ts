@@ -411,6 +411,7 @@ export const FEATURES: Feature[] = [
   { id: 'insert-date', label: 'Insert Date and Time', group: 'Editing', essential: false, description: 'Code ▸ Insert Date and Time writes the current local date and time (yyyy-MM-dd HH:mm).', commands: ['insert-date'] },
   { id: 'insert-lorem', label: 'Insert Lorem Ipsum', group: 'Editing', essential: false, description: 'Code ▸ Insert Lorem Ipsum writes a sentence of placeholder text (for test data).', commands: ['insert-lorem'] },
   { id: 'shuffle-lines', label: 'Shuffle Lines', group: 'Editing', essential: false, description: 'Edit ▸ Shuffle Lines puts the selected lines in random order.', commands: ['shuffle-lines'] },
+  { id: 'reformat-xml', label: 'Reformat XML', group: 'Editing', essential: true, vs: 'Format Document (XML)', description: 'Code ▸ Reformat XML puts each element on its own line, indented (the selection or the whole file).', commands: ['reformat-xml'] },
 ];
 export const GROUPS: FeatureGroup[] = ['Editing', 'Navigation', 'Code intelligence', 'Tool windows', 'Files', 'Git', 'Gherkin', 'View', 'Debugging', 'Help and productivity'];
 
