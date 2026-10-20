@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { readEditorConfig, setEditorConfig } from '../src/project/editorconfig';
 import { addNoWarn } from '../src/project/projectText';
 import { configOf, readProperties, setProperty, setProperties, readEvents, setEvent, readUsings, setUsings, readReferences, setReferences, relativeProjectPath, readFileItem, setFileItem, isExcluded, setExcluded } from '../server/projectProps';
 
@@ -88,5 +89,16 @@ describe('project text helpers (CSHARP-20)', () => {
     expect(addNoWarn(undefined, 'CS0168')).toBe('$(NoWarn);CS0168');
     expect(addNoWarn('CS1591', 'CA1707')).toBe('$(NoWarn);CS1591;CA1707');
     expect(addNoWarn('$(NoWarn);CS0168', 'cs0168')).toBe(null);
+  });
+});
+
+describe('.editorconfig designer (CSHARP-20)', () => {
+  const EC = 'root = true\n\n[*]\nindent_style = space\n# comment\n\n[*.cs]\ncsharp_prefer_braces = true:warning\n';
+  it('C16 reads, sets and removes options', () => {
+    expect(readEditorConfig(EC)).toEqual({ '': { root: 'true' }, '*': { indent_style: 'space' }, '*.cs': { csharp_prefer_braces: 'true:warning' } });
+    expect(setEditorConfig(EC, '*', 'indent_size', '4')).toBe('root = true\n\n[*]\nindent_style = space\n# comment\nindent_size = 4\n\n[*.cs]\ncsharp_prefer_braces = true:warning\n');
+    expect(setEditorConfig(EC, '*.cs', 'csharp_prefer_braces', null)).toBe('root = true\n\n[*]\nindent_style = space\n# comment\n\n[*.cs]\n');
+    expect(setEditorConfig(EC, '*.cs', 'dotnet_diagnostic.CA1707.severity', 'none')).toContain('[*.cs]\ncsharp_prefer_braces = true:warning\ndotnet_diagnostic.CA1707.severity = none\n');
+    expect(setEditorConfig('', '*.feature', 'indent_size', '2')).toBe('[*.feature]\nindent_size = 2\n');
   });
 });

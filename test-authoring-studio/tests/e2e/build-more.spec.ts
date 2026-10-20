@@ -68,6 +68,13 @@ test('QL70 / QL71 / QL78 / QL79 Error List grouped by file; the build result mes
     await expect(page.getByText(/^Build failed in [\d.]+ s: 1 error, \d+ warnings?\.$/).first()).toBeVisible();
     await panel.getByRole('button', { name: 'Group by file' }).click();
     await expect(panel.locator('.error-group-name').first()).toContainText('CalculatorSteps.cs');
+    // C13 Suppress in Project File (the row menu), previewed.
+    await panel.getByRole('row').filter({ hasText: 'CS0103' }).first().click({ button: 'right' });
+    await page.getByRole('menuitem', { name: 'Suppress CS0103 in Project File' }).click();
+    const sup = page.getByRole('dialog', { name: 'Suppress CS0103 in Project File' });
+    await sup.getByRole('button', { name: 'Approve and write Calculator.csproj' }).click();
+    await expect.poll(async () => fs.readFile(path.join(root, 'Calculator.csproj'), 'utf8')).toContain('<NoWarn>$(NoWarn);CS0103</NoWarn>');
+    await sup.getByRole('button', { name: 'Close dialog' }).click();
     // QL78 Copy All, QL79 Escape clears the search.
     await panel.getByRole('button', { name: 'Copy all errors' }).click();
     await expect.poll(() => page.evaluate(() => navigator.clipboard.readText())).toMatch(/missingName/);

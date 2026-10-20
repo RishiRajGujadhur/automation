@@ -531,6 +531,7 @@ export const FEATURES: Feature[] = [
   { id: 'suppress-in-project', label: 'Error List: Suppress in Project File', group: 'Tool windows', essential: true, vs: 'Error List ▸ Suppress ▸ In Project File', description: 'The Error List\'s row menu adds the warning\'s code to the project\'s NoWarn (previewed diff), like Visual Studio\'s Suppress ▸ In Project File.' },
   { id: 'pp-debug', label: 'Project Properties: Debug (launch profiles)', group: 'Code intelligence', essential: true, vs: 'Project Properties ▸ Debug ▸ Launch profiles', description: 'The Debug page edits launch profiles (Properties/launchSettings.json): launch kind, arguments, working directory, environment variables.' },
   { id: 'user-secrets', label: 'Manage User Secrets', group: 'Code intelligence', essential: true, vs: 'Manage User Secrets', description: 'The Explorer\'s project menu edits secrets.json in the user profile (adding a UserSecretsId first, previewed): credentials for tests stay out of the repository.' },
+  { id: 'editorconfig-designer', label: 'EditorConfig designer', group: 'Code intelligence', essential: true, vs: 'EditorConfig designer', description: 'Tools ▸ EditorConfig… sets whitespace and C# code style options and rule severities in the repository\'s .editorconfig (previewed diff).', commands: ['editorconfig-designer'] },
 ];
 export const GROUPS: FeatureGroup[] = ['Editing', 'Navigation', 'Code intelligence', 'Tool windows', 'Files', 'Git', 'Gherkin', 'View', 'Debugging', 'Help and productivity'];
 

@@ -3758,3 +3758,6 @@ html[data-features-off~='inlay-hints'] .cm-inlay {
 .project-previews { gap: 14px; max-height: 70vh; overflow: auto; min-height: 0; }
 .project-props .pp-check { display: flex; gap: 6px; align-items: center; }
 .user-secrets textarea { font-family: var(--font-mono, monospace); font-size: 12px; }
+.editorconfig-designer .ec-row { flex-direction: row; align-items: center; justify-content: space-between; gap: 12px; }
+.editorconfig-designer .ec-row select { min-width: 200px; }
+.editorconfig-designer .ec-head { font-size: 13px; margin: 8px 0 0; }

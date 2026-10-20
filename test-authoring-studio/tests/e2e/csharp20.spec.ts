@@ -134,3 +134,59 @@ test('C7–C11 Build Events, Global Usings, Project References, Upgrade Target F
   await fp.getByRole('button', { name: 'Approve and write Fixtures.csproj' }).click();
   await expect.poll(csproj).toContain('<None Update="Features\\Auth\\Login.feature"><CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory></None>');
 });
+
+test('C12 / C14 / C15 / C16 Exclude From Project, launch profiles, user secrets, EditorConfig designer', async ({ page }) => {
+  // C12
+  await open(page, 'AuthSteps.cs');
+  await page.getByRole('navigation', { name: 'Solution' }).getByRole('button', { name: 'Login.feature', exact: true }).first().click({ button: 'right' });
+  await page.getByRole('menuitem', { name: 'Exclude From Project…' }).click();
+  const fp = page.getByRole('dialog', { name: 'File Properties' });
+  await expect(fp.getByLabel('Exclude from project')).toBeChecked();
+  await fp.getByRole('button', { name: 'Preview changes' }).click();
+  await fp.getByRole('button', { name: 'Approve and write Fixtures.csproj' }).click();
+  await expect.poll(csproj).toContain('<None Remove="Features\\Auth\\Login.feature" />');
+  await fp.getByRole('button', { name: 'Close dialog' }).click();
+  // C14: a launch profile.
+  await projectNode(page).click({ button: 'right' });
+  await page.getByRole('menuitem', { name: 'Properties', exact: true }).click();
+  const dlg = page.getByRole('dialog', { name: 'Project Properties' });
+  await dlg.getByRole('navigation', { name: 'Property pages' }).getByRole('button', { name: 'Debug' }).click();
+  page.once('dialog', (d) => void d.accept('Fixtures'));
+  await dlg.getByRole('button', { name: 'New profile' }).click();
+  await dlg.getByLabel('Command line arguments').fill('--headed');
+  await dlg.getByLabel('Environment variables').fill('BASE_URL=https://x.test');
+  await dlg.getByRole('button', { name: 'Preview launchSettings.json' }).click();
+  await dlg.getByRole('button', { name: 'Approve and write launchSettings.json' }).click();
+  await expect.poll(async () => JSON.parse(await fs.readFile(path.join(root, 'Properties/launchSettings.json'), 'utf8').catch(() => '{}'))).toEqual({ profiles: { Fixtures: { commandName: 'Project', commandLineArgs: '--headed', environmentVariables: { BASE_URL: 'https://x.test' } } } });
+  await dlg.getByRole('button', { name: 'Close dialog' }).click();
+  // C15: a UserSecretsId first (previewed), then secrets.json in the profile.
+  await projectNode(page).click({ button: 'right' });
+  await page.getByRole('menuitem', { name: 'Manage User Secrets' }).click();
+  const add = page.getByRole('dialog', { name: 'Add a UserSecretsId, then Manage User Secrets again' });
+  await add.getByRole('button', { name: 'Approve and write Fixtures.csproj' }).click();
+  await expect.poll(csproj).toMatch(/<UserSecretsId>[0-9a-f-]{36}<\/UserSecretsId>/);
+  await add.getByRole('button', { name: 'Close dialog' }).click();
+  const id = /<UserSecretsId>([0-9a-f-]{36})<\/UserSecretsId>/.exec(await csproj())![1];
+  const where = (await (await page.request.get(`/api/project/secrets?id=${id}`)).json()).path as string;
+  try {
+    await projectNode(page).click({ button: 'right' });
+    await page.getByRole('menuitem', { name: 'Manage User Secrets' }).click();
+    const sec = page.getByRole('dialog', { name: 'Manage User Secrets' });
+    await sec.getByLabel('secrets.json').fill('{ "Login:Password": "s3cret" }');
+    await sec.getByRole('button', { name: 'Save' }).click();
+    await expect.poll(() => fs.readFile(where, 'utf8').catch(() => '')).toBe('{ "Login:Password": "s3cret" }');
+    await sec.getByRole('button', { name: 'Close dialog' }).click();
+  } finally {
+    await fs.rm(path.dirname(where), { recursive: true, force: true });
+  }
+  // C16
+  await menuItem(page, 'Tools', /^EditorConfig/);
+  const ec = page.getByRole('dialog', { name: 'EditorConfig' });
+  await ec.getByLabel('Indent size').selectOption('4');
+  await ec.getByLabel('Rule code').fill('CA1707');
+  await ec.getByRole('button', { name: 'Add rule' }).click();
+  await expect(ec.getByLabel('Severity of CA1707')).toHaveValue('none');
+  await ec.getByRole('button', { name: 'Preview changes' }).click();
+  await ec.getByRole('button', { name: 'Approve and write .editorconfig' }).click();
+  await expect.poll(() => fs.readFile(path.join(root, '.editorconfig'), 'utf8').catch(() => '')).toBe('[*]\nindent_size = 4\n\n[*.cs]\ndotnet_diagnostic.CA1707.severity = none\n');
+});
