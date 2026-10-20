@@ -3,7 +3,7 @@ import { useSyncExternalStore } from 'react';
 import { api } from '../api';
 
 /** Breakpoint settings (Visual Studio's Breakpoint Settings): condition, hit count, log message (tracepoint), enabled. */
-export type BreakpointSpec = { line: number; condition?: string; hitCondition?: string; logMessage?: string; enabled?: boolean; temporary?: boolean; labels?: string[]; disableOnceHit?: boolean };
+export type BreakpointSpec = { line: number; condition?: string; hitCondition?: string; logMessage?: string; enabled?: boolean; temporary?: boolean; labels?: string[]; disableOnceHit?: boolean; dependsOn?: string };
 export type DebugFrame = { id: number; name: string; file?: string; line: number; column: number; external: boolean };
 export type DebugStatus = 'idle' | 'building' | 'starting' | 'running' | 'paused' | 'ended';
 export type DebugState = {
@@ -39,6 +39,7 @@ let snapshot: Snapshot = {
 };
 const listeners = new Set<() => void>();
 let source: EventSource | undefined;
+let prevStatus: DebugStatus = 'idle';
 let synced = false;
 
 function set(patch: Partial<Snapshot>) {
@@ -59,6 +60,14 @@ function connect() {
     // Temporary breakpoints (Rider: "Remove once hit") go once the debugger stops on them.
     const top = state.status === 'paused' ? state.frames.find((f) => !f.external) : undefined;
     if (top?.file && specAt(top.file, top.line)?.temporary) setBreakpoints(top.file, breakpointsOf(top.file).filter((l) => l !== top.line));
+    // Dependent breakpoints: hitting a breakpoint enables those waiting for it; a new session waits again.
+    if (featureOn('bp-dependent')) {
+      const wasLive = isLive(prevStatus);
+      prevStatus = state.status;
+      const all = Object.entries(snapshot.breakpoints).flatMap(([file, specs]) => specs.map((b) => ({ file, b })));
+      if (top?.file && state.reason === 'breakpoint') for (const { file, b } of all) if (b.dependsOn === `${top.file}:${top.line}` && b.enabled === false) updateBreakpoint(file, b.line, { enabled: true });
+      if (wasLive && !isLive(state.status)) for (const { file, b } of all) if (b.dependsOn && b.enabled !== false) updateBreakpoint(file, b.line, { enabled: false });
+    }
     // Disable once hit (Visual Studio's breakpoint action).
     if (top?.file && state.reason === 'breakpoint' && featureOn('bp-disable-once')) { const s = specAt(top.file, top.line); if (s?.disableOnceHit && s.enabled !== false) updateBreakpoint(top.file, top.line, { enabled: false }); }
     // The server forgets breakpoints when it restarts: push this browser's set once per connection.
