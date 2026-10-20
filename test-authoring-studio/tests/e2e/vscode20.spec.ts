@@ -149,3 +149,20 @@ test('V4 Cursor style and width', async ({ page }) => {
   await caretLine(page, 2);
   expect((await caretStyle(page)).left).toBe('1px');
 });
+
+test('V5 Cursor blinking and smooth caret animation', async ({ page }) => {
+  await open(page, 'Steps/AuthSteps.cs', { 'editor.cursorBlinking': 'solid', 'editor.cursorSmoothCaretAnimation': 'on' });
+  await caretLine(page, 2);
+  const layer = view(page).locator('.cm-cursorLayer');
+  expect(await layer.evaluate((e) => getComputedStyle(e).animationName)).toBe('none');
+  expect(await view(page).locator('.cm-cursor-primary').evaluate((e) => getComputedStyle(e).transitionDuration)).toMatch(/0\.08s/);
+  await setSettings(page, { 'editor.cursorBlinking': 'smooth' });
+  await caretLine(page, 2);
+  expect(await layer.evaluate((e) => getComputedStyle(e).animationTimingFunction)).toBe('ease-in-out');
+  await setSettings(page, { 'editor.cursorBlinking': 'expand', 'editor.cursorSmoothCaretAnimation': 'explicit' });
+  await caretLine(page, 2);
+  expect(await view(page).locator('.cm-cursor-primary').evaluate((e) => getComputedStyle(e).animationName)).toBe('vsc-expand');
+  await page.keyboard.type('x');
+  await expect(view(page)).toHaveClass(/cm-vsc-typing/);
+  await expect(view(page)).not.toHaveClass(/cm-vsc-typing/);
+});

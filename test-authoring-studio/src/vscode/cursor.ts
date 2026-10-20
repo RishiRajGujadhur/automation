@@ -34,3 +34,44 @@ settingsExtension(() => {
   if (shapes[style]) return [...out, caretColour, EditorView.theme(shapes[style])];
   return width ? [...out, EditorView.theme({ '.cm-cursor': { borderLeftWidth: `${width}px !important` } })] : style === 'line' ? [] : out;
 });
+
+/* V5 Cursor blinking and smooth caret animation. */
+export const blinking = defineSetting<'blink' | 'smooth' | 'phase' | 'expand' | 'solid'>({
+  key: 'editor.cursorBlinking', category: C, title: 'Cursor Blinking', type: 'enum', default: 'blink', description: 'Control the cursor animation style.',
+  options: [{ value: 'blink' }, { value: 'smooth' }, { value: 'phase' }, { value: 'expand' }, { value: 'solid' }],
+});
+export const smoothCaret = defineSetting<'off' | 'explicit' | 'on'>({
+  key: 'editor.cursorSmoothCaretAnimation', category: C, title: 'Cursor Smooth Caret Animation', type: 'enum', default: 'off', description: 'Controls whether the smooth caret animation should be enabled.',
+  options: [{ value: 'off', description: 'Smooth caret animation is disabled.' }, { value: 'explicit', description: 'Smooth caret animation is enabled only when the user moves the cursor with an explicit gesture.' }, { value: 'on', description: 'Smooth caret animation is always enabled.' }],
+});
+// CodeMirror blinks the cursor layer with steps(1); the other styles change how it fades (or stop it).
+const blinkThemes: Record<string, Parameters<typeof EditorView.theme>[0]> = {
+  smooth: { '&.cm-focused > .cm-scroller > .cm-cursorLayer': { animationTimingFunction: 'ease-in-out !important' } },
+  phase: { '&.cm-focused > .cm-scroller > .cm-cursorLayer': { animationTimingFunction: 'cubic-bezier(0.8, 0, 0.2, 1) !important' } },
+  expand: {
+    '&.cm-focused > .cm-scroller > .cm-cursorLayer': { animation: 'none !important' },
+    '&.cm-focused .cm-cursor': { animation: 'vsc-expand 1.2s ease-in-out infinite' },
+    '@keyframes vsc-expand': { '0%, 20%': { transform: 'scaleY(1)' }, '50%, 60%': { transform: 'scaleY(0)' }, '90%, 100%': { transform: 'scaleY(1)' } },
+  },
+  solid: { '&.cm-focused > .cm-scroller > .cm-cursorLayer': { animation: 'none !important' } },
+};
+const glide = EditorView.theme({ '.cm-cursor': { transition: 'left 80ms ease-out, top 80ms ease-out' }, '&.cm-vsc-typing .cm-cursor': { transition: 'none' } });
+// "explicit": typing moves the caret without the glide.
+const typing = ViewPlugin.fromClass(class {
+  timer = 0;
+  constructor(readonly view: EditorView) {}
+  update(u: import('@codemirror/view').ViewUpdate) {
+    if (!u.transactions.some((t) => t.isUserEvent('input') || t.isUserEvent('delete'))) return;
+    this.view.dom.classList.add('cm-vsc-typing');
+    clearTimeout(this.timer);
+    this.timer = window.setTimeout(() => this.view.dom.classList.remove('cm-vsc-typing'), 150);
+  }
+  destroy() { clearTimeout(this.timer); }
+});
+settingsExtension(() => {
+  const b = blinking(), s = smoothCaret();
+  return [
+    b === 'blink' ? [] : [EditorView.editorAttributes.of({ class: `cm-vsc-blink-${b}` }), EditorView.theme(blinkThemes[b])],
+    s === 'off' ? [] : [EditorView.editorAttributes.of({ class: `cm-vsc-smooth-caret-${s}` }), glide, s === 'explicit' ? typing : []],
+  ];
+});

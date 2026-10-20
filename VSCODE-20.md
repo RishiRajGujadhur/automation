@@ -12,9 +12,11 @@ switch. Web and desktop share the implementation.
 | V2 | Minimap | editor.minimap.enabled, autohide, side, showSlider, scale, maxColumn, renderCharacters, size | ✅ 2026-10-20 |
 | V3 | Minimap section headers | editor.minimap.showRegionSectionHeaders, showMarkSectionHeaders, markSectionHeaderRegex, sectionHeaderFontSize, sectionHeaderLetterSpacing | ✅ 2026-10-20 |
 | V4 | Cursor style and width | editor.cursorStyle, editor.cursorWidth | ✅ 2026-10-20 |
+| V5 | Cursor blinking and smooth caret animation | editor.cursorBlinking, editor.cursorSmoothCaretAnimation | ✅ 2026-10-20 |
 
 ## Progress log
 - 2026-10-20 V1: Schema-driven VS Code settings with sub-categories, modified marker, reset, @modified and settings.json copy/import; editor.lineNumbers on / off / relative / interval; Ctrl+, opens Preferences in the web app.
 - 2026-10-20 V2: A canvas minimap beside the code and Gherkin editors: click to jump, drag the slider, left or right, scale 1–3, column limit, characters or blocks, proportional / fill / fit, autohide on mouse over or scroll.
 - 2026-10-20 V3: // MARK: comments (C#, Gherkin and XML comments) and named #region lines labelled in the minimap, a line above for MARK: -; the regex is configurable (label / separator groups).
 - 2026-10-20 V4: line, block, underline, line-thin, block-outline, underline-thin in the caret's theme colour; a line caret 1–10 px wide.
+- 2026-10-20 V5: blink, smooth, phase, expand or solid; the caret glides between positions (always, or only for explicit moves, not typing).
