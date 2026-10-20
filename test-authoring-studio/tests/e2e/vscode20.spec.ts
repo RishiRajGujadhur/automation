@@ -121,3 +121,31 @@ test('V3 Minimap section headers: MARK comments and regions, custom regex, setti
   await page.keyboard.press('Escape');
   await expect(view(page).locator('.cm-minimap')).toHaveAttribute('data-sections', 'tidy');
 });
+
+const caretStyle = (page: Page) => view(page).locator('.cm-cursor-primary').first().evaluate((e) => { const s = getComputedStyle(e); return { left: s.borderLeftWidth, bottom: s.borderBottomWidth, width: parseFloat(s.width), background: s.backgroundColor }; });
+/** New settings, then the page reloads and the file opens again. */
+const setSettings = async (page: Page, s: Record<string, unknown>, file = 'Steps/AuthSteps.cs') => {
+  await page.evaluate((x) => localStorage.setItem('tas:settings', JSON.stringify(x)), s);
+  await page.reload();
+  await expect(page.getByText('Repository indexed')).toBeVisible();
+  await page.getByRole('navigation').getByRole('button', { name: path.basename(file), exact: true }).first().click();
+  await expect(view(page)).toBeVisible();
+};
+test('V4 Cursor style and width', async ({ page }) => {
+  await open(page, 'Steps/AuthSteps.cs', { 'editor.cursorStyle': 'block' });
+  await caretLine(page, 2);
+  let c = await caretStyle(page);
+  expect(c.left).toBe('0px');
+  expect(c.width).toBeGreaterThan(5);
+  expect(c.background).not.toBe('rgba(0, 0, 0, 0)');
+  await setSettings(page, { 'editor.cursorStyle': 'underline' });
+  await caretLine(page, 2);
+  c = await caretStyle(page);
+  expect(c.bottom).toBe('2px');
+  await setSettings(page, { 'editor.cursorWidth': 4 });
+  await caretLine(page, 2);
+  expect((await caretStyle(page)).left).toBe('4px');
+  await setSettings(page, { 'editor.cursorStyle': 'line-thin' });
+  await caretLine(page, 2);
+  expect((await caretStyle(page)).left).toBe('1px');
+});
