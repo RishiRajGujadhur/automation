@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { EditorState, type TransactionSpec } from '@codemirror/state';
 import type { EditorView } from '@codemirror/view';
-import { expectedNamespace, setNamespace, firstTypeName } from '../src/editor/csharpTools';
+import { expectedNamespace, setNamespace, firstTypeName, toggleIgnore } from '../src/editor/csharpTools';
 
 const apply = (doc: string, cmd: (v: EditorView) => boolean) => {
   let state = EditorState.create({ doc });
@@ -23,5 +23,13 @@ describe('C# file tools (X79…)', () => {
     expect(firstTypeName('// class Old\nnamespace N;\n/* struct X */ var s = "class Y";\npublic sealed partial class Clock<T> : IClock {}\nclass Second {}')).toBe('Clock');
     expect(firstTypeName('public record Point(int X, int Y);')).toBe('Point');
     expect(firstTypeName('var x = 1;')).toBeUndefined();
+  });
+  it('X176 Toggle Ignore Test', () => {
+    const doc = 'class T\n{\n    [Test]\n    public void Adds()\n    {\n        Assert.Pass();\n    }\n}';
+    const on = apply(doc.replace('Assert.Pass', 'Assert.Pass'), (v) => { v.dispatch({ selection: { anchor: v.state.doc.toString().indexOf('Assert') } }); return toggleIgnore(v, 'flaky'); });
+    expect(on.doc).toBe('class T\n{\n    [Test]\n    [Ignore("flaky")]\n    public void Adds()\n    {\n        Assert.Pass();\n    }\n}');
+    const off = apply(on.doc, (v) => { v.dispatch({ selection: { anchor: v.state.doc.toString().indexOf('Assert') } }); return toggleIgnore(v); });
+    expect(off.doc).toBe(doc);
+    expect(apply('class T\n{\n    public void Helper() { }\n}', (v) => { v.dispatch({ selection: { anchor: 20 } }); return toggleIgnore(v); }).ok).toBe(false);
   });
 });

@@ -273,6 +273,7 @@ export const FEATURES: Feature[] = [
   { id: 'clear-recent', label: 'Clear Recent Files', group: 'Navigation', essential: true, vs: 'File ▸ Recent ▸ Clear', description: 'Empties the Recent Files and Recent Locations lists.', commands: ['clear-recent'] },
   { id: 'clear-bookmarks', label: 'Clear All Bookmarks', group: 'Navigation', essential: true, vs: 'Bookmarks ▸ Delete All Bookmarks', description: 'Deletes every bookmark of the workspace.', commands: ['clear-bookmarks'] },
   { id: 'save-live-template', label: 'Save as Live Template', group: 'Editing', essential: true, vs: 'Tools ▸ Save as Live Template (Rider)', description: 'Saves the selection as your own live template (Insert Live Template lists it).', commands: ['save-live-template'] },
+  { id: 'toggle-ignore', label: 'Toggle Ignore Test', group: 'Debugging', essential: true, vs: 'Unit Tests ▸ Ignore (Rider)', description: 'Adds or removes [Ignore("…")] on the test method at the caret.', commands: ['toggle-ignore'] },
 ];
 export const GROUPS: FeatureGroup[] = ['Editing', 'Navigation', 'Code intelligence', 'Tool windows', 'Files', 'Git', 'Gherkin', 'View', 'Debugging', 'Help and productivity'];
 

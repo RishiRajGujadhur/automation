@@ -888,3 +888,38 @@ test('X175 Save as Live Template, then insert it', async ({ page }) => {
   await page.keyboard.press('Enter');
   await expect.poll(async () => ((await doc(page)).match(/Given the browser is started/g) ?? []).length).toBe(2);
 });
+
+test('X176–X178 Toggle Ignore Test, Ignore Scenario, Copy Step Definition Stub', async ({ page, request, context }) => {
+  await context.grantPermissions(['clipboard-read', 'clipboard-write']);
+  await fs.writeFile(path.join(root, 'Steps/MathTests.cs'), ['namespace Demo;', 'public class MathTests', '{', '    [Test]', '    public void Adds()', '    {', '        var sum = 1 + 1;', '    }', '}', ''].join('\n'));
+  expect((await request.post('/api/workspace', { data: { repositoryRoot: root, targetProject: '.' } })).ok()).toBe(true);
+  await openCs(page, 'Steps/MathTests.cs', 'var sum');
+  await menuItem(page, 'Code', /^Toggle Ignore Test/);
+  await expect.poll(() => doc(page)).toContain('    [Ignore("Ignored")]\n    public void Adds()');
+  await page.locator('.editor-tab-label', { hasText: 'Login.feature' }).click();
+  await caretAt(page, 'the user signs in');
+  await gherkinItem(page, /^Copy Step Definition Stub/);
+  await expect.poll(() => page.evaluate(() => navigator.clipboard.readText())).toMatch(/\[When\(/);
+  await gherkinItem(page, /^Ignore \/ Unignore Scenario/);
+  await expect.poll(() => doc(page)).toMatch(/@ignore\r?\n\s*Scenario: Sign in/);
+});
+
+test('X179–X183 Zoom IDE, Compact Mode, feature settings export / import, environment info, current scenario', async ({ page, context }) => {
+  await context.grantPermissions(['clipboard-read', 'clipboard-write']);
+  await openFeature(page);
+  await menuItem(page, 'View', /^Zoom IDE In/);
+  await expect.poll(() => page.evaluate(() => document.documentElement.style.zoom)).toBe('110%');
+  await menuItem(page, 'View', /^Reset IDE Zoom/);
+  await expect.poll(() => page.evaluate(() => document.documentElement.style.zoom)).toBe('');
+  await menuItem(page, 'View', /Compact Mode/);
+  await expect(page.locator('html')).toHaveClass(/compact-ui/);
+  await menuItem(page, 'Tools', /^Export Feature Settings/);
+  await expect.poll(() => page.evaluate(() => navigator.clipboard.readText())).toContain('"overrides"');
+  page.once('dialog', (d) => void d.accept(JSON.stringify({ overrides: { 'copy-xpath': false } })));
+  await menuItem(page, 'Tools', /^Import Feature Settings/);
+  await expect(page.getByText(/Imported the feature settings \(1 switch\)/).first()).toBeVisible();
+  await menuItem(page, 'Help', /^Copy Environment Info/);
+  await expect.poll(() => page.evaluate(() => navigator.clipboard.readText())).toContain('TestAuthoring Studio (web app)');
+  await caretAt(page, 'the user signs in');
+  await expect(page.locator('.gherkin-editor .cm-current-scenario')).toHaveCount(4);
+});

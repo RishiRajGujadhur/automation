@@ -18,7 +18,7 @@ import { isBrowser } from '../files/provider';
 import { GIT_CHANGED_EVENT } from '../editor/events';
 import { buildDiagnostics, stepError } from '../build/store';
 import { api } from '../api';
-import { expectedNamespace, setNamespace, firstTypeName } from '../editor/csharpTools';
+import { expectedNamespace, setNamespace, firstTypeName, toggleIgnore } from '../editor/csharpTools';
 import { renamePath } from '../files/provider';
 import { movedPath } from '../files/tabs';
 import { DEFAULT_TODO_TOKENS } from '../editor/todoHighlight';
@@ -171,5 +171,6 @@ export function moreCommands(h: MoreHelpers): RiderCommand[] {
     { id: 'clear-recent', label: 'Clear Recent Files', menu: 'Navigate', run: () => { const n = recentList().length; clearRecent(); h.notice(n ? `Cleared ${n} recent file${n === 1 ? '' : 's'}.` : 'No recent files.'); } },
     { id: 'clear-bookmarks', label: 'Clear All Bookmarks…', menu: 'Navigate', run: () => { const n = getBookmarks().length; if (!n) { h.notice('No bookmarks.'); return; } if (!window.confirm(`Delete all ${n} bookmark${n === 1 ? '' : 's'}?`)) return; clearBookmarks(); h.notice(`Deleted ${n} bookmark${n === 1 ? '' : 's'}.`); } },
     { id: 'save-live-template', label: 'Save as Live Template…', menu: 'Tools', run: h.inEditor((v, file) => { const s = v.state.selection.main; if (s.empty) { h.notice('Select the text to save as a template.'); return; } const kind = file.endsWith('.feature') ? 'feature' : file.endsWith('.cs') ? 'cs' : undefined; if (!kind) { h.notice('Live templates are for feature and C# files.'); return; } const name = window.prompt('Template abbreviation (Insert Live Template, Ctrl+J, lists it):', '')?.trim(); if (!name) return; if (!/^\w+$/.test(name)) { h.notice('Use letters, digits or _ for the abbreviation.'); return; } saveUserTemplate(name, kind, v.state.sliceDoc(s.from, s.to)); h.notice(`Saved the live template "${name}".`); }) },
+    { id: 'toggle-ignore', label: 'Toggle Ignore Test', menu: 'Code', run: h.inEditor((v, file) => { if (!file.endsWith('.cs')) { h.notice('Open a C# test file first.'); return; } if (!toggleIgnore(v)) h.notice('Put the caret in a test method (one with attributes such as [Test]).'); }) },
   ];
 }

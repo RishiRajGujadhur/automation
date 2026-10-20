@@ -201,6 +201,7 @@ const ROWS: Record<'edit' | 'view' | 'navigate' | 'code' | 'tools' | 'help', Row
     ['Sort JSON Keys', 'sort-json'],
     ['Copy JSON Pointer', 'copy-json-pointer'],
     ['Copy XPath', 'copy-xpath'],
+    ['Toggle Ignore Test', 'toggle-ignore'],
   ],
   tools: [
     ['Run Anything… (Ctrl twice)', 'run-anything'],

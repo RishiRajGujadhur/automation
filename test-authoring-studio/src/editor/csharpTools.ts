@@ -24,3 +24,26 @@ export function firstTypeName(source: string) {
   const code = source.replace(/\/\*[\s\S]*?\*\/|\/\/.*$|@?"(?:[^"\\]|\\.|"")*"/gm, '');
   return /\b(?:class|interface|struct|record|enum)\s+(@?\w+)/.exec(code)?.[1].replace(/^@/, '');
 }
+
+/**
+ * Toggle Ignore Test (Rider's unit test "Ignore"): [Ignore("…")] on the NUnit / MSTest method at the caret, or off again.
+ * The method is the first signature at or above the caret; its attributes are the [..] lines just above it.
+ */
+export function toggleIgnore(view: EditorView, reason = 'Ignored') {
+  const { state } = view;
+  const doc = state.doc;
+  let n = doc.lineAt(state.selection.main.head).number;
+  const sig = /^\s*(?:(?:public|private|protected|internal|static|async|virtual|override)\s+)+[\w<>\[\],.? ]+\s+\w+\s*\(/;
+  while (n >= 1 && !sig.test(doc.line(n).text)) n--;
+  if (n < 1) return false;
+  let first = n;
+  while (first > 1 && /^\s*\[.*\]\s*$/.test(doc.line(first - 1).text)) first--;
+  for (let k = first; k < n; k++) {
+    const line = doc.line(k);
+    if (/^\s*\[\s*Ignore\b/.test(line.text)) { view.dispatch({ changes: { from: line.from, to: Math.min(doc.length, line.to + state.lineBreak.length) }, userEvent: 'delete' }); return true; }
+  }
+  if (first === n) return false; // no attributes: not a test method
+  const line = doc.line(n);
+  view.dispatch({ changes: { from: line.from, insert: `${/^\s*/.exec(line.text)![0]}[Ignore("${reason}")]${state.lineBreak}` }, userEvent: 'input' });
+  return true;
+}
