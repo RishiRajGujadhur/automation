@@ -296,6 +296,15 @@ export default function SolutionExplorer({ features, revision, activeFile, query
 
   /** Keyboard in the Explorer tree (QOL-50): arrows, Home / End, type to select, Enter. */
   const typed = useRef({ text: '', at: 0 });
+  // The Explorer's scroll position comes back after a reload (QOL-50), once the tree has rows.
+  const scrollSave = useRef(0);
+  const scrollRestored = useRef(false);
+  useEffect(() => {
+    if (scrollRestored.current || !featureOn('explorer-scroll') || !tree.current || !files.length) return;
+    scrollRestored.current = true;
+    const top = Number(sessionStorage.getItem(collapsedKey().replace('Collapsed', 'Scroll')) ?? 0);
+    if (top) requestAnimationFrame(() => { if (tree.current) tree.current.scrollTop = top; });
+  }, [files.length]); // eslint-disable-line react-hooks/exhaustive-deps
   const treeKeys = (e: React.KeyboardEvent) => {
     const t = e.target as HTMLElement;
     if (!tree.current || !t.matches('.explorer-file, .explorer-folder') || e.ctrlKey || e.metaKey || e.altKey) return;
@@ -524,7 +533,7 @@ export default function SolutionExplorer({ features, revision, activeFile, query
       <div className="explorer-summary" role="status">
         {pendingOnly ? `${files.length} file${files.length === 1 ? '' : 's'} with unsaved changes` : query.trim() ? `${files.length} matching file${files.length === 1 ? '' : 's'}` : `${features.length} feature file${features.length === 1 ? '' : 's'} · ${files.length} file${files.length === 1 ? '' : 's'}`}
       </div>
-      <nav className="folder-tree se-tree" ref={tree} aria-label="Solution" onKeyDown={treeKeys}>
+      <nav className="folder-tree se-tree" ref={tree} aria-label="Solution" onKeyDown={treeKeys} onScroll={(e) => { if (featureOn('explorer-scroll')) { const top = e.currentTarget.scrollTop; clearTimeout(scrollSave.current); scrollSave.current = window.setTimeout(() => { try { sessionStorage.setItem(collapsedKey().replace('Collapsed', 'Scroll'), String(top)); } catch { /* storage blocked */ } }, 200); } }}>
         <ul className="folder-children">
           <li>
             <RowMenu label="Solution" items={solution?.solutionFile && !browserSolution ? [
