@@ -288,6 +288,7 @@ export const FEATURES: Feature[] = [
   { id: 'open-to-side', label: 'Explorer: Open to the Side', group: 'Files', essential: true, vs: 'Open to the Side', description: 'A file\'s context menu opens it in the split editor.' },
   { id: 'test-copy-filter', label: 'Test Explorer: Copy dotnet test Filter', group: 'Tool windows', essential: true, description: 'Copies a dotnet test --filter for the selected tests (CI, the command line).' },
   { id: 'test-failed-only', label: 'Test Explorer: Failed tests only', group: 'Tool windows', essential: true, vs: 'Test Explorer ▸ Failed Tests filter', description: 'A toolbar toggle shows only the tests that failed.' },
+  { id: 'notifications-copy', label: 'Notifications: Copy All', group: 'Tool windows', essential: true, description: 'Copies every message of the Notifications window.' },
 ];
 export const GROUPS: FeatureGroup[] = ['Editing', 'Navigation', 'Code intelligence', 'Tool windows', 'Files', 'Git', 'Gherkin', 'View', 'Debugging', 'Help and productivity'];
 
