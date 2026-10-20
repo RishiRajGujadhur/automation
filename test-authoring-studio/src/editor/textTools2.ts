@@ -734,3 +734,15 @@ export const fillParagraph = (width = 80) => (view: EditorView) => {
   view.dispatch({ changes: { from, to, insert: next }, userEvent: 'input.format' });
   return true;
 };
+
+/** Character Info (Rider's "Show character info"): the character at the caret, its code point and UTF-8 bytes. */
+export function charInfo(state: EditorState) {
+  const pos = state.selection.main.head;
+  const text = state.sliceDoc(pos, Math.min(state.doc.length, pos + 2));
+  const cp = text.codePointAt(0);
+  if (cp === undefined) return null;
+  const ch = String.fromCodePoint(cp);
+  const bytes = [...new TextEncoder().encode(ch)].map((b) => b.toString(16).toUpperCase().padStart(2, '0')).join(' ');
+  const shown = cp < 32 ? ({ 9: 'Tab', 10: 'Line feed', 13: 'Carriage return' } as Record<number, string>)[cp] ?? 'control' : cp === 32 ? 'Space' : cp === 0xa0 ? 'No-break space' : cp === 0xfeff ? 'Byte order mark' : `"${ch}"`;
+  return `${shown} U+${cp.toString(16).toUpperCase().padStart(4, '0')} · UTF-8 ${bytes}`;
+}

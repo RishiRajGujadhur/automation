@@ -493,6 +493,7 @@ export const FEATURES: Feature[] = [
   { id: 'fill-paragraph', label: 'Fill Paragraph', group: 'Editing', essential: false, description: 'Edit ▸ Fill Paragraph re-wraps the paragraph or comment at the caret at 80 columns, keeping its // or # prefix.', commands: ['fill-paragraph'] },
   { id: 'fix-keyword-case', label: 'Fix Keyword Case', group: 'Gherkin', essential: false, description: 'Code ▸ Gherkin corrects the case of keywords in the whole file ("given" → "Given", "SCENARIO:" → "Scenario:").', commands: ['fix-keyword-case'] },
   { id: 'delete-disabled-breakpoints', label: 'Delete Disabled Breakpoints', group: 'Debugging', essential: false, description: 'Tools ▸ Delete Disabled Breakpoints removes every disabled breakpoint, keeping the enabled ones.', commands: ['delete-disabled-breakpoints'] },
+  { id: 'char-info', label: 'Character Info at Caret', group: 'Help and productivity', essential: false, description: 'Tools ▸ Character Info shows the character at the caret, its Unicode code point and UTF-8 bytes (for invisible or look-alike characters).', commands: ['char-info'] },
 ];
 export const GROUPS: FeatureGroup[] = ['Editing', 'Navigation', 'Code intelligence', 'Tool windows', 'Files', 'Git', 'Gherkin', 'View', 'Debugging', 'Help and productivity'];
 

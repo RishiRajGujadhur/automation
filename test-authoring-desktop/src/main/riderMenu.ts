@@ -373,6 +373,7 @@ const ROWS: Record<'edit' | 'view' | 'navigate' | 'code' | 'tools' | 'help', Row
     ['Copy Request as cURL', 'copy-curl'],
     ['Convert cURL to Request', 'curl-to-request'],
     ['Delete Disabled Breakpoints', 'delete-disabled-breakpoints'],
+    ['Character Info at Caret', 'char-info'],
   ],
   help: [
     null,
