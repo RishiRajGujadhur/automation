@@ -8,6 +8,7 @@ import { featureOn } from '../features';
 import { useDebug, debugControl, selectFrame, setWatches, getSnapshot, setBreakpoints, clearBreakpoints, startDebugging, isLive, breakpointsOf, updateBreakpoint, enableAllBreakpoints, stepOutTo, type Variable, type DebugFrame } from './store';
 import { useLocalState } from '../ui';
 import { readFile } from '../files/provider';
+import { formatXml } from '../editor/textTools2';
 
 const CS_KEYWORDS = new Set('var new return if else for foreach while do in is as await async public private protected internal static readonly void int string bool double decimal long float char object true false null this base typeof sizeof nameof using namespace class struct interface enum get set value throw try catch finally switch case default break continue out ref params let'.split(' '));
 
@@ -32,7 +33,7 @@ function VariableRow({ v, depth, frameKey }: { v: { name: string; value: string;
   };
   return (
     <>
-      <RowMenu label={`${v.name} value`} items={featureOn('copy-value') ? [{ label: 'Copy Value', onSelect: () => void copyText(v.value) }, { label: 'Copy Expression', onSelect: () => void copyText(v.name) }, { label: 'Add Watch', onSelect: () => { const w = getSnapshot().watches; if (!w.includes(v.name)) setWatches([...w, v.name]); } }] : []}>
+      <RowMenu label={`${v.name} value`} items={[...(featureOn('visualizers') && /^".*"$/s.test(v.value) ? (['Text', 'JSON', 'XML'] as const).map((k) => ({ label: `${k} Visualizer`, onSelect: () => window.dispatchEvent(new CustomEvent('tas:visualize', { detail: { name: v.name, kind: k, value: v.value } })) })) : []), ...(featureOn('copy-value') ? [{ label: 'Copy Value', onSelect: () => void copyText(v.value) }, { label: 'Copy Expression', onSelect: () => void copyText(v.name) }, { label: 'Add Watch', onSelect: () => { const w = getSnapshot().watches; if (!w.includes(v.name)) setWatches([...w, v.name]); } }] : [])]}>
       <div className="dbg-row" data-menu-row role="row" aria-expanded={expandable ? open : undefined}>
         <span role="gridcell" className="dbg-name" style={{ paddingLeft: depth * 14 }}>
           {expandable ? <button className="se-twisty" aria-label={`${open ? 'Collapse' : 'Expand'} ${v.name}`} onClick={toggle}>{open ? <ChevronDown size={13} /> : <ChevronRight size={13} />}</button> : <span className="se-twisty-space" />}
@@ -46,6 +47,18 @@ function VariableRow({ v, depth, frameKey }: { v: { name: string; value: string;
     </>
   );
 }
+/** The text of a C# string value as the debugger shows it ("…" with escapes), for a visualizer. */
+export function visualize(kind: 'Text' | 'JSON' | 'XML', value: string) {
+  let text = value;
+  if (/^".*"$/s.test(value)) { try { text = JSON.parse(value) as string; } catch { text = value.slice(1, -1); } }
+  if (kind === 'JSON') { try { return JSON.stringify(JSON.parse(text), null, 2); } catch (e) { return `Not valid JSON: ${(e as Error).message}\n\n${text}`; } }
+  if (kind === 'XML') return formatXml(text) ?? `Not well-formed XML.\n\n${text}`;
+  return text;
+}
+const VisualTable = ({ rows }: { rows: Record<string, string>[] }) => {
+  const cols = [...new Set(rows.flatMap((r) => Object.keys(r)))];
+  return <div className="dbg-visualizer-table"><table aria-label="Visualizer table"><thead><tr>{cols.map((c) => <th key={c}>{c}</th>)}</tr></thead><tbody>{rows.map((r, i) => <tr key={i}>{cols.map((c) => <td key={c}>{r[c] ?? ''}</td>)}</tr>)}</tbody></table></div>;
+};
 const Grid = ({ label, children }: { label: string; children: React.ReactNode }) => (
   <div className="dbg-grid" role="treegrid" aria-label={label}>
     <div className="dbg-row dbg-head" role="row"><span role="columnheader">Name</span><span role="columnheader">Value</span><span role="columnheader">Type</span></div>
@@ -64,6 +77,13 @@ export default function DebugPanel({ onOpen, onNotice, onClose, editingRequest =
   const frameKey = `${state.version}:${frame?.id ?? ''}`;
   const [locals, setLocals] = useState<Variable[]>([]);
   const [localsQuery, setLocalsQuery] = useState('');
+  // Visualizers (Visual Studio's magnifier): a string as text, formatted JSON or XML; a collection as a table.
+  const [visual, setVisual] = useState<{ kind: string; name: string; text?: string; rows?: Record<string, string>[] } | null>(null);
+  useEffect(() => {
+    const h = (e: Event) => { const d = (e as CustomEvent<{ name: string; kind: 'Text' | 'JSON' | 'XML'; value: string }>).detail; setVisual({ kind: d.kind, name: d.name, text: visualize(d.kind, d.value) }); };
+    window.addEventListener('tas:visualize', h);
+    return () => window.removeEventListener('tas:visualize', h);
+  }, []);
   const [values, setValues] = useState<{ result?: string; type?: string; error?: string; variablesReference?: number }[]>([]);
   const [draft, setDraft] = useState('');
   // Exception Settings (kept per browser, sent to the server so the next session uses them too).
@@ -183,6 +203,12 @@ export default function DebugPanel({ onOpen, onNotice, onClose, editingRequest =
       </div>
       {state.error && <p className="field-error debug-error" role="alert">{state.error.slice(0, 600)}</p>}
       {state.exception && <p className="field-error debug-error" role="alert">Exception thrown: {state.exception}</p>}
+      {visual && (
+        <div className="dbg-visualizer" role="dialog" aria-label={`${visual.kind} Visualizer`}>
+          <div className="dbg-visualizer-head"><strong>{visual.kind} Visualizer</strong> <span className="meta">{visual.name}</span><span className="toolbar-spacer" />{visual.text && <button className="link-button" onClick={() => void copyText(visual.text!)}>Copy</button>}<IconButton label="Close visualizer" onClick={() => setVisual(null)}><X size={13} /></IconButton></div>
+          {visual.rows ? <VisualTable rows={visual.rows} /> : <pre className="dbg-visualizer-text" aria-label="Visualizer text">{visual.text}</pre>}
+        </div>
+      )}
       <Tabs.Root className="debug-tabs" value={tab} onValueChange={setTab}>
         <Tabs.List className="debug-tablist" aria-label="Debug windows">
           <Tabs.Trigger value="autos">Autos</Tabs.Trigger>

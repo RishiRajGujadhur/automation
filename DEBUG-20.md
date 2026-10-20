@@ -18,6 +18,7 @@ a Settings ▸ Features switch and tests that drive a real debugging session of 
 | DB10 | Just My Code | VS 2026 | yes | ✅ 2026-10-20 |
 | DB11 | Edit values while debugging | VS 2026 | yes | ✅ 2026-10-20 |
 | DB12 | Search in Locals | VS 2026 | yes | ✅ 2026-10-20 |
+| DB13 | Text / JSON / XML visualizers | VS 2026 | yes | ✅ 2026-10-20 |
 
 ## Progress log
 - 2026-10-20 DB1: Filters breakpoints by file, line, condition, log message or label.
@@ -32,3 +33,4 @@ a Settings ▸ Features switch and tests that drive a real debugging session of 
 - 2026-10-20 DB10: Toolbar switch for the next session's justMyCode.
 - 2026-10-20 DB11: Double-click a Locals value to set it (DAP setVariable).
 - 2026-10-20 DB12: Filters Locals by name, value or type.
+- 2026-10-20 DB13: String values opened as text, formatted JSON or indented XML.
