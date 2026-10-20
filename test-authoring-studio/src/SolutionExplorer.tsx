@@ -287,6 +287,13 @@ export default function SolutionExplorer({ features, revision, activeFile, query
       const parent = t.closest('ul.folder-children')?.closest('li')?.querySelector<HTMLElement>(':scope > .explorer-folder-row .explorer-folder, :scope > div > .explorer-folder');
       return focus(parent ?? undefined);
     }
+    if (e.key.length === 1 && e.key.trim() && featureOn('explorer-type-select')) {
+      const now = Date.now();
+      typed.current = { text: now - typed.current.at < 700 ? typed.current.text + e.key.toLowerCase() : e.key.toLowerCase(), at: now };
+      const q = typed.current.text;
+      const order = [...rows.slice(i + (q.length === 1 ? 1 : 0)), ...rows.slice(0, i + (q.length === 1 ? 1 : 0))];
+      return focus(order.find((r) => (r.textContent ?? '').trim().toLowerCase().startsWith(q)));
+    }
     /* tree keys */
   };
   const open = (file: string) => {
