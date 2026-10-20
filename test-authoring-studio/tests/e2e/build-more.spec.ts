@@ -44,7 +44,8 @@ test('X102–X104 Next Error goes to the compiler error; Output Clear All and Wo
   }
 });
 
-test('QL70 / QL71 Error List grouped by file; the build result message', async ({ page, request }) => {
+test('QL70 / QL71 / QL78 / QL79 Error List grouped by file; the build result message; Copy All; Escape clears search', async ({ page, request, context }) => {
+  await context.grantPermissions(['clipboard-read', 'clipboard-write']);
   const previous = (await (await request.get('/api/workspace')).json()).config;
   const root = await fs.mkdtemp(path.join(os.tmpdir(), 'studio-build-group-'));
   await fs.cp(path.resolve(import.meta.dirname, '../../samples/Calculator'), root, { recursive: true, filter: (s) => !/[\\/](bin|obj)$/.test(s) });
@@ -63,6 +64,13 @@ test('QL70 / QL71 Error List grouped by file; the build result message', async (
     await expect(page.getByText(/^Build failed in [\d.]+ s: 1 error, \d+ warnings?\.$/).first()).toBeVisible();
     await panel.getByRole('button', { name: 'Group by file' }).click();
     await expect(panel.locator('.error-group-name').first()).toContainText('CalculatorSteps.cs');
+    // QL78 Copy All, QL79 Escape clears the search.
+    await panel.getByRole('button', { name: 'Copy all errors' }).click();
+    await expect.poll(() => page.evaluate(() => navigator.clipboard.readText())).toMatch(/missingName/);
+    const search = panel.getByLabel('Search Error List');
+    await search.fill('zzz-nothing');
+    await search.press('Escape');
+    await expect(search).toHaveValue('');
   } finally {
     await request.post('/api/workspace', { data: previous });
     await fs.rm(root, { recursive: true, force: true, maxRetries: 5 }).catch(() => {});

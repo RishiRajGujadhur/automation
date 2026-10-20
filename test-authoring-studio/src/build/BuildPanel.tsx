@@ -1,6 +1,6 @@
 import { Fragment, useEffect, useMemo, useRef, useState } from 'react';
 import * as Tabs from '@radix-ui/react-tabs';
-import { CircleX, TriangleAlert, Hammer, RotateCw, Eraser, Square, X, Loader, Search, WrapText } from 'lucide-react';
+import { CircleX, TriangleAlert, Hammer, RotateCw, Eraser, Square, X, Loader, Search, WrapText, Copy } from 'lucide-react';
 import { IconButton } from '../radix2';
 import { useLocalState } from '../ui';
 import { useBuild, startBuild, cancelBuild } from './store';
@@ -101,6 +101,8 @@ export default function BuildPanel({ onOpen, onNotice, onClose }: { onOpen: (fil
               </select>
             )}
             <label className="error-search"><Search size={12} /><input aria-label="Search Error List" placeholder="Search Error List" value={query} onChange={(e) => setQuery(e.target.value)} /></label>
+            {/* Copy the rows shown (after filters) (QOL-50). */}
+            {featureOn('error-list-copy-all') && <button className="icon-button" aria-label="Copy all errors" title="Copy all shown" disabled={!rows.length} onClick={() => void copyText(rows.map(errorText).join('\n')).then((ok) => onNotice(ok ? `Copied ${rows.length} item${rows.length === 1 ? '' : 's'}.` : 'Clipboard unavailable.'))}><Copy size={13} /></button>}
           </div>
           {rows.length ? (
             <div className="dbg-grid error-grid" role="grid" aria-label="Error List">

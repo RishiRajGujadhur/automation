@@ -524,3 +524,26 @@ test('QL75 / QL76 / QL77 Notifications: filter, relative times, dismiss one', as
   await expect(list).not.toContainText('Beta notice');
   await expect(list).toContainText('Alpha notice');
 });
+
+test('QL80 Gherkin: lowercase keywords are capitalised as you type', async ({ page }) => {
+  await openFeature(page);
+  await caretAt(page, 'dashboard');
+  await page.keyboard.press('End');
+  await page.keyboard.press('Enter');
+  await page.keyboard.type('and the user waits');
+  await expect.poll(() => doc(page)).toMatch(/\n\s+And the user waits/);
+});
+
+test('QL81 Terminal: Clear button', async ({ page }) => {
+  await openFeature(page);
+  await page.keyboard.press('Alt+F12');
+  const panel = page.getByRole('region', { name: 'Terminal' });
+  const screen = panel.locator('.terminal-host:not([hidden]) .xterm-rows');
+  await expect(screen).toContainText('PS ', { timeout: 30_000 });
+  await panel.locator('.terminal-host:not([hidden])').click();
+  await page.keyboard.type('Write-Output clear-me-81');
+  await page.keyboard.press('Enter');
+  await expect(screen).toContainText(/clear-me-81[\s\S]*clear-me-81/);
+  await panel.getByRole('button', { name: 'Clear terminal' }).click();
+  await expect(screen).not.toContainText('clear-me-81');
+});

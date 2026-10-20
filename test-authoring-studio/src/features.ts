@@ -374,6 +374,7 @@ export const FEATURES: Feature[] = [
   { id: 'notifications-filter', label: 'Notifications: filter', group: 'Tool windows', essential: true, description: 'A filter box in the Notifications window narrows the history by text.' },
   { id: 'notification-ago', label: 'Notifications: relative times', group: 'Tool windows', essential: true, description: 'Notifications show how long ago they came ("5 min ago"); hover for the exact time.' },
   { id: 'notification-dismiss', label: 'Notifications: dismiss one', group: 'Tool windows', essential: true, description: 'Each notification has a × button that removes just that one.' },
+  { id: 'error-list-copy-all', label: 'Error List: Copy All', group: 'Tool windows', essential: true, description: 'A button copies every row the Error List shows (after its filters).' },
 ];
 export const GROUPS: FeatureGroup[] = ['Editing', 'Navigation', 'Code intelligence', 'Tool windows', 'Files', 'Git', 'Gherkin', 'View', 'Debugging', 'Help and productivity'];
 
