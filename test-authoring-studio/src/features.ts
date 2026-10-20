@@ -239,6 +239,7 @@ export const FEATURES: Feature[] = [
   { id: 'next-problem', label: 'Next / Previous Problem in File', group: 'Navigation', essential: true, vs: 'Edit.GoToNextIssueInFile', description: 'F8 / Shift+F8 go to the next or previous error or warning in the editor.', commands: ['next-problem', 'previous-problem'] },
   { id: 'goto-test', label: 'Go to Test / Test Subject', group: 'Navigation', essential: true, vs: 'Navigate ▸ Test (Rider) / Go To Test', description: 'From Foo.cs to FooTests.cs and back.', commands: ['goto-test'] },
   { id: 'palette-recent', label: 'Command palette: recently used first', group: 'Help and productivity', essential: true, vs: 'Command palette ▸ recently used', description: 'The commands you used last are at the top of the command palette.' },
+  { id: 'run-selection-terminal', label: 'Run Selected Text in Terminal', group: 'Tool windows', essential: true, vs: 'Terminal ▸ Run Selected Text', description: 'Runs the selection (or the caret\'s line) in the Terminal window.', commands: ['run-selection-terminal'] },
 ];
 export const GROUPS: FeatureGroup[] = ['Editing', 'Navigation', 'Code intelligence', 'Tool windows', 'Files', 'Git', 'Gherkin', 'View', 'Debugging', 'Help and productivity'];
 

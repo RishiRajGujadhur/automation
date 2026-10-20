@@ -216,6 +216,7 @@ const ROWS: Record<'edit' | 'view' | 'navigate' | 'code' | 'tools' | 'help', Row
     ['Run All Tests in File', 'run-file-tests'],
     ['Add Watch', 'add-watch'],
     ['Undo Last Commit…', 'undo-commit'],
+    ['Run Selected Text in Terminal', 'run-selection-terminal'],
   ],
   help: [
     null,

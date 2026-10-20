@@ -1,5 +1,7 @@
 import type { EditorView } from '@codemirror/view';
 import type { RiderCommand } from './commands';
+import { runRider } from './commands';
+import { queueTerminalCommand, runInTerminal } from './TerminalPanel';
 import { nextDiagnostic, previousDiagnostic } from '@codemirror/lint';
 import { quickInfoAtCaret } from '../editor/csharp';
 import { isBrowser } from '../files/provider';
@@ -133,5 +135,6 @@ export function moreCommands(h: MoreHelpers): RiderCommand[] {
     { id: 'next-problem', label: 'Next Problem in File', menu: 'Navigate', group: true, shortcut: 'F8', run: h.inEditor((v) => { if (!nextDiagnostic(v)) h.notice('No problems in this file.'); }) },
     { id: 'previous-problem', label: 'Previous Problem in File', menu: 'Navigate', shortcut: 'Shift F8', run: h.inEditor((v) => { if (!previousDiagnostic(v)) h.notice('No problems in this file.'); }) },
     { id: 'goto-test', label: 'Go to Test / Test Subject', menu: 'Navigate', run: h.inEditor((_v, file) => { if (!file.endsWith('.cs')) { h.notice('Open a C# class or its test class first.'); return; } const base = file.split('/').pop()!.replace(/\.cs$/, ''); const isTest = /Tests?$/.test(base); const subject = base.replace(/Tests?$/, ''); const names = isTest ? [`${subject}.cs`] : [`${base}Tests.cs`, `${base}Test.cs`]; void api<{ files: { file: string }[] }>('/solution').then((s) => { const hits = s.files.map((f) => f.file).filter((f) => f !== file && names.includes(f.split('/').pop()!)); if (!hits.length) h.notice(`No ${names.join(' or ')} in the solution.`); else h.navigate({ file: hits[0] }); }, (e) => h.notice((e as Error).message)); }) },
+    { id: 'run-selection-terminal', label: 'Run Selected Text in Terminal', menu: 'Tools', run: h.inEditor((v) => { const s = v.state.selection.main; const text = (s.empty ? v.state.doc.lineAt(s.head).text : v.state.sliceDoc(s.from, s.to)).trim(); if (!text) { h.notice('Select a command (or put the caret on its line).'); return; } const cmd = text.split(/\r?\n/).filter((l) => l.trim()).join('; '); if (document.querySelector('.terminal-host:not([hidden])')) runInTerminal(cmd); else queueTerminalCommand(cmd); runRider('tool-terminal', 'menu'); }) },
   ];
 }
