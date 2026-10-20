@@ -217,3 +217,36 @@ test('118 Bulk quick-fix application: fix all in document and in solution', asyn
   await expect.poll(() => docText(page), { timeout: 30_000 }).toMatch(/a = new\(\);[\s\S]*b = new\(\);/);
   await expect.poll(() => fs.readFile(path.join(temp, 'Steps/Other.cs'), 'utf8'), { timeout: 30_000 }).toContain('b = new();');
 });
+
+const caretOffset = (page: Page) => page.evaluate(() => (window as unknown as { __activeEditor: () => { view: { state: { selection: { main: { head: number } } } } } }).__activeEditor().view.state.selection.main.head);
+const menuItem = async (page: Page, menu: string, item: RegExp) => { await page.getByRole('button', { name: `${menu} menu` }).click(); await page.getByRole('menuitem', { name: item }).click(); };
+test('324 Navigate between TODO comments; 330 previous merge conflict', async ({ page }) => {
+  await open(page, CS);
+  const text = 'namespace Demo;\n// TODO: first\npublic class P\n{\n    // FIXME: second\n    string s = "TODO no";\n}\n<<<<<<< HEAD\na\n=======\nb\n>>>>>>> other\n';
+  await setDoc(page, text);
+  await caretAt(page, 'namespace', 0);
+  await menuItem(page, 'Navigate', /^Next TODO$/);
+  expect(await caretOffset(page)).toBe(text.indexOf('TODO: first'));
+  await menuItem(page, 'Navigate', /^Next TODO$/);
+  expect(await caretOffset(page)).toBe(text.indexOf('FIXME'));
+  await menuItem(page, 'Navigate', /^Next TODO$/);
+  expect(await caretOffset(page)).toBe(text.indexOf('TODO: first'));
+  await menuItem(page, 'Navigate', /^Previous TODO$/);
+  expect(await caretOffset(page)).toBe(text.indexOf('FIXME'));
+  await menuItem(page, 'Navigate', /^Previous Merge Conflict$/);
+  expect(await caretOffset(page)).toBe(text.indexOf('<<<<<<<'));
+});
+test('334 Navigate to next compiler warning', async ({ page }) => {
+  needsLang();
+  await open(page, CS);
+  const text = 'namespace Demo;\npublic class P\n{\n    public void M()\n    {\n        int a;\n        int b;\n    }\n}\n';
+  await setDoc(page, text);
+  await expect(page.locator('.cm-lintRange-warning')).toHaveCount(2, { timeout: 60_000 });
+  await caretAt(page, 'namespace', 0);
+  await menuItem(page, 'Navigate', /^Next Warning$/);
+  expect(await caretOffset(page)).toBe(text.indexOf('a;'));
+  await menuItem(page, 'Navigate', /^Next Warning$/);
+  expect(await caretOffset(page)).toBe(text.indexOf('b;'));
+  await menuItem(page, 'Navigate', /^Previous Warning$/);
+  expect(await caretOffset(page)).toBe(text.indexOf('a;'));
+});

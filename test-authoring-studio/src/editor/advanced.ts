@@ -140,6 +140,16 @@ export function nextConflict(view: EditorView) {
   view.dispatch({ selection: { anchor: at }, effects: EditorView.scrollIntoView(at, { y: 'center' }) });
   return true;
 }
+/** Previous Merge Conflict: the conflict above the caret (the last one from the top). */
+export function prevConflict(view: EditorView) {
+  const here = view.state.doc.lineAt(view.state.selection.main.head).number;
+  const all = conflictsIn(view.state.doc.toString());
+  const c = [...all].reverse().find((x) => x.start < here) ?? all[all.length - 1];
+  if (!c) return false;
+  const at = view.state.doc.line(c.start).from;
+  view.dispatch({ selection: { anchor: at }, effects: EditorView.scrollIntoView(at, { y: 'center' }) });
+  return true;
+}
 
 /* Z4 Postfix templates (Rider): `expr.var`, `.if`, `.not`, `.null`, `.notnull`, `.foreach`, `.return`, `.await`, `.throw`,
    `.par` and Tab rewrite the expression. */

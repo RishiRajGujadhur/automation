@@ -181,6 +181,13 @@ const ROWS: Record<'edit' | 'view' | 'navigate' | 'code' | 'tools' | 'help', Row
     ['Clear All Bookmarks…', 'clear-bookmarks'],
     ['Go to Offset…', 'goto-offset'],
     ['Next Merge Conflict', 'next-conflict'],
+    ['Previous Merge Conflict', 'previous-conflict'],
+    null,
+    ['Next TODO', 'next-todo'],
+    ['Previous TODO', 'previous-todo'],
+    ['Next Warning', 'next-warning'],
+    ['Previous Warning', 'previous-warning'],
+    ['Next Test Failure', 'next-test-failure'],
     ['Search with Pattern…', 'search-pattern'],
   ],
   code: [

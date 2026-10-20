@@ -79,6 +79,8 @@ test('Z8 / Z9 / Z10 Reformat on save, inline values, unused step definitions', a
   // Z8: Ctrl+S formats the feature, then saves it.
   await page.getByRole('navigation', { name: 'Solution' }).getByRole('button', { name: 'Login.feature', exact: true }).first().click();
   await expect(page.getByLabel('Gherkin source')).toContainText('Feature:');
+  // The feature's editor becomes the active one when it has focus.
+  await page.getByLabel('Gherkin source').click();
   await setDoc(page, 'Feature: F\nScenario: S\nGiven the login page is open\n', 0);
   await page.keyboard.press('Control+S');
   await expect.poll(() => doc(page)).toBe('Feature: F\n  Scenario: S\n    Given the login page is open\n');

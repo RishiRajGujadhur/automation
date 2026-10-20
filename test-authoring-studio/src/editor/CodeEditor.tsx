@@ -75,7 +75,7 @@ const csharpLinter = (file: string) => linter(async (view) => {
     // Roslyn's IDE analyzers: suggestions (dotted), warnings, and unnecessary code faded (Visual Studio's IDE rules).
     const ide = featureOn('ide-analyzers') && !isBrowser() ? await api<{ id: string; severity: string; message: string; from: number; to: number; unnecessary: boolean }[]>('/csharp/analyze', { file, source: doc.toString() }).catch(() => []) : [];
     if (view.state.doc !== doc) return [];
-    const suggestions = ide.filter((d) => d.to <= doc.length).map((d): Diagnostic => ({ from: d.from, to: Math.max(d.from + 1, d.to), severity: d.severity === 'warning' || d.severity === 'error' ? 'warning' : d.unnecessary ? 'hint' : 'info', ...(d.unnecessary ? { markClass: 'cm-unnecessary' } : {}), source: 'Roslyn', message: `${d.id}: ${d.message}` }));
+    const suggestions = ide.filter((d) => d.to <= doc.length).map((d): Diagnostic => ({ from: d.from, to: Math.max(d.from + 1, d.to), severity: d.severity === 'error' ? 'error' : d.severity === 'warning' ? 'warning' : d.unnecessary ? 'hint' : 'info', ...(d.unnecessary ? { markClass: 'cm-unnecessary' } : {}), source: 'Roslyn', message: `${d.id}: ${d.message}` }));
     const faded = unused.map((d): Diagnostic => { const from = doc.line(Math.min(doc.lines, d.line)).from + d.column - 1; const to = Math.min(doc.length, doc.line(Math.min(doc.lines, d.endLine)).from + d.endColumn - 1); return { from, to: Math.max(from + 1, to), severity: 'hint', markClass: 'cm-unnecessary', source: 'Roslyn', message: 'IDE0005: Using directive is unnecessary.' }; });
     return items.map((d): Diagnostic => {
       const from = doc.line(Math.min(doc.lines, d.line)).from + d.column - 1;

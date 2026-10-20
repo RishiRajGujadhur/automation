@@ -440,8 +440,11 @@ sealed class LanguageService
             if (sym?.DeclaredAccessibility != Accessibility.Private) continue;
             found = found.AddRange((await AnalyzerDiagnostics(doc, m.Span, cts.Token)).Where(d => d.Id is "IDE0051" or "IDE0052"));
         }
+        // The compiler's semantic warnings and errors too (unused variables, unknown names…); syntax errors come from the scanner.
+        var syntax = (await doc.GetSyntaxTreeAsync(cts.Token))!.GetDiagnostics().Select(d => (d.Id, d.Location.SourceSpan)).ToHashSet();
+        found = found.AddRange(model.GetDiagnostics(cancellationToken: cts.Token).Where(d => d.Severity >= DiagnosticSeverity.Warning && d.Location.IsInSource && d.Id != "CS8019" && !syntax.Contains((d.Id, d.Location.SourceSpan))));
         return found.GroupBy(d => (d.Id, d.Location.SourceSpan)).Select(g => g.First())
-            .Where(d => (d.Severity >= DiagnosticSeverity.Info || Faded(d)) && !d.Id.StartsWith("CS") && d.Id is not ("IDE0005" or "IDE0055"))
+            .Where(d => (d.Severity >= DiagnosticSeverity.Info || Faded(d)) && d.Id is not ("IDE0005" or "IDE0055"))
             .Select(d => { var l = d.Location.GetLineSpan(); return new { id = d.Id, severity = d.Severity.ToString().ToLowerInvariant(), message = d.GetMessage(), from = d.Location.SourceSpan.Start, to = d.Location.SourceSpan.End, line = l.StartLinePosition.Line + 1, column = l.StartLinePosition.Character + 1, unnecessary = Faded(d) }; })
             .ToList();
     }

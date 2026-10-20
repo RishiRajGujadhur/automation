@@ -267,9 +267,9 @@ Legend: `[x]` done · `[ ]` to do.
 - [x] 321. Navigate to matching brace
 - [x] 322. Navigate to next highlighted error
 - [x] 323. Navigate to previous highlighted error
-- [ ] 324. Navigate between TODO comments
+- [x] 324. Navigate between TODO comments — Navigate ▸ Next / Previous TODO (the TODO patterns, comments only) (2026-10-21)
 - [x] 325. Custom TODO patterns
-- [ ] 326. TODO comment filtering
+- [x] 326. TODO comment filtering — TODO window: filter by keyword (existing)
 - [x] 327. Navigate to next method
 - [x] 328. Navigate to previous method
 - [x] 329. Navigate between changed lines
@@ -349,3 +349,4 @@ Legend: `[x]` done · `[ ]` to do.
 - 2026-10-21 116: A glob section of .editorconfig turns inspections off for matching files (generated code, a folder).
 - 2026-10-21 117: The highlighted Quick Action shows removed and added lines (and other files it touches) before it is applied.
 - 2026-10-21 118: Each fix offers Fix All in the document, the project or the solution (Roslyn's FixAllProvider over compiler and IDE analyzer diagnostics).
+- 2026-10-21 324: Next / Previous TODO goes to the TODO, FIXME, HACK, BUG (or custom) keywords in comments; TODO filtering already existed in the TODO window.

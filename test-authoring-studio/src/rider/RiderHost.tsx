@@ -26,6 +26,7 @@ import { surroundTemplates, surroundWith } from '../editor/surround';
 import { setUsages, wordUsages } from '../editor/usages';
 import { moreCommands } from './more';
 import { moreCommands2 } from './more2';
+import { moreCommands3 } from './more3';
 import ProjectProperties from '../project/ProjectProperties';
 import FileItemProperties from '../project/FileItemProperties';
 import UserSecrets from '../project/UserSecrets';
@@ -607,7 +608,7 @@ export default function RiderHost(props: RiderHostProps) {
       { id: 'quick-theme', label: 'Quick Switch Theme…', menu: 'View', run: () => openPopup({ kind: 'themes' }, false) },
       { id: 'carets-line-ends', label: 'Add Carets to Ends of Selected Lines', menu: 'Edit', shortcut: 'Alt Shift G', run: inEditor(caretsAtLineEnds) },
     ];
-    return registerRider([...list, ...moreCommands({ inEditor, notice: (m) => p.current.onNotice(m), navigate: (l) => p.current.onNavigate(l) }), ...moreCommands2({ inEditor, notice: (m) => p.current.onNotice(m), navigate: (l) => p.current.onNavigate(l) })]);
+    return registerRider([...list, ...moreCommands({ inEditor, notice: (m) => p.current.onNotice(m), navigate: (l) => p.current.onNavigate(l) }), ...moreCommands2({ inEditor, notice: (m) => p.current.onNotice(m), navigate: (l) => p.current.onNavigate(l) }), ...moreCommands3({ inEditor, notice: (m) => p.current.onNotice(m), navigate: (l) => p.current.onNavigate(l) })]);
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
   const layout = useLayoutState();
   let body: ReactNode = null;
