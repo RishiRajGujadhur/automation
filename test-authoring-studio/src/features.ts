@@ -342,6 +342,7 @@ export const FEATURES: Feature[] = [
   { id: 'explorer-search-mark', label: 'Explorer search: matches marked', group: 'Files', essential: true, description: 'Searching the Explorer marks the matching part of each file name.' },
   { id: 'tag-hover', label: 'Tag hover: scenario count', group: 'Gherkin', essential: true, description: 'Hovering a @tag shows how many scenarios use it.' },
   { id: 'notification-badge', label: 'Notifications badge', group: 'Help and productivity', essential: true, description: 'The status bar shows how many messages are new; a click opens Notifications.' },
+  { id: 'notifications-kept', label: 'Notifications kept after a reload', group: 'Help and productivity', essential: true, description: 'The Notifications window still lists this session\'s messages after a reload.' },
 ];
 export const GROUPS: FeatureGroup[] = ['Editing', 'Navigation', 'Code intelligence', 'Tool windows', 'Files', 'Git', 'Gherkin', 'View', 'Debugging', 'Help and productivity'];
 
