@@ -281,7 +281,7 @@ Legend: `[x]` done · `[ ]` to do.
 - [x] 335. Navigate to next test failure — Navigate ▸ Next Test Failure (each failed test of the last run, with its message) (2026-10-21)
 - [ ] 336. Search within selected text
 - [x] 337. Search within open editors
-- [ ] 338. Search within ignored files
+- [x] 338. Search within ignored files — Search: 'Use Exclude Settings and Ignore Files' toggle (2026-10-21)
 - [x] 339. Search using glob patterns
 - [x] 340. Search with multiline regular expressions — Find in Files / Replace All: regex with \n matches across lines (2026-10-21)
 
@@ -355,3 +355,4 @@ Legend: `[x]` done · `[ ]` to do.
 - 2026-10-21 335: Next Test Failure opens the failed tests of the last run one after another and shows the first line of the failure.
 - 2026-10-21 206: Replace All keeps each match's case (foo → bar, Foo → Bar, FOO → BAR, camelCase / PascalCase).
 - 2026-10-21 340: A regular expression containing a line break searches whole files; replacements keep CRLF line ends.
+- 2026-10-21 338: Turning the toggle off searches the ignored folders (bin, obj, node_modules…) too.
