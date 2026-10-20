@@ -1068,3 +1068,12 @@ export function insertDataTable(view: EditorView) {
   view.dispatch({ changes: { from: line.to, insert }, selection: EditorSelection.range(at, at + 'column'.length), userEvent: 'input' });
   return true;
 }
+
+/** The @tag at a position of a line, if any. */
+export function tagAt(state: EditorState) {
+  const pos = state.selection.main.head;
+  const line = state.doc.lineAt(pos);
+  return [...line.text.matchAll(/@[^\s@]+/g)].find((m) => pos - line.from >= m.index! && pos - line.from <= m.index! + m[0].length)?.[0];
+}
+/** The dotnet test filter of a tag (Reqnroll turns tags into NUnit / MSTest categories and xUnit traits). */
+export const tagFilter = (tag: string) => `dotnet test --filter "Category=${tag.replace(/^@/, '')}"`;

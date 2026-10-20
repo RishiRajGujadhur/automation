@@ -95,6 +95,7 @@ has it on by default, so the desktop app starts with it on. The others start off
 | Y84 | Convert to Block Body | VS 2026 | yes | ✅ 2026-10-20 |
 | Y85 | Add Missing [Binding] | Rider | yes | ✅ 2026-10-20 |
 | Y86 | Insert Data Table | Rider | no | ✅ 2026-10-20 |
+| Y87 | Copy Test Filter for Tag | Rider | no | ✅ 2026-10-20 |
 
 ## Progress log
 - 2026-10-20 Y1: Percent-encodes the selection (or line) and decodes it.
@@ -183,3 +184,4 @@ has it on by default, so the desktop app starts with it on. The others start off
 - 2026-10-20 Y84: An expression-bodied method becomes a braced body.
 - 2026-10-20 Y85: Adds [Binding] to a step definition class without it.
 - 2026-10-20 Y86: A data table under the step at the caret.
+- 2026-10-20 Y87: Copies dotnet test --filter Category=<tag>.

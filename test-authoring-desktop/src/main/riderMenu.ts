@@ -268,6 +268,7 @@ const ROWS: Record<'edit' | 'view' | 'navigate' | 'code' | 'tools' | 'help', Row
       ['Rename Scenario…', 'rename-scenario'],
       ['Split Scenario Here', 'split-scenario'],
       ['Insert Data Table', 'insert-data-table'],
+      ['Copy Test Filter for Tag', 'copy-tag-filter'],
     ] },
     ['Collapse Using Directives', 'fold-usings'],
     ['Sort JSON Keys', 'sort-json'],

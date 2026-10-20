@@ -7,7 +7,7 @@ import { forEachDiagnostic } from '@codemirror/lint';
 import { api } from '../api';
 import { getTabs, setPinned } from '../files/tabs';
 import { copyText } from '../ui';
-import { tableDeleteEmptyRows, tableRemoveDuplicateRows, tableMarkdown, tagAllScenarios, removeTagEverywhere, sortTags, promoteCommonTags, insertDocString, expandOutline, wrapInRule, setLanguageHeader, scenarioName, tableInsertRowAbove, addScenarioOutline, tableColumnStats, tableColumnValues, tableFillSeries, mergeExamples, scenarioSteps, renameScenario, splitScenario, insertDataTable } from '../editor/gherkinTools';
+import { tableDeleteEmptyRows, tableRemoveDuplicateRows, tableMarkdown, tagAllScenarios, removeTagEverywhere, sortTags, promoteCommonTags, insertDocString, expandOutline, wrapInRule, setLanguageHeader, scenarioName, tableInsertRowAbove, addScenarioOutline, tableColumnStats, tableColumnValues, tableFillSeries, mergeExamples, scenarioSteps, renameScenario, splitScenario, insertDataTable, tagAt, tagFilter } from '../editor/gherkinTools';
 import { urlEncode, urlDecode, base64Encode, base64Decode, escapeString, unescapeString, htmlEncode, htmlDecode, stepNumber, insertSequence, toggleQuotes, joinWith, splitAt, alignAssignments, swapSelections, countOccurrences, trimLines, stamp, insertText, LOREM, shuffleLines, reformatXml, minifyXml, jsonEscape, jsonUnescape, numberLines, mapDoc, toFileScopedNamespace, toBlockScopedNamespace, removeRegions, toRawString, toggleTask, formatMarkdownTable, tableOfContents, MARKDOWN_TABLE, removeComments, concatToInterpolationCmd, gotoOffset, timestampCmd, sha256Hex, decodeJwt, jwtAt, sortTokens, markdownCodeBlock, fileStatistics, todoComment, generateEquality, generateToString, addNullChecks, validateJson, requestAsCurl, curlToRequestCmd, jsonToCsv, toExpressionBody, toBlockBody, addBindingAttribute } from '../editor/textTools2';
 
 /**
@@ -101,5 +101,6 @@ export function moreCommands2(h: MoreHelpers): RiderCommand[] {
     { id: 'block-body', label: 'Convert to Block Body', menu: 'Code', submenu: 'C#', run: h.inEditor((v) => toBlockBody(v) || h.notice('Put the caret on an expression-bodied method (=> …;).')) },
     { id: 'add-binding', label: 'Add Missing [Binding]', menu: 'Code', submenu: 'C#', run: h.inEditor((v) => mapDoc(addBindingAttribute)(v) || h.notice('The class has no step definitions, or already has [Binding].')) },
     { id: 'insert-data-table', label: 'Insert Data Table', menu: 'Code', submenu: 'Gherkin', run: h.inEditor((v) => insertDataTable(v) || h.notice('Put the caret on a step without a table.')) },
+    { id: 'copy-tag-filter', label: 'Copy Test Filter for Tag', menu: 'Code', submenu: 'Gherkin', run: h.inEditor((v) => { const tag = tagAt(v.state); if (!tag) { h.notice('Put the caret on a @tag.'); return; } const f = tagFilter(tag); void copyText(f).then((ok) => h.notice(ok ? `Copied: ${f}` : 'Clipboard unavailable.')); }) },
   ];
 }
