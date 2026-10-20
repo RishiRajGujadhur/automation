@@ -212,6 +212,7 @@ export const FEATURES: Feature[] = [
   { id: 'comment-scenario', label: 'Comment / Uncomment Scenario', group: 'Gherkin', essential: true, description: 'Comments the whole scenario at the caret out (or back in).', commands: ['comment-scenario'] },
   { id: 'quick-info-key', label: 'Quick Info (Ctrl+K, Ctrl+I)', group: 'Code intelligence', essential: true, vs: 'Edit.QuickInfo (Ctrl+K, Ctrl+I)', description: 'The hover information of the symbol at the caret, from the keyboard.', commands: ['quick-info'] },
   { id: 'coverage-selected', label: 'Code Coverage for selected tests', group: 'Debugging', essential: true, vs: 'Test Explorer ▸ Analyze Code Coverage for Selected Tests', description: 'A test\'s (or group\'s) context menu runs it with code coverage.' },
+  { id: 'run-not-run', label: 'Run Not Run Tests', group: 'Debugging', essential: true, vs: 'Test Explorer ▸ Run Not Run Tests', description: 'Runs the tests that have no result yet (Test Explorer ▸ More run options).' },
 ];
 export const GROUPS: FeatureGroup[] = ['Editing', 'Navigation', 'Code intelligence', 'Tool windows', 'Files', 'Git', 'Gherkin', 'View', 'Debugging', 'Help and productivity'];
 

@@ -122,6 +122,7 @@ has it on by default, so the desktop app starts with it on. The others start off
 | X112 | Comment / Uncomment Scenario | Rider | yes | ✅ 2026-10-20 |
 | X113 | Quick Info (Ctrl+K, Ctrl+I) | VS 2026 | yes | ✅ 2026-10-20 |
 | X114 | Code Coverage for selected tests | VS 2026 | yes | ✅ 2026-10-20 |
+| X115 | Run Not Run Tests | VS 2026 | yes | ✅ 2026-10-20 |
 
 ## Progress log
 - 2026-10-20 X1: Sort Lines: the selected lines (or the whole file) in natural, case-insensitive order, blank lines last. Third-batch plumbing: src/rider/more.ts, src/editor/textTools.ts, IDE-FEATURES.md.
@@ -238,3 +239,4 @@ has it on by default, so the desktop app starts with it on. The others start off
 - 2026-10-20 X112: Whole scenario commented out or back
 - 2026-10-20 X113: Hover information from the keyboard; menu commands keep the caret
 - 2026-10-20 X114: Context menu runs with coverage
+- 2026-10-20 X115: More run options: tests without a result
