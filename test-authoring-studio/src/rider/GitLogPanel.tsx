@@ -7,7 +7,7 @@ import { api } from '../api';
 import { matchCommit } from './gitFilter';
 import { createTwoFilesPatch } from 'diff';
 import { readFile } from '../files/provider';
-import { copyText } from '../ui';
+import { copyText, useLocalState } from '../ui';
 import { featureOn } from '../features';
 import { GIT_CHANGED_EVENT, FILES_CHANGED_EVENT } from '../editor/events';
 import { useEditorTheme } from '../themes';
@@ -38,8 +38,10 @@ export default function GitLogPanel({ onOpen, onClose, onNotice }: { onOpen: (fi
       void load();
     } catch (e) { onNotice((e as Error).message); }
   };
-  const load = () => api<Row[]>('/git/graph').then((r) => { setRows(r); setError(''); }, (e) => setError((e as Error).message));
-  useEffect(() => { void load(); }, []);
+  // Current branch only (Rider's Branch filter: HEAD), else every branch.
+  const [currentOnly, setCurrentOnly] = useLocalState('gitLogCurrentOnly', false);
+  const load = () => api<Row[]>(`/git/graph${currentOnly && featureOn('git-log-current') ? '?scope=current' : ''}`).then((r) => { setRows(r); setError(''); }, (e) => setError((e as Error).message));
+  useEffect(() => { void load(); }, [currentOnly]); // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(() => { setCommit(undefined); setShownFile(undefined); if (selected) api<Commit>(`/git/commit?hash=${selected}`).then(setCommit, (e) => setError((e as Error).message)); }, [selected]);
   const shown = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -49,6 +51,7 @@ export default function GitLogPanel({ onOpen, onClose, onNotice }: { onOpen: (fi
     <section className="debug-panel git-log-panel" aria-label="Git Log">
       <div className="debug-toolbar" role="toolbar" aria-label="Git Log">
         <input className="shelf-name" aria-label="Filter commits" placeholder={featureOn('git-log-filters') ? 'Filter: words, author:…, branch:…, hash:…, -exclude' : 'Filter: text, hash, author, branch'} value={query} onChange={(e) => setQuery(e.target.value)} />
+        {featureOn('git-log-current') && <label className="build-on-save" title="Show only the commits of the current branch"><input type="checkbox" checked={currentOnly} onChange={(e) => setCurrentOnly(e.target.checked)} /> Current branch only</label>}
         <button className="icon-button" aria-label="Refresh log" title="Refresh" onClick={() => void load()}><RefreshCw size={14} /></button>
         <span className="debug-spacer" />
         <button className="icon-button" aria-label="Close Git Log" title="Close" onClick={onClose}><X size={14} /></button>

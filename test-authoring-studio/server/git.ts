@@ -242,9 +242,9 @@ export async function commitDetails(root: string, hash: string) {
   return { hash: full, author, email, date, message: msg.join('\x1f').trim(), files, patch };
 }
 /** Commits for the Git Log window, with the branch graph drawn by git. */
-export async function graphLog(root: string, max = 200) {
+export async function graphLog(root: string, max = 200, all = true) {
   const { top } = await locate(root);
-  const out = await git(top, ['log', '--all', '--graph', `-${max}`, '--date-order', '--format=%x01%h%x1f%an%x1f%ar%x1f%d%x1f%s']);
+  const out = await git(top, ['log', ...(all ? ['--all'] : []), '--graph', `-${max}`, '--date-order', '--format=%x01%h%x1f%an%x1f%ar%x1f%d%x1f%s']);
   return out.split('\n').filter(Boolean).map((l) => {
     const at = l.indexOf('\x01');
     if (at < 0) return { graph: l };
