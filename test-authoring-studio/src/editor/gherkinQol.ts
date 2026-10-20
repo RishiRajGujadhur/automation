@@ -98,4 +98,28 @@ export const tagHover = hoverTooltip(async (view, pos) => {
 // gherkin qol
 /** "<" closes itself with ">" for Scenario Outline parameters (with the usual quotes and brackets) (QOL-50). */
 const angleBrackets = Prec.high(EditorState.languageData.of(() => (featureOn('gherkin-angle') ? [{ closeBrackets: { brackets: ['(', '[', '{', '"', '<'] } }] : [])));
-export const gherkinQol: Extension[] = [angleBrackets, tagHover, alignOnPaste, tableEnter, pipeInEmptyRow, gherkinIndent, capitaliseKeywords];
+/** Enter after "Examples:" writes the table header from the outline's <parameters> (QOL-50). */
+export const examplesHeader = Prec.high(keymap.of([{
+  key: 'Enter',
+  run: (view) => {
+    if (!featureOn('examples-header')) return false;
+    const s = view.state.selection.main;
+    if (!s.empty) return false;
+    const doc = view.state.doc;
+    const line = doc.lineAt(s.head);
+    if (!/^\s*(Examples|Scenarios):\s*$/.test(line.text) || s.head < line.from + line.text.trimEnd().length) return false;
+    if (line.number < doc.lines && /^\s*\|/.test(doc.line(line.number + 1).text)) return false;
+    const params: string[] = [];
+    for (let n = line.number - 1; n >= 1; n--) {
+      const t = doc.line(n).text;
+      for (const m of t.matchAll(/<([^<>\s][^<>]*)>/g)) if (!params.includes(m[1])) params.push(m[1]);
+      if (/^\s*(Scenario Outline|Scenario Template|Scenario|Example|Feature|Rule):/.test(t)) break;
+    }
+    if (!params.length) return false;
+    const ind = /^\s*/.exec(line.text)![0] + '  ';
+    const header = `\n${ind}| ${params.join(' | ')} |\n${ind}| `;
+    view.dispatch({ changes: { from: s.head, insert: header }, selection: { anchor: s.head + header.length }, userEvent: 'input' });
+    return true;
+  },
+}]));
+export const gherkinQol: Extension[] = [examplesHeader, angleBrackets, tagHover, alignOnPaste, tableEnter, pipeInEmptyRow, gherkinIndent, capitaliseKeywords];
