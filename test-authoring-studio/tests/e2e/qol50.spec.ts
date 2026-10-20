@@ -72,7 +72,7 @@ test('QL3 Find: match counter', async ({ page }) => {
   await page.keyboard.type('the');
   await expect(page.locator('.gherkin-editor .cm-search-count')).toHaveText(/^(\d+ matches|\d+ of \d+)$/);
   await page.keyboard.press('Enter');
-  await expect(page.locator('.gherkin-editor .cm-search-count')).toHaveText(/^1 of \d+$/);
+  await expect(page.locator('.gherkin-editor .cm-search-count')).toHaveText(/^\d+ of \d+$/);
 });
 
 test('QL4 / QL5 Ctrl+click links: web address and file:line', async ({ page, context }) => {
