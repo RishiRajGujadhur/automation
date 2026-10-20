@@ -3,6 +3,7 @@ import { existsSync } from 'node:fs';
 import express from 'express';
 import fs from 'node:fs/promises';
 import path from 'node:path';
+import os from 'node:os';
 import net from 'node:net';
 import { randomUUID, createHash } from 'node:crypto';
 import { createPatch } from 'diff';
@@ -538,6 +539,22 @@ app.post('/api/project/launch/preview', async (req, res) => {
   const id = randomUUID();
   previews.set(id, { file, source, hash: hash(before), root: config.repositoryRoot });
   res.json({ id, file, diff: createPatch(file, before, source, 'repository', 'proposed'), changed: before !== source, created: !before });
+});
+// Manage User Secrets: secrets.json for a UserSecretsId, in the user profile (outside the repository, as the SDK keeps it).
+const secretsPath = (id: string) => (process.platform === 'win32' ? path.join(process.env.APPDATA ?? os.homedir(), 'Microsoft', 'UserSecrets', id, 'secrets.json') : path.join(os.homedir(), '.microsoft', 'usersecrets', id, 'secrets.json'));
+const secretsId = z.string().regex(/^[\w.-]{1,100}$/);
+app.get('/api/project/secrets', async (req, res) => {
+  const id = secretsId.parse(req.query.id);
+  const file = secretsPath(id);
+  res.json({ path: file, text: await fs.readFile(file, 'utf8').catch(() => '{\n}\n') });
+});
+app.post('/api/project/secrets', async (req, res) => {
+  const { id, text } = z.object({ id: secretsId, text: z.string().max(200_000) }).parse(req.body);
+  try { JSON.parse(text); } catch (e) { throw new Error(`Not valid JSON: ${(e as Error).message}`); }
+  const file = secretsPath(id);
+  await fs.mkdir(path.dirname(file), { recursive: true });
+  await fs.writeFile(file, text);
+  res.json({ path: file });
 });
 app.get('/api/project/model',async(_req,res)=>{res.json(await projectModel(config,await ensure()));});
 app.get('/api/project/files',async(req,res)=>{const folder=z.string().default('.').parse(req.query.folder);const dir=await confined(config.repositoryRoot,folder);const entries=await fs.readdir(dir,{withFileTypes:true});const {offset,limit}=paging.parse(req.query);const filtered=entries.filter(e=>!e.isSymbolicLink()&&!e.name.startsWith('.')&&!ignoredDirsFor(config).includes(e.name)).sort((a,b)=>Number(b.isDirectory())-Number(a.isDirectory())||a.name.localeCompare(b.name));res.json({folder,items:filtered.slice(offset,offset+limit).map(e=>({name:e.name,file:path.relative(config.repositoryRoot,path.join(dir,e.name)).replaceAll('\\','/'),directory:e.isDirectory()})),total:filtered.length,hasNext:offset+limit<filtered.length});});
