@@ -10,6 +10,7 @@ import { IconButton } from '../radix2';
 import CodeMirror, { type ReactCodeMirrorRef } from '@uiw/react-codemirror';
 import type { ViewUpdate } from '@codemirror/view';
 import { useEditorTheme } from '../themes';
+import { gherkinQol } from './gherkinQol';
 import { lintGutter, forEachDiagnostic, nextDiagnostic, openLintPanel } from '@codemirror/lint';
 import { startCompletion } from '@codemirror/autocomplete';
 import { toggleComment, selectAll } from '@codemirror/commands';
@@ -71,7 +72,7 @@ export default function GherkinEditor({ file, onSave, runMarks, onRunLine, value
   eolRef.current = loadedEol;
   const handlers = useRef<{ onRunLine?: (line: number, debug: boolean) => void; onPreview: () => void; onSave?: () => void; onValidate: () => void; onDefinition?: (s: { keyword: string; text: string; line: number }) => void }>({ onRunLine, onPreview, onSave, onValidate, onDefinition });
   handlers.current = { onRunLine, onPreview, onSave, onValidate, onDefinition };
-  const extensions = useMemo(() => [...gherkinExtensions({ onSave: () => (handlers.current.onSave ?? handlers.current.onPreview)(), onValidate: () => handlers.current.onValidate(), onDefinition: (s) => handlers.current.onDefinition?.(s) }), lintGutter(), vsKeys('#'), gherkinTables(), indentFolding(), stickyScroll(indentRange), labelled('Gherkin source'), featureFile.of(file ?? ''), cursorTracker(file ?? 'untitled.feature', () => eolRef.current), revealOn(file ?? 'untitled.feature'), ...(file ? [bookmarks(file)] : []), trackActive(file ?? 'untitled.feature'), riderKeys(file ?? 'untitled.feature'), viewOptionsExtension(), ...(file ? [breakpoints(file), runGutter((l, d) => handlers.current.onRunLine?.(l, d)), changeGutter()] : [])], [file]);
+  const extensions = useMemo(() => [...gherkinExtensions({ onSave: () => (handlers.current.onSave ?? handlers.current.onPreview)(), onValidate: () => handlers.current.onValidate(), onDefinition: (s) => handlers.current.onDefinition?.(s) }), lintGutter(), vsKeys('#'), gherkinTables(), ...gherkinQol, indentFolding(), stickyScroll(indentRange), labelled('Gherkin source'), featureFile.of(file ?? ''), cursorTracker(file ?? 'untitled.feature', () => eolRef.current), revealOn(file ?? 'untitled.feature'), ...(file ? [bookmarks(file)] : []), trackActive(file ?? 'untitled.feature'), riderKeys(file ?? 'untitled.feature'), viewOptionsExtension(), ...(file ? [breakpoints(file), runGutter((l, d) => handlers.current.onRunLine?.(l, d)), changeGutter()] : [])], [file]);
   useChangeBars(ref, file, true);
   // Reqnroll formatting settings from .editorconfig for this file (Format Document uses them).
   useEffect(() => {

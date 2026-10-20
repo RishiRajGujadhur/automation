@@ -305,6 +305,7 @@ export const FEATURES: Feature[] = [
   { id: 'selection-count', label: 'Multi-caret count in the status bar', group: 'Editing', essential: true, vs: 'Status bar ▸ selections', description: 'With several carets the status bar shows how many.' },
   { id: 'drag-path', label: 'Drag files into the editor', group: 'Files', essential: true, description: 'Dragging a file from the Explorer into an editor inserts its path.' },
   { id: 'caret-restore', label: 'Reopen files where you left them', group: 'Editing', essential: true, vs: 'Restore editor view state', description: 'Each file remembers its caret, also after a reload.' },
+  { id: 'gherkin-indent', label: 'Gherkin smart indent', group: 'Gherkin', essential: true, description: 'Enter after Scenario:, Examples: or a step ending in ":" indents one level more.' },
 ];
 export const GROUPS: FeatureGroup[] = ['Editing', 'Navigation', 'Code intelligence', 'Tool windows', 'Files', 'Git', 'Gherkin', 'View', 'Debugging', 'Help and productivity'];
 
