@@ -206,6 +206,7 @@ export const FEATURES: Feature[] = [
   { id: 'add-watch', label: 'Add Watch', group: 'Debugging', essential: true, vs: 'Add Watch (editor context menu)', description: 'Adds the selection (or the name at the caret) to the debugger\'s Watch window.', commands: ['add-watch'] },
   { id: 'copy-value', label: 'Locals / Watch: Copy Value', group: 'Debugging', essential: true, vs: 'Locals ▸ Copy Value', description: 'A variable\'s context menu copies its value or expression, or adds a watch.' },
   { id: 'undo-commit', label: 'Undo Last Commit', group: 'Git', essential: true, vs: 'Git ▸ Undo Commit', description: 'Soft-resets the last commit: its changes stay staged.', commands: ['undo-commit'] },
+  { id: 'save-as', label: 'Save As…', group: 'Files', essential: true, vs: 'File ▸ Save As', description: 'Writes the editor text to a new file and opens it (the original stays as it is on disk).', commands: ['save-as'] },
 ];
 export const GROUPS: FeatureGroup[] = ['Editing', 'Navigation', 'Code intelligence', 'Tool windows', 'Files', 'Git', 'Gherkin', 'View', 'Debugging', 'Help and productivity'];
 

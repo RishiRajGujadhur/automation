@@ -116,6 +116,7 @@ has it on by default, so the desktop app starts with it on. The others start off
 | X106 | Add Watch | VS 2026 / Rider | yes | ✅ 2026-10-20 |
 | X107 | Locals / Watch: Copy Value | VS 2026 | yes | ✅ 2026-10-20 |
 | X108 | Undo Last Commit | Rider | yes | ✅ 2026-10-20 |
+| X109 | Save As… | VS 2026 | yes | ✅ 2026-10-20 |
 
 ## Progress log
 - 2026-10-20 X1: Sort Lines: the selected lines (or the whole file) in natural, case-insensitive order, blank lines last. Third-batch plumbing: src/rider/more.ts, src/editor/textTools.ts, IDE-FEATURES.md.
@@ -226,3 +227,4 @@ has it on by default, so the desktop app starts with it on. The others start off
 - 2026-10-20 X106: Selection or name to the Watch window
 - 2026-10-20 X107: Copy value / expression, add watch
 - 2026-10-20 X108: Soft reset of HEAD, changes staged
+- 2026-10-20 X109: Copy of the editor text to a new file

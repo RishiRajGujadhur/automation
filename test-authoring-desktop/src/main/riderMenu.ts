@@ -51,6 +51,8 @@ const ROWS: Record<'edit' | 'view' | 'navigate' | 'code' | 'tools' | 'help', Row
     ['Strip Trailing Spaces', 'strip-trailing'],
     ['Tabify Selected Lines', 'tabify'],
     ['Untabify Selected Lines', 'untabify'],
+    null,
+    ['Save As…', 'save-as'],
   ],
   view: [
     null,
