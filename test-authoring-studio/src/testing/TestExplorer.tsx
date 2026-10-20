@@ -27,8 +27,11 @@ export default function TestExplorer({ revision, onOpen, onDebug, onNotice }: { 
   const [loading, setLoading] = useState(true);
   const [warning, setWarning] = useState<string>();
   const [selected, setSelected] = useState<string[]>([]);
-  const [collapsed, setCollapsed] = useState<Set<string>>(new Set());
-  const [query, setQuery] = useState('');
+  // Collapsed groups and the search come back after a reload (QOL-50).
+  const [collapsedList, setCollapsedList] = useLocalState<string[]>('testCollapsed', []);
+  const collapsed = useMemo(() => new Set(featureOn('test-remember') ? collapsedList : []), [collapsedList]); // eslint-disable-line react-hooks/exhaustive-deps
+  const setCollapsed = (next: Set<string> | ((prev: Set<string>) => Set<string>)) => setCollapsedList((prev) => [...(typeof next === 'function' ? next(new Set(prev)) : next)]);
+  const [query, setQuery] = useLocalState('testQuery', '');
   const [configuration] = useLocalState('buildConfiguration', 'Debug');
   // Playlists (Visual Studio): named sets of tests to show and run together.
   const [playlists, setPlaylists] = useLocalState<Record<string, string[]>>('testPlaylists', {});

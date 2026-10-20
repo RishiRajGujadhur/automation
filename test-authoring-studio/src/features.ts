@@ -320,6 +320,7 @@ export const FEATURES: Feature[] = [
   { id: 'search-remember', label: 'Search remembers the last search', group: 'Navigation', essential: true, description: 'The search box, options and file filters come back after a reload.' },
   { id: 'search-keys', label: 'Search results by keyboard', group: 'Navigation', essential: true, description: '↓ from the search box goes into the results; ↑ / ↓ move, Enter opens.' },
   { id: 'search-select', label: 'Search: the found text is selected', group: 'Navigation', essential: true, description: 'Opening a search result selects the match in the editor.' },
+  { id: 'test-remember', label: 'Test Explorer remembers its view', group: 'Tool windows', essential: true, description: 'Collapsed groups and the search stay after a reload.' },
 ];
 export const GROUPS: FeatureGroup[] = ['Editing', 'Navigation', 'Code intelligence', 'Tool windows', 'Files', 'Git', 'Gherkin', 'View', 'Debugging', 'Help and productivity'];
 
