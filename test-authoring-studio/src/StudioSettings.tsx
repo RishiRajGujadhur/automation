@@ -4,7 +4,7 @@ import * as Yup from 'yup';
 import CodeMirror from '@uiw/react-codemirror';
 import { StreamLanguage } from '@codemirror/language';
 import { gherkin } from '@codemirror/legacy-modes/mode/gherkin';
-import { Download, Trash2, RotateCcw, Search, Settings2, Palette, Code2, Accessibility, PanelLeft, Network, Activity, FolderCog, HardDrive, Keyboard, X, Cpu, Info, ToggleRight, type LucideIcon } from 'lucide-react';
+import { Download, Trash2, RotateCcw, Search, Settings2, Palette, Code2, Accessibility, PanelLeft, Network, Activity, FolderCog, HardDrive, Keyboard, X, Cpu, Info, ToggleRight, Type, AppWindow, FileJson, type LucideIcon } from 'lucide-react';
 import { api } from './api';
 import { TextField } from './forms';
 import { Switch as SwitchPrimitive, Segmented, usePrefs, useConfirm, useAlgorithms, Tip } from './radix2';
@@ -15,18 +15,21 @@ import { appThemes, editorThemes, resolveEditorTheme, type AppThemeId, type Edit
 import { labelled } from './editor/a11y';
 import { accents, contrast } from './accents';
 import { defaultPrefs } from './radix2';
+import { settingCategories, settingRows } from './vscode/settingsRows';
+import { exportSettings, importSettings, useSettings } from './vscode/settings';
 import { FEATURES, GROUPS, featureOn, featurePreset, setFeature, setFeaturePreset, setFeatures, useFeatures, featureChanged } from './features';
 
 type Settings = { webPort: number; apiPort: number; tracing: { enabled: boolean; screenshots: boolean; snapshots: boolean; sources: boolean } };
 type Trace = { name: string; size: number; modified: string };
-type Row = { id: string; section: string; title: string; description?: string; keywords?: string; control?: ReactNode; block?: ReactNode; tip?: string; sub?: boolean };
+type Row = { id: string; section: string; title: string; description?: string; keywords?: string; control?: ReactNode; block?: ReactNode; tip?: string; sub?: boolean; modified?: boolean; meta?: ReactNode };
 
 const port = Yup.number().typeError('Enter a number.').integer('Whole numbers only.').min(1024, 'Use 1024–65535 (lower ports need admin rights).').max(65535, 'Use 1024–65535.').required('Required.');
 const portSchema = Yup.object({ webPort: port, apiPort: port.test('distinct', 'Must differ from the web port.', function (v) { return v !== this.parent.webPort; }) });
 export const cachedKeys = () => {
   try { return Object.keys(localStorage).filter((k) => k.startsWith('tas:')); } catch { return []; }
 };
-const sections: { id: string; label: string; icon: LucideIcon }[] = [
+type Section = { id: string; label: string; icon: LucideIcon; sub?: boolean };
+const baseSections: Section[] = [
   { id: 'General', label: 'General', icon: Settings2 },
   { id: 'Appearance', label: 'Appearance', icon: Palette },
   { id: 'Code editor', label: 'Code editor', icon: Code2 },
@@ -78,6 +81,14 @@ export default function StudioSettings({ onNotice, onWorkspace, shortcuts, onClo
   const cacheCount = cachedKeys().length;
   const sw = (id: string, checked: boolean, onChange: (v: boolean) => void, label: string, disabled = false) => <SwitchPrimitive id={id} label={<span className="sr-only">{label}</span>} checked={checked} onCheckedChange={onChange} disabled={disabled} />;
   const custom = algo.preset === 'custom';
+  // VS Code–style settings (Text Editor, Workbench and their sub-categories) follow Code editor in the list.
+  const settingsVersion = useSettings();
+  const sections = useMemo(() => {
+    const extra: Section[] = settingCategories().flatMap((t) => [{ id: t.id, label: t.id, icon: t.id === 'Workbench' ? AppWindow : Type }, ...t.subs.map((c) => ({ id: c, label: c.split(' ▸ ')[1], icon: Type, sub: true }))]);
+    const i = baseSections.findIndex((x) => x.id === 'Code editor') + 1;
+    return [...baseSections.slice(0, i), ...extra, ...baseSections.slice(i)];
+  }, []);
+  const importRef = useRef<HTMLInputElement>(null);
   // Re-render on feature switches (and know whether they differ from the preset).
   useFeatures();
   const featureVersion = FEATURES.map((f) => (featureOn(f.id) ? 1 : 0)).join('');
@@ -259,19 +270,34 @@ export default function StudioSettings({ onNotice, onWorkspace, shortcuts, onClo
         })),
       ];
     }),
+    // VS Code–style settings
+    ...settingRows(),
+    {
+      id: 'settings-json', section: 'Workbench', title: 'Settings (JSON)', description: 'Copy the changed settings as settings.json, or apply a settings.json (unknown ids and invalid values are skipped).', keywords: 'settings.json json export import copy share',
+      control: (
+        <span className="button-row">
+          <Button size="small" onClick={() => { void navigator.clipboard.writeText(exportSettings()).then(() => onNotice('settings.json copied.')); }}><FileJson size={13} aria-hidden="true" />Copy settings.json</Button>
+          <Button size="small" variant="ghost" onClick={() => importRef.current?.click()}>Import settings.json…</Button>
+          <input ref={importRef} type="file" accept=".json,application/json" hidden aria-label="settings.json file" onChange={async (e) => { const f = e.target.files?.[0]; e.target.value = ''; if (!f) return; try { onNotice(`${importSettings(await f.text())} settings applied.`); } catch (x) { onNotice(`Not a settings.json: ${(x as Error).message}`); } }} />
+        </span>
+      ),
+    },
     // Storage
     { id: 'cards', section: 'Storage', title: 'Reset card states', description: 'Every collapsible card returns to its default open or closed state.', keywords: 'collapse cards reset', control: <Button variant="ghost" size="small" onClick={async () => { if (await confirm({ title: 'Reset collapsed cards?', description: 'Every card returns to its default open or closed state.', confirm: 'Reset cards' })) { cachedKeys().filter((k) => k.startsWith('tas:open:') || k.startsWith('tas:card:')).forEach((k) => localStorage.removeItem(k)); location.reload(); } }}><RotateCcw size={13} aria-hidden="true" />Reset card states</Button> },
     { id: 'cache', section: 'Storage', title: 'Clear cached UI state', description: `${cacheCount} item${cacheCount === 1 ? '' : 's'} stored in this browser: drafts, preferences, layout and history. Repository files are not affected.`, keywords: 'cache localstorage clear reset delete', control: <Button variant="danger" size="small" disabled={!cacheCount} onClick={async () => { if (await confirm({ title: 'Clear all cached UI state?', description: 'Removes drafts, preferences, layout and history stored in this browser, then reloads. Repository files are not touched.', confirm: 'Clear cache', danger: true })) { cachedKeys().forEach((k) => localStorage.removeItem(k)); location.reload(); } }}><Trash2 size={13} aria-hidden="true" />Clear cache</Button> },
     // Shortcuts
     { id: 'shortcuts', section: 'Shortcuts', title: 'All shortcuts', keywords: shortcuts.map((s) => s.join(' ')).join(' '), block: <dl className="shortcut-list">{shortcuts.map(([k, d]) => <div key={k} className="shortcut-row"><dt><kbd>{k}</kbd></dt><dd>{d}</dd></div>)}</dl> },
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  ], [prefs, settings, traces, error, cacheCount, editor, algo, featureVersion]); // eslint-disable-line react-hooks/exhaustive-deps
+  ], [prefs, settings, traces, error, cacheCount, editor, algo, featureVersion, settingsVersion]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const q = query.trim().toLowerCase();
   const matchesQuery = (r: Row) => q.split(/\s+/).every((word) => `${r.id} ${r.section} ${r.title} ${r.description ?? ''} ${r.keywords ?? ''}`.toLowerCase().includes(word));
-  const matches = q ? rows.filter(matchesQuery) : rows.filter((r) => r.section === section);
-  const grouped = q ? sections.map((s) => ({ s, items: matches.filter((r) => r.section === s.id) })).filter((g) => g.items.length) : [{ s: sections.find((s) => s.id === section)!, items: matches }];
-  const counts = Object.fromEntries(sections.map((s) => [s.id, rows.filter((r) => r.section === s.id && (!q || matchesQuery(r))).length]));
+  // A top category (Text Editor) shows its own settings and then each sub-category's, as in VS Code.
+  const inSection = (r: Row, id: string) => r.section === id || r.section.startsWith(`${id} ▸ `);
+  const current = sections.find((s) => s.id === section) ?? sections[0];
+  const matches = q ? rows.filter(matchesQuery) : rows.filter((r) => inSection(r, current.id));
+  const grouped = q ? sections.map((s) => ({ s, items: matches.filter((r) => r.section === s.id) })).filter((g) => g.items.length) : sections.filter((s) => s.id === current.id || s.id.startsWith(`${current.id} ▸ `)).map((s) => ({ s, items: matches.filter((r) => r.section === s.id) })).filter((g, i) => i === 0 || g.items.length);
+  const counts = Object.fromEntries(sections.map((s) => [s.id, rows.filter((r) => inSection(r, s.id) && (!q || matchesQuery(r))).length]));
   // Braces matter: Chromium's scrollTo() now returns a Promise, which must not be returned from an effect.
   useEffect(() => { contentRef.current?.scrollTo({ top: 0 }); }, [section, q]);
 
@@ -293,11 +319,11 @@ export default function StudioSettings({ onNotice, onWorkspace, shortcuts, onClo
           {sections.map((s) => (
             <li key={s.id}>
               <button
-                className={`settings-nav-item ${!q && section === s.id ? 'active' : ''} ${q && !counts[s.id] ? 'dim' : ''}`}
-                aria-current={!q && section === s.id ? 'page' : undefined}
+                className={`settings-nav-item ${s.sub ? 'sub' : ''} ${!q && current.id === s.id ? 'active' : ''} ${q && !counts[s.id] ? 'dim' : ''}`}
+                aria-current={!q && current.id === s.id ? 'page' : undefined}
                 onClick={() => { setQuery(''); setSection(s.id); }}
               >
-                <s.icon size={17} aria-hidden="true" />
+                {!s.sub && <s.icon size={17} aria-hidden="true" />}
                 <span>{s.label}</span>
                 {q && counts[s.id] > 0 && <span className="nav-count">{counts[s.id]}</span>}
               </button>
@@ -308,14 +334,15 @@ export default function StudioSettings({ onNotice, onWorkspace, shortcuts, onClo
       <div className="settings-content" ref={contentRef}>
         {grouped.map(({ s, items }) => (
           <section key={s.id} className="settings-section" aria-labelledby={`settings-${s.id.replace(/\W/g, '')}`}>
-            <h2 id={`settings-${s.id.replace(/\W/g, '')}`}>{s.label}</h2>
+            <h2 id={`settings-${s.id.replace(/\W/g, '')}`} className={s.sub ? 'settings-subheading' : ''}>{s.label}</h2>
             {items.map((r) => (
-              <div key={r.id} data-setting-id={r.id} className={`settings-row ${r.block && !r.control ? 'stacked' : ''} ${r.sub ? 'sub' : ''}`}>
+              <div key={r.id} data-setting-id={r.id} className={`settings-row ${r.block && !r.control ? 'stacked' : ''} ${r.sub ? 'sub' : ''} ${r.modified ? 'modified' : ''}`}>
                 <div className="settings-row-text">
                   <h3>
                     <Highlight text={r.title} query={q} />
                     {r.tip && <Tip content={<span className="tooltip-wide">{r.tip}</span>} side="top"><button type="button" className="info-tip" aria-label={`About ${r.title}`}><Info size={13} aria-hidden="true" /></button></Tip>}
                   </h3>
+                  {r.meta}
                   {r.description && <p><Highlight text={r.description} query={q} /></p>}
                 </div>
                 {r.control && <div className="settings-row-control">{r.control}</div>}

@@ -823,3 +823,45 @@
     display: none;
   }
 }
+
+/* VS Code–style settings (VSCODE-20.md): sub-categories in the nav, a bar on changed settings, the setting id. */
+.settings-nav-item.sub {
+  padding: 6px 10px 6px 39px;
+  font-size: 13px;
+}
+.settings-section h2.settings-subheading {
+  margin-top: 18px;
+  font-size: 16px;
+}
+.settings-row.modified {
+  border-left-color: var(--accent);
+}
+.setting-meta {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: -2px 0 4px;
+  code {
+    font-size: 11.5px;
+    color: var(--text-muted);
+  }
+  .setting-reset {
+    width: 20px;
+    height: 20px;
+  }
+}
+.settings-enum {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.settings-text {
+  width: min(520px, 100%);
+  padding: 6px 8px;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-mono, monospace);
+  font-size: 13px;
+}

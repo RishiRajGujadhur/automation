@@ -13,6 +13,9 @@ import { searchCount } from './searchCount';
 import { findMemory } from './findMemory';
 import { lineFlash } from './lineFlash';
 import { editorLinks } from './links';
+import '../vscode';
+import { settingsExtensions, settingsReconfigure } from '../vscode/registry';
+import { onSettingsChanged } from '../vscode/settings';
 import { EditorView, ViewPlugin, highlightWhitespace, highlightTrailingWhitespace, rectangularSelection, keymap } from '@codemirror/view';
 
 /** View ▸ Active Editor options (Rider): soft wraps, …, shared by every editor and remembered. */
@@ -23,6 +26,8 @@ let options: ViewOptions = (() => { try { return { ...DEFAULTS, ...JSON.parse(lo
 const listeners = new Set<() => void>();
 // Settings ▸ Features turn some of these on and off too.
 onFeaturesChanged(() => { for (const l of listeners) l(); });
+// So do the VS Code settings (Settings ▸ Text Editor).
+onSettingsChanged(() => { for (const l of listeners) l(); });
 export const viewOptions = () => options;
 /** Re-renders a component when the options change (the status bar's OVR). */
 const subs = new Set<() => void>();
@@ -149,10 +154,11 @@ export function viewOptionsExtension(): Extension {
     overtypeC.of(now.overtype),
     activeLine.of(now.activeLine),
     ...EXTRA.map(([c, f]) => c.of(f(options))),
+    ...settingsExtensions(),
     ViewPlugin.fromClass(class {
       off: () => void;
       constructor(view: EditorView) {
-        const apply = () => { const e = extensionsFor(options); view.dispatch({ effects: [wrap.reconfigure(e.wrap), spaces.reconfigure(e.spaces), font.reconfigure(e.font), column.reconfigure(e.column), numbers.reconfigure(e.numbers), guides.reconfigure(e.guides), caretUsages.reconfigure(e.caret), todos.reconfigure(e.todos), overtypeC.reconfigure(e.overtype), activeLine.reconfigure(e.activeLine), ...EXTRA.map(([c, f]) => c.reconfigure(f(options)))] }); };
+        const apply = () => { const e = extensionsFor(options); view.dispatch({ effects: [wrap.reconfigure(e.wrap), spaces.reconfigure(e.spaces), font.reconfigure(e.font), column.reconfigure(e.column), numbers.reconfigure(e.numbers), guides.reconfigure(e.guides), caretUsages.reconfigure(e.caret), todos.reconfigure(e.todos), overtypeC.reconfigure(e.overtype), activeLine.reconfigure(e.activeLine), ...EXTRA.map(([c, f]) => c.reconfigure(f(options))), ...settingsReconfigure()] }); };
         listeners.add(apply);
         // Ctrl+Mouse Wheel changes the font size of the editors (Rider's "Change font size with Ctrl+Mouse Wheel").
         const wheel = (e: WheelEvent) => {

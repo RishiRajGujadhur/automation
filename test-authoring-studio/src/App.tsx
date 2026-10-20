@@ -900,6 +900,11 @@ export default function App() {
         e.preventDefault();
         setPrefs({ sidebar: document.documentElement.dataset.sidebar === 'false' });
       }
+      // Preferences (Ctrl+, as in VS Code; the menus show it).
+      if ((e.ctrlKey || e.metaKey) && !e.shiftKey && !e.altKey && e.key === ',') {
+        e.preventDefault();
+        setModal('preferences');
+      }
       if (!typing && e.key === '?') {
         e.preventDefault();
         setModal('shortcuts');
