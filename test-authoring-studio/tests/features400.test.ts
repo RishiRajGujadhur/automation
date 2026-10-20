@@ -85,3 +85,13 @@ describe('211 bracket pair guides', () => {
     expect(bracketPairs('x = [1, 2]; // {')).toHaveLength(0);
   });
 });
+import { regionEnd } from '../src/vscode/foldingMarkers';
+describe('177 custom folding markers', () => {
+  it('nested regions', () => {
+    const s = /^\s*(\/\/|#)\s*(region\b|<editor-fold\b)/, e = /^\s*(\/\/|#)\s*(endregion\b|<\/editor-fold>)/;
+    const lines = ['// region Outer', 'a', '  // <editor-fold desc="x">', 'b', '  // </editor-fold>', '// endregion', '// region open'];
+    expect(regionEnd(lines, 1, s, e)).toBe(6);
+    expect(regionEnd(lines, 3, s, e)).toBe(5);
+    expect(regionEnd(lines, 7, s, e)).toBeNull();
+  });
+});

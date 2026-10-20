@@ -372,3 +372,19 @@ test('211 Bracket pair guides (all, active)', async ({ page }) => {
   await expect(page.locator('.cm-line', { hasText: 'int x = 1;' })).toHaveAttribute('data-guides', '4');
   await expect(guided).toHaveCount(1);
 });
+
+test('177 Custom folding patterns', async ({ page }) => {
+  await open(page, CS, { 'editor.showFoldingControls': 'always' });
+  await setDoc(page, 'namespace Demo;\n// region Helpers\npublic class A { }\npublic class B { }\n// endregion\n// <editor-fold desc="More">\npublic class C { }\n// </editor-fold>\n');
+  // Fold the // region line (Ctrl+Shift+[).
+  await caretAt(page, '// region', 0);
+  await page.keyboard.press('Control+Shift+BracketLeft');
+  await expect(page.locator('.cm-foldPlaceholder')).toHaveCount(1);
+  await expect(page.locator('.cm-line', { hasText: 'public class A' })).toHaveCount(0);
+  await expect(page.locator('.cm-line', { hasText: 'public class C' })).toHaveCount(1);
+  // Rider's editor-fold comments too.
+  await caretAt(page, '// <editor-fold', 0);
+  await page.keyboard.press('Control+Shift+BracketLeft');
+  await expect(page.locator('.cm-foldPlaceholder')).toHaveCount(2);
+  await expect(page.locator('.cm-line', { hasText: 'public class C' })).toHaveCount(0);
+});
