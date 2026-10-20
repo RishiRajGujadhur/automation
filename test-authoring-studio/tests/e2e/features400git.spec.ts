@@ -157,3 +157,20 @@ test('164 Git bisect integration', async ({ page }) => {
   await expect(bar).toHaveCount(0);
   expect(git('rev-parse', '--abbrev-ref', 'HEAD').trim()).toBe('main');
 });
+
+test('159 Changelist management', async ({ page }) => {
+  await fs.appendFile(path.join(root, 'Steps/AuthSteps.cs'), '// a\n');
+  await fs.appendFile(path.join(root, 'Steps/SearchSteps.cs'), '// b\n');
+  await open(page);
+  const view = await gitChanges(page);
+  page.once('dialog', (d) => void d.accept('Refactoring'));
+  await view.getByRole('button', { name: 'Move Steps/AuthSteps.cs to changelist' }).click();
+  const list = view.getByRole('region', { name: 'Refactoring' });
+  await expect(list.getByRole('button', { name: /^AuthSteps.cs/ })).toBeVisible();
+  await expect(view.getByRole('region', { name: 'Changes' }).getByRole('button', { name: /^AuthSteps.cs/ })).toHaveCount(0);
+  await view.getByLabel('Commit message').fill('Only the refactoring');
+  await list.getByRole('button', { name: 'Commit changelist Refactoring' }).click();
+  await expect.poll(() => git('log', '-1', '--format=%s').trim()).toBe('Only the refactoring');
+  expect(git('show', '--name-only', '--format=', 'HEAD').trim()).toBe('Steps/AuthSteps.cs');
+  expect(git('status', '--porcelain').trim()).toContain('Steps/SearchSteps.cs');
+});

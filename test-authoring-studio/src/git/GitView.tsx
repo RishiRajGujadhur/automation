@@ -1,5 +1,5 @@
 import { useEffect, useState, type ReactNode } from 'react';
-import { GitBranch, Plus, Minus, Undo2, RefreshCw, ChevronDown, ChevronRight, ArrowUp, ArrowDown, Check, History, CloudDownload, GitBranchPlus, Cloud, GitMerge } from 'lucide-react';
+import { GitBranch, Plus, Minus, Undo2, RefreshCw, ChevronDown, ChevronRight, ArrowUp, ArrowDown, Check, History, CloudDownload, GitBranchPlus, Cloud, GitMerge, ListPlus, Trash2 } from 'lucide-react';
 import { Dropdown } from '../radix';
 import { api } from '../api';
 import { featureOn } from '../features';
@@ -11,7 +11,7 @@ import Worktrees from './Worktrees';
 import { issueKey, withIssueKey, COMMIT_TYPES, withCommitType, withoutTemplateComments } from './commitTools';
 
 type GitFile = { file: string; staged: boolean; status: 'M' | 'A' | 'D' | 'R' | 'U' | '?'; from?: string };
-type GitStatus = { repo: boolean; branch?: string; upstream?: string; ahead: number; behind: number; files: GitFile[] };
+type GitStatus = { repo: boolean; branch?: string; upstream?: string; ahead: number; behind: number; files: GitFile[]; top?: string };
 type Commit = { hash: string; author: string; when: string; subject: string };
 const statusName: Record<GitFile['status'], string> = { M: 'Modified', A: 'Added', D: 'Deleted', R: 'Renamed', U: 'Conflict', '?': 'Untracked' };
 
@@ -24,6 +24,8 @@ export default function GitView({ onOpen, onNotice, onChanged }: { onOpen: (file
   const [st, setSt] = useState<GitStatus>();
   // The commit message draft survives a reload (QOL-50).
   const [message, setMessage] = useLocalState('gitCommitDraft', '');
+  // Changelists (Rider): named groups of changes per repository; a changelist commits on its own.
+  const [allLists, setAllLists] = useLocalState<Record<string, Record<string, string[]>>>('changelists', {});
   // Commit message template (git's commit.template or .gitmessage): an empty box starts with it.
   const [template, setTemplate] = useState<{ text: string; source: string } | null>(null);
   // The template as it came (only its comments and headings): nothing to commit yet.
@@ -86,6 +88,30 @@ export default function GitView({ onOpen, onNotice, onChanged }: { onOpen: (file
     if (action === 'pull') { window.dispatchEvent(new Event(GIT_CHANGED_EVENT)); onChanged(); }
     onNotice({ fetch: 'Fetched.', pull: 'Pulled.', push: 'Pushed.' }[action]);
   });
+  const repoKey = st?.top ?? '';
+  const lists = featureOn('git-changelists') ? allLists[repoKey] ?? {} : {};
+  const setLists = (next: Record<string, string[]>) => setAllLists({ ...allLists, [repoKey]: next });
+  const listOf = (file: string) => Object.keys(lists).find((n) => lists[n].includes(file));
+  const moveTo = (file: string) => {
+    const names = Object.keys(lists);
+    const name = window.prompt(`Move ${file.split('/').pop()} to changelist (${names.length ? `${names.join(', ')}, ` : ''}a new name, or empty for Changes):`, listOf(file) ?? names[0] ?? '')?.trim();
+    if (name === undefined) return;
+    const next = Object.fromEntries(Object.entries(lists).map(([n, fs]) => [n, fs.filter((f) => f !== file)]));
+    if (name) next[name] = [...(next[name] ?? []), file];
+    setLists(next);
+  };
+  const commitList = (name: string, files: string[]) => act(async () => {
+    const text = template ? withoutTemplateComments(message, template.text) : message;
+    if (!text.trim() || untouched) { onNotice('Enter a commit message first.'); return; }
+    const others = staged.filter((f) => !files.includes(f.file)).map((f) => f.file);
+    if (others.length) await api('/git/unstage', { files: others });
+    await api('/git/stage', { files });
+    const r = await api<{ summary: string }>('/git/commit', { message: text, all: false });
+    setLists(Object.fromEntries(Object.entries(lists).map(([n, fs]) => [n, n === name ? [] : fs])));
+    setMessage(template?.text ?? '');
+    window.dispatchEvent(new Event(GIT_CHANGED_EVENT));
+    onNotice(`Committed changelist ${name}: ${r.summary}.`);
+  });
   const toggle = (k: string) => setClosed((p) => { const n = new Set(p); if (n.has(k)) n.delete(k); else n.add(k); return n; });
   const row = (f: GitFile) => {
     const { icon: Icon, color } = fileType(f.file);
@@ -99,6 +125,7 @@ export default function GitView({ onOpen, onNotice, onChanged }: { onOpen: (file
           <small>{dir}</small>
         </button>
         <span className="git-actions">
+          {!f.staged && featureOn('git-changelists') && <button className="icon-button" aria-label={`Move ${f.file} to changelist`} title="Move to Changelist…" disabled={busy} onClick={() => moveTo(f.file)}><ListPlus size={13} /></button>}
           {!f.staged && <button className="icon-button" aria-label={`Discard changes to ${f.file}`} title="Discard Changes" disabled={busy} onClick={() => void discard([f.file])}><Undo2 size={13} /></button>}
           {f.staged
             ? <button className="icon-button" aria-label={`Unstage ${f.file}`} title="Unstage" disabled={busy} onClick={() => void act(() => api('/git/unstage', { files: [f.file] }))}><Minus size={13} /></button>
@@ -182,7 +209,11 @@ export default function GitView({ onOpen, onNotice, onChanged }: { onOpen: (file
       <div className="git-lists">
         {staged.length > 0 && group('staged', 'Staged Changes', staged,
           <button className="icon-button" aria-label="Unstage All" title="Unstage All" disabled={busy} onClick={() => void act(() => api('/git/unstage', { files: staged.map((f) => f.file) }))}><Minus size={13} /></button>)}
-        {group('changes', 'Changes', changes, <>
+        {Object.entries(lists).map(([name, fs]) => group(`cl:${name}`, name, changes.filter((c) => fs.includes(c.file)), <>
+          <button className="icon-button" aria-label={`Commit changelist ${name}`} title="Commit this changelist" disabled={busy || !changes.some((c) => fs.includes(c.file))} onClick={() => void commitList(name, changes.filter((c) => fs.includes(c.file)).map((c) => c.file))}><Check size={13} /></button>
+          <button className="icon-button" aria-label={`Delete changelist ${name}`} title="Delete changelist (its files go back to Changes)" disabled={busy} onClick={() => { const next = { ...lists }; delete next[name]; setLists(next); }}><Trash2 size={13} /></button>
+        </>))}
+        {group('changes', 'Changes', Object.keys(lists).length ? changes.filter((c) => !listOf(c.file)) : changes, <>
           <button className="icon-button" aria-label="Discard All Changes" title="Discard All" disabled={busy || !changes.length} onClick={() => void discard(changes.map((f) => f.file))}><Undo2 size={13} /></button>
           <button className="icon-button" aria-label="Stage All Changes" title="Stage All" disabled={busy || !changes.length} onClick={() => void act(() => api('/git/stage', { files: changes.map((f) => f.file) }))}><Plus size={13} /></button>
         </>)}

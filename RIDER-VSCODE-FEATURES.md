@@ -185,7 +185,7 @@ Legend: `[x]` done · `[ ]` to do.
 - [x] 156. Git worktree management — Git Changes ▸ Worktrees: list, add (new / existing branch), open in the studio, remove (2026-10-21)
 - [x] 157. Git stash management — Shelf (stash)
 - [x] 158. Shelve changes — Shelf
-- [ ] 159. Changelist management
+- [x] 159. Changelist management — Git Changes: Move to Changelist…, a group per changelist, Commit changelist, Delete changelist (2026-10-21)
 - [x] 160. Local History
 - [x] 161. Compare branches — Compare with Branch
 - [x] 162. Compare commits — Git Log: Ctrl+click a second commit, files that differ and the patch (2026-10-21)
@@ -375,3 +375,4 @@ Legend: `[x]` done · `[ ]` to do.
 - 2026-10-21 147: The selected commit and every later one become one commit with a new message.
 - 2026-10-21 156: Worktrees of the repository in Git Changes: add one beside the repository, open it as the workspace, remove it (not the main or the open one).
 - 2026-10-21 164: git bisect from Git Log: mark a bad and a good commit, then test each commit git checks out until it names the first bad one; git commands also retry when the index is locked by a concurrent refresh.
+- 2026-10-21 159: Changed files can be grouped in named changelists (kept per repository); each changelist commits on its own, leaving the other changes uncommitted.
