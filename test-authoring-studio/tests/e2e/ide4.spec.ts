@@ -101,3 +101,23 @@ test('Y21–Y30 Code ▸ C#: namespaces, raw string, interpolation; Code ▸ Mar
   await menuItem(page, 'Code', /^Remove Comments/);
   await expect.poll(() => doc(page)).toBe('int a;\nint b;');
 });
+
+test('Y31–Y40 Code ▸ Gherkin: tags, tables, doc string, Expand Outline, Wrap in Rule', async ({ page }) => {
+  await open(page);
+  await expect(page.getByLabel('Gherkin source')).toContainText('Feature:');
+  const outline = 'Feature: F\n\n  Scenario Outline: As <role>\n    Given the user signs in as "<role>"\n\n    Examples:\n      | role  |\n      | admin |\n      | admin |\n      | guest |\n';
+  await setDoc(page, outline, outline.indexOf('| admin') + 2);
+  await gherkinItem(page, /^Table: Remove Duplicate Rows/);
+  await expect.poll(() => doc(page)).not.toMatch(/admin \|\n\s+\| admin/);
+  await setDoc(page, (await doc(page)), 20);
+  await gherkinItem(page, /^Expand Outline to Scenarios/);
+  await expect.poll(() => doc(page)).toContain('Scenario: As guest\n    Given the user signs in as "guest"');
+  page.once('dialog', (d) => void d.accept('@smoke'));
+  await gherkinItem(page, /^Tag All Scenarios/);
+  await expect.poll(() => doc(page)).toMatch(/@smoke\n  Scenario: As admin[\s\S]*@smoke\n  Scenario: As guest/);
+  await gherkinItem(page, /^Promote Common Tags to Feature/);
+  await expect.poll(() => doc(page)).toMatch(/^@smoke\nFeature: F/);
+  await setDoc(page, 'Feature: F\n  Scenario: S\n    Given a body', 40);
+  await gherkinItem(page, /^Insert Doc String/);
+  await expect.poll(() => doc(page)).toBe(`Feature: F\n  Scenario: S\n    Given a body\n      ${'"'.repeat(3)}\n      \n      ${'"'.repeat(3)}`);
+});

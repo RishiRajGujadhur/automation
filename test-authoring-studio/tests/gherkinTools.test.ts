@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { EditorState, type TransactionSpec } from '@codemirror/state';
 import { EditorView } from '@codemirror/view';
-import { cycleStepKeyword, scenarioToOutline, tableInsertRow, tableAddColumn, tableDeleteColumn, tableSortByColumn, testFilter, selectScenario, renameTag, extractExamplesParameter, outlineToScenario, duplicateScenario, moveScenario, extractBackground, addExamplesTable, toggleTag, toggleScenarioComment, pasteAsTable, tableCsv, featureStats, renameExamplesParameter, removeUnusedColumns, inlineBackground, normalizeStepKeywords, addScenario, scenarioMarkdown, tableDuplicateRow, tableDeleteRow, tableMoveColumn, tableSelectColumn, tableTranspose, tableFillDown, tableClearColumn, sortScenarios, featureOutline, tableDeleteEmptyRows, tableRemoveDuplicateRows, tableMarkdown, tagAllScenarios, removeTagEverywhere, sortTags, promoteCommonTags, insertDocString, expandOutline } from '../src/editor/gherkinTools';
+import { cycleStepKeyword, scenarioToOutline, tableInsertRow, tableAddColumn, tableDeleteColumn, tableSortByColumn, testFilter, selectScenario, renameTag, extractExamplesParameter, outlineToScenario, duplicateScenario, moveScenario, extractBackground, addExamplesTable, toggleTag, toggleScenarioComment, pasteAsTable, tableCsv, featureStats, renameExamplesParameter, removeUnusedColumns, inlineBackground, normalizeStepKeywords, addScenario, scenarioMarkdown, tableDuplicateRow, tableDeleteRow, tableMoveColumn, tableSelectColumn, tableTranspose, tableFillDown, tableClearColumn, sortScenarios, featureOutline, tableDeleteEmptyRows, tableRemoveDuplicateRows, tableMarkdown, tagAllScenarios, removeTagEverywhere, sortTags, promoteCommonTags, insertDocString, expandOutline, wrapInRule } from '../src/editor/gherkinTools';
 
 /** Runs an editor command on `doc` with the selection between « and » (or a caret at ‸); with `caret`, the result marks the caret with ¦. */
 function run(doc: string, cmd: (v: EditorView) => boolean, caret = false) {
@@ -214,5 +214,8 @@ describe('Gherkin tools (IDE-FEATURES X49…)', () => {
   it('Y39 Expand Outline to Scenarios', () => {
     const src = 'Feature: F\n  @auth\n  Scenario Outline: Sign in as <role>‸\n    Given the user signs in as "<role>"\n    Then the <page> page opens\n\n    @fast\n    Examples:\n      | role  | page  |\n      | admin | admin |\n      | guest | home  |\n';
     expect(run(src, expandOutline)).toBe('Feature: F\n  @auth @fast\n  Scenario: Sign in as admin\n    Given the user signs in as "admin"\n    Then the admin page opens\n\n  @auth @fast\n  Scenario: Sign in as guest\n    Given the user signs in as "guest"\n    Then the home page opens\n');
+  });
+  it('Y40 Wrap in Rule', () => {
+    expect(run('Feature: F\n\n  Scenario: a‸\n    Given x\n\n  Scenario: b\n    Given y', wrapInRule('Users sign in'))).toBe('Feature: F\n\n  Rule: Users sign in\n\n    Scenario: a\n      Given x\n\n  Scenario: b\n    Given y');
   });
 });

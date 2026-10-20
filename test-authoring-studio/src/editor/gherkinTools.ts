@@ -886,3 +886,18 @@ export function expandOutline(view: EditorView) {
   view.dispatch({ changes: { from, to, insert: out.join(state.lineBreak) }, selection: EditorSelection.cursor(from), userEvent: 'input' });
   return true;
 }
+
+/** Wrap in Rule: the scenarios of the selection (or the caret's) go under a new `Rule:`, indented one level. */
+export const wrapInRule = (name: string) => (view: EditorView) => {
+  const { state } = view;
+  const doc = state.doc;
+  const r = state.selection.main;
+  const a = scenarioBlock(state, doc.lineAt(r.from).number), b = scenarioBlock(state, doc.lineAt(r.to).number);
+  if (!a || !b || !name.trim()) return false;
+  const indent = /^\s*/.exec(doc.line(a.first).text)![0];
+  const from = doc.line(a.first).from, to = doc.line(b.end).to;
+  const body = state.sliceDoc(from, to).split(/\r?\n/).map((l) => (l.trim() ? `  ${l}` : l)).join(state.lineBreak);
+  const insert = `${indent}Rule: ${name.trim()}${state.lineBreak}${state.lineBreak}${body}`;
+  view.dispatch({ changes: { from, to, insert }, selection: EditorSelection.cursor(from + indent.length), userEvent: 'input' });
+  return true;
+};
