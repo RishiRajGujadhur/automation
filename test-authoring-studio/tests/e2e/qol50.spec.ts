@@ -246,3 +246,78 @@ test('QL30 Build time in the status bar', async ({ page }) => {
   await page.getByRole('menuitem', { name: /^Build Solution/ }).click();
   await expect(page.getByLabel('Build progress')).toContainText(/(Building|Cleaning)… \d+ s/);
 });
+
+test('QL31 / QL32 Busy window title while building; Copy on a message', async ({ page, context }) => {
+  await context.grantPermissions(['clipboard-read', 'clipboard-write']);
+  await openFeature(page);
+  await page.getByRole('button', { name: 'Build menu' }).click();
+  await page.getByRole('menuitem', { name: /^Build Solution/ }).click();
+  await expect(page).toHaveTitle(/^⏳ (Building|Cleaning) · /);
+  await menuItem(page, 'Navigate', /^Clear Recent Files/);
+  await page.getByRole('button', { name: 'Copy the message' }).click();
+  await expect.poll(() => page.evaluate(() => navigator.clipboard.readText())).toMatch(/recent file/);
+});
+
+test('QL33 Notifications: file:line references open the file', async ({ page }) => {
+  await openFeature(page);
+  await page.evaluate(() => window.dispatchEvent(new CustomEvent('tas:notice', { detail: 'Check Steps/AuthSteps.cs:5 please' })));
+  await menuItem(page, 'View', /^Notifications/);
+  await page.getByRole('list', { name: 'Notification history' }).getByRole('button', { name: 'Steps/AuthSteps.cs:5' }).click();
+  await expect(page.locator('.editor-tab-label[aria-current="true"]')).toHaveAttribute('title', 'Steps/AuthSteps.cs');
+});
+
+test('QL34 Keyboard shortcuts dialog: filter', async ({ page }) => {
+  await openFeature(page);
+  await page.locator('body').press('?');
+  const dlg = page.getByRole('dialog');
+  const filter = dlg.getByLabel('Filter shortcuts');
+  const rows = dlg.locator('.shortcut-list dt');
+  const all = await rows.count();
+  await filter.fill('ctrl s');
+  await expect.poll(() => rows.count()).toBeLessThan(all);
+  await expect(dlg.locator('.shortcut-list')).toContainText(/Ctrl.?S/i);
+});
+
+test('QL35 / QL36 Settings remembers its section and search', async ({ page }) => {
+  await page.goto('/#/dashboard');
+  await page.getByRole('button', { name: 'Preferences' }).click();
+  const dialog = page.getByRole('dialog', { name: 'Preferences' });
+  await dialog.getByRole('navigation', { name: 'Settings categories' }).getByRole('button', { name: 'Appearance' }).click();
+  await page.keyboard.press('Escape');
+  await expect(dialog).toHaveCount(0);
+  await page.getByRole('button', { name: 'Preferences' }).click();
+  await expect(dialog.getByRole('navigation', { name: 'Settings categories' }).getByRole('button', { name: 'Appearance' })).toHaveAttribute('aria-current', 'page');
+});
+
+test('QL37 Command palette remembers the last query', async ({ page }) => {
+  await openFeature(page);
+  await page.keyboard.press('Control+Shift+P');
+  await page.keyboard.type('sort lines');
+  await page.keyboard.press('Escape');
+  await page.keyboard.press('Control+Shift+P');
+  const input = page.getByLabel('Search commands and steps').last();
+  await expect(input).toHaveValue('sort lines');
+  await page.keyboard.type('x');
+  await expect(input).toHaveValue('x');
+});
+
+test('QL38 / QL39 Lists: Page Down, Ctrl+End and the typed text marked', async ({ page }) => {
+  await openFeature(page);
+  await menuItem(page, 'Navigate', /^Switcher/);
+  const list = page.getByRole('listbox').last();
+  await page.keyboard.press('Control+End');
+  await expect(list.getByRole('option').last()).toHaveAttribute('aria-selected', 'true');
+  await page.keyboard.press('Control+Home');
+  await expect(list.getByRole('option').first()).toHaveAttribute('aria-selected', 'true');
+  await page.keyboard.type('stru');
+  await expect(list.locator('mark.list-match').first()).toHaveText(/stru/i);
+});
+
+test('QL40 Recent Files kept after a reload', async ({ page }) => {
+  await openFeature(page);
+  await nav(page).getByRole('button', { name: 'AuthSteps.cs', exact: true }).first().dblclick();
+  await page.reload();
+  await expect(page.getByText('Repository indexed')).toBeVisible();
+  await page.locator('body').press('Control+E');
+  await expect(page.getByRole('dialog').getByText('AuthSteps.cs').first()).toBeVisible();
+});

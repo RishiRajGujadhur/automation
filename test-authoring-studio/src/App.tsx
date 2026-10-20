@@ -34,6 +34,8 @@ import OutputPanel, { type OutputSource } from './OutputPanel';
 import TodoPanel from './TodoPanel';
 import { eolOf, withEol, SET_EOL_EVENT, type Eol } from './editor/lineSeparator';
 import RiderHost from './rider/RiderHost';
+import BusyTitle from './BusyTitle';
+import { setBaseTitle } from './windowTitle';
 import { useViewOptions } from './editor/viewOptions';
 import { recordNotice } from './rider/notifications';
 import RiderMenubar from './rider/RiderMenubar';
@@ -751,7 +753,7 @@ export default function App() {
     const file = tab === 'Features' && (view === 'editor' || view === 'code') ? openEditors.active : undefined;
     const folder = fileSrc.kind === 'browser' ? fileSrc.name : (config?.repositoryRoot ?? '').split(/[\\/]/).filter(Boolean).pop();
     const changed = dirty || (!!file && unsavedFiles().includes(file));
-    document.title = file ? `${changed ? '● ' : ''}${file.split('/').pop()}${folder ? ` — ${folder}` : ''} · TestAuthoring Studio` : `${dirty ? '● ' : ''}${pageTitle} · TestAuthoring Studio`;
+    setBaseTitle(file ? `${changed ? '● ' : ''}${file.split('/').pop()}${folder ? ` — ${folder}` : ''} · TestAuthoring Studio` : `${dirty ? '● ' : ''}${pageTitle} · TestAuthoring Studio`);
   }, [pageTitle, dirty, tab, view, openEditors.active, fileSrc, config?.repositoryRoot, unsavedTick]);
   useEffect(() => {
     const name = tab === 'Features' ? ({ recorder: 'Playwright Recorder', builder: 'Scenario Builder', editor: 'Feature Editor' } as Record<string, string>)[view] ?? tab : tab;
@@ -2264,6 +2266,7 @@ export default function App() {
           </button>
         </span>
       </footer>
+      <BusyTitle />
       <Toast.Provider swipeDirection={typeof window !== 'undefined' && matchMedia('(max-width: 640px)').matches ? 'down' : 'right'} duration={6000}>
         <Toast.Root
           key={toastKey}

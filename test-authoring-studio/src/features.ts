@@ -327,6 +327,7 @@ export const FEATURES: Feature[] = [
   { id: 'commit-draft', label: 'Commit message draft kept', group: 'Git', essential: true, description: 'The Git Changes commit message stays after a reload until you commit.' },
   { id: 'commit-length', label: 'Commit message hints', group: 'Git', essential: true, description: 'Warns about a summary line over 72 characters or a missing blank second line.' },
   { id: 'build-elapsed', label: 'Build time in the status bar', group: 'Tool windows', essential: true, description: 'While a build runs, the status bar shows for how long.' },
+  { id: 'busy-title', label: 'Busy window title', group: 'Help and productivity', essential: true, description: 'The window (and taskbar) title says "Building" or "Running tests" while they run.' },
 ];
 export const GROUPS: FeatureGroup[] = ['Editing', 'Navigation', 'Code intelligence', 'Tool windows', 'Files', 'Git', 'Gherkin', 'View', 'Debugging', 'Help and productivity'];
 
