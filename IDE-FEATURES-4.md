@@ -34,6 +34,7 @@ has it on by default, so the desktop app starts with it on. The others start off
 | Y23 | Remove #region Directives | Rider | no | ✅ 2026-10-20 |
 | Y24 | Convert to Raw String Literal | VS 2026 | yes | ✅ 2026-10-20 |
 | Y25 | Markdown: Toggle Task | Rider | no | ✅ 2026-10-20 |
+| Y26 | Markdown: Format Table | Rider | no | ✅ 2026-10-20 |
 
 ## Progress log
 - 2026-10-20 Y1: Percent-encodes the selection (or line) and decodes it.
@@ -61,3 +62,4 @@ has it on by default, so the desktop app starts with it on. The others start off
 - 2026-10-20 Y23: Every #region / #endregion line removed, code kept.
 - 2026-10-20 Y24: The string at the caret becomes a C# 11 raw string (multi-line when it has new lines).
 - 2026-10-20 Y25: Checks / unchecks - [ ] tasks; a line becomes a task.
+- 2026-10-20 Y26: The pipes of the table at the caret lined up, alignment kept.

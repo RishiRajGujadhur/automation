@@ -310,3 +310,30 @@ export function toggleTask(view: EditorView) {
   view.dispatch({ changes: { from: first.from, to: last.to, insert: next }, userEvent: 'input.convert' });
   return true;
 }
+
+/** Markdown: Format Table (Rider): the table at the caret with its pipes lined up; ":---:" alignment kept. */
+export function formatMarkdownTable(view: EditorView) {
+  const { state } = view;
+  const at = state.doc.lineAt(state.selection.main.head).number;
+  const isRow = (n: number) => n >= 1 && n <= state.doc.lines && state.doc.line(n).text.trim().startsWith('|');
+  if (!isRow(at)) return false;
+  let first = at, last = at;
+  while (isRow(first - 1)) first--;
+  while (isRow(last + 1)) last++;
+  const indent = /^\s*/.exec(state.doc.line(first).text)![0];
+  const rows = Array.from({ length: last - first + 1 }, (_, i) => state.doc.line(first + i).text.trim().replace(/^\||\|$/g, '').split('|').map((c) => c.trim()));
+  const cols = Math.max(...rows.map((r) => r.length));
+  const sep = (c: string) => /^:?-+:?$/.test(c);
+  const isSep = (r: string[]) => r.every((c) => sep(c) || !c) && r.some(sep);
+  const width = Array.from({ length: cols }, (_, c) => Math.max(3, ...rows.filter((r) => !isSep(r)).map((r) => (r[c] ?? '').length)));
+  const out = rows.map((r) => `${indent}| ${Array.from({ length: cols }, (_, c) => {
+    const v = r[c] ?? '';
+    if (!isSep(r)) return v.padEnd(width[c]);
+    const left = v.startsWith(':'), right = v.endsWith(':') && v.length > 1;
+    return (left ? ':' : '-') + '-'.repeat(width[c] - 2) + (right ? ':' : '-');
+  }).join(' | ')} |`).join('\n');
+  const from = state.doc.line(first).from, to = state.doc.line(last).to;
+  if (out === state.sliceDoc(from, to)) return true;
+  view.dispatch({ changes: { from, to, insert: out }, userEvent: 'input.convert' });
+  return true;
+}

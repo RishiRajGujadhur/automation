@@ -257,6 +257,7 @@ const ROWS: Record<'edit' | 'view' | 'navigate' | 'code' | 'tools' | 'help', Row
     null,
     { submenu: 'Markdown', rows: [
       ['Toggle Task', 'md-toggle-task'],
+      ['Format Table', 'md-format-table'],
     ] },
   ],
   tools: [

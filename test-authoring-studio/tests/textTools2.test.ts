@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { EditorSelection, EditorState, type TransactionSpec } from '@codemirror/state';
 import type { EditorView } from '@codemirror/view';
-import { mapSelections, urlEncode, urlDecode, base64Encode, base64Decode, escapeString, unescapeString, htmlEncode, htmlDecode, stepNumber, insertSequence, toggleQuotes, joinWith, splitAt, alignAssignments, swapSelections, countOccurrences, trimLines, stamp, insertText, LOREM, shuffleLines, formatXml, minifyXml, jsonEscape, jsonUnescape, numberLines, toFileScopedNamespace, toBlockScopedNamespace, removeRegions, toRawString, toggleTask } from '../src/editor/textTools2';
+import { mapSelections, urlEncode, urlDecode, base64Encode, base64Decode, escapeString, unescapeString, htmlEncode, htmlDecode, stepNumber, insertSequence, toggleQuotes, joinWith, splitAt, alignAssignments, swapSelections, countOccurrences, trimLines, stamp, insertText, LOREM, shuffleLines, formatXml, minifyXml, jsonEscape, jsonUnescape, numberLines, toFileScopedNamespace, toBlockScopedNamespace, removeRegions, toRawString, toggleTask, formatMarkdownTable } from '../src/editor/textTools2';
 
 /** Runs an editor command on `doc` with the selection between « and » (or a caret at |). */
 function run(doc: string, cmd: (v: EditorView) => boolean) {
@@ -121,5 +121,12 @@ describe('text tools, fourth batch (IDE-FEATURES-4 Y1…)', () => {
   });
   it('Y25 Markdown Toggle Task', () => {
     expect(run('«- [ ] a\n- [x] b\n- c\nd»', toggleTask)).toBe('- [x] a\n- [ ] b\n- [ ] c\n- [ ] d');
+  });
+  it('Y26 Markdown Format Table', () => {
+    // (built directly: the table's pipes would read as the caret marker of run())
+    let state = EditorState.create({ doc: '|Name|Role|\n|:-|-:|\n|ad|administrator|\n\n|x', selection: { anchor: 3 } });
+    const view = { get state() { return state; }, dispatch: (spec: TransactionSpec) => { state = state.update(spec).state; } };
+    formatMarkdownTable(view as unknown as EditorView);
+    expect(state.doc.toString()).toBe('| Name | Role          |\n| :--- | ------------: |\n| ad   | administrator |\n\n|x');
   });
 });
