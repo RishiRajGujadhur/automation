@@ -337,6 +337,7 @@ const ROWS: Record<'edit' | 'view' | 'navigate' | 'code' | 'tools' | 'help', Row
     ['Copy Current Branch Name', 'copy-branch-name'],
     ['Copy SHA-256 Hash', 'copy-sha256'],
     ['Decode JWT', 'decode-jwt'],
+    ['File Statistics', 'file-statistics'],
   ],
   help: [
     null,

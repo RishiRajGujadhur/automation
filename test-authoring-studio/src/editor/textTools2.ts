@@ -459,3 +459,21 @@ export function markdownCodeBlock(text: string, file: string) {
   const fence = text.includes('```') ? '````' : '```';
   return `${fence}${lang}\n${text.replace(/\n$/, '')}\n${fence}`;
 }
+
+/** File Statistics (Rider's Statistic plugin): total, code, comment and blank lines. */
+export function fileStatistics(text: string, file: string) {
+  const hash = /\.(feature|ya?ml|ps1|sh|py|toml|ini)$/i.test(file);
+  let lines = 0, code = 0, comments = 0, blank = 0, block = false;
+  for (const raw of text.split('\n')) {
+    lines++;
+    const l = raw.trim();
+    if (!l) { blank++; continue; }
+    if (hash) { if (l.startsWith('#')) comments++; else code++; continue; }
+    if (block) { comments++; if (l.includes('*/')) block = false; continue; }
+    if (l.startsWith('//')) { comments++; continue; }
+    if (l.startsWith('/*')) { comments++; block = !l.includes('*/'); continue; }
+    if (/^<!--/.test(l)) { comments++; continue; }
+    code++;
+  }
+  return { lines, code, comments, blank };
+}
