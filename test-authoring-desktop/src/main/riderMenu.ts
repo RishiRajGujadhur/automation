@@ -263,6 +263,7 @@ const ROWS: Record<'edit' | 'view' | 'navigate' | 'code' | 'tools' | 'help', Row
       ['Merge Examples Tables', 'merge-examples'],
       ['Copy Scenario Steps', 'copy-scenario-steps'],
       ['Next Unbound Step', 'list-unbound'],
+      ['Run Scenarios with Tag at Caret', 'run-tag-at-caret'],
     ] },
     ['Collapse Using Directives', 'fold-usings'],
     ['Sort JSON Keys', 'sort-json'],

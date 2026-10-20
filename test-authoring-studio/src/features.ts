@@ -465,6 +465,7 @@ export const FEATURES: Feature[] = [
   { id: 'file-statistics', label: 'File Statistics', group: 'Help and productivity', essential: false, description: 'Tools ▸ File Statistics counts the code, comment and blank lines of the active file.', commands: ['file-statistics'] },
   { id: 'copy-scenario-steps', label: 'Copy Scenario Steps', group: 'Gherkin', essential: false, description: 'Code ▸ Gherkin copies the steps of the scenario at the caret (tables included), to reuse them.', commands: ['copy-scenario-steps'] },
   { id: 'list-unbound', label: 'Next Unbound Step', group: 'Gherkin', essential: true, vs: 'Reqnroll: unbound steps', description: 'Code ▸ Gherkin goes to the next step without a step definition and says how many the file has.', commands: ['list-unbound'] },
+  { id: 'run-tag-at-caret', label: 'Run Scenarios with Tag at Caret', group: 'Gherkin', essential: true, vs: 'Test Explorer ▸ Run by Trait', description: 'Code ▸ Gherkin runs every scenario of the solution that has the @tag under the caret.', commands: ['run-tag-at-caret'] },
 ];
 export const GROUPS: FeatureGroup[] = ['Editing', 'Navigation', 'Code intelligence', 'Tool windows', 'Files', 'Git', 'Gherkin', 'View', 'Debugging', 'Help and productivity'];
 

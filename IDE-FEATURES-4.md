@@ -79,6 +79,7 @@ has it on by default, so the desktop app starts with it on. The others start off
 | Y68 | File Statistics | Rider | no | ✅ 2026-10-20 |
 | Y69 | Copy Scenario Steps | Rider | no | ✅ 2026-10-20 |
 | Y70 | Next Unbound Step | Rider | yes | ✅ 2026-10-20 |
+| Y71 | Run Scenarios with Tag at Caret | VS 2026 | yes | ✅ 2026-10-20 |
 
 ## Progress log
 - 2026-10-20 Y1: Percent-encodes the selection (or line) and decodes it.
@@ -151,3 +152,4 @@ has it on by default, so the desktop app starts with it on. The others start off
 - 2026-10-20 Y68: Code, comment and blank line counts of the active file.
 - 2026-10-20 Y69: The steps of the scenario at the caret, tables included.
 - 2026-10-20 Y70: Goes to the next step without a binding and counts them.
+- 2026-10-20 Y71: Runs every scenario that has the @tag under the caret.
