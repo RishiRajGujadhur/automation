@@ -145,7 +145,7 @@ Legend: `[x]` done · `[ ]` to do.
 - [ ] 120. Structural Search and Replace templates
 - [ ] 121. Dependency cycle detection
 - [ ] 122. Layer dependency rules
-- [ ] 123. Namespace consistency inspections
+- [x] 123. Namespace consistency inspections — IDE0130: namespace does not match the folder (root namespace + folder from the project), fix in Quick Actions (2026-10-21)
 - [ ] 124. API compatibility inspections
 - [ ] 125. Public API change tracking
 
@@ -390,3 +390,4 @@ Legend: `[x]` done · `[ ]` to do.
 - 2026-10-21 104: Roslyn's control-flow analysis of the selected statements as a report.
 - 2026-10-21 105: Roslyn's data-flow analysis of the selected statements or expression as a report.
 - 2026-10-21 33: The overrides tree of a C# method: what it overrides or implements above, every override below, to jump through.
+- 2026-10-21 123: The language service knows each project's root namespace and folder, so a namespace that does not match its folder is reported and fixed (also across the solution with Fix All).

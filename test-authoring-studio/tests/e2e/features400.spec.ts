@@ -671,3 +671,7 @@ test('33 Method hierarchy', async ({ page }) => {
   expect(order('Mid.Run')).toBeLessThan(order('Leaf.Run'));
   expect(order('Other.Run')).toBe(-1);
 });
+
+test('123 Namespace consistency inspections', async ({ page }) => {
+  await analyzerFix(page, 'namespace Wrong.Place;\npublic class P { }\n', [{ cls: '.cm-lintRange-info', text: 'Wrong.Place' }], 'Wrong.Place', /^Change namespace to match folder structure$/, (d) => d.includes('namespace Fixtures.Steps'));
+});
