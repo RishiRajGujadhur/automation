@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { EditorState, type TransactionSpec } from '@codemirror/state';
 import { EditorView } from '@codemirror/view';
-import { cycleStepKeyword, scenarioToOutline, tableInsertRow, tableAddColumn, tableDeleteColumn, tableSortByColumn, testFilter, selectScenario, renameTag, extractExamplesParameter, outlineToScenario, duplicateScenario, moveScenario, extractBackground, addExamplesTable, toggleTag, toggleScenarioComment, pasteAsTable, tableCsv, featureStats, renameExamplesParameter, removeUnusedColumns, inlineBackground, normalizeStepKeywords, addScenario, scenarioMarkdown, tableDuplicateRow, tableDeleteRow, tableMoveColumn, tableSelectColumn, tableTranspose, tableFillDown, tableClearColumn, sortScenarios, featureOutline, tableDeleteEmptyRows, tableRemoveDuplicateRows, tableMarkdown, tagAllScenarios, removeTagEverywhere } from '../src/editor/gherkinTools';
+import { cycleStepKeyword, scenarioToOutline, tableInsertRow, tableAddColumn, tableDeleteColumn, tableSortByColumn, testFilter, selectScenario, renameTag, extractExamplesParameter, outlineToScenario, duplicateScenario, moveScenario, extractBackground, addExamplesTable, toggleTag, toggleScenarioComment, pasteAsTable, tableCsv, featureStats, renameExamplesParameter, removeUnusedColumns, inlineBackground, normalizeStepKeywords, addScenario, scenarioMarkdown, tableDuplicateRow, tableDeleteRow, tableMoveColumn, tableSelectColumn, tableTranspose, tableFillDown, tableClearColumn, sortScenarios, featureOutline, tableDeleteEmptyRows, tableRemoveDuplicateRows, tableMarkdown, tagAllScenarios, removeTagEverywhere, sortTags } from '../src/editor/gherkinTools';
 
 /** Runs an editor command on `doc` with the selection between « and » (or a caret at ‸); with `caret`, the result marks the caret with ¦. */
 function run(doc: string, cmd: (v: EditorView) => boolean, caret = false) {
@@ -198,5 +198,8 @@ describe('Gherkin tools (IDE-FEATURES X49…)', () => {
   it('Y35 Remove Tag Everywhere', () => {
     expect(removeTagEverywhere('@wip @a\nFeature: F\n  @wip\n  Scenario: s\n    Given @wip text', 'wip')).toBe('@a\nFeature: F\n  Scenario: s\n    Given @wip text');
     expect(removeTagEverywhere('Feature: F', '@x')).toBe(null);
+  });
+  it('Y36 Sort Tags', () => {
+    expect(run('@smoke @Auth @a10 @a9 @smoke\nFeature: F\n  @z @b # note\n  Scenario: s', sortTags)).toBe('@a9 @a10 @Auth @smoke\nFeature: F\n  @z @b # note\n  Scenario: s');
   });
 });

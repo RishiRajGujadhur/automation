@@ -782,3 +782,21 @@ export function removeTagEverywhere(text: string, raw: string) {
   });
   return changed ? out.join('') : null;
 }
+
+/** Sort Tags: the tags of each tag line (of the selection, or the file) in alphabetical order, duplicates removed. */
+export function sortTags(view: EditorView) {
+  const { state } = view;
+  const r = state.selection.main;
+  const first = r.empty ? 1 : state.doc.lineAt(r.from).number, last = r.empty ? state.doc.lines : state.doc.lineAt(r.to).number;
+  const changes: ChangeSpec[] = [];
+  for (let n = first; n <= last; n++) {
+    const l = state.doc.line(n);
+    const toks = l.text.trim().split(/\s+/);
+    if (!l.text.trim() || !toks.every((t) => t.startsWith('@'))) continue;
+    const next = /^\s*/.exec(l.text)![0] + [...new Set(toks)].sort(collator.compare).join(' ');
+    if (next !== l.text) changes.push({ from: l.from, to: l.to, insert: next });
+  }
+  if (!changes.length) return false;
+  view.dispatch({ changes, userEvent: 'input' });
+  return true;
+}

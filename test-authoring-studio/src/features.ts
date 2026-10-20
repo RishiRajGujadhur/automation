@@ -430,6 +430,7 @@ export const FEATURES: Feature[] = [
   { id: 'table-copy-markdown', label: 'Table: Copy as Markdown', group: 'Gherkin', essential: false, description: 'Code ▸ Gherkin copies the table at the caret as a Markdown table (for wikis and pull requests).', commands: ['table-copy-markdown'] },
   { id: 'tag-all-scenarios', label: 'Tag All Scenarios', group: 'Gherkin', essential: false, description: 'Code ▸ Gherkin adds a tag to every scenario of the file that lacks it.', commands: ['tag-all-scenarios'] },
   { id: 'remove-tag-everywhere', label: 'Remove Tag Everywhere', group: 'Gherkin', essential: false, description: 'Code ▸ Gherkin removes a tag from every tag line of the file.', commands: ['remove-tag-everywhere'] },
+  { id: 'sort-tags', label: 'Sort Tags', group: 'Gherkin', essential: false, description: 'Code ▸ Gherkin sorts the tags of each tag line (selection or file) and drops repeats.', commands: ['sort-tags'] },
 ];
 export const GROUPS: FeatureGroup[] = ['Editing', 'Navigation', 'Code intelligence', 'Tool windows', 'Files', 'Git', 'Gherkin', 'View', 'Debugging', 'Help and productivity'];
 

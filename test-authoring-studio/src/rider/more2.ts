@@ -1,7 +1,7 @@
 import type { RiderCommand } from './commands';
 import type { MoreHelpers } from './more';
 import { copyText } from '../ui';
-import { tableDeleteEmptyRows, tableRemoveDuplicateRows, tableMarkdown, tagAllScenarios, removeTagEverywhere } from '../editor/gherkinTools';
+import { tableDeleteEmptyRows, tableRemoveDuplicateRows, tableMarkdown, tagAllScenarios, removeTagEverywhere, sortTags } from '../editor/gherkinTools';
 import { urlEncode, urlDecode, base64Encode, base64Decode, escapeString, unescapeString, htmlEncode, htmlDecode, stepNumber, insertSequence, toggleQuotes, joinWith, splitAt, alignAssignments, swapSelections, countOccurrences, trimLines, stamp, insertText, LOREM, shuffleLines, reformatXml, minifyXml, jsonEscape, jsonUnescape, numberLines, mapDoc, toFileScopedNamespace, toBlockScopedNamespace, removeRegions, toRawString, toggleTask, formatMarkdownTable, tableOfContents, MARKDOWN_TABLE, removeComments, concatToInterpolationCmd } from '../editor/textTools2';
 
 /**
@@ -51,5 +51,6 @@ export function moreCommands2(h: MoreHelpers): RiderCommand[] {
     { id: 'table-copy-markdown', label: 'Table: Copy as Markdown', menu: 'Code', submenu: 'Gherkin', run: h.inEditor((v) => { const md = tableMarkdown(v.state); if (!md) { h.notice('Put the caret in a table.'); return; } void copyText(md).then((ok) => h.notice(ok ? 'Copied the table as Markdown.' : 'Clipboard unavailable.')); }) },
     { id: 'tag-all-scenarios', label: 'Tag All Scenarios…', menu: 'Code', submenu: 'Gherkin', run: h.inEditor((v) => { const tag = window.prompt('Tag to add to every scenario of the file:', '@regression')?.trim(); if (tag && !tagAllScenarios(tag)(v)) h.notice('Every scenario already has that tag (or it is not a valid tag).'); }) },
     { id: 'remove-tag-everywhere', label: 'Remove Tag Everywhere…', menu: 'Code', submenu: 'Gherkin', run: h.inEditor((v) => { const tag = window.prompt('Tag to remove from the whole file:', '@wip')?.trim(); if (!tag) return; const next = removeTagEverywhere(v.state.doc.toString(), tag); if (next === null) { h.notice('The file has no such tag.'); return; } v.dispatch({ changes: { from: 0, to: v.state.doc.length, insert: next }, userEvent: 'input' }); }) },
+    { id: 'sort-tags', label: 'Sort Tags', menu: 'Code', submenu: 'Gherkin', run: h.inEditor((v) => sortTags(v) || h.notice('The tags are already in order.')) },
   ];
 }

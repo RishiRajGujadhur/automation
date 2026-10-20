@@ -242,6 +242,7 @@ const ROWS: Record<'edit' | 'view' | 'navigate' | 'code' | 'tools' | 'help', Row
       ['Table: Copy as Markdown', 'table-copy-markdown'],
       ['Tag All Scenarios…', 'tag-all-scenarios'],
       ['Remove Tag Everywhere…', 'remove-tag-everywhere'],
+      ['Sort Tags', 'sort-tags'],
     ] },
     ['Collapse Using Directives', 'fold-usings'],
     ['Sort JSON Keys', 'sort-json'],
