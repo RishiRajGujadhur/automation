@@ -21,6 +21,27 @@ export function duplicateScenarioNames(src: string): Problem[] {
 }
 CHECKS.push({ feature: 'duplicate-scenario-names', run: duplicateScenarioNames });
 
+/** A row repeated in one Examples table runs the same test twice. */
+export function duplicateExamplesRows(src: string): Problem[] {
+  const lines = src.split('\n');
+  const out: Problem[] = [];
+  for (let i = 0; i < lines.length; i++) {
+    if (!/^\s*(Examples|Scenarios):/.test(lines[i])) continue;
+    let k = i + 1;
+    while (k < lines.length && !lines[k].trim()) k++;
+    const seen = new Map<string, number>();
+    for (let r = k; r < lines.length && lines[r].trim().startsWith('|'); r++) {
+      if (r === k) continue;
+      const row = lines[r].trim().replace(/\s*\|\s*/g, '|');
+      const first = seen.get(row);
+      if (first) out.push({ line: r + 1, message: `This Examples row repeats line ${first}: the same test runs twice.` });
+      else seen.set(row, r + 1);
+    }
+  }
+  return out;
+}
+CHECKS.push({ feature: 'duplicate-examples-rows', run: duplicateExamplesRows });
+
 export const gherkinLint2 = linter((view) => {
   const src = view.state.doc.toString();
   const out: Diagnostic[] = [];

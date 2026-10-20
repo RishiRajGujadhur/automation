@@ -121,3 +121,20 @@ test('Y31–Y40 Code ▸ Gherkin: tags, tables, doc string, Expand Outline, Wrap
   await gherkinItem(page, /^Insert Doc String/);
   await expect.poll(() => doc(page)).toBe(`Feature: F\n  Scenario: S\n    Given a body\n      ${'"'.repeat(3)}\n      \n      ${'"'.repeat(3)}`);
 });
+
+test('Y41–Y50 Gherkin: language header, column statistics, fill series, duplicate warnings', async ({ page }) => {
+  await open(page);
+  await expect(page.getByLabel('Gherkin source')).toContainText('Feature:');
+  const src = 'Feature: F\n\n  Scenario Outline: Same\n    Given <n>\n\n    Examples:\n      | n |\n      | 4 |\n      |   |\n      | 4 |\n\n  Scenario: same\n    Given x\n';
+  await setDoc(page, src, src.indexOf('| 4') + 2);
+  await gherkinItem(page, /^Table: Column Statistics/);
+  await expect(page.getByText('n: 2 numbers, sum 8, average 4, min 4, max 4.').first()).toBeVisible();
+  await gherkinItem(page, /^Table: Fill Series/);
+  await expect.poll(() => doc(page)).toContain('| 4 |\n      | 5 |\n      | 6 |');
+  await setDoc(page, src, 0);
+  await expect(page.locator('.cm-lintRange-warning', { hasText: 'Scenario: same' })).toBeVisible();
+  await expect(page.locator('.cm-lintRange-warning', { hasText: '| 4 |' })).toBeVisible();
+  page.once('dialog', (d) => void d.accept('fr'));
+  await gherkinItem(page, /^Set Language Header/);
+  await expect.poll(() => doc(page)).toMatch(/^# language: fr\nFeature: F/);
+});

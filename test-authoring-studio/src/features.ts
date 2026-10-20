@@ -444,6 +444,7 @@ export const FEATURES: Feature[] = [
   { id: 'table-copy-column', label: 'Table: Copy Column', group: 'Gherkin', essential: false, description: 'Code ▸ Gherkin copies the values of the caret\'s column (without the header), one per line.', commands: ['table-copy-column'] },
   { id: 'table-fill-series', label: 'Table: Fill Series', group: 'Gherkin', essential: false, description: 'Code ▸ Gherkin numbers the caret\'s column 1, 2, 3… downwards (or counts on from the cell\'s number).', commands: ['table-fill-series'] },
   { id: 'merge-examples', label: 'Merge Examples Tables', group: 'Gherkin', essential: false, description: 'Code ▸ Gherkin merges the outline\'s Examples tables that have the same columns into the first.', commands: ['merge-examples'] },
+  { id: 'duplicate-examples-rows', label: 'Warn on duplicate Examples rows', group: 'Gherkin', essential: true, vs: 'Reqnroll: duplicate examples', description: 'A row repeated in an Examples table gets a warning (it runs the same test twice).' },
 ];
 export const GROUPS: FeatureGroup[] = ['Editing', 'Navigation', 'Code intelligence', 'Tool windows', 'Files', 'Git', 'Gherkin', 'View', 'Debugging', 'Help and productivity'];
 
