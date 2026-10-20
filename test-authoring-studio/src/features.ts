@@ -255,6 +255,7 @@ export const FEATURES: Feature[] = [
   { id: 'explorer-open-filter', label: 'Explorer: Open Files filter', group: 'Files', essential: true, vs: 'Solution Explorer ▸ Open Files Filter', description: 'Shows only the files open in editor tabs.' },
   { id: 'explorer-track', label: 'Explorer: Track Active Item toggle', group: 'Files', essential: true, vs: 'Options ▸ Track Active Item in Solution Explorer', description: 'Turns off revealing the active file in the Explorer (Sync stays one click away).' },
   { id: 'unpin-all', label: 'Tabs: Unpin All', group: 'Files', essential: true, vs: 'Tab ▸ Unpin All', description: 'The tab menu unpins every pinned tab.' },
+  { id: 'sort-tabs', label: 'Sort Tabs by Name', group: 'Files', essential: false, vs: 'Editor Tabs ▸ Sort tabs alphabetically (Rider)', description: 'Orders the editor tabs alphabetically (pinned tabs stay first).', commands: ['sort-tabs'] },
 ];
 export const GROUPS: FeatureGroup[] = ['Editing', 'Navigation', 'Code intelligence', 'Tool windows', 'Files', 'Git', 'Gherkin', 'View', 'Debugging', 'Help and productivity'];
 

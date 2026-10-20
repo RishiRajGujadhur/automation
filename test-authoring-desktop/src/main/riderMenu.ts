@@ -97,6 +97,7 @@ const ROWS: Record<'edit' | 'view' | 'navigate' | 'code' | 'tools' | 'help', Row
     ['Centered Layout', 'centered-layout'],
     ['Do Not Disturb', 'do-not-disturb'],
     ['Toggle Read-Only (Session)', 'toggle-readonly'],
+    ['Sort Tabs by Name', 'sort-tabs'],
   ],
   navigate: [
     ['Select In…', 'select-in', 'Alt+F1'],

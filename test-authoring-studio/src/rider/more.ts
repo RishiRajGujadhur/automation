@@ -1,5 +1,6 @@
 import type { EditorView } from '@codemirror/view';
 import type { RiderCommand } from './commands';
+import { sortTabs } from '../files/tabs';
 import { requestFileHistory } from './GitLogPanel';
 import { GIT_CHANGED_EVENT as GIT_EVENT, FILES_CHANGED_EVENT } from '../editor/events';
 import { forEachDiagnostic } from '@codemirror/lint';
@@ -149,5 +150,6 @@ export function moreCommands(h: MoreHelpers): RiderCommand[] {
     { id: 'git-undo-file', label: 'Git: Undo Changes in File…', menu: 'Tools', group: true, run: h.inEditor((_v, file) => { if (isBrowser()) { h.notice('Git needs a folder indexed by the studio server.'); return; } if (!window.confirm(`Undo every uncommitted change in ${file.split('/').pop()}? The file goes back to its last committed version.`)) return; void api('/git/discard', { files: [file], approved: true }).then(() => { window.dispatchEvent(new CustomEvent(FILES_CHANGED_EVENT, { detail: [file] })); window.dispatchEvent(new Event(GIT_EVENT)); h.notice(`Undid the changes in ${file.split('/').pop()}.`); }, (e) => h.notice((e as Error).message)); }) },
     { id: 'git-stage-file', label: 'Git: Stage File', menu: 'Tools', run: h.inEditor((_v, file) => { if (isBrowser()) { h.notice('Git needs a folder indexed by the studio server.'); return; } void api('/git/stage', { files: [file] }).then(() => { window.dispatchEvent(new Event(GIT_EVENT)); h.notice(`Staged ${file.split('/').pop()}.`); }, (e) => h.notice((e as Error).message)); }) },
     { id: 'git-file-history', label: 'Git: Show History for File', menu: 'Tools', run: h.inEditor((_v, file) => { if (isBrowser()) { h.notice('Git needs a folder indexed by the studio server.'); return; } requestFileHistory(file); runRider('tool-gitlog', 'menu'); }) },
+    { id: 'sort-tabs', label: 'Sort Tabs by Name', menu: 'View', run: () => sortTabs() },
   ];
 }

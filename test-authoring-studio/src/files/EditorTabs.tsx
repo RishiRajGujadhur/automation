@@ -7,7 +7,7 @@ import { RowMenu, copyText } from '../ui';
 import { Dropdown } from '../radix';
 import { UNSAVED_EVENT, unsavedFiles } from '../editor/autosave';
 import { SELECT_IN_EXPLORER } from '../SolutionExplorer';
-import { useTabs, activateTab, closeOthers, closeToRight, closeToLeft, unpinAll, closeAll, setPinned, keepTab, type EditorTab } from './tabs';
+import { useTabs, activateTab, closeOthers, closeToRight, closeToLeft, unpinAll, sortTabs, closeAll, setPinned, keepTab, type EditorTab } from './tabs';
 import { fileType } from './fileTypes';
 
 const base = (f: string) => f.split('/').pop()!;
@@ -84,6 +84,7 @@ export default function EditorTabs({ onClose, onSplit, children }: { onClose: (f
                 ...(featureOn('close-left') ? [{ label: 'Close to the Left', onSelect: () => closeToLeft(t.file) }] : []),
                 { label: 'Close to the Right', onSelect: () => closeToRight(t.file) },
                 { label: 'Close All', icon: XCircle, onSelect: () => closeAll() },
+                ...(featureOn('sort-tabs') ? [{ label: 'Sort Tabs by Name', onSelect: () => sortTabs() }] : []),
                 'separator',
                 { label: 'Copy Relative Path', icon: Copy, onSelect: () => copyText(t.file) },
                 ...(featureOn('tab-copy-name') ? [{ label: 'Copy File Name', icon: Copy, onSelect: () => void copyText(base(t.file)) }] : []),

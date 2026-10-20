@@ -59,6 +59,12 @@ export function closeToRight(file: string) { const i = state.tabs.findIndex((t) 
 export function closeToLeft(file: string) { const i = state.tabs.findIndex((t) => t.file === file); remember(state.tabs.filter((t, j) => j < i && !t.pinned).map((t) => t.file)); const tabs = state.tabs.filter((t, j) => j >= i || t.pinned); set({ tabs, active: tabs.some((t) => t.file === state.active) ? state.active : file }); }
 /** Unpin All (Visual Studio's tab menu). */
 export function unpinAll() { set({ ...state, tabs: state.tabs.map((t) => (t.pinned ? { ...t, pinned: false } : t)) }); }
+/** Sort Tabs by Name (Rider's 'Sort tabs alphabetically'): pinned tabs stay first. */
+export function sortTabs() {
+  const name = (f: string) => f.split('/').pop()!.toLowerCase();
+  const rest = state.tabs.filter((t) => !t.pinned).sort((a, b) => name(a.file).localeCompare(name(b.file)) || a.file.localeCompare(b.file));
+  set({ ...state, tabs: [...state.tabs.filter((t) => t.pinned), ...rest] });
+}
 export function closeAll() { remember(state.tabs.filter((t) => !t.pinned).map((t) => t.file)); const tabs = state.tabs.filter((t) => t.pinned); set({ tabs, active: tabs.some((t) => t.file === state.active) ? state.active : tabs[0]?.file }); }
 /** Pinned tabs move to the front (in pin order) and survive Close Others / Close All. */
 export function setPinned(file: string, pinned: boolean) {
