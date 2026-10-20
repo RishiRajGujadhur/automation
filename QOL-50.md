@@ -1,6 +1,6 @@
-# Quality of life: 50 improvements (QL1–QL50)
+# Quality of life: 100 improvements (QL1–QL100)
 
-Goal: 50 small improvements to everyday work in the studio (web and desktop apps alike: the desktop app runs the same
+Goal: 100 small improvements (QL1–QL50, then QL51–QL100) to everyday work in the studio (web and desktop apps alike: the desktop app runs the same
 UI), each pushed on its own. Desktop-only items stay in [DESKTOP-QOL.md](DESKTOP-QOL.md).
 
 Every improvement is verified by a unit or Playwright test (`tests/e2e/qol50.spec.ts` unless noted).

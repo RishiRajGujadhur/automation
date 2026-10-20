@@ -2,7 +2,7 @@ import { test, expect } from '@playwright/test';
 
 test.use({ storageState: { cookies: [], origins: [] } });
 
-test('status bar: cursor position, line endings, encoding and the Git branch (opens Git Changes)', async ({ page }) => {
+test('status bar: cursor position, line endings, encoding and the Git branch (opens the Branches popup)', async ({ page }) => {
   await page.addInitScript(() => { if (!sessionStorage.getItem('seeded')) { localStorage.setItem('tas:prefs', JSON.stringify({ mode: 'advanced' })); sessionStorage.setItem('seeded', '1'); } });
   await page.goto('/#/features/editor');
   await expect(page.getByText('Repository indexed')).toBeVisible();
@@ -17,9 +17,9 @@ test('status bar: cursor position, line endings, encoding and the Git branch (op
   await expect(bar.getByLabel('Cursor position')).toHaveText(/Ln 3, Col 16 \(14 selected\)/);
   await expect(bar).toContainText('UTF-8');
   await expect(bar).toContainText(/CRLF|LF/);
-  // fixtures/ lives inside this repository, so a branch is shown; it opens Git Changes.
+  // fixtures/ lives inside this repository, so a branch is shown; it opens the Branches popup (IDE-FEATURES X48).
   const branch = bar.getByRole('button', { name: /^Branch .+: open Git Changes$/ });
   await expect(branch).toBeVisible({ timeout: 15_000 });
   await branch.click();
-  await expect(page.getByRole('region', { name: 'Git Changes' })).toBeVisible();
+  await expect(page.getByRole('dialog', { name: 'Branches' })).toBeVisible();
 });

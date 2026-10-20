@@ -322,7 +322,9 @@ export default function SolutionExplorer({ features, revision, activeFile, query
       const path = t.dataset.path;
       if (!path) return;
       open(path);
-      setTimeout(() => { keepTab(path); requestAnimationFrame(() => requestAnimationFrame(() => document.querySelector<HTMLElement>('.gherkin-editor .cm-content, .code-editor:not([hidden]) .cm-content')?.focus())); });
+      // The editor mounts (and loads the file) a moment later: keep trying for up to 2 s.
+      const focusEditor = (tries = 0) => { const ed = document.querySelector<HTMLElement>(path.endsWith('.feature') ? '.gherkin-editor .cm-content' : `[aria-label="Source of ${CSS.escape(path)}"]`); if (ed && ed.offsetParent !== null) ed.focus(); else if (tries < 40) setTimeout(() => focusEditor(tries + 1), 50); };
+      setTimeout(() => { keepTab(path); focusEditor(); });
       return;
     }
     /* tree keys */
