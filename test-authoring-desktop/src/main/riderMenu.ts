@@ -348,6 +348,7 @@ const ROWS: Record<'edit' | 'view' | 'navigate' | 'code' | 'tools' | 'help', Row
     ['Copy SHA-256 Hash', 'copy-sha256'],
     ['Decode JWT', 'decode-jwt'],
     ['File Statistics', 'file-statistics'],
+    ['Copy Request as cURL', 'copy-curl'],
   ],
   help: [
     null,

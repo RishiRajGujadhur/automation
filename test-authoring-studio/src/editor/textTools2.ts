@@ -571,3 +571,21 @@ export function validateJson(text: string) {
     return { message: msg.replace(/^JSON\.parse: /, ''), offset: Math.min(offset, text.length) };
   }
 }
+
+/** Copy as cURL (Rider HTTP Client): the request at the caret of a .http file as a curl command. */
+export function requestAsCurl(text: string, offset: number) {
+  const blocks = text.split(/^###.*$/m);
+  let start = 0, block = '';
+  for (const b of blocks) { const end = start + b.length; if (offset <= end) { block = b; break; } start = end + (text.slice(end).match(/^###.*$/m)?.[0].length ?? 0); }
+  const lines = (block || blocks.at(-1)!).split(/\r?\n/).filter((l) => !/^\s*(#|\/\/)/.test(l));
+  while (lines.length && !lines[0].trim()) lines.shift();
+  const req = /^(GET|POST|PUT|PATCH|DELETE|HEAD|OPTIONS)?\s*(\S+)(\s+HTTP\/[\d.]+)?\s*$/i.exec(lines[0] ?? '');
+  if (!req) return null;
+  const method = (req[1] ?? 'GET').toUpperCase();
+  const q = (s: string) => `'${s.replace(/'/g, `'\\''`)}'`;
+  const headers: string[] = [];
+  let i = 1;
+  for (; i < lines.length && lines[i].trim(); i++) if (/^[\w-]+\s*:/.test(lines[i])) headers.push(lines[i].trim());
+  const body = lines.slice(i + 1).join('\n').trim();
+  return ['curl', ...(method !== 'GET' || body ? ['-X', method] : []), q(req[2]), ...headers.flatMap((h) => ['-H', q(h)]), ...(body ? ['--data-raw', q(body)] : [])].join(' ');
+}

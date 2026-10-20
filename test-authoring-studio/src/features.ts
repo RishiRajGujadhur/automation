@@ -473,6 +473,7 @@ export const FEATURES: Feature[] = [
   { id: 'generate-tostring', label: 'Generate ToString()', group: 'Code intelligence', essential: true, vs: 'Quick Actions: Generate overrides', description: 'Code ▸ C# writes a ToString override listing the public properties.', commands: ['generate-tostring'] },
   { id: 'add-null-checks', label: 'Add Null Checks for Parameters', group: 'Code intelligence', essential: true, vs: 'Quick Actions: Add null checks for all parameters', description: 'Code ▸ C# adds ArgumentNullException.ThrowIfNull for the method\'s non-nullable reference parameters.', commands: ['add-null-checks'] },
   { id: 'validate-json', label: 'Validate JSON', group: 'Editing', essential: true, vs: 'JSON editor validation', description: 'Code ▸ Validate JSON checks the file and puts the caret where the first error is.', commands: ['validate-json'] },
+  { id: 'copy-curl', label: 'HTTP Client: Copy Request as cURL', group: 'Tool windows', essential: false, description: 'Tools ▸ Copy Request as cURL turns the .http request at the caret into a curl command.', commands: ['copy-curl'] },
 ];
 export const GROUPS: FeatureGroup[] = ['Editing', 'Navigation', 'Code intelligence', 'Tool windows', 'Files', 'Git', 'Gherkin', 'View', 'Debugging', 'Help and productivity'];
 
