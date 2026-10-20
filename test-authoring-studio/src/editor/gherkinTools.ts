@@ -957,3 +957,13 @@ export function tableColumnValues(state: EditorState) {
   const t = tableAt(state);
   return t ? t.rows.slice(1).map((r) => (r[t.col] ?? '').trim()).join('\n') : null;
 }
+
+/** Table ▸ Fill Series: the caret's column from its row down counts 1, 2, 3… (or on from the number in the caret's cell). */
+export function tableFillSeries(view: EditorView) {
+  const t = tableAt(view.state);
+  if (!t || t.row < 1) return false;
+  const here = (t.rows[t.row][t.col] ?? '').trim();
+  const start = /^-?\d+$/.test(here) ? Number(here) : 1;
+  const rows = t.rows.map((r, i) => (i < t.row ? r : Object.assign([...r], { [t.col]: String(start + i - t.row) })));
+  return writeTable(view, t, rows, t.row, t.col);
+}
