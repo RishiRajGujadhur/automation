@@ -1,6 +1,7 @@
 import { autocompletion, type Completion, type CompletionContext, type CompletionResult } from '@codemirror/autocomplete';
 import { linter, type Diagnostic } from '@codemirror/lint';
-import { EditorView, hoverTooltip } from '@codemirror/view';
+import { EditorView, hoverTooltip, keymap } from '@codemirror/view';
+import { Prec } from '@codemirror/state';
 import type { Extension } from '@codemirror/state';
 import { api } from '../../api';
 import { gateSource } from '../../vscode/suggestions';
@@ -66,8 +67,26 @@ const quickInfo = (file: string) => hoverTooltip(async (view, pos) => {
   };
 }, { hoverTime: 450 });
 
+/** F10: Enter on a line that is just `/**` (above a declaration) writes the JSDoc template, as in VS Code. */
+const jsdocOnEnter = (file: string) => Prec.high(keymap.of([{ key: 'Enter', run: (view) => {
+  const sel = view.state.selection.main;
+  const line = view.state.doc.lineAt(sel.head);
+  if (!sel.empty || sel.head !== line.to || !/^\s*\/\*\*\s*$/.test(line.text)) return false;
+  const indent = /^\s*/.exec(line.text)![0];
+  const source = view.state.doc.toString();
+  const without = source.slice(0, line.from) + source.slice(line.to);
+  void api<{ text: string; caret: number } | null>('/web/docTemplate', { file, source: without, pos: line.from }).then((t) => {
+    if (view.state.doc.lineAt(view.state.selection.main.head).text !== line.text) return;
+    const text = t ? t.text.replace(/\s+$/, '').split('\n').map((l, i) => (i ? indent + l.trimStart().replace(/^\*/, ' *') : indent + l)).join('\n').replace(/\*\/[ \t]+$/, '*/') : `${indent}/**\n${indent} * \n${indent} */`;
+    const caretLine = text.split('\n')[1] ?? '';
+    view.dispatch({ changes: { from: line.from, to: line.to, insert: text }, selection: { anchor: line.from + text.indexOf('\n') + 1 + caretLine.length }, userEvent: 'input' });
+  }, () => {});
+  return true;
+} }]));
+
 export function scriptFeatures(file: string): Extension[] {
   return [
+    jsdocOnEnter(file),
     scriptLinter(file),
     autocompletion({ override: [gateSource((ctx) => complete(file, ctx))], activateOnTyping: true, maxRenderedOptions: 80, icons: true }),
     quickInfo(file),

@@ -103,6 +103,14 @@ export function webRoutes(app: Express, root: () => string) {
     await confined(root(), b.from); await confined(root(), b.to, false);
     res.json({ changes: editsForMove(tsProject(root()), b.from, b.to) });
   });
+  /** F10: typing /** then Enter above a declaration: the JSDoc template for it. */
+  app.post('/api/web/docTemplate', async (req, res) => {
+    const b = at.parse(req.body);
+    const p = await script(b.file);
+    const abs = p.setText(b.file, b.source);
+    const t = p.service.getDocCommentTemplateAtPosition(abs, b.pos, { generateReturnInDocTemplate: true });
+    res.json(t ? { text: t.newText, caret: t.caretOffset } : null);
+  });
   app.post('/api/web/format', async (req, res) => {
     const b = z.object({ file, source: z.string().max(5_000_000) }).parse(req.body);
     const p = await script(b.file);

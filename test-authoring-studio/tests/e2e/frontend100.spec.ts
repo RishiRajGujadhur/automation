@@ -159,3 +159,22 @@ test('F22 Update imports when files move', async ({ page }) => {
   await approve(page, /Update imports for math\.ts: 1 file/);
   await expect.poll(() => fs.readFile(path.join(temp, 'src/app.ts'), 'utf8')).toContain('from "./calc"');
 });
+
+test('F10 Generate JSDoc annotations', async ({ page }) => {
+  await open(page, 'src/util.ts', 'export function scale(value: number, factor = 2) {\n  return value * factor;\n}\n');
+  // Quick Action on the declaration.
+  await convert(page, 'scale', /^Generate JSDoc comment$/, /\/\*\*\n \*\s*\n \* @param value\n \* @param factor\n \* @returns\s*\n \*\/\nexport function scale/, false, 1);
+  // Typing /** and Enter above a declaration.
+  await setDoc(page, 'export class Box {\n  /**\n  resize(width: number, height: number) {}\n}\n');
+  await caretAt(page, '/**', 3);
+  await page.keyboard.press('Enter');
+  await expect.poll(() => docText(page), { timeout: 15_000 }).toMatch(/  \/\*\*\n   \*\s*\n   \* @param width\n   \* @param height\n   \*\/\n  resize/);
+});
+test('F11 Infer types from JSDoc', async ({ page }) => {
+  await open(page, 'src/util.ts', '/**\n * @param {string} name\n * @param {number} [times]\n */\nexport function repeat(name, times) {\n  return name.repeat(times ?? 1);\n}\n');
+  await convert(page, 'repeat(', /^Annotate with type from JSDoc$/, 'export function repeat(name: string, times: number)', false, 2);
+});
+test('F13 Convert promise chains to async/await', async ({ page }) => {
+  await open(page, 'src/api.ts', 'export function load(url: string) {\n  return fetch(url).then((r) => r.json()).then((data) => data.items);\n}\n');
+  await convert(page, 'load', /^Convert to async function$/, /export async function load\(url: string\) \{\s*const r = await fetch\(url\);\s*const data = await r\.json\(\);\s*return data\.items;\s*\}/, false, 1);
+});
