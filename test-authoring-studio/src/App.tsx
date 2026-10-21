@@ -522,6 +522,10 @@ export default function App() {
   useEffect(() => { if (buildOpen) setDockTab('build'); }, [buildOpen]); // eslint-disable-line react-hooks/exhaustive-deps
   const dockOpen = [...(showBuild ? ['build' as const] : []), ...(showDebug ? ['debug' as const] : []), ...(outputOpen ? ['output' as const] : []), ...(todoOpen ? ['todo' as const] : []), ...riderTools.filter((k) => RIDER_TOOLS[k])];
   const dockShows = dockOpen.includes(dockTab) ? dockTab : dockOpen[0] ?? null;
+  // Toggle Panel (title bar layout controls) hides the panel, its tool windows still running (a terminal keeps its
+  // shell); opening one shows it again.
+  const [panelHidden, setPanelHidden] = useState(false);
+  useEffect(() => { setPanelHidden(false); }, [dockOpen.join(), dockTab]); // eslint-disable-line react-hooks/exhaustive-deps
   // Side bar view: the Explorer or the Test Explorer (activity bar, Test menu).
   // Manage NuGet Packages (project from the Explorer, else the first project).
   const [nugetProject, setNugetProject] = useState<string>();
@@ -1201,7 +1205,7 @@ export default function App() {
   const dockRef = useRef<HTMLDivElement>(null);
   const panelStyle = { ...(panelSize.h ? { '--panel-h': `${panelSize.h}px` } : {}), ...(panelSize.w ? { '--panel-w': `${panelSize.w}px` } : {}) } as React.CSSProperties;
   const dock = inEditor && dockShows ? (
-    <div ref={dockRef} className={`dock dock-${dockSide} ${panelSize[dockSide === 'bottom' ? 'h' : 'w'] ? 'dock-sized' : ''} ${panelMax ? 'dock-max' : ''}`} style={panelStyle}>
+    <div ref={dockRef} className={`dock dock-${dockSide} ${panelSize[dockSide === 'bottom' ? 'h' : 'w'] ? 'dock-sized' : ''} ${panelMax ? 'dock-max' : ''}`} style={panelStyle} hidden={panelHidden}>
       {!panelMax && <PanelSash side={dockSide} size={dockSide === 'bottom' ? panelSize.h : panelSize.w} onSize={(px) => setPanelSize(dockSide === 'bottom' ? { ...panelSize, h: px } : { ...panelSize, w: px })} panel={() => dockRef.current} />}
       <div className="dock-bar">
         {dockOpen.length > 1 && (
@@ -1380,6 +1384,13 @@ export default function App() {
         )}
         {vscode && tab === 'Features' && featureViewSwitch}
         {vscode && !basic && <AppMenuButton {...menuProps} />}
+        {vscode && featureOn('layout-controls') && (
+          <div className="layout-controls" role="group" aria-label="Layout">
+            <IconButton label="Toggle Primary Side Bar" aria-pressed={!!prefs.sidebar} shortcut="Ctrl+B" onClick={() => setPrefs({ sidebar: !prefs.sidebar })}><PanelLeft size={16} /></IconButton>
+            <IconButton label="Toggle Panel" aria-pressed={!!dock && !panelHidden} onClick={() => { if (dockShows && inEditor) setPanelHidden((h) => !h); else showRiderTool('terminal'); }}><PanelBottom size={16} /></IconButton>
+            <IconButton label="Toggle Secondary Side Bar" aria-pressed={!!secondary} shortcut="Ctrl+Alt+B" onClick={() => setSecondary((x) => (x ? null : 'structure'))}><PanelRight size={16} /></IconButton>
+          </div>
+        )}
         <Button
           id="guide-me" className="guide-button"
           disabled={!index || busy}

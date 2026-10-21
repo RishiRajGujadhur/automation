@@ -18,7 +18,8 @@ export async function restoreFixtures() {
   } catch {
     return;
   }
-  await fs.rm(fixtures, { recursive: true, force: true });
+  // A shell the app started in fixtures/ (Terminal) can hold it for a moment after the run.
+  await fs.rm(fixtures, { recursive: true, force: true, maxRetries: 20, retryDelay: 250 });
   await fs.cp(snapshot, fixtures, { recursive: true });
   await fs.rm(snapshot, { recursive: true, force: true });
 }

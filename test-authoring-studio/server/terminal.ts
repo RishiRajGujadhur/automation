@@ -98,5 +98,12 @@ export function startTerminal(cwd: string) {
 }
 export const terminal = (id: string) => sessions.get(id);
 export function stopTerminal(id: string) { const s = sessions.get(id); if (s) { s.kill(); sessions.delete(id); } }
+/**
+ * A page that closes without stopping its terminal (closed tab, reload, crash) leaves no one listening: stop the shell
+ * once nobody has reconnected for a while, so it does not keep running (and holding its folder) in the background.
+ */
+export function releaseWhenUnused(id: string, ms = 15_000) {
+  setTimeout(() => { const s = sessions.get(id); if (s && s.listenerCount('event') === 0) stopTerminal(id); }, ms).unref();
+}
 export function stopAllTerminals() { for (const s of sessions.values()) s.kill(); sessions.clear(); }
 process.once('exit', stopAllTerminals);

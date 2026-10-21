@@ -25,7 +25,7 @@ import {
   isCucumberExpression as isCucumberPattern,
   expressionToRegex as patternToRegex,
 } from './core.js';
-import { startTerminal, stopTerminal, terminal, type TerminalEvent } from './terminal.js';
+import { startTerminal, stopTerminal, releaseWhenUnused, terminal, type TerminalEvent } from './terminal.js';
 import { Recorder } from './recorder.js';
 import { Spy } from './spy.js';
 import { proposeCode, proposeDictionaryPageObject } from './proposals.js';
@@ -1508,7 +1508,7 @@ app.get('/api/terminal/events', (req, res) => {
   for (const e of t.backlog) send(e);
   t.on('event', send);
   const ping = setInterval(() => res.write('event: ping\ndata: 1\n\n'), 10_000);
-  req.on('close', () => { clearInterval(ping); t.off('event', send); });
+  req.on('close', () => { clearInterval(ping); t.off('event', send); releaseWhenUnused(t.id); });
 });
 app.get('/api/debug/events', (req, res) => {
   res.writeHead(200, { 'Content-Type': 'text/event-stream', 'Cache-Control': 'no-cache', Connection: 'keep-alive' });

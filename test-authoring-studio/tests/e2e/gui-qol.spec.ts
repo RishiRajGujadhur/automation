@@ -59,3 +59,40 @@ test('G2 Maximize Panel Size and restore', async ({ page }) => {
   await expect(page.locator('.editor-split')).toBeVisible();
   await expect.poll(async () => Math.round((await dock.boundingBox())!.height)).toBe(Math.round(before));
 });
+
+test('G3 Layout controls in the title bar: side bar, panel, secondary side bar', async ({ page }) => {
+  await open(page);
+  const layout = page.getByRole('group', { name: 'Layout' });
+  const sidebar = layout.getByRole('button', { name: 'Toggle Primary Side Bar' });
+  await expect(sidebar).toHaveAttribute('aria-pressed', 'true');
+  await sidebar.click();
+  await expect(page.locator('#feature-sidebar')).toBeHidden();
+  await expect(sidebar).toHaveAttribute('aria-pressed', 'false');
+  await sidebar.click();
+  await expect(page.locator('#feature-sidebar')).toBeVisible();
+  // Toggle Panel with nothing open: the Terminal; again hides the panel; again shows the same tool window.
+  const panel = layout.getByRole('button', { name: 'Toggle Panel' });
+  await panel.click();
+  await expect(page.getByRole('region', { name: 'Terminal' })).toBeVisible();
+  await expect(panel).toHaveAttribute('aria-pressed', 'true');
+  const screen = page.locator('.terminal-host:not([hidden]) .xterm-rows');
+  await expect(screen).toContainText('PS ', { timeout: 30_000 });
+  await page.locator('.terminal-host:not([hidden])').click();
+  await page.keyboard.type('echo kept-1234');
+  await page.keyboard.press('Enter');
+  await expect(screen).toContainText('kept-1234');
+  await panel.click();
+  await expect(page.locator('.dock')).toBeHidden();
+  await expect(panel).toHaveAttribute('aria-pressed', 'false');
+  await panel.click();
+  await expect(page.getByRole('region', { name: 'Terminal' })).toBeVisible();
+  // Hidden, not closed: the same shell, with its output.
+  await expect(screen).toContainText('kept-1234');
+  // Secondary side bar.
+  const secondary = layout.getByRole('button', { name: 'Toggle Secondary Side Bar' });
+  await secondary.click();
+  await expect(page.locator('.secondary-sidebar')).toBeVisible();
+  await secondary.click();
+  await expect(page.locator('.secondary-sidebar')).toHaveCount(0);
+  await page.getByRole('button', { name: 'Close terminal 1' }).click();
+});
