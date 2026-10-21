@@ -30,7 +30,7 @@ Legend: `[x]` done · `[ ]` to do.
 - [x] W14. workbench.quickOpen.preserveInput / workbench.commandPalette.preserveInput
 - [x] W15. workbench.commandPalette.history (how many recent commands)
 - [x] W16. Quick Input history: Ctrl+↑ / Ctrl+↓ (quickInput.history) cycles earlier queries
-- [ ] W17. Quick Input: Ctrl+P again moves down, Ctrl+Shift+Tab / Ctrl+Tab navigation inside
+- [x] W17. Quick navigate: Ctrl+P again moves down, Ctrl+Shift+P up, releasing Ctrl opens the item
 - [ ] W18. Command palette: configure the keybinding of a command (gear on a row)
 - [ ] W19. Command palette: "similar commands" for a query without exact match (word match on titles)
 - [ ] W20. Quick Input position (workbench.quickInput.position: top / center)
@@ -310,3 +310,4 @@ Legend: `[x]` done · `[ ]` to do.
 - 2026-10-21: W14. workbench.quickOpen.preserveInput and workbench.commandPalette.preserveInput bring the last text back, selected, when the picker reopens (the palette also keeps doing so while QOL-50's 'palette-last' is on).
 - 2026-10-21: W15. The number of recently used commands the palette lists first (default 50); 0 turns command history off.
 - 2026-10-21: W16. Queries that picked something are kept (50, newest first); Ctrl+↑ / Ctrl+↓ in the Quick Input go back and forth through them.
+- 2026-10-21: W17. Holding Ctrl, P moves down the list and Shift+P up; releasing Ctrl opens the selected file, as in VS Code.

@@ -364,3 +364,28 @@ test('W16 Quick Input history: Ctrl+Up / Ctrl+Down go through earlier queries', 
   await page.keyboard.press('Control+ArrowDown');
   await expect(quickBox(page)).toHaveValue('');
 });
+
+test('W17 Quick navigate: Ctrl+P P… moves down, Ctrl+Shift+P up, releasing Ctrl opens', async ({ page }) => {
+  await start(page);
+  await open(page, 'Steps/AuthSteps.cs');
+  await open(page, 'Steps/SearchSteps.cs');
+  await open(page, 'Fixtures.csproj');
+  // Hold Ctrl, P P P: the third recent file; release Ctrl: it opens.
+  await page.keyboard.down('Control');
+  await page.keyboard.press('p');
+  await expect(rows(page).first()).toHaveAttribute('aria-selected', 'true');
+  await page.keyboard.press('p');
+  await page.keyboard.press('p');
+  await expect(rows(page).nth(2)).toHaveAttribute('aria-selected', 'true');
+  await page.keyboard.up('Control');
+  await expect(quick(page)).toBeHidden();
+  await expect(page.locator('.editor-tab-label[aria-current="true"]')).toHaveAttribute('title', 'Steps/AuthSteps.cs');
+  await page.keyboard.down('Control');
+  await page.keyboard.press('p');
+  await page.keyboard.press('p');
+  await page.keyboard.press('p');
+  await page.keyboard.press('Shift+P');
+  await expect(rows(page).nth(1)).toHaveAttribute('aria-selected', 'true');
+  await page.keyboard.up('Control');
+  await expect(quick(page)).toBeHidden();
+});

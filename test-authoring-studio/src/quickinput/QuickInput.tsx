@@ -53,6 +53,7 @@ export default function QuickInput() {
   const list = useRef<HTMLDivElement>(null);
   const accepted = useRef(false);
   const historyAt = useRef(-1);
+  const quickNavigate = useRef(false);
   // Results still loading when Enter is pressed: accept the first of them once they arrive (as VS Code does).
   const deferred = useRef<{ side: boolean } | undefined>(undefined);
   const provider = providerFor(value);
@@ -67,6 +68,7 @@ export default function QuickInput() {
     setActive(0);
     accepted.current = false;
     historyAt.current = -1;
+    quickNavigate.current = false;
     // Focus now, so keys typed right after the shortcut land in the box; select once the value is in.
     input.current?.focus();
     requestAnimationFrame(() => {
@@ -123,10 +125,17 @@ export default function QuickInput() {
             spellCheck={false}
             autoComplete="off"
             onChange={(e) => setValue(e.target.value)}
+            onKeyUp={(e) => { if (quickNavigate.current && (e.key === 'Control' || e.key === 'Meta')) { quickNavigate.current = false; accept(active); } }}
             onBlur={(e) => { if (quickOpen.closeOnFocusLost() && !e.currentTarget.closest('.quick-input-widget')?.contains(e.relatedTarget as Node)) close(); }}
             onKeyDown={(e) => {
               const n = items.length;
-              if ((e.ctrlKey || e.metaKey) && (e.key === 'ArrowUp' || e.key === 'ArrowDown')) {
+              // W17: Ctrl+P again moves down (Ctrl+Shift+P up); releasing Ctrl then opens the item (VS Code's quick navigate).
+              if ((e.ctrlKey || e.metaKey) && !e.altKey && e.key.toLowerCase() === 'p' && !value.startsWith('>')) {
+                e.preventDefault();
+                quickNavigate.current = true;
+                setActive((a) => (n ? (a + (e.shiftKey ? n - 1 : 1)) % n : 0));
+              }
+              else if ((e.ctrlKey || e.metaKey) && (e.key === 'ArrowUp' || e.key === 'ArrowDown')) {
                 e.preventDefault();
                 const h = readHistory();
                 const at = Math.max(-1, Math.min(h.length - 1, historyAt.current + (e.key === 'ArrowUp' ? 1 : -1)));
