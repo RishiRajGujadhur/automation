@@ -53,7 +53,7 @@ Legend: `[x]` done · `[ ]` to do.
 - [x] W35. Focus Status Bar (keyboard: ←/→ between items, Enter runs one, Escape back to the editor); several cursors read "n selections (m characters selected)"
 
 ## Notifications
-- [ ] W36. VS Code toasts: severity icon, message, "Source:", gear, close, action buttons, bottom-right stack
+- [x] W36. VS Code toasts: severity icon, message, "Source:", gear, close, action buttons, bottom-right stack
 - [ ] W37. Notification Center (Notifications: Show Notifications): list, collapse, clear one / all, Do Not Disturb toggle
 - [ ] W38. Progress notifications (indexing, build) with an indeterminate bar
 - [ ] W39. Notifications: Focus Toast / Accept primary action (Ctrl+Shift+A? / keyboard) and Clear All (command)
@@ -329,3 +329,4 @@ Legend: `[x]` done · `[ ]` to do.
 - 2026-10-21: W33. The branch item opens VS Code's Checkout to…: Create new branch… (an input box with Git's branch-name validation), then branches, remote branches and tags (newest first). Rider's Branches popup stays under Tools ▸ Branches…. The Quick Input gained VS Code's InputBox.
 - 2026-10-21: W34. VS Code's sync item beside the branch: incoming ↓ and outgoing ↑ counts; a click pulls and pushes (fetches when even) with a spinning icon; Publish Branch (cloud) when the branch has no upstream.
 - 2026-10-21: W35. View ▸ Focus Status Bar (palette): ←/→, Home / End move between the status bar items, Enter runs one, Escape returns to the editor. Several cursors read 'n selections (m characters selected)' as in VS Code.
+- 2026-10-21: W36. Notices are VS Code toasts at the bottom right: a severity icon (info / warning / error), the message, 'Source:', Copy and Undo buttons and ×; up to three stack, errors stay longer, Do Not Disturb and Zen Mode keep them quiet.

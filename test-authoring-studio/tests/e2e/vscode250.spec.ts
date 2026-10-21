@@ -769,3 +769,28 @@ test('W35 Focus Status Bar from the keyboard; several cursors read "n selections
   await page.keyboard.press('Escape');
   await expect(src).toBeFocused();
 });
+
+test('W36 Notification toasts: severity icon, source, buttons, stacked bottom right', async ({ page }) => {
+  await start(page);
+  const notify = (t: string) => page.evaluate((x) => window.dispatchEvent(new CustomEvent('tas:notice', { detail: x })), t);
+  await notify('Repository index refreshed.');
+  await notify('Build failed: 2 errors.');
+  await notify('Auto save is turned off.');
+  const toasts = page.locator('.notification-toast');
+  await expect(toasts).toHaveCount(3);
+  await expect(toasts.nth(0).getByRole('img', { name: 'info' })).toBeVisible();
+  await expect(toasts.nth(1).getByRole('img', { name: 'error' })).toBeVisible();
+  await expect(toasts.nth(2).getByRole('img', { name: 'warning' })).toBeVisible();
+  await expect(toasts.nth(1)).toContainText('Source: TestAuthoring Studio');
+  // Bottom right.
+  const box = (await toasts.nth(2).boundingBox())!;
+  const vp = page.viewportSize()!;
+  expect(box.x + box.width).toBeGreaterThan(vp.width - 40);
+  expect(box.y + box.height).toBeGreaterThan(vp.height - 120);
+  // A fourth pushes out the oldest; × closes one.
+  await notify('Saved.');
+  await expect(toasts).toHaveCount(3);
+  await expect(toasts.first()).toContainText('Build failed');
+  await toasts.first().getByRole('button', { name: 'Dismiss notification' }).click();
+  await expect(toasts).toHaveCount(2);
+});

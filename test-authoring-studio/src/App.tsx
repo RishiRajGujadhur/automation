@@ -63,6 +63,7 @@ import SearchView from './search/SearchView';
 import GitView from './git/GitView';
 import StatusBarItems, { ProblemsStatus, TOGGLE_PROBLEMS_EVENT, TOGGLE_NOTIFICATIONS_EVENT } from './StatusBarItems';
 import StatusBarMenu from './StatusBarMenu';
+import NotificationToasts from './NotificationToasts';
 import GoToAll from './search/GoToAll';
 import { runTests, getTestRun, discoverTests, useTestRun, outcomeOf, combine, type DiscoveredTest } from './testing/store';
 import type { RunMark } from './editor/runGutter';
@@ -793,8 +794,6 @@ export default function App() {
   };
   const confirm = useConfirm();
   const [sidebarWidth, setSidebarWidth] = useLocalState('sidebarWidth', SIDEBAR_DEFAULT);
-  const [toastKey, setToastKey] = useState(0);
-  useEffect(() => { if (notice) setToastKey((k) => k + 1); }, [notice]);
   useEffect(() => { if (index) markDone('scan'); }, [index]);
   useEffect(() => { if (tab === 'Test Generator') markDone('generator'); if (tab === 'Dictionary Inspector') markDone('dictionary'); }, [tab]);
   // Deep links: #/<tab>[/<view>] is shareable and drives back/forward.
@@ -2469,27 +2468,8 @@ export default function App() {
       <StatusBarMenu />
       <BusyTitle />
       <Toast.Provider swipeDirection={typeof window !== 'undefined' && matchMedia('(max-width: 640px)').matches ? 'down' : 'right'} duration={6000}>
-        <Toast.Root
-          key={toastKey}
-          // Problems stay up longer than confirmations (QOL-50).
-          duration={featureOn('toast-errors-longer') && /\b(fail|failed|error|errors|cannot|could not|not found|invalid|refused|denied|unavailable)\b/i.test(notice) && !/\b0 errors\b/.test(notice) ? 15000 : undefined}
-          className="toast"
-          // Zen Mode's silent notifications (zenMode.silentNotifications) too.
-          open={!!notice && !(viewOpts.doNotDisturb && featureOn('do-not-disturb')) && !zenSilent()}
-          onOpenChange={(open) => { if (!open) { setNotice(''); setUndo(undefined); } }}
-        >
-          <Check size={17} />
-          <Toast.Description>{notice}</Toast.Description>
-          {undo && (
-            <Toast.Action asChild altText="Undo the last change">
-              <Button size="tiny" onClick={() => { undo.run(); setUndo(undefined); setNotice('Restored.'); }}>
-                Undo
-              </Button>
-            </Toast.Action>
-          )}
-          {featureOn('toast-copy') && <Toast.Action asChild altText="Copy the message"><button className="toast-copy" aria-label="Copy the message" title="Copy" onClick={() => void copyText(notice)}><Copy size={13} /></button></Toast.Action>}
-          <Toast.Close className="toast-close" aria-label="Dismiss notification"><X size={14} /></Toast.Close>
-        </Toast.Root>
+        {/* VS Code's notification toasts (W36); Zen Mode's silent notifications and Do Not Disturb hide them. */}
+        <NotificationToasts notice={notice} undo={undo} silent={(viewOpts.doNotDisturb && featureOn('do-not-disturb')) || zenSilent()} onUndone={() => { setUndo(undefined); setNotice('Restored.'); }} onClosed={() => { setNotice(''); setUndo(undefined); }} />
         <Toast.Viewport className="toast-viewport" />
       </Toast.Provider>
       <Dialog.Root open={!!modal} onOpenChange={(open) => { if (!open) setModal(undefined); }}>
