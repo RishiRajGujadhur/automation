@@ -178,7 +178,7 @@ test('159 Changelist management', async ({ page }) => {
 test('154 Three-way merge editor', async ({ page }) => {
   const file = path.join(root, 'Steps/AuthSteps.cs');
   // The conflict far down the file (the editor must open at it).
-  const original = `${Array.from({ length: 80 }, (_, i) => `// line ${i + 1}`).join('\n')}\n${await fs.readFile(file, 'utf8')}`;
+  const original = `${Array.from({ length: 80 }, (_, i) => `// line ${i + 1}${i === 0 ? " long".repeat(200) : ""}`).join('\n')}\n${await fs.readFile(file, 'utf8')}`;
   await fs.writeFile(file, original);
   git('commit', '-q', '-am', 'Padding');
   git('checkout', '-q', '-b', 'other');
@@ -197,6 +197,13 @@ test('154 Three-way merge editor', async ({ page }) => {
   await expect(me).toContainText('1 conflict left');
   // Opens at the conflict.
   await expect(me.getByLabel('Result').locator('.cm-line', { hasText: '<<<<<<<' })).toBeInViewport();
+  // A long line does not push Incoming out of the window: the two sides share the width.
+  const [cur, inc] = [await me.getByLabel('Current').boundingBox(), await me.getByLabel('Incoming').boundingBox()];
+  expect(inc!.x).toBeGreaterThan(cur!.x + 100);
+  expect(Math.abs(inc!.width - cur!.width)).toBeLessThan(20);
+  const box = (await me.boundingBox())!;
+  expect(inc!.x + inc!.width).toBeLessThanOrEqual(box.x + box.width + 1);
+  expect(await me.evaluate((e) => e.scrollWidth - e.clientWidth)).toBeLessThanOrEqual(1);
   await expect(me.getByRole('button', { name: 'Complete Merge' })).toBeDisabled();
   await me.getByRole('button', { name: 'Accept Incoming' }).click();
   await expect(me).toContainText('No conflicts left');
