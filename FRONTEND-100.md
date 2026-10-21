@@ -9,7 +9,7 @@ and CodeMirror's JavaScript, HTML, CSS, SCSS and LESS modes. Every feature has a
 Status: `[x]` done, `[ ]` to do. Before this list, JS / TS / HTML / CSS files opened as plain text: no feature existed.
 
 ## JavaScript & TypeScript
-- [ ] F1 Extract TypeScript type alias
+- [x] F1 Extract TypeScript type alias
 - [ ] F2 Convert interface to type alias
 - [ ] F3 Convert type alias to interface
 - [ ] F4 Generate missing interface properties
@@ -113,3 +113,4 @@ Status: `[x]` done, `[ ]` to do. Before this list, JS / TS / HTML / CSS files op
 
 ## Progress log
 - 2026-10-21: Foundation: CodeMirror modes for JS / TS / JSX / TSX / HTML / CSS / SCSS / SASS / LESS; the TypeScript 5 service on the server (`server/web/`), `/api/web/*`; diagnostics, completion with auto-imports, Quick Info, F12 / Shift+F12 / Alt+F12 / F2 / Ctrl+. / Shift+Alt+F for scripts. The desktop app ships `typescript5` beside its API bundle.
+- 2026-10-21: F1. Extract to type alias (and to interface) from the TypeScript service, on a selected type.

@@ -79,3 +79,8 @@ test('Foundation: TypeScript colouring, diagnostics, completion with auto-import
   await page.keyboard.press('Control+.');
   await expect(page.getByRole('listbox', { name: 'Quick Actions' }).getByRole('option', { name: /Convert to template string/ })).toBeVisible({ timeout: 30_000 });
 });
+
+test('F1 Extract TypeScript type alias', async ({ page }) => {
+  await open(page, 'src/shapes.ts', 'export const origin: { x: number; y: number } = { x: 0, y: 0 };\n');
+  await convert(page, '{ x: number; y: number }', /^Extract to type alias$/, /type NewType = \{\s*x: number;\s*y: number;?\s*\};?\s*\nexport const origin: NewType =/, true);
+});
