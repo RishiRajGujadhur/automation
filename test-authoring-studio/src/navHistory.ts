@@ -53,6 +53,8 @@ export const canGoBack = () => index > 0;
 export const canGoForward = () => index >= 0 && index < stack.length - 1;
 export const recentFiles = () => { loadRecent(); return recent; };
 /** Clear Recent Files (Visual Studio's File ▸ Recent Files ▸ clear, Rider's Clear Recent Files). */
+/** Removes one file from Recent Files (Quick Open's Remove from Recently Opened). */
+export function removeRecent(file: string) { loadRecent(); recent = recent.filter((f) => f !== file); keepRecent(); emit(); }
 export function clearRecent() { recent = []; keepRecent(); stack = stack.slice(index >= 0 ? index : 0, index + 1); index = stack.length - 1; emit(); }
 /** Recent Locations: newest first, one per file and line. */
 export const recentLocations = () => {

@@ -261,3 +261,21 @@ test('W11 Quick Open: Ctrl+Enter and the split button open to the side', async (
   await expect(quick(page)).toBeHidden();
   await expect(page.getByLabel('Source of Fixtures.csproj')).toBeVisible();
 });
+
+test('W12 Quick Open: Remove from Recently Opened', async ({ page }) => {
+  await start(page);
+  await open(page, 'Steps/AuthSteps.cs');
+  await open(page, 'Steps/SearchSteps.cs');
+  await page.keyboard.press('Control+p');
+  const auth = rows(page).filter({ hasText: 'AuthSteps.cs' });
+  await expect(auth).toHaveCount(1);
+  await auth.hover();
+  await auth.getByRole('button', { name: 'Remove from Recently Opened' }).click();
+  await expect(auth).toHaveCount(0);
+  await expect(rows(page).first()).toContainText('SearchSteps.cs');
+  await expect(quickBox(page)).toBeFocused();
+  // Still a workspace file: typing finds it, without the remove button.
+  await quickBox(page).fill('authsteps');
+  await expect(rows(page).first()).toContainText('AuthSteps.cs');
+  await expect(rows(page).first().getByRole('button', { name: 'Remove from Recently Opened' })).toHaveCount(0);
+});

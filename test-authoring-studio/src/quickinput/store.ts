@@ -51,13 +51,15 @@ export function providerFor(value: string) {
   return best;
 }
 
-type State = { open: boolean; value: string; /** Changes on every open, so the widget resets its selection. */ session: number; select?: boolean };
-let state: State = { open: false, value: '', session: 0 };
+type State = { open: boolean; value: string; /** Changes on every open, so the widget resets its selection. */ session: number; select?: boolean; /** Changes when the items should be fetched again. */ revision: number };
+let state: State = { open: false, value: '', session: 0, revision: 0 };
 const listeners = new Set<() => void>();
 const emit = () => { for (const l of listeners) l(); };
 export const useQuickInput = () => useSyncExternalStore((l) => { listeners.add(l); return () => listeners.delete(l); }, () => state);
 /** Opens the Quick Input with `value` (a prefix such as '>' or ''); `select` selects the text after the prefix. */
-export function openQuickInput(value = '', select = false) { state = { open: true, value, session: state.session + 1, select }; emit(); }
+export function openQuickInput(value = '', select = false) { state = { open: true, value, session: state.session + 1, select, revision: state.revision }; emit(); }
+/** Asks the open widget for its items again (after a row's button changed them). */
+export function refreshQuickInput() { state = { ...state, revision: state.revision + 1 }; emit(); }
 export function closeQuickInput() { if (state.open) { state = { ...state, open: false }; emit(); } }
 export const quickInputOpen = () => state.open;
 

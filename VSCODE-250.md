@@ -25,7 +25,7 @@ Legend: `[x]` done · `[ ]` to do.
 - [x] W9. Show All Editors by MRU (`edt `)
 - [x] W10. Quick text search (`%`): lines matching the text across files, open at the match
 - [x] W11. Open to the side from Quick Open (Ctrl+Enter / the split button)
-- [ ] W12. Remove from Recently Opened (× on a recent entry)
+- [x] W12. Remove from Recently Opened (× on a recent entry)
 - [ ] W13. workbench.quickOpen.closeOnFocusLost
 - [ ] W14. workbench.quickOpen.preserveInput / workbench.commandPalette.preserveInput
 - [ ] W15. workbench.commandPalette.history (how many recent commands)
@@ -305,3 +305,4 @@ Legend: `[x]` done · `[ ]` to do.
 - 2026-10-21: W9. Open editors last used first, unsaved ones marked ●, a Close Editor button on each (through the usual unsaved-changes prompt).
 - 2026-10-21: W10. Matching lines across the workspace in the Quick Input, the match highlighted, grouped under each file; Enter opens the file at the match.
 - 2026-10-21: W11. Ctrl+Enter or a row's split button opens the file in the side editor group. Enter pressed while results are still loading now opens the first result once they arrive (it took the previous list's).
+- 2026-10-21: W12. A × on each recently opened file removes it from the list (and from Recent Files); the list refreshes in place.

@@ -39,7 +39,7 @@ const ROW = 22;
  * ↑ / ↓ / Page Up / Page Down move, Enter accepts, Ctrl+Enter opens to the side, Escape or a click outside closes.
  */
 export default function QuickInput() {
-  const { open, value: initial, session, select } = useQuickInput();
+  const { open, value: initial, session, select, revision } = useQuickInput();
   const [value, setValue] = useState(initial);
   const [items, setItems] = useState<QuickItem[]>([]);
   const [active, setActive] = useState(0);
@@ -79,7 +79,7 @@ export default function QuickInput() {
     if (Array.isArray(r)) { setItems(r); setBusy(false); }
     else { setBusy(true); r.then((x) => { if (!ctl.signal.aborted) { setItems(x); setBusy(false); } }, () => { if (!ctl.signal.aborted) { setItems([]); setBusy(false); } }); }
     return () => ctl.abort();
-  }, [open, value, session]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [open, value, session, revision]); // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(() => setActive(0), [value]);
   useEffect(() => { if (!busy && deferred.current) { const d = deferred.current; deferred.current = undefined; accept(0, d.side); } }, [busy, items]); // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(() => { if (open) provider?.onActive?.(items[active], filter); }, [open, items, active]); // eslint-disable-line react-hooks/exhaustive-deps

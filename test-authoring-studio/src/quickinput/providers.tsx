@@ -1,10 +1,10 @@
 import { api } from '../api';
-import { recentFiles } from '../navHistory';
+import { recentFiles, removeRecent } from '../navHistory';
 import { fileType } from '../files/fileTypes';
 import { featureOn } from '../features';
 import { matchesWords, scoreFile } from './fuzzy';
 import { readUsage } from '../rider/commands';
-import { closeQuickInput, lastQuery, openQuickInput, registerQuickAccess, type QuickItem } from './store';
+import { closeQuickInput, lastQuery, openQuickInput, refreshQuickInput, registerQuickAccess, type QuickItem } from './store';
 
 /** Opens a file (and line) in the editor, as Go to All does. */
 export const openLocation = (file: string, line?: number, column?: number) => window.dispatchEvent(new CustomEvent('tas:open-location', { detail: { file, line, column } }));
@@ -25,8 +25,10 @@ async function workspaceFiles() {
 export const openToSide = (file: string) => { if (file.endsWith('.feature')) openLocation(file); else window.dispatchEvent(new CustomEvent('tas:open-split', { detail: file })); };
 const fileItem = (f: string, extra: Partial<QuickItem> = {}): QuickItem => {
   const { name, dir } = split(f);
-  // W11: Ctrl+Enter or the split button opens to the side.
-  return { id: `file:${f}`, label: name, description: dir, icon: fileIcon(f), buttons: [{ icon: <span className="codicon codicon-split-horizontal" />, title: 'Open to the Side', run: () => { closeQuickInput(); openToSide(f); } }], accept: ({ side }) => (side ? openToSide(f) : openLocation(f)), ...extra };
+  // W11: Ctrl+Enter or the split button opens to the side; W12: a recent file can be removed from the list.
+  const buttons = [{ icon: <span className="codicon codicon-split-horizontal" />, title: 'Open to the Side', run: () => { closeQuickInput(); openToSide(f); } }];
+  if (recentFiles().includes(f)) buttons.push({ icon: <span className="codicon codicon-close" />, title: 'Remove from Recently Opened', run: () => { removeRecent(f); refreshQuickInput(); } });
+  return { id: `file:${f}`, label: name, description: dir, icon: fileIcon(f), buttons, accept: ({ side }) => (side ? openToSide(f) : openLocation(f)), ...extra };
 };
 
 /** W1 Quick Open (Ctrl+P): recently opened files first, then every file of the workspace, fuzzy matched. */
