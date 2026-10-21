@@ -831,3 +831,29 @@ test('W38 Progress notification while a build runs: indeterminate bar and Cancel
   await toast.getByRole('button', { name: 'Cancel' }).click();
   expect(cancelled).toBe(true);
 });
+
+test('W39 Notifications commands: Show, Clear All, Do Not Disturb, Accept Primary Action (Ctrl+Shift+A)', async ({ page }) => {
+  await start(page);
+  const palette = async (cmd: string) => { await page.keyboard.press('Control+Shift+P'); await quickBox(page).fill('>' + cmd); await rows(page).filter({ hasText: cmd }).first().click(); };
+  await page.evaluate(() => window.dispatchEvent(new CustomEvent('tas:notice', { detail: 'Hello there.' })));
+  await palette('Notifications: Show Notifications');
+  const center = page.getByRole('region', { name: 'Notification Center' });
+  await expect(center.locator('li')).toHaveCount(1);
+  await palette('Notifications: Clear All Notifications');
+  await expect(center.locator('li')).toHaveCount(0);
+  await expect(page.locator('.notification-toast')).toHaveCount(0);
+  await palette('Notifications: Hide Notifications');
+  await expect(center).toHaveCount(0);
+  await palette('Notifications: Toggle Do Not Disturb Mode');
+  await expect(page.locator('footer.status-bar .codicon-bell-slash')).toBeVisible();
+  await palette('Notifications: Toggle Do Not Disturb Mode');
+  // A toast with a primary action (the progress notification's Cancel): Ctrl+Shift+A presses it.
+  let cancelled = false;
+  await page.route('**/api/build/events', (route) => route.fulfill({ status: 200, headers: { 'content-type': 'text/event-stream' }, body: `data: ${JSON.stringify({ status: cancelled ? 'cancelled' : 'running', version: 1, action: 'build', output: '', diagnostics: [] })}\n\n` }));
+  await page.route('**/api/build/cancel', (route) => { cancelled = true; return route.fulfill({ status: 200, contentType: 'application/json', body: '{"status":"cancelled","version":2,"output":"","diagnostics":[]}' }); });
+  await page.reload();
+  await expect(page.locator('.progress-toast')).toBeVisible();
+  await page.locator('footer.status-bar').click();
+  await page.keyboard.press('Control+Shift+A');
+  await expect.poll(() => cancelled).toBe(true);
+});

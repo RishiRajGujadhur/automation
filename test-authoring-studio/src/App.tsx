@@ -65,6 +65,7 @@ import StatusBarItems, { ProblemsStatus, TOGGLE_PROBLEMS_EVENT, TOGGLE_NOTIFICAT
 import StatusBarMenu from './StatusBarMenu';
 import NotificationToasts from './NotificationToasts';
 import NotificationCenter from './NotificationCenter';
+import { NOTIFICATION_CENTER_EVENT } from './notificationCommands';
 import GoToAll from './search/GoToAll';
 import { runTests, getTestRun, discoverTests, useTestRun, outcomeOf, combine, type DiscoveredTest } from './testing/store';
 import type { RunMark } from './editor/runGutter';
@@ -561,6 +562,7 @@ export default function App() {
   // The status bar's bell (W31): VS Code's Notification Center (W37), toggled.
   const [notificationCenter, setNotificationCenter] = useState(false);
   useEffect(() => { const h = () => setNotificationCenter((o) => !o); window.addEventListener(TOGGLE_NOTIFICATIONS_EVENT, h); return () => window.removeEventListener(TOGGLE_NOTIFICATIONS_EVENT, h); }, []);
+  useEffect(() => { const h = (e: Event) => { const d = (e as CustomEvent<boolean | undefined>).detail; setNotificationCenter((o) => d ?? !o); }; window.addEventListener(NOTIFICATION_CENTER_EVENT, h); return () => window.removeEventListener(NOTIFICATION_CENTER_EVENT, h); }, []);
   // TODO window (Rider, Alt+6): another tab of the bottom panel.
   const [todoOpen, setTodoOpen] = useLocalState('todoOpen', false);
   // Output window (View ▸ Output, Ctrl+Alt+O): a third tab of the bottom panel.

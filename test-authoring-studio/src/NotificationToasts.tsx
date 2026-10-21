@@ -32,7 +32,7 @@ function ProgressToasts({ silent }: { silent: boolean }) {
             <Toast.Description className="notification-message">{p.text}</Toast.Description>
             <div className="notification-footer">
               <span className="notification-source">Source: TestAuthoring Studio</span>
-              <span className="notification-buttons"><Toast.Action asChild altText="Cancel"><button className="notification-button secondary" onClick={p.cancel}>Cancel</button></Toast.Action></span>
+              <span className="notification-buttons"><Toast.Action asChild altText="Cancel"><button className="notification-button" onClick={p.cancel}>Cancel</button></Toast.Action></span>
             </div>
           </div>
           <div className="notification-progress" role="progressbar" aria-label={p.text} />
