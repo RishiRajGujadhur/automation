@@ -445,3 +445,19 @@ test('W21 Status bar colours: accent normally, orange while debugging', async ({
   await expect.poll(() => bar.evaluate((e) => getComputedStyle(e).backgroundColor)).toBe('rgb(204, 102, 51)');
   expect(normal).not.toBe('rgb(204, 102, 51)');
 });
+
+test('W22 Remote indicator: window and workspace actions in a quick pick', async ({ page, context }) => {
+  await context.grantPermissions(['clipboard-read', 'clipboard-write']);
+  await start(page);
+  const bar = page.locator('footer.status-bar');
+  const remote = bar.getByRole('button', { name: 'Open a Remote Window' });
+  // It is the first item, at the left edge.
+  expect((await remote.boundingBox())!.x).toBeLessThan(4);
+  await remote.click();
+  await expect(quickBox(page)).toHaveAttribute('placeholder', 'Select an option to open a Remote Window');
+  await expect(rows(page).locator('.quick-input-label')).toContainText(['Open Folder…', 'Open Project/Solution…', 'Rescan Repository', 'Copy Workspace Path']);
+  await page.keyboard.type('copy');
+  await expect(rows(page)).toHaveCount(1);
+  await page.keyboard.press('Enter');
+  await expect.poll(() => page.evaluate(() => navigator.clipboard.readText())).toBe(temp);
+});

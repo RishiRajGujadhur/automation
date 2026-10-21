@@ -125,6 +125,15 @@
     .muted-separator {
       opacity: 0.7;
     }
+    // The remote indicator: VS Code's darker block at the far left.
+    .remote-indicator {
+      margin-left: -10px;
+      padding: 0 9px;
+      height: 22px;
+      background: var(--status-remote-bg, #16825d);
+      border-radius: 0;
+      .codicon { font-size: 14px !important; }
+    }
     // statusBar.noFolderBackground / statusBar.debuggingBackground (VS Code).
     &.no-folder {
       background: #68217a;

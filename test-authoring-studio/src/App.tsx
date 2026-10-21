@@ -78,7 +78,7 @@ import { desktop, type DesktopMenuCommand } from './desktop';
 import StepCatalogue from './StepCatalogue';
 import SearchPalette from './SearchPalette';
 import QuickInput from './quickinput/QuickInput';
-import { openQuickInput } from './quickinput/store';
+import { openQuickInput, openQuickPick } from './quickinput/store';
 import { openCommandPalette, openQuickOpen, runPaletteCommand, setPaletteCommands, type PaletteEntry } from './quickinput/providers';
 import { setOpenViews } from './quickinput/help';
 import { CLOSE_EDITOR_EVENT } from './quickinput/editors';
@@ -2422,6 +2422,17 @@ export default function App() {
       {/* VS Code's status bar colours (W21): purple with no folder open, orange while debugging. */}
       <footer className={`status-bar ${viewOpts.hideStatusBar && featureOn('toggle-status-bar') ? 'status-bar-hidden' : ''}${debugLive ? ' debugging' : !config?.repositoryRoot || !index?.workspace ? ' no-folder' : ''}`} aria-label={debugLive ? 'Status bar (debugging)' : 'Status bar'}>
         <span>
+          {/* VS Code's remote indicator (W22): window and workspace actions in a quick pick. */}
+          <button className="status-item remote-indicator" aria-label="Open a Remote Window" title="Open a Remote Window" onClick={() => openQuickPick({
+            placeholder: 'Select an option to open a Remote Window',
+            items: [
+              { id: 'folder', label: 'Open Folder…', icon: <span className="codicon codicon-folder-opened" />, accept: () => void openFolder() },
+              { id: 'solution', label: 'Open Project/Solution…', icon: <span className="codicon codicon-project" />, accept: () => openSolutionDialog() },
+              { id: 'rescan', label: 'Rescan Repository', icon: <span className="codicon codicon-refresh" />, accept: () => work(async () => { setIndex(await api('/scan', {})); setNotice('Repository index refreshed.'); }) },
+              ...(config?.repositoryRoot ? [{ id: 'copy', label: 'Copy Workspace Path', description: config.repositoryRoot, icon: <span className="codicon codicon-copy" />, accept: () => void copyText(config.repositoryRoot).then((ok) => setNotice(ok ? 'Copied the workspace path.' : 'Clipboard unavailable.')) }] : []),
+              ...(desktop && config?.repositoryRoot ? [{ id: 'reveal', label: 'Reveal in File Explorer', icon: <span className="codicon codicon-go-to-file" />, accept: () => void desktop!.reveal(config.repositoryRoot) }] : []),
+            ],
+          })}><span className="codicon codicon-remote" aria-hidden="true" /></button>
           <span className="status-dot" />
           {busy ? 'Working…' : 'Ready'}
           <span className="muted-separator">│</span>

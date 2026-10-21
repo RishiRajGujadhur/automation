@@ -1,5 +1,6 @@
 import { Fragment, useEffect, useLayoutEffect, useRef, useState } from 'react';
-import { closeQuickInput, providerFor, rememberQuery, useQuickInput, type QuickItem, type QuickProvider } from './store';
+import { closeQuickInput, providerFor, rememberQuery, useQuickInput, type QuickItem, type QuickPick, type QuickProvider } from './store';
+import { matchesWords } from './fuzzy';
 import type { Match } from './fuzzy';
 import { quickOpen } from '../vscode/quickOpen';
 import './quickInput.scss';
@@ -34,6 +35,17 @@ export function Keybinding({ keys }: { keys: string }) {
   );
 }
 
+/** The provider of a one-off quick pick: its items filtered by the words typed. */
+function pickProvider(pick: QuickPick): QuickProvider {
+  return {
+    prefix: '', help: pick.title ?? '', placeholder: pick.placeholder, onCancel: pick.onCancel, onActive: (it) => pick.onActive?.(it),
+    provide: (filter) => {
+      if (typeof pick.items === 'function') return pick.items(filter);
+      const q = filter.trim();
+      return pick.items.flatMap((it) => { const m = matchesWords(q, it.label); const d = !m && it.description ? matchesWords(q, it.description) : null; return m || d ? [{ ...it, labelMatches: m ?? [], descriptionMatches: d ?? [], separator: q ? undefined : it.separator }] : []; });
+    },
+  };
+}
 const ROW = 22;
 // Accepted queries, newest first (W16: Ctrl+↑ / Ctrl+↓ go back through them).
 const HISTORY = 'tas:quickInput:history';
@@ -44,7 +56,7 @@ const noteHistory = (v: string) => { if (!v.trim()) return; try { localStorage.s
  * ↑ / ↓ / Page Up / Page Down move, Enter accepts, Ctrl+Enter opens to the side, Escape or a click outside closes.
  */
 export default function QuickInput() {
-  const { open, value: initial, session, select, revision } = useQuickInput();
+  const { open, value: initial, session, select, revision, pick } = useQuickInput();
   const [value, setValue] = useState(initial);
   const [items, setItems] = useState<QuickItem[]>([]);
   const [active, setActive] = useState(0);
@@ -56,8 +68,8 @@ export default function QuickInput() {
   const quickNavigate = useRef(false);
   // Results still loading when Enter is pressed: accept the first of them once they arrive (as VS Code does).
   const deferred = useRef<{ side: boolean } | undefined>(undefined);
-  const provider = providerFor(value);
-  const filter = provider ? value.slice(provider.prefix.length) : value;
+  const provider = pick ? pickProvider(pick) : providerFor(value);
+  const filter = pick ? value : provider ? value.slice(provider.prefix.length) : value;
   const providerRef = useRef<QuickProvider | undefined>(provider);
   providerRef.current = provider;
 
@@ -90,19 +102,20 @@ export default function QuickInput() {
     return () => ctl.abort();
   }, [open, value, session, revision]); // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(() => setActive(0), [value]);
+  // A quick pick can start on its current value (e.g. the file's language).
+  useEffect(() => { if (pick?.activeId && !value) { const i = items.findIndex((x) => x.id === pick.activeId); if (i > 0) setActive(i); } }, [items]); // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(() => { if (!busy && deferred.current) { const d = deferred.current; deferred.current = undefined; accept(0, d.side); } }, [busy, items]); // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(() => { if (open) provider?.onActive?.(items[active], filter); }, [open, items, active]); // eslint-disable-line react-hooks/exhaustive-deps
   // Keep the active row in view.
   useEffect(() => { list.current?.querySelector<HTMLElement>(`[data-index="${active}"]`)?.scrollIntoView({ block: 'nearest' }); }, [active]);
 
   if (!open) return null;
-  const close = () => { rememberQuery(value); if (!accepted.current) providerRef.current?.onCancel?.(); closeQuickInput(); };
+  const close = () => { if (!pick) rememberQuery(value); if (!accepted.current) providerRef.current?.onCancel?.(); closeQuickInput(); };
   const accept = (i: number, side = false) => {
     const it = items[i];
     if (!it) return;
     accepted.current = true;
-    rememberQuery(value);
-    noteHistory(value);
+    if (!pick) { rememberQuery(value); noteHistory(value); }
     closeQuickInput();
     it.accept({ side });
   };
