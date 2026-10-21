@@ -967,3 +967,72 @@ test('47 Semantic code search', async ({ page }) => {
   await results.getByRole('button', { name: 'SearchPage.SearchBox' }).click();
   await expect(page.locator('.editor-tab-label[aria-current="true"]')).toHaveAttribute('title', 'Steps/SearchSteps.cs');
 });
+
+const analyzeMenu = async (page: Page, item: RegExp) => { await page.getByRole('button', { name: 'Code menu' }).click(); await page.getByRole('menuitem', { name: 'Analyze', exact: true }).click(); await page.getByRole('menuitem', { name: item }).click(); };
+const reload = async (page: Page) => { expect((await page.request.post('/api/workspace', { data: { repositoryRoot: temp, targetProject: '.' } })).ok()).toBe(true); };
+const approve = async (page: Page, title: RegExp) => { const d = page.getByRole('dialog', { name: title }); await expect(d).toBeVisible({ timeout: 60_000 }); await d.getByRole('button', { name: /Apply|Approve/ }).first().click(); await expect(d.getByRole('button', { name: 'Written' }).first()).toBeVisible(); await d.getByRole('button', { name: 'Close dialog' }).click(); };
+const BODY = '        var total = 0;\n        for (var i = 0; i < items.Length; i++)\n        {\n            if (items[i] > limit) total += items[i] * 2;\n            else total -= items[i];\n        }\n        System.Console.WriteLine($"Total: {total}");\n        return total;\n';
+test('119 Duplicate code detection', async ({ page }) => {
+  needsLang();
+  await fs.writeFile(path.join(temp, 'Steps/Dup1.cs'), `namespace Fixtures.Steps;\npublic class Dup1\n{\n    public int Sum(int[] items, int limit)\n    {\n${BODY}    }\n}\n`);
+  await fs.writeFile(path.join(temp, 'Steps/Dup2.cs'), `namespace Fixtures.Steps;\npublic class Dup2\n{\n    public int Count(int[] values, int max)\n    {\n${BODY.replace(/items/g, 'values').replace(/limit/g, 'max')}    }\n}\n`);
+  await reload(page);
+  await open(page, CS, { 'codeAnalysis.duplicates.minimumTokens': 40 });
+  await analyzeMenu(page, /^Find Duplicate Code$/);
+  const list = page.getByRole('dialog', { name: /Duplicate code: 1 group/ });
+  await expect(list).toBeVisible({ timeout: 90_000 });
+  await expect(list.getByRole('option')).toHaveCount(2);
+  await expect(list).toContainText('Dup1.cs:');
+  await expect(list).toContainText('Dup2.cs:');
+});
+test('121 Dependency cycle detection', async ({ page }) => {
+  needsLang();
+  await fs.writeFile(path.join(temp, 'Steps/CycleA.cs'), 'namespace Fixtures.Alpha { public class A { public Fixtures.Beta.B? Other; } }\nnamespace Fixtures.Beta { public class B { public Fixtures.Alpha.A? Back; } }\n');
+  await reload(page);
+  await open(page, CS);
+  await analyzeMenu(page, /^Find Dependency Cycles$/);
+  const list = page.getByRole('dialog', { name: /Dependency cycles: 1/ });
+  await expect(list).toBeVisible({ timeout: 90_000 });
+  await expect(list).toContainText('Namespaces in a cycle: Fixtures.Alpha ⇄ Fixtures.Beta');
+  await expect(list).toContainText('Fixtures.Alpha → Fixtures.Beta');
+});
+test('122 Layer dependency rules', async ({ page }) => {
+  needsLang();
+  await fs.mkdir(path.join(temp, 'Pages'), { recursive: true });
+  await fs.writeFile(path.join(temp, 'Pages/LoginPage.cs'), 'namespace Fixtures.Pages;\npublic class LoginPage { public Fixtures.Steps.StepHelper? Helper; }\n');
+  await fs.writeFile(path.join(temp, 'Steps/StepHelper.cs'), 'namespace Fixtures.Steps;\npublic class StepHelper { }\n');
+  await reload(page);
+  await open(page, CS);
+  // First time: layers.json from a template, approved as a diff.
+  await analyzeMenu(page, /^Check Layer Rules$/);
+  await approve(page, /create layers\.json/);
+  expect(await fs.readFile(path.join(temp, 'layers.json'), 'utf8')).toContain('"notTo": "Steps"');
+  await reload(page);
+  await analyzeMenu(page, /^Check Layer Rules$/);
+  const list = page.getByRole('dialog', { name: /Layer rules: 1 violation/ });
+  await expect(list).toBeVisible({ timeout: 90_000 });
+  await expect(list).toContainText('Pages must not use Steps: LoginPage uses StepHelper');
+});
+test('125 Public API change tracking; 124 API compatibility inspections', async ({ page }) => {
+  needsLang();
+  await open(page, CS);
+  await analyzeMenu(page, /^Public API/);
+  const panel = page.getByLabel('Public API of Fixtures');
+  await expect(panel).toContainText('no baseline yet', { timeout: 90_000 });
+  await panel.getByRole('button', { name: 'Save Baseline…' }).click();
+  await approve(page, /Public API baseline/);
+  expect(await fs.readFile(path.join(temp, 'PublicAPI.Shipped.txt'), 'utf8')).toContain('Demo.AuthSteps.OpenLogin()');
+  // A member removed and one changed: breaking changes; one added: not breaking.
+  const steps = path.join(temp, 'Steps/AuthSteps.cs');
+  await fs.writeFile(steps, (await fs.readFile(steps, 'utf8')).replace(/\[Then[^\n]*Dashboard\(\) \{ \}\n?/, '').replace('public void OpenLogin()', 'public void OpenLogin(int retries)').replace(/\}\s*$/, '    public void Added() { }\n}\n'));
+  await reload(page);
+  await page.keyboard.press('Escape');
+  await analyzeMenu(page, /^Public API/);
+  const panel2 = page.getByLabel('Public API of Fixtures');
+  await expect(panel2.getByRole('status')).toContainText('2 breaking changes', { timeout: 90_000 });
+  await expect(panel2).toContainText('Removed (breaking):');
+  await expect(panel2).toContainText('Dashboard()');
+  await expect(panel2).toContainText('Changed (breaking):');
+  await expect(panel2).toContainText('OpenLogin(int)');
+  await expect(panel2).toContainText('Added: void Demo.AuthSteps.Added()');
+});

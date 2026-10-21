@@ -3976,3 +3976,10 @@ html[data-activity-bar='right'] .app-body > .activity-bar { order: 99; border-le
   margin: 0; padding: 2px 0; list-style: none; overflow: auto; max-height: 220px; border-left: 1px solid var(--border); font-size: 12px; outline: none;
   li { padding: 2px 8px; cursor: pointer; white-space: nowrap; &.active { background: var(--accent-soft); } }
 }
+
+/* Public API (RIDER-VSCODE-FEATURES.md 124, 125). */
+.public-api { display: grid; gap: 12px; max-height: 60vh; overflow: auto; }
+.public-api-project h3 { margin: 0 0 4px; font-size: 14px; }
+.public-api-changes { margin: 4px 0 8px; padding-left: 16px; font-size: 12px; li { margin: 2px 0; } }
+.api-removed, .api-changed { color: var(--danger, #f85149); }
+.api-added { color: var(--success, #2ea043); }

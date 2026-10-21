@@ -1018,6 +1018,12 @@ app.post('/api/search/replace', async (req, res) => {
   if (changed.length) { lang.notify(config.repositoryRoot, changed.map((c) => c.file)); rescanSoon(500); }
   res.json({ changed });
 });
+// Solution analyses: duplicate code, dependency cycles, layer rules (layers.json), public API (PublicAPI.Shipped.txt).
+app.get('/api/csharp/analysis/:kind', async (req, res) => {
+  const kind = z.enum(['duplicates', 'cycles', 'layers', 'publicApi']).parse(req.params.kind);
+  const minTokens = req.query.minTokens ? z.coerce.number().int().min(20).max(500).parse(req.query.minTokens) : undefined;
+  res.json(await lang.request(config.repositoryRoot, { op: kind, ...(minTokens ? { minTokens } : {}) }, 180_000));
+});
 // Semantic Search: symbols by kind, type, attributes, modifiers… (the language service's semanticSearch).
 app.get('/api/csharp/semantic-search', async (req, res) => {
   const q = z.string().min(1).max(400).parse(req.query.q);

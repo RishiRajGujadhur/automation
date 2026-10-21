@@ -382,6 +382,13 @@ const ROWS: Record<'edit' | 'view' | 'navigate' | 'code' | 'tools' | 'help', Row
       ['Introduce Factory Method', 'introduce-factory'],
       ['Replace Constructor with Factory Method', 'replace-ctor-factory'],
     ] },
+    null,
+    { submenu: 'Analyze', rows: [
+      ['Find Duplicate Code', 'find-duplicates'],
+      ['Find Dependency Cycles', 'dependency-cycles'],
+      ['Check Layer Rules', 'layer-rules'],
+      ['Public API…', 'public-api'],
+    ] },
   ],
   tools: [
     ['Run Anything… (Ctrl twice)', 'run-anything'],

@@ -141,7 +141,7 @@ Legend: `[x]` done · `[ ]` to do.
 - [x] 116. Inspection exclusion scopes — .editorconfig sections: generated_code / dotnet_analyzer_diagnostic.severity = none per glob (2026-10-21)
 - [x] 117. Quick-fix previews — Quick Actions: the highlighted action's diff beside the list (2026-10-21)
 - [x] 118. Bulk quick-fix application — Quick Actions: '… (fix all in document / project / solution)' with Roslyn's Fix All (2026-10-21)
-- [ ] 119. Duplicate code detection
+- [x] 119. Duplicate code detection — Code ▸ Analyze ▸ Find Duplicate Code (normalised token windows; codeAnalysis.duplicates.minimumTokens) (2026-10-21)
 - [x] 120. Structural Search and Replace templates — Search with Pattern: built-in templates and Save as Template / Delete Template (2026-10-21)
 - [ ] 121. Dependency cycle detection
 - [ ] 122. Layer dependency rules
@@ -418,3 +418,4 @@ Legend: `[x]` done · `[ ]` to do.
 - 2026-10-21 52: Bookmarks grouped in named lists; new bookmarks go to the active list; a deleted list's bookmarks return to Bookmarks.
 - 2026-10-21 57: References of the symbol at the caret in an inline peek panel: a list beside a preview of the selected one.
 - 2026-10-21 47: Symbols of the solution found by their kind, types, attributes, modifiers, parameters, namespace and base types (the language service's symbol model).
+- 2026-10-21 119: Repeated C# code (names and literals aside) found across the solution, grouped with each place to jump to; the language service also reads files changed outside the studio before solution-wide analyses.

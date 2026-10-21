@@ -176,3 +176,12 @@ describe('355 / 91 / 347 C# conversions', () => {
     expect(asyncDisposableFields('private readonly HttpClient _client = new();\nprivate IBrowser? browser;\nprivate int count;\nprivate Stream stream;')).toEqual(['_client', 'browser', 'stream']);
   });
 });
+import { apiChanges } from '../src/rider/analysis400';
+describe('124 / 125 public API changes', () => {
+  it('added, removed and changed members', () => {
+    const c = apiChanges(['class N.A', 'void N.A.Run(int)', 'void N.A.New()'], ['class N.A', 'void N.A.Run()', 'void N.A.Gone()']);
+    expect(c.added).toEqual(['void N.A.New()']);
+    expect(c.removed).toEqual(['void N.A.Gone()']);
+    expect(c.changed).toEqual([{ before: 'void N.A.Run()', after: 'void N.A.Run(int)' }]);
+  });
+});

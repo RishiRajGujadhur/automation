@@ -71,7 +71,12 @@ sealed partial class LanguageService
         if (op == "update") { foreach (var f in req["files"]!.AsArray()) Refresh((string)f!); return true; }
         if (op == "tests") return await DiscoverTests();
         if (op == "symbols") return await Symbols((string)req["query"]!);
+        if (op is "semanticSearch" or "duplicates" or "cycles" or "layers" or "publicApi" or "solutionDiagnostics") SyncFromDisk();
         if (op == "semanticSearch") return await SemanticSearch((string)req["query"]!);
+        if (op == "duplicates") return await Duplicates((int?)req["minTokens"] ?? 60);
+        if (op == "cycles") return await DependencyCycles();
+        if (op == "layers") return await LayerViolations();
+        if (op == "publicApi") return await PublicApi();
         if (op == "solutionDiagnostics") return await SolutionDiagnostics();
         var doc = Document((string)req["file"]!, (string?)req["source"]);
         int Pos(SourceText t) => t.Lines[Math.Clamp((int)req["line"]! - 1, 0, t.Lines.Count - 1)].Start + (int)req["column"]! - 1;
@@ -294,6 +299,24 @@ sealed partial class LanguageService
         return workspace.CurrentSolution.GetDocument(id)!;
     }
     /// <summary>Re-reads files changed on disk (or removes deleted ones).</summary>
+    /// <summary>
+    /// Files changed outside the studio (git checkout, another editor) since the language service last read them, and
+    /// new or deleted ones: read again before a solution-wide analysis, so it sees what is on disk.
+    /// </summary>
+    readonly Dictionary<string, DateTime> seen = new(StringComparer.OrdinalIgnoreCase);
+    void SyncFromDisk()
+    {
+        var onDisk = SourceFiles().ToList();
+        var known = workspace!.CurrentSolution.Projects.SelectMany(p => p.Documents).Select(d => d.FilePath).OfType<string>().Where(f => !f.EndsWith("GlobalUsings.g.cs")).Select(Path.GetFullPath).ToHashSet(StringComparer.OrdinalIgnoreCase);
+        foreach (var f in onDisk)
+        {
+            var t = File.GetLastWriteTimeUtc(f);
+            if (!known.Contains(f) || (seen.TryGetValue(f, out var was) ? t > was : t > started)) { Refresh(f); }
+            seen[f] = t;
+        }
+        foreach (var gone in known.Where(k => !onDisk.Contains(k, StringComparer.OrdinalIgnoreCase) && !File.Exists(k)).ToList()) Refresh(gone);
+    }
+    readonly DateTime started = DateTime.UtcNow;
     void Refresh(string file)
     {
         var path = Full(file);
