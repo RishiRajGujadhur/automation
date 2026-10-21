@@ -1,4 +1,4 @@
-import { BrowserWindow, clipboard, dialog, ipcMain, nativeTheme, shell, type IpcMainEvent, type IpcMainInvokeEvent } from 'electron';
+import { BrowserWindow, Menu, clipboard, dialog, ipcMain, nativeTheme, shell, type IpcMainEvent, type IpcMainInvokeEvent } from 'electron';
 import { ctx } from './context';
 import { IPC } from '../shared/bridge';
 import fs from 'node:fs';
@@ -48,6 +48,16 @@ export function registerIpc() {
     const hex = (s: string) => (/^#[0-9a-f]{6}$/i.test(s) ? s : undefined);
     nativeTheme.themeSource = c.dark ? 'dark' : 'light';
     if (hex(c.background)) ctx.win.setBackgroundColor(c.background);
+  });
+  // window.menuBarVisibility (VS Code, VSCODE-250.md W44): classic, toggle (Alt shows it), hidden or compact (the page's ☰).
+  ipcMain.on(IPC.menuBarVisibility, (e, mode: string) => {
+    if (!trusted(e) || !ctx.win || !['classic', 'compact', 'toggle', 'hidden'].includes(mode)) return;
+    ctx.win.setAutoHideMenuBar(mode === 'toggle');
+    ctx.win.setMenuBarVisibility(mode === 'classic');
+  });
+  ipcMain.on(IPC.popupMenu, (e, x: number, y: number) => {
+    if (!trusted(e) || !ctx.win) return;
+    Menu.getApplicationMenu()?.popup({ window: ctx.win, x: Math.round(Number(x) || 0), y: Math.round(Number(y) || 0) });
   });
 }
 
