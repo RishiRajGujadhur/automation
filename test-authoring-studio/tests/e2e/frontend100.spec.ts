@@ -284,3 +284,25 @@ test('F25 Navigate source maps', async ({ page }) => {
   await page.getByRole('menuitem', { name: /^Go to Source-Mapped Location/ }).click();
   await expect(active).toHaveAttribute('title', 'dist/app.js');
 });
+
+test('F26 Extract object destructuring', async ({ page }) => {
+  await open(page, 'src/user.ts', 'declare function getUser(): { name: string; age: number; id: number };\nexport function describe() {\n  const user = getUser();\n  return `${user.name} (${user.age})`;\n}\n');
+  await convert(page, 'user =', /^Introduce object destructuring \{ name, age \}$/, 'const { name, age } = getUser();\n  return `${name} (${age})`;', false, 2);
+});
+test('F27 Convert destructuring to property access', async ({ page }) => {
+  await open(page, 'src/user.ts', 'type Props = { title: string; size: number };\nexport function label(props: Props) {\n  const { title, size: s } = props;\n  return { title, text: title + s };\n}\n');
+  await convert(page, '{ title, size', /^Convert destructuring to property access$/, 'export function label(props: Props) {\n  return { title: props.title, text: props.title + props.size };\n}', false, 3);
+});
+test('F28 Convert optional checks to optional chaining', async ({ page }) => {
+  await open(page, 'src/user.ts', 'type U = { address?: { city?: string } };\nexport const city = (u?: U) => u && u.address && u.address.city;\n');
+  await convert(page, 'u && u.address && u.address.city', /^Convert to optional chain expression$/, 'export const city = (u?: U) => u?.address?.city;', true);
+});
+test('F29 Convert null checks to nullish coalescing', async ({ page }) => {
+  await open(page, 'src/user.ts', 'export function pick(a: string | null | undefined, b: number | null) {\n  const x = a !== null && a !== undefined ? a : "none";\n  const y = b == null ? 0 : b;\n  return [x, y];\n}\n');
+  await convert(page, 'a !== null', /^Convert to nullish coalescing \(\?\?\)$/, 'const x = a ?? "none";', false, 1);
+  await convert(page, 'b == null', /^Convert to nullish coalescing \(\?\?\)$/, 'const y = b ?? 0;', false, 1);
+});
+test('F30 Convert string concatenation to template literals', async ({ page }) => {
+  await open(page, 'src/user.ts', 'export const greet = (name: string, n: number) => "Hello " + name + ", you have " + n + " messages";\n');
+  await convert(page, '"Hello "', /^Convert to template string$/, 'export const greet = (name: string, n: number) => `Hello ${name}, you have ${n} messages`;', false, 2);
+});

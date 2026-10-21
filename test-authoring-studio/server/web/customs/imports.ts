@@ -25,7 +25,7 @@ registerCustom({
 const esModule = (c: Context) => c.sf.statements.some((s) => ts.isImportDeclaration(s) || ts.isExportAssignment(s) || ts.isExportDeclaration(s) || (ts.canHaveModifiers(s) && (ts.getModifiers(s) ?? []).some((m) => m.kind === ts.SyntaxKind.ExportKeyword)));
 registerCustom({
   name: 'esm-to-commonjs',
-  offer: (c) => (/\.(jsx?|cjs|mjs|tsx?)$/i.test(c.file) && esModule(c) ? 'Convert to CommonJS module' : undefined),
+  offer: (c) => (/\.(jsx?|cjs|mjs)$/i.test(c.file) && esModule(c) ? 'Convert to CommonJS module' : undefined),
   apply: (c) => {
     const exportsList: string[] = [];
     let defaultExport = '';

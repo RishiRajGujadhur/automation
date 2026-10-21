@@ -34,11 +34,11 @@ Status: `[x]` done, `[ ]` to do. Before this list, JS / TS / HTML / CSS files op
 - [x] F23 Detect circular module dependencies
 - [x] F24 Navigate TypeScript declaration files
 - [x] F25 Navigate source maps
-- [ ] F26 Extract object destructuring
-- [ ] F27 Convert destructuring to property access
-- [ ] F28 Convert optional checks to optional chaining
-- [ ] F29 Convert null checks to nullish coalescing
-- [ ] F30 Convert string concatenation to template literals
+- [x] F26 Extract object destructuring
+- [x] F27 Convert destructuring to property access
+- [x] F28 Convert optional checks to optional chaining
+- [x] F29 Convert null checks to nullish coalescing
+- [x] F30 Convert string concatenation to template literals
 
 ## React & JSX / TSX
 - [ ] F31 Extract JSX into React component
@@ -123,3 +123,4 @@ Status: `[x]` done, `[ ]` to do. Before this list, JS / TS / HTML / CSS files op
 - 2026-10-21: F17, F18, F19, F20, F21. Convert to ES module and Add import from (TypeScript code fixes); Convert to CommonJS module (studio action: imports to require, exports to module.exports); Organize imports (Quick Action and Shift+Alt+O) and Remove unused imports from TypeScript's organizeImports.
 - 2026-10-21: F23. Code ▸ Analyze ▸ Find Circular Imports (web and desktop menus): the import graph of the scripts (imports, re-exports, dynamic import, require; type-only imports left out) and its cycles with the imports that close them.
 - 2026-10-21: F24, F25. F12 on a symbol declared in node_modules typings or TypeScript's lib.*.d.ts opens the declaration file read-only at the declaration. Navigate ▸ Go to Source-Mapped Location (web and desktop) jumps from generated code to the original source through its source map (sourceMappingURL file or data: URL, or a .map beside it) and back (source-map-js).
+- 2026-10-21: F26, F27, F28, F29, F30. Studio actions (customs/expressions.ts): Introduce object destructuring for a variable used only through property reads; destructuring back to property access (references filtered to the variable, shorthand keys kept); null checks to ??. Optional chaining and template strings are TypeScript refactorings. Convert to CommonJS is now offered in JavaScript files only.
