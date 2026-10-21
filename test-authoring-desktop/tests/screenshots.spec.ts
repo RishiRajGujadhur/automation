@@ -24,9 +24,14 @@ let page: Page;
 let userData: string;
 let repo: string;
 
-const shot = async (name: string) => {
+const shot = async (name: string, region?: string) => {
   await page.waitForTimeout(600); // let lenses, hints and fonts settle
-  await page.screenshot({ path: path.join(out, `${name}.png`) });
+  // No shortcut reminders, notifications or hover tooltips over the shot (clicked in the DOM: a modal dialog makes
+  // the rest of the page inert to the mouse).
+  await page.evaluate(() => document.querySelectorAll<HTMLElement>('.key-promoter button[aria-label="Dismiss"], .toast-close').forEach((b) => b.click()));
+  await page.mouse.move(2, 2);
+  await page.waitForTimeout(300);
+  await (region ? page.getByRole('region', { name: region }) : page).screenshot({ path: path.join(out, `${name}.png`) });
 };
 const call = (url: string, body?: unknown) => page.evaluate(async ([u, b]) => {
   const r = await fetch(`/api${u}`, b === undefined ? undefined : { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(b) });
@@ -271,6 +276,7 @@ test('README screenshots: advanced features', async () => {
 
   // 4. Debugger: a collection local in the table visualizer, breakpoint with a label and its hit count.
   await explorer.getByRole('button', { name: 'CalculatorSteps.cs', exact: true }).first().click();
+  await call('/debug/breakpoints', { file: 'Features/Add.feature', lines: [] });
   await call('/debug/breakpoints', { file: 'Steps/CalculatorSteps.cs', breakpoints: [{ line: 46 }] });
   await call('/debug/start', { project: 'Calculator.csproj' });
   await expect.poll(async () => (await call('/debug')).status, { timeout: 240_000, intervals: [1000] }).toBe('paused');
@@ -282,4 +288,160 @@ test('README screenshots: advanced features', async () => {
   await expect(dbg.getByRole('table', { name: 'Visualizer table' }).locator('tbody tr')).toHaveCount(3, { timeout: 30_000 });
   await shot('debugger-visualizer');
   await call('/debug/control', { action: 'stop' });
+});
+
+test('README screenshots: refactoring, analysis, Git and coverage', async () => {
+  /** Clicks a native menu item by its label, wherever it is in the menu bar. */
+  const menu = (label: string) => app.evaluate(({ Menu }, l) => {
+    const walk = (items: Electron.MenuItem[]): boolean => items.some((x) => (x.label === l ? (x.click(), true) : !!x.submenu && walk(x.submenu.items)));
+    if (!walk(Menu.getApplicationMenu()!.items)) throw new Error(`No menu item ${l}`);
+  }, label);
+  const editor = () => page.locator('.code-editor:not([hidden]) .cm-content').first();
+  /** Puts the caret in Pricing.cs at a text (through the DOM selection; the editor follows it). */
+  const caretAt = async (text: string, offset = 0) => {
+    await page.locator('[aria-label="Source of Steps/Pricing.cs"] .cm-line', { hasText: text }).first().click();
+    await page.mouse.move(2, 2); // no hover tooltip from where it clicked
+    await page.evaluate(([t, o]) => {
+      const root = document.querySelector('[aria-label="Source of Steps/Pricing.cs"]')!;
+      const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
+      const nodes: Text[] = [];
+      for (let n = walker.nextNode(); n; n = walker.nextNode()) nodes.push(n as Text);
+      const line = [...root.querySelectorAll('.cm-line')].find((l) => l.textContent!.includes(t))!;
+      let at = line.textContent!.indexOf(t) + o;
+      for (const n of nodes.filter((x) => line.contains(x))) {
+        if (at <= n.length) { const r = document.createRange(); r.setStart(n, at); r.collapse(true); const sel = getSelection()!; sel.removeAllRanges(); sel.addRange(r); return; }
+        at -= n.length;
+      }
+    }, [text, offset] as const);
+    await page.waitForTimeout(200);
+  };
+  const pricing = path.join(repo, 'Steps', 'Pricing.cs');
+  fs.writeFileSync(pricing, ['using System.Text;', '', 'namespace Calculator;', '', 'public class Pricing', '{', '    public decimal Total(decimal unitPrice, int quantity, bool unused)', '    {', '        var total = unitPrice * quantity;', '        return quantity >= 10 ? total * 0.9m : total;', '    }', '', '    public string Receipt(decimal unitPrice, int quantity)', '    {', '        var text = new StringBuilder();', '        text.Append("Total: ").Append(Total(unitPrice, quantity, false));', '        return text.ToString();', '    }', '', '    public decimal Discount(decimal total) => total * 0.1m;', '}', ''].join('\n'));
+  fs.writeFileSync(path.join(repo, 'Tests', 'PricingTests.cs'), ['using NUnit.Framework;', '', 'namespace Calculator.Tests;', '', 'public class PricingTests', '{', '    [Test]', '    public void SmallOrder() => Assert.That(new Pricing().Total(2m, 3, false), Is.EqualTo(6m));', '}', ''].join('\n'));
+  await call('/scan', {});
+  await page.goto(page.url().replace(/#.*$/, '#/features/editor'));
+  await page.evaluate(() => localStorage.setItem('tas:settings', JSON.stringify({ 'editor.minimap.enabled': true, 'editor.minimap.showSlider': 'always', 'editor.guides.bracketPairs': 'active' })));
+  await page.reload();
+  await expect(page.getByText('Repository indexed')).toBeVisible({ timeout: 60_000 });
+  const explorer = page.getByRole('navigation');
+  const openPricing = async () => { await explorer.getByRole('button', { name: 'Pricing.cs', exact: true }).first().click(); await expect(page.getByLabel('Source of Steps/Pricing.cs')).toBeVisible(); };
+  await openPricing();
+
+  // 1. Settings editor: the category tree at Text Editor ▸ Minimap.
+  await editor().click();
+  await page.keyboard.press('Control+,');
+  const prefs = page.getByRole('dialog', { name: 'Preferences' });
+  await prefs.getByRole('navigation', { name: 'Settings categories' }).getByRole('button', { name: 'Minimap', exact: true }).click();
+  await shot('settings-editor');
+  await page.keyboard.press('Escape');
+
+  // 2. Public API: a baseline, then a removed and a changed member are breaking changes.
+  await menu('Public API…');
+  const api = () => page.getByLabel(/^Public API of /).first();
+  await api().getByRole('button', { name: 'Save Baseline…' }).click({ timeout: 120_000 });
+  const base = page.getByRole('dialog', { name: /Public API baseline/ });
+  await base.getByRole('button', { name: /Apply|Approve/ }).first().click();
+  await expect(base.getByRole('button', { name: 'Written' }).first()).toBeVisible();
+  await base.getByRole('button', { name: 'Close dialog' }).click();
+  const before = fs.readFileSync(pricing, 'utf8');
+  fs.writeFileSync(pricing, before.replace(/\n {4}public decimal Discount[^\n]*\n/, '\n').replace('public string Receipt(decimal unitPrice, int quantity)', 'public string Receipt(decimal unitPrice, int quantity, string currency)').replace('return text.ToString();', 'return text.Append(currency).ToString();').replace(/\}\s*$/, '\n    public decimal Tax(decimal total) => total * 0.2m;\n}\n'));
+  await page.keyboard.press('Escape');
+  await menu('Public API…');
+  await expect(api().getByRole('status')).toContainText('breaking change', { timeout: 120_000 });
+  await shot('public-api');
+  fs.writeFileSync(pricing, before);
+  fs.rmSync(path.join(repo, 'PublicAPI.Shipped.txt'), { force: true });
+  await page.keyboard.press('Escape');
+
+  // 3. Change Signature: rename, remove and reorder parameters, with the new signature.
+  await openPricing();
+  await caretAt('decimal Total(', 9);
+  await menu('Change Signature…');
+  const sig = page.getByRole('dialog', { name: 'Change Signature' });
+  await sig.getByLabel('Name of parameter unitPrice').fill('price', { timeout: 60_000 });
+  await sig.getByLabel('Remove parameter unused').check();
+  await sig.getByRole('button', { name: 'Move quantity up' }).click();
+  await expect(sig.getByLabel('New signature')).toContainText('Total(int quantity, decimal price)');
+  await shot('change-signature');
+  await page.keyboard.press('Escape');
+
+  // 4. Semantic search: methods by kind and attribute.
+  await menu('Semantic Search…');
+  const sem = page.getByLabel('Semantic Search');
+  await sem.getByLabel('Semantic query').fill('kind:method attr:Given');
+  await sem.getByLabel('Semantic query').press('Enter');
+  await expect(sem.getByLabel('Semantic search results')).toContainText('GivenTheFirstNumberIs', { timeout: 60_000 });
+  await shot('semantic-search');
+  await page.keyboard.press('Escape');
+
+  // 5. Decompiled source of a framework method.
+  await openPricing();
+  await caretAt('text.Append', 7);
+  await menu('Go to Decompiled Source');
+  const dec = page.getByRole('dialog', { name: /StringBuilder \[decompiled/ });
+  await expect(dec.locator('.cm-preview-target')).toBeVisible({ timeout: 120_000 });
+  await shot('decompiled-source');
+  await page.keyboard.press('Escape');
+
+  // 6. Branch coverage: a test that takes one branch of two; partly covered lines in yellow.
+  await page.getByRole('button', { name: 'Test Explorer' }).click();
+  const te = page.getByRole('region', { name: 'Test Explorer' });
+  const tree = te.getByRole('navigation', { name: 'Tests' });
+  await expect(tree.locator('.t-label', { hasText: /SmallOrder/ })).toBeVisible({ timeout: 120_000 });
+  await tree.locator('.t-label', { hasText: /SmallOrder/ }).click({ button: 'right' });
+  await page.getByRole('menuitem', { name: 'Analyze Code Coverage' }).click();
+  await expect(te).toContainText(/Branch \d+(\.\d)?%/, { timeout: 300_000 });
+  await page.getByRole('button', { name: 'Features (Explorer)' }).click();
+  await openPricing();
+  await caretAt('public class Pricing');
+  await page.keyboard.press('Control+Home');
+  await expect(page.locator('.cm-cov-partial').first()).toBeVisible({ timeout: 30_000 });
+  await page.getByRole('button', { name: 'Test Explorer' }).click();
+  await shot('branch-coverage');
+  await page.getByRole('button', { name: 'Features (Explorer)' }).click();
+
+  // 7. Interactive rebase from the Git Log.
+  const { execFileSync } = await import('node:child_process');
+  // The studio refreshes Git in the background: retry while its index.lock is held.
+  const g = (...args: string[]): string => {
+    for (let i = 0; ; i++) {
+      try { return execFileSync('git', ['-c', 'user.email=ada@example.com', '-c', 'user.name=Ada Lovelace', ...args], { cwd: repo, encoding: 'utf8', stdio: 'pipe' }); }
+      catch (e) { if (i > 20 || !/index\.lock/.test(String((e as { stderr?: string }).stderr))) throw e; execFileSync(process.execPath, ['-e', 'setTimeout(()=>{},250)']); }
+    }
+  };
+  g('add', '-A'); g('commit', '-qm', 'Pricing with a bulk discount');
+  for (const [msg, line] of [['Pricing: comment the discount rule', '// Ten or more items: 10% off.'], ['WIP', '// TODO: currencies'], ['Fix typo', '// Prices are in EUR.']]) { fs.appendFileSync(pricing, `${line}\n`); g('commit', '-qam', msg); }
+  await editor().click();
+  await page.keyboard.press('Alt+9');
+  const log = page.getByRole('region', { name: 'Git Log' });
+  await log.getByRole('listbox', { name: 'Commits' }).getByRole('option', { name: /comment the discount rule/ }).click({ timeout: 30_000 });
+  await log.getByRole('button', { name: 'Interactively Rebase from Here…' }).click();
+  const rb = log.getByLabel('Interactive Rebase');
+  await expect(rb.locator('.git-rebase-row')).toHaveCount(3);
+  // Actions without a message box, so the whole plan fits in the panel.
+  await rb.getByLabel('Action for WIP').selectOption('fixup');
+  await rb.getByRole('button', { name: 'Move Fix typo up' }).click();
+  await rb.getByLabel('Action for Fix typo').selectOption('drop');
+  await shot('interactive-rebase');
+  await rb.getByRole('button', { name: 'Cancel' }).click();
+
+  // 8. Three-way merge editor on a conflict.
+  const steps = path.join(repo, 'Steps', 'CalculatorSteps.cs');
+  const original = fs.readFileSync(steps, 'utf8');
+  g('checkout', '-qb', 'feature/checked');
+  fs.writeFileSync(steps, original.replace('var sum = First + Second;', 'var sum = checked(First + Second);'));
+  g('commit', '-qam', 'Overflow check in Add');
+  g('checkout', '-q', 'main');
+  fs.writeFileSync(steps, original.replace('var sum = First + Second;', 'var sum = Math.Clamp(First + Second, int.MinValue, int.MaxValue);'));
+  g('commit', '-qam', 'Clamp the sum');
+  try { g('merge', 'feature/checked'); } catch { /* conflict expected */ }
+  await page.keyboard.press('Escape');
+  await page.getByRole('button', { name: 'Git Changes', exact: true }).click();
+  const view = page.getByRole('region', { name: 'Git Changes' });
+  await view.getByRole('button', { name: 'Open Merge Editor for Steps/CalculatorSteps.cs' }).click({ timeout: 30_000 });
+  const me = page.getByRole('region', { name: 'Merge Editor Steps/CalculatorSteps.cs' });
+  await expect(me).toContainText('1 conflict left');
+  await shot('merge-editor');
+  await me.getByRole('button', { name: 'Accept Incoming' }).click();
+  await me.getByRole('button', { name: 'Complete Merge' }).click();
 });
