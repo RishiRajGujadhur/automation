@@ -110,7 +110,7 @@ Legend: `[x]` done · `[ ]` to do.
 - [ ] 88. Convert methods to local functions
 - [x] 89. Convert local functions to methods — Quick Actions: Convert to method
 - [x] 90. Convert class to record — Quick Actions: Convert to positional record
-- [ ] 91. Convert record to class
+- [x] 91. Convert record to class — Code ▸ C# ▸ Convert Record to Class (init properties, constructor, Deconstruct, value equality, ToString) (2026-10-21)
 - [x] 92. Convert switch statements to expressions — Quick Actions (IDE0066): Convert switch statement to expression (2026-10-21)
 - [x] 93. Convert if statements to switch — Quick Actions
 - [x] 94. Invert conditional — Quick Actions: Invert if
@@ -397,3 +397,4 @@ Legend: `[x]` done · `[ ]` to do.
 - 2026-10-21 344: CompareTo compares property by property with Comparer<T>.Default; the comparison operators use it.
 - 2026-10-21 347: The async Dispose pattern, disposing fields such as HttpClient, streams, connections and Playwright browsers.
 - 2026-10-21 355: An interpolated string becomes string.Format with numbered holes.
+- 2026-10-21 91: A positional record becomes an equivalent class.
