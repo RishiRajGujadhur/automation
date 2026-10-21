@@ -94,7 +94,7 @@ Legend: `[x]` done · `[ ]` to do.
 - [x] 72. Inline field — Code ▸ Refactor ▸ Inline Field (2026-10-21)
 - [x] 73. Move type — Move Type to Matching File
 - [ ] 74. Move members
-- [ ] 75. Pull members up
+- [x] 75. Pull members up — Code ▸ Refactor ▸ Pull Members Up (2026-10-21)
 - [ ] 76. Push members down
 - [x] 77. Safe symbol rename — F2 (Roslyn Renamer, across files)
 - [x] 78. Change namespace — Sync Namespace with Folder
@@ -407,3 +407,4 @@ Legend: `[x]` done · `[ ]` to do.
 - 2026-10-21 67: The selected expression becomes a field: readonly with its value, or assigned where it is used when it reads locals.
 - 2026-10-21 68: The selected expression becomes a computed property.
 - 2026-10-21 72: A field never assigned after its declaration is replaced by its value and removed.
+- 2026-10-21 75: The member moves to the base class (in any file of the solution).
