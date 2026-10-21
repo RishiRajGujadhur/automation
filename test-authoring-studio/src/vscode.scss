@@ -609,3 +609,23 @@
   border: 0;
   border-radius: 0;
 }
+
+// Activity bar badges (GUI-QOL.md G4): a count in the bottom-right corner of the icon, like VS Code.
+.activity-item { position: relative; }
+.activity-badge {
+  position: absolute;
+  right: 6px;
+  bottom: 6px;
+  min-width: 16px;
+  height: 16px;
+  padding: 0 4px;
+  border-radius: 8px;
+  background: var(--accent, #6d5ce8);
+  color: #fff;
+  font-size: 10px;
+  font-weight: 600;
+  line-height: 16px;
+  text-align: center;
+  pointer-events: none;
+  &.error { background: #d13438; }
+}

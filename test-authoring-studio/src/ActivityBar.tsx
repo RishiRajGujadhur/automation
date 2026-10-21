@@ -2,6 +2,9 @@ import { useLayoutEffect, useRef, useState } from 'react';
 import { LayoutDashboard, Wand2, Files, Circle, Braces, FlaskConical, BookOpen, Blocks, ScanLine, FolderTree, Settings2, SlidersHorizontal, MoreHorizontal, Menu, TestTubeDiagonal, Search, GitBranch, type LucideIcon } from 'lucide-react';
 import { Tip } from './radix2';
 import { Dropdown } from './radix';
+import { useGitSummary } from './git/statusStore';
+import { useTestRun } from './testing/store';
+import { featureOn } from './features';
 
 export type ActivityItem = { id: string; label: string; icon: LucideIcon; shortcut?: string; advanced?: boolean };
 /** VS Code-style activity bar: one icon per page. Features toggles the explorer when it is already active. */
@@ -42,6 +45,14 @@ export default function ActivityBar({ active, basic, sidebarOpen, onSelect, onTo
     ro.observe(el);
     return () => ro.disconnect();
   }, [items.length, basic]);
+  // Badges (VS Code): pending Git changes on Git Changes, failed tests of the last run on Test Explorer.
+  const git = useGitSummary();
+  const run = useTestRun();
+  const failed = run.summary?.failed ?? run.results.filter((r) => r.outcome === 'failed').length;
+  const badges: Record<string, { n: number; text: string; tone: string } | undefined> = featureOn('activity-badges') ? {
+    Git: git?.changes ? { n: git.changes, text: `${git.changes} pending change${git.changes === 1 ? '' : 's'}`, tone: 'info' } : undefined,
+    Testing: run.status !== 'running' && failed ? { n: failed, text: `${failed} failed test${failed === 1 ? '' : 's'}`, tone: 'error' } : undefined,
+  } : {};
   const visible = items.slice(0, fit);
   const hidden = items.slice(fit);
   // Keep the active page visible: if it overflowed, swap it in for the last visible item.
@@ -51,7 +62,7 @@ export default function ActivityBar({ active, basic, sidebarOpen, onSelect, onTo
     const isActive = active === i.id;
     return (
       <li key={i.id}>
-        <Tip content={i.label} shortcut={i.shortcut} side="right">
+        <Tip content={badges[i.id] ? `${i.label} · ${badges[i.id]!.text}` : i.label} shortcut={i.shortcut} side="right">
           <button
             className={`activity-item ${isActive ? 'active' : ''}`}
             aria-label={i.label}
@@ -60,6 +71,7 @@ export default function ActivityBar({ active, basic, sidebarOpen, onSelect, onTo
             onClick={() => (i.id === 'Features' && isActive ? onToggleSidebar() : onSelect(i.id))}
           >
             <i.icon size={22} strokeWidth={1.6} aria-hidden="true" />
+            {badges[i.id] && <span className={`activity-badge ${badges[i.id]!.tone}`} data-badge={i.id} title={badges[i.id]!.text}>{badges[i.id]!.n > 99 ? '99+' : badges[i.id]!.n}</span>}
           </button>
         </Tip>
       </li>

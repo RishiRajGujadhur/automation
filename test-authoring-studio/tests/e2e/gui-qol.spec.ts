@@ -1,4 +1,8 @@
 import { test, expect, type Page } from '@playwright/test';
+import fs from 'node:fs/promises';
+import os from 'node:os';
+import path from 'node:path';
+import { execFileSync } from 'node:child_process';
 
 // Workbench ease-of-use improvements in the style of Visual Studio 2026 and VS Code (GUI-QOL.md).
 test.use({ storageState: { cookies: [], origins: [] } });
@@ -95,4 +99,41 @@ test('G3 Layout controls in the title bar: side bar, panel, secondary side bar',
   await secondary.click();
   await expect(page.locator('.secondary-sidebar')).toHaveCount(0);
   await page.getByRole('button', { name: 'Close terminal 1' }).click();
+});
+
+test('G4 Activity bar badges: pending Git changes, failed tests', async ({ page, request }) => {
+  test.setTimeout(400_000);
+  const previous = (await (await request.get('/api/workspace')).json()).config;
+  const root = path.join(await fs.mkdtemp(path.join(os.tmpdir(), 'studio-gui-')), 'Calculator');
+  await fs.cp(path.resolve(import.meta.dirname, '../../samples/Calculator'), root, { recursive: true, filter: (f) => !/[\/](bin|obj)$/.test(f) });
+  const git = (...args: string[]) => execFileSync('git', ['-c', 'user.email=t@example.com', '-c', 'user.name=T', ...args], { cwd: root });
+  await fs.writeFile(path.join(root, 'Tests/Failing.cs'), 'using NUnit.Framework;\n\nnamespace Calculator.Tests;\n\npublic class FailingTests\n{\n    [Test]\n    public void Fails() => Assert.That(1, Is.EqualTo(2));\n}\n');
+  await fs.writeFile(path.join(root, '.gitignore'), 'bin/\nobj/\n');
+  git('init', '-q', '-b', 'main'); git('add', '-A'); git('commit', '-qm', 'Initial');
+  try {
+    expect((await request.post('/api/solution/open', { data: { path: path.join(root, 'Calculator.csproj') } })).ok()).toBe(true);
+    await page.addInitScript(() => { if (!sessionStorage.getItem('seeded')) { localStorage.setItem('tas:prefs', JSON.stringify({ mode: 'advanced', autoSave: 'off' })); sessionStorage.setItem('seeded', '1'); } });
+    await page.goto('/#/features/editor');
+    await expect(page.getByText('Repository indexed')).toBeVisible();
+    const bar = page.getByRole('navigation', { name: 'Main' });
+    await expect(bar.locator('[data-badge="Git"]')).toHaveCount(0);
+    // Two changed files: a badge of 2 on Git Changes (refreshed on focus, like VS Code).
+    await fs.appendFile(path.join(root, 'Features/Add.feature'), '\n');
+    await fs.writeFile(path.join(root, 'NOTES.md'), '# Notes');
+    await page.evaluate(() => window.dispatchEvent(new Event('focus')));
+    await expect(bar.locator('[data-badge="Git"]')).toHaveText('2', { timeout: 15_000 });
+    await expect(bar.locator('[data-badge="Git"]')).toHaveAttribute('title', '2 pending changes');
+    // A failed test: a red badge of 1 on Test Explorer.
+    await bar.getByRole('button', { name: 'Test Explorer' }).click();
+    const te = page.getByRole('region', { name: 'Test Explorer' });
+    await expect(te.getByRole('navigation', { name: 'Tests' }).locator('.t-label', { hasText: /Fails/ })).toBeVisible({ timeout: 120_000 });
+    await te.getByRole('button', { name: 'Run All Tests' }).click();
+    await expect(bar.locator('[data-badge="Testing"]')).toHaveText('1', { timeout: 300_000 });
+    await expect(bar.locator('[data-badge="Testing"]')).toHaveClass(/error/);
+    // The badges do not change the buttons' names.
+    await expect(bar.getByRole('button', { name: 'Git Changes', exact: true })).toBeVisible();
+  } finally {
+    await request.post('/api/workspace', { data: previous });
+    await fs.rm(path.dirname(root), { recursive: true, force: true, maxRetries: 5 }).catch(() => {});
+  }
 });

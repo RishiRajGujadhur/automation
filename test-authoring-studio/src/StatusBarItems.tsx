@@ -1,6 +1,5 @@
 import { useEffect, useState } from 'react';
 import { GitBranch, CircleX, TriangleAlert, ArrowUp, ArrowDown, Loader, Bell, FlaskConical, MemoryStick } from 'lucide-react';
-import { api } from './api';
 import { useBuild } from './build/store';
 import { useTestRun } from './testing/store';
 import { useNotices, unreadNotices } from './rider/notifications';
@@ -8,7 +7,7 @@ import { usePrefs } from './radix2';
 import { SAVE_ALL_EVENT } from './editor/events';
 import { unsavedFiles, UNSAVED_EVENT } from './editor/autosave';
 import { useCursor } from './editor/cursor';
-import { GIT_CHANGED_EVENT } from './editor/events';
+import { useGitSummary } from './git/statusStore';
 import { Dropdown } from './radix';
 import { requestEol } from './editor/lineSeparator';
 import { setViewOptions, useViewOptions } from './editor/viewOptions';
@@ -58,16 +57,7 @@ export default function StatusBarItems({ repository, onGit, onErrors }: { reposi
   useEffect(() => { if (build.status !== 'running') return; setBuildStart(Date.now()); const t = setInterval(() => tick((n) => n + 1), 1000); return () => clearInterval(t); }, [build.status]);
   const cursor = useCursor();
   const view = useViewOptions();
-  const [git, setGit] = useState<{ repo: boolean; branch?: string; ahead: number; behind: number; changes: number }>();
-  useEffect(() => {
-    let live = true;
-    const load = () => api<{ repo: boolean; branch?: string; ahead: number; behind: number; files: unknown[] }>('/git/status').then((s) => live && setGit({ repo: s.repo, branch: s.branch, ahead: s.ahead, behind: s.behind, changes: s.files.length }), () => {});
-    void load();
-    const t = setInterval(() => { if (document.visibilityState === 'visible') void load(); }, 10_000);
-    window.addEventListener(GIT_CHANGED_EVENT, load);
-    window.addEventListener('focus', load);
-    return () => { live = false; clearInterval(t); window.removeEventListener(GIT_CHANGED_EVENT, load); window.removeEventListener('focus', load); };
-  }, [repository]);
+  const git = useGitSummary(repository);
   const errors = build.diagnostics.filter((d) => d.severity === 'error').length;
   const warnings = build.diagnostics.length - errors;
   return (
