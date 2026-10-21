@@ -22,6 +22,8 @@ import type { GeneratorSeed } from './TestGenerator';
 import TestDesign, { designTools } from './TestDesign';
 import ActivityBar from './ActivityBar';
 import PanelSash from './PanelSash';
+import { SCRIPT_FILE } from './editor/web/languages';
+import { RENAME_CONVERT_EVENT } from './rider/refactor400';
 import CreateStepDialog from './CreateStepDialog';
 import CodeEditor from './editor/CodeEditor';
 import { readDraft, sha256, useAutoSave, unsavedFiles, editedThisSession, UNSAVED_EVENT } from './editor/autosave';
@@ -409,6 +411,7 @@ export default function App() {
     else if (e.key.toLowerCase() === 's' && !e.altKey && !e.shiftKey && !(e.target as HTMLElement | null)?.closest?.('.cm-editor') && tab === 'Features' && active) { e.preventDefault(); if (featureTabActive) saveFeature(); else saveAll(); }
   };
   useEffect(() => { const h = (e: KeyboardEvent) => editorKeys.current(e); window.addEventListener('keydown', h); return () => window.removeEventListener('keydown', h); }, []);
+  const fileOpRef = useRef<(op: FileOp) => Promise<void>>(async () => {});
   /** Explorer Rename / Paste (copy or move) / Delete: applied on disk (server or browser folder), then tabs follow. */
   const fileOp = async (op: FileOp) => {
     const name = op.from.split('/').pop();
@@ -418,8 +421,16 @@ export default function App() {
         await deletePath(op.from);
         deletedPath(op.from);
       } else if (op.kind === 'rename') {
+        // Scripts and folders: the imports that point at them follow the move (FRONTEND-100.md F22), as diffs to approve.
+        const imports = fileSource().kind !== 'browser' && featureOn('update-imports-on-move') && (op.folder || SCRIPT_FILE.test(op.from))
+          ? await api<{ changes: { file: string; text: string }[] }>('/web/fileRename', { from: op.from, to: op.to }).then((r) => r.changes, () => [])
+          : [];
         await renamePath(op.from, op.to!);
         movedPath(op.from, op.to!);
+        if (imports.length) {
+          const previews = await Promise.all(imports.map((c) => api<{ id: string }>('/file/preview', { file: c.file, source: c.text })));
+          window.dispatchEvent(new CustomEvent('tas:project-previews', { detail: { title: `Update imports for ${name}: ${imports.length} file${imports.length === 1 ? '' : 's'}`, previews } }));
+        }
         if (feature && (feature.file === op.from || feature.file.startsWith(`${op.from}/`))) setFeature(undefined);
       } else {
         const created = await copyPath(op.from, op.to!);
@@ -432,6 +443,20 @@ export default function App() {
       setNotice((e as Error).message);
     }
   };
+  fileOpRef.current = fileOp;
+  // Convert to TypeScript (F9): rename the file (imports follow), then its converted text as a diff to approve.
+  useEffect(() => {
+    const h = (e: Event) => {
+      const d = (e as CustomEvent<{ from: string; to: string; text: string; title: string }>).detail;
+      void (async () => {
+        await fileOpRef.current({ kind: 'rename', from: d.from, to: d.to });
+        const preview = await api<{ id: string }>('/file/preview', { file: d.to, source: d.text });
+        window.dispatchEvent(new CustomEvent('tas:project-previews', { detail: { title: `${d.title}: the types to add`, previews: [preview] } }));
+      })().catch((err) => setNotice((err as Error).message));
+    };
+    window.addEventListener(RENAME_CONVERT_EVENT, h);
+    return () => window.removeEventListener(RENAME_CONVERT_EVENT, h);
+  }, []);
   /** Closing a tab with unsaved edits keeps them (hot exit) after a confirmation. */
   const closeEditor = async (file: string) => {
     if (unsavedFiles().includes(file) && !(await confirm({ title: `Close ${file.split('/').pop()}?`, description: 'It has unsaved changes. They stay in this browser and come back when you reopen the file; press Ctrl+S first to write them to disk.', confirm: 'Close' }))) return;

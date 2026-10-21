@@ -17,7 +17,7 @@ Status: `[x]` done, `[ ]` to do. Before this list, JS / TS / HTML / CSS files op
 - [x] F6 Infer generic type arguments
 - [x] F7 Add explicit type annotations
 - [x] F8 Remove redundant type annotations
-- [ ] F9 Convert JavaScript to TypeScript
+- [x] F9 Convert JavaScript to TypeScript
 - [ ] F10 Generate JSDoc annotations
 - [ ] F11 Infer types from JSDoc
 - [ ] F12 Convert callbacks to promises
@@ -30,7 +30,7 @@ Status: `[x]` done, `[ ]` to do. Before this list, JS / TS / HTML / CSS files op
 - [ ] F19 Organize ES module imports
 - [ ] F20 Remove unused imports
 - [ ] F21 Auto-import unresolved symbols
-- [ ] F22 Update imports when files move
+- [x] F22 Update imports when files move
 - [ ] F23 Detect circular module dependencies
 - [ ] F24 Navigate TypeScript declaration files
 - [ ] F25 Navigate source maps
@@ -117,3 +117,4 @@ Status: `[x]` done, `[ ]` to do. Before this list, JS / TS / HTML / CSS files op
 - 2026-10-21: F2, F3. Studio actions on the TypeScript syntax tree (server/web/customs/types.ts): extends clauses become an intersection and back; modifiers and type parameters kept.
 - 2026-10-21: F4, F5. TypeScript code fixes Add missing properties and Implement interface in Quick Actions.
 - 2026-10-21: F6, F7, F8. Studio actions on the type checker (customs/annotations.ts): explicit type arguments from the resolved signature, an annotation from the inferred type (literals widened), and removal when the initializer gives the same type.
+- 2026-10-21: F9, F22. Convert to TypeScript renames the file (imports follow) and shows its typed text (JSDoc types moved into annotations, parameters typed from usage) as a diff to approve. An Explorer rename or move of a script or folder updates the imports that point at it (getEditsForFileRename), as diffs to approve. Fixed on the way: the Explorer did not list .ts / .js / .html / .css files.

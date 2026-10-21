@@ -4,6 +4,7 @@ import { confined } from '../core.js';
 import { tsProject, SCRIPT, ts, applyEdits } from './tsService.js';
 import { listActions, applyAction, prefs, fmt, changesOf } from './tsActions.js';
 import './customs/index.js';
+import { editsForMove } from './customs/modules.js';
 
 /**
  * /api/web/*: language features for front-end files (FRONTEND-100.md). Every request carries the editor's text, so
@@ -95,6 +96,12 @@ export function webRoutes(app: Express, root: () => string) {
     const b = z.object({ file, source: z.string().max(5_000_000), id: z.string().max(4000) }).parse(req.body);
     const p = await script(b.file);
     res.json(applyAction(p, b.file, b.source, b.id));
+  });
+  /** F22: before a rename / move in the Explorer, the import updates it needs (shown as diffs to approve after it). */
+  app.post('/api/web/fileRename', async (req, res) => {
+    const b = z.object({ from: file, to: file }).parse(req.body);
+    await confined(root(), b.from); await confined(root(), b.to, false);
+    res.json({ changes: editsForMove(tsProject(root()), b.from, b.to) });
   });
   app.post('/api/web/format', async (req, res) => {
     const b = z.object({ file, source: z.string().max(5_000_000) }).parse(req.body);

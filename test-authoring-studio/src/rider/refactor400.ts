@@ -6,8 +6,10 @@ import { lineChanges } from '../vscode/filesOnSave';
 
 /* Refactorings of RIDER-VSCODE-FEATURES.md done by the language service (langserver/Refactor400.cs). */
 
-type Change = { file: string; text: string; added?: boolean };
+type Change = { file: string; text: string; added?: boolean; renamedFrom?: string };
 type Result = { title: string; changes: Change[] };
+/** A refactoring that renames the open file (Convert to TypeScript): { from, to, text, title }. */
+export const RENAME_CONVERT_EVENT = 'tas:rename-convert';
 /** Line / column of the caret (and selection end) for the language service. */
 export const at = (v: EditorView) => { const r = v.state.selection.main; const a = v.state.doc.lineAt(r.from), b = v.state.doc.lineAt(r.to); return { line: a.number, column: r.from - a.from + 1, endLine: b.number, endColumn: r.to - b.from + 1 }; };
 /**
@@ -15,6 +17,9 @@ export const at = (v: EditorView) => { const r = v.state.selection.main; const a
  * approve (the studio's write rule).
  */
 export async function applyRefactor(v: EditorView, file: string, r: Result, notice: (m: string) => void) {
+  // Convert to TypeScript (FRONTEND-100.md F9): the workbench renames the file, then shows its new text to approve.
+  const renamed = r.changes.find((c) => c.renamedFrom);
+  if (renamed) { window.dispatchEvent(new CustomEvent(RENAME_CONVERT_EVENT, { detail: { from: renamed.renamedFrom, to: renamed.file, text: renamed.text, title: r.title } })); return; }
   const mine = r.changes.find((c) => c.file === file);
   const others = r.changes.filter((c) => c.file !== file);
   if (!mine && !others.length) { notice('Nothing to change.'); return; }

@@ -121,3 +121,41 @@ test('F8 Remove redundant type annotations', async ({ page }) => {
   await expect(page.getByRole('listbox', { name: 'Quick Actions' })).toBeVisible({ timeout: 30_000 });
   await expect(page.getByRole('option', { name: 'Remove redundant type annotation' })).toHaveCount(0);
 });
+
+/** Approves the diff previews in a dialog whose title matches. */
+async function approve(page: Page, title: RegExp) {
+  const d = page.getByRole('dialog', { name: title });
+  await expect(d).toBeVisible({ timeout: 60_000 });
+  for (const b of await d.getByRole('button', { name: /^(Apply|Approve)/ }).all()) await b.click();
+  await expect(d.getByRole('button', { name: 'Written' }).first()).toBeVisible();
+  await d.getByRole('button', { name: 'Close dialog' }).click();
+}
+/** The Explorer's button for a file (all files shown). */
+async function explorerFile(page: Page, name: string) {
+  const all = page.getByRole('button', { name: 'Show all files' });
+  if (await all.count() && (await all.getAttribute('aria-pressed')) !== 'true') await all.click();
+  return page.getByRole('navigation').getByRole('button', { name, exact: true }).first();
+}
+
+test('F9 Convert JavaScript to TypeScript', async ({ page }) => {
+  await open(page, 'src/legacy.js', '/**\n * @param {number} w\n * @param {number} h\n * @returns {number}\n */\nexport function area(w, h) {\n  return w * h;\n}\n');
+  await caretAt(page, 'area', 1);
+  await quickAction(page, /^Convert to TypeScript \(rename to legacy\.ts\)$/);
+  await approve(page, /Convert to TypeScript/);
+  await expect.poll(() => fs.readFile(path.join(temp, 'src/legacy.ts'), 'utf8').catch(() => '')).toContain('export function area(w: number, h: number): number {');
+  await expect.poll(() => fs.access(path.join(temp, 'src/legacy.js')).then(() => true, () => false)).toBe(false);
+  await expect(page.locator('.editor-tab-label[aria-current="true"]')).toHaveAttribute('title', 'src/legacy.ts');
+});
+
+test('F22 Update imports when files move', async ({ page }) => {
+  await fs.writeFile(path.join(temp, 'src/app.ts'), 'import { add } from "./math";\nconsole.log(add(1, 2));\n');
+  await open(page, 'src/app.ts');
+  const math = await explorerFile(page, 'math.ts');
+  await math.click();
+  await math.press('F2');
+  const box = page.getByLabel('New name for math.ts');
+  await box.fill('calc.ts');
+  await box.press('Enter');
+  await approve(page, /Update imports for math\.ts: 1 file/);
+  await expect.poll(() => fs.readFile(path.join(temp, 'src/app.ts'), 'utf8')).toContain('from "./calc"');
+});

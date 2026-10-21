@@ -6,7 +6,7 @@ import { ts, applyEdits, type TsProject } from './tsService.js';
  * carries what is needed to compute its edits again; applying returns each file's new text.
  */
 export type WebAction = { id: string; title: string; kind: 'fix' | 'refactor' };
-export type Change = { file: string; text: string; added?: boolean };
+export type Change = { file: string; text: string; added?: boolean; renamedFrom?: string };
 export type Context = { project: TsProject; file: string; abs: string; text: string; from: number; to: number; sf: ts.SourceFile; checker: ts.TypeChecker };
 /** A studio action: offered when `titles` returns something; `apply` returns the file's new text or several files. */
 export type Custom = { name: string; offer: (c: Context) => string | undefined; apply: (c: Context) => string | Change[] };
