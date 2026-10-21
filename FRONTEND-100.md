@@ -85,31 +85,31 @@ Status: `[x]` done, `[ ]` to do. Before this list, JS / TS / HTML / CSS files op
 - [x] F70 HTML language injection
 
 ## CSS, SCSS & LESS
-- [ ] F71 CSS selector completion
-- [ ] F72 CSS property completion
-- [ ] F73 CSS value completion
-- [ ] F74 CSS custom property navigation
-- [ ] F75 CSS variable usage search
-- [ ] F76 CSS selector specificity inspection
-- [ ] F77 CSS shorthand expansion
-- [ ] F78 CSS shorthand compression
-- [ ] F79 CSS vendor prefix handling
-- [ ] F80 CSS color previews
-- [ ] F81 CSS color picker
-- [ ] F82 CSS gradient previews
-- [ ] F83 CSS unit conversion
-- [ ] F84 CSS media query completion
-- [ ] F85 CSS container query completion
-- [ ] F86 CSS pseudo-class completion
-- [ ] F87 CSS pseudo-element completion
-- [ ] F88 CSS nesting support
-- [ ] F89 SCSS mixin navigation
-- [ ] F90 SCSS variable navigation
-- [ ] F91 SCSS function completion
-- [ ] F92 SCSS partial import resolution
-- [ ] F93 LESS variable completion
-- [ ] F94 CSS Modules class completion
-- [ ] F95 CSS Modules class navigation
+- [x] F71 CSS selector completion
+- [x] F72 CSS property completion
+- [x] F73 CSS value completion
+- [x] F74 CSS custom property navigation
+- [x] F75 CSS variable usage search
+- [x] F76 CSS selector specificity inspection
+- [x] F77 CSS shorthand expansion
+- [x] F78 CSS shorthand compression
+- [x] F79 CSS vendor prefix handling
+- [x] F80 CSS color previews
+- [x] F81 CSS color picker
+- [x] F82 CSS gradient previews
+- [x] F83 CSS unit conversion
+- [x] F84 CSS media query completion
+- [x] F85 CSS container query completion
+- [x] F86 CSS pseudo-class completion
+- [x] F87 CSS pseudo-element completion
+- [x] F88 CSS nesting support
+- [x] F89 SCSS mixin navigation
+- [x] F90 SCSS variable navigation
+- [x] F91 SCSS function completion
+- [x] F92 SCSS partial import resolution
+- [x] F93 LESS variable completion
+- [x] F94 CSS Modules class completion
+- [x] F95 CSS Modules class navigation
 
 ## Progress log
 - 2026-10-21: Foundation: CodeMirror modes for JS / TS / JSX / TSX / HTML / CSS / SCSS / SASS / LESS; the TypeScript 5 service on the server (`server/web/`), `/api/web/*`; diagnostics, completion with auto-imports, Quick Info, F12 / Shift+F12 / Alt+F12 / F2 / Ctrl+. / Shift+Alt+F for scripts. The desktop app ships `typescript5` beside its API bundle.
@@ -129,3 +129,4 @@ Status: `[x]` done, `[ ]` to do. Before this list, JS / TS / HTML / CSS files op
 - 2026-10-21: F46, F47, F48. eslint-plugin-react-hooks (exhaustive-deps, rules-of-hooks) run in-process with ESLint 9's Linter and Babel 7's parser (server/web/hooksLint.ts), loaded on first use: warnings and errors in the editor, and Update the dependencies array as a Quick Action. Babel 8's parser was not usable: it parses in a worker thread and blocks the API waiting for it.
 - 2026-10-21: F49, F50. Navigate ▸ Go to Context Provider (web and desktop): from a context or a useContext call to every <Ctx.Provider> and React 19 <Ctx value> (server/web/react.ts). JSX using a component with propTypes is checked for missing required props, undeclared props and literals of the wrong kind (TSX props are checked by TypeScript). Fixed on the way: .jsx, .mts, .cts, .sass, .less, .vue, .svelte, .xhtml and .map files could not be opened (Unsupported source file).
 - 2026-10-21: F51, F52, F53, F54, F55, F56, F57, F58, F59, F60, F61, F62, F63, F64, F65, F66, F67, F68, F69, F70. VS Code's HTML language service on the server (server/web/markup.ts): tag, attribute, value and entity completion, the project's custom elements (customElements.define with observedAttributes, html.customData) and CSS completion inside <style> and style=""; document formatting. CodeMirror's HTML mode closes tags and folds elements; linked editing (editor.linkedEditing) renames tag pairs. Studio checks: tag structure, unknown / duplicate / out-of-range attributes, nesting, image alt, labels, button and link text, html lang, iframe title, duplicate ids, ARIA roles, boolean and id-reference attributes. Quick Actions: wrap with <div>, remove a tag keeping its content, characters to entities and back. F12 / Shift+F12 on id references and class names. Fixed on the way: a watch restart could start the API before the previous instance had released its port, and the API then stayed down.
+- 2026-10-21: F71, F72, F73, F74, F75, F76, F77, F78, F79, F80, F81, F82, F83, F84, F85, F86, F87, F88, F89, F90, F91, F92, F93, F94, F95. VS Code's CSS, SCSS and LESS services on the server (server/web/styles.ts): property, value, at-rule, media feature, pseudo-class / -element and SCSS function completion, validation and vendor-prefix lint, selector specificity on hover, formatting; added by the studio: classes and ids of the project's markup as selectors, container names and features, SCSS functions and SCSS / LESS variables of other files, custom properties / mixins / variables / partials across files (F12, Shift+F12), unresolved partials, shorthand expand / combine, add and drop vendor prefixes, px / rem / em / ms / s / deg / turn conversions. Colour swatches (click for the colour picker, value kept in its format) and gradient previews in the editor. CSS Modules: typings generated from the stylesheet (allowArbitraryExtensions), so styles. completes class names, unknown classes are errors and F12 goes to the rule.

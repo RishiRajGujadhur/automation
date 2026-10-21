@@ -4020,3 +4020,18 @@ html[data-activity-bar='right'] .app-body > .activity-bar { order: 99; border-le
 
 /* Back / Forward beside the search box (GUI-QOL.md G6). */
 .nav-buttons { display: inline-flex; align-items: center; gap: 1px; margin-right: 4px; button:disabled { opacity: 0.35; } }
+
+/* Colour swatches, colour picker and gradient previews in stylesheets (FRONTEND-100.md F80–F82). */
+.cm-color-swatch, .cm-gradient-swatch {
+  display: inline-block;
+  width: 0.85em;
+  height: 0.85em;
+  margin: 0 3px 0 1px;
+  padding: 0;
+  border: 1px solid color-mix(in srgb, currentColor 45%, transparent);
+  border-radius: 2px;
+  vertical-align: -0.1em;
+  cursor: pointer;
+}
+.cm-gradient-swatch { width: 2.4em; cursor: default; }
+.cm-color-input { position: fixed; width: 1px; height: 1px; opacity: 0; pointer-events: none; }

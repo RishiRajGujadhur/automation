@@ -575,3 +575,147 @@ test('F70 HTML language injection (CSS in <style> and style="", JavaScript in <s
   await completeAt(page, 'style="', 7, 'marg', /^margin$/);
   await expect.poll(() => docText(page)).toContain('<p style="margin: ');
 });
+
+// ---- CSS, SCSS & LESS ----
+test('F71 selector, F72 property, F73 value, F84 media query, F85 container query, F86 pseudo-class, F87 pseudo-element completion', async ({ page }) => {
+  await fs.writeFile(path.join(temp, 'index.html'), '<main class="card hero"><p id="intro">Hi</p></main>\n');
+  await fs.writeFile(path.join(temp, 'src/Btn.tsx'), 'export const Btn = () => <button className="btn primary">Go</button>;\n');
+  await open(page, 'styles.css', '\n');
+  // F71 Classes the markup uses.
+  await completeAt(page, '\n', 0, '.he', /^\.hero$/);
+  await expect.poll(() => docText(page)).toBe('.hero\n');
+  await page.keyboard.type(' {\n');
+  // F72, F73
+  await completeAt(page, '.hero {\n', 8, 'backgr', /^background-color$/);
+  await expect.poll(() => docText(page)).toContain('background-color: ');
+  await setDoc(page, '.hero {\n  display: \n}\n');
+  await completeAt(page, 'display: ', 9, 'fl', /^flex$/);
+  await expect.poll(() => docText(page)).toContain('display: flex');
+  // F84, F85
+  await setDoc(page, '.side { container: sidebar / inline-size; }\n@media (\n');
+  await completeAt(page, '@media (', 8, 'prefers-co', /^prefers-color-scheme$/);
+  await expect.poll(() => docText(page)).toContain('@media (prefers-color-scheme: ');
+  await setDoc(page, '.side { container: sidebar / inline-size; }\n@container \n');
+  await completeAt(page, '@container ', 11, 'side', /^sidebar$/);
+  await expect.poll(() => docText(page)).toContain('@container sidebar');
+  await page.keyboard.type(' (');
+  await page.keyboard.press('Control+Space');
+  const inline = page.locator('.cm-tooltip-autocomplete li').filter({ has: page.locator('.cm-completionLabel', { hasText: /^inline-size$/ }) });
+  await expect(inline).toBeVisible({ timeout: 30_000 });
+  await inline.click();
+  await expect.poll(() => docText(page)).toContain('@container sidebar (inline-size: ');
+  // F86, F87
+  await setDoc(page, '.btn\n');
+  await completeAt(page, '.btn', 4, ':hov', /^:hover$/);
+  await expect.poll(() => docText(page)).toContain('.btn:hover');
+  await setDoc(page, '.btn\n');
+  await completeAt(page, '.btn', 4, '::bef', /^::before$/);
+  await expect.poll(() => docText(page)).toContain('.btn::before');
+});
+test('F74 CSS custom property navigation; F75 CSS variable usage search', async ({ page }) => {
+  await fs.writeFile(path.join(temp, 'tokens.css'), ':root {\n  --brand: #3366ff;\n}\n');
+  await fs.writeFile(path.join(temp, 'src/Tag.tsx'), 'export const Tag = () => <b style={{ color: "var(--brand)" }}>x</b>;\n');
+  await open(page, 'styles.css', '.a {\n  color: var(--brand);\n}\n.b { border-color: var(--brand); }\n');
+  await caretAt(page, 'var(--brand)', 7);
+  await page.keyboard.press('F12');
+  await expect(page.locator('.editor-tab-label[aria-current="true"]')).toHaveAttribute('title', 'tokens.css');
+  await page.getByLabel('Source of tokens.css').click();
+  await caretAt(page, '--brand', 3);
+  await page.keyboard.press('Shift+F12');
+  const refs = page.getByLabel(/References: --brand|Find All References/).or(page.getByRole('region', { name: /References/ })).first();
+  await expect(refs).toContainText('styles.css', { timeout: 30_000 });
+  await expect(refs).toContainText('src/Tag.tsx');
+  await expect(refs).toContainText('tokens.css');
+});
+test('F76 CSS selector specificity inspection', async ({ page }) => {
+  const editor = await open(page, 'styles.css', '#nav .item a:hover { color: red; }\n');
+  await editor.locator('.cm-line').first().locator('text=#nav').hover();
+  await expect(page.locator('.cm-quickinfo')).toContainText('Selector Specificity: (1, 2, 1)', { timeout: 15_000 });
+});
+test('F77 CSS shorthand expansion; F78 CSS shorthand compression', async ({ page }) => {
+  await open(page, 'styles.css', '.a {\n  margin: 4px 8px;\n  color: red;\n}\n');
+  await convert(page, 'margin', /^Expand margin into longhand properties$/, '.a {\n  margin-top: 4px;\n  margin-right: 8px;\n  margin-bottom: 4px;\n  margin-left: 8px;\n  color: red;\n}', false, 2);
+  await convert(page, 'margin-top', /^Combine into margin shorthand$/, '.a {\n  margin: 4px 8px;\n  color: red;\n}', false, 2);
+});
+test('F79 CSS vendor prefix handling', async ({ page }) => {
+  await open(page, 'styles.css', '.a {\n  user-select: none;\n  -webkit-border-radius: 4px;\n}\n');
+  await convert(page, 'user-select', /^Add vendor prefixes for user-select \(-webkit-user-select\)$/, '  -webkit-user-select: none;\n  user-select: none;', false, 2);
+  await convert(page, '-webkit-border-radius', /^Remove the obsolete prefix -webkit-border-radius \(use border-radius\)$/, '  border-radius: 4px;', false, 3);
+  // The service's lint: a prefixed property without its standard one.
+  const problems = (await (await page.request.post('/api/web/diagnostics', { data: { file: 'styles.css', source: '.b { -webkit-appearance: none; }' } })).json()) as { message: string }[];
+  expect(problems.map((p) => p.message).join()).toMatch(/Also define the standard property 'appearance'/);
+});
+test('F80 CSS color previews; F81 CSS color picker; F82 CSS gradient previews', async ({ page }) => {
+  const editor = await open(page, 'styles.css', '.a {\n  color: red;\n  border-color: rgb(0, 0, 255);\n  background: linear-gradient(90deg, #ff0000, #0000ff);\n}\n');
+  const swatches = editor.locator('.cm-color-swatch');
+  await expect(swatches).toHaveCount(4);
+  await expect(editor.locator('.cm-gradient-swatch')).toHaveAttribute('aria-label', 'Gradient preview: linear-gradient(90deg, #ff0000, #0000ff)');
+  // The picker writes the value in its own format.
+  await editor.getByRole('button', { name: 'Colour red: pick a colour' }).dispatchEvent('mousedown');
+  await page.getByLabel('Colour picker').fill('#00ff00');
+  await expect.poll(() => docText(page)).toContain('color: #00ff00;');
+  await editor.getByRole('button', { name: /^Colour rgb\(0, 0, 255\)/ }).dispatchEvent('mousedown');
+  await page.getByLabel('Colour picker').fill('#336699');
+  await expect.poll(() => docText(page)).toContain('border-color: rgb(51, 102, 153);');
+});
+test('F83 CSS unit conversion', async ({ page }) => {
+  await open(page, 'styles.css', '.a {\n  font-size: 24px;\n  transition: opacity 250ms;\n}\n');
+  await convert(page, '24px', /^Convert 24px to 1\.5rem$/, 'font-size: 1.5rem;', false, 1);
+  await convert(page, '250ms', /^Convert 250ms to 0\.25s$/, 'transition: opacity 0.25s;', false, 1);
+});
+test('F88 CSS nesting support', async ({ page }) => {
+  const editor = await open(page, 'styles.css', '.card {\n  color: red;\n  &:hover {\n    color: blue;\n  }\n  .title {\n    font-weight: bold;\n    \n  }\n}\n');
+  await page.waitForTimeout(1500);
+  await expect(editor.locator('.cm-lintRange-error')).toHaveCount(0);
+  await completeAt(page, 'font-weight: bold;\n    ', 23, 'text-al', /^text-align$/);
+  await expect.poll(() => docText(page)).toContain('    text-align: ');
+});
+test('F89 SCSS mixin navigation; F90 SCSS variable navigation; F92 SCSS partial import resolution', async ({ page }) => {
+  await fs.mkdir(path.join(temp, 'scss'), { recursive: true });
+  await fs.writeFile(path.join(temp, 'scss/_mixins.scss'), '@mixin flex-center {\n  display: flex;\n  align-items: center;\n}\n');
+  await fs.writeFile(path.join(temp, 'scss/_vars.scss'), '$brand: #3366ff;\n');
+  const editor = await open(page, 'scss/main.scss', '@use "mixins";\n@use "vars" as *;\n.a {\n  @include mixins.flex-center;\n  color: $brand;\n}\n');
+  await caretAt(page, 'flex-center;', 3);
+  await page.keyboard.press('F12');
+  await expect(page.locator('.editor-tab-label[aria-current="true"]')).toHaveAttribute('title', 'scss/_mixins.scss');
+  await page.getByRole('button', { name: 'main.scss', exact: true }).first().click();
+  await page.getByLabel('Source of scss/main.scss').click();
+  await caretAt(page, '$brand', 2);
+  await page.keyboard.press('F12');
+  await expect(page.locator('.editor-tab-label[aria-current="true"]')).toHaveAttribute('title', 'scss/_vars.scss');
+  await page.getByRole('button', { name: 'main.scss', exact: true }).first().click();
+  await page.getByLabel('Source of scss/main.scss').click();
+  // F92 The partial behind @use "vars" (_vars.scss), and an import that does not resolve.
+  await caretAt(page, '"vars"', 2);
+  await page.keyboard.press('F12');
+  await expect(page.locator('.editor-tab-label[aria-current="true"]')).toHaveAttribute('title', 'scss/_vars.scss');
+  const problems = (await (await page.request.post('/api/web/diagnostics', { data: { file: 'scss/main.scss', source: '@use "missing";\n' } })).json()) as { message: string }[];
+  expect(problems.map((p) => p.message)).toContain('Cannot find the stylesheet "missing" (tried missing.scss, missing.sass, missing.css, missing.less, _missing.scss, _missing.sass, _missing.css, _missing.less, _index.scss, _index.sass, _index.css, _index.less, index.scss, index.sass, index.css, index.less).');
+  void editor;
+});
+test('F91 SCSS function completion; F93 LESS variable completion', async ({ page }) => {
+  await fs.writeFile(path.join(temp, '_functions.scss'), '@function rem($px) { @return math.div($px, 16) * 1rem; }\n');
+  await fs.writeFile(path.join(temp, 'vars.less'), '@primary: #333;\n@spacing: 8px;\n');
+  await open(page, 'main.scss', '.a {\n  color: \n  margin: \n}\n');
+  await completeAt(page, 'color: ', 7, 'darke', /^darken$/);
+  await expect.poll(() => docText(page)).toContain('color: darken(');
+  await completeAt(page, 'margin: ', 8, 're', /^rem$/);
+  await expect.poll(() => docText(page)).toContain('margin: rem(');
+  await open(page, 'main.less', '.a {\n  color: \n}\n');
+  await completeAt(page, 'color: ', 7, '@pri', /^@primary$/);
+  await expect.poll(() => docText(page)).toContain('color: @primary');
+});
+test('F94 CSS Modules class completion; F95 CSS Modules class navigation', async ({ page }) => {
+  await withReact();
+  await fs.writeFile(path.join(temp, 'src/Card.module.css'), '.card {\n  padding: 8px;\n}\n.title-text { font-weight: bold; }\n');
+  const editor = await open(page, 'src/Card.tsx', 'import styles from "./Card.module.css";\nexport const Card = () => <div className={styles.}>x</div>;\n');
+  await completeAt(page, 'styles.', 7, 'ca', /^card$/);
+  await expect.poll(() => docText(page)).toContain('className={styles.card}');
+  // An unknown class is an error, like any missing property.
+  await setDoc(page, 'import styles from "./Card.module.css";\nexport const Card = () => <div className={styles.cart}>x</div>;\n');
+  await expect(editor.locator('.cm-lintRange-error')).toHaveCount(1, { timeout: 30_000 });
+  await setDoc(page, 'import styles from "./Card.module.css";\nexport const Card = () => <div className={styles.card}>x</div>;\n');
+  await caretAt(page, 'styles.card', 8);
+  await page.keyboard.press('F12');
+  await expect(page.locator('.editor-tab-label[aria-current="true"]')).toHaveAttribute('title', 'src/Card.module.css');
+});

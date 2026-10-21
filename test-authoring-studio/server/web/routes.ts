@@ -1,7 +1,7 @@
 import type { Express } from 'express';
 import { z } from 'zod';
 import { confined } from '../core.js';
-import { tsProject, SCRIPT, ts, applyEdits } from './tsService.js';
+import { tsProject, SCRIPT, ts, applyEdits, VIRTUAL_MODULE, stylesheetOf } from './tsService.js';
 import { listActions, applyAction, prefs, fmt, changesOf } from './tsActions.js';
 import './customs/index.js';
 import { editsForMove } from './customs/modules.js';
@@ -10,8 +10,10 @@ import { hookProblemsLoaded } from './hooksLint.js';
 import { contextProviders, propTypeProblems } from './react.js';
 import { htmlComplete, htmlTagComplete, htmlFormat, htmlProblems } from './markup.js';
 import { htmlActions, applyHtmlAction, htmlDefinition, htmlReferences } from './markupActions.js';
+import { locIn, styleComplete, styleHover, styleProblems, styleDefinition, styleReferences, styleActions, applyStyleAction, styleFormat } from './styles.js';
 
 const HTML = /\.(html?|xhtml|vue|svelte)$/i;
+const STYLE = /\.(css|scss|sass|less)$/i;
 import { declarationSource, toOriginal, toGenerated } from './navigation.js';
 
 /**
@@ -27,6 +29,7 @@ export function webRoutes(app: Express, root: () => string) {
 
   app.post('/api/web/diagnostics', async (req, res) => {
     const b = z.object({ file, source: z.string().max(5_000_000) }).parse(req.body);
+    if (STYLE.test(b.file)) { await confined(root(), b.file, false); res.json(styleProblems(root(), b.file, b.source).map((x) => ({ ...x, code: 0, unnecessary: false, deprecated: false }))); return; }
     if (HTML.test(b.file)) { await confined(root(), b.file, false); res.json(htmlProblems(root(), b.file, b.source).map((x) => ({ ...x, code: 0, unnecessary: false, deprecated: false }))); return; }
     const p = await script(b.file);
     const abs = p.setText(b.file, b.source);
@@ -75,14 +78,18 @@ export function webRoutes(app: Express, root: () => string) {
   const location = (p: ReturnType<typeof tsProject>, abs: string, start: number) => ({ file: p.rel(abs), ...lineCol(abs, start, p) });
   app.post('/api/web/definition', async (req, res) => {
     const b = at.parse(req.body);
+    if (STYLE.test(b.file)) { await confined(root(), b.file, false); res.json(styleDefinition(root(), b.file, b.source, b.pos)); return; }
     if (HTML.test(b.file)) { await confined(root(), b.file, false); res.json(htmlDefinition(root(), b.file, b.source, b.pos)); return; }
     const p = await script(b.file);
     const abs = p.setText(b.file, b.source);
     const defs = p.service.getDefinitionAtPosition(abs, b.pos) ?? [];
+    const sheet = defs.find((d) => VIRTUAL_MODULE.test(d.fileName));
+    if (sheet) { const css = stylesheetOf(sheet.fileName); const text = p.text(css); sheet.name = sheet.name.replace(/^["']|["']$/g, ''); const at = text.search(new RegExp(`\\.${sheet.name.replace(/[-]/g, '\\-')}(?![\\w-])`)); res.json({ name: `.${sheet.name}`, locations: at < 0 ? [] : [locIn(p.rel(css), text, at)] }); return; }
     res.json({ name: defs[0]?.name ?? '', locations: defs.map((d) => ({ ...location(p, d.fileName, d.textSpan.start), external: d.fileName.includes('/node_modules/') || !d.fileName.startsWith(p.root) ? d.fileName : undefined })) });
   });
   app.post('/api/web/references', async (req, res) => {
     const b = at.parse(req.body);
+    if (STYLE.test(b.file)) { await confined(root(), b.file, false); res.json(styleReferences(root(), b.file, b.source, b.pos)); return; }
     if (HTML.test(b.file)) { await confined(root(), b.file, false); res.json(htmlReferences(root(), b.file, b.source, b.pos)); return; }
     const p = await script(b.file);
     const abs = p.setText(b.file, b.source);
@@ -104,12 +111,14 @@ export function webRoutes(app: Express, root: () => string) {
 
   app.post('/api/web/actions', async (req, res) => {
     const b = z.object({ file, source: z.string().max(5_000_000), from: z.number().int().min(0), to: z.number().int().min(0) }).parse(req.body);
+    if (STYLE.test(b.file)) { await confined(root(), b.file, false); res.json(styleActions(b.file, b.source, b.from)); return; }
     if (HTML.test(b.file)) { await confined(root(), b.file, false); res.json(htmlActions(root(), b.file, b.source, b.from, b.to)); return; }
     const p = await script(b.file);
     res.json(listActions(p, b.file, b.source, b.from, b.to));
   });
   app.post('/api/web/applyAction', async (req, res) => {
     const b = z.object({ file, source: z.string().max(5_000_000), id: z.string().max(4000) }).parse(req.body);
+    if (STYLE.test(b.file)) { await confined(root(), b.file, false); const r = applyStyleAction(b.source, b.id); res.json({ title: r.title, changes: [{ file: b.file, text: r.text }] }); return; }
     if (HTML.test(b.file)) { await confined(root(), b.file, false); const r = applyHtmlAction(root(), b.file, b.source, b.id); res.json({ title: r.title, changes: [{ file: b.file, text: r.text }] }); return; }
     const p = await script(b.file);
     res.json(applyAction(p, b.file, b.source, b.id));
@@ -154,6 +163,17 @@ export function webRoutes(app: Express, root: () => string) {
     await confined(root(), b.file, false);
     res.json(htmlComplete(root(), b.file, b.source, b.pos));
   });
+  /** CSS / SCSS / LESS (F71–F95): completion, and hover (selector specificity). */
+  app.post('/api/web/style/complete', async (req, res) => {
+    const b = at.parse(req.body);
+    await confined(root(), b.file, false);
+    res.json(styleComplete(root(), b.file, b.source, b.pos));
+  });
+  app.post('/api/web/style/hover', async (req, res) => {
+    const b = at.parse(req.body);
+    await confined(root(), b.file, false);
+    res.json(styleHover(b.file, b.source, b.pos));
+  });
   /** F54: the closing tag after `>` or `</`. */
   app.post('/api/web/markup/tagComplete', async (req, res) => {
     const b = at.parse(req.body);
@@ -162,6 +182,7 @@ export function webRoutes(app: Express, root: () => string) {
   });
   app.post('/api/web/format', async (req, res) => {
     const b = z.object({ file, source: z.string().max(5_000_000) }).parse(req.body);
+    if (STYLE.test(b.file)) { await confined(root(), b.file, false); res.json({ text: styleFormat(b.file, b.source) }); return; }
     if (HTML.test(b.file)) { await confined(root(), b.file, false); res.json({ text: htmlFormat(root(), b.file, b.source) }); return; }
     const p = await script(b.file);
     const abs = p.setText(b.file, b.source);

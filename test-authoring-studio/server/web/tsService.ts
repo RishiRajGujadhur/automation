@@ -1,6 +1,12 @@
 import { readdirSync, readFileSync, statSync, existsSync } from 'node:fs';
 import path from 'node:path';
 import ts from 'typescript5';
+import { moduleClasses } from './styles.js';
+
+/** F94 CSS Modules: `import s from './x.module.css'` reads typings generated from the stylesheet (x.module.d.css.ts). */
+export const VIRTUAL_MODULE = /\.module\.d\.(css|scss|sass|less)\.ts$/i;
+export const stylesheetOf = (virtual: string) => virtual.replace(VIRTUAL_MODULE, '.module.$1');
+const moduleTypings = (sheet: string) => `declare const styles: {\n${moduleClasses(readFileSync(sheet, 'utf8')).map((c) => `  readonly ${JSON.stringify(c)}: string;`).join('\n')}\n};\nexport default styles;\n`;
 
 /**
  * TypeScript / JavaScript language service for the open folder (FRONTEND-100.md): the TypeScript 5 service (the
@@ -22,12 +28,12 @@ export class TsProject {
     const host: ts.LanguageServiceHost = {
       getCompilationSettings: () => this.options,
       getScriptFileNames: () => this.list(),
-      getScriptVersion: (f) => { const o = this.overlay.get(f); if (o) return `o${o.version}`; try { return String(statSync(f).mtimeMs); } catch { return '0'; } },
-      getScriptSnapshot: (f) => { const o = this.overlay.get(f); if (o) return ts.ScriptSnapshot.fromString(o.text); try { return ts.ScriptSnapshot.fromString(readFileSync(f, 'utf8')); } catch { return undefined; } },
+      getScriptVersion: (f) => { const o = this.overlay.get(f); if (o) return `o${o.version}`; try { return String(statSync(VIRTUAL_MODULE.test(f) ? stylesheetOf(f) : f).mtimeMs); } catch { return '0'; } },
+      getScriptSnapshot: (f) => { const o = this.overlay.get(f); if (o) return ts.ScriptSnapshot.fromString(o.text); try { return ts.ScriptSnapshot.fromString(VIRTUAL_MODULE.test(f) ? moduleTypings(stylesheetOf(f)) : readFileSync(f, 'utf8')); } catch { return undefined; } },
       getCurrentDirectory: () => this.root,
       getDefaultLibFileName: (o) => ts.getDefaultLibFilePath(o),
-      fileExists: (f) => this.overlay.has(f) || ts.sys.fileExists(f),
-      readFile: (f) => this.overlay.get(f)?.text ?? ts.sys.readFile(f),
+      fileExists: (f) => this.overlay.has(f) || ts.sys.fileExists(f) || (VIRTUAL_MODULE.test(f) && ts.sys.fileExists(stylesheetOf(f))),
+      readFile: (f) => this.overlay.get(f)?.text ?? (VIRTUAL_MODULE.test(f) && ts.sys.fileExists(stylesheetOf(f)) ? moduleTypings(stylesheetOf(f)) : ts.sys.readFile(f)),
       readDirectory: ts.sys.readDirectory,
       directoryExists: ts.sys.directoryExists,
       getDirectories: ts.sys.getDirectories,
@@ -37,14 +43,14 @@ export class TsProject {
   }
   /** The repository's tsconfig.json / jsconfig.json, else settings for a modern React + TypeScript project. */
   private readOptions(): ts.CompilerOptions {
-    const defaults: ts.CompilerOptions = { target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.ESNext, moduleResolution: ts.ModuleResolutionKind.Bundler, jsx: ts.JsxEmit.ReactJSX, allowJs: true, checkJs: false, strict: true, esModuleInterop: true, skipLibCheck: true, resolveJsonModule: true, allowImportingTsExtensions: true, noEmit: true, lib: ['lib.es2023.d.ts', 'lib.dom.d.ts', 'lib.dom.iterable.d.ts'] };
+    const defaults: ts.CompilerOptions = { target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.ESNext, moduleResolution: ts.ModuleResolutionKind.Bundler, jsx: ts.JsxEmit.ReactJSX, allowJs: true, checkJs: false, strict: true, esModuleInterop: true, skipLibCheck: true, resolveJsonModule: true, allowImportingTsExtensions: true, allowArbitraryExtensions: true, noEmit: true, lib: ['lib.es2023.d.ts', 'lib.dom.d.ts', 'lib.dom.iterable.d.ts'] };
     for (const name of ['tsconfig.json', 'jsconfig.json']) {
       const file = path.join(this.root, name);
       if (!existsSync(file)) continue;
       const read = ts.readConfigFile(file, ts.sys.readFile);
       if (read.error) continue;
       const parsed = ts.parseJsonConfigFileContent(read.config, ts.sys, this.root);
-      return { ...defaults, ...parsed.options, allowJs: parsed.options.allowJs ?? true, noEmit: true };
+      return { ...defaults, ...parsed.options, allowJs: parsed.options.allowJs ?? true, noEmit: true, allowArbitraryExtensions: true };
     }
     return defaults;
   }

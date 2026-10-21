@@ -1,4 +1,5 @@
-import { isWebFile, webLanguage, SCRIPT_FILE, HTML_FILE } from './web/languages';
+import { isWebFile, webLanguage, SCRIPT_FILE, HTML_FILE, STYLE_FILE } from './web/languages';
+import { styleFeatures, colorPreviews } from './web/styleFeatures';
 import { markupFeatures } from './web/markupFeatures';
 import { scriptFeatures } from './web/scriptFeatures';
 import { webKeys } from './web/webKeys';
@@ -100,7 +101,7 @@ function languageOf(file: string, browser: boolean) {
   if (/\.(xml|csproj|props|targets|config|runsettings|resx)$/.test(file)) return xmlExtensions(false, /\.(csproj|props|targets)$/.test(file));
   if (file.endsWith('.feature')) return [...(browser ? [] : [breakpoints(file)]), ...gherkinSyntaxExtensions()];
   if (isHttpFile(file)) return [StreamLanguage.define(httpMode)];
-  if (isWebFile(file)) return [...webLanguage(file), ...(browser ? [] : SCRIPT_FILE.test(file) ? scriptFeatures(file) : HTML_FILE.test(file) ? markupFeatures(file) : [])];
+  if (isWebFile(file)) return [...webLanguage(file), ...(browser ? [] : SCRIPT_FILE.test(file) ? scriptFeatures(file) : HTML_FILE.test(file) ? [...markupFeatures(file), colorPreviews] : STYLE_FILE.test(file) ? styleFeatures(file) : [])];
   if (/\.(md|markdown|txt)$/i.test(file)) return markdownQol;
   return [];
 }
