@@ -166,7 +166,7 @@ test('114 Custom analyzer configuration: dotnet_diagnostic severities', async ({
   needsLang();
   await editorconfig(page, 'root = true\n[*.cs]\ndotnet_diagnostic.IDE0059.severity = warning\ndotnet_diagnostic.IDE0044.severity = none\n');
   await open(page, CS);
-  await setDoc(page, 'namespace Demo;\npublic class P\n{\n    private int f = 1;\n    public int Run(int a)\n    {\n        var x = 1;\n        x = a;\n        return x + f;\n    }\n}\n');
+  await setDoc(page, 'namespace Fixtures.Steps;\npublic class P\n{\n    private int f = 1;\n    public int Run(int a)\n    {\n        var x = 1;\n        x = a;\n        return x + f;\n    }\n}\n');
   // IDE0059 raised to a warning; IDE0044 (make field readonly) turned off.
   await expect.poll(() => lintText(page, '.cm-lintRange-warning'), { timeout: 60_000 }).toContain('x');
   await expect(page.locator('.cm-lintRange-info')).toHaveCount(0);
