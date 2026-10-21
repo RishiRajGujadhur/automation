@@ -673,9 +673,9 @@ test('X141 Command palette: recently used commands first', async ({ page }) => {
   await caretAt(page, 'Feature:');
   await menuItem(page, 'Edit', /^Remove Blank Lines/);
   await page.keyboard.press('Control+Shift+P');
-  const first = page.locator('.command-palette [cmdk-group]').filter({ hasText: 'Commands' }).locator('[cmdk-item]').first();
+  const first = page.getByRole('dialog', { name: 'Quick Input' }).getByRole('option').first();
   await expect(first).toContainText('Remove Blank Lines');
-  await expect(first).toContainText('recent');
+  await expect(first).toContainText('recently used');
 });
 
 test('X142 Run Selected Text in Terminal', async ({ page, request }) => {

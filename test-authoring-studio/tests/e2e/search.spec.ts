@@ -53,7 +53,7 @@ test('Find in Files (Ctrl+Shift+F), Replace in Files (Ctrl+Shift+H) and Go to Al
 
     // Go to All: files always; types and members when the C# language service is built.
     await page.locator('body').click({ position: { x: 5, y: 5 } });
-    await page.keyboard.press('Control+p');
+    await page.keyboard.press('Control+t');
     const dialog = page.getByRole('dialog', { name: 'Go to All' });
     await dialog.getByLabel('Go to All').fill('hooks');
     await expect(dialog.getByRole('option', { name: /Hooks\.cs/ })).toBeVisible();

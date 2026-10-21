@@ -77,6 +77,9 @@ import { snapshot } from './algorithms/registry';
 import { desktop, type DesktopMenuCommand } from './desktop';
 import StepCatalogue from './StepCatalogue';
 import SearchPalette from './SearchPalette';
+import QuickInput from './quickinput/QuickInput';
+import { openQuickInput } from './quickinput/store';
+import { openCommandPalette, setPaletteCommands, type PaletteEntry } from './quickinput/providers';
 import { SelectorCatalogue, BackgroundCatalogue } from './Catalogues';
 import { api } from './api';
 import { useLocalState, RowMenu, copyText } from './ui';
@@ -400,7 +403,9 @@ export default function App() {
     if (!desktop && e.shiftKey && !e.altKey && e.key.toLowerCase() === 'o') { e.preventDefault(); setModal('solution'); return; }
     if (e.shiftKey && !e.altKey && e.key.toLowerCase() === 'f') { e.preventDefault(); showSearch(false); return; }
     if (e.shiftKey && !e.altKey && e.key.toLowerCase() === 'h') { e.preventDefault(); showSearch(true); return; }
-    if (!e.shiftKey && !e.altKey && (e.key.toLowerCase() === 't' || e.key.toLowerCase() === 'p')) { e.preventDefault(); setModal('goto'); return; }
+    if (!e.shiftKey && !e.altKey && e.key.toLowerCase() === 't') { e.preventDefault(); setModal('goto'); return; }
+    // Quick Open (VS Code, W1).
+    if (!e.shiftKey && !e.altKey && e.key.toLowerCase() === 'p') { e.preventDefault(); openQuickInput(''); return; }
     if (e.altKey && !e.shiftKey && e.key.toLowerCase() === 'o') { e.preventDefault(); openOutput(); return; }
     if (e.shiftKey && !e.altKey && e.key.toLowerCase() === 'b') { e.preventDefault(); if (getBuild().status !== 'running') runBuild('build'); return; }
     if (e.key === 'Pause' || e.key === 'Cancel') { if (getBuild().status === 'running') { e.preventDefault(); void cancelBuild(); } return; }
@@ -1005,7 +1010,7 @@ export default function App() {
       }
       if ((e.ctrlKey || e.metaKey) && e.shiftKey && !e.altKey && e.key.toLowerCase() === 'p') {
         e.preventDefault();
-        setPaletteOpen(true);
+        openCommandPalette();
       }
     };
     window.addEventListener('keydown', handler);
@@ -1060,7 +1065,7 @@ export default function App() {
     if (c === 'run-tests') { setModal('run'); return; }
     if (c === 'continue-draft') { setTab('Test Generator'); return; }
     if (c === 'design-tool' && typeof arg === 'string') { try { localStorage.setItem('tas:design:tool', JSON.stringify(arg)); } catch { /* storage blocked */ } setDesignKey((k) => k + 1); setTab('Test Design'); return; }
-    if (c === 'palette') setPaletteOpen(true);
+    if (c === 'palette') openCommandPalette();
     else if (c === 'preferences') setModal('preferences');
     else if (c === 'shortcuts') setModal('shortcuts');
     else if (c === 'workspace-settings') setModal('settings');
@@ -1206,6 +1211,23 @@ export default function App() {
           : `click("${a.target?.description ?? a.target?.name ?? 'element'}")`;
   const matched = matches.filter((m) => m.candidates.length).length;
   const riderList = useRiderCommands();
+  // Command palette entries: the old palette (Ctrl+K) and VS Code's Quick Input (Ctrl+Shift+P, W2) share them.
+  const paletteCommands: PaletteEntry[] = [
+          { label: 'Rescan repository', run: () => work(async () => { setIndex(await api('/scan', {})); setNotice('Repository index refreshed.'); }) },
+          { label: 'Start a recording', run: () => { setTab('Features'); setView('recorder'); setModal('record'); } },
+          { label: 'Create a new feature', run: () => beginFeature() },
+          { label: 'Open workspace settings', run: () => setModal('settings') },
+          { label: 'Show keyboard shortcuts', run: () => setModal('shortcuts'), shortcut: '?' },
+          { label: 'Show index diagnostics', run: () => setModal('diagnostics') },
+          { label: 'Start the guided tour', run: () => setGuideOpen(true) },
+          { label: 'Preferences', run: () => setModal('preferences') },
+          { label: 'Toggle focus mode', run: () => setPrefs({ focus: !prefs.focus }), shortcut: 'Ctrl .' },
+          { label: 'Copy link to this page', run: () => copyText(location.href).then((ok) => setNotice(ok ? 'Link copied.' : 'Clipboard unavailable.')) },
+          // Recently used commands first (VS Code's command palette): the palette orders by `recent`.
+          ...(() => { const u = featureOn('palette-recent') ? readUsage() : {}; return riderList.filter((c) => commandOn(c.id)).map((c) => { const last = u[c.id]?.last ?? 0; return { id: c.id, label: `${c.menu}: ${c.label}`, shortcut: last ? `recent${c.shortcut ? ` · ${c.shortcut}` : ''}` : c.shortcut, recent: last, run: () => { runRider(c.id, 'palette'); } }; }); })(),
+          ...designTools.map((d) => ({ label: `Test Design: ${d.label}`, run: () => { try { localStorage.setItem('tas:design:tool', JSON.stringify(d.id)); } catch { /* storage blocked */ } setDesignKey((k) => k + 1); setTab('Test Design'); } })),
+  ];
+  setPaletteCommands(paletteCommands);
   const menuProps = {
     pages: basic ? [] : moreTabs.map((t) => ({ ...t })),
     primary: navTabs.map((t, i) => ({ name: t.name, icon: t.icon, hint: `Alt+${i + 1}` })),
@@ -1286,6 +1308,7 @@ export default function App() {
       >
       <CreateStepDialog onOpen={(file, line) => editFile(file, line)} onIndex={setIndex} onNotice={setNotice} />
       <RiderHost onNotice={setNotice} onNavigate={navigateTo} onTool={showRiderTool} onExplorer={() => { setTab('Features'); if (view !== 'code' && view !== 'editor') setView('editor'); setSidebarView('explorer'); setPrefs({ sidebar: true }); }} />
+      <QuickInput />
       <SearchPalette
         open={paletteOpen}
         onOpenChange={setPaletteOpen}
@@ -1293,21 +1316,7 @@ export default function App() {
         onAdd={(b) => addBinding(b)}
         revision={revision}
         recentPages={recentPages}
-        commands={[
-          { label: 'Rescan repository', run: () => work(async () => { setIndex(await api('/scan', {})); setNotice('Repository index refreshed.'); }) },
-          { label: 'Start a recording', run: () => { setTab('Features'); setView('recorder'); setModal('record'); } },
-          { label: 'Create a new feature', run: () => beginFeature() },
-          { label: 'Open workspace settings', run: () => setModal('settings') },
-          { label: 'Show keyboard shortcuts', run: () => setModal('shortcuts'), shortcut: '?' },
-          { label: 'Show index diagnostics', run: () => setModal('diagnostics') },
-          { label: 'Start the guided tour', run: () => setGuideOpen(true) },
-          { label: 'Preferences', run: () => setModal('preferences') },
-          { label: 'Toggle focus mode', run: () => setPrefs({ focus: !prefs.focus }), shortcut: 'Ctrl .' },
-          { label: 'Copy link to this page', run: () => copyText(location.href).then((ok) => setNotice(ok ? 'Link copied.' : 'Clipboard unavailable.')) },
-          // Recently used commands first (VS Code's command palette): the palette orders by `recent`.
-          ...(() => { const u = featureOn('palette-recent') ? readUsage() : {}; return riderList.filter((c) => commandOn(c.id)).map((c) => { const last = u[c.id]?.last ?? 0; return { label: `${c.menu}: ${c.label}`, shortcut: last ? `recent${c.shortcut ? ` · ${c.shortcut}` : ''}` : c.shortcut, recent: last, run: () => { runRider(c.id, 'palette'); } }; }); })(),
-          ...designTools.map((d) => ({ label: `Test Design: ${d.label}`, run: () => { try { localStorage.setItem('tas:design:tool', JSON.stringify(d.id)); } catch { /* storage blocked */ } setDesignKey((k) => k + 1); setTab('Test Design'); } })),
-        ]}
+        commands={paletteCommands}
       />
       {busy && <IndeterminateProgress label="Working" />}
       {!online && (

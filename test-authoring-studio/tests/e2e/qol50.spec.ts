@@ -298,10 +298,11 @@ test('QL37 Command palette remembers the last query', async ({ page }) => {
   await page.keyboard.type('sort lines');
   await page.keyboard.press('Escape');
   await page.keyboard.press('Control+Shift+P');
-  const input = page.getByLabel('Search commands and steps').last();
-  await expect(input).toHaveValue('sort lines');
+  const input = page.getByRole('combobox', { name: 'Quick Input' });
+  await expect(input).toHaveValue('>sort lines');
+  // The query after the prefix is selected: typing replaces it.
   await page.keyboard.type('x');
-  await expect(input).toHaveValue('x');
+  await expect(input).toHaveValue('>x');
 });
 
 test('QL38 / QL39 Lists: Page Down, Ctrl+End and the typed text marked', async ({ page }) => {
@@ -492,10 +493,10 @@ test('QL65 / QL66 Find in Files starts with the selection; Go to All remembers i
   await page.keyboard.press('Shift+End');
   await page.keyboard.press('Control+Shift+F');
   await expect(page.getByRole('region', { name: 'Search' }).getByLabel('Search in files')).toHaveValue('dashboard is displayed');
-  await page.keyboard.press('Control+P');
+  await page.keyboard.press('Control+T');
   await page.keyboard.type('login');
   await page.keyboard.press('Escape');
-  await page.keyboard.press('Control+P');
+  await page.keyboard.press('Control+T');
   await expect(page.getByRole('dialog').locator('input').first()).toHaveValue('login');
 });
 
