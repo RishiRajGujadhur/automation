@@ -231,7 +231,7 @@ Legend: `[x]` done · `[ ]` to do.
 - [x] 211. Bracket pair guides — editor.guides.bracketPairs (true / active / false), editor.guides.highlightActiveBracketPair (2026-10-21)
 - [x] 212. Automatic import organization — Organize Usings
 - [x] 213. Automatic import removal — remove unused usings
-- [ ] 214. Import alias generation
+- [x] 214. Import alias generation — Quick Actions on an ambiguous type (CS0104): using X = Namespace.X; (the compiler errors now reach Quick Actions) (2026-10-21)
 - [x] 215. Namespace import optimization — Organize Usings, Code Cleanup
 - [x] 216. Code formatting on save — editor.formatOnSave: C# (Roslyn + .editorconfig), feature files, JSON (2026-10-21)
 - [x] 217. Code actions on save — editor.codeActionsOnSave.organizeImports: sort and remove unnecessary usings on save (2026-10-21)
@@ -413,3 +413,4 @@ Legend: `[x]` done · `[ ]` to do.
 - 2026-10-21 74: A static member moves to another class; calls through the old class follow.
 - 2026-10-21 82: A static Create method beside the constructor.
 - 2026-10-21 83: The constructor becomes private; new T(...) outside the class becomes T.Create(...).
+- 2026-10-21 214: An ambiguous type name offers a using alias for each candidate, or the fully qualified name.

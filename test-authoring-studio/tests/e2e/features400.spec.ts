@@ -885,3 +885,8 @@ test('83 Replace constructor with factory', async ({ page }) => {
   expect(d).toContain('public static C Create() => new C();');
   expect(d).toContain('public C Make() => C.Create();');
 });
+
+test('214 Import alias generation', async ({ page }) => {
+  await analyzerFix(page, 'using System.Threading;\nusing System.Timers;\nnamespace Fixtures.Steps;\npublic class P\n{\n    private Timer? t;\n    public object? T => t;\n}\n',
+    [{ cls: '.cm-lintRange-error', text: 'Timer' }], 'Timer?', /^using Timer = System\.Timers\.Timer;$/, (d) => d.includes('using Timer = System.Timers.Timer;'), );
+});
