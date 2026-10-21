@@ -982,3 +982,21 @@ test('W44 window.menuBarVisibility: toggle (Alt shows it), compact (☰), hidden
   await expect(file).toBeHidden();
   await expect(page.getByRole('button', { name: 'Application Menu' })).toHaveCount(0);
 });
+
+test('W45 Command center: the workspace name opens Quick Open, the arrow lists the pickers; window.commandCenter', async ({ page }) => {
+  await start(page);
+  const cc = page.getByRole('group', { name: 'Command Center' });
+  const main = cc.getByRole('button', { name: /^Search .*Ctrl\+P/ });
+  await expect(main).toContainText(path.basename(temp));
+  await main.click();
+  await expect(quickBox(page)).toHaveValue('');
+  await expect(quickBox(page)).toHaveAttribute('placeholder', /Search files by name/);
+  await page.keyboard.press('Escape');
+  await cc.getByRole('button', { name: 'Search Options' }).click();
+  await expect(quickBox(page)).toHaveValue('?');
+  await page.keyboard.press('Escape');
+  await page.evaluate(() => localStorage.setItem('tas:settings', JSON.stringify({ 'window.commandCenter': false })));
+  await page.reload();
+  await expect(page.getByText('Repository indexed')).toBeVisible();
+  await expect(cc).toHaveCount(0);
+});

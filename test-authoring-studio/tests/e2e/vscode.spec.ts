@@ -39,8 +39,9 @@ test('activity bar navigates; Features toggles the explorer like VS Code', async
   await expect(page.locator('html')).toHaveAttribute('data-sidebar', 'true');
   await features.click();
   await expect(page.locator('html')).toHaveAttribute('data-sidebar', 'false');
-  await page.getByRole('button', { name: /Search pages, commands and steps/ }).click();
-  await expect(page.locator('[cmdk-input]')).toBeVisible();
+  // VS Code's command center (VSCODE-250.md W45): Quick Open.
+  await page.getByRole('group', { name: 'Command Center' }).getByRole('button', { name: /^Search .*Ctrl\+P/ }).click();
+  await expect(page.getByRole('combobox', { name: 'Quick Input' })).toBeVisible();
 });
 
 test('short windows move extra pages into a ☰ overflow menu; nothing is cut off', async ({ page }) => {

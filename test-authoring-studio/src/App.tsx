@@ -84,7 +84,7 @@ import StepCatalogue from './StepCatalogue';
 import SearchPalette from './SearchPalette';
 import QuickInput from './quickinput/QuickInput';
 import { openQuickInput, openQuickPick } from './quickinput/store';
-import { menuBarVisibility, revealMenuBar } from './vscode/menuBar';
+import { commandCenter, menuBarVisibility, revealMenuBar } from './vscode/menuBar';
 import { openCommandPalette, openQuickOpen, runPaletteCommand, setPaletteCommands, type PaletteEntry } from './quickinput/providers';
 import { setOpenViews } from './quickinput/help';
 import { customizeLayout, setLayoutParts, resetLayoutSettings } from './quickinput/layoutPick';
@@ -1505,12 +1505,15 @@ export default function App() {
         {vscode && featureOn('nav-buttons') && (
           <NavButtons onGo={navigateTo} />
         )}
-        {vscode && (
-          <button className="command-center" onClick={() => setPaletteOpen(true)} aria-label="Search pages, commands and steps (Ctrl+K)">
-            <Search size={13} aria-hidden="true" />
-            <span>{index?.workspace ?? 'Search'}</span>
-            <kbd>Ctrl K</kbd>
-          </button>
+        {/* VS Code's command center (W45): the workspace's name, a click is Quick Open; the arrow lists the other pickers. */}
+        {vscode && commandCenter() && (
+          <span className="command-center" role="group" aria-label="Command Center">
+            <button className="command-center-main" onClick={() => openQuickOpen()} aria-label={`Search ${index?.workspace ?? 'files'} (Ctrl+P)`} title={`Search ${index?.workspace ?? 'files'} (Ctrl+P)`}>
+              <Search size={13} aria-hidden="true" />
+              <span>{fileSrc.kind === 'browser' ? fileSrc.name : (index?.workspace ?? 'Search')}</span>
+            </button>
+            <button className="command-center-more" aria-label="Search Options" title="Search Options" onClick={() => openQuickInput('?')}><ChevronDown size={13} aria-hidden="true" /></button>
+          </span>
         )}
         {vscode && tab === 'Features' && featureViewSwitch}
         {vscode && !basic && <AppMenuButton {...menuProps} />}

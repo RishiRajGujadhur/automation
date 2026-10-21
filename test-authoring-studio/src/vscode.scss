@@ -821,3 +821,14 @@ html[data-side-bar='right'] .app-body {
   .app-header .menubar-item { display: none; }
 }
 .app-header .menubar-toggle { margin: 0 2px; }
+
+// The command center's two halves (W45): the search box and VS Code's options arrow.
+:root[data-layout='vscode'] .app-header .command-center {
+  padding: 0;
+  gap: 0;
+  overflow: hidden;
+  button { height: 100%; border: 0; background: none; color: inherit; font: inherit; cursor: pointer; display: flex; align-items: center; }
+  .command-center-main { flex: 1; min-width: 0; gap: 8px; padding: 0 10px; justify-content: center; }
+  .command-center-more { flex: none; padding: 0 6px; border-left: 1px solid var(--border); }
+  button:hover { background: color-mix(in srgb, var(--text) 8%, transparent); color: var(--text); }
+}

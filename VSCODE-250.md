@@ -64,7 +64,7 @@ Legend: `[x]` done · `[ ]` to do.
 - [x] W42. Panel alignment: center / justify / left / right (workbench.panel.alignment)
 - [x] W43. Primary side bar on the right (workbench.sideBar.location)
 - [x] W44. Menu bar visibility: classic / compact (a ☰ button) / toggle (Alt shows) / hidden (window.menuBarVisibility)
-- [ ] W45. Command center in the title bar: `← → [🔍 folder name]`, click opens Quick Open (window.commandCenter)
+- [x] W45. Command center in the title bar: `← → [🔍 folder name]`, click opens Quick Open (window.commandCenter)
 - [ ] W46. Window title from window.title (${activeEditorShort}${separator}${rootName}…) and window.titleSeparator
 - [ ] W47. Activity bar: Accounts and Manage (gear) menus at the bottom
 - [ ] W48. Activity bar: right-click to hide / show items, drag to reorder (persisted)
@@ -338,3 +338,4 @@ Legend: `[x]` done · `[ ]` to do.
 - 2026-10-21: W42. workbench.panel.alignment: a bottom panel under the editors only (center, default), the whole window width (justify), or with the primary (left) or secondary (right) side bar.
 - 2026-10-21: W43. workbench.sideBar.location: the primary side bar and its activity bar on the right (the secondary side bar goes left), its resizer works the other way round; Customize Layout gained Primary Side Bar Position and Panel Alignment. Fixed on the way: a title bar too wide for the window scrolled the whole workbench sideways; it is clipped now, and narrower windows get icon-only view switches, a short product name and no section crumb so everything fits at 1440 px.
 - 2026-10-21: W44. window.menuBarVisibility: classic, compact (a ☰ shows the menus; on desktop it pops up the native menu), toggle (Alt pressed alone shows and focuses them; a used menu, Escape or a click elsewhere hides them) or hidden. The desktop app applies it to its native menu bar. Customize Layout ▸ Visibility gained Menu Bar.
+- 2026-10-22: W45. The title bar's command center is VS Code's: the workspace name (a click is Quick Open, Ctrl+P) and an arrow listing the pickers (?); window.commandCenter hides it. The old step palette stays on Ctrl+K.

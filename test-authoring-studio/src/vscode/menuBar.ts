@@ -46,3 +46,6 @@ if (typeof window !== 'undefined') {
     if ('menubarShown' in root().dataset && !t.closest('.app-header .menubar-item, [role="menu"], .menubar-toggle')) revealMenuBar(false);
   }, true);
 }
+
+/** window.commandCenter (W45): the title bar's search box with the workspace name. */
+export const commandCenter = defineSetting<boolean>({ key: 'window.commandCenter', category: 'Window', title: 'Command Center', type: 'boolean', default: true, description: 'Show the command launcher together with the window title.' });
