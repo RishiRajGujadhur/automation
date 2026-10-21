@@ -61,7 +61,7 @@ Legend: `[x]` done · `[ ]` to do.
 
 ## Layout
 - [x] W41. Customize Layout quick pick (visibility, side bar position, panel alignment, quick input position, modes) with reset
-- [ ] W42. Panel alignment: center / justify / left / right (workbench.panel.alignment)
+- [x] W42. Panel alignment: center / justify / left / right (workbench.panel.alignment)
 - [ ] W43. Primary side bar on the right (workbench.sideBar.location)
 - [ ] W44. Menu bar visibility: classic / compact (a ☰ button) / toggle (Alt shows) / hidden (window.menuBarVisibility)
 - [ ] W45. Command center in the title bar: `← → [🔍 folder name]`, click opens Quick Open (window.commandCenter)
@@ -335,3 +335,4 @@ Legend: `[x]` done · `[ ]` to do.
 - 2026-10-21: W39. Palette commands Notifications: Show / Hide Notifications, Clear All Notifications, Toggle Do Not Disturb Mode, Focus Notification Toast and Accept Notification Primary Action; Ctrl+Shift+A presses a toast's primary button (Undo, Cancel) while one is up.
 - 2026-10-21: W40. Each toast has VS Code's gear with Don't Show Again: messages of that kind (numbers and quoted names aside) stop popping up but stay in the Notification Center; Notifications: Reset 'Don't Show Again' Messages brings them back.
 - 2026-10-21: W41. View ▸ Customize Layout… (and a layout button in the title bar's layout controls): VS Code's quick pick with Visibility (Activity Bar, Primary / Secondary Side Bar, Panel, Status Bar), Quick Input Position and Modes (Full Screen, Zen Mode, Centered Layout); toggles keep it open showing the new state; Reset to Defaults.
+- 2026-10-21: W42. workbench.panel.alignment: a bottom panel under the editors only (center, default), the whole window width (justify), or with the primary (left) or secondary (right) side bar.

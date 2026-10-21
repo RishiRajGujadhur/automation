@@ -1,3 +1,4 @@
+import { createPortal } from 'react-dom';
 import React, { useEffect, useState, useCallback, useRef, useMemo, lazy, Suspense } from 'react';
 // Pages and dialogs that are not part of the first screen load on demand (smaller start-up bundle).
 const StudioTourLazy = lazy(() => import('./StudioTour'));
@@ -50,7 +51,7 @@ import { featureOn, disabledCommands, onFeaturesChanged } from './features';
 import { zenSilent } from './vscode/zenMode';
 import { sideBySide, useMaximizedGroup } from './vscode/editorGroups';
 import { useSettings, setSetting, resetSetting } from './vscode/settings';
-import { activityBarLocation, panelLocation } from './vscode/workbenchLayout';
+import { activityBarLocation, panelAlignment, panelLocation } from './vscode/workbenchLayout';
 import { studioLog } from './outputLog';
 import RecentPopup from './RecentPopup';
 import LocalHistory from './LocalHistory';
@@ -1324,6 +1325,22 @@ export default function App() {
     toggleSecondary: () => setSecondary((x) => (x ? null : 'structure')),
     reset: () => { setPrefs({ sidebar: true }); setPanelHidden(false); setSecondary(null); setViewOptions({ hideActivityBar: false, hideStatusBar: false, centered: false }); resetSetting('workbench.quickInput.position'); resetLayoutSettings(); },
   });
+  // Panel alignment: where a full-width bottom panel starts and ends (the side bars it spans).
+  const [panelSlot, setPanelSlot] = useState<HTMLDivElement | null>(null);
+  const [panelSlotStyle, setPanelSlotStyle] = useState<React.CSSProperties>({});
+  useEffect(() => {
+    const a = panelAlignment();
+    if (a === 'center' || a === 'justify') { setPanelSlotStyle({}); return; }
+    const measure = () => {
+      const main = document.querySelector('main.main-content, main')?.getBoundingClientRect();
+      if (!main) return;
+      setPanelSlotStyle(a === 'right' ? { marginLeft: main.left } : { marginRight: Math.max(0, window.innerWidth - main.right) });
+    };
+    measure();
+    window.addEventListener('resize', measure);
+    const t = setInterval(measure, 1000);
+    return () => { window.removeEventListener('resize', measure); clearInterval(t); };
+  });
   const dock = inEditor && dockShows ? (
     <div ref={dockRef} className={`dock dock-${dockSide} ${panelSize[dockSide === 'bottom' ? 'h' : 'w'] ? 'dock-sized' : ''} ${panelMax ? 'dock-max' : ''}`} style={panelStyle} hidden={panelHidden}>
       {!panelMax && <PanelSash side={dockSide} size={dockSide === 'bottom' ? panelSize.h : panelSize.w} onSize={(px) => setPanelSize(dockSide === 'bottom' ? { ...panelSize, h: px } : { ...panelSize, w: px })} panel={() => dockRef.current} />}
@@ -2206,7 +2223,7 @@ export default function App() {
             {dockSide === 'right' && dock}
             </div>
           )}
-          {dockSide === 'bottom' && dock}
+          {dockSide === 'bottom' && (panelAlignment() === 'center' || !panelSlot ? dock : createPortal(dock, panelSlot))}
           {tab === 'Features' && view === 'builder' && (
             <div className="builder-grid">
               <section className="panel builder-panel">
@@ -2425,6 +2442,8 @@ export default function App() {
           </aside>
         )}
       </div>
+      {/* workbench.panel.alignment (W42): a bottom panel wider than the editors sits here, under the side bars too. */}
+      {panelAlignment() !== 'center' && <div className={`panel-slot panel-align-${panelAlignment()}`} ref={setPanelSlot} style={panelSlotStyle} />}
       <nav className="bottom-nav" aria-label="Main (mobile)">
         {navTabs.map((t) => (
           <button key={t.name} className={tab === t.name ? 'active' : ''} aria-current={tab === t.name ? 'page' : undefined} onClick={() => navigate(t.name)}>

@@ -13,3 +13,14 @@ export const panelLocation = defineSetting<'bottom' | 'left' | 'right'>({
 // The activity bar's side is a CSS order on <html>.
 function apply() { if (typeof document !== 'undefined') document.documentElement.dataset.activityBar = activityBarLocation(); }
 if (typeof window !== 'undefined') { onSettingsChanged(apply); apply(); }
+
+/** workbench.panel.alignment (VSCODE-250.md W42): how wide a bottom panel is. */
+export const panelAlignment = defineSetting<'center' | 'justify' | 'left' | 'right'>({
+  key: 'workbench.panel.alignment', category: C, title: 'Panel: Alignment', type: 'enum', default: 'center', description: 'Controls the alignment of the panel (terminal, debug console, output, problems) when it is at the bottom of the workbench.',
+  options: [
+    { value: 'left', description: 'The panel extends under the editor area and the primary side bar.' },
+    { value: 'right', description: 'The panel extends under the editor area and the secondary side bar.' },
+    { value: 'center', description: 'The panel only extends under the editor area.' },
+    { value: 'justify', description: 'The panel extends under the editor area and both side bars.' },
+  ],
+});

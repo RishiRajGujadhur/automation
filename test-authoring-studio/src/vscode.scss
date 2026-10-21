@@ -766,3 +766,13 @@
   &[hidden] { display: none; }
   button { display: block; width: 100%; padding: 3px 10px; border: 0; border-radius: 3px; background: none; color: var(--text); text-align: left; cursor: pointer; &:hover { background: var(--accent, #0078d4); color: #fff; } }
 }
+
+// workbench.panel.alignment (W42): the full-width row under the side bars.
+.panel-slot {
+  flex: none;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  &:empty { display: none; }
+  > .dock { border-top: 1px solid var(--border); }
+}

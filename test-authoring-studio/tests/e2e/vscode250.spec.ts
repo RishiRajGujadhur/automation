@@ -902,3 +902,32 @@ test('W41 Customize Layout: visibility toggles that keep the picker open, quick 
   await expect(row('Primary Side Bar').locator('.codicon-check')).toBeVisible();
   await expect.poll(async () => (await quick(page).boundingBox())!.y).toBeLessThan(20);
 });
+
+test('W42 workbench.panel.alignment: center (under the editors) or justify (under the side bars too)', async ({ page }) => {
+  await start(page);
+  await open(page, 'Steps/AuthSteps.cs');
+  // The panel's state is kept across reloads: open it only when it is not shown.
+  const showProblems = async () => { await page.waitForTimeout(500); if (!(await page.locator('.dock').first().isVisible())) await page.locator('footer.status-bar').getByRole('button', { name: /^Problems:/ }).click(); };
+  await showProblems();
+  const panel = page.locator('.dock').first();
+  await expect(panel).toBeVisible();
+  const explorer = page.getByRole('region', { name: 'Explorer' }).first();
+  const side = (await explorer.boundingBox())!;
+  // Center: the panel starts right of the side bar.
+  expect((await panel.boundingBox())!.x).toBeGreaterThanOrEqual(side.x + side.width - 2);
+  await page.evaluate(() => localStorage.setItem('tas:settings', JSON.stringify({ 'workbench.panel.alignment': 'justify' })));
+  await page.reload();
+  await open(page, 'Steps/AuthSteps.cs');
+  await showProblems();
+  await expect(panel).toBeVisible();
+  // Justify: it spans the window, under the activity bar and the side bar.
+  await expect.poll(async () => (await panel.boundingBox())!.x).toBeLessThan(4);
+  const w = (await panel.boundingBox())!.width;
+  expect(w).toBeGreaterThan(page.viewportSize()!.width - 24);
+  // Right: from the editors to the right edge.
+  await page.evaluate(() => localStorage.setItem('tas:settings', JSON.stringify({ 'workbench.panel.alignment': 'right' })));
+  await page.reload();
+  await open(page, 'Steps/AuthSteps.cs');
+  await showProblems();
+  await expect.poll(async () => (await panel.boundingBox())!.x).toBeGreaterThan(side.x + side.width - 2);
+});
