@@ -15,7 +15,8 @@ export const isWebFile = (f: string) => SCRIPT_FILE.test(f) || HTML_FILE.test(f)
 export function webLanguage(file: string): Extension[] {
   const f = file.toLowerCase();
   if (SCRIPT_FILE.test(f)) return [javascript({ typescript: /\.(tsx?|mts|cts)$/.test(f), jsx: /\.(tsx|jsx|js)$/.test(f) })];
-  if (HTML_FILE.test(f)) return [html({ autoCloseTags: false })];
+  // Closing tags as you type `>` or `</` (FRONTEND-100.md F54).
+  if (HTML_FILE.test(f)) return [html({ autoCloseTags: true })];
   if (f.endsWith('.scss')) return [sass({ indented: false })];
   if (f.endsWith('.sass')) return [sass({ indented: true })];
   if (f.endsWith('.less')) return [less()];

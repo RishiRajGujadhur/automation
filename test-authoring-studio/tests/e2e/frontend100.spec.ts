@@ -461,3 +461,117 @@ test('F50 React component prop type validation', async ({ page }) => {
   expect(messages.join('\n')).toContain("Avatar: 'size' should be a number (PropTypes.number), not a string.");
   expect(messages.join('\n')).toContain("Avatar does not declare the prop 'round' in its propTypes.");
 });
+
+// ---- HTML ----
+const PAGE = '<!doctype html>\n<html lang="en">\n<head>\n  <title>Shop</title>\n  <link rel="stylesheet" href="styles.css">\n</head>\n<body>\n  <main>\n    <p>Hi</p>\n  </main>\n</body>\n</html>\n';
+/** Types at `at` (+offset), opens completion and picks the option whose label matches. */
+async function completeAt(page: Page, at: string, offset: number, typed: string, label: RegExp) {
+  await caretAt(page, at, offset);
+  await page.keyboard.type(typed);
+  await page.keyboard.press('Control+Space');
+  const option = page.locator('.cm-tooltip-autocomplete li').filter({ has: page.locator('.cm-completionLabel', { hasText: label }) }).first();
+  await expect(option).toBeVisible({ timeout: 30_000 });
+  await option.click();
+}
+const caretLine = (page: Page) => page.evaluate(() => { const v = (window as unknown as { __activeEditor: () => { view: { state: { doc: { lineAt(p: number): { number: number } }; selection: { main: { head: number } } } } } }).__activeEditor().view; return v.state.doc.lineAt(v.state.selection.main.head).number; });
+const diagnostics = async (page: Page, file: string, source: string) => (await (await page.request.post('/api/web/diagnostics', { data: { file, source } })).json()) as { message: string; rule?: string; severity: string }[];
+
+test('F51 HTML tag name completion; F52 attribute completion; F53 attribute value completion; F61 entity completion', async ({ page }) => {
+  await open(page, 'index.html', PAGE);
+  await completeAt(page, '<p>Hi</p>', 9, '\n<sec', /^section$/);
+  await expect.poll(() => docText(page)).toContain('<p>Hi</p>\n    <section');
+  await setDoc(page, PAGE.replace('<p>Hi</p>', '<img >'));
+  await completeAt(page, '<img ', 5, 'al', /^alt$/);
+  await expect.poll(() => docText(page)).toContain('<img alt=""');
+  await setDoc(page, PAGE.replace('<p>Hi</p>', '<input type="">'));
+  await completeAt(page, 'type="', 6, 'che', /^checkbox$/);
+  await expect.poll(() => docText(page)).toContain('<input type="checkbox">');
+  await setDoc(page, PAGE.replace('<p>Hi</p>', '<p>Hi </p>'));
+  await completeAt(page, '<p>Hi ', 6, '&cop', /^&copy;$/);
+  await expect.poll(() => docText(page)).toContain('<p>Hi &copy;</p>');
+});
+test('F54 Automatic closing tag insertion; F55 Linked HTML tag renaming', async ({ page }) => {
+  await open(page, 'index.html', PAGE);
+  await caretAt(page, '<p>Hi</p>', 9);
+  await page.keyboard.type('\n    <article>');
+  await expect.poll(() => docText(page)).toContain('<article></article>');
+  // Linked editing (editor.linkedEditing): the closing tag follows the opening one.
+  await page.evaluate(() => localStorage.setItem('tas:settings', JSON.stringify({ 'editor.linkedEditing': true })));
+  await page.reload();
+  await expect(page.getByLabel('Source of index.html')).toBeVisible();
+  await setDoc(page, PAGE);
+  await caretAt(page, '<main>', 5);
+  await page.keyboard.type('x');
+  await expect.poll(() => docText(page)).toContain('<mainx>\n    <p>Hi</p>\n  </mainx>');
+});
+test('F56 HTML element wrapping; F57 HTML tag unwrapping', async ({ page }) => {
+  await open(page, 'index.html', PAGE);
+  await convert(page, '<p>Hi</p>', /^Wrap with <div>$/, '  <main>\n    <div>\n      <p>Hi</p>\n    </div>\n  </main>', true);
+  await convert(page, '<div>', /^Remove tag <div> \(keep its content\)$/, '  <main>\n    <p>Hi</p>\n  </main>', false, 2);
+});
+test('F62 HTML character entity conversion', async ({ page }) => {
+  await open(page, 'index.html', PAGE.replace('<p>Hi</p>', '<p>Fish & Chips © 2026 <now></p>'));
+  await convert(page, 'Fish & Chips © 2026 <now>', /^Convert characters to HTML entities$/, '<p>Fish &amp; Chips &copy; 2026 &lt;now&gt;</p>', true);
+  await convert(page, 'Fish &amp; Chips &copy; 2026 &lt;now&gt;', /^Convert HTML entities to characters$/, '<p>Fish & Chips © 2026 <now></p>', true);
+});
+test('F58 tag structure, F59 attribute, F60 nesting validation; F63 accessibility, F64 ARIA inspections', async ({ page }) => {
+  const editor = await open(page, 'index.html', PAGE.replace('<p>Hi</p>', '<p><div>x</div></p>\n    <span>open\n    <ul><div>bad</div></ul>\n    <img src="a.png" hieght="4">\n    <input type="txt" id="q">\n    <button></button>\n    <a href="/"><button>Go</button></a>\n    <div role="buton" aria-hidden="yes" aria-labelledby="nope" aria-colour="red">x</div>\n    </section>'));
+  await expect(editor.locator('.cm-lintRange-error').first()).toBeVisible({ timeout: 30_000 });
+  const all = (await diagnostics(page, 'index.html', await docText(page))).map((d) => d.message).join('\n');
+  // F58
+  expect(all).toContain('Closing tag </section> has no matching <section>.');
+  expect(all).toContain('<span> is not closed');
+  // F59
+  expect(all).toContain('<img> has no attribute hieght.');
+  expect(all).toMatch(/"txt" is not a valid value of type on <input>/);
+  // F60
+  expect(all).toContain('<div> cannot be inside <p> (the paragraph ends before it).');
+  expect(all).toContain('Interactive <button> inside interactive <a>.');
+  // F63
+  expect(all).toContain('<img> needs an alt attribute');
+  expect(all).toContain('<input> has no label');
+  expect(all).toContain('<button> has no text for screen readers');
+  // F64
+  expect(all).toContain('"buton" is not an ARIA role.');
+  expect(all).toContain('aria-hidden must be "true" or "false".');
+  expect(all).toContain('aria-labelledby refers to "nope", but no element has that id.');
+  expect(all).toContain('aria-colour is not an ARIA attribute.');
+});
+test('F65 HTML ID reference navigation; F66 HTML class reference navigation', async ({ page }) => {
+  await fs.writeFile(path.join(temp, 'styles.css'), 'body { margin: 0; }\n\n.card { padding: 8px; }\n');
+  await open(page, 'index.html', PAGE.replace('<p>Hi</p>', '<label for="email">Email</label>\n    <p class="card">Hi</p>\n    <input id="email">'));
+  await caretAt(page, 'for="email"', 7);
+  await page.keyboard.press('F12');
+  await expect.poll(() => caretLine(page)).toBe(11);
+  await caretAt(page, 'class="card"', 8);
+  await page.keyboard.press('F12');
+  await expect(page.locator('.editor-tab-label[aria-current="true"]')).toHaveAttribute('title', 'styles.css');
+});
+test('F67 HTML element folding; F68 HTML document formatting', async ({ page }) => {
+  const editor = await open(page, 'index.html', '<html lang="en"><body>\n<main>\n<p>Hi</p>\n<ul><li>a</li><li>b</li></ul>\n</main>\n</body></html>\n');
+  await page.keyboard.press('Shift+Alt+F');
+  await expect.poll(() => docText(page)).toContain('<main>\n    <p>Hi</p>\n    <ul>\n      <li>a</li>\n      <li>b</li>\n    </ul>\n  </main>');
+  await caretAt(page, '<main>', 3);
+  await page.keyboard.press('Control+Shift+BracketLeft');
+  await expect(editor.locator('.cm-foldPlaceholder')).toBeVisible();
+  await expect(editor.locator('.cm-line', { hasText: '<li>a</li>' })).toHaveCount(0);
+});
+test('F69 HTML custom element support', async ({ page }) => {
+  await fs.writeFile(path.join(temp, 'src/user-card.js'), 'class UserCard extends HTMLElement {\n  static get observedAttributes() { return ["name", "avatar"]; }\n}\ncustomElements.define("user-card", UserCard);\n');
+  await open(page, 'index.html', PAGE.replace('<p>Hi</p>', '<user-card></user-card>\n    <other-card></other-card>'));
+  const problems = await diagnostics(page, 'index.html', await docText(page));
+  expect(problems.map((p) => p.message)).toContain('<other-card> is not defined in this project (customElements.define or html.customData).');
+  expect(problems.map((p) => p.message).join()).not.toContain('<user-card>');
+  await completeAt(page, '<user-card', 10, ' na', /^name$/);
+  await expect.poll(() => docText(page)).toContain('<user-card name=""></user-card>');
+  await setDoc(page, PAGE.replace('<p>Hi</p>', ''));
+  await completeAt(page, '<main>', 6, '\n<user', /^user-card$/);
+  await expect.poll(() => docText(page)).toContain('<user-card');
+});
+test('F70 HTML language injection (CSS in <style> and style="", JavaScript in <script>)', async ({ page }) => {
+  await open(page, 'index.html', PAGE.replace('</head>', '  <style>\n    main {  }\n  </style>\n</head>').replace('<p>Hi</p>', '<p style="">Hi</p>'));
+  await completeAt(page, 'main {', 7, 'backgr', /^background-color$/);
+  await expect.poll(() => docText(page)).toContain('main { background-color: ');
+  await completeAt(page, 'style="', 7, 'marg', /^margin$/);
+  await expect.poll(() => docText(page)).toContain('<p style="margin: ');
+});

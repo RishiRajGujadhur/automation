@@ -63,26 +63,26 @@ Status: `[x]` done, `[ ]` to do. Before this list, JS / TS / HTML / CSS files op
 - [x] F50 React component prop type validation
 
 ## HTML
-- [ ] F51 HTML tag name completion
-- [ ] F52 HTML attribute completion
-- [ ] F53 HTML attribute value completion
-- [ ] F54 Automatic closing tag insertion
-- [ ] F55 Linked HTML tag renaming
-- [ ] F56 HTML element wrapping
-- [ ] F57 HTML tag unwrapping
-- [ ] F58 HTML tag structure validation
-- [ ] F59 HTML attribute validation
-- [ ] F60 HTML nesting validation
-- [ ] F61 HTML entity completion
-- [ ] F62 HTML character entity conversion
-- [ ] F63 HTML accessibility inspections
-- [ ] F64 HTML ARIA attribute validation
-- [ ] F65 HTML ID reference navigation
-- [ ] F66 HTML class reference navigation
-- [ ] F67 HTML element folding
-- [ ] F68 HTML document formatting
-- [ ] F69 HTML custom element support
-- [ ] F70 HTML language injection
+- [x] F51 HTML tag name completion
+- [x] F52 HTML attribute completion
+- [x] F53 HTML attribute value completion
+- [x] F54 Automatic closing tag insertion
+- [x] F55 Linked HTML tag renaming
+- [x] F56 HTML element wrapping
+- [x] F57 HTML tag unwrapping
+- [x] F58 HTML tag structure validation
+- [x] F59 HTML attribute validation
+- [x] F60 HTML nesting validation
+- [x] F61 HTML entity completion
+- [x] F62 HTML character entity conversion
+- [x] F63 HTML accessibility inspections
+- [x] F64 HTML ARIA attribute validation
+- [x] F65 HTML ID reference navigation
+- [x] F66 HTML class reference navigation
+- [x] F67 HTML element folding
+- [x] F68 HTML document formatting
+- [x] F69 HTML custom element support
+- [x] F70 HTML language injection
 
 ## CSS, SCSS & LESS
 - [ ] F71 CSS selector completion
@@ -128,3 +128,4 @@ Status: `[x]` done, `[ ]` to do. Before this list, JS / TS / HTML / CSS files op
 - 2026-10-21: F31, F33, F34, F35, F43, F44, F45. Studio actions on the TypeScript tree (customs/react.ts): JSX to a component with the locals it uses as typed props; class components to function components (state to useState, mount / unmount to useEffect, this.* rewritten, hooks imported); props generated from the attributes of every usage; props types moved to an interface NameProps (types from usages and defaults); style={{…}} to a class in the component's stylesheet (created and imported when missing, CSS module aware, a diff to approve); inline JSX handlers to handleX constants; inline callbacks to named functions (renderItem for JSX maps).
 - 2026-10-21: F46, F47, F48. eslint-plugin-react-hooks (exhaustive-deps, rules-of-hooks) run in-process with ESLint 9's Linter and Babel 7's parser (server/web/hooksLint.ts), loaded on first use: warnings and errors in the editor, and Update the dependencies array as a Quick Action. Babel 8's parser was not usable: it parses in a worker thread and blocks the API waiting for it.
 - 2026-10-21: F49, F50. Navigate ▸ Go to Context Provider (web and desktop): from a context or a useContext call to every <Ctx.Provider> and React 19 <Ctx value> (server/web/react.ts). JSX using a component with propTypes is checked for missing required props, undeclared props and literals of the wrong kind (TSX props are checked by TypeScript). Fixed on the way: .jsx, .mts, .cts, .sass, .less, .vue, .svelte, .xhtml and .map files could not be opened (Unsupported source file).
+- 2026-10-21: F51, F52, F53, F54, F55, F56, F57, F58, F59, F60, F61, F62, F63, F64, F65, F66, F67, F68, F69, F70. VS Code's HTML language service on the server (server/web/markup.ts): tag, attribute, value and entity completion, the project's custom elements (customElements.define with observedAttributes, html.customData) and CSS completion inside <style> and style=""; document formatting. CodeMirror's HTML mode closes tags and folds elements; linked editing (editor.linkedEditing) renames tag pairs. Studio checks: tag structure, unknown / duplicate / out-of-range attributes, nesting, image alt, labels, button and link text, html lang, iframe title, duplicate ids, ARIA roles, boolean and id-reference attributes. Quick Actions: wrap with <div>, remove a tag keeping its content, characters to entities and back. F12 / Shift+F12 on id references and class names. Fixed on the way: a watch restart could start the API before the previous instance had released its port, and the API then stayed down.

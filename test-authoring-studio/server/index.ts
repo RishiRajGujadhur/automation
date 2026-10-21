@@ -1706,11 +1706,15 @@ app.use(
 );
 // Windows lets a second server bind a port that is already listening, and connections then go to the
 // other process (e.g. the desktop app). Refuse to start instead of serving nothing.
-const portTaken = await new Promise<boolean>((resolve) => {
+// A watch restart (tsx watch) can start this before the previous instance has let go of the port: wait a few
+// seconds for it before giving up.
+const probePort = () => new Promise<boolean>((resolve) => {
   const probe = net.connect({ host: '127.0.0.1', port: studio.apiPort });
   probe.once('connect', () => { probe.destroy(); resolve(true); });
   probe.once('error', () => resolve(false));
 });
+let portTaken = await probePort();
+for (let i = 0; portTaken && i < 16; i++) { await new Promise((r) => setTimeout(r, 500)); portTaken = await probePort(); }
 if (portTaken) {
   console.error(`Port ${studio.apiPort} is already in use by another program (is the TestAuthoring Studio desktop app running?). Close it, or set STUDIO_API_PORT / change the API port in Settings → Ports.`);
   process.exit(1);

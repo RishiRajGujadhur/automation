@@ -1,4 +1,5 @@
-import { isWebFile, webLanguage, SCRIPT_FILE } from './web/languages';
+import { isWebFile, webLanguage, SCRIPT_FILE, HTML_FILE } from './web/languages';
+import { markupFeatures } from './web/markupFeatures';
 import { scriptFeatures } from './web/scriptFeatures';
 import { webKeys } from './web/webKeys';
 import { applyRefactor } from '../rider/refactor400';
@@ -99,7 +100,7 @@ function languageOf(file: string, browser: boolean) {
   if (/\.(xml|csproj|props|targets|config|runsettings|resx)$/.test(file)) return xmlExtensions(false, /\.(csproj|props|targets)$/.test(file));
   if (file.endsWith('.feature')) return [...(browser ? [] : [breakpoints(file)]), ...gherkinSyntaxExtensions()];
   if (isHttpFile(file)) return [StreamLanguage.define(httpMode)];
-  if (isWebFile(file)) return [...webLanguage(file), ...(browser ? [] : SCRIPT_FILE.test(file) ? scriptFeatures(file) : [])];
+  if (isWebFile(file)) return [...webLanguage(file), ...(browser ? [] : SCRIPT_FILE.test(file) ? scriptFeatures(file) : HTML_FILE.test(file) ? markupFeatures(file) : [])];
   if (/\.(md|markdown|txt)$/i.test(file)) return markdownQol;
   return [];
 }
@@ -125,7 +126,7 @@ export default function CodeEditor({ file, reveal, active = true, onNotice, onIn
   const browser = isBrowser();
   const isCs = file.endsWith('.cs');
   // Front-end files (FRONTEND-100.md): the same handlers as C#, served by /api/web.
-  const isWeb = SCRIPT_FILE.test(file);
+  const isWeb = isWebFile(file);
   // C# language features (Roslyn): rename box over the symbol, Find All References results.
   const [renameAt, setRenameAt] = useState<{ pos: number; name: string; top: number; left: number }>();
   const [refs, setRefs] = useState<{ name: string; locations: (CsLocation & { text?: string })[] }>();
