@@ -17,6 +17,8 @@ const readOnly = new Compartment();
 const readOnlyFiles = new Set<string>();
 const editors = new Set<EditorView>();
 const readOnlyExt = (on: boolean) => (on ? [EditorState.readOnly.of(true), EditorView.editorAttributes.of({ class: 'cm-session-readonly' })] : []);
+/** Every open editor with its file (hidden tabs included): workspace problem counts (W29). */
+export const allEditors = () => [...editors].filter((v) => v.dom.isConnected && files.has(v)).map((view) => ({ view, file: files.get(view)! }));
 export const isReadOnlyFile = (file: string) => readOnlyFiles.has(file);
 export function setReadOnlyFile(file: string, on: boolean) {
   if (on) readOnlyFiles.add(file); else readOnlyFiles.delete(file);

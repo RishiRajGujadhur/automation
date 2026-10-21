@@ -61,7 +61,7 @@ import BuildPanel from './build/BuildPanel';
 import TestExplorer from './testing/TestExplorer';
 import SearchView from './search/SearchView';
 import GitView from './git/GitView';
-import StatusBarItems from './StatusBarItems';
+import StatusBarItems, { ProblemsStatus, TOGGLE_PROBLEMS_EVENT } from './StatusBarItems';
 import GoToAll from './search/GoToAll';
 import { runTests, getTestRun, discoverTests, useTestRun, outcomeOf, combine, type DiscoveredTest } from './testing/store';
 import type { RunMark } from './editor/runGutter';
@@ -411,6 +411,7 @@ export default function App() {
     if (!e.shiftKey && !e.altKey && e.key.toLowerCase() === 't') { e.preventDefault(); setModal('goto'); return; }
     // Quick Open (VS Code, W1).
     if (!e.shiftKey && !e.altKey && e.key.toLowerCase() === 'p') { e.preventDefault(); openQuickOpen(); return; }
+    if (e.shiftKey && !e.altKey && e.key.toLowerCase() === 'm') { e.preventDefault(); toggleProblemsRef.current(); return; }
     // Open View (VS Code's Ctrl+Q, W8).
     if (!e.shiftKey && !e.altKey && e.key.toLowerCase() === 'q') { e.preventDefault(); openQuickInput('view '); return; }
     if (e.altKey && !e.shiftKey && e.key.toLowerCase() === 'o') { e.preventDefault(); openOutput(); return; }
@@ -550,6 +551,10 @@ export default function App() {
   const [riderTools, setRiderTools] = useLocalState<RiderTool[]>('riderTools', []);
   const showRiderTool = (k: RiderTool) => { setRiderTools((l) => (l.includes(k) ? l : [...l, k])); setDockTab(k); if (tab !== 'Features' || (view !== 'code' && view !== 'editor')) { setTab('Features'); setView('editor'); } };
   const closeRiderTool = (k: RiderTool) => setRiderTools((l) => l.filter((x) => x !== k));
+  // Toggle Problems (VS Code's status bar item and Ctrl+Shift+M, W29).
+  const toggleProblemsRef = useRef(() => {});
+  toggleProblemsRef.current = () => { if (riderTools.includes('problems') && dockTab === 'problems') closeRiderTool('problems'); else showRiderTool('problems'); };
+  useEffect(() => { const h = () => toggleProblemsRef.current(); window.addEventListener(TOGGLE_PROBLEMS_EVENT, h); return () => window.removeEventListener(TOGGLE_PROBLEMS_EVENT, h); }, []);
   // TODO window (Rider, Alt+6): another tab of the bottom panel.
   const [todoOpen, setTodoOpen] = useLocalState('todoOpen', false);
   // Output window (View ▸ Output, Ctrl+Alt+O): a third tab of the bottom panel.
@@ -2433,6 +2438,7 @@ export default function App() {
               ...(desktop && config?.repositoryRoot ? [{ id: 'reveal', label: 'Reveal in File Explorer', icon: <span className="codicon codicon-go-to-file" />, accept: () => void desktop!.reveal(config.repositoryRoot) }] : []),
             ],
           })}><span className="codicon codicon-remote" aria-hidden="true" /></button>
+          <ProblemsStatus />
           <span className="status-dot" />
           {busy ? 'Working…' : 'Ready'}
           <span className="muted-separator">│</span>

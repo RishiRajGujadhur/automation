@@ -44,7 +44,7 @@ Legend: `[x]` done · `[ ]` to do.
 - [x] W26. files.encoding (default) and UTF-8 with BOM preserved on save
 - [x] W27. Line ending item as VS Code quick pick (Select End of Line Sequence)
 - [x] W28. Indentation item as VS Code quick pick: Indent Using Spaces / Tabs, Change Tab Display Size, Detect Indentation from Content, Convert Indentation to Spaces / Tabs
-- [ ] W29. Problems item `⊗ n ⚠ n ⓘ n` toggles the Problems panel
+- [x] W29. Problems item `⊗ n ⚠ n ⓘ n` toggles the Problems panel
 - [ ] W30. Status bar context menu: hide / show each item (persisted), "Hide Status Bar"
 - [ ] W31. Notifications bell with a dot for unread and a slashed bell in Do Not Disturb
 - [ ] W32. Git blame of the caret line in the status bar (git.blame.statusBarItem.enabled)
@@ -322,3 +322,4 @@ Legend: `[x]` done · `[ ]` to do.
 - 2026-10-21: W26. The default encoding for reading and writing files without a byte order mark (new files too); a BOM still wins and saves keep it.
 - 2026-10-21: W27. The status bar's LF / CRLF opens VS Code's Select End of Line Sequence quick pick (the current one selected); the file is written with it on the next save.
 - 2026-10-21: W28. The status bar's Spaces / Tab Size opens VS Code's Select Action (Indent Using Spaces / Tabs, Change Tab Display Size, Detect Indentation from Content, Convert Indentation to Spaces / Tabs) and a tab size list; the editor items are in VS Code's order (Ln/Col, indentation, encoding, line endings, language).
+- 2026-10-21: W29. VS Code's ⊗ n ⚠ n (ⓘ n) at the left of the status bar: the errors, warnings and infos of every open file plus the last build; a click or Ctrl+Shift+M toggles the Problems panel.

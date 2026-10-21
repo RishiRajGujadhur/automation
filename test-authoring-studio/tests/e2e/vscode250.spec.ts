@@ -615,3 +615,18 @@ test('W28 Indentation: VS Code order in the status bar, Select Action, tab size,
   await rows(page).filter({ hasText: /^8/ }).click();
   await expect(item).toHaveText('Spaces: 8');
 });
+
+test('W29 Problems status item: counts of the open files, click or Ctrl+Shift+M toggles Problems', async ({ page }) => {
+  await fs.writeFile(path.join(temp, 'bad.ts'), 'const n: number = "x";\nconst m: string = 1;\n// @ts-expect-error\nconst ok = 1;\n');
+  await start(page);
+  await open(page, 'bad.ts');
+  const item = page.locator('footer.status-bar').getByRole('button', { name: /^Problems:/ });
+  await expect(item).toHaveAttribute('aria-label', /^Problems: [2-9]\d* errors/, { timeout: 30_000 });
+  await item.click();
+  const problems = page.getByRole('region', { name: 'Problems' });
+  await expect(problems.first()).toBeVisible();
+  await item.click();
+  await expect(problems).toHaveCount(0);
+  await page.keyboard.press('Control+Shift+M');
+  await expect(problems.first()).toBeVisible();
+});

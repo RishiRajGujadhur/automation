@@ -8,12 +8,11 @@ import { SAVE_ALL_EVENT } from './editor/events';
 import { unsavedFiles, UNSAVED_EVENT } from './editor/autosave';
 import { useCursor } from './editor/cursor';
 import { useGitSummary } from './git/statusStore';
-import { Dropdown } from './radix';
 import { requestEol } from './editor/lineSeparator';
 import { setViewOptions, useViewOptions } from './editor/viewOptions';
 import { runRider } from './rider/commands';
 import { featureOn } from './features';
-import { activeEditor } from './editor/activeEditor';
+import { activeEditor, allEditors } from './editor/activeEditor';
 import { openQuickInput, openQuickPick } from './quickinput/store';
 import { changeLanguageMode } from './quickinput/languagePick';
 import { selectIndentation } from './quickinput/indentPick';
@@ -28,6 +27,35 @@ import { forEachDiagnostic, nextDiagnostic } from '@codemirror/lint';
  * Right side of the status bar, like Visual Studio's: Git branch (with ↑/↓), errors and warnings of the last build,
  * and for the active editor the cursor position, line endings and encoding.
  */
+/** Errors, warnings and infos of the open files (their squiggles, one editor per file) and of the last build. */
+function useWorkspaceProblems(build: { diagnostics: { severity: string }[] }) {
+  const [p, setP] = useState({ errors: 0, warnings: 0, infos: 0 });
+  useEffect(() => {
+    const t = window.setInterval(() => {
+      let errors = 0, warnings = 0, infos = 0;
+      const seen = new Set<string>();
+      for (const { view, file } of allEditors()) { if (seen.has(file)) continue; seen.add(file); forEachDiagnostic(view.state, (d) => { if (d.severity === 'error') errors++; else if (d.severity === 'warning') warnings++; else infos++; }); }
+      for (const d of build.diagnostics) { if (d.severity === 'error') errors++; else if (d.severity === 'warning') warnings++; }
+      setP((x) => (x.errors === errors && x.warnings === warnings && x.infos === infos ? x : { errors, warnings, infos }));
+    }, 1000);
+    return () => clearInterval(t);
+  }, [build.diagnostics]);
+  return p;
+}
+/** VS Code's problems item (W29): ⊗ errors ⚠ warnings ⓘ infos; a click (or Ctrl+Shift+M) toggles the Problems panel. */
+export function ProblemsStatus() {
+  const build = useBuild();
+  const p = useWorkspaceProblems(build);
+  return (
+    <button className="status-item problems-status" aria-label={`Problems: ${p.errors} errors, ${p.warnings} warnings, ${p.infos} infos`} title="Toggle Problems (Ctrl+Shift+M)" onClick={() => window.dispatchEvent(new Event(TOGGLE_PROBLEMS_EVENT))}>
+      <span className="codicon codicon-error" aria-hidden="true" />{p.errors}
+      <span className="codicon codicon-warning" aria-hidden="true" />{p.warnings}
+      {p.infos > 0 && <><span className="codicon codicon-info" aria-hidden="true" />{p.infos}</>}
+    </button>
+  );
+}
+export const TOGGLE_PROBLEMS_EVENT = 'tas:toggle-problems';
+
 export default function StatusBarItems({ repository, onGit, onErrors }: { repository?: string; onGit: () => void; onErrors: () => void }) {
   const build = useBuild();
   // Problems of the active editor (its squiggles), refreshed every second; a click goes to the next one.
