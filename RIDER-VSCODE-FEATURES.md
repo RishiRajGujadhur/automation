@@ -107,7 +107,7 @@ Legend: `[x]` done · `[ ]` to do.
 - [x] 85. Convert LINQ to loops — Code ▸ Refactor ▸ Convert LINQ to Loop (Where / Select + ToList, ToArray, Count, Any, First, FirstOrDefault, Sum) (2026-10-21)
 - [x] 86. Convert anonymous types to named types — Quick Actions: Convert to class / record
 - [x] 87. Convert anonymous functions to methods — Quick Actions: Use local function, then Convert to method (2026-10-21)
-- [ ] 88. Convert methods to local functions
+- [x] 88. Convert methods to local functions — Code ▸ Refactor ▸ Convert Method to Local Function (2026-10-21)
 - [x] 89. Convert local functions to methods — Quick Actions: Convert to method
 - [x] 90. Convert class to record — Quick Actions: Convert to positional record
 - [x] 91. Convert record to class — Code ▸ C# ▸ Convert Record to Class (init properties, constructor, Deconstruct, value equality, ToString) (2026-10-21)
@@ -403,3 +403,4 @@ Legend: `[x]` done · `[ ]` to do.
 - 2026-10-21 98: The parameters in a new order; every call follows.
 - 2026-10-21 99: Parameters the body never reads go from the method and every call (not for virtual, abstract or interface members).
 - 2026-10-21 85: A LINQ method chain becomes a foreach loop, typed from the semantic model.
+- 2026-10-21 88: A private method used by one method moves into it as a local function.
