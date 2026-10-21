@@ -93,7 +93,7 @@ Legend: `[x]` done · `[ ]` to do.
 - [x] 71. Inline variable — Ctrl+Alt+N
 - [x] 72. Inline field — Code ▸ Refactor ▸ Inline Field (2026-10-21)
 - [x] 73. Move type — Move Type to Matching File
-- [ ] 74. Move members
+- [x] 74. Move members — Code ▸ Refactor ▸ Move Static Members… (2026-10-21)
 - [x] 75. Pull members up — Code ▸ Refactor ▸ Pull Members Up (2026-10-21)
 - [x] 76. Push members down — Code ▸ Refactor ▸ Push Members Down (2026-10-21)
 - [x] 77. Safe symbol rename — F2 (Roslyn Renamer, across files)
@@ -410,3 +410,4 @@ Legend: `[x]` done · `[ ]` to do.
 - 2026-10-21 75: The member moves to the base class (in any file of the solution).
 - 2026-10-21 76: The member moves from the base class into each derived class.
 - 2026-10-21 64: The public instance methods and properties of a class move to a new abstract base class.
+- 2026-10-21 74: A static member moves to another class; calls through the old class follow.
