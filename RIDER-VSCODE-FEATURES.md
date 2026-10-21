@@ -301,7 +301,7 @@ Legend: `[x]` done · `[ ]` to do.
 - [x] 352. Convert properties to expression-bodied members — Convert to Expression Body
 - [x] 353. Convert expression-bodied members to block bodies — Convert to Block Body
 - [x] 354. Convert string concatenation to interpolation — Quick Actions
-- [ ] 355. Convert interpolation to composite formatting
+- [x] 355. Convert interpolation to composite formatting — Code ▸ C# ▸ Convert Interpolation to string.Format (formats and alignments kept) (2026-10-21)
 - [x] 356. Convert anonymous objects to tuples — Quick Actions: Convert to tuple
 - [x] 357. Convert tuples to named types — Quick Actions: Convert to struct / record struct (titles now complete) (2026-10-21)
 - [x] 358. Convert foreach loops to indexed loops — Quick Actions: Convert to 'for'
@@ -396,3 +396,4 @@ Legend: `[x]` done · `[ ]` to do.
 - 2026-10-21 345: IEquatable<T> generated from the public properties, added to the base list.
 - 2026-10-21 344: CompareTo compares property by property with Comparer<T>.Default; the comparison operators use it.
 - 2026-10-21 347: The async Dispose pattern, disposing fields such as HttpClient, streams, connections and Playwright browsers.
+- 2026-10-21 355: An interpolated string becomes string.Format with numbered holes.
