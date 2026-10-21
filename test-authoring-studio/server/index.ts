@@ -619,16 +619,16 @@ function rescanSoon(delay: number) {
   }, delay);
 }
 app.post('/api/file/save', async (req, res) => {
-  const { file, source, baseHash, encoding, reopened } = z.object({ file: z.string().max(400).regex(editable), source: z.string().max(1_000_000), baseHash: z.string().max(80), encoding: z.enum(ENCODINGS).optional(), reopened: z.enum(ENCODINGS).optional() }).parse(req.body);
+  const { file, source, baseHash, encoding, reopened, fallback } = z.object({ file: z.string().max(400).regex(editable), source: z.string().max(1_000_000), baseHash: z.string().max(80), encoding: z.enum(ENCODINGS).optional(), reopened: z.enum(ENCODINGS).optional(), fallback: z.enum(ENCODINGS).optional() }).parse(req.body);
   if (file.endsWith('.feature')) parseFeature(source, file, []);
   const target = await confined(config.repositoryRoot, file, false);
   // The text the editor loaded: in the encoding it was opened with (Reopen with Encoding), else the detected one.
-  const before = await readText(target, reopened).then((r) => r.text).catch((e) => { if (e.code === 'ENOENT') return ''; throw e; });
+  const before = await readText(target, reopened, fallback).then((r) => r.text).catch((e) => { if (e.code === 'ENOENT') return ''; throw e; });
   if (hash(before) !== baseHash) { res.status(409).json({ error: `${file} changed outside the studio. Reload it before saving.`, hash: hash(before) }); return; }
   await recordHistory(config.repositoryRoot, file, before, 'save').catch(() => {});
   await fs.mkdir(path.dirname(target), { recursive: true });
   // Save with Encoding (W25): the chosen encoding; otherwise the file keeps its own (a UTF-8 BOM, UTF-16…).
-  const keep = encoding ?? (await fs.readFile(target).then(detect, () => 'utf8' as const));
+  const keep = encoding ?? (await fs.readFile(target).then((b) => (detect(b) === 'utf8' && fallback ? fallback : detect(b)), () => fallback ?? ('utf8' as const)));
   await fs.writeFile(target, encode(source, keep));
   // Re-index shortly after the last save so bindings and features stay current without rescanning on every keystroke.
   rescanSoon(1500);
@@ -1190,7 +1190,8 @@ app.get('/api/source', async (req, res) => {
   if (!editable.test(file)) throw new Error('Unsupported source file');
   if((await fs.stat(file)).size>2_000_000)throw new Error('Source preview is limited to 2 MB. Open this file in your IDE.');
   const enc = req.query.encoding ? z.enum(ENCODINGS).parse(req.query.encoding) : undefined;
-  const { text: source, encoding } = await readText(file, enc);
+  const fallback = req.query.fallback ? z.enum(ENCODINGS).parse(req.query.fallback) : undefined;
+  const { text: source, encoding } = await readText(file, enc, fallback);
   res.json({ source, hash: hash(source), encoding });
 });
 app.post('/api/scenario/validate', async (req, res) => {

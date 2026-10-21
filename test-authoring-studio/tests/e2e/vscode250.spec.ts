@@ -552,3 +552,28 @@ test('W25 Encoding: detected (UTF-16, BOM), Reopen with Encoding, Save with Enco
   await expect(item).toHaveText('UTF-8 with BOM');
   await expect(latin.locator('.cm-line').first()).toHaveText('café');
 });
+
+test('W26 files.encoding: the default for files without a byte order mark', async ({ page }) => {
+  await fs.writeFile(path.join(temp, 'latin.txt'), Buffer.from([0x63, 0x61, 0x66, 0xe9, 0x0a]));
+  await fs.writeFile(path.join(temp, 'bom.txt'), Buffer.from([0xef, 0xbb, 0xbf, 0x6f, 0x6b, 0x0a]));
+  await start(page, { 'files.encoding': 'windows1252' });
+  const latin = await open(page, 'latin.txt');
+  await expect(latin.locator('.cm-line').first()).toHaveText('café');
+  const item = page.locator('footer.status-bar').getByRole('button', { name: /^Select Encoding/ });
+  await expect(item).toHaveText('Western (Windows 1252)');
+  // A BOM still wins, and is kept when saving.
+  const bom = await open(page, 'bom.txt');
+  await expect(item).toHaveText('UTF-8 with BOM');
+  await bom.locator('.cm-line').first().click();
+  await page.keyboard.press('End');
+  await page.keyboard.type('!');
+  await page.keyboard.press('Control+s');
+  await expect.poll(async () => [...await fs.readFile(path.join(temp, 'bom.txt'))].join(',')).toBe([0xef, 0xbb, 0xbf, 0x6f, 0x6b, 0x21, 0x0a].join(','));
+  // Saving the Windows 1252 file keeps its encoding.
+  await open(page, 'latin.txt');
+  await latin.locator('.cm-line').first().click();
+  await page.keyboard.press('End');
+  await page.keyboard.type('s');
+  await page.keyboard.press('Control+s');
+  await expect.poll(async () => [...await fs.readFile(path.join(temp, 'latin.txt'))].join(',')).toBe([0x63, 0x61, 0x66, 0xe9, 0x73, 0x0a].join(','));
+});

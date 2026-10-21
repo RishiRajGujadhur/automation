@@ -39,8 +39,10 @@ export function encode(text: string, enc: Encoding): Buffer {
   }
 }
 /** A file's text in the given (or detected) encoding. */
-export async function readText(file: string, enc?: Encoding) {
+export async function readText(file: string, enc?: Encoding, fallback?: Encoding) {
   const buf = await fs.readFile(file);
-  const encoding = enc ?? detect(buf);
+  // files.encoding (W26): files without a byte order mark are read in the default encoding.
+  const found = detect(buf);
+  const encoding = enc ?? (found === 'utf8' && fallback ? fallback : found);
   return { text: decode(buf, encoding), encoding };
 }

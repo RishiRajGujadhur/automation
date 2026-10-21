@@ -1,5 +1,6 @@
 import { useSyncExternalStore } from 'react';
 import { api } from '../api';
+import { files } from '../vscode/files';
 import { encodingOf, noteRead, noteSaved, reopenEncoding, type EncodingId } from './encoding';
 import { readText, writeText, browserRoot, copyPath as fsaCopy, deletePath as fsaDelete, renamePath as fsaRename } from './fsa';
 
@@ -24,7 +25,8 @@ export async function readFile(file: string): Promise<{ source: string; hash: st
   if (isBrowser()) { const text = await readText(file); return { source: text, hash: await digest(text) }; }
   // Reopen with Encoding (W25): the chosen encoding; otherwise the server detects it.
   const enc = reopenEncoding(file);
-  const r = await api<{ source: string; hash: string; encoding?: EncodingId }>(`/source?file=${encodeURIComponent(file)}${enc ? `&encoding=${enc}` : ''}`);
+  const fallback = files.encoding();
+  const r = await api<{ source: string; hash: string; encoding?: EncodingId }>(`/source?file=${encodeURIComponent(file)}${enc ? `&encoding=${enc}` : ''}${fallback !== 'utf8' ? `&fallback=${fallback}` : ''}`);
   if (r.encoding) noteRead(file, r.encoding);
   return r;
 }
@@ -38,7 +40,8 @@ export async function saveFile(file: string, text: string, baseHash: string): Pr
     return { hash: await digest(text) };
   }
   const enc = encodingOf(file);
-  const r = await api<{ hash: string }>('/file/save', { file, source: text, baseHash, ...(enc ? { encoding: enc.save, reopened: enc.read } : {}) });
+  const fallback = files.encoding();
+  const r = await api<{ hash: string }>('/file/save', { file, source: text, baseHash, ...(enc ? { encoding: enc.save, reopened: enc.read } : {}), ...(fallback !== 'utf8' ? { fallback } : {}) });
   noteSaved(file);
   return r;
 }
