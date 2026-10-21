@@ -306,3 +306,76 @@ test('F30 Convert string concatenation to template literals', async ({ page }) =
   await open(page, 'src/user.ts', 'export const greet = (name: string, n: number) => "Hello " + name + ", you have " + n + " messages";\n');
   await convert(page, '"Hello "', /^Convert to template string$/, 'export const greet = (name: string, n: number) => `Hello ${name}, you have ${n} messages`;', false, 2);
 });
+
+// ---- React & JSX / TSX ----
+/** React's typings in the temporary project (copied from the studio's own node_modules). */
+async function withReact() {
+  const nm = path.resolve(import.meta.dirname, '../../node_modules');
+  for (const pkg of ['@types/react', 'csstype']) await fs.cp(path.join(nm, pkg), path.join(temp, 'node_modules', pkg), { recursive: true });
+}
+const BUTTON = 'export type ButtonProps = { label: string; onPress?: () => void };\nexport function Button({ label, onPress }: ButtonProps) {\n  return <button onClick={onPress}>{label}</button>;\n}\n';
+
+test('F32 Extract JSX into reusable variable', async ({ page }) => {
+  await withReact();
+  await open(page, 'src/App.tsx', 'export function App({ name }: { name: string }) {\n  return <main><h1 className="title">Hello {name}</h1></main>;\n}\n');
+  await convert(page, '<h1 className="title">Hello {name}</h1>', /^Extract to constant in enclosing scope$/, /const newLocal = <h1 className="title">Hello \{name\}<\/h1>;\s*return <main>\{newLocal\}<\/main>;/, true);
+});
+test('F36 Navigate React component definitions; F37 Find React component usages', async ({ page }) => {
+  await withReact();
+  await fs.writeFile(path.join(temp, 'src/Button.tsx'), BUTTON);
+  await open(page, 'src/App.tsx', 'import { Button } from "./Button";\nexport const App = () => <div><Button label="A" /><Button label="B" /></div>;\n');
+  await caretAt(page, '<Button label="A"', 2);
+  await page.keyboard.press('F12');
+  await expect(page.locator('.editor-tab-label[aria-current="true"]')).toHaveAttribute('title', 'src/Button.tsx');
+  await page.getByLabel('Source of src/Button.tsx').click();
+  await caretAt(page, 'function Button', 10);
+  await page.keyboard.press('Shift+F12');
+  const refs = page.getByRole('region', { name: /References|Find All References/ }).or(page.getByLabel(/References: Button/)).first();
+  await expect(refs).toContainText('src/App.tsx', { timeout: 30_000 });
+});
+test('F38 Rename JSX component tags; F39 Rename JSX attributes', async ({ page }) => {
+  await withReact();
+  await fs.writeFile(path.join(temp, 'src/Button.tsx'), BUTTON);
+  await open(page, 'src/App.tsx', 'import { Button } from "./Button";\nexport const App = () => <section><Button label="A">x</Button></section>;\n');
+  // The component: its tags here (opening and closing) and its declaration in Button.tsx.
+  await caretAt(page, '<Button label', 2);
+  await page.keyboard.press('F2');
+  await page.getByLabel('Rename Button').fill('PrimaryButton');
+  await page.getByLabel('Rename PrimaryButton').or(page.getByLabel('Rename Button')).press('Enter');
+  await expect.poll(() => docText(page)).toContain('<PrimaryButton label="A">x</PrimaryButton>');
+  await approve(page, /Rename Button to PrimaryButton/);
+  expect(await fs.readFile(path.join(temp, 'src/Button.tsx'), 'utf8')).toContain('export function PrimaryButton(');
+  // An attribute: the prop in the props type and every usage.
+  await caretAt(page, 'label="A"', 2);
+  await page.keyboard.press('F2');
+  await page.getByLabel('Rename label').fill('text');
+  await page.getByLabel('Rename label').press('Enter');
+  await expect.poll(() => docText(page)).toContain('<PrimaryButton text="A">');
+  await approve(page, /Rename label to text/);
+  expect(await fs.readFile(path.join(temp, 'src/Button.tsx'), 'utf8')).toContain('text: string');
+});
+test('F40 Auto-close JSX tags', async ({ page }) => {
+  await withReact();
+  const editor = await open(page, 'src/App.tsx', 'export const App = () => (\n  \n);\n');
+  await caretAt(page, '(\n  ', 4);
+  await page.keyboard.type('<section className="box">');
+  await expect.poll(() => docText(page)).toContain('<section className="box"></section>');
+  void editor;
+});
+test('F41 Auto-import React components', async ({ page }) => {
+  await withReact();
+  await fs.writeFile(path.join(temp, 'src/Button.tsx'), BUTTON);
+  await open(page, 'src/App.tsx', 'export const App = () => <div><Butt</div>;\n');
+  await caretAt(page, '<Butt', 5);
+  await page.keyboard.press('Control+Space');
+  const option = page.locator('.cm-tooltip-autocomplete li').filter({ has: page.locator('.cm-completionLabel', { hasText: /^Button$/ }) }).first();
+  await expect(option).toBeVisible({ timeout: 30_000 });
+  await option.click();
+  await expect.poll(() => docText(page), { timeout: 15_000 }).toMatch(/^import \{ Button \} from "\.\/Button";\n/);
+});
+test('F42 Generate missing JSX attributes', async ({ page }) => {
+  await withReact();
+  await fs.writeFile(path.join(temp, 'src/Button.tsx'), BUTTON);
+  await open(page, 'src/App.tsx', 'import { Button } from "./Button";\nexport const App = () => <Button />;\n');
+  await convert(page, '<Button', /^Add missing attributes$/, '<Button label={""} />', false, 2);
+});

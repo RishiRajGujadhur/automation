@@ -42,17 +42,17 @@ Status: `[x]` done, `[ ]` to do. Before this list, JS / TS / HTML / CSS files op
 
 ## React & JSX / TSX
 - [ ] F31 Extract JSX into React component
-- [ ] F32 Extract JSX into reusable variable
+- [x] F32 Extract JSX into reusable variable
 - [ ] F33 Convert class components to functional components
 - [ ] F34 Generate React component props
 - [ ] F35 Generate TypeScript props interfaces
-- [ ] F36 Navigate React component definitions
-- [ ] F37 Find React component usages
-- [ ] F38 Rename JSX component tags
-- [ ] F39 Rename JSX attributes
-- [ ] F40 Auto-close JSX tags
-- [ ] F41 Auto-import React components
-- [ ] F42 Generate missing JSX attributes
+- [x] F36 Navigate React component definitions
+- [x] F37 Find React component usages
+- [x] F38 Rename JSX component tags
+- [x] F39 Rename JSX attributes
+- [x] F40 Auto-close JSX tags
+- [x] F41 Auto-import React components
+- [x] F42 Generate missing JSX attributes
 - [ ] F43 Convert inline JSX styles to CSS classes
 - [ ] F44 Extract inline event handlers
 - [ ] F45 Convert inline callbacks to named functions
@@ -124,3 +124,4 @@ Status: `[x]` done, `[ ]` to do. Before this list, JS / TS / HTML / CSS files op
 - 2026-10-21: F23. Code ▸ Analyze ▸ Find Circular Imports (web and desktop menus): the import graph of the scripts (imports, re-exports, dynamic import, require; type-only imports left out) and its cycles with the imports that close them.
 - 2026-10-21: F24, F25. F12 on a symbol declared in node_modules typings or TypeScript's lib.*.d.ts opens the declaration file read-only at the declaration. Navigate ▸ Go to Source-Mapped Location (web and desktop) jumps from generated code to the original source through its source map (sourceMappingURL file or data: URL, or a .map beside it) and back (source-map-js).
 - 2026-10-21: F26, F27, F28, F29, F30. Studio actions (customs/expressions.ts): Introduce object destructuring for a variable used only through property reads; destructuring back to property access (references filtered to the variable, shorthand keys kept); null checks to ??. Optional chaining and template strings are TypeScript refactorings. Convert to CommonJS is now offered in JavaScript files only.
+- 2026-10-21: F32, F36, F37, F38, F39, F40, F41, F42. From the TypeScript service and CodeMirror's JSX mode: Extract to constant on JSX, F12 to the component, Shift+F12 usages, F2 on a tag (opening and closing tags, declaration) or an attribute (props type and usages), tags closed as you type, components auto-imported from completion, Add missing attributes.
