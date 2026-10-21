@@ -313,6 +313,12 @@ const ROWS: Record<'edit' | 'view' | 'navigate' | 'code' | 'tools' | 'help', Row
     ['Minify XML', 'minify-xml'],
     null,
     { submenu: 'C#', rows: [
+      ['Inherit Documentation', 'inherit-doc'],
+      ['Generate Comparison Members', 'generate-comparison'],
+      ['Generate IEquatable<T>', 'generate-iequatable'],
+      ['Implement IAsyncDisposable', 'generate-async-disposable'],
+      ['Convert Interpolation to string.Format', 'interpolation-to-format'],
+      ['Convert Record to Class', 'record-to-class'],
       ['Convert to File-Scoped Namespace', 'file-scoped-namespace'],
       ['Convert to Block-Scoped Namespace', 'block-scoped-namespace'],
       ['Remove #region Directives', 'remove-regions'],

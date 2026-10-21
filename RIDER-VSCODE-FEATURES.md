@@ -291,7 +291,7 @@ Legend: `[x]` done · `[ ]` to do.
 - [ ] 342. Inherit XML documentation from base members
 - [x] 343. Generate `ToString()` implementations
 - [ ] 344. Generate comparison members
-- [ ] 345. Generate `IEquatable<T>` implementations
+- [x] 345. Generate `IEquatable<T>` implementations — Code ▸ C# ▸ Generate IEquatable<T> (Equals(T), Equals(object), GetHashCode, ==, !=) (2026-10-21)
 - [x] 346. Generate `IDisposable` implementation patterns — Quick Actions: Implement interface with Dispose pattern
 - [ ] 347. Generate `IAsyncDisposable` implementation patterns
 - [x] 348. Generate null argument guards — Add Null Checks for Parameters
@@ -393,3 +393,4 @@ Legend: `[x]` done · `[ ]` to do.
 - 2026-10-21 123: The language service knows each project's root namespace and folder, so a namespace that does not match its folder is reported and fixed (also across the solution with Fix All).
 - 2026-10-21 60: Go to Definition outside the repository shows the type's declarations generated from metadata, opened at the member.
 - 2026-10-21 59: Framework and NuGet types decompile to C# with bodies (ICSharpCode.Decompiler in the language service), shown read-only at the member.
+- 2026-10-21 345: IEquatable<T> generated from the public properties, added to the base list.

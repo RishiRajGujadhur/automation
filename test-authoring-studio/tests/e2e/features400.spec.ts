@@ -703,3 +703,64 @@ test('59 Decompiled source navigation', async ({ page }) => {
   await expect(dlg.locator('.cm-preview-target')).toContainText('Clear(');
   await expect(dlg.getByLabel(/StringBuilder \[decompiled/)).toContainText('Decompiled from System.Private.CoreLib.dll');
 });
+
+const csCommand = async (page: Page, item: RegExp) => { await page.getByRole('button', { name: 'Code menu' }).click(); await page.getByRole('menuitem', { name: /^C#/ }).click(); await page.getByRole('menuitem', { name: item }).click(); };
+const POINT = 'namespace Fixtures.Steps;\npublic class Point\n{\n    public int X { get; set; }\n    public int Y { get; set; }\n}\n';
+test('345 Generate IEquatable<T> implementations', async ({ page }) => {
+  await open(page, CS);
+  await setDoc(page, POINT);
+  await caretAt(page, 'public int X', 0);
+  await csCommand(page, /^Generate IEquatable<T>$/);
+  const d = await docText(page);
+  expect(d).toContain('public class Point : IEquatable<Point>');
+  expect(d).toContain('public bool Equals(Point? other) => other is not null');
+  expect(d).toContain('public static bool operator ==(Point? left, Point? right)');
+  expect(d).toContain('HashCode.Combine(X, Y)');
+});
+test('344 Generate comparison members', async ({ page }) => {
+  await open(page, CS);
+  await setDoc(page, POINT);
+  await caretAt(page, 'public int X', 0);
+  await csCommand(page, /^Generate Comparison Members$/);
+  const d = await docText(page);
+  expect(d).toContain('public class Point : IComparable<Point>');
+  expect(d).toContain('if ((result = Comparer<int>.Default.Compare(X, other.X)) != 0) return result;');
+  expect(d).toContain('return Comparer<int>.Default.Compare(Y, other.Y);');
+  expect(d).toContain('public static bool operator <=(Point? left, Point? right)');
+});
+test('347 Generate IAsyncDisposable implementation patterns', async ({ page }) => {
+  await open(page, CS);
+  await setDoc(page, 'namespace Fixtures.Steps;\npublic sealed class Session\n{\n    private readonly System.Net.Http.HttpClient _client = new();\n}\n');
+  await caretAt(page, '_client', 0);
+  await csCommand(page, /^Implement IAsyncDisposable$/);
+  const d = await docText(page);
+  expect(d).toContain('public sealed class Session : IAsyncDisposable');
+  expect(d).toContain('public async ValueTask DisposeAsync()');
+  expect(d).toContain('private async ValueTask DisposeAsyncCore()');
+  expect(d).toContain('if (_client is not null) await _client.DisposeAsync().ConfigureAwait(false);');
+});
+test('355 Convert interpolation to composite formatting', async ({ page }) => {
+  await open(page, CS);
+  await setDoc(page, 'namespace Fixtures.Steps;\npublic class P\n{\n    public string M(string name, double total) => $"Hi {name}: {total:F2}";\n}\n');
+  await caretAt(page, 'Hi {name}', 0);
+  await csCommand(page, /^Convert Interpolation to string\.Format$/);
+  expect(await docText(page)).toContain('=> string.Format("Hi {0}: {1:F2}", name, total);');
+});
+test('91 Convert record to class', async ({ page }) => {
+  await open(page, CS);
+  await setDoc(page, 'namespace Fixtures.Steps;\npublic record Point(int X, int Y);\n');
+  await caretAt(page, 'record Point', 2);
+  await csCommand(page, /^Convert Record to Class$/);
+  const d = await docText(page);
+  expect(d).toContain('public class Point : IEquatable<Point>');
+  expect(d).toContain('public Point(int x, int y)');
+  expect(d).not.toContain('record');
+});
+test('342 Inherit XML documentation from base members', async ({ page }) => {
+  needsLang();
+  await open(page, CS);
+  await setDoc(page, 'namespace Fixtures.Steps;\npublic class Base\n{\n    /// <summary>Runs.</summary>\n    public virtual void Run() { }\n}\npublic class Child : Base\n{\n    public override void Run() { }\n}\n');
+  await caretAt(page, 'override void Run', 15);
+  await csCommand(page, /^Inherit Documentation$/);
+  await expect.poll(() => docText(page), { timeout: 60_000 }).toContain('{\n    /// <inheritdoc/>\n    public override void Run() { }');
+});

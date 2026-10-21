@@ -10,6 +10,7 @@ import { toggleZen } from '../vscode/zenMode';
 import { layoutState } from './layoutModes';
 import { splitEditor, toggleMaximizeGroup } from '../vscode/editorGroups';
 import { api } from '../api';
+import { generateIEquatable, generateComparison, generateAsyncDisposable, interpolationToFormatCmd, recordToClassCmd } from '../editor/csharpGen';
 import type { EditorView } from '@codemirror/view';
 
 /**
@@ -58,6 +59,25 @@ export function moreCommands3(h: MoreHelpers): RiderCommand[] {
     { id: 'analyze-data-flow', label: 'Analyze Data Flow', menu: 'Code', run: h.inEditor((v, file) => { if (!file.endsWith('.cs')) { h.notice('Open a C# file and select statements or an expression.'); return; } void api<Flow>('/csharp/op', { op: 'flow', file, source: v.state.doc.toString(), ...range(v) }).then((f) => window.dispatchEvent(new CustomEvent('tas:text-preview', { detail: flowReport(f, 'data') })), (e) => h.notice((e as Error).message)); }) },
     { id: 'method-hierarchy', label: 'Method Hierarchy', menu: 'Navigate', run: h.inEditor((v, file) => { if (!file.endsWith('.cs')) { h.notice('Open a C# file and put the caret on a method.'); return; } const r = v.state.selection.main.head; const l = v.state.doc.lineAt(r); void api<{ name: string; items: { name: string; container?: string; depth: number; relation: string; file: string | null; line: number; external?: string }[] }>('/csharp/op', { op: 'methodHierarchy', file, source: v.state.doc.toString(), line: l.number, column: r - l.from + 1 }).then((m) => window.dispatchEvent(new CustomEvent('tas:location-list', { detail: { title: `Method Hierarchy: ${m.name}`, items: m.items.map((i) => ({ file: i.file ?? undefined, line: i.line, label: `${'  '.repeat(i.depth)}${i.relation === 'this' ? '● ' : i.relation === 'interface' ? '◇ ' : i.relation === 'base' ? '↑ ' : '↓ '}${i.name}`, detail: i.file ? `${i.relation} · ${i.file}:${i.line}` : `${i.relation} · ${i.external ?? 'external'}` })) } })), (e) => h.notice((e as Error).message)); }) },
     { id: 'go-to-decompiled', label: 'Go to Decompiled Source', menu: 'Navigate', run: h.inEditor((v, file) => { if (!file.endsWith('.cs')) { h.notice('Open a C# file and put the caret on a framework or NuGet symbol.'); return; } const r = v.state.selection.main.head; const l = v.state.doc.lineAt(r); h.notice('Decompiling…'); void api<{ name: string; assembly: string; text: string; line: number }>('/csharp/op', { op: 'decompile', file, source: v.state.doc.toString(), line: l.number, column: r - l.from + 1 }).then((d) => window.dispatchEvent(new CustomEvent('tas:code-preview', { detail: { title: `${d.name} [decompiled: ${d.assembly}]`, text: d.text, line: d.line } })), (e) => h.notice((e as Error).message)); }) },
+    { id: 'inherit-doc', label: 'Inherit Documentation', menu: 'Code', submenu: 'C#', run: h.inEditor((v, file) => {
+      if (!file.endsWith('.cs')) { h.notice('Open a C# file and put the caret on an override or an interface member.'); return; }
+      const doc = v.state.doc; const line = doc.lineAt(v.state.selection.main.head);
+      const name = /\b(\w+)\s*(?:\(|\{|=>|$)/.exec(line.text.replace(/\[.*?\]/g, ''));
+      const at = name ? line.from + line.text.indexOf(name[1]) + 1 : v.state.selection.main.head;
+      void api<{ locations: unknown[]; external?: string }>('/csharp/base', { file, source: doc.toString(), line: line.number, column: at - line.from + 1 }).then((b) => {
+        if (!b.locations.length && !b.external) { h.notice('This member has no base member or interface member to inherit documentation from.'); return; }
+        const prev = line.number > 1 ? doc.line(line.number - 1).text.trim() : '';
+        if (prev.startsWith('///')) { h.notice('This member already has documentation.'); return; }
+        const indent = /^\s*/.exec(line.text)![0];
+        let first = line; while (first.number > 1 && /^\s*\[/.test(doc.line(first.number - 1).text)) first = doc.line(first.number - 1);
+        v.dispatch({ changes: { from: first.from, insert: `${indent}/// <inheritdoc/>\n` }, userEvent: 'input' });
+      }, (e) => h.notice((e as Error).message));
+    }) },
+    { id: 'generate-comparison', label: 'Generate Comparison Members', menu: 'Code', submenu: 'C#', run: h.inEditor((v) => generateComparison(v) || h.notice('Put the caret in a class or struct with public properties (and no IComparable yet).')) },
+    { id: 'generate-iequatable', label: 'Generate IEquatable<T>', menu: 'Code', submenu: 'C#', run: h.inEditor((v) => generateIEquatable(v) || h.notice('Put the caret in a class or struct with public properties (and no IEquatable yet).')) },
+    { id: 'generate-async-disposable', label: 'Implement IAsyncDisposable', menu: 'Code', submenu: 'C#', run: h.inEditor((v) => generateAsyncDisposable(v) || h.notice('Put the caret in a class that does not implement IAsyncDisposable yet.')) },
+    { id: 'interpolation-to-format', label: 'Convert Interpolation to string.Format', menu: 'Code', submenu: 'C#', run: h.inEditor((v) => interpolationToFormatCmd(v) || h.notice('Put the caret in an interpolated string ($"…").')) },
+    { id: 'record-to-class', label: 'Convert Record to Class', menu: 'Code', submenu: 'C#', run: h.inEditor((v) => recordToClassCmd(v) || h.notice('Put the caret on a positional record (record Name(…)).')) },
     { id: 'next-todo', label: 'Next TODO', menu: 'Navigate', group: true, run: h.inEditor((v) => gotoTodo(tokens(), 1)(v) || h.notice(`No ${tokens().join(' / ')} comments in this file.`)) },
     { id: 'previous-todo', label: 'Previous TODO', menu: 'Navigate', run: h.inEditor((v) => gotoTodo(tokens(), -1)(v) || h.notice(`No ${tokens().join(' / ')} comments in this file.`)) },
     { id: 'previous-conflict', label: 'Previous Merge Conflict', menu: 'Navigate', run: h.inEditor((v) => prevConflict(v) || h.notice('This file has no merge conflicts.')) },

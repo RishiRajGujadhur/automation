@@ -504,12 +504,12 @@ export function classAt(state: EditorState) {
       d += (line.match(/\{/g) ?? []).length - (line.match(/\}/g) ?? []).length;
       if (pm) d = Math.max(0, d);
     }
-    return { name: m[3], indent: `${m[1]}    `, close: i, props };
+    return { name: m[3], kind: m[2], indent: `${m[1]}    `, close: i, props, header: doc.line(n).from, open };
   }
   return undefined;
 }
 /** Inserts members before the class's closing brace (after a blank line). */
-function addMembers(view: EditorView, close: number, lines: string[]) {
+export function addMembers(view: EditorView, close: number, lines: string[]) {
   const doc = view.state.doc;
   const line = doc.lineAt(close);
   const at = line.from;

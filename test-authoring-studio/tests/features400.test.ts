@@ -154,3 +154,25 @@ describe('400 side-by-side diff rows', () => {
     expect(rows[4][1].n).toBe(4);
   });
 });
+import { interpolationToFormat, recordToClass, asyncDisposableFields } from '../src/editor/csharpGen';
+describe('355 / 91 / 347 C# conversions', () => {
+  it('interpolation to composite formatting', () => {
+    expect(interpolationToFormat('$"Hello {name}, {total:F2} ({items.Count,5})"')).toBe('string.Format("Hello {0}, {1:F2} ({2,5})", name, total, items.Count)');
+    expect(interpolationToFormat('$"{{literal}} {Get(a, b)}"')).toBe('string.Format("{{literal}} {0}", Get(a, b))');
+    expect(interpolationToFormat('$@"C:\{dir}"')).toBe('string.Format(@"C:\{0}", dir)');
+    expect(interpolationToFormat('"plain"')).toBeNull();
+  });
+  it('record to class', () => {
+    const c = recordToClass('public record Point(int X, int Y);')!;
+    expect(c).toContain('public class Point : IEquatable<Point>');
+    expect(c).toContain('public int X { get; init; }');
+    expect(c).toContain('public Point(int x, int y)');
+    expect(c).toContain('public void Deconstruct(out int x, out int y)');
+    expect(c).toContain('public override string ToString() => $"Point {{ X = {X}, Y = {Y} }}";');
+    expect(recordToClass('public record Named(string Name) : Base\n{\n    public int Extra => 1;\n}')).toContain('public class Named : Base, IEquatable<Named>');
+    expect(recordToClass('public class NotARecord { }')).toBeNull();
+  });
+  it('async disposable fields', () => {
+    expect(asyncDisposableFields('private readonly HttpClient _client = new();\nprivate IBrowser? browser;\nprivate int count;\nprivate Stream stream;')).toEqual(['_client', 'browser', 'stream']);
+  });
+});
