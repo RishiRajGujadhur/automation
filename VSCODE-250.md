@@ -65,7 +65,7 @@ Legend: `[x]` done · `[ ]` to do.
 - [x] W43. Primary side bar on the right (workbench.sideBar.location)
 - [x] W44. Menu bar visibility: classic / compact (a ☰ button) / toggle (Alt shows) / hidden (window.menuBarVisibility)
 - [x] W45. Command center in the title bar: `← → [🔍 folder name]`, click opens Quick Open (window.commandCenter)
-- [ ] W46. Window title from window.title (${activeEditorShort}${separator}${rootName}…) and window.titleSeparator
+- [x] W46. Window title from window.title (${activeEditorShort}${separator}${rootName}…) and window.titleSeparator
 - [ ] W47. Activity bar: Accounts and Manage (gear) menus at the bottom
 - [ ] W48. Activity bar: right-click to hide / show items, drag to reorder (persisted)
 - [ ] W49. Activity bar at the top of the side bar (workbench.activityBar.location: top)
@@ -339,3 +339,4 @@ Legend: `[x]` done · `[ ]` to do.
 - 2026-10-21: W43. workbench.sideBar.location: the primary side bar and its activity bar on the right (the secondary side bar goes left), its resizer works the other way round; Customize Layout gained Primary Side Bar Position and Panel Alignment. Fixed on the way: a title bar too wide for the window scrolled the whole workbench sideways; it is clipped now, and narrower windows get icon-only view switches, a short product name and no section crumb so everything fits at 1440 px.
 - 2026-10-21: W44. window.menuBarVisibility: classic, compact (a ☰ shows the menus; on desktop it pops up the native menu), toggle (Alt pressed alone shows and focuses them; a used menu, Escape or a click elsewhere hides them) or hidden. The desktop app applies it to its native menu bar. Customize Layout ▸ Visibility gained Menu Bar.
 - 2026-10-22: W45. The title bar's command center is VS Code's: the workspace name (a click is Quick Open, Ctrl+P) and an arrow listing the pickers (?); window.commandCenter hides it. The old step palette stays on Ctrl+K.
+- 2026-10-22: W46. VS Code's window.title template (dirty, activeEditorShort / Medium / Long, activeFolderShort / Medium / Long, rootName, rootPath, appName, separator) and window.titleSeparator; separators next to empty values are dropped. The default is VS Code's: 'file — folder — TestAuthoring Studio' (the page name when no file is open).

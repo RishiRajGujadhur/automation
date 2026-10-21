@@ -1000,3 +1000,13 @@ test('W45 Command center: the workspace name opens Quick Open, the arrow lists t
   await expect(page.getByText('Repository indexed')).toBeVisible();
   await expect(cc).toHaveCount(0);
 });
+
+test('W46 window.title and window.titleSeparator', async ({ page }) => {
+  await start(page);
+  await open(page, 'Steps/AuthSteps.cs');
+  await expect(page).toHaveTitle(`AuthSteps.cs — ${path.basename(temp)} — TestAuthoring Studio`);
+  await page.evaluate(() => localStorage.setItem('tas:settings', JSON.stringify({ 'window.title': '${activeEditorMedium}${separator}${appName}', 'window.titleSeparator': ' | ' })));
+  await page.reload();
+  await open(page, 'Steps/AuthSteps.cs');
+  await expect(page).toHaveTitle('Steps/AuthSteps.cs | TestAuthoring Studio');
+});

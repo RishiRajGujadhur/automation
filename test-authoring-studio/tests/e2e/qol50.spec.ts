@@ -54,7 +54,7 @@ const nav = (page: Page) => page.getByRole('navigation', { name: 'Solution' });
 
 test('QL1 Window title: the active file and the workspace folder', async ({ page }) => {
   await openFeature(page);
-  await expect(page).toHaveTitle(new RegExp(`^Login\.feature — ${path.basename(root)} · TestAuthoring Studio$`));
+  await expect(page).toHaveTitle(new RegExp(`^Login\.feature — ${path.basename(root)} — TestAuthoring Studio$`));
   await caretAt(page, 'Feature:');
   await page.keyboard.type('x');
   await expect(page).toHaveTitle(/^● Login\.feature/);

@@ -53,7 +53,7 @@ test('WCAG 2.2 AA: dialogs and menus', async ({ page }) => {
 test('document structure: language, title, landmarks, one h1, skip link', async ({ page }) => {
   await page.goto('/#/test-generator');
   await expect(page.locator('html')).toHaveAttribute('lang', 'en');
-  await expect(page).toHaveTitle(/Test Generator · TestAuthoring Studio/);
+  await expect(page).toHaveTitle(/^Test Generator — .+ — TestAuthoring Studio$/);
   await expect(page.getByRole('banner')).toHaveCount(1);
   await expect(page.getByRole('main')).toHaveCount(1);
   await expect(page.getByRole('contentinfo')).toHaveCount(1);

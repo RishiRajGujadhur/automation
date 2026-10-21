@@ -41,7 +41,7 @@ import RiderHost from './rider/RiderHost';
 import { formatFeature } from './editor/gherkin';
 import { activeEditor as focusedEditor } from './editor/activeEditor';
 import BusyTitle from './BusyTitle';
-import { setBaseTitle } from './windowTitle';
+import { setTitleContext } from './windowTitle';
 import { setViewOptions, useViewOptions } from './editor/viewOptions';
 import { recordNotice } from './rider/notifications';
 import RiderMenubar from './rider/RiderMenubar';
@@ -890,7 +890,7 @@ export default function App() {
     const file = tab === 'Features' && (view === 'editor' || view === 'code') ? openEditors.active : undefined;
     const folder = fileSrc.kind === 'browser' ? fileSrc.name : (config?.repositoryRoot ?? '').split(/[\\/]/).filter(Boolean).pop();
     const changed = dirty || (!!file && unsavedFiles().includes(file));
-    setBaseTitle(file ? `${changed ? '● ' : ''}${file.split('/').pop()}${folder ? ` — ${folder}` : ''} · TestAuthoring Studio` : `${dirty ? '● ' : ''}${pageTitle} · TestAuthoring Studio`);
+    setTitleContext({ file, page: pageTitle, root: fileSrc.kind === 'browser' ? fileSrc.name : config?.repositoryRoot ?? folder, dirty: changed });
   }, [pageTitle, dirty, tab, view, openEditors.active, fileSrc, config?.repositoryRoot, unsavedTick]);
   useEffect(() => {
     const name = tab === 'Features' ? ({ recorder: 'Playwright Recorder', builder: 'Scenario Builder', editor: 'Feature Editor' } as Record<string, string>)[view] ?? tab : tab;
