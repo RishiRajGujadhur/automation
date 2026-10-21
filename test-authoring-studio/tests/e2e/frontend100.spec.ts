@@ -93,3 +93,13 @@ test('F3 Convert type alias to interface', async ({ page }) => {
   await open(page, 'src/shapes.ts', 'interface Named { name: string }\nexport type Point = Named & {\n  x: number;\n};\n');
   await convert(page, 'type Point', /^Convert to interface$/, 'export interface Point extends Named {\n  x: number;\n}', false, 6);
 });
+
+test('F4 Generate missing interface properties', async ({ page }) => {
+  await open(page, 'src/shapes.ts', 'interface Point { x: number; y: number; label: string }\nexport const p: Point = { x: 1 };\n');
+  await convert(page, 'const p', /^Add missing properties$/, /y: 0,\s*label: ""/, false, 6);
+});
+test('F5 Implement interface members', async ({ page }) => {
+  await open(page, 'src/shapes.ts', 'interface Shape { area(): number; readonly name: string }\nexport class Circle implements Shape {\n}\n');
+  await convert(page, 'class Circle', /^Implement interface 'Shape'$/, /area\(\): number \{\s*throw new Error\("Method not implemented\."\);\s*\}/, false, 7);
+  expect(await docText(page)).toContain('name: string');
+});
