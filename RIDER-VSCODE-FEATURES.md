@@ -118,7 +118,7 @@ Legend: `[x]` done · `[ ]` to do.
 - [x] 96. Split conditional expressions — Quick Actions: Split into nested 'if'
 - [x] 97. Replace magic values with constants — Quick Actions: Introduce constant for all occurrences
 - [x] 98. Reorder method parameters — Code ▸ Refactor ▸ Reorder Parameters… (2026-10-21)
-- [ ] 99. Remove unused parameters
+- [x] 99. Remove unused parameters — Code ▸ Refactor ▸ Remove Unused Parameters (2026-10-21)
 - [x] 100. Batch code cleanup — Code Cleanup in Solution
 
 ## Code Analysis & Quality
@@ -401,3 +401,4 @@ Legend: `[x]` done · `[ ]` to do.
 - 2026-10-21 342: Members with a base or interface member get /// <inheritdoc/>.
 - 2026-10-21 61: A Change Signature dialog: parameters reordered, removed and renamed; the language service updates the declaration, overrides, implementations and calls (named arguments after an omitted optional one).
 - 2026-10-21 98: The parameters in a new order; every call follows.
+- 2026-10-21 99: Parameters the body never reads go from the method and every call (not for virtual, abstract or interface members).
