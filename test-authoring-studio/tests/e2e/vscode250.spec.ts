@@ -344,3 +344,23 @@ test('W15 workbench.commandPalette.history: how many recently used commands come
   await quickBox(page).fill('>');
   await expect(quick(page).locator('.quick-input-separator')).toHaveCount(0);
 });
+
+test('W16 Quick Input history: Ctrl+Up / Ctrl+Down go through earlier queries', async ({ page }) => {
+  await start(page);
+  for (const q of ['authsteps', 'searchsteps']) {
+    await page.keyboard.press('Control+p');
+    await quickBox(page).fill(q);
+    await expect(rows(page).first()).toContainText(/steps/i);
+    await page.keyboard.press('Enter');
+    await expect(quick(page)).toBeHidden();
+  }
+  await page.keyboard.press('Control+p');
+  await page.keyboard.press('Control+ArrowUp');
+  await expect(quickBox(page)).toHaveValue('searchsteps');
+  await page.keyboard.press('Control+ArrowUp');
+  await expect(quickBox(page)).toHaveValue('authsteps');
+  await page.keyboard.press('Control+ArrowDown');
+  await expect(quickBox(page)).toHaveValue('searchsteps');
+  await page.keyboard.press('Control+ArrowDown');
+  await expect(quickBox(page)).toHaveValue('');
+});

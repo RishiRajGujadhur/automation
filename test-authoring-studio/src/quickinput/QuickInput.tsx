@@ -35,6 +35,10 @@ export function Keybinding({ keys }: { keys: string }) {
 }
 
 const ROW = 22;
+// Accepted queries, newest first (W16: Ctrl+↑ / Ctrl+↓ go back through them).
+const HISTORY = 'tas:quickInput:history';
+const readHistory = (): string[] => { try { return JSON.parse(localStorage.getItem(HISTORY) ?? '[]') as string[]; } catch { return []; } };
+const noteHistory = (v: string) => { if (!v.trim()) return; try { localStorage.setItem(HISTORY, JSON.stringify([v, ...readHistory().filter((x) => x !== v)].slice(0, 50))); } catch { /* storage blocked */ } };
 /**
  * The Quick Input widget (VS Code's quickInput.css look): 600 px wide at the top centre, an input box and up to 20 rows.
  * ↑ / ↓ / Page Up / Page Down move, Enter accepts, Ctrl+Enter opens to the side, Escape or a click outside closes.
@@ -48,6 +52,7 @@ export default function QuickInput() {
   const input = useRef<HTMLInputElement>(null);
   const list = useRef<HTMLDivElement>(null);
   const accepted = useRef(false);
+  const historyAt = useRef(-1);
   // Results still loading when Enter is pressed: accept the first of them once they arrive (as VS Code does).
   const deferred = useRef<{ side: boolean } | undefined>(undefined);
   const provider = providerFor(value);
@@ -61,6 +66,7 @@ export default function QuickInput() {
     setValue(initial);
     setActive(0);
     accepted.current = false;
+    historyAt.current = -1;
     // Focus now, so keys typed right after the shortcut land in the box; select once the value is in.
     input.current?.focus();
     requestAnimationFrame(() => {
@@ -94,6 +100,7 @@ export default function QuickInput() {
     if (!it) return;
     accepted.current = true;
     rememberQuery(value);
+    noteHistory(value);
     closeQuickInput();
     it.accept({ side });
   };
@@ -119,7 +126,14 @@ export default function QuickInput() {
             onBlur={(e) => { if (quickOpen.closeOnFocusLost() && !e.currentTarget.closest('.quick-input-widget')?.contains(e.relatedTarget as Node)) close(); }}
             onKeyDown={(e) => {
               const n = items.length;
-              if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); close(); }
+              if ((e.ctrlKey || e.metaKey) && (e.key === 'ArrowUp' || e.key === 'ArrowDown')) {
+                e.preventDefault();
+                const h = readHistory();
+                const at = Math.max(-1, Math.min(h.length - 1, historyAt.current + (e.key === 'ArrowUp' ? 1 : -1)));
+                historyAt.current = at;
+                setValue(at < 0 ? initial : h[at]);
+              }
+              else if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); close(); }
               else if (e.key === 'ArrowDown') { e.preventDefault(); setActive((a) => (n ? (a + 1) % n : 0)); }
               else if (e.key === 'ArrowUp') { e.preventDefault(); setActive((a) => (n ? (a - 1 + n) % n : 0)); }
               else if (e.key === 'PageDown') { e.preventDefault(); setActive((a) => Math.min(n - 1, a + page)); }
