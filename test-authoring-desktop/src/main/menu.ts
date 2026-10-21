@@ -70,7 +70,7 @@ export function buildMenu() {
     {
       label: '&File',
       submenu: [
-        { label: 'Open Project/Solution…', accelerator: 'CmdOrCtrl+Shift+O', click: () => pickAndOpenSolution().then(buildMenu) },
+        { label: 'Open Project/Solution…', accelerator: 'CmdOrCtrl+Shift+O', registerAccelerator: false, click: () => pickAndOpenSolution().then(buildMenu) },
         { label: 'Open Folder…', accelerator: 'CmdOrCtrl+Shift+Alt+O', click: () => pickAndOpenRepository().then(buildMenu) },
         { label: 'Open Recent', submenu: recentMenu() },
         { label: 'Reopen Last Closed Repository', accelerator: 'CmdOrCtrl+Shift+T', enabled: !!s.lastClosed && fs.existsSync(s.lastClosed), click: () => { if (s.lastClosed) openAndRebuild(s.lastClosed); } },

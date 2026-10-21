@@ -55,6 +55,8 @@ export async function fileOutline(file: string, source: string): Promise<Outline
     }
     return items.sort((a, b) => a.line - b.line || a.depth - b.depth);
   }
+  // JavaScript / TypeScript, HTML and CSS / SCSS / LESS: the front-end language services (VSCODE-250.md W3).
+  if (/\.(tsx?|jsx?|mjs|cjs|mts|cts|html?|xhtml|vue|svelte|css|scss|sass|less)$/i.test(file) && !isBrowser()) return api<OutlineItem[]>('/web/outline', { file, source });
   return [];
 }
 

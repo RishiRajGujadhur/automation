@@ -343,6 +343,8 @@ export default function App() {
   const leaveBrowserFolder = async () => { if (fileSource().kind !== 'browser') return; await closeBrowserFolder(); setBrowserSol(undefined); };
   /** Open Project/Solution: the native file dialog on desktop (it opens the solution itself), the browse dialog on the web. */
   const openSolutionDialog = () => { if (desktop?.openSolution) void desktop.openSolution(); else setModal('solution'); };
+  const openSolutionDialogRef = useRef(openSolutionDialog);
+  openSolutionDialogRef.current = openSolutionDialog;
   /** A solution, project or folder was opened (Open Project/Solution, Start Window). */
   const solutionOpened = async (r: { config: { repositoryRoot: string; solution?: string }; index: Index }) => {
     await leaveBrowserFolder();
@@ -400,7 +402,8 @@ export default function App() {
     if (e.defaultPrevented) return;
     // Recent Files (Ctrl+E) / Recent Locations (Ctrl+Shift+E), as in Rider.
     if (!e.altKey && e.key.toLowerCase() === 'e' && Date.now() - chordK.current > 1500) { e.preventDefault(); setRecentMode(e.shiftKey ? 'locations' : 'files'); setModal('recent'); return; }
-    if (!desktop && e.shiftKey && !e.altKey && e.key.toLowerCase() === 'o') { e.preventDefault(); setModal('solution'); return; }
+    // Ctrl+Shift+O: Go to Symbol in Editor in an editor (VS Code, W3), Open Project/Solution elsewhere (Visual Studio).
+    if (e.shiftKey && !e.altKey && e.key.toLowerCase() === 'o') { e.preventDefault(); if ((e.target as HTMLElement | null)?.closest?.('.cm-editor')) openQuickInput('@'); else openSolutionDialogRef.current(); return; }
     if (e.shiftKey && !e.altKey && e.key.toLowerCase() === 'f') { e.preventDefault(); showSearch(false); return; }
     if (e.shiftKey && !e.altKey && e.key.toLowerCase() === 'h') { e.preventDefault(); showSearch(true); return; }
     if (!e.shiftKey && !e.altKey && e.key.toLowerCase() === 't') { e.preventDefault(); setModal('goto'); return; }

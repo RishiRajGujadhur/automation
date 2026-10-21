@@ -102,3 +102,47 @@ test('W2 Command Palette: > commands with keybinding chips, recently used first'
   await expect(rows(page).first()).toContainText('AuthSteps.cs');
   await page.keyboard.press('Escape');
 });
+
+const SHAPES = ['export interface Shape {', '  area(): number;', '}', '', 'export class Circle implements Shape {', '  radius = 1;', '  area() {', '    return Math.PI * this.radius ** 2;', '  }', '}', '', 'export class Square implements Shape {', '  side = 2;', '  area() {', '    return this.side ** 2;', '  }', '  perimeter() {', '    return 4 * this.side;', '  }', '}', '', 'export function total(shapes: Shape[]) {', '  return shapes.reduce((s, x) => s + x.area(), 0);', '}', ''].join('\n');
+const caretLine = (page: Page) => page.evaluate(() => { const v = (window as unknown as { __activeEditor: () => { view: { state: { doc: { lineAt(p: number): { number: number } }; selection: { main: { head: number } } } } } }).__activeEditor().view; return v.state.doc.lineAt(v.state.selection.main.head).number; });
+
+test('W3 Go to Symbol in Editor: Ctrl+Shift+O, preview while moving, Escape restores, Enter goes', async ({ page }) => {
+  await fs.writeFile(path.join(temp, 'shapes.ts'), SHAPES);
+  await start(page);
+  const src = await open(page, 'shapes.ts');
+  await src.locator('.cm-line').first().click();
+  await page.keyboard.press('Control+Shift+O');
+  await expect(quickBox(page)).toHaveValue('@');
+  await expect(rows(page).first()).toContainText('Shape');
+  await expect(rows(page).first().locator('.quick-input-separator')).toHaveText(/symbols \(\d+\)/);
+  await expect(rows(page).first().locator('.codicon-symbol-interface')).toBeVisible();
+  await page.keyboard.type('perim');
+  await expect(rows(page)).toHaveCount(1);
+  await expect(rows(page).first().locator('.codicon-symbol-method')).toBeVisible();
+  // Preview: the editor already shows the symbol; Escape goes back to line 1.
+  await expect.poll(() => caretLine(page)).toBe(17);
+  await page.keyboard.press('Escape');
+  await expect.poll(() => caretLine(page)).toBe(1);
+  await page.keyboard.press('Control+Shift+O');
+  await page.keyboard.type('total');
+  await page.keyboard.press('Enter');
+  await expect(quick(page)).toBeHidden();
+  await expect.poll(() => caretLine(page)).toBe(22);
+  // Typed after a file name in Quick Open: "@" goes to symbols too.
+  await page.keyboard.press('Control+p');
+  await quickBox(page).fill('@circle');
+  await expect(rows(page).first()).toContainText('Circle');
+  await page.keyboard.press('Escape');
+});
+
+test('W4 Go to Symbol by category (@:): groups with counts', async ({ page }) => {
+  await fs.writeFile(path.join(temp, 'shapes.ts'), SHAPES);
+  await start(page);
+  const src = await open(page, 'shapes.ts');
+  await src.locator('.cm-line').first().click();
+  await page.keyboard.press('Control+Shift+O');
+  await page.keyboard.type(':');
+  await expect(quickBox(page)).toHaveValue('@:');
+  const seps = quick(page).locator('.quick-input-separator');
+  await expect(seps).toHaveText(['interfaces (1)', 'methods (4)', 'classes (2)', 'properties (2)', 'functions (1)'].sort((a, b) => 0 * a.length + 0 * b.length));
+});

@@ -58,6 +58,8 @@ export default function QuickInput() {
     setValue(initial);
     setActive(0);
     accepted.current = false;
+    // Focus now, so keys typed right after the shortcut land in the box; select once the value is in.
+    input.current?.focus();
     requestAnimationFrame(() => {
       const el = input.current;
       if (!el) return;

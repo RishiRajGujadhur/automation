@@ -15,6 +15,7 @@ import { locIn, styleComplete, styleHover, styleProblems, styleDefinition, style
 const HTML = /\.(html?|xhtml|vue|svelte)$/i;
 const STYLE = /\.(css|scss|sass|less)$/i;
 import { declarationSource, toOriginal, toGenerated } from './navigation.js';
+import { scriptSymbols, markupSymbols, styleSymbols } from './outline.js';
 
 /**
  * /api/web/*: language features for front-end files (FRONTEND-100.md). Every request carries the editor's text, so
@@ -65,6 +66,16 @@ export function webRoutes(app: Express, root: () => string) {
     const d = p.service.getCompletionEntryDetails(abs, b.pos, b.name, fmt(), b.origin, prefs, b.data ? JSON.parse(b.data) : undefined);
     const mine = d?.codeActions?.flatMap((a) => a.changes).filter((c) => c.fileName === abs).flatMap((c) => c.textChanges) ?? [];
     res.json({ detail: d ? ts.displayPartsToString(d.displayParts) : '', edits: mine.map((e) => ({ from: e.span.start, to: e.span.start + e.span.length, insert: e.newText })) });
+  });
+
+  // Document symbols (VSCODE-250.md W3: Go to Symbol in Editor, the Outline view).
+  app.post('/api/web/outline', async (req, res) => {
+    const b = z.object({ file, source: z.string().max(5_000_000) }).parse(req.body);
+    await confined(root(), b.file, false);
+    if (STYLE.test(b.file)) { res.json(styleSymbols(b.file, b.source)); return; }
+    if (HTML.test(b.file)) { res.json(markupSymbols(b.file, b.source)); return; }
+    const p = await script(b.file);
+    res.json(scriptSymbols(p, p.setText(b.file, b.source)));
   });
 
   app.post('/api/web/quickinfo', async (req, res) => {

@@ -16,8 +16,8 @@ Legend: `[x]` done · `[ ]` to do.
 ## Quick Input (title-bar quick pick)
 - [x] W1. Quick Open (Ctrl+P) in VS Code's Quick Input at the top of the window: files with icons, folder beside the name, recently opened first, fuzzy match highlights
 - [x] W2. Command Palette (Ctrl+Shift+P, `>`): every command with its keybinding chips, "recently used" and "other commands" groups
-- [ ] W3. Go to Symbol in Editor (Ctrl+Shift+O, `@`): the active file's symbols, preview on arrow keys
-- [ ] W4. Symbols grouped by kind (`@:`), with counts
+- [x] W3. Go to Symbol in Editor (Ctrl+Shift+O, `@`): the active file's symbols, preview on arrow keys
+- [x] W4. Symbols grouped by kind (`@:`), with counts
 - [ ] W5. Go to Line/Column (Ctrl+G, `:`): "Current Line: x, Character: y. Type a line number between 1 and n", live preview, `line:column`
 - [ ] W6. Go to Symbol in Workspace (Ctrl+T, `#`)
 - [ ] W7. Quick access help (`?`): the prefixes and what they do
@@ -297,3 +297,4 @@ Legend: `[x]` done · `[ ]` to do.
 
 ## Progress log
 - 2026-10-21: W1, W2. VS Code's Quick Input at the top centre (fuzzyScore ported from VS Code's filters.ts): files with recently opened first and highlights; > commands with keybinding chips, recently used / other commands. Ctrl+T keeps Go to All; Ctrl+K keeps the step palette.
+- 2026-10-21: W3, W4. Symbols of C#, Gherkin, Markdown and (new /api/web/outline) TypeScript / JavaScript, HTML, CSS; codicon symbol icons in VS Code's colours; the highlighted symbol is previewed, Escape restores the caret. Ctrl+Shift+O in an editor; elsewhere it still opens a solution.

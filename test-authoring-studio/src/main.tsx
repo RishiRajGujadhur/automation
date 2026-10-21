@@ -1,5 +1,6 @@
 import React from 'react';
 import { createRoot } from 'react-dom/client';
+import '@vscode/codicons/dist/codicon.css';
 import App from './App';
 import FloatingEditor, { floatingFile } from './FloatingEditor';
 import { ConfirmProvider, PrefsProvider, TooltipProvider } from './radix2';
