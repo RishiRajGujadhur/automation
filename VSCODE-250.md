@@ -60,7 +60,7 @@ Legend: `[x]` done · `[ ]` to do.
 - [x] W40. Gear on a toast: "Don't show again" for that kind of message
 
 ## Layout
-- [ ] W41. Customize Layout quick pick (visibility, side bar position, panel alignment, quick input position, modes) with reset
+- [x] W41. Customize Layout quick pick (visibility, side bar position, panel alignment, quick input position, modes) with reset
 - [ ] W42. Panel alignment: center / justify / left / right (workbench.panel.alignment)
 - [ ] W43. Primary side bar on the right (workbench.sideBar.location)
 - [ ] W44. Menu bar visibility: classic / compact (a ☰ button) / toggle (Alt shows) / hidden (window.menuBarVisibility)
@@ -334,3 +334,4 @@ Legend: `[x]` done · `[ ]` to do.
 - 2026-10-21: W38. While a build or a test run is going, a VS Code progress notification shows what runs (action, project, configuration) with an indeterminate bar and Cancel.
 - 2026-10-21: W39. Palette commands Notifications: Show / Hide Notifications, Clear All Notifications, Toggle Do Not Disturb Mode, Focus Notification Toast and Accept Notification Primary Action; Ctrl+Shift+A presses a toast's primary button (Undo, Cancel) while one is up.
 - 2026-10-21: W40. Each toast has VS Code's gear with Don't Show Again: messages of that kind (numbers and quoted names aside) stop popping up but stay in the Notification Center; Notifications: Reset 'Don't Show Again' Messages brings them back.
+- 2026-10-21: W41. View ▸ Customize Layout… (and a layout button in the title bar's layout controls): VS Code's quick pick with Visibility (Activity Bar, Primary / Secondary Side Bar, Panel, Status Bar), Quick Input Position and Modes (Full Screen, Zen Mode, Centered Layout); toggles keep it open showing the new state; Reset to Defaults.

@@ -880,3 +880,25 @@ test("W40 Toast gear: Don't Show Again for that kind of message; the palette res
   await notify('Saved 7 files.');
   await expect(page.locator('.notification-toast').filter({ hasText: 'Saved 7 files.' })).toBeVisible();
 });
+
+test('W41 Customize Layout: visibility toggles that keep the picker open, quick input position, reset', async ({ page }) => {
+  await start(page);
+  await open(page, 'Steps/AuthSteps.cs');
+  await page.getByRole('button', { name: 'Customize Layout…' }).click();
+  await expect(quickBox(page)).toHaveAttribute('placeholder', 'Customize Layout');
+  await expect(quick(page).locator('.quick-input-separator')).toContainText(['Visibility', 'Quick Input Position', 'Modes']);
+  const row = (name: string) => rows(page).filter({ hasText: new RegExp(`^${name}`) }).first();
+  await expect(row('Status Bar').locator('.codicon-check')).toBeVisible();
+  await row('Status Bar').click();
+  // Still open, with the new state.
+  await expect(row('Status Bar').locator('.codicon-blank')).toBeVisible();
+  await expect(page.locator('footer.status-bar')).toBeHidden();
+  await row('Primary Side Bar').click();
+  await expect(row('Primary Side Bar').locator('.codicon-blank')).toBeVisible();
+  await row('Center').click();
+  await expect.poll(async () => (await quick(page).boundingBox())!.y).toBeGreaterThan(100);
+  await rows(page).filter({ hasText: 'Reset to Defaults' }).click();
+  await expect(page.locator('footer.status-bar')).toBeVisible();
+  await expect(row('Primary Side Bar').locator('.codicon-check')).toBeVisible();
+  await expect.poll(async () => (await quick(page).boundingBox())!.y).toBeLessThan(20);
+});

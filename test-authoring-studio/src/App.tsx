@@ -41,7 +41,7 @@ import { formatFeature } from './editor/gherkin';
 import { activeEditor as focusedEditor } from './editor/activeEditor';
 import BusyTitle from './BusyTitle';
 import { setBaseTitle } from './windowTitle';
-import { useViewOptions } from './editor/viewOptions';
+import { setViewOptions, useViewOptions } from './editor/viewOptions';
 import { recordNotice } from './rider/notifications';
 import RiderMenubar from './rider/RiderMenubar';
 import RiderToolWindow, { RIDER_TOOLS, type RiderTool } from './rider/RiderToolWindow';
@@ -49,7 +49,7 @@ import { menuEntries, runRider, useRiderCommands, commandOn, readUsage } from '.
 import { featureOn, disabledCommands, onFeaturesChanged } from './features';
 import { zenSilent } from './vscode/zenMode';
 import { sideBySide, useMaximizedGroup } from './vscode/editorGroups';
-import { useSettings, setSetting } from './vscode/settings';
+import { useSettings, setSetting, resetSetting } from './vscode/settings';
 import { activityBarLocation, panelLocation } from './vscode/workbenchLayout';
 import { studioLog } from './outputLog';
 import RecentPopup from './RecentPopup';
@@ -85,6 +85,7 @@ import QuickInput from './quickinput/QuickInput';
 import { openQuickInput, openQuickPick } from './quickinput/store';
 import { openCommandPalette, openQuickOpen, runPaletteCommand, setPaletteCommands, type PaletteEntry } from './quickinput/providers';
 import { setOpenViews } from './quickinput/help';
+import { customizeLayout, setLayoutParts, resetLayoutSettings } from './quickinput/layoutPick';
 import { CLOSE_EDITOR_EVENT } from './quickinput/editors';
 import { SelectorCatalogue, BackgroundCatalogue } from './Catalogues';
 import { api } from './api';
@@ -1315,6 +1316,14 @@ export default function App() {
     window.addEventListener(TOGGLE_MAXIMIZED_EDITOR, h);
     return () => window.removeEventListener(TOGGLE_MAXIMIZED_EDITOR, h);
   });
+  // View ▸ Customize Layout (VS Code, W41): what is shown and how to toggle it.
+  setLayoutParts({
+    sidebar: !!prefs.sidebar, panel: !!dockShows && inEditor && !panelHidden, secondary: !!secondary,
+    toggleSidebar: () => setPrefs({ sidebar: !prefs.sidebar }),
+    togglePanel: () => { if (dockShows && inEditor) setPanelHidden((h) => !h); else showRiderTool('terminal'); },
+    toggleSecondary: () => setSecondary((x) => (x ? null : 'structure')),
+    reset: () => { setPrefs({ sidebar: true }); setPanelHidden(false); setSecondary(null); setViewOptions({ hideActivityBar: false, hideStatusBar: false, centered: false }); resetSetting('workbench.quickInput.position'); resetLayoutSettings(); },
+  });
   const dock = inEditor && dockShows ? (
     <div ref={dockRef} className={`dock dock-${dockSide} ${panelSize[dockSide === 'bottom' ? 'h' : 'w'] ? 'dock-sized' : ''} ${panelMax ? 'dock-max' : ''}`} style={panelStyle} hidden={panelHidden}>
       {!panelMax && <PanelSash side={dockSide} size={dockSide === 'bottom' ? panelSize.h : panelSize.w} onSize={(px) => setPanelSize(dockSide === 'bottom' ? { ...panelSize, h: px } : { ...panelSize, w: px })} panel={() => dockRef.current} />}
@@ -1487,6 +1496,7 @@ export default function App() {
         {vscode && !basic && <AppMenuButton {...menuProps} />}
         {vscode && featureOn('layout-controls') && (
           <div className="layout-controls" role="group" aria-label="Layout">
+            <IconButton label="Customize Layout…" onClick={() => customizeLayout()}><span className="codicon codicon-layout" aria-hidden="true" /></IconButton>
             <IconButton label="Toggle Primary Side Bar" aria-pressed={!!prefs.sidebar} shortcut="Ctrl+B" onClick={() => setPrefs({ sidebar: !prefs.sidebar })}><PanelLeft size={16} /></IconButton>
             <IconButton label="Toggle Panel" aria-pressed={!!dock && !panelHidden} onClick={() => { if (dockShows && inEditor) setPanelHidden((h) => !h); else showRiderTool('terminal'); }}><PanelBottom size={16} /></IconButton>
             <IconButton label="Toggle Secondary Side Bar" aria-pressed={!!secondary} shortcut="Ctrl+Alt+B" onClick={() => setSecondary((x) => (x ? null : 'structure'))}><PanelRight size={16} /></IconButton>
