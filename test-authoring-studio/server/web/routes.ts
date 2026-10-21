@@ -3,6 +3,7 @@ import { z } from 'zod';
 import { confined } from '../core.js';
 import { tsProject, SCRIPT, ts, applyEdits } from './tsService.js';
 import { listActions, applyAction, prefs, fmt, changesOf } from './tsActions.js';
+import './customs/index.js';
 
 /**
  * /api/web/*: language features for front-end files (FRONTEND-100.md). Every request carries the editor's text, so

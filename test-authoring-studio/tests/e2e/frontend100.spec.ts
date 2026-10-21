@@ -84,3 +84,12 @@ test('F1 Extract TypeScript type alias', async ({ page }) => {
   await open(page, 'src/shapes.ts', 'export const origin: { x: number; y: number } = { x: 0, y: 0 };\n');
   await convert(page, '{ x: number; y: number }', /^Extract to type alias$/, /type NewType = \{\s*x: number;\s*y: number;?\s*\};?\s*\nexport const origin: NewType =/, true);
 });
+
+test('F2 Convert interface to type alias', async ({ page }) => {
+  await open(page, 'src/shapes.ts', 'interface Named { name: string }\nexport interface Point<T> extends Named {\n  x: T;\n  y: T;\n}\n');
+  await convert(page, 'interface Point', /^Convert to type alias$/, 'export type Point<T> = Named & {\n  x: T;\n  y: T;\n};', false, 12);
+});
+test('F3 Convert type alias to interface', async ({ page }) => {
+  await open(page, 'src/shapes.ts', 'interface Named { name: string }\nexport type Point = Named & {\n  x: number;\n};\n');
+  await convert(page, 'type Point', /^Convert to interface$/, 'export interface Point extends Named {\n  x: number;\n}', false, 6);
+});

@@ -10,8 +10,8 @@ Status: `[x]` done, `[ ]` to do. Before this list, JS / TS / HTML / CSS files op
 
 ## JavaScript & TypeScript
 - [x] F1 Extract TypeScript type alias
-- [ ] F2 Convert interface to type alias
-- [ ] F3 Convert type alias to interface
+- [x] F2 Convert interface to type alias
+- [x] F3 Convert type alias to interface
 - [ ] F4 Generate missing interface properties
 - [ ] F5 Implement interface members
 - [ ] F6 Infer generic type arguments
@@ -114,3 +114,4 @@ Status: `[x]` done, `[ ]` to do. Before this list, JS / TS / HTML / CSS files op
 ## Progress log
 - 2026-10-21: Foundation: CodeMirror modes for JS / TS / JSX / TSX / HTML / CSS / SCSS / SASS / LESS; the TypeScript 5 service on the server (`server/web/`), `/api/web/*`; diagnostics, completion with auto-imports, Quick Info, F12 / Shift+F12 / Alt+F12 / F2 / Ctrl+. / Shift+Alt+F for scripts. The desktop app ships `typescript5` beside its API bundle.
 - 2026-10-21: F1. Extract to type alias (and to interface) from the TypeScript service, on a selected type.
+- 2026-10-21: F2, F3. Studio actions on the TypeScript syntax tree (server/web/customs/types.ts): extends clauses become an intersection and back; modifiers and type parameters kept.
