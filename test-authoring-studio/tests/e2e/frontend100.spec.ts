@@ -103,3 +103,21 @@ test('F5 Implement interface members', async ({ page }) => {
   await convert(page, 'class Circle', /^Implement interface 'Shape'$/, /area\(\): number \{\s*throw new Error\("Method not implemented\."\);\s*\}/, false, 7);
   expect(await docText(page)).toContain('name: string');
 });
+
+test('F6 Infer generic type arguments', async ({ page }) => {
+  await open(page, 'src/util.ts', 'function pair<A, B>(a: A, b: B): [A, B] { return [a, b]; }\nexport const p = pair(1, "one");\n');
+  await convert(page, 'pair(1', /^Add explicit type arguments <number, string>$/, 'export const p = pair<number, string>(1, "one");', false, 1);
+});
+test('F7 Add explicit type annotations', async ({ page }) => {
+  await open(page, 'src/util.ts', 'export const names = ["a", "b"].map((s) => s.length);\n');
+  await convert(page, 'names', /^Add explicit type annotation ': number\[\]'$/, 'export const names: number[] = ', false, 2);
+});
+test('F8 Remove redundant type annotations', async ({ page }) => {
+  await open(page, 'src/util.ts', 'export let count: number = 0;\nexport const label: string | number = "x";\n');
+  await convert(page, 'count', /^Remove redundant type annotation$/, 'export let count = 0;', false, 2);
+  // Not redundant: the annotation is wider than the initializer.
+  await caretAt(page, 'label', 2);
+  await page.keyboard.press('Control+.');
+  await expect(page.getByRole('listbox', { name: 'Quick Actions' })).toBeVisible({ timeout: 30_000 });
+  await expect(page.getByRole('option', { name: 'Remove redundant type annotation' })).toHaveCount(0);
+});

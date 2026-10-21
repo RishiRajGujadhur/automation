@@ -14,9 +14,9 @@ Status: `[x]` done, `[ ]` to do. Before this list, JS / TS / HTML / CSS files op
 - [x] F3 Convert type alias to interface
 - [x] F4 Generate missing interface properties
 - [x] F5 Implement interface members
-- [ ] F6 Infer generic type arguments
-- [ ] F7 Add explicit type annotations
-- [ ] F8 Remove redundant type annotations
+- [x] F6 Infer generic type arguments
+- [x] F7 Add explicit type annotations
+- [x] F8 Remove redundant type annotations
 - [ ] F9 Convert JavaScript to TypeScript
 - [ ] F10 Generate JSDoc annotations
 - [ ] F11 Infer types from JSDoc
@@ -116,3 +116,4 @@ Status: `[x]` done, `[ ]` to do. Before this list, JS / TS / HTML / CSS files op
 - 2026-10-21: F1. Extract to type alias (and to interface) from the TypeScript service, on a selected type.
 - 2026-10-21: F2, F3. Studio actions on the TypeScript syntax tree (server/web/customs/types.ts): extends clauses become an intersection and back; modifiers and type parameters kept.
 - 2026-10-21: F4, F5. TypeScript code fixes Add missing properties and Implement interface in Quick Actions.
+- 2026-10-21: F6, F7, F8. Studio actions on the type checker (customs/annotations.ts): explicit type arguments from the resolved signature, an annotation from the inferred type (literals widened), and removal when the initializer gives the same type.
