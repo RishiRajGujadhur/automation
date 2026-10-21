@@ -1036,3 +1036,30 @@ test('125 Public API change tracking; 124 API compatibility inspections', async 
   await expect(panel2).toContainText('OpenLogin(int)');
   await expect(panel2).toContainText('Added: void Demo.AuthSteps.Added()');
 });
+
+test('142 Branch coverage visualization', async ({ page, request }) => {
+  needsLang();
+  test.setTimeout(400_000);
+  const root = await fs.mkdtemp(path.join(os.tmpdir(), 'studio-f400-cov-'));
+  await fs.cp(path.resolve(import.meta.dirname, '../../samples/Calculator'), root, { recursive: true, filter: (s) => !/[\/](bin|obj)$/.test(s) });
+  await fs.writeFile(path.join(root, 'Tests/Branchy.cs'), 'using NUnit.Framework;\n\nnamespace Calculator.Tests;\n\npublic static class Signs\n{\n    public static int Sign(int x)\n    {\n        if (x > 0) return 1;\n        return -1;\n    }\n}\n\npublic class SignTests\n{\n    [Test]\n    public void PositiveOnly() => Assert.That(Signs.Sign(5), Is.EqualTo(1));\n}\n');
+  try {
+    expect((await request.post('/api/solution/open', { data: { path: path.join(root, 'Calculator.csproj') } })).ok()).toBe(true);
+    await open(page);
+    await page.getByRole('button', { name: 'Test Explorer' }).click();
+    const te = page.getByRole('region', { name: 'Test Explorer' });
+    const tree = te.getByRole('navigation', { name: 'Tests' });
+    await expect(tree.locator('.t-label', { hasText: /PositiveOnly/ })).toBeVisible({ timeout: 90_000 });
+    await tree.locator('.t-label', { hasText: /PositiveOnly/ }).click({ button: 'right' });
+    await page.getByRole('menuitem', { name: 'Analyze Code Coverage' }).click();
+    await expect(te).toContainText(/Branch \d+(\.\d)?%/, { timeout: 300_000 });
+    await page.getByRole('button', { name: 'Features (Explorer)' }).click();
+    await page.getByRole('navigation').getByRole('button', { name: 'Branchy.cs', exact: true }).first().click();
+    const partial = page.locator('.cm-cov-partial');
+    await expect(partial.first()).toBeVisible({ timeout: 30_000 });
+    await expect(partial.first()).toHaveAttribute('title', /Partly covered: 1 of 2 branches/);
+  } finally {
+    await request.post('/api/tests/cancel').catch(() => {});
+    await fs.rm(root, { recursive: true, force: true, maxRetries: 5 }).catch(() => {});
+  }
+});

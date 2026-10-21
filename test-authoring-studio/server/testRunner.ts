@@ -55,7 +55,7 @@ export function parseTrx(xml: string): TestResult[] {
   return results;
 }
 
-export type Coverage = { lineRate: number; files: Record<string, { covered: number[]; uncovered: number[] }> };
+export type Coverage = { lineRate: number; branchRate?: number; files: Record<string, { covered: number[]; uncovered: number[]; partial?: { line: number; covered: number; total: number }[] }> };
 
 /**
  * Cobertura XML (from `--collect "Code Coverage;Format=cobertura"`): covered and uncovered lines per file, with paths
@@ -74,15 +74,21 @@ export function parseCobertura(xml: string, root: string): Coverage {
     const f = (files[rel] ??= { covered: [], uncovered: [] });
     // Only the class's own <lines> (method <lines> repeat them).
     const body = cls[2].replace(/<methods>[\s\S]*?<\/methods>/, '');
-    for (const l of body.matchAll(/<line\b[^>]*\bnumber="(\d+)"[^>]*\bhits="(\d+)"/g)) (Number(l[2]) > 0 ? f.covered : f.uncovered).push(Number(l[1]));
+    for (const l of body.matchAll(/<line\b[^>]*\bnumber="(\d+)"[^>]*\bhits="(\d+)"[^>]*>/g)) {
+      (Number(l[2]) > 0 ? f.covered : f.uncovered).push(Number(l[1]));
+      // Branch coverage: condition-coverage="50% (1/2)" on a line with branches.
+      const b = /\bcondition-coverage="[^"]*\((\d+)\/(\d+)\)"/.exec(l[0]);
+      if (b && /\bbranch="true"/i.test(l[0])) (f.partial ??= []).push({ line: Number(l[1]), covered: Number(b[1]), total: Number(b[2]) });
+    }
   }
-  let covered = 0, total = 0;
+  let covered = 0, total = 0, bCovered = 0, bTotal = 0;
   for (const f of Object.values(files)) {
+    if (f.partial) { const byLine = new Map(f.partial.map((p) => [p.line, p])); f.partial = [...byLine.values()].sort((a, b) => a.line - b.line); for (const p of f.partial) { bCovered += p.covered; bTotal += p.total; } }
     f.covered = [...new Set(f.covered)].sort((a, b) => a - b);
     f.uncovered = [...new Set(f.uncovered)].filter((n) => !f.covered.includes(n)).sort((a, b) => a - b);
     covered += f.covered.length; total += f.covered.length + f.uncovered.length;
   }
-  return { lineRate: total ? covered / total : 0, files };
+  return { lineRate: total ? covered / total : 0, ...(bTotal ? { branchRate: bCovered / bTotal } : {}), files };
 }
 async function findFiles(dir: string, suffix: string): Promise<string[]> {
   const out: string[] = [];
@@ -184,10 +190,19 @@ export class TestRunner extends EventEmitter {
             const m = (cov.files[file] ??= { covered: [], uncovered: [] });
             m.covered = [...new Set([...m.covered, ...l.covered])];
             m.uncovered = [...new Set([...m.uncovered, ...l.uncovered])].filter((n) => !m.covered.includes(n));
+            // Branches per line: keep the report that took the most branches.
+            if (l.partial) {
+              const byLine = new Map((m.partial ?? []).map((p) => [p.line, p]));
+              for (const p of l.partial) if ((byLine.get(p.line)?.covered ?? -1) < p.covered) byLine.set(p.line, p);
+              m.partial = [...byLine.values()].sort((a, b) => a.line - b.line);
+            }
           }
         }
         const c = Object.values(cov.files).reduce((n, f) => n + f.covered.length, 0), t = Object.values(cov.files).reduce((n, f) => n + f.covered.length + f.uncovered.length, 0);
         cov.lineRate = t ? c / t : 0;
+        const branches = Object.values(cov.files).flatMap((f) => f.partial ?? []);
+        const bt = branches.reduce((n, p) => n + p.total, 0);
+        if (bt) cov.branchRate = branches.reduce((n, p) => n + p.covered, 0) / bt;
       }
       await fs.rm(results, { recursive: true, force: true }).catch(() => {});
       if (this.state.status === 'cancelled') return;

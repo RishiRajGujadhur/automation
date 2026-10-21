@@ -167,7 +167,7 @@ Legend: `[x]` done · `[ ]` to do.
 - [x] 139. Test fixture navigation — Go To Hooks, Go to Test / Test Subject
 - [x] 140. Test framework integration — NUnit, xUnit, MSTest, Reqnroll / SpecFlow
 - [x] 141. Test coverage highlighting
-- [ ] 142. Branch coverage visualization
+- [x] 142. Branch coverage visualization — Test Explorer, gutter (2026-10-21)
 - [x] 143. Test coverage gutters
 
 ## Git & Version Control
@@ -423,3 +423,4 @@ Legend: `[x]` done · `[ ]` to do.
 - 2026-10-21 122: Layer rules from layers.json (a template is offered the first time) and every reference that breaks them.
 - 2026-10-21 125: Each project public API listed against its baseline file; added members are shown.
 - 2026-10-21 124: API compatibility: members removed or whose signature changed since the baseline are breaking changes.
+- 2026-10-21 142: Cobertura condition-coverage parsed and merged across projects; Branch % in Test Explorer; partly covered lines yellow in the gutter with a branch count

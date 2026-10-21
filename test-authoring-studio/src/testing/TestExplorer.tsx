@@ -241,7 +241,7 @@ export default function TestExplorer({ revision, onOpen, onDebug, onNotice }: { 
       </div>
       {run.coverage && (
         <div className="t-coverage" role="note" aria-label="Code coverage">
-          <ShieldCheck size={12} /> Line coverage {(run.coverage.lineRate * 100).toFixed(1)}% · {Object.keys(run.coverage.files).length} files
+          <ShieldCheck size={12} /> Line coverage {(run.coverage.lineRate * 100).toFixed(1)}%{run.coverage.branchRate !== undefined ? ` · Branch ${(run.coverage.branchRate * 100).toFixed(1)}%` : ''} · {Object.keys(run.coverage.files).length} files
         </div>
       )}
       {warning && <p className="field-error" role="alert">{warning}</p>}

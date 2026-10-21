@@ -15,7 +15,7 @@ export type TestRunState = {
   error?: string;
   coverage?: Coverage;
 };
-export type Coverage = { lineRate: number; files: Record<string, { covered: number[]; uncovered: number[] }> };
+export type Coverage = { lineRate: number; branchRate?: number; files: Record<string, { covered: number[]; uncovered: number[]; partial?: { line: number; covered: number; total: number }[] }> };
 
 /** Test run state streamed from /api/tests/events (Test Explorer reads it). */
 let state: TestRunState = { status: 'idle', version: 0, requested: [], results: [], output: '' };
