@@ -39,10 +39,15 @@ export function chordOf(e: Pick<KeyboardEvent, 'key' | 'ctrlKey' | 'metaKey' | '
   return [e.ctrlKey || e.metaKey ? 'Ctrl' : '', e.altKey ? 'Alt' : '', e.shiftKey ? 'Shift' : '', key === ' ' ? 'Space' : key].filter(Boolean).join('+');
 }
 
-export type Bindings = Record<string, DesktopMenuCommand>;
+/** A chord → a menu command, `rider:<id>` (a Rider / editor command) or `palette:<label>` (a palette entry). */
+export type Bindings = Record<string, DesktopMenuCommand | `rider:${string}` | `palette:${string}`>;
+/** The command a palette row stands for, as stored in Bindings (W18 Configure Keybinding). */
+export type BindTarget = { id: string; label: string };
+/** Asks the shell to open Keyboard Shortcuts recording a key for one command (the palette's gear, W18). */
+export const CONFIGURE_KEYBINDING_EVENT = 'tas:configure-keybinding';
 
 /** Runs user shortcuts before the built-in ones (capture phase), so an assigned chord wins. */
-export function useKeybindings(run: (c: DesktopMenuCommand) => void) {
+export function useKeybindings(run: (c: Bindings[string]) => void) {
   // Read on each key press: the editor (Keyboard Shortcuts dialog) writes the same storage key.
   const ref = useRef(run);
   ref.current = run;
@@ -64,15 +69,18 @@ export function useKeybindings(run: (c: DesktopMenuCommand) => void) {
 }
 
 /** Keyboard ▸ custom shortcuts: assign by pressing the keys, remove, reset. */
-export function KeybindingEditor() {
+export function KeybindingEditor({ configure }: { configure?: BindTarget }) {
   const [bindings, setBindings] = useLocalState<Bindings>('keybindings', {});
-  const [recording, setRecording] = useState<DesktopMenuCommand | null>(null);
-  const chordsFor = (id: DesktopMenuCommand) => Object.entries(bindings).filter(([, c]) => c === id).map(([k]) => k);
+  // Configure Keybinding from the palette: that command first, already waiting for its keys.
+  const [recording, setRecording] = useState<string | null>(configure?.id ?? null);
+  const chordsFor = (id: string) => Object.entries(bindings).filter(([, c]) => c === id).map(([k]) => k);
+  const extra = Object.values(bindings).filter((c) => /^(rider|palette):/.test(c) && c !== configure?.id).filter((c, i, a) => a.indexOf(c) === i).map((c) => ({ id: c, label: c.replace(/^(rider|palette):/, '') }));
+  const rows: { id: string; label: string }[] = [...(configure ? [configure] : []), ...extra, ...BINDABLE];
   return (
     <section className="keybindings" aria-label="Custom shortcuts">
       <h3 className="micro-label">CUSTOM SHORTCUTS</h3>
       <ul>
-        {BINDABLE.map((b) => (
+        {rows.map((b) => (
           <li key={b.id}>
             <span>{b.label}</span>
             <span className="kb-chords">
@@ -93,7 +101,7 @@ export function KeybindingEditor() {
                     if (e.key === 'Escape') { setRecording(null); return; }
                     const chord = chordOf(e.nativeEvent);
                     if (!chord) return;
-                    setBindings({ ...bindings, [chord]: b.id });
+                    setBindings({ ...bindings, [chord]: b.id as Bindings[string] });
                     setRecording(null);
                   }}
                 />

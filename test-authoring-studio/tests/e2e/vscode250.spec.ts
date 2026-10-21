@@ -389,3 +389,27 @@ test('W17 Quick navigate: Ctrl+P P… moves down, Ctrl+Shift+P up, releasing Ctr
   await page.keyboard.up('Control');
   await expect(quick(page)).toBeHidden();
 });
+
+test('W18 Command palette: Configure Keybinding (gear) records a key that then runs the command', async ({ page }) => {
+  await start(page);
+  const src = await open(page, 'Steps/AuthSteps.cs');
+  const before = await docText(page);
+  await page.keyboard.press('Control+Shift+P');
+  await quickBox(page).fill('>reverse lines');
+  const row = rows(page).filter({ hasText: 'Reverse Lines' }).first();
+  await row.hover();
+  await row.getByRole('button', { name: 'Configure Keybinding' }).click();
+  const rec = page.getByLabel('Press the shortcut for Edit: Reverse Lines');
+  await expect(rec).toBeFocused();
+  await page.keyboard.press('Control+Alt+9');
+  await expect(page.getByRole('button', { name: 'Remove Ctrl+Alt+9 from Edit: Reverse Lines' })).toBeVisible();
+  await page.keyboard.press('Escape');
+  await src.locator('.cm-line').first().click();
+  await page.keyboard.press('Control+a');
+  await page.keyboard.press('Control+Alt+9');
+  await expect.poll(async () => (await docText(page)).trim().split('\n')[0]).toBe(before.trim().split('\n').at(-1));
+  // The palette shows the new key.
+  await page.keyboard.press('Control+Shift+P');
+  await quickBox(page).fill('>reverse lines');
+  await expect(rows(page).filter({ hasText: 'Reverse Lines' }).first().locator('kbd')).toHaveText(['Ctrl', 'Alt', '9']);
+});

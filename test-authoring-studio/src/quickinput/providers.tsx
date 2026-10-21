@@ -5,6 +5,7 @@ import { featureOn } from '../features';
 import { matchesWords, scoreFile } from './fuzzy';
 import { readUsage } from '../rider/commands';
 import { quickOpen } from '../vscode/quickOpen';
+import { CONFIGURE_KEYBINDING_EVENT } from '../keybindings';
 import { closeQuickInput, lastQuery, openQuickInput, refreshQuickInput, registerQuickAccess, type QuickItem } from './store';
 
 /** Opens a file (and line) in the editor, as Go to All does. */
@@ -64,6 +65,10 @@ registerQuickAccess({
 export type PaletteEntry = { label: string; run: () => void; shortcut?: string; /** Last use (ms). */ recent?: number; /** A Rider command's id (its use is counted by runRider). */ id?: string };
 let commands: PaletteEntry[] = [];
 export const setPaletteCommands = (list: PaletteEntry[]) => { commands = list; };
+/** Runs a palette entry by label (a custom keybinding bound to it). */
+export const runPaletteCommand = (label: string) => commands.find((c) => c.label === label)?.run();
+/** A custom keybinding the user gave the command (Keyboard Shortcuts). */
+const customKey = (e: PaletteEntry) => { let b: Record<string, string> = {}; try { b = JSON.parse(localStorage.getItem('tas:keybindings') ?? '{}') as Record<string, string>; } catch { /* none */ } const id = e.id ? `rider:${e.id}` : `palette:${e.label}`; return Object.entries(b).find(([, c]) => c === id)?.[0]; };
 /** VS Code's keybinding label from a stored shortcut ("recent · Ctrl Shift U" → "Ctrl Shift U"). */
 const keysOf = (s?: string) => s?.replace(/^recent( · )?/, '') || undefined;
 
@@ -91,7 +96,9 @@ registerQuickAccess({
     const recentFirst = featureOn('palette-recent');
     const recent = recentFirst ? rows.filter((r) => last(r.e)).sort((a, b) => last(b.e) - last(a.e)).slice(0, historySize()) : [];
     const others = rows.filter((r) => !recent.includes(r)).sort((a, b) => (q ? (a.m![0]?.start ?? 0) - (b.m![0]?.start ?? 0) : 0) || a.e.label.localeCompare(b.e.label));
-    const item = (r: (typeof rows)[number], separator?: string): QuickItem => ({ id: `cmd:${r.e.label}`, label: r.e.label, labelMatches: r.m ?? [], keybinding: keysOf(r.e.shortcut), separator, accept: () => { notePaletteUse(r.e.label); r.e.run(); } });
+    // W18: the gear on a row opens Keyboard Shortcuts to give the command a key.
+    const configure = (e: PaletteEntry) => ({ icon: <span className="codicon codicon-gear" />, title: 'Configure Keybinding', run: () => { closeQuickInput(); window.dispatchEvent(new CustomEvent(CONFIGURE_KEYBINDING_EVENT, { detail: { id: e.id ? `rider:${e.id}` : `palette:${e.label}`, label: e.label } })); } });
+    const item = (r: (typeof rows)[number], separator?: string): QuickItem => ({ id: `cmd:${r.e.label}`, label: r.e.label, labelMatches: r.m ?? [], keybinding: keysOf(r.e.shortcut) ?? customKey(r.e), separator, buttons: [configure(r.e)], accept: () => { notePaletteUse(r.e.label); r.e.run(); } });
     return [...recent.map((r, i) => item(r, i === 0 ? 'recently used' : undefined)), ...others.map((r, i) => item(r, i === 0 && recent.length ? 'other commands' : undefined))];
   },
 });

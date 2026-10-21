@@ -56,7 +56,7 @@ import RecentPopup from './RecentPopup';
 import LocalHistory from './LocalHistory';
 import { useBookmarks, removeBookmark, bookmarkLists, getActiveList, setActiveList, moveBookmark, renameList, deleteList, listOf, DEFAULT_LIST } from './editor/bookmarks';
 import { visitFile, visit as visitLocation, back as navBack, forward as navForward, canGoBack, canGoForward, useNavHistory, reveal } from './navHistory';
-import { useKeybindings, KeybindingEditor } from './keybindings';
+import { useKeybindings, KeybindingEditor, CONFIGURE_KEYBINDING_EVENT, type BindTarget } from './keybindings';
 import BuildPanel from './build/BuildPanel';
 import TestExplorer from './testing/TestExplorer';
 import SearchView from './search/SearchView';
@@ -79,7 +79,7 @@ import StepCatalogue from './StepCatalogue';
 import SearchPalette from './SearchPalette';
 import QuickInput from './quickinput/QuickInput';
 import { openQuickInput } from './quickinput/store';
-import { openCommandPalette, openQuickOpen, setPaletteCommands, type PaletteEntry } from './quickinput/providers';
+import { openCommandPalette, openQuickOpen, runPaletteCommand, setPaletteCommands, type PaletteEntry } from './quickinput/providers';
 import { setOpenViews } from './quickinput/help';
 import { CLOSE_EDITOR_EVENT } from './quickinput/editors';
 import { SelectorCatalogue, BackgroundCatalogue } from './Catalogues';
@@ -1031,7 +1031,10 @@ export default function App() {
   // Desktop app (window.desktop): native menu commands, taskbar progress and run-finished notifications.
   const menuRef = useRef<(c: DesktopMenuCommand, arg?: unknown) => void>(() => {});
   // User-assigned shortcuts (Keyboard Shortcuts ▸ Custom shortcuts) run menu commands.
-  useKeybindings((c) => menuRef.current(c));
+  useKeybindings((c) => { if (c.startsWith('rider:')) runRider(c.slice(6), 'key'); else if (c.startsWith('palette:')) runPaletteCommand(c.slice(8)); else menuRef.current(c as DesktopMenuCommand); });
+  // Configure Keybinding (the palette's gear, W18): Keyboard Shortcuts waiting for that command's keys.
+  const [configureKey, setConfigureKey] = useState<BindTarget>();
+  useEffect(() => { const h = (e: Event) => { setConfigureKey((e as CustomEvent<BindTarget>).detail); setModal('shortcuts'); }; window.addEventListener(CONFIGURE_KEYBINDING_EVENT, h); return () => window.removeEventListener(CONFIGURE_KEYBINDING_EVENT, h); }, []);
   menuRef.current = (c, arg) => {
     // Preference changes from the native View menu (and first-run OS defaults). Only known keys pass.
     if (c === 'set-pref' && arg && typeof arg === 'object') {
@@ -2761,7 +2764,7 @@ export default function App() {
                     ))}
                   </dl>
                 )}
-                {modal === 'shortcuts' && <KeybindingEditor />}
+                {modal === 'shortcuts' && <KeybindingEditor key={configureKey?.id} configure={configureKey} />}
                 {modal === 'define-steps' && feature && (
                   <DefineSteps
                     feature={feature.file}
