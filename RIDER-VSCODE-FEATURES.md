@@ -87,7 +87,7 @@ Legend: `[x]` done · `[ ]` to do.
 - [x] 65. Extract local variable — Ctrl+Alt+V
 - [x] 66. Extract constant — Quick Actions: Introduce constant
 - [x] 67. Extract field — Code ▸ Refactor ▸ Introduce Field (Ctrl+Alt+F) (2026-10-21)
-- [ ] 68. Extract property
+- [x] 68. Extract property — Code ▸ Refactor ▸ Introduce Property (2026-10-21)
 - [x] 69. Extract parameter — Ctrl+Alt+P
 - [x] 70. Inline method — Ctrl+Alt+N
 - [x] 71. Inline variable — Ctrl+Alt+N
@@ -405,3 +405,4 @@ Legend: `[x]` done · `[ ]` to do.
 - 2026-10-21 85: A LINQ method chain becomes a foreach loop, typed from the semantic model.
 - 2026-10-21 88: A private method used by one method moves into it as a local function.
 - 2026-10-21 67: The selected expression becomes a field: readonly with its value, or assigned where it is used when it reads locals.
+- 2026-10-21 68: The selected expression becomes a computed property.
