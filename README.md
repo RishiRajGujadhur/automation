@@ -21,6 +21,7 @@ machine; nothing is uploaded.
 | Projects | **Project Properties** | Property pages for a `.csproj` with effective values from the .NET SDK and `Directory.Build.props`; every change to a project file is a diff written only when you approve it. |
 | Editor | **VS Code settings** | A settings editor with a category tree, `settings.json` import / export and `@modified`; minimap with section headers, bracket pair guides, sticky scroll, rulers, word wrap, whitespace, semantic highlighting, inactive `#if` regions, format and organize usings on save. |
 | Workbench | **Layout** | Editor groups (split right or down, move, lock, maximize), floating editor windows, Zen Mode, a secondary sidebar, activity bar and panel positions. |
+| Workbench | **VS Code-style ease of use** | A resizable panel (drag its edge) with Maximize Panel Size, layout buttons and Back / Forward in the title bar, badges on the activity bar for Git changes and failed tests, index status in the status bar, double-click a tab to maximize the editor. See [GUI-QOL.md](GUI-QOL.md). |
 
 Every optional feature has a switch under **Settings ▸ Features**. Progress and details:
 [RIDER-VSCODE-FEATURES.md](RIDER-VSCODE-FEATURES.md), [VSCODE-20.md](VSCODE-20.md), [ADVANCED-20.md](ADVANCED-20.md),
@@ -30,6 +31,11 @@ Every optional feature has a switch under **Settings ▸ Features**. Progress an
 
 Captured from the Windows desktop build on a temporary copy of the Calculator sample (running-app captures, not
 mockups).
+
+**Workbench.** Structure in a panel made taller by dragging its edge; layout buttons and Back / Forward in the title
+bar; a badge with the pending Git changes on the activity bar; the index status in the status bar.
+
+![Workbench](docs/screenshots/workbench.png)
 
 **Change Signature.** Rename a parameter, remove an unused one and move another up; the new signature updates as you
 go, and call sites in other files come back as diffs.

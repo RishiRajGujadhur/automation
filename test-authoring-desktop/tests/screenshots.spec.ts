@@ -324,8 +324,26 @@ test('README screenshots: refactoring, analysis, Git and coverage', async () => 
   await page.reload();
   await expect(page.getByText('Repository indexed')).toBeVisible({ timeout: 60_000 });
   const explorer = page.getByRole('navigation');
+  /** Drags the panel's sash up, so the panel is taller (it is remembered until the sash is double-clicked). */
+  const growPanel = async (by = 120) => {
+    const sash = (await page.getByRole('separator', { name: 'Resize panel' }).boundingBox())!;
+    await page.mouse.move(sash.x + sash.width / 2, sash.y + 3);
+    await page.mouse.down();
+    await page.mouse.move(sash.x + sash.width / 2, sash.y - by, { steps: 5 });
+    await page.mouse.up();
+  };
   const openPricing = async () => { await explorer.getByRole('button', { name: 'Pricing.cs', exact: true }).first().click(); await expect(page.getByLabel('Source of Steps/Pricing.cs')).toBeVisible(); };
   await openPricing();
+
+  // 0. The workbench: Structure in a taller panel (dragged by its sash), layout controls and Back / Forward in the title
+  // bar, the Git badge on the activity bar, the index status in the status bar.
+  await editor().click();
+  await page.keyboard.press('Alt+7');
+  await expect(page.getByRole('list', { name: 'Structure of the file' }).getByRole('button').first()).toBeVisible({ timeout: 60_000 });
+  await growPanel();
+  await expect(page.locator('[data-badge="Git"]')).toBeVisible({ timeout: 30_000 });
+  await shot('workbench');
+  await page.getByRole('separator', { name: 'Resize panel' }).dblclick(); // back to the default size
 
   // 1. Settings editor: the category tree at Text Editor ▸ Minimap.
   await editor().click();
@@ -418,11 +436,12 @@ test('README screenshots: refactoring, analysis, Git and coverage', async () => 
   await log.getByRole('button', { name: 'Interactively Rebase from Here…' }).click();
   const rb = log.getByLabel('Interactive Rebase');
   await expect(rb.locator('.git-rebase-row')).toHaveCount(3);
-  // Actions without a message box, so the whole plan fits in the panel.
   await rb.getByLabel('Action for WIP').selectOption('fixup');
   await rb.getByRole('button', { name: 'Move Fix typo up' }).click();
   await rb.getByLabel('Action for Fix typo').selectOption('drop');
+  await growPanel(200);
   await shot('interactive-rebase');
+  await page.getByRole('separator', { name: 'Resize panel' }).dblclick();
   await rb.getByRole('button', { name: 'Cancel' }).click();
 
   // 8. Three-way merge editor on a conflict.
