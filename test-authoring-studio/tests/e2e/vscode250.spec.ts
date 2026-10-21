@@ -321,3 +321,26 @@ test('W14 workbench.quickOpen.preserveInput and workbench.commandPalette.preserv
   await page.keyboard.press('Control+p');
   await expect(quickBox(page)).toHaveValue('');
 });
+
+test('W15 workbench.commandPalette.history: how many recently used commands come first', async ({ page }) => {
+  await start(page, { 'workbench.commandPalette.history': 1 });
+  await open(page, 'Steps/AuthSteps.cs');
+  for (const c of ['sort lines', 'reverse lines']) {
+    await page.keyboard.press('Control+Shift+P');
+    await quickBox(page).fill('>' + c);
+    await page.keyboard.press('Enter');
+    await expect(quick(page)).toBeHidden();
+  }
+  await page.keyboard.press('Control+Shift+P');
+  await quickBox(page).fill('>');
+  await expect(rows(page).first()).toContainText('Reverse Lines');
+  await expect(rows(page).nth(1).locator('.quick-input-separator')).toHaveText('other commands');
+  await page.keyboard.press('Escape');
+  // 0: no history at all.
+  await page.evaluate(() => localStorage.setItem('tas:settings', JSON.stringify({ 'workbench.commandPalette.history': 0 })));
+  await page.reload();
+  await expect(page.getByText('Repository indexed')).toBeVisible();
+  await page.keyboard.press('Control+Shift+P');
+  await quickBox(page).fill('>');
+  await expect(quick(page).locator('.quick-input-separator')).toHaveCount(0);
+});

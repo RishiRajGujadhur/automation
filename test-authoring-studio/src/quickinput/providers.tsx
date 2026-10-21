@@ -72,7 +72,7 @@ const USED = 'tas:palette:used';
 const paletteUsage = (): Record<string, number> => { try { return JSON.parse(localStorage.getItem(USED) ?? '{}') as Record<string, number>; } catch { return {}; } };
 const notePaletteUse = (label: string) => { try { localStorage.setItem(USED, JSON.stringify({ ...paletteUsage(), [label]: Date.now() })); } catch { /* storage blocked */ } };
 /** How many recently used commands the palette keeps first (workbench.commandPalette.history, W15). */
-const historySize = () => 50;
+const historySize = () => quickOpen.history();
 
 /** W2 Command Palette (Ctrl+Shift+P, `>`): recently used commands first, then the others, with their keys. */
 registerQuickAccess({
