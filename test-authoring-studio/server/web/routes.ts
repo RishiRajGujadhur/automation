@@ -6,6 +6,7 @@ import { listActions, applyAction, prefs, fmt, changesOf } from './tsActions.js'
 import './customs/index.js';
 import { editsForMove } from './customs/modules.js';
 import { importCycles } from './analysis.js';
+import { declarationSource, toOriginal, toGenerated } from './navigation.js';
 
 /**
  * /api/web/*: language features for front-end files (FRONTEND-100.md). Every request carries the editor's text, so
@@ -114,6 +115,19 @@ export function webRoutes(app: Express, root: () => string) {
   });
   /** F23: circular imports among the repository's scripts. */
   app.get('/api/web/analysis/cycles', (_req, res) => { res.json(importCycles(tsProject(root()))); });
+  /** F24: a declaration file of node_modules or TypeScript's lib (read-only). */
+  app.get('/api/web/declaration', (req, res) => { res.json(declarationSource(tsProject(root()), z.string().max(1000).parse(req.query.file))); });
+  /** F25: the other side of a source map: original source for generated code, generated code for a source. */
+  app.post('/api/web/sourcemap', async (req, res) => {
+    const b = z.object({ file, line: z.number().int().min(1), column: z.number().int().min(1) }).parse(req.body);
+    await confined(root(), b.file);
+    const p = tsProject(root());
+    const original = toOriginal(p, b.file, b.line, b.column);
+    if (original) { res.json({ direction: 'original', ...original }); return; }
+    const generated = toGenerated(p, b.file, b.line, b.column);
+    if (generated) { res.json({ direction: 'generated', ...generated }); return; }
+    throw new Error(`No source map links ${b.file} to another file.`);
+  });
   app.post('/api/web/format', async (req, res) => {
     const b = z.object({ file, source: z.string().max(5_000_000) }).parse(req.body);
     const p = await script(b.file);

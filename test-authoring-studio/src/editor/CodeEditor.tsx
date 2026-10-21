@@ -316,7 +316,7 @@ export default function CodeEditor({ file, reveal, active = true, onNotice, onIn
   csHandlers.current = {
     definition: async (pos) => {
       try {
-        if (isWeb) { const w = await api<{ name: string; locations: (CsLocation & { external?: string })[] }>('/web/definition', webPos(pos)); goToAny(w.name, w.locations.filter((l) => !l.external), w.locations.length ? `${w.name} is declared outside the repository (${w.locations[0].external}).` : 'No definition found.'); return; }
+        if (isWeb) { const w = await api<{ name: string; locations: (CsLocation & { external?: string })[] }>('/web/definition', webPos(pos)); const ext = w.locations.find((l) => l.external); if (ext && !w.locations.some((l) => !l.external)) { const d = await api<{ name: string; text: string }>(`/web/declaration?file=${encodeURIComponent(ext.external!)}`); window.dispatchEvent(new CustomEvent('tas:code-preview', { detail: { title: `${w.name} [${d.name}]`, text: d.text, line: ext.line } })); return; } goToAny(w.name, w.locations.filter((l) => !l.external), w.locations.length ? `${w.name} is declared outside the repository (${w.locations[0].external}).` : 'No definition found.'); return; }
         const r = await api<{ name: string; locations: CsLocation[]; external?: string }>('/csharp/definition', position(pos));
         const here = r.locations.find((l) => l.file === file);
         const target = here ?? r.locations[0];

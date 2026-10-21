@@ -173,6 +173,7 @@ const ROWS: Record<'edit' | 'view' | 'navigate' | 'code' | 'tools' | 'help', Row
     ['Peek References', 'peek-references'],
     ['Semantic Search…', 'semantic-search'],
     ['Go to Decompiled Source', 'go-to-decompiled'],
+    ['Go to Source-Mapped Location', 'source-map-jump'],
     null,
     ['Go to Matching Brace', 'goto-brace', 'CmdOrCtrl+]'],
     ['Select to Matching Brace', 'select-brace', 'CmdOrCtrl+Shift+]'],

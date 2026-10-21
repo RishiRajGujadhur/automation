@@ -241,3 +241,46 @@ test('F23 Detect circular module dependencies', async ({ page }) => {
   // Type-only imports do not make a cycle (b.ts ⇄ types.ts).
   await expect(d).not.toContainText('types.ts');
 });
+
+test('F24 Navigate TypeScript declaration files', async ({ page }) => {
+  await fs.mkdir(path.join(temp, 'node_modules/tiny-lib'), { recursive: true });
+  await fs.writeFile(path.join(temp, 'node_modules/tiny-lib/package.json'), '{ "name": "tiny-lib", "types": "index.d.ts" }');
+  await fs.writeFile(path.join(temp, 'node_modules/tiny-lib/index.d.ts'), '/** Adds one. */\nexport declare function inc(n: number): number;\n');
+  await open(page, 'src/dom.ts', 'import { inc } from "tiny-lib";\nexport const el = document.querySelector("a");\nexport const two = inc(1);\n');
+  // A package's typings.
+  await caretAt(page, 'inc(1)', 1);
+  await page.keyboard.press('F12');
+  const pkg = page.getByRole('dialog', { name: /inc \[tiny-lib\/index\.d\.ts\]/ });
+  await expect(pkg).toBeVisible({ timeout: 30_000 });
+  await expect(pkg).toContainText('export declare function inc(n: number): number;');
+  await page.keyboard.press('Escape');
+  // TypeScript's DOM library.
+  await caretAt(page, 'querySelector', 3);
+  await page.keyboard.press('F12');
+  const dom = page.getByRole('dialog', { name: /querySelector \[lib\.dom\.d\.ts\]/ });
+  await expect(dom).toBeVisible({ timeout: 30_000 });
+  await expect(dom.locator('.cm-preview-target')).toContainText('querySelector');
+});
+
+test('F25 Navigate source maps', async ({ page }) => {
+  const { SourceMapGenerator } = await import('source-map-js');
+  const map = new SourceMapGenerator({ file: 'app.js' });
+  map.addMapping({ generated: { line: 1, column: 0 }, original: { line: 1, column: 0 }, source: '../src/app.ts' });
+  map.addMapping({ generated: { line: 2, column: 0 }, original: { line: 2, column: 0 }, source: '../src/app.ts' });
+  await fs.mkdir(path.join(temp, 'dist'), { recursive: true });
+  await fs.writeFile(path.join(temp, 'dist/app.js'), 'const total = 1;\nconsole.log(total);\n//# sourceMappingURL=app.js.map\n');
+  await fs.writeFile(path.join(temp, 'dist/app.js.map'), map.toString());
+  await open(page, 'dist/app.js');
+  const active = page.locator('.editor-tab-label[aria-current="true"]');
+  await caretAt(page, 'console', 0);
+  await page.getByRole('button', { name: 'Navigate menu' }).click();
+  await page.getByRole('menuitem', { name: /^Go to Source-Mapped Location/ }).click();
+  await expect(active).toHaveAttribute('title', 'src/app.ts');
+  await expect(page.getByText('Original source: src/app.ts:2', { exact: true })).toBeVisible();
+  // And back to the generated code.
+  await page.getByLabel('Source of src/app.ts').click();
+  await caretAt(page, 'console', 0);
+  await page.getByRole('button', { name: 'Navigate menu' }).click();
+  await page.getByRole('menuitem', { name: /^Go to Source-Mapped Location/ }).click();
+  await expect(active).toHaveAttribute('title', 'dist/app.js');
+});

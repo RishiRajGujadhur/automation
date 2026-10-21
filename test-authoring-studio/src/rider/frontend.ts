@@ -10,6 +10,15 @@ const list = (title: string, items: Item[]) => window.dispatchEvent(new CustomEv
 export function frontendCommands(h: MoreHelpers): RiderCommand[] {
   const A = { menu: 'Code' as const, submenu: 'Analyze' };
   return [
+    // F25 Navigate source maps: generated code ⇄ original source, at the caret.
+    { id: 'source-map-jump', label: 'Go to Source-Mapped Location', menu: 'Navigate', run: h.inEditor((v, file) => {
+      const r = v.state.selection.main;
+      const line = v.state.doc.lineAt(r.head);
+      void api<{ direction: string; file: string; line: number; column: number }>('/web/sourcemap', { file, line: line.number, column: r.head - line.from + 1 }).then((t) => {
+        window.dispatchEvent(new CustomEvent('tas:open-location', { detail: { file: t.file, line: t.line, column: t.column } }));
+        h.notice(`${t.direction === 'original' ? 'Original source' : 'Generated code'}: ${t.file}:${t.line}`);
+      }, (e) => h.notice((e as Error).message));
+    }) },
     // F23 Detect circular module dependencies.
     { id: 'import-cycles', label: 'Find Circular Imports', ...A, run: () => {
       void api<{ files: number; cycles: { members: string[]; edges: { from: string; to: string; file: string; line: number }[] }[] }>('/web/analysis/cycles').then((r) => {
