@@ -101,7 +101,7 @@ Legend: `[x]` done · `[ ]` to do.
 - [x] 79. Convert method to property — Quick Actions: Replace 'GetX' with property
 - [x] 80. Convert property to method — Quick Actions: Replace 'X' with methods
 - [x] 81. Encapsulate field — Quick Actions
-- [ ] 82. Introduce factory method
+- [x] 82. Introduce factory method — Code ▸ Refactor ▸ Introduce Factory Method (2026-10-21)
 - [ ] 83. Replace constructor with factory
 - [x] 84. Convert loops to LINQ — Quick Actions: Convert to LINQ
 - [x] 85. Convert LINQ to loops — Code ▸ Refactor ▸ Convert LINQ to Loop (Where / Select + ToList, ToArray, Count, Any, First, FirstOrDefault, Sum) (2026-10-21)
@@ -411,3 +411,4 @@ Legend: `[x]` done · `[ ]` to do.
 - 2026-10-21 76: The member moves from the base class into each derived class.
 - 2026-10-21 64: The public instance methods and properties of a class move to a new abstract base class.
 - 2026-10-21 74: A static member moves to another class; calls through the old class follow.
+- 2026-10-21 82: A static Create method beside the constructor.
