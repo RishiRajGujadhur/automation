@@ -1,4 +1,5 @@
 import { openQuickInput } from '../quickinput/store';
+import { runRider } from '../rider/commands';
 import { EditorSelection, Prec, type ChangeSpec, type Extension } from '@codemirror/state';
 import { EditorView, keymap } from '@codemirror/view';
 
@@ -58,6 +59,8 @@ export function vsKeys(commentToken: string): Extension {
     { key: 'Mod-k Mod-u', preventDefault: true, run: comment(commentToken, false) },
     { key: 'Mod-Shift-d', preventDefault: true, run: duplicate },
     { key: 'Mod-Shift-l', preventDefault: true, run: deleteLines },
+    // Change Language Mode (VS Code, W23).
+    { key: 'Mod-k m', preventDefault: true, run: () => runRider('change-language-mode', 'key') },
     // Go to Line in VS Code's Quick Input (VSCODE-250.md W5).
     { key: 'Mod-g', preventDefault: true, run: () => { openQuickInput(':'); return true; } },
   ]));

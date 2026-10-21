@@ -8,6 +8,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import CodeMirror, { type ReactCodeMirrorRef } from '@uiw/react-codemirror';
 import type { ViewUpdate } from '@codemirror/view';
 import { StreamLanguage } from '@codemirror/language';
+import { languageOf as languageModeOf, languageById, naturalLanguage, useLanguageModes } from './languageMode';
 import { csharp } from '@codemirror/legacy-modes/mode/clike';
 import { forEachDiagnostic, linter, lintGutter, type Diagnostic } from '@codemirror/lint';
 import { keymap, EditorView } from '@codemirror/view';
@@ -97,13 +98,17 @@ const csharpLinter = (file: string) => linter(async (view) => {
 }, { delay: 600 });
 
 function languageOf(file: string, browser: boolean) {
+  // Change Language Mode / files.associations (VSCODE-250.md W23 / W24): another mode's syntax colouring only.
+  const mode = languageModeOf(file);
+  if (mode !== naturalLanguage(file)) return languageById(mode)?.syntax() ?? [];
   if (file.endsWith('.cs')) return [...(browser ? [] : [breakpoints(file)]), StreamLanguage.define(csharp), csharpLinter(file)];
   if (/\.(xml|csproj|props|targets|config|runsettings|resx)$/.test(file)) return xmlExtensions(false, /\.(csproj|props|targets)$/.test(file));
   if (file.endsWith('.feature')) return [...(browser ? [] : [breakpoints(file)]), ...gherkinSyntaxExtensions()];
   if (isHttpFile(file)) return [StreamLanguage.define(httpMode)];
   if (isWebFile(file)) return [...webLanguage(file), ...(browser ? [] : SCRIPT_FILE.test(file) ? scriptFeatures(file) : HTML_FILE.test(file) ? [...markupFeatures(file), colorPreviews] : STYLE_FILE.test(file) ? styleFeatures(file) : [])];
   if (/\.(md|markdown|txt)$/i.test(file)) return markdownQol;
-  return [];
+  // Files without editor features: their mode's colouring (JSON, YAML, PowerShell, SQL…).
+  return languageById(mode)?.syntax() ?? [];
 }
 
 /**
@@ -126,6 +131,7 @@ export default function CodeEditor({ file, reveal, active = true, onNotice, onIn
   const [problems, setProblems] = useState({ errors: 0, warnings: 0 });
   const browser = isBrowser();
   const isCs = file.endsWith('.cs');
+  const modes = useLanguageModes();
   // Front-end files (FRONTEND-100.md): the same handlers as C#, served by /api/web.
   const isWeb = isWebFile(file);
   // C# language features (Roslyn): rename box over the symbol, Find All References results.
@@ -482,7 +488,7 @@ export default function CodeEditor({ file, reveal, active = true, onNotice, onIn
     ...(isWeb && !browser ? webKeys(csHandlers) : []),
     ...(isCs && !browser ? [...csharpLanguage(file, csHandlers), stepLenses((l) => showUsagesRef.current(l), (l) => openRefLensRef.current(l)), runGutter((l, d) => runRef.current?.(l, d))] : []),
     // Stable per file: rebuilding extensions on every keystroke would reset the linter before it reports.
-  ], [file, browser]);
+  ], [file, browser, modes]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Stable: a new function each render would make @uiw/react-codemirror reconfigure the editor every time.
   const countProblems = useCallback((u: ViewUpdate) => {

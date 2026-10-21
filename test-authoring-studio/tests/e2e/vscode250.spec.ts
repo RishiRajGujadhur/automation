@@ -461,3 +461,32 @@ test('W22 Remote indicator: window and workspace actions in a quick pick', async
   await page.keyboard.press('Enter');
   await expect.poll(() => page.evaluate(() => navigator.clipboard.readText())).toBe(temp);
 });
+
+test('W23 Change Language Mode: status bar item and Ctrl+K M, per file, colouring follows', async ({ page }) => {
+  await fs.writeFile(path.join(temp, 'notes.txt'), '{ "name": "demo", "count": 3 }\n');
+  await start(page);
+  const src = await open(page, 'notes.txt');
+  const item = page.locator('footer.status-bar').getByRole('button', { name: /^Select Language Mode/ });
+  await expect(item).toHaveText('Plain Text');
+  const demo = src.locator('.cm-line span', { hasText: /^"demo"$/ });
+  await expect(demo).toHaveCount(0);
+  await item.click();
+  await expect(quickBox(page)).toHaveAttribute('placeholder', 'Select Language Mode');
+  await expect(rows(page).filter({ hasText: 'Plain Text' })).toHaveAttribute('aria-selected', 'true');
+  await page.keyboard.type('json');
+  await expect(rows(page).first()).toContainText('JSON(json)');
+  await page.keyboard.press('Enter');
+  await expect(item).toHaveText('JSON');
+  // JSON colouring: the strings and the number are tokens now.
+  await expect(demo).toHaveCount(1);
+  // Kept for the file after a reload; Ctrl+K M offers going back to the extension's mode.
+  await page.reload();
+  const again = await open(page, 'notes.txt');
+  await expect(item).toHaveText('JSON');
+  await again.locator('.cm-line').first().click();
+  await page.keyboard.press('Control+k');
+  await page.keyboard.press('m');
+  await expect(rows(page).first()).toContainText('Reset to Plain Text');
+  await rows(page).first().click();
+  await expect(item).toHaveText('Plain Text');
+});

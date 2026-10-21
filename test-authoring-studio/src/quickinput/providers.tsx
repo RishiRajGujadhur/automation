@@ -117,3 +117,4 @@ import './workspaceSymbols';
 import './help';
 import './editors';
 import './textSearch';
+import './languagePick';
