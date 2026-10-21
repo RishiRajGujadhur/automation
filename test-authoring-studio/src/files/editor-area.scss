@@ -3969,3 +3969,10 @@ html[data-activity-bar='right'] .app-body > .activity-bar { order: 99; border-le
 .bookmark-lists { margin: 4px 0 8px; align-items: center; }
 .bookmark-list-head { padding: 6px 4px 2px; color: var(--text-muted); list-style: none; }
 .bookmark-move { height: 22px; font-size: 12px; }
+
+/* Peek References (RIDER-VSCODE-FEATURES.md 57): the preview and the list of references side by side. */
+.cm-peek.cm-peek-refs { display: grid; grid-template-columns: 1fr 220px; grid-template-rows: auto 1fr; > .cm-peek-head { grid-column: 1 / -1; } }
+.cm-peek-list {
+  margin: 0; padding: 2px 0; list-style: none; overflow: auto; max-height: 220px; border-left: 1px solid var(--border); font-size: 12px; outline: none;
+  li { padding: 2px 8px; cursor: pointer; white-space: nowrap; &.active { background: var(--accent-soft); } }
+}

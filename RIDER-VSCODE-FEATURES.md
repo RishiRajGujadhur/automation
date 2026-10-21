@@ -73,7 +73,7 @@ Legend: `[x]` done · `[ ]` to do.
 - [x] 54. CodeLens references
 - [x] 55. Code Vision annotations — authors above scenarios, step usages
 - [x] 56. Peek definition — Alt+F12
-- [ ] 57. Peek references
+- [x] 57. Peek references — Navigate ▸ Peek References: the references in the peek panel, each previewed (arrow keys) (2026-10-21)
 - [x] 58. Hierarchical symbol navigation — Structure window, breadcrumbs
 - [x] 59. Decompiled source navigation — Navigate ▸ Go to Decompiled Source (ILSpy decompiler in the language service), opened at the member (2026-10-21)
 - [x] 60. External source navigation — F12 on a framework / NuGet symbol: its declarations from metadata (assembly, namespace, type, members), the member marked (2026-10-21)
@@ -416,3 +416,4 @@ Legend: `[x]` done · `[ ]` to do.
 - 2026-10-21 214: An ambiguous type name offers a using alias for each candidate, or the fully qualified name.
 - 2026-10-21 120: Structural search templates: a built-in catalogue (null checks, Any(), NUnit Assert.That, Task.Result…) and saved ones.
 - 2026-10-21 52: Bookmarks grouped in named lists; new bookmarks go to the active list; a deleted list's bookmarks return to Bookmarks.
+- 2026-10-21 57: References of the symbol at the caret in an inline peek panel: a list beside a preview of the selected one.

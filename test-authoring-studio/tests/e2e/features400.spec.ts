@@ -932,3 +932,21 @@ test('52 Named bookmark lists', async ({ page }) => {
   await dlg.getByRole('button', { name: 'Delete List' }).click();
   await expect(dlg.getByRole('list', { name: 'Bookmarks' }).locator('.bookmark-row')).toHaveCount(2);
 });
+
+test('57 Peek references', async ({ page }) => {
+  needsLang();
+  await fs.writeFile(path.join(temp, 'Steps/Uses.cs'), 'namespace Fixtures.Steps;\npublic class Uses { public void A(Shared s) { s.Go(); } public void B(Shared s) { s.Go(); } }\npublic class Shared { public void Go() { } }\n');
+  expect((await page.request.post('/api/workspace', { data: { repositoryRoot: temp, targetProject: '.' } })).ok()).toBe(true);
+  await open(page, 'Steps/Uses.cs');
+  await caretAt(page, 'void Go()', 6);
+  await menuItem(page, 'Navigate', /^Peek References$/);
+  const peekPanel = page.getByRole('region', { name: /^Peek References: .*Shared\.Go\(\)$/ });
+  await expect(peekPanel).toBeVisible({ timeout: 60_000 });
+  const list = peekPanel.getByRole('listbox', { name: 'References' });
+  await expect(list.getByRole('option')).toHaveCount(3);
+  await list.getByRole('option').nth(1).click();
+  await expect(list.getByRole('option').nth(1)).toHaveAttribute('aria-selected', 'true');
+  await list.focus();
+  await page.keyboard.press('ArrowDown');
+  await expect(list.getByRole('option').nth(2)).toHaveAttribute('aria-selected', 'true');
+});

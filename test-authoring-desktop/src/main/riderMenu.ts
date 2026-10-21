@@ -170,6 +170,7 @@ const ROWS: Record<'edit' | 'view' | 'navigate' | 'code' | 'tools' | 'help', Row
     ['Type Hierarchy', 'type-hierarchy', 'CmdOrCtrl+H'],
     ['Call Hierarchy', 'call-hierarchy', 'CmdOrCtrl+Alt+H'],
     ['Method Hierarchy', 'method-hierarchy'],
+    ['Peek References', 'peek-references'],
     ['Go to Decompiled Source', 'go-to-decompiled'],
     null,
     ['Go to Matching Brace', 'goto-brace', 'CmdOrCtrl+]'],

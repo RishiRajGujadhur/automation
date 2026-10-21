@@ -160,7 +160,29 @@ export default function CodeEditor({ file, reveal, active = true, onNotice, onIn
   openRefLensRef.current = openRefLens;
   const [busyOp, setBusyOp] = useState('');
   // Peek Definition (Alt+F12): the definition's code in a window under the cursor.
-  const [peek, setPeek] = useState<{ file: string; line: number; column: number; source: string; name: string; top: number }>();
+  const [peek, setPeek] = useState<{ file: string; line: number; column: number; source: string; name: string; top: number; refs?: CsLocation[]; index?: number }>();
+  // Peek References (VS Code Shift+F12): the references in the peek panel, each previewed in turn.
+  const peekAt = async (refs: CsLocation[], index: number, name: string, top: number) => {
+    const l = refs[index];
+    const v = ref.current?.view;
+    const src = l.file === file && v ? v.state.doc.toString() : (await readFile(l.file)).source;
+    setPeek({ ...l, source: src, name, top, refs, index });
+  };
+  useEffect(() => {
+    const h = (e: Event) => {
+      if ((e as CustomEvent<string>).detail !== file) return;
+      const v = ref.current?.view;
+      if (!v) return;
+      const pos = v.state.selection.main.head;
+      void api<{ name: string; locations: CsLocation[] }>('/csharp/references', position(pos)).then((r) => {
+        if (!r.locations.length) { onNotice?.(`No references to ${r.name}.`); return; }
+        const box = v.coordsAtPos(pos); const host = v.dom.getBoundingClientRect();
+        return peekAt(r.locations, 0, r.name, (box?.bottom ?? host.top) - host.top + 4);
+      }).catch((x) => onNotice?.((x as Error).message));
+    };
+    window.addEventListener('tas:peek-references', h);
+    return () => window.removeEventListener('tas:peek-references', h);
+  });
   // Escape closes the peek window while the editor keeps focus (as in Visual Studio).
   useEffect(() => {
     if (!peek) return;
@@ -568,7 +590,7 @@ export default function CodeEditor({ file, reveal, active = true, onNotice, onIn
             </div>
           )}
           {peek && (
-            <section className="cm-peek" aria-label={`Peek Definition: ${peek.name}`} style={{ top: peek.top }} onKeyDown={(e) => { if (e.key === 'Escape') { setPeek(undefined); ref.current?.view?.focus(); } }}>
+            <section className={`cm-peek ${peek.refs ? 'cm-peek-refs' : ''}`} aria-label={peek.refs ? `Peek References: ${peek.name}` : `Peek Definition: ${peek.name}`} style={{ top: peek.top }} onKeyDown={(e) => { if (e.key === 'Escape') { setPeek(undefined); ref.current?.view?.focus(); } }}>
               <div className="cm-peek-head">
                 <strong>{peek.file.split('/').pop()}</strong><span className="meta">{peek.file}:{peek.line}</span>
                 <button className="button" onClick={() => { const p = peek; setPeek(undefined); if (p.file === file) { const v = ref.current!.view!; const at = offsetOf(v.state.doc, p.line, p.column); v.dispatch({ selection: { anchor: at }, effects: EditorView.scrollIntoView(at, { y: 'center' }) }); v.focus(); } else onOpen?.(p.file, p.line, p.column); }}>Open</button>
@@ -581,8 +603,14 @@ export default function CodeEditor({ file, reveal, active = true, onNotice, onIn
                 editable={false}
                 basicSetup={PEEK_SETUP}
                 extensions={[StreamLanguage.define(csharp), EditorView.contentAttributes.of({ 'aria-label': `Definition of ${peek.name}` })]}
+                key={`${peek.file}:${peek.line}:${peek.column}`}
                 onCreateEditor={(v) => { const l = v.state.doc.line(Math.min(peek.line, v.state.doc.lines)); v.dispatch({ selection: { anchor: l.from, head: l.to }, effects: EditorView.scrollIntoView(l.from, { y: 'start', yMargin: 40 }) }); }}
               />
+              {peek.refs && (
+                <ul className="cm-peek-list" role="listbox" aria-label="References" tabIndex={0} onKeyDown={(e) => { const n = peek.refs!.length; if (e.key === 'ArrowDown' || e.key === 'ArrowUp') { e.preventDefault(); void peekAt(peek.refs!, ((peek.index ?? 0) + (e.key === 'ArrowDown' ? 1 : n - 1)) % n, peek.name, peek.top); } }}>
+                  {peek.refs.map((r, i) => <li key={`${r.file}:${r.line}:${r.column}`} role="option" aria-selected={i === peek.index} className={i === peek.index ? 'active' : ''} onClick={() => void peekAt(peek.refs!, i, peek.name, peek.top)}>{r.file.split('/').pop()}:{r.line}</li>)}
+                </ul>
+              )}
             </section>
           )}
           {busyOp && <span className="cm-busy" role="status"><Loader size={12} className="spin" />{busyOp}</span>}
