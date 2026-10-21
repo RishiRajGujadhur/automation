@@ -1,3 +1,7 @@
+import { isWebFile, webLanguage, SCRIPT_FILE } from './web/languages';
+import { scriptFeatures } from './web/scriptFeatures';
+import { webKeys } from './web/webKeys';
+import { applyRefactor } from '../rider/refactor400';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import CodeMirror, { type ReactCodeMirrorRef } from '@uiw/react-codemirror';
 import type { ViewUpdate } from '@codemirror/view';
@@ -95,6 +99,7 @@ function languageOf(file: string, browser: boolean) {
   if (/\.(xml|csproj|props|targets|config|runsettings|resx)$/.test(file)) return xmlExtensions(false, /\.(csproj|props|targets)$/.test(file));
   if (file.endsWith('.feature')) return [...(browser ? [] : [breakpoints(file)]), ...gherkinSyntaxExtensions()];
   if (isHttpFile(file)) return [StreamLanguage.define(httpMode)];
+  if (isWebFile(file)) return [...webLanguage(file), ...(browser ? [] : SCRIPT_FILE.test(file) ? scriptFeatures(file) : [])];
   if (/\.(md|markdown|txt)$/i.test(file)) return markdownQol;
   return [];
 }
@@ -119,6 +124,8 @@ export default function CodeEditor({ file, reveal, active = true, onNotice, onIn
   const [problems, setProblems] = useState({ errors: 0, warnings: 0 });
   const browser = isBrowser();
   const isCs = file.endsWith('.cs');
+  // Front-end files (FRONTEND-100.md): the same handlers as C#, served by /api/web.
+  const isWeb = SCRIPT_FILE.test(file);
   // C# language features (Roslyn): rename box over the symbol, Find All References results.
   const [renameAt, setRenameAt] = useState<{ pos: number; name: string; top: number; left: number }>();
   const [refs, setRefs] = useState<{ name: string; locations: (CsLocation & { text?: string })[] }>();
@@ -296,6 +303,7 @@ export default function CodeEditor({ file, reveal, active = true, onNotice, onIn
   });
 
   const position = (pos: number) => { const v = ref.current!.view!; return { file, source: v.state.doc.toString(), ...lineCol(v.state.doc, pos) }; };
+  const webPos = (pos: number) => ({ file, source: ref.current!.view!.state.doc.toString(), pos });
   const csHandlers = useRef<CsHandlers>({ definition: () => {}, references: () => {}, rename: () => {}, actions: () => {}, format: () => {}, implementations: () => {}, peek: () => {} });
   /** One location: go there; several: list them (Find All References panel). */
   const goToAny = (name: string, locations: CsLocation[], none: string) => {
@@ -308,6 +316,7 @@ export default function CodeEditor({ file, reveal, active = true, onNotice, onIn
   csHandlers.current = {
     definition: async (pos) => {
       try {
+        if (isWeb) { const w = await api<{ name: string; locations: (CsLocation & { external?: string })[] }>('/web/definition', webPos(pos)); goToAny(w.name, w.locations.filter((l) => !l.external), w.locations.length ? `${w.name} is declared outside the repository (${w.locations[0].external}).` : 'No definition found.'); return; }
         const r = await api<{ name: string; locations: CsLocation[]; external?: string }>('/csharp/definition', position(pos));
         const here = r.locations.find((l) => l.file === file);
         const target = here ?? r.locations[0];
@@ -320,7 +329,7 @@ export default function CodeEditor({ file, reveal, active = true, onNotice, onIn
     },
     references: async (pos) => {
       setBusyOp('Finding references…');
-      try { setRefs(await api('/csharp/references', position(pos))); } catch (e) { onNotice?.((e as Error).message); } finally { setBusyOp(''); }
+      try { setRefs(isWeb ? await api('/web/references', webPos(pos)) : await api('/csharp/references', position(pos))); } catch (e) { onNotice?.((e as Error).message); } finally { setBusyOp(''); }
     },
     implementations: async (pos) => {
       try { const r = await api<{ name: string; locations: CsLocation[] }>('/csharp/implementations', position(pos)); goToAny(`Implementations of ${r.name}`, r.locations, `No implementations of ${r.name} in this repository.`); } catch (e) { onNotice?.((e as Error).message); }
@@ -329,7 +338,7 @@ export default function CodeEditor({ file, reveal, active = true, onNotice, onIn
       const v = ref.current?.view;
       if (!v) return;
       try {
-        const r = await api<{ name: string; locations: CsLocation[]; external?: string }>('/csharp/definition', position(pos));
+        const r = isWeb ? await api<{ name: string; locations: CsLocation[]; external?: string }>('/web/definition', webPos(pos)) : await api<{ name: string; locations: CsLocation[]; external?: string }>('/csharp/definition', position(pos));
         const l = r.locations[0];
         if (!l) { onNotice?.(`${r.name} is defined in ${r.external ?? 'a referenced assembly'}.`); return; }
         const src = l.file === file ? v.state.doc.toString() : (await readFile(l.file)).source;
@@ -344,7 +353,7 @@ export default function CodeEditor({ file, reveal, active = true, onNotice, onIn
       setBusyOp('Finding quick actions…');
       try {
         const end = lineCol(v.state.doc, to);
-        const items = await api<{ id: string; title: string; kind: string }[]>('/csharp/actions', { ...position(from), ...(to > from ? { endLine: end.line, endColumn: end.column } : {}) });
+        const items = isWeb ? await api<{ id: string; title: string; kind: string }[]>('/web/actions', { file, source: v.state.doc.toString(), from, to }) : await api<{ id: string; title: string; kind: string }[]>('/csharp/actions', { ...position(from), ...(to > from ? { endLine: end.line, endColumn: end.column } : {}) });
         const re = filter?.title ? new RegExp(filter.title) : undefined;
         const shown = !filter ? items : items.filter((a) => (!filter.kind || a.kind === filter.kind) && (!re || re.test(a.title)) && !(filter.noDialogs && /\.\.\.$/.test(a.title)));
         if (!shown.length) { onNotice?.(filter ? `No ${filter.label} here.` : 'No quick actions here.'); return; }
@@ -361,7 +370,7 @@ export default function CodeEditor({ file, reveal, active = true, onNotice, onIn
       const r = v.state.selection.main;
       try {
         const sel = r.to > r.from ? { selection: { ...lineCol(v.state.doc, r.from), endLine: lineCol(v.state.doc, r.to).line, endColumn: lineCol(v.state.doc, r.to).column } } : {};
-        const out = await api<{ text: string }>('/csharp/format', { file, source: v.state.doc.toString(), ...sel });
+        const out = isWeb ? await api<{ text: string }>('/web/format', { file, source: v.state.doc.toString() }) : await api<{ text: string }>('/csharp/format', { file, source: v.state.doc.toString(), ...sel });
         replaceText(v, out.text);
       } catch (e) { onNotice?.((e as Error).message); }
     },
@@ -383,6 +392,7 @@ export default function CodeEditor({ file, reveal, active = true, onNotice, onIn
     if (!at || !v || !newName || newName === at.name) { v?.focus(); return; }
     setBusyOp(`Renaming ${at.name}…`);
     try {
+      if (isWeb) { await applyRefactor(v, file, await api('/web/rename', { ...webPos(at.pos), newName }), (m) => onNotice?.(m)); return; }
       const r = await api<{ current: string | null; written: string[]; changes: { file: string; edits: number }[] }>('/csharp/rename', { ...position(at.pos), newName });
       if (r.current !== null) replaceText(v, r.current);
       if (r.written.length) window.dispatchEvent(new CustomEvent(FILES_CHANGED_EVENT, { detail: r.written }));
@@ -396,6 +406,7 @@ export default function CodeEditor({ file, reveal, active = true, onNotice, onIn
     const v = ref.current?.view;
     if (!v) return;
     try {
+      if (isWeb) { await applyRefactor(v, file, await api('/web/applyAction', { file, source: v.state.doc.toString(), id }), (m) => onNotice?.(m)); return; }
       const r = await api<{ title: string; current: string | null; written: string[] }>('/csharp/applyAction', { file, actionId: id });
       if (r.current !== null) replaceText(v, r.current);
       if (r.written.length) { window.dispatchEvent(new CustomEvent(FILES_CHANGED_EVENT, { detail: r.written })); onNotice?.(`${r.title}: changed ${r.written.length + (r.current !== null ? 1 : 0)} files.`); }
@@ -466,6 +477,7 @@ export default function CodeEditor({ file, reveal, active = true, onNotice, onIn
     ]),
     ...(isHttpFile(file) && !browser ? [httpClient((l) => void sendHttpRef.current(l))] : []),
     ...(isCs && featureOn('xml-doc') ? [xmlDocComments] : []),
+    ...(isWeb && !browser ? webKeys(csHandlers) : []),
     ...(isCs && !browser ? [...csharpLanguage(file, csHandlers), stepLenses((l) => showUsagesRef.current(l), (l) => openRefLensRef.current(l)), runGutter((l, d) => runRef.current?.(l, d))] : []),
     // Stable per file: rebuilding extensions on every keystroke would reset the linter before it reports.
   ], [file, browser]);
@@ -586,7 +598,7 @@ export default function CodeEditor({ file, reveal, active = true, onNotice, onIn
                 </li>
               ))}
             </ul>
-            {featureOn('quick-action-preview') && quick.items[quick.index] && !isBrowser() && <QuickPreview file={file} actionId={quick.items[quick.index].id} source={ref.current?.view?.state.doc.toString() ?? ''} />}
+            {featureOn('quick-action-preview') && quick.items[quick.index] && !isBrowser() && !isWeb && <QuickPreview file={file} actionId={quick.items[quick.index].id} source={ref.current?.view?.state.doc.toString() ?? ''} />}
             </div>
           )}
           {peek && (

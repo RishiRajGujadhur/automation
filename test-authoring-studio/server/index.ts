@@ -54,6 +54,7 @@ import { recordedStepsSource } from './recordedSteps.js';
 import { editorConfigFor } from './editorconfig.js';
 import { recordHistory, historyOf, historyItem, recentChanges } from './localHistory.js';
 import { findVisualStudio, classicProjects, msbuildArgs, classicOutput, CLASSIC_HELP } from './msbuild.js';
+import { webRoutes } from './web/routes.js';
 import { mergeDictionary, proposeField, findEntry, parseDictionary, selectorRank, fieldName, type FieldProposal } from './dictionaries.js';
 const studio = readSettings();
 const allowedHosts = [studio.apiPort, studio.webPort].flatMap((p) => [`127.0.0.1:${p}`, `localhost:${p}`]);
@@ -1092,6 +1093,8 @@ app.post('/api/csharp/cleanup-solution', async (_req, res) => {
   }
   res.json(out);
 });
+// Front-end languages: TypeScript / JavaScript, HTML, CSS (FRONTEND-100.md).
+webRoutes(app, () => config.repositoryRoot);
 app.post('/api/csharp/actions', async (req, res) => {
   const body = csPosition.extend({ endLine: z.number().int().min(1).optional(), endColumn: z.number().int().min(1).optional() }).parse(req.body);
   await confined(config.repositoryRoot, body.file, false);

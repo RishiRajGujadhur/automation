@@ -27,7 +27,8 @@ mkdirSync(path.join(app, 'server'), { recursive: true });
 
 // ESM output that still needs `require` for CommonJS dependencies (express et al.).
 const banner = { js: "import { createRequire as __cr } from 'node:module'; const require = __cr(import.meta.url);" };
-const external = ['playwright', 'playwright-core', 'chromium-bidi', 'fsevents', 'electron'];
+// typescript5 (the front-end language service) loads its lib.*.d.ts files from its own folder, so it stays a real module.
+const external = ['playwright', 'playwright-core', 'chromium-bidi', 'fsevents', 'electron', 'typescript5'];
 step('Bundling the studio API…');
 await build({
   entryPoints: [path.join(studio, 'server/index.ts')],
@@ -92,7 +93,7 @@ const scanner = path.join(studio, 'scanner/bin/Release');
 if (!existsSync(path.join(scannerOut, exeName)) && existsSync(scanner)) cpSync(scanner, path.join(app, 'scanner/bin/Release'), { recursive: true });
 // The API bundle sits outside app.asar (worker threads and the scanner need real files), so modules it keeps
 // external must sit beside it: Playwright drives the recorder and selector verification.
-for (const mod of ['playwright', 'playwright-core']) {
+for (const mod of ['playwright', 'playwright-core', 'typescript5']) {
   const src = path.join(root, 'node_modules', mod);
   if (existsSync(src)) cpSync(src, path.join(app, 'node_modules', mod), { recursive: true, dereference: true });
   else console.warn(`  ${mod} not installed; recording will be unavailable.`);
