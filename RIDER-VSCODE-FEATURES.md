@@ -290,7 +290,7 @@ Legend: `[x]` done · `[ ]` to do.
 - [x] 341. Generate XML documentation stubs — `///`
 - [ ] 342. Inherit XML documentation from base members
 - [x] 343. Generate `ToString()` implementations
-- [ ] 344. Generate comparison members
+- [x] 344. Generate comparison members — Code ▸ C# ▸ Generate Comparison Members (IComparable<T>.CompareTo, <, >, <=, >=) (2026-10-21)
 - [x] 345. Generate `IEquatable<T>` implementations — Code ▸ C# ▸ Generate IEquatable<T> (Equals(T), Equals(object), GetHashCode, ==, !=) (2026-10-21)
 - [x] 346. Generate `IDisposable` implementation patterns — Quick Actions: Implement interface with Dispose pattern
 - [ ] 347. Generate `IAsyncDisposable` implementation patterns
@@ -394,3 +394,4 @@ Legend: `[x]` done · `[ ]` to do.
 - 2026-10-21 60: Go to Definition outside the repository shows the type's declarations generated from metadata, opened at the member.
 - 2026-10-21 59: Framework and NuGet types decompile to C# with bodies (ICSharpCode.Decompiler in the language service), shown read-only at the member.
 - 2026-10-21 345: IEquatable<T> generated from the public properties, added to the base list.
+- 2026-10-21 344: CompareTo compares property by property with Comparer<T>.Default; the comparison operators use it.
