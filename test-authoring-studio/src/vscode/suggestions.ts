@@ -24,13 +24,14 @@ export function suggestAllowed(explicit: boolean, before: string, o = { quick: s
 type Source = (ctx: CompletionContext) => CompletionResult | null | Promise<CompletionResult | null>;
 /** Wraps an IntelliSense source with editor.quickSuggestions, its delay and editor.suggestOnTriggerCharacters. */
 export function gateSource(source: Source): Source {
-  return async (ctx) => {
+  // Synchronous unless there is a delay: a synchronous source's list is active at once, so Enter accepts it.
+  return (ctx) => {
     const word = ctx.matchBefore(/[\w@]*/);
     const before = ctx.state.sliceDoc(Math.max(0, (word?.from ?? ctx.pos) - 1), word?.from ?? ctx.pos);
     if (!suggestAllowed(ctx.explicit, before)) return null;
     const ms = suggest.delay();
-    if (!ctx.explicit && ms > 10) { await new Promise((r) => setTimeout(r, ms)); if (ctx.aborted) return null; }
-    return source(ctx);
+    if (ctx.explicit || ms <= 10) return source(ctx);
+    return new Promise<void>((r) => setTimeout(r, ms)).then(() => (ctx.aborted ? null : source(ctx)));
   };
 }
 /** The completion keys run first (capture phase), before CodeMirror's own keymap. */

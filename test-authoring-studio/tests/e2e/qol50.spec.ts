@@ -438,6 +438,8 @@ test('QL57 / QL58 Gherkin: tag and <parameter> completion', async ({ page, reque
   await page.keyboard.press('End');
   await page.keyboard.type(' as <ro');
   await expect(page.locator('.cm-tooltip-autocomplete')).toContainText('role');
+  // CodeMirror ignores an Enter that comes within 75 ms of the list changing (interactionDelay).
+  await page.waitForTimeout(150);
   await page.keyboard.press('Enter');
   await expect.poll(() => doc(page)).toContain('started as <role>');
 });
