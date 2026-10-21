@@ -288,7 +288,7 @@ Legend: `[x]` done · `[ ]` to do.
 ## Advanced C# Development
 
 - [x] 341. Generate XML documentation stubs — `///`
-- [ ] 342. Inherit XML documentation from base members
+- [x] 342. Inherit XML documentation from base members — Code ▸ C# ▸ Inherit Documentation (/// <inheritdoc/> on overrides and interface members) (2026-10-21)
 - [x] 343. Generate `ToString()` implementations
 - [x] 344. Generate comparison members — Code ▸ C# ▸ Generate Comparison Members (IComparable<T>.CompareTo, <, >, <=, >=) (2026-10-21)
 - [x] 345. Generate `IEquatable<T>` implementations — Code ▸ C# ▸ Generate IEquatable<T> (Equals(T), Equals(object), GetHashCode, ==, !=) (2026-10-21)
@@ -398,3 +398,4 @@ Legend: `[x]` done · `[ ]` to do.
 - 2026-10-21 347: The async Dispose pattern, disposing fields such as HttpClient, streams, connections and Playwright browsers.
 - 2026-10-21 355: An interpolated string becomes string.Format with numbered holes.
 - 2026-10-21 91: A positional record becomes an equivalent class.
+- 2026-10-21 342: Members with a base or interface member get /// <inheritdoc/>.
