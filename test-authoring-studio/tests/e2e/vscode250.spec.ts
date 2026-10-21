@@ -746,3 +746,26 @@ test('W34 Sync item: incoming / outgoing counts, a click pushes; Publish Branch 
     expect(execSync('git log --oneline -1 main', { cwd: remote }).toString()).toContain('Second');
   } finally { await fs.rm(remote, { recursive: true, force: true }).catch(() => {}); }
 });
+
+test('W35 Focus Status Bar from the keyboard; several cursors read "n selections"', async ({ page }) => {
+  await start(page);
+  const src = await open(page, 'Steps/AuthSteps.cs');
+  await src.locator('.cm-line').nth(2).click();
+  // "public" selected, then the next occurrence added (Alt+J).
+  await page.evaluate(() => { const v = (window as unknown as { __activeEditor: () => { view: { state: { doc: { toString(): string } }; dispatch(x: unknown): void; focus(): void } } }).__activeEditor().view; const i = v.state.doc.toString().indexOf('public'); v.dispatch({ selection: { anchor: i, head: i + 6 } }); v.focus(); });
+  await page.keyboard.press('Alt+j');
+  const pos = page.locator('footer.status-bar').getByRole('button', { name: 'Cursor position' });
+  await expect(pos).toHaveText('2 selections (12 characters selected)');
+  // View ▸ Focus Status Bar: arrows move between items, Escape goes back to the editor.
+  await page.keyboard.press('Control+Shift+P');
+  await quickBox(page).fill('>focus status bar');
+  await page.keyboard.press('Enter');
+  const first = page.locator('footer.status-bar button:visible').first();
+  await expect(first).toBeFocused();
+  await page.keyboard.press('ArrowRight');
+  await expect(page.locator('footer.status-bar button:visible').nth(1)).toBeFocused();
+  await page.keyboard.press('End');
+  await expect(page.locator('footer.status-bar button:visible').last()).toBeFocused();
+  await page.keyboard.press('Escape');
+  await expect(src).toBeFocused();
+});

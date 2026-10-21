@@ -3,7 +3,7 @@ import { EditorView, ViewPlugin } from '@codemirror/view';
 import { visit, REVEAL_EVENT } from '../navHistory';
 
 /** Where the cursor is in the focused editor (status bar: "Ln 12, Col 5", line endings). */
-export type CursorInfo = { file: string; line: number; column: number; selected: number; lines?: number; ranges?: number; total?: number; eol: 'CRLF' | 'LF' } | null;
+export type CursorInfo = { file: string; line: number; column: number; selected: number; lines?: number; ranges?: number; /** Characters selected by all cursors. */ chars?: number; total?: number; eol: 'CRLF' | 'LF' } | null;
 let info: CursorInfo = null;
 const listeners = new Set<() => void>();
 const set = (next: CursorInfo) => {
@@ -21,7 +21,7 @@ export function cursorTracker(file: string, eol: () => 'CRLF' | 'LF') {
     if (!u.view.hasFocus || (!u.selectionSet && !u.docChanged && !u.focusChanged)) return;
     const r = u.state.selection.main;
     const line = u.state.doc.lineAt(r.head);
-    set({ file, line: line.number, column: r.head - line.from + 1, selected: Math.abs(r.to - r.from), lines: r.empty ? 0 : u.state.doc.lineAt(r.to).number - u.state.doc.lineAt(r.from).number + 1, ranges: u.state.selection.ranges.length, total: u.state.doc.lines, eol: eol() });
+    set({ file, line: line.number, column: r.head - line.from + 1, selected: Math.abs(r.to - r.from), lines: r.empty ? 0 : u.state.doc.lineAt(r.to).number - u.state.doc.lineAt(r.from).number + 1, ranges: u.state.selection.ranges.length, chars: u.state.selection.ranges.reduce((n, x) => n + x.to - x.from, 0), total: u.state.doc.lines, eol: eol() });
     // Navigation history (Back / Forward, Recent Locations), with the line's code.
     if (u.selectionSet || u.focusChanged) visit({ file, line: line.number, column: r.head - line.from + 1, text: line.text.trim().slice(0, 120) });
   });

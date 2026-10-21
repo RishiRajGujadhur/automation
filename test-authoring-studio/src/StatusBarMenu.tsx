@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react';
 import { useLocalState } from './ui';
 import { setViewOptions } from './editor/viewOptions';
+import { activeEditor } from './editor/activeEditor';
+import { registerRider } from './rider/commands';
 
 /** Status bar entries that can be hidden (VS Code's status bar context menu, W30), found by their labels. */
 const ENTRIES: { id: string; name: string; selector: string }[] = [
@@ -21,7 +23,31 @@ const ENTRIES: { id: string; name: string; selector: string }[] = [
 ];
 
 /** The hidden entries' CSS, and the right-click menu that toggles them. */
+const items = () => [...document.querySelectorAll<HTMLElement>('footer.status-bar button')].filter((b) => b.getClientRects().length > 0);
+/** Focus Status Bar (VS Code, W35): its first item; ←/→ then move, Enter runs one, Escape goes back to the editor. */
+export function focusStatusBar() {
+  // After the palette or a menu closes (they hand focus back to the editor first).
+  const go = () => { if (!document.activeElement?.closest('footer.status-bar')) items()[0]?.focus(); };
+  setTimeout(go, 50);
+  setTimeout(go, 250);
+}
+registerRider([{ id: 'focus-status-bar', label: 'Focus Status Bar', menu: 'View', run: focusStatusBar }]);
+
 export default function StatusBarMenu() {
+  useEffect(() => {
+    const h = (e: KeyboardEvent) => {
+      const t = e.target as HTMLElement;
+      if (!t.closest?.('footer.status-bar') || e.ctrlKey || e.altKey || e.metaKey) return;
+      const list = items();
+      const i = list.indexOf(t);
+      if (e.key === 'ArrowRight' || e.key === 'ArrowLeft') { e.preventDefault(); list[(i + (e.key === 'ArrowRight' ? 1 : list.length - 1)) % list.length]?.focus(); }
+      else if (e.key === 'Home') { e.preventDefault(); list[0]?.focus(); }
+      else if (e.key === 'End') { e.preventDefault(); list.at(-1)?.focus(); }
+      else if (e.key === 'Escape') { e.preventDefault(); activeEditor()?.view.focus(); }
+    };
+    window.addEventListener('keydown', h, true);
+    return () => window.removeEventListener('keydown', h, true);
+  }, []);
   const [hidden, setHidden] = useLocalState<string[]>('statusBarHidden', []);
   const [at, setAt] = useState<{ x: number; y: number }>();
   useEffect(() => {

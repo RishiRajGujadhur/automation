@@ -99,7 +99,7 @@ test('QL6 Multi-caret count in the status bar', async ({ page }) => {
   await caretAt(page, 'Feature:');
   await page.keyboard.press('Control+A');
   await menuItem(page, 'Edit', /^Add Carets to Ends of Selected Lines/);
-  await expect(page.getByLabel('Cursor position')).toContainText(/· \d+ selections/);
+  await expect(page.getByLabel('Cursor position')).toContainText(/^\d+ selections/);
 });
 
 test('QL7 Drag a file from the Explorer into the editor inserts its path', async ({ page }) => {
