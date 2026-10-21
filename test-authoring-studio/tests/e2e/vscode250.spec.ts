@@ -430,3 +430,18 @@ test('W20 workbench.quickInput.position: top or center', async ({ page }) => {
   const y = (await quick(page).boundingBox())!.y;
   expect(y).toBeGreaterThan(page.viewportSize()!.height * 0.15);
 });
+
+test('W21 Status bar colours: accent normally, orange while debugging', async ({ page }) => {
+  // A debug session that is running (the debugger's event stream, faked).
+  let debugging = false;
+  await page.route('**/api/debug/events', (route) => route.fulfill({ status: 200, headers: { 'content-type': 'text/event-stream' }, body: debugging ? `data: ${JSON.stringify({ status: 'running', version: 1, frames: [], output: '', breakpoints: {} })}\n\n` : 'event: ping\ndata: {}\n\n' }));
+  await start(page);
+  const bar = page.locator('footer.status-bar');
+  await expect(bar).not.toHaveClass(/debugging|no-folder/);
+  const normal = await bar.evaluate((e) => getComputedStyle(e).backgroundColor);
+  debugging = true;
+  await page.reload();
+  await expect(bar).toHaveClass(/debugging/);
+  await expect.poll(() => bar.evaluate((e) => getComputedStyle(e).backgroundColor)).toBe('rgb(204, 102, 51)');
+  expect(normal).not.toBe('rgb(204, 102, 51)');
+});

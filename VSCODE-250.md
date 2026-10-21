@@ -36,7 +36,7 @@ Legend: `[x]` done · `[ ]` to do.
 - [x] W20. Quick Input position (workbench.quickInput.position: top / center)
 
 ## Status bar
-- [ ] W21. Status bar in VS Code colours: blue normally, purple with no folder, orange while debugging
+- [x] W21. Status bar in VS Code colours: blue normally, purple with no folder, orange while debugging
 - [ ] W22. Remote indicator (bottom-left `><`): quick pick of window actions (open folder, new window, close folder)
 - [ ] W23. Language mode item → Change Language Mode (Ctrl+K M) quick pick, per file
 - [ ] W24. Configure File Association for '.ext' (files.associations)
@@ -314,3 +314,4 @@ Legend: `[x]` done · `[ ]` to do.
 - 2026-10-21: W18. A gear on each palette row opens Keyboard Shortcuts recording a key for that command; any palette or editor command can now have a custom key (rider:/palette: bindings), shown as chips in the palette.
 - 2026-10-21: W19. When no command title contains the typed words, the palette lists the closest titles by VS Code's fuzzy score under 'similar commands'.
 - 2026-10-21: W20. workbench.quickInput.position: the Quick Input at the top of the window (VS Code's default) or in the middle.
+- 2026-10-21: W21. VS Code's statusBar.noFolderBackground (purple) with no folder open and statusBar.debuggingBackground (orange) while a debug session runs.

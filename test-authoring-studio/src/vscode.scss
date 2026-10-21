@@ -125,6 +125,13 @@
     .muted-separator {
       opacity: 0.7;
     }
+    // statusBar.noFolderBackground / statusBar.debuggingBackground (VS Code).
+    &.no-folder {
+      background: #68217a;
+    }
+    &.debugging {
+      background: #cc6633;
+    }
   }
   .back-to-top {
     bottom: 34px;

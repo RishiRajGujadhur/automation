@@ -2419,7 +2419,8 @@ export default function App() {
         ) : null}
         <AppMenuButton {...menuProps} />
       </nav>
-      <footer className={`status-bar ${viewOpts.hideStatusBar && featureOn('toggle-status-bar') ? 'status-bar-hidden' : ''}`}>
+      {/* VS Code's status bar colours (W21): purple with no folder open, orange while debugging. */}
+      <footer className={`status-bar ${viewOpts.hideStatusBar && featureOn('toggle-status-bar') ? 'status-bar-hidden' : ''}${debugLive ? ' debugging' : !config?.repositoryRoot || !index?.workspace ? ' no-folder' : ''}`} aria-label={debugLive ? 'Status bar (debugging)' : 'Status bar'}>
         <span>
           <span className="status-dot" />
           {busy ? 'Working…' : 'Ready'}
