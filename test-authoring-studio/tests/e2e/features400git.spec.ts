@@ -192,6 +192,8 @@ test('154 Three-way merge editor', async ({ page }) => {
   await expect(me.getByLabel('Current')).toContainText('namespace Demo.Ours;');
   await expect(me.getByLabel('Incoming')).toContainText('namespace Demo.Theirs;');
   await expect(me).toContainText('1 conflict left');
+  // Opens at the conflict.
+  await expect(me.getByLabel('Result').locator('.cm-line', { hasText: '<<<<<<<' })).toBeInViewport();
   await expect(me.getByRole('button', { name: 'Complete Merge' })).toBeDisabled();
   await me.getByRole('button', { name: 'Accept Incoming' }).click();
   await expect(me).toContainText('No conflicts left');
