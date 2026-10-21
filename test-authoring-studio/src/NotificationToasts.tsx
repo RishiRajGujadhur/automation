@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import * as Toast from '@radix-ui/react-toast';
 import { featureOn } from './features';
 import { copyText } from './ui';
+import { registerRider } from './rider/commands';
 import { cancelBuild, useBuild } from './build/store';
 import { cancelTests, useTestRun } from './testing/store';
 
@@ -13,6 +14,15 @@ export function noticeSeverity(text: string): 'error' | 'warning' | 'info' {
 }
 
 type Item = { id: number; text: string; undo?: { run: () => void } };
+
+// W40 "Don't Show Again": messages of a kind (numbers and quoted names ignored) that no longer pop up.
+const MUTED = 'tas:notifications:muted';
+const kindOf = (text: string) => text.replace(/\d+/g, '#').replace(/'[^']*'|"[^"]*"|“[^”]*”/g, '…').trim();
+const muted = (): string[] => { try { return JSON.parse(localStorage.getItem(MUTED) ?? '[]') as string[]; } catch { return []; } };
+export const isMuted = (text: string) => muted().includes(kindOf(text));
+const mute = (text: string) => { try { localStorage.setItem(MUTED, JSON.stringify([...new Set([...muted(), kindOf(text)])])); } catch { /* storage blocked */ } };
+export const resetMuted = () => { try { localStorage.removeItem(MUTED); } catch { /* storage blocked */ } };
+registerRider([{ id: 'notifications-reset-muted', label: "Notifications: Reset 'Don't Show Again' Messages", menu: 'View', run: () => { resetMuted(); window.dispatchEvent(new CustomEvent('tas:notice', { detail: "Messages hidden with Don't Show Again show again." })); } }]);
 
 /** W38 progress notifications: a build or test run in progress, with VS Code's indeterminate bar and Cancel. */
 function ProgressToasts({ silent }: { silent: boolean }) {
@@ -51,7 +61,7 @@ export default function NotificationToasts({ notice, undo, silent, onUndone, onC
   const [items, setItems] = useState<Item[]>([]);
   const next = useRef(0);
   useEffect(() => {
-    if (!notice || silent) return;
+    if (!notice || silent || isMuted(notice)) return;
     setItems((list) => [...list.filter((x) => x.text !== notice), { id: ++next.current, text: notice, undo }].slice(-MAX));
   }, [notice]); // eslint-disable-line react-hooks/exhaustive-deps
   // Do Not Disturb (or Zen Mode's silence) hides the toasts already up too.
@@ -78,6 +88,12 @@ export default function NotificationToasts({ notice, undo, silent, onUndone, onC
               <div className="notification-footer">
                 <span className="notification-source">Source: TestAuthoring Studio</span>
                 <span className="notification-buttons">
+                  <span className="notification-gear">
+                    <button className="icon-button" aria-label="Configure Notification" title="Configure Notification" onClick={(e) => { const m = (e.currentTarget.nextElementSibling as HTMLElement); m.hidden = !m.hidden; }}><span className="codicon codicon-gear" /></button>
+                    <span className="notification-gear-menu" role="menu" hidden>
+                      <button role="menuitem" onClick={() => { mute(it.text); close(it.id); }}>Don&apos;t Show Again</button>
+                    </span>
+                  </span>
                   {featureOn('toast-copy') && <Toast.Action asChild altText="Copy the message"><button className="toast-copy notification-button secondary" aria-label="Copy the message" title="Copy" onClick={() => void copyText(it.text)}>Copy</button></Toast.Action>}
                   {it.undo && (
                     <Toast.Action asChild altText="Undo the last change">

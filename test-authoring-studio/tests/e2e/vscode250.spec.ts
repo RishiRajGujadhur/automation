@@ -857,3 +857,26 @@ test('W39 Notifications commands: Show, Clear All, Do Not Disturb, Accept Primar
   await page.keyboard.press('Control+Shift+A');
   await expect.poll(() => cancelled).toBe(true);
 });
+
+test("W40 Toast gear: Don't Show Again for that kind of message; the palette resets it", async ({ page }) => {
+  await start(page);
+  const notify = (t: string) => page.evaluate((x) => window.dispatchEvent(new CustomEvent('tas:notice', { detail: x })), t);
+  await notify('Saved 3 files.');
+  const toast = page.locator('.notification-toast').filter({ hasText: 'Saved 3 files.' });
+  await toast.getByRole('button', { name: 'Configure Notification' }).click();
+  await toast.getByRole('menuitem', { name: "Don't Show Again" }).click();
+  await expect(toast).toHaveCount(0);
+  // The same kind (another number) stays quiet, but is still in the Notification Center.
+  await notify('Saved 5 files.');
+  await expect(page.locator('.notification-toast').filter({ hasText: 'Saved 5 files.' })).toHaveCount(0);
+  await page.locator('footer.status-bar .notifications-bell').click();
+  await expect(page.getByRole('region', { name: 'Notification Center' })).toContainText('Saved 5 files.');
+  await page.keyboard.press('Escape');
+  await page.keyboard.press('Control+Shift+P');
+  await quickBox(page).fill(">Reset 'Don't Show Again'");
+  await expect(rows(page).first()).toContainText("Notifications: Reset 'Don't Show Again' Messages");
+  await page.keyboard.press('Enter');
+  await expect(page.locator('.notification-toast').filter({ hasText: 'show again.' })).toBeVisible();
+  await notify('Saved 7 files.');
+  await expect(page.locator('.notification-toast').filter({ hasText: 'Saved 7 files.' })).toBeVisible();
+});

@@ -750,3 +750,19 @@
   }
 }
 @keyframes notification-progress { from { left: -25%; } to { left: 100%; } }
+// The toast's gear menu (W40).
+.notification-gear { position: relative; display: inline-flex; }
+.notification-gear-menu {
+  position: absolute;
+  right: 0;
+  bottom: 26px;
+  z-index: 2;
+  padding: 4px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 5px;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.35);
+  white-space: nowrap;
+  &[hidden] { display: none; }
+  button { display: block; width: 100%; padding: 3px 10px; border: 0; border-radius: 3px; background: none; color: var(--text); text-align: left; cursor: pointer; &:hover { background: var(--accent, #0078d4); color: #fff; } }
+}

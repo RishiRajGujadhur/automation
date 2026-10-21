@@ -57,7 +57,7 @@ Legend: `[x]` done · `[ ]` to do.
 - [x] W37. Notification Center (Notifications: Show Notifications): list, collapse, clear one / all, Do Not Disturb toggle
 - [x] W38. Progress notifications (indexing, build) with an indeterminate bar
 - [x] W39. Notifications: Focus Toast / Accept primary action (Ctrl+Shift+A? / keyboard) and Clear All (command)
-- [ ] W40. Gear on a toast: "Don't show again" for that kind of message
+- [x] W40. Gear on a toast: "Don't show again" for that kind of message
 
 ## Layout
 - [ ] W41. Customize Layout quick pick (visibility, side bar position, panel alignment, quick input position, modes) with reset
@@ -333,3 +333,4 @@ Legend: `[x]` done · `[ ]` to do.
 - 2026-10-21: W37. The bell opens VS Code's Notification Center above the status bar: every notification of the session with severity, source and age; × clears one; Clear All, Toggle Do Not Disturb (which also hides the toasts already up) and Hide; Escape closes it.
 - 2026-10-21: W38. While a build or a test run is going, a VS Code progress notification shows what runs (action, project, configuration) with an indeterminate bar and Cancel.
 - 2026-10-21: W39. Palette commands Notifications: Show / Hide Notifications, Clear All Notifications, Toggle Do Not Disturb Mode, Focus Notification Toast and Accept Notification Primary Action; Ctrl+Shift+A presses a toast's primary button (Undo, Cancel) while one is up.
+- 2026-10-21: W40. Each toast has VS Code's gear with Don't Show Again: messages of that kind (numbers and quoted names aside) stop popping up but stay in the Notification Center; Notifications: Reset 'Don't Show Again' Messages brings them back.
