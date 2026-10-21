@@ -9,7 +9,7 @@ Workbench improvements that make the studio feel like VS Code and Visual Studio 
 | G2 | [x] | Maximize Panel Size / Restore Panel Size button in the panel bar | VS Code |
 | G3 | [x] | Layout controls in the title bar: Toggle Primary Side Bar, Toggle Panel, Toggle Secondary Side Bar | VS Code title bar |
 | G4 | [x] | Activity bar badges: pending Git changes, failed tests | VS Code |
-| G5 | [ ] | Index status in the status bar (rescan on click); the Explorer gets the full height | VS Code / Visual Studio background tasks |
+| G5 | [x] | Index status in the status bar (rescan on click); the Explorer gets the full height | VS Code / Visual Studio background tasks |
 | G6 | [ ] | Back and Forward buttons beside the search box | VS Code command center |
 | G7 | [ ] | Double-click an editor tab to maximize the editor (side bar and panel hidden); again to restore | VS Code |
 
@@ -17,3 +17,4 @@ Workbench improvements that make the studio feel like VS Code and Visual Studio 
 - 2026-10-21: G1, G2.
 - 2026-10-21: G3. Toggle Panel hides the panel without stopping its tool windows (a terminal keeps its shell). Fixed on the way: a terminal whose page closed without stopping it kept its PowerShell running (and its folder locked) until eight more were opened; the server now stops it 15 s after the last listener leaves.
 - 2026-10-21: G4. The Git status poll moved into a shared store (`src/git/statusStore.ts`): the status bar and the badge use one poll.
+- 2026-10-21: G5. The counts and the last scan time are in the tooltip; the folder name in the status bar shows the full path on hover.

@@ -85,7 +85,7 @@ import * as Dialog from '@radix-ui/react-dialog';
 import * as Toast from '@radix-ui/react-toast';
 import * as ToggleGroup from '@radix-ui/react-toggle-group';
 import * as NavigationMenu from '@radix-ui/react-navigation-menu';
-import { IconButton, IndeterminateProgress, Separator, Switch, Segmented, usePrefs, useConfirm, haptic, withTransition, Meter } from './radix2';
+import { IconButton, IndeterminateProgress, Separator, Switch, Segmented, usePrefs, useConfirm, haptic, withTransition, Meter, Tip } from './radix2';
 import { markDone } from './progress';
 import SidebarResizer, { SIDEBAR_DEFAULT } from './SidebarResizer';
 import GherkinEditor from './editor/GherkinEditor';
@@ -1529,37 +1529,6 @@ export default function App() {
               setMobileExplorer(false);
             }}
           />}
-          <div className="sidebar-bottom">
-            <div className="index-status">
-              <div className="index-icon">
-                <ShieldCheck size={18} />
-              </div>
-              <div>
-                <strong>Repository indexed</strong>
-                <span>
-                  {index?.stats?.steps ?? 0} steps · {index?.stats?.selectors ?? 0} selectors ·{' '}
-                  {index?.stats?.dictionaries ?? 0} fields
-                </span>
-                {index?.scannedAt && <span className="scanned-at" title={new Date(index.scannedAt).toLocaleString()}>Scanned {timeAgo(index.scannedAt, now)}</span>}
-              </div>
-              <IconButton
-                className={busy ? 'spin' : ''}
-                label="Rescan repository"
-                onClick={() =>
-                  work(async () => {
-                    setIndex(await api('/scan', {}));
-                    setNotice('Repository index refreshed.');
-                  })
-                }
-              >
-                <RefreshCw size={15} />
-              </IconButton>
-            </div>
-            <div className="repo-path">
-              <Folder size={13} />
-              <span title={config?.repositoryRoot}>{config?.repositoryRoot ?? 'Connecting…'}</span>
-            </div>
-          </div>
         </aside>
         {prefs.sidebar && !prefs.focus && (
           <SidebarResizer width={sidebarWidth} onWidth={setSidebarWidth} onCollapse={() => { setPrefs({ sidebar: false }); setSidebarWidth(SIDEBAR_DEFAULT); setNotice('Explorer hidden. Press Ctrl/Cmd+B to show it again.'); }} label="Resize feature explorer" />
@@ -2366,10 +2335,17 @@ export default function App() {
           {busy ? 'Working…' : 'Ready'}
           <span className="muted-separator">│</span>
           <Folder size={12} />
-          {index?.workspace ?? 'No repository'}
+          <span title={config?.repositoryRoot}>{index?.workspace ?? 'No repository'}</span>
           {execution.status === 'running' && (<><Separator vertical /><span className="status-run">Running tests</span><Meter value={60} label="Test run" tone="purple" /></>)}
         </span>
         <span className="status-right">
+          {/* Index status (VS Code / Visual Studio background status): a click rescans; details in the tooltip. */}
+          <Tip content={`Rescan repository · ${index?.stats?.steps ?? 0} steps · ${index?.stats?.selectors ?? 0} selectors · ${index?.stats?.dictionaries ?? 0} fields${index?.scannedAt ? ` · scanned ${timeAgo(index.scannedAt, now)}` : ''}`} side="top">
+            <button className="status-item index-status-item" aria-label="Rescan repository" disabled={!index} onClick={() => work(async () => { setIndex(await api('/scan', {})); setNotice('Repository index refreshed.'); })}>
+              {busy ? <RefreshCw size={12} className="spin" /> : <ShieldCheck size={12} />}
+              {index ? 'Repository indexed' : 'Indexing…'}
+            </button>
+          </Tip>
           <StatusBarItems repository={config?.repositoryRoot} onGit={showGit} onErrors={() => { setTab('Features'); if (view !== 'code' && view !== 'editor') setView('editor'); setBuildOpen(true); try { localStorage.setItem('tas:buildTab', '"errors"'); } catch { /* storage blocked */ } }} />
           <button onClick={() => setModal('diagnostics')}>
             <TriangleAlert size={12} />

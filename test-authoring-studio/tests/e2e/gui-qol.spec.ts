@@ -137,3 +137,20 @@ test('G4 Activity bar badges: pending Git changes, failed tests', async ({ page,
     await fs.rm(path.dirname(root), { recursive: true, force: true, maxRetries: 5 }).catch(() => {});
   }
 });
+
+test('G5 Index status in the status bar; the Explorer gets the full height', async ({ page }) => {
+  await open(page);
+  const status = page.locator('footer.status-bar');
+  const item = status.getByRole('button', { name: 'Rescan repository' });
+  await expect(item).toHaveText('Repository indexed');
+  await item.hover();
+  await expect(page.getByRole('tooltip')).toContainText(/Rescan repository · \d+ steps · \d+ selectors · \d+ fields/);
+  // The Explorer runs down to the status bar (no index card at its foot).
+  const sidebar = (await page.locator('#feature-sidebar').boundingBox())!;
+  const bar = (await status.boundingBox())!;
+  expect(Math.abs(sidebar.y + sidebar.height - bar.y)).toBeLessThan(3);
+  await item.click();
+  await expect(page.getByText('Repository index refreshed.')).toBeVisible();
+  // The full folder path on the workspace name.
+  await expect(status.locator('span[title]').filter({ hasText: /^fixtures$/ })).toHaveAttribute('title', /fixtures$/);
+});
