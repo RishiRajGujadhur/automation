@@ -7,6 +7,7 @@ import './customs/index.js';
 import { editsForMove } from './customs/modules.js';
 import { importCycles } from './analysis.js';
 import { hookProblemsLoaded } from './hooksLint.js';
+import { contextProviders, propTypeProblems } from './react.js';
 import { declarationSource, toOriginal, toGenerated } from './navigation.js';
 
 /**
@@ -32,7 +33,9 @@ export function webRoutes(app: Express, root: () => string) {
     }));
     // React Hooks rules (F46–F48): missing dependencies, hooks called conditionally or outside components.
     const hooks = (await hookProblemsLoaded(b.file, b.source)).map((h) => ({ from: h.from, to: h.to, code: 0, severity: h.severity, message: h.message, rule: h.rule, unnecessary: false, deprecated: false }));
-    res.json([...out, ...hooks]);
+    // PropTypes of JavaScript components (F50).
+    const props = propTypeProblems(p, b.file, b.source).map((x) => ({ ...x, code: 0, unnecessary: false, deprecated: false }));
+    res.json([...out, ...hooks, ...props]);
   });
 
   app.post('/api/web/complete', async (req, res) => {
@@ -130,6 +133,11 @@ export function webRoutes(app: Express, root: () => string) {
     const generated = toGenerated(p, b.file, b.line, b.column);
     if (generated) { res.json({ direction: 'generated', ...generated }); return; }
     throw new Error(`No source map links ${b.file} to another file.`);
+  });
+  /** F49: the JSX that provides the context at the caret. */
+  app.post('/api/web/contextProviders', async (req, res) => {
+    const b = at.parse(req.body);
+    res.json(contextProviders(await script(b.file), b.file, b.source, b.pos));
   });
   app.post('/api/web/format', async (req, res) => {
     const b = z.object({ file, source: z.string().max(5_000_000) }).parse(req.body);

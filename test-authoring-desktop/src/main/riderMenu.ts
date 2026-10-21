@@ -174,6 +174,7 @@ const ROWS: Record<'edit' | 'view' | 'navigate' | 'code' | 'tools' | 'help', Row
     ['Semantic Search…', 'semantic-search'],
     ['Go to Decompiled Source', 'go-to-decompiled'],
     ['Go to Source-Mapped Location', 'source-map-jump'],
+    ['Go to Context Provider', 'context-providers'],
     null,
     ['Go to Matching Brace', 'goto-brace', 'CmdOrCtrl+]'],
     ['Select to Matching Brace', 'select-brace', 'CmdOrCtrl+Shift+]'],

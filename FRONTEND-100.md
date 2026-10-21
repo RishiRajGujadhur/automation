@@ -59,8 +59,8 @@ Status: `[x]` done, `[ ]` to do. Before this list, JS / TS / HTML / CSS files op
 - [x] F46 Detect missing React Hook dependencies
 - [x] F47 Apply React Hook dependency fixes
 - [x] F48 Detect invalid Hook usage
-- [ ] F49 Navigate React context providers
-- [ ] F50 React component prop type validation
+- [x] F49 Navigate React context providers
+- [x] F50 React component prop type validation
 
 ## HTML
 - [ ] F51 HTML tag name completion
@@ -127,3 +127,4 @@ Status: `[x]` done, `[ ]` to do. Before this list, JS / TS / HTML / CSS files op
 - 2026-10-21: F32, F36, F37, F38, F39, F40, F41, F42. From the TypeScript service and CodeMirror's JSX mode: Extract to constant on JSX, F12 to the component, Shift+F12 usages, F2 on a tag (opening and closing tags, declaration) or an attribute (props type and usages), tags closed as you type, components auto-imported from completion, Add missing attributes.
 - 2026-10-21: F31, F33, F34, F35, F43, F44, F45. Studio actions on the TypeScript tree (customs/react.ts): JSX to a component with the locals it uses as typed props; class components to function components (state to useState, mount / unmount to useEffect, this.* rewritten, hooks imported); props generated from the attributes of every usage; props types moved to an interface NameProps (types from usages and defaults); style={{…}} to a class in the component's stylesheet (created and imported when missing, CSS module aware, a diff to approve); inline JSX handlers to handleX constants; inline callbacks to named functions (renderItem for JSX maps).
 - 2026-10-21: F46, F47, F48. eslint-plugin-react-hooks (exhaustive-deps, rules-of-hooks) run in-process with ESLint 9's Linter and Babel 7's parser (server/web/hooksLint.ts), loaded on first use: warnings and errors in the editor, and Update the dependencies array as a Quick Action. Babel 8's parser was not usable: it parses in a worker thread and blocks the API waiting for it.
+- 2026-10-21: F49, F50. Navigate ▸ Go to Context Provider (web and desktop): from a context or a useContext call to every <Ctx.Provider> and React 19 <Ctx value> (server/web/react.ts). JSX using a component with propTypes is checked for missing required props, undeclared props and literals of the wrong kind (TSX props are checked by TypeScript). Fixed on the way: .jsx, .mts, .cts, .sass, .less, .vue, .svelte, .xhtml and .map files could not be opened (Unsupported source file).

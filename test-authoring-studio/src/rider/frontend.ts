@@ -10,6 +10,14 @@ const list = (title: string, items: Item[]) => window.dispatchEvent(new CustomEv
 export function frontendCommands(h: MoreHelpers): RiderCommand[] {
   const A = { menu: 'Code' as const, submenu: 'Analyze' };
   return [
+    // F49 Navigate React context providers.
+    { id: 'context-providers', label: 'Go to Context Provider', menu: 'Navigate', run: h.inEditor((v, file) => {
+      void api<{ name: string; providers: { file: string; line: number; column: number; text: string }[] }>('/web/contextProviders', { file, source: v.state.doc.toString(), pos: v.state.selection.main.head }).then((r) => {
+        if (!r.providers.length) { h.notice(`No provider of ${r.name} found.`); return; }
+        if (r.providers.length === 1) { const p = r.providers[0]; window.dispatchEvent(new CustomEvent('tas:open-location', { detail: p })); return; }
+        list(`Providers of ${r.name}: ${r.providers.length}`, r.providers.map((p) => ({ file: p.file, line: p.line, label: p.text, detail: `${p.file}:${p.line}` })));
+      }, (e) => h.notice((e as Error).message));
+    }) },
     // F25 Navigate source maps: generated code ⇄ original source, at the caret.
     { id: 'source-map-jump', label: 'Go to Source-Mapped Location', menu: 'Navigate', run: h.inEditor((v, file) => {
       const r = v.state.selection.main;

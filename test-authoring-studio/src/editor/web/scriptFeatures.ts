@@ -21,7 +21,7 @@ export const scriptLinter = (file: string) => linter(async (view) => {
       from: d.from, to: Math.min(doc.length, Math.max(d.from + 1, d.to)),
       severity: d.severity === 'info' && d.unnecessary ? 'hint' : d.severity,
       ...(d.unnecessary ? { markClass: 'cm-unnecessary' } : d.deprecated ? { markClass: 'cm-deprecated' } : {}),
-      source: d.rule ? 'React Hooks' : 'TypeScript', message: d.rule ? `${d.message} (${d.rule})` : `TS${d.code}: ${d.message}`,
+      source: d.rule?.startsWith('react-hooks') ? 'React Hooks' : d.rule ? 'React' : 'TypeScript', message: d.rule ? `${d.message} (${d.rule})` : `TS${d.code}: ${d.message}`,
     }));
   } catch { return []; }
 }, { delay: 500 });

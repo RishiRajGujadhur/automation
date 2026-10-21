@@ -435,3 +435,29 @@ test('F48 Detect invalid Hook usage', async ({ page }) => {
   await errors.nth(1).hover();
   await expect(page.locator('.cm-tooltip-lint')).toContainText('React Hook "useState" is called in function "helper"');
 });
+
+test('F49 Navigate React context providers', async ({ page }) => {
+  await withReact();
+  await fs.writeFile(path.join(temp, 'src/theme.ts'), 'import { createContext } from "react";\nexport const ThemeContext = createContext("light");\n');
+  await fs.writeFile(path.join(temp, 'src/Root.tsx'), 'import { ThemeContext } from "./theme";\nexport const Root = ({ children }: { children: React.ReactNode }) => (\n  <ThemeContext.Provider value="dark">{children}</ThemeContext.Provider>\n);\n');
+  await fs.writeFile(path.join(temp, 'src/Island.tsx'), 'import { ThemeContext } from "./theme";\nexport const Island = () => <ThemeContext value="light"><p /></ThemeContext>;\n');
+  await open(page, 'src/Label.tsx', 'import { useContext } from "react";\nimport { ThemeContext } from "./theme";\nexport const Label = () => <b>{useContext(ThemeContext)}</b>;\n');
+  await caretAt(page, 'useContext(Theme', 3);
+  await page.getByRole('button', { name: 'Navigate menu' }).click();
+  await page.getByRole('menuitem', { name: /^Go to Context Provider/ }).click();
+  const d = page.getByRole('dialog', { name: /Providers of ThemeContext: 2/ });
+  await expect(d).toBeVisible({ timeout: 30_000 });
+  await expect(d).toContainText('<ThemeContext.Provider value="dark">');
+  await expect(d).toContainText('<ThemeContext value="light">');
+});
+test('F50 React component prop type validation', async ({ page }) => {
+  await fs.writeFile(path.join(temp, 'src/Avatar.jsx'), 'import PropTypes from "prop-types";\nexport function Avatar({ name, size }) {\n  return <img alt={name} width={size} />;\n}\nAvatar.propTypes = {\n  name: PropTypes.string.isRequired,\n  size: PropTypes.number,\n};\n');
+  const editor = await open(page, 'src/Profile.jsx', 'import { Avatar } from "./Avatar";\nexport const Profile = () => <div><Avatar size="large" round /></div>;\n');
+  const warnings = editor.locator('.cm-lintRange-warning');
+  await expect(warnings).toHaveCount(3, { timeout: 30_000 });
+  const messages: string[] = [];
+  for (let i = 0; i < 3; i++) { await page.mouse.move(0, 0); await warnings.nth(i).hover(); messages.push((await page.locator('.cm-tooltip-lint').innerText()).trim()); }
+  expect(messages.join('\n')).toContain("Avatar requires the prop 'name' (PropTypes.string.isRequired).");
+  expect(messages.join('\n')).toContain("Avatar: 'size' should be a number (PropTypes.number), not a string.");
+  expect(messages.join('\n')).toContain("Avatar does not declare the prop 'round' in its propTypes.");
+});

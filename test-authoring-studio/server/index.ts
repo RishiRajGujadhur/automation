@@ -586,7 +586,7 @@ app.get('/api/selectors',async(req,res)=>{await ensure();const {q,offset,limit}=
 app.get('/api/backgrounds',async(req,res)=>{await ensure();const {q,offset,limit}=paging.parse(req.query);res.json(await search!.query('backgrounds',q,offset,limit));});
 // ---- Code editing (C#, feature, XML) --------------------------------------------------------------
 // Text files the editors can save (project files, JSON, Markdown, .http requests, scripts, …).
-const editable = /\.(cs|feature|xml|csproj|props|targets|config|runsettings|resx|json|md|markdown|txt|http|rest|ya?ml|editorconfig|sln|slnx|ps1|psm1|sh|cmd|bat|js|mjs|cjs|ts|tsx|css|scss|html?|gitignore|gitattributes|env|ini|csv|sql|code-search)$/i;
+const editable = /\.(cs|feature|xml|csproj|props|targets|config|runsettings|resx|json|md|markdown|txt|http|rest|ya?ml|editorconfig|sln|slnx|ps1|psm1|sh|cmd|bat|js|jsx|mjs|cjs|ts|tsx|mts|cts|css|scss|sass|less|html?|xhtml|vue|svelte|map|gitignore|gitattributes|env|ini|csv|sql|code-search)$/i;
 // Roslyn syntax diagnostics + step-binding checks for one C# buffer (scanner --diagnostics).
 app.post('/api/csharp/diagnostics', async (req, res) => {
   const { source, path: file } = z.object({ source: z.string().max(1_000_000), path: z.string().max(400).default('') }).parse(req.body);
