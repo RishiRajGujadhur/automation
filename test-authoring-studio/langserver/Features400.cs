@@ -219,4 +219,56 @@ sealed partial class LanguageService
         else line = Math.Max(1, Array.FindIndex(lines, l => System.Text.RegularExpressions.Regex.IsMatch(l, $@"\b(class|struct|interface|enum|record)\s+{System.Text.RegularExpressions.Regex.Escape(type.Name)}\b")) + 1);
         return new { name = type.ToDisplayString(), assembly = Path.GetFileName(path), text = $"// Decompiled from {Path.GetFileName(path)} (ILSpy)\n{text}", line = line + 1 };
     }
+    // ------------------------------------------------------------------ semantic code search (47)
+    /// <summary>
+    /// Symbols of the solution by what they are, not by their text: `kind:method returns:Task attr:Given name:*Login*
+    /// static:false async:true params:1 in:Fixtures.Steps type:string`. Words without a key match the name.
+    /// </summary>
+    async Task<object> SemanticSearch(string query)
+    {
+        var terms = query.Split(' ', StringSplitOptions.RemoveEmptyEntries).Select(t => t.Split(':', 2)).Select(t => t.Length == 2 ? (Key: t[0].ToLowerInvariant(), Value: t[1]) : (Key: "name", Value: t[0])).ToList();
+        System.Text.RegularExpressions.Regex Glob(string g) => new("^" + System.Text.RegularExpressions.Regex.Escape(g).Replace(@"\*", ".*").Replace(@"\?", ".") + "$", System.Text.RegularExpressions.RegexOptions.IgnoreCase);
+        bool Has(string key) => terms.Any(t => t.Key == key);
+        string Kind(ISymbol s) => s switch { INamedTypeSymbol t => t.TypeKind.ToString().ToLowerInvariant(), IMethodSymbol { MethodKind: MethodKind.Constructor } => "constructor", IMethodSymbol => "method", IPropertySymbol => "property", IFieldSymbol => "field", IEventSymbol => "event", _ => s.Kind.ToString().ToLowerInvariant() };
+        ITypeSymbol? TypeOf(ISymbol s) => s switch { IMethodSymbol m => m.ReturnType, IPropertySymbol p => p.Type, IFieldSymbol f => f.Type, IEventSymbol e => e.Type, _ => null };
+        bool TypeMatches(ITypeSymbol? t, string want)
+        {
+            if (t == null) return false;
+            var names = new[] { t.ToDisplayString(SymbolDisplayFormat.MinimallyQualifiedFormat), t.Name, t.ToDisplayString() };
+            var g = Glob(want);
+            return names.Any(n => g.IsMatch(n)) || (t is INamedTypeSymbol nt && nt.IsGenericType && g.IsMatch(nt.Name));
+        }
+        bool Match(ISymbol s) => terms.All(t => t.Key switch
+        {
+            "name" => Glob(t.Value.Contains('*') || t.Value.Contains('?') ? t.Value : $"*{t.Value}*").IsMatch(s.Name),
+            "kind" => Kind(s).StartsWith(t.Value.ToLowerInvariant()) || (t.Value.ToLowerInvariant() is "type" && s is INamedTypeSymbol),
+            "returns" or "type" => TypeMatches(TypeOf(s), t.Value),
+            "attr" or "attribute" => s.GetAttributes().Any(a => a.AttributeClass is { } c && (Glob(t.Value).IsMatch(c.Name) || Glob(t.Value + "Attribute").IsMatch(c.Name))),
+            "static" => s.IsStatic == (t.Value.ToLowerInvariant() is "true" or "yes"),
+            "async" => s is IMethodSymbol m && m.IsAsync == (t.Value.ToLowerInvariant() is "true" or "yes"),
+            "abstract" => s.IsAbstract == (t.Value.ToLowerInvariant() is "true" or "yes"),
+            "params" => s is IMethodSymbol pm && int.TryParse(t.Value, out var n) && pm.Parameters.Length == n,
+            "param" => s is IMethodSymbol pp && pp.Parameters.Any(p => TypeMatches(p.Type, t.Value)),
+            "in" => Glob(t.Value.Contains('*') ? t.Value : $"{t.Value}*").IsMatch(s.ContainingNamespace?.ToDisplayString() ?? "") || (s.ContainingType != null && Glob(t.Value).IsMatch(s.ContainingType.Name)),
+            "access" => s.DeclaredAccessibility.ToString().StartsWith(t.Value, StringComparison.OrdinalIgnoreCase),
+            "implements" => s is INamedTypeSymbol it && it.AllInterfaces.Any(i => Glob(t.Value).IsMatch(i.Name)),
+            "inherits" or "extends" => s is INamedTypeSymbol bt && Bases(bt).Any(b => Glob(t.Value).IsMatch(b.Name)),
+            _ => true,
+        });
+        static IEnumerable<INamedTypeSymbol> Bases(INamedTypeSymbol t) { for (var b = t.BaseType; b != null; b = b.BaseType) yield return b; }
+        var found = new List<ISymbol>();
+        foreach (var p in workspace!.CurrentSolution.Projects)
+        {
+            var c = await p.GetCompilationAsync();
+            if (c == null) continue;
+            foreach (var s in c.GetSymbolsWithName(_ => true, SymbolFilter.TypeAndMember))
+                if (!s.IsImplicitlyDeclared && s.Locations.Any(InRepo) && s is not IMethodSymbol { MethodKind: MethodKind.PropertyGet or MethodKind.PropertySet or MethodKind.EventAdd or MethodKind.EventRemove } && Match(s)) found.Add(s);
+            if (found.Count > 400) break;
+        }
+        return found.Distinct<ISymbol>(SymbolEqualityComparer.Default).Take(300).Select(s =>
+        {
+            var l = s.Locations.First(InRepo).GetLineSpan();
+            return new { name = s.ToDisplayString(SymbolDisplayFormat.CSharpShortErrorMessageFormat), kind = Kind(s), type = TypeOf(s)?.ToDisplayString(SymbolDisplayFormat.MinimallyQualifiedFormat), file = Rel(l.Path), line = l.StartLinePosition.Line + 1 };
+        }).ToList();
+    }
 }

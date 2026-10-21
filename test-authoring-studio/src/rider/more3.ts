@@ -81,6 +81,7 @@ export function moreCommands3(h: MoreHelpers): RiderCommand[] {
     { id: 'interpolation-to-format', label: 'Convert Interpolation to string.Format', menu: 'Code', submenu: 'C#', run: h.inEditor((v) => interpolationToFormatCmd(v) || h.notice('Put the caret in an interpolated string ($"…").')) },
     { id: 'record-to-class', label: 'Convert Record to Class', menu: 'Code', submenu: 'C#', run: h.inEditor((v) => recordToClassCmd(v) || h.notice('Put the caret on a positional record (record Name(…)).')) },
     { id: 'peek-references', label: 'Peek References', menu: 'Navigate', run: h.inEditor((_v, file) => { if (!file.endsWith('.cs')) { h.notice('Peek References works in C# files.'); return; } window.dispatchEvent(new CustomEvent('tas:peek-references', { detail: file })); }) },
+    { id: 'semantic-search', label: 'Semantic Search…', menu: 'Navigate', run: () => window.dispatchEvent(new Event('tas:semantic-search')) },
     { id: 'next-todo', label: 'Next TODO', menu: 'Navigate', group: true, run: h.inEditor((v) => gotoTodo(tokens(), 1)(v) || h.notice(`No ${tokens().join(' / ')} comments in this file.`)) },
     { id: 'previous-todo', label: 'Previous TODO', menu: 'Navigate', run: h.inEditor((v) => gotoTodo(tokens(), -1)(v) || h.notice(`No ${tokens().join(' / ')} comments in this file.`)) },
     { id: 'previous-conflict', label: 'Previous Merge Conflict', menu: 'Navigate', run: h.inEditor((v) => prevConflict(v) || h.notice('This file has no merge conflicts.')) },

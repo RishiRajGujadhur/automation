@@ -950,3 +950,20 @@ test('57 Peek references', async ({ page }) => {
   await page.keyboard.press('ArrowDown');
   await expect(list.getByRole('option').nth(2)).toHaveAttribute('aria-selected', 'true');
 });
+
+test('47 Semantic code search', async ({ page }) => {
+  needsLang();
+  await open(page, CS);
+  await menuItem(page, 'Navigate', /^Semantic Search/);
+  const s = page.getByLabel('Semantic Search');
+  await s.getByLabel('Semantic query').fill('kind:method returns:Task attr:When');
+  await s.getByLabel('Semantic query').press('Enter');
+  const results = s.getByLabel('Semantic search results');
+  await expect(results).toContainText('SearchSteps.Search(string)', { timeout: 60_000 });
+  await expect(results).not.toContainText('AuthSteps.SignIn');
+  await s.getByLabel('Semantic query').fill('kind:property type:ILocator');
+  await s.getByLabel('Semantic query').press('Enter');
+  await expect(results).toContainText('SearchPage.SearchBox');
+  await results.getByRole('button', { name: 'SearchPage.SearchBox' }).click();
+  await expect(page.locator('.editor-tab-label[aria-current="true"]')).toHaveAttribute('title', 'Steps/SearchSteps.cs');
+});

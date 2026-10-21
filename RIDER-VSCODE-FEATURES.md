@@ -63,7 +63,7 @@ Legend: `[x]` done · `[ ]` to do.
 - [x] 44. Navigate to related files — Go to Related Files, Go to Test / Test Subject
 - [x] 45. File structure popup — Ctrl+Alt+F12
 - [x] 46. Breadcrumb navigation — breadcrumbs / navigation bar
-- [ ] 47. Semantic code search
+- [x] 47. Semantic code search — Navigate ▸ Semantic Search… (kind:, returns:, type:, attr:, param:, params:, static:, async:, in:, implements:, inherits:) (2026-10-21)
 - [x] 48. Scoped search — Find in Folder, Search Only in Open Editors, Explorer: Scope to This
 - [x] 49. Structural search — Search with Pattern
 - [x] 50. Search Everywhere — Shift twice
@@ -417,3 +417,4 @@ Legend: `[x]` done · `[ ]` to do.
 - 2026-10-21 120: Structural search templates: a built-in catalogue (null checks, Any(), NUnit Assert.That, Task.Result…) and saved ones.
 - 2026-10-21 52: Bookmarks grouped in named lists; new bookmarks go to the active list; a deleted list's bookmarks return to Bookmarks.
 - 2026-10-21 57: References of the symbol at the caret in an inline peek panel: a list beside a preview of the selected one.
+- 2026-10-21 47: Symbols of the solution found by their kind, types, attributes, modifiers, parameters, namespace and base types (the language service's symbol model).

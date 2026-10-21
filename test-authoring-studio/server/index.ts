@@ -1018,6 +1018,11 @@ app.post('/api/search/replace', async (req, res) => {
   if (changed.length) { lang.notify(config.repositoryRoot, changed.map((c) => c.file)); rescanSoon(500); }
   res.json({ changed });
 });
+// Semantic Search: symbols by kind, type, attributes, modifiers… (the language service's semanticSearch).
+app.get('/api/csharp/semantic-search', async (req, res) => {
+  const q = z.string().min(1).max(400).parse(req.query.q);
+  res.json(await lang.request(config.repositoryRoot, { op: 'semanticSearch', query: q }, 60_000));
+});
 app.get('/api/symbols', async (req, res) => {
   const q = z.string().min(1).max(200).parse(req.query.q);
   res.json(await lang.request(config.repositoryRoot, { op: 'symbols', query: q }, 30_000).catch(() => []));

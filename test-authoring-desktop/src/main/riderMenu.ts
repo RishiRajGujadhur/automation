@@ -171,6 +171,7 @@ const ROWS: Record<'edit' | 'view' | 'navigate' | 'code' | 'tools' | 'help', Row
     ['Call Hierarchy', 'call-hierarchy', 'CmdOrCtrl+Alt+H'],
     ['Method Hierarchy', 'method-hierarchy'],
     ['Peek References', 'peek-references'],
+    ['Semantic Search…', 'semantic-search'],
     ['Go to Decompiled Source', 'go-to-decompiled'],
     null,
     ['Go to Matching Brace', 'goto-brace', 'CmdOrCtrl+]'],

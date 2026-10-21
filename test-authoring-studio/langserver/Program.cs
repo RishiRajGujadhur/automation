@@ -71,6 +71,7 @@ sealed partial class LanguageService
         if (op == "update") { foreach (var f in req["files"]!.AsArray()) Refresh((string)f!); return true; }
         if (op == "tests") return await DiscoverTests();
         if (op == "symbols") return await Symbols((string)req["query"]!);
+        if (op == "semanticSearch") return await SemanticSearch((string)req["query"]!);
         if (op == "solutionDiagnostics") return await SolutionDiagnostics();
         var doc = Document((string)req["file"]!, (string?)req["source"]);
         int Pos(SourceText t) => t.Lines[Math.Clamp((int)req["line"]! - 1, 0, t.Lines.Count - 1)].Start + (int)req["column"]! - 1;
