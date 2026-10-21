@@ -79,7 +79,7 @@ import StepCatalogue from './StepCatalogue';
 import SearchPalette from './SearchPalette';
 import QuickInput from './quickinput/QuickInput';
 import { openQuickInput } from './quickinput/store';
-import { openCommandPalette, setPaletteCommands, type PaletteEntry } from './quickinput/providers';
+import { openCommandPalette, openQuickOpen, setPaletteCommands, type PaletteEntry } from './quickinput/providers';
 import { setOpenViews } from './quickinput/help';
 import { CLOSE_EDITOR_EVENT } from './quickinput/editors';
 import { SelectorCatalogue, BackgroundCatalogue } from './Catalogues';
@@ -410,7 +410,7 @@ export default function App() {
     if (e.shiftKey && !e.altKey && e.key.toLowerCase() === 'h') { e.preventDefault(); showSearch(true); return; }
     if (!e.shiftKey && !e.altKey && e.key.toLowerCase() === 't') { e.preventDefault(); setModal('goto'); return; }
     // Quick Open (VS Code, W1).
-    if (!e.shiftKey && !e.altKey && e.key.toLowerCase() === 'p') { e.preventDefault(); openQuickInput(''); return; }
+    if (!e.shiftKey && !e.altKey && e.key.toLowerCase() === 'p') { e.preventDefault(); openQuickOpen(); return; }
     // Open View (VS Code's Ctrl+Q, W8).
     if (!e.shiftKey && !e.altKey && e.key.toLowerCase() === 'q') { e.preventDefault(); openQuickInput('view '); return; }
     if (e.altKey && !e.shiftKey && e.key.toLowerCase() === 'o') { e.preventDefault(); openOutput(); return; }

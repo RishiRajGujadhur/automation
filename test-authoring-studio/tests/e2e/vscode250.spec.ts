@@ -299,3 +299,25 @@ test('W13 workbench.quickOpen.closeOnFocusLost', async ({ page }) => {
   await page.keyboard.press('Escape');
   await expect(quick(page)).toBeHidden();
 });
+
+test('W14 workbench.quickOpen.preserveInput and workbench.commandPalette.preserveInput', async ({ page }) => {
+  await start(page, { 'workbench.quickOpen.preserveInput': true });
+  await page.keyboard.press('Control+p');
+  await page.keyboard.type('auth');
+  await page.keyboard.press('Escape');
+  await page.keyboard.press('Control+p');
+  await expect(quickBox(page)).toHaveValue('auth');
+  // The text is selected: typing replaces it.
+  await page.keyboard.type('se');
+  await expect(quickBox(page)).toHaveValue('se');
+  await page.keyboard.press('Escape');
+  // Off (the default): Quick Open starts empty.
+  await page.evaluate(() => localStorage.setItem('tas:settings', '{}'));
+  await page.reload();
+  await expect(page.getByText('Repository indexed')).toBeVisible();
+  await page.keyboard.press('Control+p');
+  await page.keyboard.type('auth');
+  await page.keyboard.press('Escape');
+  await page.keyboard.press('Control+p');
+  await expect(quickBox(page)).toHaveValue('');
+});

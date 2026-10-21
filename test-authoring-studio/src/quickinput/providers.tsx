@@ -4,6 +4,7 @@ import { fileType } from '../files/fileTypes';
 import { featureOn } from '../features';
 import { matchesWords, scoreFile } from './fuzzy';
 import { readUsage } from '../rider/commands';
+import { quickOpen } from '../vscode/quickOpen';
 import { closeQuickInput, lastQuery, openQuickInput, refreshQuickInput, registerQuickAccess, type QuickItem } from './store';
 
 /** Opens a file (and line) in the editor, as Go to All does. */
@@ -95,8 +96,10 @@ registerQuickAccess({
   },
 });
 
-/** Ctrl+Shift+P: the palette with its last query selected (QOL-50 "palette-last"), else just `>`. */
-export const openCommandPalette = () => openQuickInput(featureOn('palette-last') ? lastQuery('>') ?? '>' : '>', true);
+/** Ctrl+Shift+P: the palette with its last query selected (workbench.commandPalette.preserveInput, W14, or QOL-50 "palette-last"), else just `>`. */
+export const openCommandPalette = () => openQuickInput(quickOpen.palettePreserveInput() || featureOn('palette-last') ? lastQuery('>') ?? '>' : '>', true);
+/** Ctrl+P: Quick Open, with the last query selected when workbench.quickOpen.preserveInput is on (W14). */
+export const openQuickOpen = () => openQuickInput(quickOpen.preserveInput() ? lastQuery('') ?? '' : '', true);
 import './symbols';
 import './gotoLine';
 import './workspaceSymbols';
