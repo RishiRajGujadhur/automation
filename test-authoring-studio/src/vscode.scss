@@ -84,7 +84,8 @@
     flex: 1;
     min-height: 0;
     display: flex;
-    overflow: hidden;
+    // clip, not hidden: a focused element's scrollIntoView cannot scroll the workbench sideways (W43 found it).
+    overflow: clip;
   }
   .sidebar {
     height: 100%;
@@ -775,4 +776,40 @@
   min-height: 0;
   &:empty { display: none; }
   > .dock { border-top: 1px solid var(--border); }
+}
+
+// workbench.sideBar.location: right (W43): editors first, then the resizer, the side bar and its activity bar;
+// the secondary side bar moves to the left.
+html[data-side-bar='right'] .app-body {
+  > .main-content { order: 2; }
+  > .sidebar-resizer, > [role='separator'] { order: 3; }
+  > #feature-sidebar { order: 4; border-left: 1px solid var(--border); border-right: 0; }
+  > .activity-bar { order: 5; border-left: 1px solid var(--border); border-right: 0; }
+  > .secondary-sidebar { order: 1; border-right: 1px solid var(--border); border-left: 0; }
+}
+
+// The workbench never scrolls sideways: a title bar too full for the window (the editor's view switch, layout
+// controls) is clipped instead of widening the page (found with W43).
+:root[data-layout='vscode'],
+:root[data-layout='vscode'] body {
+  overflow-x: clip;
+}
+:root[data-layout='vscode'] .app-header {
+  min-width: 0;
+  overflow-x: clip;
+}
+// Narrower windows: the editor's view switch and Guide me show their icons only (names stay for screen readers).
+@media (max-width: 1800px) {
+  :root[data-layout='vscode'] .app-header {
+    .segmented .segmented-item { font-size: 0; gap: 0; padding-inline: 7px; }
+    .guide-button { font-size: 0; gap: 0; padding-inline: 7px; }
+  }
+}
+// Below 1700 px: the product name shortens to "TA" (VS Code shows only its icon there) and the page's section crumb goes.
+@media (max-width: 1700px) {
+  :root[data-layout='vscode'] .app-header {
+    .brand-word { font-size: 0; }
+    .brand-word .brand-accent::before { content: 'TA'; font-size: 15px; }
+    .crumb-section { display: none; }
+  }
 }

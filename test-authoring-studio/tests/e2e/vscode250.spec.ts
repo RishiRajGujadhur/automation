@@ -895,7 +895,8 @@ test('W41 Customize Layout: visibility toggles that keep the picker open, quick 
   await expect(page.locator('footer.status-bar')).toBeHidden();
   await row('Primary Side Bar').click();
   await expect(row('Primary Side Bar').locator('.codicon-blank')).toBeVisible();
-  await row('Center').click();
+  // Quick Input Position ▸ Center (Panel Alignment has a Center too, above it).
+  await rows(page).filter({ hasText: /^Center$/ }).last().click();
   await expect.poll(async () => (await quick(page).boundingBox())!.y).toBeGreaterThan(100);
   await rows(page).filter({ hasText: 'Reset to Defaults' }).click();
   await expect(page.locator('footer.status-bar')).toBeVisible();
@@ -930,4 +931,26 @@ test('W42 workbench.panel.alignment: center (under the editors) or justify (unde
   await open(page, 'Steps/AuthSteps.cs');
   await showProblems();
   await expect.poll(async () => (await panel.boundingBox())!.x).toBeGreaterThan(side.x + side.width - 2);
+});
+
+test('W43 workbench.sideBar.location: the primary side bar and activity bar on the right; Customize Layout switches it', async ({ page }) => {
+  await start(page);
+  await open(page, 'Steps/AuthSteps.cs');
+  const side = page.locator('#feature-sidebar');
+  const editor = page.locator('main.main-content');
+  expect((await side.boundingBox())!.x).toBeLessThan((await editor.boundingBox())!.x);
+  await page.getByRole('button', { name: 'Customize Layout…' }).click();
+  await expect(quick(page).locator('.quick-input-separator')).toContainText(['Primary Side Bar Position', 'Panel Alignment']);
+  await rows(page).filter({ hasText: /^Right/ }).first().click();
+  await page.keyboard.press('Escape');
+  await expect.poll(async () => (await side.boundingBox())!.x).toBeGreaterThan((await editor.boundingBox())!.x);
+  await expect.poll(async () => { const bar = (await page.locator('.activity-bar').boundingBox())!; return bar.x + bar.width; }).toBeGreaterThan(page.viewportSize()!.width - 30);
+  // Dragging the resizer to the left widens a right-hand side bar.
+  const w = (await side.boundingBox())!.width;
+  const r = (await page.locator('.sidebar-resizer').boundingBox())!;
+  await page.mouse.move(r.x + r.width / 2, r.y + 100);
+  await page.mouse.down();
+  await page.mouse.move(r.x - 60, r.y + 100, { steps: 5 });
+  await page.mouse.up();
+  await expect.poll(async () => (await side.boundingBox())!.width).toBeGreaterThan(w + 30);
 });

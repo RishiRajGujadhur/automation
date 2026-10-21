@@ -2,6 +2,7 @@ import { runRider, registerRider } from '../rider/commands';
 import { setViewOptions, viewOptions } from '../editor/viewOptions';
 import { resetSetting, setSetting } from '../vscode/settings';
 import { quickOpen } from '../vscode/quickOpen';
+import { panelAlignment, sideBarLocation } from '../vscode/workbenchLayout';
 import { layoutState } from '../rider/layoutModes';
 import { openQuickPick, type QuickItem } from './store';
 
@@ -17,7 +18,7 @@ export const addLayoutSection = (s: LayoutSection, at = sections.length) => { se
 /** Settings the sections own, reset by Reset to Defaults. */
 const owned: string[] = [];
 export const ownLayoutSetting = (key: string) => { owned.push(key); };
-export const resetLayoutSettings = () => owned.forEach((k) => resetSetting(k));
+export const resetLayoutSettings = () => ['workbench.sideBar.location', 'workbench.panel.alignment', ...owned].forEach((k) => resetSetting(k));
 
 const check = (on: boolean) => <span className={`codicon codicon-${on ? 'check' : 'blank'}`} aria-hidden="true" />;
 
@@ -34,6 +35,9 @@ export function customizeLayout(activeId?: string) {
       { id: 'panel', label: 'Panel', on: p.panel, run: p.togglePanel },
       { id: 'status', label: 'Status Bar', on: !v.hideStatusBar, run: () => setViewOptions({ hideStatusBar: !viewOptions().hideStatusBar }) },
     ] },
+    // W43 / W42: where the primary side bar goes, how wide a bottom panel is.
+    { title: 'Primary Side Bar Position', rows: (['left', 'right'] as const).map((x) => ({ id: `side-${x}`, label: x === 'left' ? 'Left' : 'Right', on: sideBarLocation() === x, run: () => setSetting('workbench.sideBar.location', x) })) },
+    { title: 'Panel Alignment', rows: (['left', 'right', 'center', 'justify'] as const).map((x) => ({ id: `align-${x}`, label: x[0].toUpperCase() + x.slice(1), on: panelAlignment() === x, run: () => setSetting('workbench.panel.alignment', x) })) },
     ...sections.map((s) => ({ title: s.title, rows: s.items() })),
     { title: 'Quick Input Position', rows: [
       { id: 'qi-top', label: 'Top', on: quickOpen.position() === 'top', run: () => resetSetting('workbench.quickInput.position') },

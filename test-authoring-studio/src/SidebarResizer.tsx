@@ -1,3 +1,4 @@
+import { sideBarLocation } from './vscode/workbenchLayout';
 import { useRef, useState } from 'react';
 
 export const SIDEBAR_MIN = 180;
@@ -40,7 +41,7 @@ export default function SidebarResizer({ width, onWidth, onCollapse, label = 'Re
       }}
       onPointerMove={(e) => {
         if (!start.current) return;
-        const next = start.current.w + (e.clientX - start.current.x);
+        const next = start.current.w + (e.clientX - start.current.x) * (sideBarLocation() === 'right' ? -1 : 1);
         if (next < COLLAPSE_AT && onCollapse) {
           end();
           onCollapse();
@@ -54,8 +55,8 @@ export default function SidebarResizer({ width, onWidth, onCollapse, label = 'Re
       onDoubleClick={() => onWidth(SIDEBAR_DEFAULT)}
       onKeyDown={(e) => {
         const step = e.shiftKey ? 48 : 16;
-        if (e.key === 'ArrowLeft') { e.preventDefault(); onWidth(clamp(width - step)); }
-        if (e.key === 'ArrowRight') { e.preventDefault(); onWidth(clamp(width + step)); }
+        if (e.key === 'ArrowLeft') { e.preventDefault(); onWidth(clamp(width - step * (sideBarLocation() === 'right' ? -1 : 1))); }
+        if (e.key === 'ArrowRight') { e.preventDefault(); onWidth(clamp(width + step * (sideBarLocation() === 'right' ? -1 : 1))); }
         if (e.key === 'Home') { e.preventDefault(); onWidth(SIDEBAR_MIN); }
         if (e.key === 'End') { e.preventDefault(); onWidth(SIDEBAR_MAX); }
         if (e.key === 'Enter') { e.preventDefault(); onWidth(SIDEBAR_DEFAULT); }
