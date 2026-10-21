@@ -146,7 +146,7 @@ Legend: `[x]` done · `[ ]` to do.
 - [x] 121. Dependency cycle detection — Code ▸ Analyze ▸ Find Dependency Cycles (namespaces with the closing references, project references) (2026-10-21)
 - [x] 122. Layer dependency rules — Code ▸ Analyze ▸ Check Layer Rules (layers.json: layers by namespace, forbidden dependencies) (2026-10-21)
 - [x] 123. Namespace consistency inspections — IDE0130: namespace does not match the folder (root namespace + folder from the project), fix in Quick Actions (2026-10-21)
-- [ ] 124. API compatibility inspections
+- [x] 124. API compatibility inspections — Public API window: removed and changed members flagged as breaking changes (2026-10-21)
 - [x] 125. Public API change tracking — Code ▸ Analyze ▸ Public API… (PublicAPI.Shipped.txt baseline per project, Save / Update Baseline) (2026-10-21)
 
 ## Testing
@@ -422,3 +422,4 @@ Legend: `[x]` done · `[ ]` to do.
 - 2026-10-21 121: Namespace dependency cycles (Tarjan components of the type-reference graph) and project reference cycles.
 - 2026-10-21 122: Layer rules from layers.json (a template is offered the first time) and every reference that breaks them.
 - 2026-10-21 125: Each project public API listed against its baseline file; added members are shown.
+- 2026-10-21 124: API compatibility: members removed or whose signature changed since the baseline are breaking changes.
