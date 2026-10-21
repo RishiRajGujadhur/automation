@@ -1,6 +1,6 @@
+import { openQuickInput } from '../quickinput/store';
 import { EditorSelection, Prec, type ChangeSpec, type Extension } from '@codemirror/state';
 import { EditorView, keymap } from '@codemirror/view';
-import { gotoLine } from '@codemirror/search';
 
 /** Lines touched by the selection, each once. */
 function selectedLines(view: EditorView) {
@@ -58,7 +58,8 @@ export function vsKeys(commentToken: string): Extension {
     { key: 'Mod-k Mod-u', preventDefault: true, run: comment(commentToken, false) },
     { key: 'Mod-Shift-d', preventDefault: true, run: duplicate },
     { key: 'Mod-Shift-l', preventDefault: true, run: deleteLines },
-    { key: 'Mod-g', preventDefault: true, run: gotoLine },
+    // Go to Line in VS Code's Quick Input (VSCODE-250.md W5).
+    { key: 'Mod-g', preventDefault: true, run: () => { openQuickInput(':'); return true; } },
   ]));
 }
 export const commentTokenFor = (file: string) => (/\.(feature|py|ps1|ya?ml|sh|rb)$/i.test(file) ? '#' : /\.(xml|xaml|csproj|config|props|targets|html?)$/i.test(file) ? '' : '//');

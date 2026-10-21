@@ -14,7 +14,7 @@ import { setViewOptions, useViewOptions } from './editor/viewOptions';
 import { runRider } from './rider/commands';
 import { featureOn } from './features';
 import { activeEditor } from './editor/activeEditor';
-import { gotoLine } from '@codemirror/search';
+import { openQuickInput } from './quickinput/store';
 import { featureStats } from './editor/gherkinTools';
 import { wordCount } from './editor/docTools';
 import { forEachDiagnostic, nextDiagnostic } from '@codemirror/lint';
@@ -64,7 +64,7 @@ export default function StatusBarItems({ repository, onGit, onErrors }: { reposi
     <span className="status-items">
       {cursor && (
         <>
-          {(() => { const text = <>Ln {cursor.line}, Col {cursor.column}{cursor.selected ? ` (${cursor.selected} selected${featureOn('selected-lines') && (cursor.lines ?? 0) > 1 ? `, ${cursor.lines} lines` : ''})` : ''}{featureOn('selection-count') && (cursor.ranges ?? 1) > 1 ? ` · ${cursor.ranges} selections` : ''}</>; return featureOn('status-goto-line') ? <button className="status-item" aria-label="Cursor position" title={`${cursor.file}${featureOn('line-total') && cursor.total ? ` · ${cursor.total} lines` : ''} — Go to Line (Ctrl+G)`} onClick={() => { const a = activeEditor(); if (a) { a.view.focus(); gotoLine(a.view); } }}>{text}</button> : <span className="status-item" aria-label="Cursor position" title={`${cursor.file}${featureOn('line-total') && cursor.total ? ` · ${cursor.total} lines` : ''}`}>{text}</span>; })()}
+          {(() => { const text = <>Ln {cursor.line}, Col {cursor.column}{cursor.selected ? ` (${cursor.selected} selected${featureOn('selected-lines') && (cursor.lines ?? 0) > 1 ? `, ${cursor.lines} lines` : ''})` : ''}{featureOn('selection-count') && (cursor.ranges ?? 1) > 1 ? ` · ${cursor.ranges} selections` : ''}</>; return featureOn('status-goto-line') ? <button className="status-item" aria-label="Cursor position" title={`${cursor.file}${featureOn('line-total') && cursor.total ? ` · ${cursor.total} lines` : ''} — Go to Line (Ctrl+G)`} onClick={() => { const a = activeEditor(); if (a) { a.view.focus(); openQuickInput(':'); } }}>{text}</button> : <span className="status-item" aria-label="Cursor position" title={`${cursor.file}${featureOn('line-total') && cursor.total ? ` · ${cursor.total} lines` : ''}`}>{text}</span>; })()}
           <Dropdown
             label="Line separators"
             trigger={<button className="status-item" aria-label={`Line separators: ${cursor.eol}`} title="Line separators (click to change)">{cursor.eol}</button>}

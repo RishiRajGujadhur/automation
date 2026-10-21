@@ -146,3 +146,27 @@ test('W4 Go to Symbol by category (@:): groups with counts', async ({ page }) =>
   const seps = quick(page).locator('.quick-input-separator');
   await expect(seps).toHaveText(['interfaces (1)', 'methods (4)', 'classes (2)', 'properties (2)', 'functions (1)'].sort((a, b) => 0 * a.length + 0 * b.length));
 });
+
+test('W5 Go to Line/Column: Ctrl+G, current line message, line:column, preview, Escape restores', async ({ page }) => {
+  await start(page);
+  const src = await open(page, 'Steps/AuthSteps.cs');
+  await src.locator('.cm-line').nth(2).click();
+  await page.keyboard.press('Control+g');
+  await expect(quickBox(page)).toHaveValue(':');
+  await expect(quick(page).getByRole('status')).toHaveText(/^Current Line: 3, Character: \d+\. Type a line number between 1 and \d+ to navigate to\.$/);
+  await page.keyboard.type('6:5');
+  await expect(rows(page)).toHaveText(['Go to line 6 and character 5.']);
+  await expect.poll(() => caretLine(page)).toBe(6);
+  await page.keyboard.press('Escape');
+  await expect.poll(() => caretLine(page)).toBe(3);
+  await page.keyboard.press('Control+g');
+  await page.keyboard.type('-1');
+  await expect(rows(page).first()).toHaveText(/^Go to line \d+\.$/);
+  await page.keyboard.press('Enter');
+  const last = await page.evaluate(() => (window as unknown as { __activeEditor: () => { view: { state: { doc: { lines: number } } } } }).__activeEditor().view.state.doc.lines);
+  await expect.poll(() => caretLine(page)).toBe(last);
+  // The status bar's Ln / Col opens it too.
+  await page.getByRole('button', { name: 'Cursor position' }).click();
+  await expect(quickBox(page)).toHaveValue(':');
+  await page.keyboard.press('Escape');
+});

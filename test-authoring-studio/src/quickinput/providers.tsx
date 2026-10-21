@@ -93,3 +93,4 @@ registerQuickAccess({
 /** Ctrl+Shift+P: the palette with its last query selected (QOL-50 "palette-last"), else just `>`. */
 export const openCommandPalette = () => openQuickInput(featureOn('palette-last') ? lastQuery('>') ?? '>' : '>', true);
 import './symbols';
+import './gotoLine';

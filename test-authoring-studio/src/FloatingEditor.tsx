@@ -1,5 +1,7 @@
 import { useState } from 'react';
 import CodeEditor from './editor/CodeEditor';
+import QuickInput from './quickinput/QuickInput';
+import './quickinput/providers';
 
 /**
  * Floating editor window (VS Code's Move into New Window, Rider's Open in New Window): a file alone in its own browser
@@ -12,6 +14,7 @@ export default function FloatingEditor({ file }: { file: string }) {
     <div className="floating-editor" aria-label={`Floating editor ${file}`}>
       <header className="floating-head"><strong>{file.split('/').pop()}</strong><span className="meta">{file}</span>{notice && <span role="status" className="meta">{notice}</span>}</header>
       <div className="floating-body"><CodeEditor file={file} active onNotice={setNotice} /></div>
+      <QuickInput />
     </div>
   );
 }
