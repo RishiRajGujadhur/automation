@@ -95,7 +95,7 @@ Legend: `[x]` done · `[ ]` to do.
 - [x] 73. Move type — Move Type to Matching File
 - [ ] 74. Move members
 - [x] 75. Pull members up — Code ▸ Refactor ▸ Pull Members Up (2026-10-21)
-- [ ] 76. Push members down
+- [x] 76. Push members down — Code ▸ Refactor ▸ Push Members Down (2026-10-21)
 - [x] 77. Safe symbol rename — F2 (Roslyn Renamer, across files)
 - [x] 78. Change namespace — Sync Namespace with Folder
 - [x] 79. Convert method to property — Quick Actions: Replace 'GetX' with property
@@ -408,3 +408,4 @@ Legend: `[x]` done · `[ ]` to do.
 - 2026-10-21 68: The selected expression becomes a computed property.
 - 2026-10-21 72: A field never assigned after its declaration is replaced by its value and removed.
 - 2026-10-21 75: The member moves to the base class (in any file of the solution).
+- 2026-10-21 76: The member moves from the base class into each derived class.
