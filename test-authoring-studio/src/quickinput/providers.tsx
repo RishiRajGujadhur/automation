@@ -2,7 +2,7 @@ import { api } from '../api';
 import { recentFiles, removeRecent } from '../navHistory';
 import { fileType } from '../files/fileTypes';
 import { featureOn } from '../features';
-import { matchesWords, scoreFile } from './fuzzy';
+import { fuzzyScore, matchesWords, scoreFile } from './fuzzy';
 import { readUsage } from '../rider/commands';
 import { quickOpen } from '../vscode/quickOpen';
 import { CONFIGURE_KEYBINDING_EVENT } from '../keybindings';
@@ -99,7 +99,11 @@ registerQuickAccess({
     // W18: the gear on a row opens Keyboard Shortcuts to give the command a key.
     const configure = (e: PaletteEntry) => ({ icon: <span className="codicon codicon-gear" />, title: 'Configure Keybinding', run: () => { closeQuickInput(); window.dispatchEvent(new CustomEvent(CONFIGURE_KEYBINDING_EVENT, { detail: { id: e.id ? `rider:${e.id}` : `palette:${e.label}`, label: e.label } })); } });
     const item = (r: (typeof rows)[number], separator?: string): QuickItem => ({ id: `cmd:${r.e.label}`, label: r.e.label, labelMatches: r.m ?? [], keybinding: keysOf(r.e.shortcut) ?? customKey(r.e), separator, buttons: [configure(r.e)], accept: () => { notePaletteUse(r.e.label); r.e.run(); } });
-    return [...recent.map((r, i) => item(r, i === 0 ? 'recently used' : undefined)), ...others.map((r, i) => item(r, i === 0 && recent.length ? 'other commands' : undefined))];
+    const out = [...recent.map((r, i) => item(r, i === 0 ? 'recently used' : undefined)), ...others.map((r, i) => item(r, i === 0 && recent.length ? 'other commands' : undefined))];
+    if (out.length || !q) return out;
+    // W19: nothing contains the words: the closest titles by fuzzy match, as "similar commands".
+    const similar = [...seen].map((label) => ({ label, s: fuzzyScore(q.replace(/\s+/g, ''), label.replace(/\s+/g, ''), true) })).filter((x) => x.s).sort((a, b) => b.s![0] - a.s![0]).slice(0, 10);
+    return similar.map((x, i) => { const e = commands.find((c) => c.label === x.label)!; return item({ e, m: [], i }, i === 0 ? 'similar commands' : undefined); });
   },
 });
 

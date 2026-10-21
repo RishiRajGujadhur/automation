@@ -413,3 +413,13 @@ test('W18 Command palette: Configure Keybinding (gear) records a key that then r
   await quickBox(page).fill('>reverse lines');
   await expect(rows(page).filter({ hasText: 'Reverse Lines' }).first().locator('kbd')).toHaveText(['Ctrl', 'Alt', '9']);
 });
+
+test('W19 Command palette: similar commands when no title contains the words', async ({ page }) => {
+  await start(page);
+  await page.keyboard.press('Control+Shift+P');
+  await quickBox(page).fill('>srtlns');
+  await expect(rows(page).first().locator('.quick-input-separator')).toHaveText('similar commands');
+  await expect(rows(page).filter({ hasText: 'Sort Lines' }).first()).toBeVisible();
+  await quickBox(page).fill('>zzzzqqq');
+  await expect(quick(page).getByText('No matching commands')).toBeVisible();
+});
