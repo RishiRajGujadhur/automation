@@ -2,6 +2,7 @@ import { runRider, registerRider } from '../rider/commands';
 import { setViewOptions, viewOptions } from '../editor/viewOptions';
 import { resetSetting, setSetting } from '../vscode/settings';
 import { quickOpen } from '../vscode/quickOpen';
+import { menuBarVisibility } from '../vscode/menuBar';
 import { panelAlignment, sideBarLocation } from '../vscode/workbenchLayout';
 import { layoutState } from '../rider/layoutModes';
 import { openQuickPick, type QuickItem } from './store';
@@ -18,7 +19,7 @@ export const addLayoutSection = (s: LayoutSection, at = sections.length) => { se
 /** Settings the sections own, reset by Reset to Defaults. */
 const owned: string[] = [];
 export const ownLayoutSetting = (key: string) => { owned.push(key); };
-export const resetLayoutSettings = () => ['workbench.sideBar.location', 'workbench.panel.alignment', ...owned].forEach((k) => resetSetting(k));
+export const resetLayoutSettings = () => ['workbench.sideBar.location', 'workbench.panel.alignment', 'window.menuBarVisibility', ...owned].forEach((k) => resetSetting(k));
 
 const check = (on: boolean) => <span className={`codicon codicon-${on ? 'check' : 'blank'}`} aria-hidden="true" />;
 
@@ -29,6 +30,7 @@ export function customizeLayout(activeId?: string) {
   const v = viewOptions();
   const groups: { title: string; rows: { id: string; label: string; on: boolean; run: () => void; keys?: string }[] }[] = [
     { title: 'Visibility', rows: [
+      { id: 'menubar', label: 'Menu Bar', on: menuBarVisibility() === 'classic', run: () => setSetting('window.menuBarVisibility', menuBarVisibility() === 'classic' ? 'toggle' : 'classic') },
       { id: 'activity', label: 'Activity Bar', on: !v.hideActivityBar, run: () => setViewOptions({ hideActivityBar: !viewOptions().hideActivityBar }) },
       { id: 'sidebar', label: 'Primary Side Bar', on: p.sidebar, run: p.toggleSidebar, keys: 'Ctrl+B' },
       { id: 'secondary', label: 'Secondary Side Bar', on: p.secondary, run: p.toggleSecondary, keys: 'Ctrl+Alt+B' },

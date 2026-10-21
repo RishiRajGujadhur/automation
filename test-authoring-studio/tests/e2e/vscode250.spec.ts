@@ -954,3 +954,31 @@ test('W43 workbench.sideBar.location: the primary side bar and activity bar on t
   await page.mouse.up();
   await expect.poll(async () => (await side.boundingBox())!.width).toBeGreaterThan(w + 30);
 });
+
+test('W44 window.menuBarVisibility: toggle (Alt shows it), compact (☰), hidden', async ({ page }) => {
+  await start(page, { 'window.menuBarVisibility': 'toggle' });
+  const file = page.getByRole('button', { name: 'File menu' });
+  await expect(file).toBeHidden();
+  await page.keyboard.press('Alt');
+  await expect(file).toBeVisible();
+  await expect(file).toBeFocused();
+  await page.keyboard.press('Escape');
+  await expect(file).toBeHidden();
+  // Compact: a ☰ shows the menus; using one hides them again.
+  await page.evaluate(() => localStorage.setItem('tas:settings', JSON.stringify({ 'window.menuBarVisibility': 'compact' })));
+  await page.reload();
+  await expect(page.getByText('Repository indexed')).toBeVisible();
+  await expect(file).toBeHidden();
+  await page.getByRole('button', { name: 'Application Menu' }).click();
+  await expect(file).toBeVisible();
+  await page.getByRole('button', { name: 'Help menu' }).click();
+  await page.getByRole('menuitem').first().click();
+  await expect(file).toBeHidden();
+  // Hidden: no menus, no ☰, Alt does nothing.
+  await page.evaluate(() => localStorage.setItem('tas:settings', JSON.stringify({ 'window.menuBarVisibility': 'hidden' })));
+  await page.reload();
+  await expect(page.getByText('Repository indexed')).toBeVisible();
+  await page.keyboard.press('Alt');
+  await expect(file).toBeHidden();
+  await expect(page.getByRole('button', { name: 'Application Menu' })).toHaveCount(0);
+});

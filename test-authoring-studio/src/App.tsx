@@ -84,6 +84,7 @@ import StepCatalogue from './StepCatalogue';
 import SearchPalette from './SearchPalette';
 import QuickInput from './quickinput/QuickInput';
 import { openQuickInput, openQuickPick } from './quickinput/store';
+import { menuBarVisibility, revealMenuBar } from './vscode/menuBar';
 import { openCommandPalette, openQuickOpen, runPaletteCommand, setPaletteCommands, type PaletteEntry } from './quickinput/providers';
 import { setOpenViews } from './quickinput/help';
 import { customizeLayout, setLayoutParts, resetLayoutSettings } from './quickinput/layoutPick';
@@ -1405,6 +1406,8 @@ export default function App() {
           </span>
           <Badge tone="purple">LOCAL</Badge>
         </div>
+        {/* window.menuBarVisibility = compact (VS Code, W44): a ☰ that shows the menus (the native menu on desktop). */}
+        {menuBarVisibility() === 'compact' && <button className="icon-button menubar-toggle" aria-label="Application Menu" title="Application Menu" onClick={(e) => { if (desktop?.popupMenu) { const r = e.currentTarget.getBoundingClientRect(); desktop.popupMenu(r.left, r.bottom); } else { revealMenuBar(!('menubarShown' in document.documentElement.dataset)); setTimeout(() => document.querySelector<HTMLElement>('.app-header .menubar-item')?.focus(), 0); } }}><span className="codicon codicon-menu" aria-hidden="true" /></button>}
         {/* VS Code style File menu (the desktop app has the native one). */}
         {!desktop && (
           <Dropdown

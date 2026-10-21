@@ -26,3 +26,4 @@ export { SETTINGS } from './settings';
 import './quickOpen';
 import './files';
 import './git';
+import './menuBar';

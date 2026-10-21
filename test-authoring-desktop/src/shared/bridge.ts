@@ -22,6 +22,10 @@ export type DesktopBridge = {
   /** 0–1 shows taskbar progress, -1 clears it, 2 is indeterminate. */
   setProgress(value: number): void;
   setTheme(colors: { background: string; text: string; dark: boolean }): void;
+  /** window.menuBarVisibility (VS Code): the native menu bar classic, toggled by Alt, hidden, or behind a ☰ (compact). */
+  setMenuBarVisibility?(mode: 'classic' | 'compact' | 'toggle' | 'hidden'): void;
+  /** Shows the application menu at the given point (the compact menu bar's ☰ button). */
+  popupMenu?(x: number, y: number): void;
   /** Commands from the native menu that the web app handles. Returns an unsubscribe function. */
   onMenu(cb: (command: MenuCommand, arg?: unknown) => void): () => void;
 };
@@ -39,4 +43,6 @@ export const IPC = {
   disabledCommands: 'desktop:disabled-commands',
   dropFolder: 'desktop:drop-folder',
   copyPath: 'desktop:copy-path',
+  menuBarVisibility: 'desktop:menu-bar-visibility',
+  popupMenu: 'desktop:popup-menu',
 } as const;

@@ -14,6 +14,8 @@ const bridge: DesktopBridge = {
   notify: (title, body) => ipcRenderer.send(IPC.notify, title, body),
   setProgress: (value) => ipcRenderer.send(IPC.progress, value),
   setTheme: (colors) => ipcRenderer.send(IPC.theme, colors),
+  setMenuBarVisibility: (mode) => ipcRenderer.send(IPC.menuBarVisibility, mode),
+  popupMenu: (x, y) => ipcRenderer.send(IPC.popupMenu, x, y),
   onMenu: (cb) => {
     const h = (_e: unknown, c: MenuCommand, arg?: unknown) => cb(c, arg);
     ipcRenderer.on(IPC.menu, h);

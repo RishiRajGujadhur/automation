@@ -18,6 +18,8 @@ type DesktopBridge = {
   notify(title: string, body: string): void;
   setProgress(value: number): void;
   setTheme(colors: { background: string; text: string; dark: boolean }): void;
+  setMenuBarVisibility?(mode: 'classic' | 'compact' | 'toggle' | 'hidden'): void;
+  popupMenu?(x: number, y: number): void;
   onMenu(cb: (command: DesktopMenuCommand, arg?: unknown) => void): () => void;
 };
 export const desktop: DesktopBridge | undefined = typeof window !== 'undefined' ? (window as unknown as { desktop?: DesktopBridge }).desktop : undefined;

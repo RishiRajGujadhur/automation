@@ -813,3 +813,11 @@ html[data-side-bar='right'] .app-body {
     .crumb-section { display: none; }
   }
 }
+
+// window.menuBarVisibility (W44): compact, toggle and hidden keep the menus out until they are revealed.
+:root[data-menubar='compact']:not([data-menubar-shown]),
+:root[data-menubar='toggle']:not([data-menubar-shown]),
+:root[data-menubar='hidden'] {
+  .app-header .menubar-item { display: none; }
+}
+.app-header .menubar-toggle { margin: 0 2px; }
