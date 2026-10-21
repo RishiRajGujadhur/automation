@@ -104,7 +104,7 @@ Legend: `[x]` done · `[ ]` to do.
 - [ ] 82. Introduce factory method
 - [ ] 83. Replace constructor with factory
 - [x] 84. Convert loops to LINQ — Quick Actions: Convert to LINQ
-- [ ] 85. Convert LINQ to loops
+- [x] 85. Convert LINQ to loops — Code ▸ Refactor ▸ Convert LINQ to Loop (Where / Select + ToList, ToArray, Count, Any, First, FirstOrDefault, Sum) (2026-10-21)
 - [x] 86. Convert anonymous types to named types — Quick Actions: Convert to class / record
 - [x] 87. Convert anonymous functions to methods — Quick Actions: Use local function, then Convert to method (2026-10-21)
 - [ ] 88. Convert methods to local functions
@@ -402,3 +402,4 @@ Legend: `[x]` done · `[ ]` to do.
 - 2026-10-21 61: A Change Signature dialog: parameters reordered, removed and renamed; the language service updates the declaration, overrides, implementations and calls (named arguments after an omitted optional one).
 - 2026-10-21 98: The parameters in a new order; every call follows.
 - 2026-10-21 99: Parameters the body never reads go from the method and every call (not for virtual, abstract or interface members).
+- 2026-10-21 85: A LINQ method chain becomes a foreach loop, typed from the semantic model.
