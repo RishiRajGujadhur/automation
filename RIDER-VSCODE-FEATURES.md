@@ -91,7 +91,7 @@ Legend: `[x]` done · `[ ]` to do.
 - [x] 69. Extract parameter — Ctrl+Alt+P
 - [x] 70. Inline method — Ctrl+Alt+N
 - [x] 71. Inline variable — Ctrl+Alt+N
-- [ ] 72. Inline field
+- [x] 72. Inline field — Code ▸ Refactor ▸ Inline Field (2026-10-21)
 - [x] 73. Move type — Move Type to Matching File
 - [ ] 74. Move members
 - [ ] 75. Pull members up
@@ -406,3 +406,4 @@ Legend: `[x]` done · `[ ]` to do.
 - 2026-10-21 88: A private method used by one method moves into it as a local function.
 - 2026-10-21 67: The selected expression becomes a field: readonly with its value, or assigned where it is used when it reads locals.
 - 2026-10-21 68: The selected expression becomes a computed property.
+- 2026-10-21 72: A field never assigned after its declaration is replaced by its value and removed.
