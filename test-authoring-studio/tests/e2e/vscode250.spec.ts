@@ -577,3 +577,19 @@ test('W26 files.encoding: the default for files without a byte order mark', asyn
   await page.keyboard.press('Control+s');
   await expect.poll(async () => [...await fs.readFile(path.join(temp, 'latin.txt'))].join(',')).toBe([0x63, 0x61, 0x66, 0xe9, 0x73, 0x0a].join(','));
 });
+
+test('W27 Select End of Line Sequence: quick pick from the status bar', async ({ page }) => {
+  await fs.writeFile(path.join(temp, 'crlf.txt'), 'one\r\ntwo\r\n');
+  await start(page);
+  const src = await open(page, 'crlf.txt');
+  const item = page.locator('footer.status-bar').getByRole('button', { name: /^Line separators/ });
+  await expect(item).toHaveText('CRLF');
+  await item.click();
+  await expect(quickBox(page)).toHaveAttribute('placeholder', 'Select End of Line Sequence');
+  await expect(rows(page).filter({ hasText: 'CRLF' })).toHaveAttribute('aria-selected', 'true');
+  await rows(page).filter({ hasText: /^LF/ }).click();
+  await expect(item).toHaveText('LF');
+  await src.click();
+  await page.keyboard.press('Control+s');
+  await expect.poll(() => fs.readFile(path.join(temp, 'crlf.txt'), 'utf8')).toBe('one\ntwo\n');
+});

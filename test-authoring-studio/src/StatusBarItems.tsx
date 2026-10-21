@@ -14,7 +14,7 @@ import { setViewOptions, useViewOptions } from './editor/viewOptions';
 import { runRider } from './rider/commands';
 import { featureOn } from './features';
 import { activeEditor } from './editor/activeEditor';
-import { openQuickInput } from './quickinput/store';
+import { openQuickInput, openQuickPick } from './quickinput/store';
 import { changeLanguageMode } from './quickinput/languagePick';
 import { selectEncoding } from './quickinput/encodingPick';
 import { encodingLabel, encodingOf, useEncodings } from './files/encoding';
@@ -71,14 +71,8 @@ export default function StatusBarItems({ repository, onGit, onErrors }: { reposi
       {cursor && (
         <>
           {(() => { const text = <>Ln {cursor.line}, Col {cursor.column}{cursor.selected ? ` (${cursor.selected} selected${featureOn('selected-lines') && (cursor.lines ?? 0) > 1 ? `, ${cursor.lines} lines` : ''})` : ''}{featureOn('selection-count') && (cursor.ranges ?? 1) > 1 ? ` · ${cursor.ranges} selections` : ''}</>; return featureOn('status-goto-line') ? <button className="status-item" aria-label="Cursor position" title={`${cursor.file}${featureOn('line-total') && cursor.total ? ` · ${cursor.total} lines` : ''} — Go to Line (Ctrl+G)`} onClick={() => { const a = activeEditor(); if (a) { a.view.focus(); openQuickInput(':'); } }}>{text}</button> : <span className="status-item" aria-label="Cursor position" title={`${cursor.file}${featureOn('line-total') && cursor.total ? ` · ${cursor.total} lines` : ''}`}>{text}</span>; })()}
-          <Dropdown
-            label="Line separators"
-            trigger={<button className="status-item" aria-label={`Line separators: ${cursor.eol}`} title="Line separators (click to change)">{cursor.eol}</button>}
-            entries={[
-              { label: `${cursor.eol === 'CRLF' ? '✓ ' : '\u2003'}CRLF – Windows (\\r\\n)`, onSelect: () => requestEol(cursor.file, '\r\n') },
-              { label: `${cursor.eol === 'LF' ? '✓ ' : '\u2003'}LF – Unix and macOS (\\n)`, onSelect: () => requestEol(cursor.file, '\n') },
-            ]}
-          />
+          {/* VS Code's Select End of Line Sequence (W27). */}
+          <button className="status-item" aria-label={`Line separators: ${cursor.eol}`} title="Select End of Line Sequence" onClick={() => openQuickPick({ placeholder: 'Select End of Line Sequence', activeId: cursor.eol, items: [{ id: 'LF', label: 'LF', description: 'Unix and macOS (\\n)', accept: () => requestEol(cursor.file, '\n') }, { id: 'CRLF', label: 'CRLF', description: 'Windows (\\r\\n)', accept: () => requestEol(cursor.file, '\r\n') }] })}>{cursor.eol}</button>
           {/* VS Code's encoding item (W25): Reopen with Encoding / Save with Encoding (and File Properties). */}
           {(() => { const label = encodingLabel(encodingOf(cursor.file)?.save); return <button className="status-item" aria-label={`Select Encoding: ${label}`} title="Select Encoding" onClick={() => selectEncoding(cursor.file)}>{label}</button>; })()}
           {/* The file's language mode (VS Code, W23): a click changes it. */}

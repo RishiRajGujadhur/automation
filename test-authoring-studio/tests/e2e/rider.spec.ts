@@ -1100,7 +1100,7 @@ test('J59 Line separators: a CRLF file keeps CRLF when saved; the status bar con
   await expect.poll(disk).toContain('// edited\r\n}');
   expect((await disk()).split('\r\n')).toHaveLength(6);
   await page.getByRole('button', { name: 'Line separators: CRLF' }).click();
-  await page.getByRole('menuitem', { name: /LF – Unix/ }).click();
+  await page.getByRole('dialog', { name: 'Quick Input' }).getByRole('option', { name: /^LF, Unix/ }).click();
   await expect(page.getByRole('button', { name: 'Line separators: LF' })).toBeVisible();
   await src.click();
   await page.keyboard.press('Control+S');

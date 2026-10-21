@@ -42,7 +42,7 @@ Legend: `[x]` done · `[ ]` to do.
 - [x] W24. Configure File Association for '.ext' (files.associations)
 - [x] W25. Encoding item → Reopen with Encoding / Save with Encoding quick pick
 - [x] W26. files.encoding (default) and UTF-8 with BOM preserved on save
-- [ ] W27. Line ending item as VS Code quick pick (Select End of Line Sequence)
+- [x] W27. Line ending item as VS Code quick pick (Select End of Line Sequence)
 - [ ] W28. Indentation item as VS Code quick pick: Indent Using Spaces / Tabs, Change Tab Display Size, Detect Indentation from Content, Convert Indentation to Spaces / Tabs
 - [ ] W29. Problems item `⊗ n ⚠ n ⓘ n` toggles the Problems panel
 - [ ] W30. Status bar context menu: hide / show each item (persisted), "Hide Status Bar"
@@ -320,3 +320,4 @@ Legend: `[x]` done · `[ ]` to do.
 - 2026-10-21: W24. Change Language Mode starts with Configure File Association for '.ext' (a language for every such file, stored in files.associations); the setting takes glob patterns (*.log, **/folder/*.txt) and is edited as JSON in Settings. Settings gained object values. .log, .toml, .py, .diff, .jsonc, .code-snippets… files now open in the editor.
 - 2026-10-21: W25. The status bar's encoding is the file's (UTF-8, UTF-8 with BOM, UTF-16 LE / BE detected from the byte order mark); its picker reopens the file in another encoding (Windows 1252, ISO 8859-1…) or writes it in one, and keeps File Properties. Saves keep a file's encoding; the BOM is no longer shown as a character.
 - 2026-10-21: W26. The default encoding for reading and writing files without a byte order mark (new files too); a BOM still wins and saves keep it.
+- 2026-10-21: W27. The status bar's LF / CRLF opens VS Code's Select End of Line Sequence quick pick (the current one selected); the file is written with it on the next save.
