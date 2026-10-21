@@ -2,6 +2,7 @@ import { test, expect, type Page } from '@playwright/test';
 import fs from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
+import { execSync } from 'node:child_process';
 
 // VS Code look and features (VSCODE-250.md, W1–W250), on a temporary copy of the fixtures.
 test.use({ storageState: { cookies: [], origins: [] } });
@@ -672,4 +673,32 @@ test('W31 Notifications bell: always there, a dot for new ones, slashed in Do No
   await page.evaluate(() => { const k = 'tas:rider:view'; localStorage.setItem(k, JSON.stringify({ ...JSON.parse(localStorage.getItem(k) ?? '{}'), doNotDisturb: true })); });
   await page.reload();
   await expect(bell.locator('.codicon-bell-slash')).toBeVisible();
+});
+
+/** Makes the temporary folder a Git repository with one commit by "Ada Lovelace". */
+function gitInit(dir: string) {
+  const run = (args: string) => execSync(`git ${args}`, { cwd: dir, stdio: 'pipe' });
+  run('init -q -b main');
+  run('config user.name "Ada Lovelace"');
+  run('config user.email ada@example.com');
+  run('add -A');
+  run('commit -q -m "First commit"');
+}
+
+test('W32 Git blame in the status bar (git.blame.statusBarItem.enabled)', async ({ page }) => {
+  gitInit(temp);
+  await start(page);
+  const src = await open(page, 'Steps/AuthSteps.cs');
+  await src.locator('.cm-line').nth(3).click();
+  const item = page.locator('footer.status-bar').getByRole('button', { name: /^Blame:/ });
+  await expect(item).toHaveText(/Ada Lovelace, today/);
+  await expect(item).toHaveAttribute('title', /First commit/);
+  await item.click();
+  await expect(page.getByRole('region', { name: /Git Log/ }).first()).toBeVisible();
+  // Off: no item.
+  await page.evaluate(() => localStorage.setItem('tas:settings', JSON.stringify({ 'git.blame.statusBarItem.enabled': false })));
+  await page.reload();
+  await open(page, 'Steps/AuthSteps.cs');
+  await expect(page.locator('footer.status-bar').getByRole('button', { name: 'Cursor position' })).toBeVisible();
+  await expect(item).toHaveCount(0);
 });
