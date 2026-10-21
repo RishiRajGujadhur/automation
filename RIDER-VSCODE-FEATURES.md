@@ -144,7 +144,7 @@ Legend: `[x]` done · `[ ]` to do.
 - [x] 119. Duplicate code detection — Code ▸ Analyze ▸ Find Duplicate Code (normalised token windows; codeAnalysis.duplicates.minimumTokens) (2026-10-21)
 - [x] 120. Structural Search and Replace templates — Search with Pattern: built-in templates and Save as Template / Delete Template (2026-10-21)
 - [x] 121. Dependency cycle detection — Code ▸ Analyze ▸ Find Dependency Cycles (namespaces with the closing references, project references) (2026-10-21)
-- [ ] 122. Layer dependency rules
+- [x] 122. Layer dependency rules — Code ▸ Analyze ▸ Check Layer Rules (layers.json: layers by namespace, forbidden dependencies) (2026-10-21)
 - [x] 123. Namespace consistency inspections — IDE0130: namespace does not match the folder (root namespace + folder from the project), fix in Quick Actions (2026-10-21)
 - [ ] 124. API compatibility inspections
 - [ ] 125. Public API change tracking
@@ -420,3 +420,4 @@ Legend: `[x]` done · `[ ]` to do.
 - 2026-10-21 47: Symbols of the solution found by their kind, types, attributes, modifiers, parameters, namespace and base types (the language service's symbol model).
 - 2026-10-21 119: Repeated C# code (names and literals aside) found across the solution, grouped with each place to jump to; the language service also reads files changed outside the studio before solution-wide analyses.
 - 2026-10-21 121: Namespace dependency cycles (Tarjan components of the type-reference graph) and project reference cycles.
+- 2026-10-21 122: Layer rules from layers.json (a template is offered the first time) and every reference that breaks them.
