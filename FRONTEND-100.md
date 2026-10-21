@@ -31,7 +31,7 @@ Status: `[x]` done, `[ ]` to do. Before this list, JS / TS / HTML / CSS files op
 - [x] F20 Remove unused imports
 - [x] F21 Auto-import unresolved symbols
 - [x] F22 Update imports when files move
-- [ ] F23 Detect circular module dependencies
+- [x] F23 Detect circular module dependencies
 - [ ] F24 Navigate TypeScript declaration files
 - [ ] F25 Navigate source maps
 - [ ] F26 Extract object destructuring
@@ -121,3 +121,4 @@ Status: `[x]` done, `[ ]` to do. Before this list, JS / TS / HTML / CSS files op
 - 2026-10-21: F10, F11, F13. Generate JSDoc comment (Quick Action, or /** then Enter above a declaration) from TypeScript's doc template; Annotate with type from JSDoc and Convert to async function from the TypeScript service.
 - 2026-10-21: F12, F14, F15, F16. Studio actions (customs/functions.ts): a Node-style callback becomes a Promise with .then / .catch; an async function becomes a .then chain (not offered with try/catch); a function declaration becomes a const arrow function (not offered when it uses this, arguments, overloads or is a generator); the rewritten code is formatted. Arrow to function declaration: TypeScript's Convert to named function.
 - 2026-10-21: F17, F18, F19, F20, F21. Convert to ES module and Add import from (TypeScript code fixes); Convert to CommonJS module (studio action: imports to require, exports to module.exports); Organize imports (Quick Action and Shift+Alt+O) and Remove unused imports from TypeScript's organizeImports.
+- 2026-10-21: F23. Code ▸ Analyze ▸ Find Circular Imports (web and desktop menus): the import graph of the scripts (imports, re-exports, dynamic import, require; type-only imports left out) and its cycles with the imports that close them.

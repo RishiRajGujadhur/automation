@@ -12,6 +12,7 @@ import { splitEditor, toggleMaximizeGroup } from '../vscode/editorGroups';
 import { api } from '../api';
 import { refactorCommands } from './refactor400';
 import { analysisCommands } from './analysis400';
+import { frontendCommands } from './frontend';
 import { generateIEquatable, generateComparison, generateAsyncDisposable, interpolationToFormatCmd, recordToClassCmd } from '../editor/csharpGen';
 import type { EditorView } from '@codemirror/view';
 
@@ -50,6 +51,7 @@ export function moreCommands3(h: MoreHelpers): RiderCommand[] {
   return [
     ...refactorCommands(h),
     ...analysisCommands(h),
+    ...frontendCommands(h),
     { id: 'find-in-selection', label: 'Find in Selection', menu: 'Edit', group: true, run: h.inEditor((v) => findInSelection(v) || h.notice('Select the text to search in first.')) },
     { id: 'vs-zen-mode', label: 'Zen Mode', menu: 'View', group: true, shortcut: 'Ctrl K, Z', checked: () => layoutState().mode === 'vszen', run: () => toggleZen() },
     { id: 'split-right', label: 'Split Editor Right', menu: 'View', group: true, run: () => splitEditor('right') },

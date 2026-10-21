@@ -386,6 +386,7 @@ const ROWS: Record<'edit' | 'view' | 'navigate' | 'code' | 'tools' | 'help', Row
     { submenu: 'Analyze', rows: [
       ['Find Duplicate Code', 'find-duplicates'],
       ['Find Dependency Cycles', 'dependency-cycles'],
+      ['Find Circular Imports', 'import-cycles'],
       ['Check Layer Rules', 'layer-rules'],
       ['Public API…', 'public-api'],
     ] },

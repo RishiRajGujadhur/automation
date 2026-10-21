@@ -5,6 +5,7 @@ import { tsProject, SCRIPT, ts, applyEdits } from './tsService.js';
 import { listActions, applyAction, prefs, fmt, changesOf } from './tsActions.js';
 import './customs/index.js';
 import { editsForMove } from './customs/modules.js';
+import { importCycles } from './analysis.js';
 
 /**
  * /api/web/*: language features for front-end files (FRONTEND-100.md). Every request carries the editor's text, so
@@ -111,6 +112,8 @@ export function webRoutes(app: Express, root: () => string) {
     const t = p.service.getDocCommentTemplateAtPosition(abs, b.pos, { generateReturnInDocTemplate: true });
     res.json(t ? { text: t.newText, caret: t.caretOffset } : null);
   });
+  /** F23: circular imports among the repository's scripts. */
+  app.get('/api/web/analysis/cycles', (_req, res) => { res.json(importCycles(tsProject(root()))); });
   app.post('/api/web/format', async (req, res) => {
     const b = z.object({ file, source: z.string().max(5_000_000) }).parse(req.body);
     const p = await script(b.file);

@@ -225,3 +225,19 @@ test('F21 Auto-import unresolved symbols', async ({ page }) => {
   await open(page, 'src/app.ts', 'export const twice = add(PI, PI);\n');
   await convert(page, 'add(', /^Add import from "\.\/math"$/, /^import \{ add(, PI)? \} from "\.\/math";\n/, false, 1);
 });
+
+const analyzeMenu = async (page: Page, item: RegExp) => { await page.getByRole('button', { name: 'Code menu' }).click(); await page.getByRole('menuitem', { name: 'Analyze', exact: true }).click(); await page.getByRole('menuitem', { name: item }).click(); };
+test('F23 Detect circular module dependencies', async ({ page }) => {
+  await fs.writeFile(path.join(temp, 'src/a.ts'), 'import { b } from "./b";\nexport const a = () => b();\n');
+  await fs.writeFile(path.join(temp, 'src/b.ts'), 'import type { Shape } from "./types";\nimport { a } from "./a";\nexport const b = () => a;\n');
+  await fs.writeFile(path.join(temp, 'src/types.ts'), 'import type { b } from "./b";\nexport type Shape = typeof b;\n');
+  await open(page, 'src/a.ts');
+  await analyzeMenu(page, /^Find Circular Imports$/);
+  const d = page.getByRole('dialog', { name: /Circular imports: 1/ });
+  await expect(d).toBeVisible({ timeout: 30_000 });
+  await expect(d).toContainText('Modules in a cycle: a.ts ⇄ b.ts');
+  await expect(d).toContainText('src/a.ts → src/b.ts');
+  await expect(d).toContainText('src/b.ts → src/a.ts');
+  // Type-only imports do not make a cycle (b.ts ⇄ types.ts).
+  await expect(d).not.toContainText('types.ts');
+});
