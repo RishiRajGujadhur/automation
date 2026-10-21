@@ -655,3 +655,21 @@ test('W30 Status bar context menu: hide and show items, Hide Status Bar', async 
   await menu.getByRole('menuitem', { name: 'Hide Status Bar' }).click();
   await expect(bar).toBeHidden();
 });
+
+test('W31 Notifications bell: always there, a dot for new ones, slashed in Do Not Disturb, toggles the list', async ({ page }) => {
+  await start(page);
+  const bell = page.locator('footer.status-bar .notifications-bell');
+  await expect(bell).toBeVisible();
+  // It is the last item on the right.
+  const last = await page.locator('footer.status-bar .status-item:visible').last().getAttribute('class');
+  expect(last).toContain('notifications-bell');
+  await page.evaluate(() => window.dispatchEvent(new CustomEvent('tas:notice', { detail: 'Something happened.' })));
+  await expect(bell.locator('.codicon-bell-dot')).toBeVisible();
+  await bell.click();
+  await expect(page.getByRole('region', { name: 'Notifications', exact: true }).first()).toBeVisible();
+  await bell.click();
+  await expect(page.getByRole('region', { name: 'Notifications', exact: true })).toHaveCount(0);
+  await page.evaluate(() => { const k = 'tas:rider:view'; localStorage.setItem(k, JSON.stringify({ ...JSON.parse(localStorage.getItem(k) ?? '{}'), doNotDisturb: true })); });
+  await page.reload();
+  await expect(bell.locator('.codicon-bell-slash')).toBeVisible();
+});

@@ -61,7 +61,7 @@ import BuildPanel from './build/BuildPanel';
 import TestExplorer from './testing/TestExplorer';
 import SearchView from './search/SearchView';
 import GitView from './git/GitView';
-import StatusBarItems, { ProblemsStatus, TOGGLE_PROBLEMS_EVENT } from './StatusBarItems';
+import StatusBarItems, { ProblemsStatus, TOGGLE_PROBLEMS_EVENT, TOGGLE_NOTIFICATIONS_EVENT } from './StatusBarItems';
 import StatusBarMenu from './StatusBarMenu';
 import GoToAll from './search/GoToAll';
 import { runTests, getTestRun, discoverTests, useTestRun, outcomeOf, combine, type DiscoveredTest } from './testing/store';
@@ -556,6 +556,10 @@ export default function App() {
   const toggleProblemsRef = useRef(() => {});
   toggleProblemsRef.current = () => { if (riderTools.includes('problems') && dockTab === 'problems') closeRiderTool('problems'); else showRiderTool('problems'); };
   useEffect(() => { const h = () => toggleProblemsRef.current(); window.addEventListener(TOGGLE_PROBLEMS_EVENT, h); return () => window.removeEventListener(TOGGLE_PROBLEMS_EVENT, h); }, []);
+  // The status bar's bell (W31): the Notifications window, toggled.
+  const toggleNotificationsRef = useRef(() => {});
+  toggleNotificationsRef.current = () => { if (riderTools.includes('notifications') && dockTab === 'notifications') closeRiderTool('notifications'); else showRiderTool('notifications'); };
+  useEffect(() => { const h = () => toggleNotificationsRef.current(); window.addEventListener(TOGGLE_NOTIFICATIONS_EVENT, h); return () => window.removeEventListener(TOGGLE_NOTIFICATIONS_EVENT, h); }, []);
   // TODO window (Rider, Alt+6): another tab of the bottom panel.
   const [todoOpen, setTodoOpen] = useLocalState('todoOpen', false);
   // Output window (View ▸ Output, Ctrl+Alt+O): a third tab of the bottom panel.

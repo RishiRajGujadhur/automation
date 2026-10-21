@@ -46,7 +46,7 @@ Legend: `[x]` done · `[ ]` to do.
 - [x] W28. Indentation item as VS Code quick pick: Indent Using Spaces / Tabs, Change Tab Display Size, Detect Indentation from Content, Convert Indentation to Spaces / Tabs
 - [x] W29. Problems item `⊗ n ⚠ n ⓘ n` toggles the Problems panel
 - [x] W30. Status bar context menu: hide / show each item (persisted), "Hide Status Bar"
-- [ ] W31. Notifications bell with a dot for unread and a slashed bell in Do Not Disturb
+- [x] W31. Notifications bell with a dot for unread and a slashed bell in Do Not Disturb
 - [ ] W32. Git blame of the caret line in the status bar (git.blame.statusBarItem.enabled)
 - [ ] W33. Branch item → Checkout to… quick pick (branches, tags, Create new branch…)
 - [ ] W34. Sync item `↓n ↑n` (pull and push) with a spinner while syncing
@@ -324,3 +324,4 @@ Legend: `[x]` done · `[ ]` to do.
 - 2026-10-21: W28. The status bar's Spaces / Tab Size opens VS Code's Select Action (Indent Using Spaces / Tabs, Change Tab Display Size, Detect Indentation from Content, Convert Indentation to Spaces / Tabs) and a tab size list; the editor items are in VS Code's order (Ln/Col, indentation, encoding, line endings, language).
 - 2026-10-21: W29. VS Code's ⊗ n ⚠ n (ⓘ n) at the left of the status bar: the errors, warnings and infos of every open file plus the last build; a click or Ctrl+Shift+M toggles the Problems panel.
 - 2026-10-21: W30. Right-click the status bar: VS Code's list of its entries (Remote Host, Problems, Editor Selection / Indentation / Encoding / End of Line / Language, Source Control, Notifications…) with checkmarks to hide or show each (kept), and Hide Status Bar.
+- 2026-10-21: W31. VS Code's bell, always the last status bar item: a dot when there are new notifications, slashed in Do Not Disturb; a click opens or closes the Notifications window.

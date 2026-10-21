@@ -55,6 +55,7 @@ export function ProblemsStatus() {
   );
 }
 export const TOGGLE_PROBLEMS_EVENT = 'tas:toggle-problems';
+export const TOGGLE_NOTIFICATIONS_EVENT = 'tas:toggle-notifications';
 
 export default function StatusBarItems({ repository, onGit, onErrors }: { repository?: string; onGit: () => void; onErrors: () => void }) {
   const build = useBuild();
@@ -133,6 +134,10 @@ export default function StatusBarItems({ repository, onGit, onErrors }: { reposi
           {git.behind > 0 && <><ArrowDown size={11} />{git.behind}</>}
         </button>
       )}
+      {/* VS Code's bell (W31), always last: a dot for unread notifications, slashed in Do Not Disturb. */}
+      <button className="status-item notifications-bell" aria-label={view.doNotDisturb ? 'Notifications (Do Not Disturb)' : unread > 0 ? `Notifications: ${unread} new` : 'Notifications: none new'} title={view.doNotDisturb ? 'Do Not Disturb' : 'Notifications'} onClick={() => window.dispatchEvent(new Event(TOGGLE_NOTIFICATIONS_EVENT))}>
+        <span className={`codicon codicon-${view.doNotDisturb ? 'bell-slash' : unread > 0 ? 'bell-dot' : 'bell'}`} aria-hidden="true" />
+      </button>
     </span>
   );
 }
