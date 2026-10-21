@@ -16,6 +16,7 @@ import { featureOn } from './features';
 import { activeEditor } from './editor/activeEditor';
 import { openQuickInput, openQuickPick } from './quickinput/store';
 import { changeLanguageMode } from './quickinput/languagePick';
+import { selectIndentation } from './quickinput/indentPick';
 import { selectEncoding } from './quickinput/encodingPick';
 import { encodingLabel, encodingOf, useEncodings } from './files/encoding';
 import { languageById, languageOf, useLanguageModes } from './editor/languageMode';
@@ -71,29 +72,16 @@ export default function StatusBarItems({ repository, onGit, onErrors }: { reposi
       {cursor && (
         <>
           {(() => { const text = <>Ln {cursor.line}, Col {cursor.column}{cursor.selected ? ` (${cursor.selected} selected${featureOn('selected-lines') && (cursor.lines ?? 0) > 1 ? `, ${cursor.lines} lines` : ''})` : ''}{featureOn('selection-count') && (cursor.ranges ?? 1) > 1 ? ` · ${cursor.ranges} selections` : ''}</>; return featureOn('status-goto-line') ? <button className="status-item" aria-label="Cursor position" title={`${cursor.file}${featureOn('line-total') && cursor.total ? ` · ${cursor.total} lines` : ''} — Go to Line (Ctrl+G)`} onClick={() => { const a = activeEditor(); if (a) { a.view.focus(); openQuickInput(':'); } }}>{text}</button> : <span className="status-item" aria-label="Cursor position" title={`${cursor.file}${featureOn('line-total') && cursor.total ? ` · ${cursor.total} lines` : ''}`}>{text}</span>; })()}
-          {/* VS Code's Select End of Line Sequence (W27). */}
-          <button className="status-item" aria-label={`Line separators: ${cursor.eol}`} title="Select End of Line Sequence" onClick={() => openQuickPick({ placeholder: 'Select End of Line Sequence', activeId: cursor.eol, items: [{ id: 'LF', label: 'LF', description: 'Unix and macOS (\\n)', accept: () => requestEol(cursor.file, '\n') }, { id: 'CRLF', label: 'CRLF', description: 'Windows (\\r\\n)', accept: () => requestEol(cursor.file, '\r\n') }] })}>{cursor.eol}</button>
+          {/* VS Code's indentation item (W28), right after the cursor position. */}
+          {featureOn('indentation') && <button className="status-item" aria-label={`Indentation: ${view.indent?.tabs ? 'tabs' : 'spaces'} ${view.indent?.size ?? 2}`} title="Select Indentation" onClick={selectIndentation}>{view.indent?.tabs ? 'Tab Size' : 'Spaces'}: {view.indent?.size ?? 2}</button>}
           {/* VS Code's encoding item (W25): Reopen with Encoding / Save with Encoding (and File Properties). */}
           {(() => { const label = encodingLabel(encodingOf(cursor.file)?.save); return <button className="status-item" aria-label={`Select Encoding: ${label}`} title="Select Encoding" onClick={() => selectEncoding(cursor.file)}>{label}</button>; })()}
+          {/* VS Code's Select End of Line Sequence (W27). */}
+          <button className="status-item" aria-label={`Line separators: ${cursor.eol}`} title="Select End of Line Sequence" onClick={() => openQuickPick({ placeholder: 'Select End of Line Sequence', activeId: cursor.eol, items: [{ id: 'LF', label: 'LF', description: 'Unix and macOS (\\n)', accept: () => requestEol(cursor.file, '\n') }, { id: 'CRLF', label: 'CRLF', description: 'Windows (\\r\\n)', accept: () => requestEol(cursor.file, '\r\n') }] })}>{cursor.eol}</button>
           {/* The file's language mode (VS Code, W23): a click changes it. */}
           <button className="status-item" aria-label={`Select Language Mode: ${languageById(languageOf(cursor.file))?.name ?? 'Plain Text'}`} title="Select Language Mode" onClick={() => changeLanguageMode(cursor.file)}>{languageById(languageOf(cursor.file))?.name ?? 'Plain Text'}</button>
           {featureOn('md-word-count') && /\.(md|markdown|txt)$/i.test(cursor.file) && (() => { const a = activeEditor(); if (!a || a.file !== cursor.file) return null; const s = a.view.state.selection.main; const n = wordCount(s.empty ? a.view.state.doc.toString() : a.view.state.sliceDoc(s.from, s.to)); return <span className="status-item" aria-label="Word count">{n} word{n === 1 ? '' : 's'}{s.empty ? '' : ' selected'}</span>; })()}
           {featureOn('feature-stats') && cursor.file.endsWith('.feature') && (() => { const a = activeEditor(); if (!a || a.file !== cursor.file) return null; const s = featureStats(a.view.state.doc.toString()); return <span className="status-item" aria-label="Feature statistics" title={`${s.scenarios} scenario${s.scenarios === 1 ? '' : 's'}, ${s.examples} example row${s.examples === 1 ? '' : 's'}, ${s.steps} step${s.steps === 1 ? '' : 's'}`}>{s.scenarios} scenario{s.scenarios === 1 ? '' : 's'} · {s.steps} step{s.steps === 1 ? '' : 's'}</span>; })()}
-          {featureOn('indentation') && (
-            <Dropdown
-              label="Indentation"
-              trigger={<button className="status-item" aria-label={`Indentation: ${view.indent?.tabs ? 'tabs' : 'spaces'} ${view.indent?.size ?? 2}`} title="Indentation (click to change)">{view.indent?.tabs ? 'Tab Size' : 'Spaces'}: {view.indent?.size ?? 2}</button>}
-              entries={[
-                { label: `${!view.indent?.tabs ? '✓ ' : '\u2003'}Indent Using Spaces`, onSelect: () => setViewOptions({ indent: { tabs: false, size: view.indent?.size ?? 4 } }) },
-                { label: `${view.indent?.tabs ? '✓ ' : '\u2003'}Indent Using Tabs`, onSelect: () => setViewOptions({ indent: { tabs: true, size: view.indent?.size ?? 4 } }) },
-                'separator',
-                ...[2, 4, 8].map((n) => ({ label: `${(view.indent?.size ?? 2) === n ? '✓ ' : '\u2003'}Size ${n}`, onSelect: () => setViewOptions({ indent: { tabs: !!view.indent?.tabs, size: n } }) })),
-                'separator',
-                { label: 'Convert Indentation to Spaces', onSelect: () => { runRider('untabify', 'menu'); } },
-                { label: 'Convert Indentation to Tabs', onSelect: () => { runRider('tabify', 'menu'); } },
-              ]}
-            />
-          )}
           {featureOn('zoom-indicator') && <button className="status-item" aria-label={`Editor zoom ${view.fontSize ? Math.round((view.fontSize / 13) * 100) : 100}%: reset`} title="Editor zoom (Ctrl+Mouse Wheel); click to reset" onClick={() => setViewOptions({ fontSize: null })}>{view.fontSize ? Math.round((view.fontSize / 13) * 100) : 100}%</button>}
           {view.overtype && <button className="status-item" aria-label="Overtype mode: on" title="Overtype: typing replaces characters (Insert)" onClick={() => setViewOptions({ overtype: false })}>OVR</button>}
         </>

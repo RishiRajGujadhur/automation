@@ -593,3 +593,25 @@ test('W27 Select End of Line Sequence: quick pick from the status bar', async ({
   await page.keyboard.press('Control+s');
   await expect.poll(() => fs.readFile(path.join(temp, 'crlf.txt'), 'utf8')).toBe('one\ntwo\n');
 });
+
+test('W28 Indentation: VS Code order in the status bar, Select Action, tab size, Detect Indentation from Content', async ({ page }) => {
+  await fs.writeFile(path.join(temp, 'four.ts'), 'class A {\n    m() {\n        return 1;\n    }\n}\n');
+  await start(page);
+  await open(page, 'four.ts');
+  const bar = page.locator('footer.status-bar');
+  // Ln / Col, indentation, encoding, line endings, language: VS Code's order.
+  const labels = await bar.locator('.status-item').evaluateAll((els) => els.map((e) => e.getAttribute('aria-label') ?? ''));
+  const at = (re: RegExp) => labels.findIndex((l) => re.test(l));
+  expect([at(/^Cursor position/), at(/^Indentation/), at(/^Select Encoding/), at(/^Line separators/), at(/^Select Language Mode/)]).toEqual([...[at(/^Cursor position/), at(/^Indentation/), at(/^Select Encoding/), at(/^Line separators/), at(/^Select Language Mode/)]].sort((a, b) => a - b));
+  const item = bar.getByRole('button', { name: /^Indentation/ });
+  await expect(item).toHaveText('Spaces: 2');
+  await item.click();
+  await expect(quickBox(page)).toHaveAttribute('placeholder', 'Select Action');
+  await rows(page).filter({ hasText: 'Detect Indentation from Content' }).click();
+  await expect(item).toHaveText('Spaces: 4');
+  await item.click();
+  await rows(page).filter({ hasText: 'Change Tab Display Size' }).click();
+  await expect(quickBox(page)).toHaveAttribute('placeholder', 'Select Tab Size for the Current File');
+  await rows(page).filter({ hasText: /^8/ }).click();
+  await expect(item).toHaveText('Spaces: 8');
+});

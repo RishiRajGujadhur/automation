@@ -456,7 +456,9 @@ test('X95 Indentation from the status bar: tabs, size, conversion', async ({ pag
   const item = page.getByRole('button', { name: /^Indentation:/ });
   await expect(item).toHaveText('Spaces: 2');
   await item.click();
-  await page.getByRole('menuitem', { name: /Indent Using Tabs/ }).click();
+  // VS Code's Select Action, then the tab size (VSCODE-250.md W28).
+  await page.getByRole('dialog', { name: 'Quick Input' }).getByRole('option', { name: /^Indent Using Tabs/ }).click();
+  await page.getByRole('dialog', { name: 'Quick Input' }).getByRole('option', { name: /^4/ }).click();
   await expect(item).toHaveText('Tab Size: 4');
   await caretAt(page, 'Feature:');
   await page.keyboard.press('Home');
