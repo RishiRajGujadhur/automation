@@ -521,3 +521,34 @@ test('W24 files.associations: Configure File Association for .ext, and the setti
   await page.getByLabel('Source of other.log').click();
   await expect(item).toHaveText('Ini');
 });
+
+test('W25 Encoding: detected (UTF-16, BOM), Reopen with Encoding, Save with Encoding', async ({ page }) => {
+  // café in Windows-1252 bytes; a UTF-16 LE file with its BOM.
+  await fs.writeFile(path.join(temp, 'latin.txt'), Buffer.from([0x63, 0x61, 0x66, 0xe9, 0x0a]));
+  await fs.writeFile(path.join(temp, 'wide.txt'), Buffer.concat([Buffer.from([0xff, 0xfe]), Buffer.from('wide text\n', 'utf16le')]));
+  await start(page);
+  const wide = await open(page, 'wide.txt');
+  const item = page.locator('footer.status-bar').getByRole('button', { name: /^Select Encoding/ });
+  await expect(item).toHaveText('UTF-16 LE');
+  await expect(wide.locator('.cm-line').first()).toHaveText('wide text');
+  const latin = await open(page, 'latin.txt');
+  await expect(item).toHaveText('UTF-8');
+  await expect(latin.locator('.cm-line').first()).toHaveText('caf�');
+  // Reopen with Encoding: Windows 1252.
+  await item.click();
+  await rows(page).filter({ hasText: 'Reopen with Encoding' }).click();
+  await expect(quickBox(page)).toHaveAttribute('placeholder', 'Select File Encoding to Reopen File');
+  await page.keyboard.type('1252');
+  await page.keyboard.press('Enter');
+  await expect(latin.locator('.cm-line').first()).toHaveText('café');
+  await expect(item).toHaveText('Western (Windows 1252)');
+  // Save with Encoding: UTF-8 with BOM is written straight away.
+  await item.click();
+  await rows(page).filter({ hasText: 'Save with Encoding' }).click();
+  await expect(quickBox(page)).toHaveAttribute('placeholder', 'Select File Encoding to Save with');
+  await page.keyboard.type('bom');
+  await page.keyboard.press('Enter');
+  await expect.poll(async () => [...await fs.readFile(path.join(temp, 'latin.txt'))].join(',')).toBe([0xef, 0xbb, 0xbf, 0x63, 0x61, 0x66, 0xc3, 0xa9, 0x0a].join(','));
+  await expect(item).toHaveText('UTF-8 with BOM');
+  await expect(latin.locator('.cm-line').first()).toHaveText('café');
+});

@@ -1,5 +1,6 @@
 import { useSyncExternalStore } from 'react';
 import { api } from '../api';
+import { encodingOf, noteRead, noteSaved, reopenEncoding, type EncodingId } from './encoding';
 import { readText, writeText, browserRoot, copyPath as fsaCopy, deletePath as fsaDelete, renamePath as fsaRename } from './fsa';
 
 /**
@@ -21,7 +22,11 @@ async function digest(text: string) {
 
 export async function readFile(file: string): Promise<{ source: string; hash: string }> {
   if (isBrowser()) { const text = await readText(file); return { source: text, hash: await digest(text) }; }
-  return api<{ source: string; hash: string }>(`/source?file=${encodeURIComponent(file)}`);
+  // Reopen with Encoding (W25): the chosen encoding; otherwise the server detects it.
+  const enc = reopenEncoding(file);
+  const r = await api<{ source: string; hash: string; encoding?: EncodingId }>(`/source?file=${encodeURIComponent(file)}${enc ? `&encoding=${enc}` : ''}`);
+  if (r.encoding) noteRead(file, r.encoding);
+  return r;
 }
 
 /** Writes only when the file on disk is still the one the editor loaded (baseHash); otherwise refuses. */
@@ -32,7 +37,10 @@ export async function saveFile(file: string, text: string, baseHash: string): Pr
     await writeText(file, text);
     return { hash: await digest(text) };
   }
-  return api<{ hash: string }>('/file/save', { file, source: text, baseHash });
+  const enc = encodingOf(file);
+  const r = await api<{ hash: string }>('/file/save', { file, source: text, baseHash, ...(enc ? { encoding: enc.save, reopened: enc.read } : {}) });
+  noteSaved(file);
+  return r;
 }
 
 /* Explorer file operations, on the studio server's repository or the browser folder. */

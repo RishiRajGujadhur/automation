@@ -16,6 +16,8 @@ import { featureOn } from './features';
 import { activeEditor } from './editor/activeEditor';
 import { openQuickInput } from './quickinput/store';
 import { changeLanguageMode } from './quickinput/languagePick';
+import { selectEncoding } from './quickinput/encodingPick';
+import { encodingLabel, encodingOf, useEncodings } from './files/encoding';
 import { languageById, languageOf, useLanguageModes } from './editor/languageMode';
 import { featureStats } from './editor/gherkinTools';
 import { wordCount } from './editor/docTools';
@@ -59,6 +61,7 @@ export default function StatusBarItems({ repository, onGit, onErrors }: { reposi
   useEffect(() => { if (build.status !== 'running') return; setBuildStart(Date.now()); const t = setInterval(() => tick((n) => n + 1), 1000); return () => clearInterval(t); }, [build.status]);
   const cursor = useCursor();
   useLanguageModes();
+  useEncodings();
   const view = useViewOptions();
   const git = useGitSummary(repository);
   const errors = build.diagnostics.filter((d) => d.severity === 'error').length;
@@ -76,7 +79,8 @@ export default function StatusBarItems({ repository, onGit, onErrors }: { reposi
               { label: `${cursor.eol === 'LF' ? '✓ ' : '\u2003'}LF – Unix and macOS (\\n)`, onSelect: () => requestEol(cursor.file, '\n') },
             ]}
           />
-          {featureOn('status-file-props') ? <button className="status-item" aria-label="Encoding: UTF-8 (File Properties)" title="Encoding — File Properties (Alt+Enter)" onClick={() => runRider('file-props', 'menu')}>UTF-8</button> : <span className="status-item" title="Encoding">UTF-8</span>}
+          {/* VS Code's encoding item (W25): Reopen with Encoding / Save with Encoding (and File Properties). */}
+          {(() => { const label = encodingLabel(encodingOf(cursor.file)?.save); return <button className="status-item" aria-label={`Select Encoding: ${label}`} title="Select Encoding" onClick={() => selectEncoding(cursor.file)}>{label}</button>; })()}
           {/* The file's language mode (VS Code, W23): a click changes it. */}
           <button className="status-item" aria-label={`Select Language Mode: ${languageById(languageOf(cursor.file))?.name ?? 'Plain Text'}`} title="Select Language Mode" onClick={() => changeLanguageMode(cursor.file)}>{languageById(languageOf(cursor.file))?.name ?? 'Plain Text'}</button>
           {featureOn('md-word-count') && /\.(md|markdown|txt)$/i.test(cursor.file) && (() => { const a = activeEditor(); if (!a || a.file !== cursor.file) return null; const s = a.view.state.selection.main; const n = wordCount(s.empty ? a.view.state.doc.toString() : a.view.state.sliceDoc(s.from, s.to)); return <span className="status-item" aria-label="Word count">{n} word{n === 1 ? '' : 's'}{s.empty ? '' : ' selected'}</span>; })()}

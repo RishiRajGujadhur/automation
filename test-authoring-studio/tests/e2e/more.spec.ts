@@ -970,10 +970,13 @@ test('X192–X194 Reset Feature Settings, status bar Go to Line and File Propert
   await expect(page.getByText('Feature settings are back to the defaults.').first()).toBeVisible();
   await caretAt(page, 'Feature:');
   await page.getByRole('button', { name: 'Cursor position' }).click();
-  await expect(page.locator('.cm-panel input[name="line"], .cm-gotoLine input').first()).toBeVisible();
+  // Go to Line in VS Code's Quick Input (VSCODE-250.md W5).
+  await expect(page.getByRole('combobox', { name: 'Quick Input' })).toHaveValue(':');
   await page.keyboard.press('Escape');
   await caretAt(page, 'Feature:');
-  await page.getByRole('button', { name: /^Encoding: UTF-8/ }).click();
+  // The encoding item's picker (W25) keeps File Properties.
+  await page.getByRole('button', { name: /^Select Encoding: UTF-8/ }).click();
+  await page.getByRole('dialog', { name: 'Quick Input' }).getByRole('option', { name: /File Properties/ }).click();
   await expect(page.getByRole('dialog', { name: 'Properties' })).toBeVisible();
 });
 
