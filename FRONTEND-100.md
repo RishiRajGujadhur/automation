@@ -25,11 +25,11 @@ Status: `[x]` done, `[ ]` to do. Before this list, JS / TS / HTML / CSS files op
 - [x] F14 Convert async/await to promise chains
 - [x] F15 Convert function declarations to arrow functions
 - [x] F16 Convert arrow functions to function declarations
-- [ ] F17 Convert CommonJS to ES modules
-- [ ] F18 Convert ES modules to CommonJS
-- [ ] F19 Organize ES module imports
-- [ ] F20 Remove unused imports
-- [ ] F21 Auto-import unresolved symbols
+- [x] F17 Convert CommonJS to ES modules
+- [x] F18 Convert ES modules to CommonJS
+- [x] F19 Organize ES module imports
+- [x] F20 Remove unused imports
+- [x] F21 Auto-import unresolved symbols
 - [x] F22 Update imports when files move
 - [ ] F23 Detect circular module dependencies
 - [ ] F24 Navigate TypeScript declaration files
@@ -120,3 +120,4 @@ Status: `[x]` done, `[ ]` to do. Before this list, JS / TS / HTML / CSS files op
 - 2026-10-21: F9, F22. Convert to TypeScript renames the file (imports follow) and shows its typed text (JSDoc types moved into annotations, parameters typed from usage) as a diff to approve. An Explorer rename or move of a script or folder updates the imports that point at it (getEditsForFileRename), as diffs to approve. Fixed on the way: the Explorer did not list .ts / .js / .html / .css files.
 - 2026-10-21: F10, F11, F13. Generate JSDoc comment (Quick Action, or /** then Enter above a declaration) from TypeScript's doc template; Annotate with type from JSDoc and Convert to async function from the TypeScript service.
 - 2026-10-21: F12, F14, F15, F16. Studio actions (customs/functions.ts): a Node-style callback becomes a Promise with .then / .catch; an async function becomes a .then chain (not offered with try/catch); a function declaration becomes a const arrow function (not offered when it uses this, arguments, overloads or is a generator); the rewritten code is formatted. Arrow to function declaration: TypeScript's Convert to named function.
+- 2026-10-21: F17, F18, F19, F20, F21. Convert to ES module and Add import from (TypeScript code fixes); Convert to CommonJS module (studio action: imports to require, exports to module.exports); Organize imports (Quick Action and Shift+Alt+O) and Remove unused imports from TypeScript's organizeImports.

@@ -200,3 +200,28 @@ test('F16 Convert arrow functions to function declarations', async ({ page }) =>
   await open(page, 'src/util.ts', 'export const square = (n: number) => n * n;\n');
   await convert(page, 'square', /^Convert to named function$/, /export function square\(n: number\) \{\s*return n \* n;\s*\}/, false, 1);
 });
+
+test('F17 Convert CommonJS to ES modules', async ({ page }) => {
+  await open(page, 'src/legacy.js', 'const path = require("path");\nfunction join(a, b) { return path.join(a, b); }\nmodule.exports = { join };\n');
+  await convert(page, 'require', /^Convert to ES module$/, /import path from "path";?[\s\S]*export function join\(a, b\)|import \{ join as _join \} from "path"|import path from "path";[\s\S]*export \{ join \}/, false, 1);
+});
+test('F18 Convert ES modules to CommonJS', async ({ page }) => {
+  await open(page, 'src/esm.js', 'import fs, { readFileSync as read } from "fs";\nimport * as os from "os";\nexport const name = "x";\nexport function size(p) { return read(p).length + os.EOL.length + fs.constants.F_OK; }\nexport default size;\n');
+  await convert(page, 'name', /^Convert to CommonJS module$/, 'const fs = require("fs");\nconst { readFileSync: read } = require("fs");\nconst os = require("os");\nconst name = "x";\nfunction size(p) { return read(p).length + os.EOL.length + fs.constants.F_OK; }\n\nmodule.exports = size;\nmodule.exports.name = name;\nmodule.exports.size = size;\n', false, 1);
+});
+test('F19 Organize ES module imports; F20 Remove unused imports', async ({ page }) => {
+  const src = 'import { b, a } from "./letters";\nimport { PI } from "./math";\nimport { add } from "./math";\nexport const x = add(PI, 1) + a + b;\n';
+  await fs.writeFile(path.join(temp, 'src/letters.ts'), 'export const a = 1, b = 2, c = 3;\n');
+  await open(page, 'src/app.ts', src);
+  await convert(page, 'import { b', /^Organize imports$/, 'import { a, b } from "./letters";\nimport { add, PI } from "./math";\nexport const x', false, 2);
+  // Shift+Alt+O does the same.
+  await setDoc(page, src);
+  await page.keyboard.press('Shift+Alt+O');
+  await expect.poll(() => docText(page)).toContain('import { a, b } from "./letters";\nimport { add, PI } from "./math";');
+  await setDoc(page, 'import { a, c } from "./letters";\nimport { add } from "./math";\nexport const y = a;\n');
+  await convert(page, 'import { a', /^Remove unused imports$/, /^import \{ a \} from "\.\/letters";\nexport const y = a;\n$/, false, 2);
+});
+test('F21 Auto-import unresolved symbols', async ({ page }) => {
+  await open(page, 'src/app.ts', 'export const twice = add(PI, PI);\n');
+  await convert(page, 'add(', /^Add import from "\.\/math"$/, /^import \{ add(, PI)? \} from "\.\/math";\n/, false, 1);
+});

@@ -4,3 +4,4 @@ import './annotations.js';
 import './modules.js';
 import './docs.js';
 import './functions.js';
+import './imports.js';
