@@ -97,3 +97,4 @@ import './gotoLine';
 import './workspaceSymbols';
 import './help';
 import './editors';
+import './textSearch';

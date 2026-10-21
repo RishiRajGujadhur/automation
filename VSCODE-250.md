@@ -23,7 +23,7 @@ Legend: `[x]` done · `[ ]` to do.
 - [x] W7. Quick access help (`?`): the prefixes and what they do
 - [x] W8. Open View (`view `, Ctrl+Q): side bar views, panels and pages
 - [x] W9. Show All Editors by MRU (`edt `)
-- [ ] W10. Quick text search (`%`): lines matching the text across files, open at the match
+- [x] W10. Quick text search (`%`): lines matching the text across files, open at the match
 - [ ] W11. Open to the side from Quick Open (Ctrl+Enter / the split button)
 - [ ] W12. Remove from Recently Opened (× on a recent entry)
 - [ ] W13. workbench.quickOpen.closeOnFocusLost
@@ -303,3 +303,4 @@ Legend: `[x]` done · `[ ]` to do.
 - 2026-10-21: W7. ? lists every Quick Input prefix (…, >, @, :, #, view) with what it does; picking one switches to it.
 - 2026-10-21: W8. Side bar views, panel views (Build, Debug, Output, TODO, Structure, Problems, Terminal…) and pages, grouped as in VS Code; Ctrl+Q opens it.
 - 2026-10-21: W9. Open editors last used first, unsaved ones marked ●, a Close Editor button on each (through the usual unsaved-changes prompt).
+- 2026-10-21: W10. Matching lines across the workspace in the Quick Input, the match highlighted, grouped under each file; Enter opens the file at the match.

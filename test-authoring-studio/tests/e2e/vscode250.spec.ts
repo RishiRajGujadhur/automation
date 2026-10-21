@@ -229,3 +229,18 @@ test('W9 Show All Editors by MRU (edt ): last used first, close button', async (
   await page.keyboard.press('Enter');
   await expect(page.locator('.editor-tab-label[aria-current="true"]')).toHaveAttribute('title', 'Steps/SearchSteps.cs');
 });
+
+test('W10 Quick text search (%): matching lines grouped by file, Enter opens at the match', async ({ page }) => {
+  await start(page);
+  await page.keyboard.press('Control+p');
+  await quickBox(page).fill('%OpenLogin');
+  const first = rows(page).first();
+  await expect(first).toBeVisible({ timeout: 20_000 });
+  await expect(first.locator('.highlight')).toHaveText('OpenLogin');
+  await expect(first.locator('.quick-input-separator')).toHaveText(/\.(cs|feature|xml)$/);
+  const desc = await first.locator('.quick-input-description').innerText();
+  const [name, line] = desc.split(':');
+  await page.keyboard.press('Enter');
+  await expect(page.locator('.editor-tab-label[aria-current="true"]')).toHaveAttribute('title', new RegExp(`${name.replace('.', '\.')}$`));
+  await expect.poll(() => caretLine(page)).toBe(Number(line));
+});
