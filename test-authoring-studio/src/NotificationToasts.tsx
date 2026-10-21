@@ -24,6 +24,8 @@ export default function NotificationToasts({ notice, undo, silent, onUndone, onC
     if (!notice || silent) return;
     setItems((list) => [...list.filter((x) => x.text !== notice), { id: ++next.current, text: notice, undo }].slice(-MAX));
   }, [notice]); // eslint-disable-line react-hooks/exhaustive-deps
+  // Do Not Disturb (or Zen Mode's silence) hides the toasts already up too.
+  useEffect(() => { if (silent) setItems([]); }, [silent]);
   // Undo belongs to the newest toast (it is set together with the notice).
   useEffect(() => { setItems((list) => (list.length ? [...list.slice(0, -1), { ...list[list.length - 1], undo }] : list)); }, [undo]);
   const close = (id: number) => setItems((list) => { const rest = list.filter((x) => x.id !== id); if (list[list.length - 1]?.id === id) onClosed(); return rest; });

@@ -657,7 +657,7 @@ test('W30 Status bar context menu: hide and show items, Hide Status Bar', async 
   await expect(bar).toBeHidden();
 });
 
-test('W31 Notifications bell: always there, a dot for new ones, slashed in Do Not Disturb, toggles the list', async ({ page }) => {
+test('W31 Notifications bell: always there, a dot for new ones, slashed in Do Not Disturb, toggles the Notification Center', async ({ page }) => {
   await start(page);
   const bell = page.locator('footer.status-bar .notifications-bell');
   await expect(bell).toBeVisible();
@@ -667,9 +667,9 @@ test('W31 Notifications bell: always there, a dot for new ones, slashed in Do No
   await page.evaluate(() => window.dispatchEvent(new CustomEvent('tas:notice', { detail: 'Something happened.' })));
   await expect(bell.locator('.codicon-bell-dot')).toBeVisible();
   await bell.click();
-  await expect(page.getByRole('region', { name: 'Notifications', exact: true }).first()).toBeVisible();
+  await expect(page.getByRole('region', { name: 'Notification Center' })).toBeVisible();
   await bell.click();
-  await expect(page.getByRole('region', { name: 'Notifications', exact: true })).toHaveCount(0);
+  await expect(page.getByRole('region', { name: 'Notification Center' })).toHaveCount(0);
   await page.evaluate(() => { const k = 'tas:rider:view'; localStorage.setItem(k, JSON.stringify({ ...JSON.parse(localStorage.getItem(k) ?? '{}'), doNotDisturb: true })); });
   await page.reload();
   await expect(bell.locator('.codicon-bell-slash')).toBeVisible();
@@ -793,4 +793,29 @@ test('W36 Notification toasts: severity icon, source, buttons, stacked bottom ri
   await expect(toasts.first()).toContainText('Build failed');
   await toasts.first().getByRole('button', { name: 'Dismiss notification' }).click();
   await expect(toasts).toHaveCount(2);
+});
+
+test('W37 Notification Center: every notification, clear one / all, Do Not Disturb, hide', async ({ page }) => {
+  await start(page);
+  const notify = (t: string) => page.evaluate((x) => window.dispatchEvent(new CustomEvent('tas:notice', { detail: x })), t);
+  await notify('First message.');
+  await notify('Build failed: 1 error.');
+  await page.locator('footer.status-bar .notifications-bell').click();
+  const center = page.getByRole('region', { name: 'Notification Center' });
+  await expect(center.locator('li')).toHaveCount(2);
+  await expect(center.locator('li').first()).toContainText('Build failed');
+  await expect(center.locator('li').first().getByRole('img', { name: 'error' })).toBeVisible();
+  // Seen: the bell loses its dot.
+  await expect(page.locator('footer.status-bar .codicon-bell-dot')).toHaveCount(0);
+  await center.getByRole('button', { name: 'Clear Notification: First message.' }).click();
+  await expect(center.locator('li')).toHaveCount(1);
+  await center.getByRole('button', { name: 'Toggle Do Not Disturb Mode' }).click();
+  await expect(page.locator('footer.status-bar .codicon-bell-slash')).toBeVisible();
+  await notify('Quiet.');
+  await expect(page.locator('.notification-toast')).toHaveCount(0);
+  await center.getByRole('button', { name: 'Toggle Do Not Disturb Mode' }).click();
+  await center.getByRole('button', { name: 'Clear All Notifications' }).click();
+  await expect(center).toContainText('NO NEW NOTIFICATIONS');
+  await center.getByRole('button', { name: 'Hide Notifications' }).click();
+  await expect(center).toHaveCount(0);
 });

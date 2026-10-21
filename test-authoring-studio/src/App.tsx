@@ -64,6 +64,7 @@ import GitView from './git/GitView';
 import StatusBarItems, { ProblemsStatus, TOGGLE_PROBLEMS_EVENT, TOGGLE_NOTIFICATIONS_EVENT } from './StatusBarItems';
 import StatusBarMenu from './StatusBarMenu';
 import NotificationToasts from './NotificationToasts';
+import NotificationCenter from './NotificationCenter';
 import GoToAll from './search/GoToAll';
 import { runTests, getTestRun, discoverTests, useTestRun, outcomeOf, combine, type DiscoveredTest } from './testing/store';
 import type { RunMark } from './editor/runGutter';
@@ -557,10 +558,9 @@ export default function App() {
   const toggleProblemsRef = useRef(() => {});
   toggleProblemsRef.current = () => { if (riderTools.includes('problems') && dockTab === 'problems') closeRiderTool('problems'); else showRiderTool('problems'); };
   useEffect(() => { const h = () => toggleProblemsRef.current(); window.addEventListener(TOGGLE_PROBLEMS_EVENT, h); return () => window.removeEventListener(TOGGLE_PROBLEMS_EVENT, h); }, []);
-  // The status bar's bell (W31): the Notifications window, toggled.
-  const toggleNotificationsRef = useRef(() => {});
-  toggleNotificationsRef.current = () => { if (riderTools.includes('notifications') && dockTab === 'notifications') closeRiderTool('notifications'); else showRiderTool('notifications'); };
-  useEffect(() => { const h = () => toggleNotificationsRef.current(); window.addEventListener(TOGGLE_NOTIFICATIONS_EVENT, h); return () => window.removeEventListener(TOGGLE_NOTIFICATIONS_EVENT, h); }, []);
+  // The status bar's bell (W31): VS Code's Notification Center (W37), toggled.
+  const [notificationCenter, setNotificationCenter] = useState(false);
+  useEffect(() => { const h = () => setNotificationCenter((o) => !o); window.addEventListener(TOGGLE_NOTIFICATIONS_EVENT, h); return () => window.removeEventListener(TOGGLE_NOTIFICATIONS_EVENT, h); }, []);
   // TODO window (Rider, Alt+6): another tab of the bottom panel.
   const [todoOpen, setTodoOpen] = useLocalState('todoOpen', false);
   // Output window (View ▸ Output, Ctrl+Alt+O): a third tab of the bottom panel.
@@ -2466,6 +2466,7 @@ export default function App() {
         </span>
       </footer>
       <StatusBarMenu />
+      {notificationCenter && <NotificationCenter onClose={() => setNotificationCenter(false)} />}
       <BusyTitle />
       <Toast.Provider swipeDirection={typeof window !== 'undefined' && matchMedia('(max-width: 640px)').matches ? 'down' : 'right'} duration={6000}>
         {/* VS Code's notification toasts (W36); Zen Mode's silent notifications and Do Not Disturb hide them. */}
