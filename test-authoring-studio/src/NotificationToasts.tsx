@@ -2,6 +2,8 @@ import { useEffect, useRef, useState } from 'react';
 import * as Toast from '@radix-ui/react-toast';
 import { featureOn } from './features';
 import { copyText } from './ui';
+import { cancelBuild, useBuild } from './build/store';
+import { cancelTests, useTestRun } from './testing/store';
 
 /** A notice's severity, guessed from its words: VS Code's error / warning / info icons. */
 export function noticeSeverity(text: string): 'error' | 'warning' | 'info' {
@@ -11,6 +13,34 @@ export function noticeSeverity(text: string): 'error' | 'warning' | 'info' {
 }
 
 type Item = { id: number; text: string; undo?: { run: () => void } };
+
+/** W38 progress notifications: a build or test run in progress, with VS Code's indeterminate bar and Cancel. */
+function ProgressToasts({ silent }: { silent: boolean }) {
+  const build = useBuild();
+  const tests = useTestRun();
+  const list = [
+    ...(build.status === 'running' ? [{ id: 'build', text: `${build.action === 'clean' ? 'Cleaning' : build.action === 'rebuild' ? 'Rebuilding' : 'Building'} ${build.target ?? 'the solution'} (${build.configuration ?? 'Debug'})…`, cancel: () => void cancelBuild() }] : []),
+    ...(tests.status === 'running' ? [{ id: 'tests', text: 'Running tests…', cancel: () => void cancelTests() }] : []),
+  ];
+  if (silent) return null;
+  return (
+    <>
+      {list.map((p) => (
+        <Toast.Root key={p.id} duration={Infinity} open className="toast notification-toast progress-toast severity-info" onOpenChange={() => {}}>
+          <span className="codicon codicon-info notification-icon" role="img" aria-label="info" />
+          <div className="notification-body">
+            <Toast.Description className="notification-message">{p.text}</Toast.Description>
+            <div className="notification-footer">
+              <span className="notification-source">Source: TestAuthoring Studio</span>
+              <span className="notification-buttons"><Toast.Action asChild altText="Cancel"><button className="notification-button secondary" onClick={p.cancel}>Cancel</button></Toast.Action></span>
+            </div>
+          </div>
+          <div className="notification-progress" role="progressbar" aria-label={p.text} />
+        </Toast.Root>
+      ))}
+    </>
+  );
+}
 const MAX = 3;
 
 /**
@@ -31,6 +61,7 @@ export default function NotificationToasts({ notice, undo, silent, onUndone, onC
   const close = (id: number) => setItems((list) => { const rest = list.filter((x) => x.id !== id); if (list[list.length - 1]?.id === id) onClosed(); return rest; });
   return (
     <>
+      <ProgressToasts silent={silent} />
       {items.map((it) => {
         const sev = noticeSeverity(it.text);
         return (

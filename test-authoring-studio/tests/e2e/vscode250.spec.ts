@@ -819,3 +819,15 @@ test('W37 Notification Center: every notification, clear one / all, Do Not Distu
   await center.getByRole('button', { name: 'Hide Notifications' }).click();
   await expect(center).toHaveCount(0);
 });
+
+test('W38 Progress notification while a build runs: indeterminate bar and Cancel', async ({ page }) => {
+  let cancelled = false;
+  await page.route('**/api/build/events', (route) => route.fulfill({ status: 200, headers: { 'content-type': 'text/event-stream' }, body: `data: ${JSON.stringify({ status: cancelled ? 'cancelled' : 'running', version: 1, action: 'build', target: 'Fixtures.csproj', configuration: 'Debug', output: '', diagnostics: [] })}\n\n` }));
+  await page.route('**/api/build/cancel', (route) => { cancelled = true; return route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ status: 'cancelled', version: 2, output: '', diagnostics: [] }) }); });
+  await start(page);
+  const toast = page.locator('.progress-toast');
+  await expect(toast).toContainText('Building Fixtures.csproj (Debug)…');
+  await expect(toast.getByRole('progressbar')).toBeVisible();
+  await toast.getByRole('button', { name: 'Cancel' }).click();
+  expect(cancelled).toBe(true);
+});

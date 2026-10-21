@@ -736,3 +736,17 @@
   .severity-warning .notification-icon { color: #cca700; }
   .severity-error .notification-icon { color: #f14c4c; }
 }
+// Progress notifications (W38): the indeterminate bar along the bottom edge.
+.toast-viewport .toast.progress-toast {
+  overflow: hidden;
+  .notification-progress {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    height: 2px;
+    overflow: hidden;
+    &::after { content: ''; position: absolute; width: 25%; height: 100%; background: var(--accent, #0e70c0); animation: notification-progress 1.2s linear infinite; }
+  }
+}
+@keyframes notification-progress { from { left: -25%; } to { left: 100%; } }

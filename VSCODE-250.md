@@ -55,7 +55,7 @@ Legend: `[x]` done · `[ ]` to do.
 ## Notifications
 - [x] W36. VS Code toasts: severity icon, message, "Source:", gear, close, action buttons, bottom-right stack
 - [x] W37. Notification Center (Notifications: Show Notifications): list, collapse, clear one / all, Do Not Disturb toggle
-- [ ] W38. Progress notifications (indexing, build) with an indeterminate bar
+- [x] W38. Progress notifications (indexing, build) with an indeterminate bar
 - [ ] W39. Notifications: Focus Toast / Accept primary action (Ctrl+Shift+A? / keyboard) and Clear All (command)
 - [ ] W40. Gear on a toast: "Don't show again" for that kind of message
 
@@ -331,3 +331,4 @@ Legend: `[x]` done · `[ ]` to do.
 - 2026-10-21: W35. View ▸ Focus Status Bar (palette): ←/→, Home / End move between the status bar items, Enter runs one, Escape returns to the editor. Several cursors read 'n selections (m characters selected)' as in VS Code.
 - 2026-10-21: W36. Notices are VS Code toasts at the bottom right: a severity icon (info / warning / error), the message, 'Source:', Copy and Undo buttons and ×; up to three stack, errors stay longer, Do Not Disturb and Zen Mode keep them quiet.
 - 2026-10-21: W37. The bell opens VS Code's Notification Center above the status bar: every notification of the session with severity, source and age; × clears one; Clear All, Toggle Do Not Disturb (which also hides the toasts already up) and Hide; Escape closes it.
+- 2026-10-21: W38. While a build or a test run is going, a VS Code progress notification shows what runs (action, project, configuration) with an indeterminate bar and Cancel.
