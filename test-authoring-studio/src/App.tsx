@@ -80,6 +80,7 @@ import SearchPalette from './SearchPalette';
 import QuickInput from './quickinput/QuickInput';
 import { openQuickInput } from './quickinput/store';
 import { openCommandPalette, setPaletteCommands, type PaletteEntry } from './quickinput/providers';
+import { setOpenViews } from './quickinput/help';
 import { SelectorCatalogue, BackgroundCatalogue } from './Catalogues';
 import { api } from './api';
 import { useLocalState, RowMenu, copyText } from './ui';
@@ -409,6 +410,8 @@ export default function App() {
     if (!e.shiftKey && !e.altKey && e.key.toLowerCase() === 't') { e.preventDefault(); setModal('goto'); return; }
     // Quick Open (VS Code, W1).
     if (!e.shiftKey && !e.altKey && e.key.toLowerCase() === 'p') { e.preventDefault(); openQuickInput(''); return; }
+    // Open View (VS Code's Ctrl+Q, W8).
+    if (!e.shiftKey && !e.altKey && e.key.toLowerCase() === 'q') { e.preventDefault(); openQuickInput('view '); return; }
     if (e.altKey && !e.shiftKey && e.key.toLowerCase() === 'o') { e.preventDefault(); openOutput(); return; }
     if (e.shiftKey && !e.altKey && e.key.toLowerCase() === 'b') { e.preventDefault(); if (getBuild().status !== 'running') runBuild('build'); return; }
     if (e.key === 'Pause' || e.key === 'Cancel') { if (getBuild().status === 'running') { e.preventDefault(); void cancelBuild(); } return; }
@@ -1231,6 +1234,20 @@ export default function App() {
           ...designTools.map((d) => ({ label: `Test Design: ${d.label}`, run: () => { try { localStorage.setItem('tas:design:tool', JSON.stringify(d.id)); } catch { /* storage blocked */ } setDesignKey((k) => k + 1); setTab('Test Design'); } })),
   ];
   setPaletteCommands(paletteCommands);
+  // Open View (VS Code's `view ` quick access, W8).
+  const toEditor = () => { if (tab !== 'Features' || (view !== 'code' && view !== 'editor')) { setTab('Features'); setView('editor'); } };
+  setOpenViews([
+    { group: 'Side Bar', label: 'Explorer', keybinding: 'Ctrl+Shift+E', run: () => { toEditor(); setSidebarView('explorer'); setPrefs({ sidebar: true }); } },
+    { group: 'Side Bar', label: 'Search', keybinding: 'Ctrl+Shift+F', run: () => showSearch(false) },
+    { group: 'Side Bar', label: 'Source Control', run: () => showGit() },
+    { group: 'Side Bar', label: 'Testing', run: () => showTests() },
+    { group: 'Panel', label: 'Build', run: () => { toEditor(); setBuildOpen(true); setDockTab('build'); } },
+    { group: 'Panel', label: 'Debug', run: () => { toEditor(); setDebugOpen(true); setDockTab('debug'); } },
+    { group: 'Panel', label: 'Output', keybinding: 'Ctrl+Alt+O', run: () => openOutput() },
+    { group: 'Panel', label: 'TODO', run: () => openTodo() },
+    ...(Object.entries(RIDER_TOOLS) as [RiderTool, string][]).map(([k, label]) => ({ group: 'Panel' as const, label, run: () => showRiderTool(k) })),
+    ...navTabs.map((t) => ({ group: 'Page' as const, label: t.name, run: () => navigate(t.name) })),
+  ]);
   const menuProps = {
     pages: basic ? [] : moreTabs.map((t) => ({ ...t })),
     primary: navTabs.map((t, i) => ({ name: t.name, icon: t.icon, hint: `Alt+${i + 1}` })),

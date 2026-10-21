@@ -20,7 +20,7 @@ Legend: `[x]` done · `[ ]` to do.
 - [x] W4. Symbols grouped by kind (`@:`), with counts
 - [x] W5. Go to Line/Column (Ctrl+G, `:`): "Current Line: x, Character: y. Type a line number between 1 and n", live preview, `line:column`
 - [x] W6. Go to Symbol in Workspace (Ctrl+T, `#`)
-- [ ] W7. Quick access help (`?`): the prefixes and what they do
+- [x] W7. Quick access help (`?`): the prefixes and what they do
 - [ ] W8. Open View (`view `, Ctrl+Q): side bar views, panels and pages
 - [ ] W9. Show All Editors by MRU (`edt `)
 - [ ] W10. Quick text search (`%`): lines matching the text across files, open at the match
@@ -300,3 +300,4 @@ Legend: `[x]` done · `[ ]` to do.
 - 2026-10-21: W3, W4. Symbols of C#, Gherkin, Markdown and (new /api/web/outline) TypeScript / JavaScript, HTML, CSS; codicon symbol icons in VS Code's colours; the highlighted symbol is previewed, Escape restores the caret. Ctrl+Shift+O in an editor; elsewhere it still opens a solution.
 - 2026-10-21: W5. VS Code's Go to Line: 'Current Line: x, Character: y…', line:column, negative lines from the end, the line previewed while typing, Escape restores; Ctrl+G and the status bar's Ln/Col open it (floating editors too).
 - 2026-10-21: W6. C# symbols from Roslyn and TypeScript / JavaScript symbols (new /api/web/symbols, TypeScript's navigateTo) with container and file, fuzzy highlighted; Enter opens at the symbol.
+- 2026-10-21: W7. ? lists every Quick Input prefix (…, >, @, :, #, view) with what it does; picking one switches to it.

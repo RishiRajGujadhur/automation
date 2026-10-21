@@ -95,3 +95,4 @@ export const openCommandPalette = () => openQuickInput(featureOn('palette-last')
 import './symbols';
 import './gotoLine';
 import './workspaceSymbols';
+import './help';

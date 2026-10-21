@@ -185,3 +185,29 @@ test('W6 Go to Symbol in Workspace (#): TypeScript symbols across files, open at
   await expect(page.getByLabel('Source of shapes.ts')).toBeVisible();
   await expect.poll(() => caretLine(page)).toBe(17);
 });
+
+test('W7 Quick access help (?): the prefixes, Enter switches to one', async ({ page }) => {
+  await start(page);
+  await page.keyboard.press('Control+p');
+  await quickBox(page).fill('?');
+  for (const [p, help] of [['…', 'Go to File'], ['>', 'Show and Run Commands'], ['@', 'Go to Symbol in Editor'], [':', 'Go to Line/Column'], ['#', 'Go to Symbol in Workspace'], ['view', 'Open View']])
+    await expect(rows(page).filter({ hasText: help }).first()).toContainText(p);
+  await rows(page).filter({ hasText: 'Show and Run Commands' }).click();
+  await expect(quickBox(page)).toHaveValue('>');
+  await page.keyboard.press('Escape');
+});
+
+test('W8 Open View (Ctrl+Q): side bar, panel and pages', async ({ page }) => {
+  await start(page);
+  await page.keyboard.press('Control+q');
+  await expect(quickBox(page)).toHaveValue('view ');
+  await expect(quick(page).locator('.quick-input-separator')).toHaveText(['Side Bar', 'Panel', 'Page']);
+  await page.keyboard.type('outp');
+  await expect(rows(page)).toHaveCount(1);
+  await page.keyboard.press('Enter');
+  await expect(page.getByRole('region', { name: 'Output' })).toBeVisible();
+  await page.keyboard.press('Control+q');
+  await page.keyboard.type('source control');
+  await page.keyboard.press('Enter');
+  await expect(page.getByRole('region', { name: /Source Control|Git/ }).first()).toBeVisible();
+});
