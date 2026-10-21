@@ -94,3 +94,4 @@ registerQuickAccess({
 export const openCommandPalette = () => openQuickInput(featureOn('palette-last') ? lastQuery('>') ?? '>' : '>', true);
 import './symbols';
 import './gotoLine';
+import './workspaceSymbols';

@@ -170,3 +170,18 @@ test('W5 Go to Line/Column: Ctrl+G, current line message, line:column, preview, 
   await expect(quickBox(page)).toHaveValue(':');
   await page.keyboard.press('Escape');
 });
+
+test('W6 Go to Symbol in Workspace (#): TypeScript symbols across files, open at the symbol', async ({ page }) => {
+  await fs.writeFile(path.join(temp, 'shapes.ts'), SHAPES);
+  await fs.writeFile(path.join(temp, 'tsconfig.json'), JSON.stringify({ compilerOptions: { target: 'ES2022', strict: true, noEmit: true }, include: ['*.ts'] }));
+  await start(page);
+  await page.keyboard.press('Control+p');
+  await quickBox(page).fill('#perim');
+  const row = rows(page).filter({ hasText: 'perimeter' }).first();
+  await expect(row).toBeVisible({ timeout: 30_000 });
+  await expect(row).toContainText('Square · shapes.ts');
+  await expect(row.locator('.codicon-symbol-method')).toBeVisible();
+  await row.click();
+  await expect(page.getByLabel('Source of shapes.ts')).toBeVisible();
+  await expect.poll(() => caretLine(page)).toBe(17);
+});

@@ -78,6 +78,14 @@ export function webRoutes(app: Express, root: () => string) {
     res.json(scriptSymbols(p, p.setText(b.file, b.source)));
   });
 
+  // Workspace symbols of the TypeScript / JavaScript project (VSCODE-250.md W6: Go to Symbol in Workspace).
+  app.get('/api/web/symbols', async (req, res) => {
+    const q = z.string().min(1).max(200).parse(req.query.q);
+    const p = tsProject(root());
+    const items = p.service.getNavigateToItems(q, 200, undefined, true).filter((i) => !/[\/]node_modules[\/]/.test(i.fileName) && !/\.d\.ts$/.test(i.fileName));
+    res.json(items.map((i) => ({ name: i.name, kind: i.kind, container: i.containerName || undefined, file: p.rel(i.fileName), ...lineCol(i.fileName, i.textSpan.start, p) })));
+  });
+
   app.post('/api/web/quickinfo', async (req, res) => {
     const b = at.parse(req.body);
     const p = await script(b.file);
