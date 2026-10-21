@@ -161,7 +161,9 @@ export async function branches(root: string) {
     if (/^[^/]+\/.+/.test(name) && !local.some((l) => l.name === name) && (await git(top, ['show-ref', '--verify', '--quiet', `refs/remotes/${name}`]).then(() => true, () => false))) remote.push(name);
     else local.push({ name, current: head === '*', upstream: upstream || undefined, when });
   }
-  return { local: local.sort((a, b) => Number(b.current) - Number(a.current) || a.name.localeCompare(b.name)), remote: remote.filter((r) => !local.some((l) => r.endsWith(`/${l.name}`))) };
+  // Tags too, newest first (VS Code's Checkout to… lists them after the branches).
+  const tags = (await git(top, ['tag', '--sort=-creatordate']).catch(() => '')).split('\n').filter(Boolean);
+  return { local: local.sort((a, b) => Number(b.current) - Number(a.current) || a.name.localeCompare(b.name)), remote: remote.filter((r) => !local.some((l) => r.endsWith(`/${l.name}`))), tags };
 }
 /** Switch branch (a remote branch gets a local tracking branch); refuses when local changes would be overwritten. */
 export async function checkout(root: string, name: string) {

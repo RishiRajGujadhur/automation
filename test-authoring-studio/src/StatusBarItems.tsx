@@ -20,6 +20,7 @@ import { isBrowser } from './files/provider';
 import { openQuickInput, openQuickPick } from './quickinput/store';
 import { changeLanguageMode } from './quickinput/languagePick';
 import { selectIndentation } from './quickinput/indentPick';
+import { checkoutTo } from './quickinput/gitPick';
 import { selectEncoding } from './quickinput/encodingPick';
 import { encodingLabel, encodingOf, useEncodings } from './files/encoding';
 import { languageById, languageOf, useLanguageModes } from './editor/languageMode';
@@ -146,7 +147,7 @@ export default function StatusBarItems({ repository, onGit, onErrors }: { reposi
         </button>
       )}
       {git?.repo && git.branch && (
-        <button className="status-item" aria-label={`Branch ${git.branch}: open Git Changes`} title={`${git.changes} pending change${git.changes === 1 ? '' : 's'} — Git Changes`} onClick={() => { if (!featureOn('branches') || !runRider('branches', 'menu')) onGit(); }}>
+        <button className="status-item" aria-label={`Branch ${git.branch}: Checkout to…`} title={`${git.branch}${git.changes ? `, ${git.changes} pending change${git.changes === 1 ? '' : 's'}` : ''} — Checkout to…`} onClick={() => void checkoutTo()}>
           <GitBranch size={12} />{git.branch}{git.changes ? '*' : ''}
           {git.ahead > 0 && <><ArrowUp size={11} />{git.ahead}</>}
           {git.behind > 0 && <><ArrowDown size={11} />{git.behind}</>}

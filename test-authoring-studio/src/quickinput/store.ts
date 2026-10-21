@@ -52,7 +52,11 @@ export function providerFor(value: string) {
 }
 
 /** A one-off quick pick (status bar pickers, Change Language Mode…): its own items instead of a prefix provider. */
-export type QuickPick = { placeholder: string; items: QuickItem[] | ((filter: string) => QuickItem[] | Promise<QuickItem[]>); title?: string; onCancel?: () => void; onActive?: (item: QuickItem | undefined) => void; activeId?: string };
+export type QuickPick = {
+  placeholder: string; items: QuickItem[] | ((filter: string) => QuickItem[] | Promise<QuickItem[]>); title?: string; onCancel?: () => void; onActive?: (item: QuickItem | undefined) => void; activeId?: string;
+  /** An input box instead of a list (VS Code's InputBox): Enter gives the text to `onInput`, `validate` explains a bad one. */
+  onInput?: (value: string) => void; prompt?: string; validate?: (value: string) => string | undefined; value?: string;
+};
 type State = { open: boolean; value: string; /** Changes on every open, so the widget resets its selection. */ session: number; select?: boolean; /** Changes when the items should be fetched again. */ revision: number; pick?: QuickPick };
 let state: State = { open: false, value: '', session: 0, revision: 0 };
 const listeners = new Set<() => void>();
@@ -61,7 +65,11 @@ export const useQuickInput = () => useSyncExternalStore((l) => { listeners.add(l
 /** Opens the Quick Input with `value` (a prefix such as '>' or ''); `select` selects the text after the prefix. */
 export function openQuickInput(value = '', select = false) { state = { open: true, value, session: state.session + 1, select, revision: state.revision }; emit(); }
 /** Shows a quick pick; the typed text filters its items by label and description. */
-export function openQuickPick(pick: QuickPick) { state = { open: true, value: '', session: state.session + 1, revision: state.revision, pick }; emit(); }
+export function openQuickPick(pick: QuickPick) { state = { open: true, value: pick.value ?? '', session: state.session + 1, revision: state.revision, pick, select: !!pick.value }; emit(); }
+/** VS Code's InputBox: one line of text, a prompt, validation as you type. */
+export function openInputBox(o: { placeholder?: string; prompt: string; value?: string; validate?: (value: string) => string | undefined; accept: (value: string) => void }) {
+  openQuickPick({ placeholder: o.placeholder ?? '', items: [], prompt: o.prompt, value: o.value, validate: o.validate, onInput: o.accept });
+}
 /** Asks the open widget for its items again (after a row's button changed them). */
 export function refreshQuickInput() { state = { ...state, revision: state.revision + 1 }; emit(); }
 export function closeQuickInput() { if (state.open) { state = { ...state, open: false }; emit(); } }

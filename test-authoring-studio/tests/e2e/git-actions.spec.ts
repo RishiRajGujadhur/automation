@@ -112,17 +112,20 @@ test('X47 Git Log Reset to Here: mixed keeps the changes, hard asks again', asyn
   expect(g('status', '--porcelain')).toContain('Login.feature');
 });
 
-test('X48 Branches popup: the status bar branch switches to or creates a branch', async ({ page }) => {
+test('X48 Branches popup (Tools ▸ Branches…) switches to or creates a branch', async ({ page }) => {
   g('branch', 'feature/other');
   await open(page);
-  await page.getByRole('button', { name: /^Branch main/ }).click();
+  // The status bar's branch opens VS Code's Checkout to… (VSCODE-250.md W33); Rider's popup is Tools ▸ Branches….
+  const branches = async () => { await page.getByRole('button', { name: 'Tools menu' }).click(); await page.getByRole('menuitem', { name: /^Branches…/ }).click(); };
+  await branches();
   const dlg = page.getByRole('dialog', { name: 'Branches' });
   const list = dlg.getByRole('listbox', { name: 'Branches' });
   await expect(list).toContainText('feature/other');
   await list.getByRole('option', { name: /feature\/other/ }).click();
   await expect(page.getByText('Switched to feature/other.').first()).toBeVisible();
   expect(g('branch', '--show-current')).toBe('feature/other');
-  await page.getByRole('button', { name: /^Branch feature\/other/ }).click();
+  await expect(page.getByRole('button', { name: /^Branch feature\/other/ })).toBeVisible();
+  await branches();
   await page.getByLabel('Filter branches').fill('topic/new');
   await page.keyboard.press('Enter');
   await expect(page.getByText('Created and switched to topic/new.').first()).toBeVisible();

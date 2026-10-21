@@ -702,3 +702,26 @@ test('W32 Git blame in the status bar (git.blame.statusBarItem.enabled)', async 
   await expect(page.locator('footer.status-bar').getByRole('button', { name: 'Cursor position' })).toBeVisible();
   await expect(item).toHaveCount(0);
 });
+
+test('W33 Branch item: Checkout to… (branches, tags, Create new branch with validation)', async ({ page }) => {
+  gitInit(temp);
+  execSync('git branch feature/other', { cwd: temp });
+  execSync('git tag v1.0', { cwd: temp });
+  await start(page);
+  const branch = page.locator('footer.status-bar').getByRole('button', { name: /^Branch main/ });
+  await branch.click();
+  await expect(quickBox(page)).toHaveAttribute('placeholder', 'Select a branch or tag to checkout');
+  await expect(quick(page).locator('.quick-input-separator')).toHaveText(['branches', 'tags']);
+  await rows(page).filter({ hasText: 'feature/other' }).click();
+  await expect.poll(() => execSync('git branch --show-current', { cwd: temp }).toString().trim()).toBe('feature/other');
+  await expect(page.locator('footer.status-bar').getByRole('button', { name: /^Branch feature\/other/ })).toBeVisible({ timeout: 15_000 });
+  // Create new branch…: the name is checked while typing.
+  await page.locator('footer.status-bar').getByRole('button', { name: /^Branch feature\/other/ }).click();
+  await rows(page).filter({ hasText: 'Create new branch...' }).click();
+  await expect(quick(page).getByRole('status')).toContainText('Please provide a new branch name');
+  await page.keyboard.type('bad name');
+  await expect(quick(page).getByRole('status')).toHaveText('Branch name "bad name" is not valid');
+  await quickBox(page).fill('topic/new');
+  await page.keyboard.press('Enter');
+  await expect.poll(() => execSync('git branch --show-current', { cwd: temp }).toString().trim()).toBe('topic/new');
+});

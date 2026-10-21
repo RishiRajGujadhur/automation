@@ -120,7 +120,9 @@ export default function QuickInput() {
     it.accept({ side });
   };
   const page = Math.max(1, Math.floor((list.current?.clientHeight ?? ROW * 20) / ROW) - 1);
-  const message = provider?.message?.(filter);
+  // An input box shows its prompt until something is typed, then the validation message (if any).
+  const invalid = pick?.onInput && value ? pick.validate?.(value) : undefined;
+  const message = pick?.onInput ? invalid ?? `${pick.prompt ?? ''} (Press 'Enter' to confirm or 'Escape' to cancel)` : provider?.message?.(filter);
   return (
     <div className={`quick-input-widget${quickOpen.position() === 'center' ? ' center' : ''}`} role="dialog" aria-label="Quick Input" onMouseDown={(e) => { if (e.target === e.currentTarget) e.preventDefault(); }}>
       <div className="quick-input-header">
@@ -160,6 +162,7 @@ export default function QuickInput() {
               else if (e.key === 'ArrowUp') { e.preventDefault(); setActive((a) => (n ? (a - 1 + n) % n : 0)); }
               else if (e.key === 'PageDown') { e.preventDefault(); setActive((a) => Math.min(n - 1, a + page)); }
               else if (e.key === 'PageUp') { e.preventDefault(); setActive((a) => Math.max(0, a - page)); }
+              else if (e.key === 'Enter' && pick?.onInput) { e.preventDefault(); e.stopPropagation(); if (pick.validate?.(value)) return; const on = pick.onInput; accepted.current = true; closeQuickInput(); on(value); }
               else if (e.key === 'Enter') { e.preventDefault(); e.stopPropagation(); if (busy) deferred.current = { side: e.ctrlKey || e.metaKey }; else accept(active, e.ctrlKey || e.metaKey); }
               e.stopPropagation();
             }}
@@ -167,7 +170,7 @@ export default function QuickInput() {
           {busy && <div className="quick-input-progress" aria-hidden="true" />}
         </div>
       </div>
-      {message && <div className="quick-input-message" role="status">{message}</div>}
+      {message && <div className={`quick-input-message${invalid ? ' error' : ''}`} role="status">{message}</div>}
       <div className="quick-input-list" id="quick-input-list" role="listbox" aria-label="Quick Input results" ref={list} style={{ maxHeight: ROW * 20 }}>
         {items.map((it, i) => (
           <div
@@ -199,7 +202,7 @@ export default function QuickInput() {
             ) : null}
           </div>
         ))}
-        {!items.length && !busy && <div className="quick-input-empty">{provider?.noResults ?? 'No matching results'}</div>}
+        {!items.length && !busy && !pick?.onInput && <div className="quick-input-empty">{provider?.noResults ?? 'No matching results'}</div>}
       </div>
     </div>
   );
