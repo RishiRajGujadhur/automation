@@ -24,7 +24,7 @@ Legend: `[x]` done · `[ ]` to do.
 - [x] W8. Open View (`view `, Ctrl+Q): side bar views, panels and pages
 - [x] W9. Show All Editors by MRU (`edt `)
 - [x] W10. Quick text search (`%`): lines matching the text across files, open at the match
-- [ ] W11. Open to the side from Quick Open (Ctrl+Enter / the split button)
+- [x] W11. Open to the side from Quick Open (Ctrl+Enter / the split button)
 - [ ] W12. Remove from Recently Opened (× on a recent entry)
 - [ ] W13. workbench.quickOpen.closeOnFocusLost
 - [ ] W14. workbench.quickOpen.preserveInput / workbench.commandPalette.preserveInput
@@ -304,3 +304,4 @@ Legend: `[x]` done · `[ ]` to do.
 - 2026-10-21: W8. Side bar views, panel views (Build, Debug, Output, TODO, Structure, Problems, Terminal…) and pages, grouped as in VS Code; Ctrl+Q opens it.
 - 2026-10-21: W9. Open editors last used first, unsaved ones marked ●, a Close Editor button on each (through the usual unsaved-changes prompt).
 - 2026-10-21: W10. Matching lines across the workspace in the Quick Input, the match highlighted, grouped under each file; Enter opens the file at the match.
+- 2026-10-21: W11. Ctrl+Enter or a row's split button opens the file in the side editor group. Enter pressed while results are still loading now opens the first result once they arrive (it took the previous list's).

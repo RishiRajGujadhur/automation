@@ -244,3 +244,20 @@ test('W10 Quick text search (%): matching lines grouped by file, Enter opens at 
   await expect(page.locator('.editor-tab-label[aria-current="true"]')).toHaveAttribute('title', new RegExp(`${name.replace('.', '\.')}$`));
   await expect.poll(() => caretLine(page)).toBe(Number(line));
 });
+
+test('W11 Quick Open: Ctrl+Enter and the split button open to the side', async ({ page }) => {
+  await start(page);
+  await open(page, 'Steps/AuthSteps.cs');
+  await page.keyboard.press('Control+p');
+  await quickBox(page).fill('searchsteps');
+  await page.keyboard.press('Control+Enter');
+  await expect(quick(page)).toBeHidden();
+  await expect(page.getByLabel('Source of Steps/SearchSteps.cs')).toBeVisible();
+  await expect(page.getByLabel('Source of Steps/AuthSteps.cs')).toBeVisible();
+  await page.keyboard.press('Control+p');
+  await quickBox(page).fill('fixtures.csproj');
+  await rows(page).first().hover();
+  await rows(page).first().getByRole('button', { name: 'Open to the Side' }).click();
+  await expect(quick(page)).toBeHidden();
+  await expect(page.getByLabel('Source of Fixtures.csproj')).toBeVisible();
+});

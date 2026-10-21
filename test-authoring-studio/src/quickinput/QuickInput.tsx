@@ -47,6 +47,8 @@ export default function QuickInput() {
   const input = useRef<HTMLInputElement>(null);
   const list = useRef<HTMLDivElement>(null);
   const accepted = useRef(false);
+  // Results still loading when Enter is pressed: accept the first of them once they arrive (as VS Code does).
+  const deferred = useRef<{ side: boolean } | undefined>(undefined);
   const provider = providerFor(value);
   const filter = provider ? value.slice(provider.prefix.length) : value;
   const providerRef = useRef<QuickProvider | undefined>(provider);
@@ -79,6 +81,7 @@ export default function QuickInput() {
     return () => ctl.abort();
   }, [open, value, session]); // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(() => setActive(0), [value]);
+  useEffect(() => { if (!busy && deferred.current) { const d = deferred.current; deferred.current = undefined; accept(0, d.side); } }, [busy, items]); // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(() => { if (open) provider?.onActive?.(items[active], filter); }, [open, items, active]); // eslint-disable-line react-hooks/exhaustive-deps
   // Keep the active row in view.
   useEffect(() => { list.current?.querySelector<HTMLElement>(`[data-index="${active}"]`)?.scrollIntoView({ block: 'nearest' }); }, [active]);
@@ -120,7 +123,7 @@ export default function QuickInput() {
               else if (e.key === 'ArrowUp') { e.preventDefault(); setActive((a) => (n ? (a - 1 + n) % n : 0)); }
               else if (e.key === 'PageDown') { e.preventDefault(); setActive((a) => Math.min(n - 1, a + page)); }
               else if (e.key === 'PageUp') { e.preventDefault(); setActive((a) => Math.max(0, a - page)); }
-              else if (e.key === 'Enter') { e.preventDefault(); e.stopPropagation(); accept(active, e.ctrlKey || e.metaKey); }
+              else if (e.key === 'Enter') { e.preventDefault(); e.stopPropagation(); if (busy) deferred.current = { side: e.ctrlKey || e.metaKey }; else accept(active, e.ctrlKey || e.metaKey); }
               e.stopPropagation();
             }}
           />
