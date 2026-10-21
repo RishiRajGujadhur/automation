@@ -211,3 +211,21 @@ test('W8 Open View (Ctrl+Q): side bar, panel and pages', async ({ page }) => {
   await page.keyboard.press('Enter');
   await expect(page.getByRole('region', { name: /Source Control|Git/ }).first()).toBeVisible();
 });
+
+test('W9 Show All Editors by MRU (edt ): last used first, close button', async ({ page }) => {
+  await start(page);
+  await open(page, 'Steps/AuthSteps.cs');
+  await open(page, 'Steps/SearchSteps.cs');
+  await open(page, 'Fixtures.csproj');
+  await page.keyboard.press('Control+p');
+  await quickBox(page).fill('edt ');
+  // The feature editor's start file was opened first, so it is last.
+  await expect(rows(page).locator('.quick-input-label')).toHaveText(['Fixtures.csproj', 'SearchSteps.cs', 'AuthSteps.cs', 'GoogleSearch.feature']);
+  await rows(page).nth(2).hover();
+  await rows(page).nth(2).getByRole('button', { name: 'Close Editor' }).click();
+  await expect(rows(page).locator('.quick-input-label')).toHaveText(['Fixtures.csproj', 'SearchSteps.cs', 'GoogleSearch.feature']);
+  await expect(page.locator('.editor-tab-label', { hasText: 'AuthSteps.cs' })).toHaveCount(0);
+  await quickBox(page).fill('edt search');
+  await page.keyboard.press('Enter');
+  await expect(page.locator('.editor-tab-label[aria-current="true"]')).toHaveAttribute('title', 'Steps/SearchSteps.cs');
+});

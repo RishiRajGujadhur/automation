@@ -81,6 +81,7 @@ import QuickInput from './quickinput/QuickInput';
 import { openQuickInput } from './quickinput/store';
 import { openCommandPalette, setPaletteCommands, type PaletteEntry } from './quickinput/providers';
 import { setOpenViews } from './quickinput/help';
+import { CLOSE_EDITOR_EVENT } from './quickinput/editors';
 import { SelectorCatalogue, BackgroundCatalogue } from './Catalogues';
 import { api } from './api';
 import { useLocalState, RowMenu, copyText } from './ui';
@@ -473,6 +474,11 @@ export default function App() {
     if (unsavedFiles().includes(file) && !(await confirm({ title: `Close ${file.split('/').pop()}?`, description: 'It has unsaved changes. They stay in this browser and come back when you reopen the file; press Ctrl+S first to write them to disk.', confirm: 'Close' }))) return;
     closeTab(file);
   };
+  // The Quick Input's editor list (edt, W9) closes editors through the same save prompt.
+  const closeEditorRef = useRef(closeEditor);
+  closeEditorRef.current = closeEditor;
+  useEffect(() => { const h = (e: Event) => void closeEditorRef.current((e as CustomEvent<string>).detail); window.addEventListener(CLOSE_EDITOR_EVENT, h); return () => window.removeEventListener(CLOSE_EDITOR_EVENT, h); }, []);
+
   // Debugger: the debug windows dock under the editor while a session runs (or when opened).
   const debug = useDebug();
   const [debugOpen, setDebugOpen] = useLocalState('debugOpen', false);
