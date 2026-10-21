@@ -177,7 +177,10 @@ test('159 Changelist management', async ({ page }) => {
 
 test('154 Three-way merge editor', async ({ page }) => {
   const file = path.join(root, 'Steps/AuthSteps.cs');
-  const original = await fs.readFile(file, 'utf8');
+  // The conflict far down the file (the editor must open at it).
+  const original = `${Array.from({ length: 80 }, (_, i) => `// line ${i + 1}`).join('\n')}\n${await fs.readFile(file, 'utf8')}`;
+  await fs.writeFile(file, original);
+  git('commit', '-q', '-am', 'Padding');
   git('checkout', '-q', '-b', 'other');
   await fs.writeFile(file, original.replace('namespace Demo;', 'namespace Demo.Theirs;'));
   git('commit', '-q', '-am', 'Theirs');

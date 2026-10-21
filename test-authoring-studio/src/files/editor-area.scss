@@ -3876,7 +3876,7 @@ html[data-rider-mode='vszen'] {
     gap: 6px;
     padding: 3px 0;
     border-bottom: 1px solid var(--border);
-    select { height: 24px; }
+    select { height: 24px; min-width: 84px; padding: 0 24px 0 6px; font-size: 12px; line-height: 22px; }
     textarea { flex-basis: 100%; font-family: var(--font-mono, monospace); font-size: 12px; }
     &.a-drop .git-subject { text-decoration: line-through; opacity: 0.6; }
     &.a-squash, &.a-fixup { padding-left: 18px; }

@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import CodeMirror, { EditorView } from '@uiw/react-codemirror';
 import { X } from 'lucide-react';
 import { api } from '../api';
@@ -27,17 +27,12 @@ export default function MergeEditor({ file, theme, onClose, onDone, onNotice }: 
   const [error, setError] = useState('');
   useEffect(() => { api<Sides>(`/git/merge-sides?file=${encodeURIComponent(file)}`).then((s) => { setSides(s); setResult(s.result.replace(/\r\n/g, '\n')); }, (e) => setError((e as Error).message)); }, [file]);
   const conflicts = useMemo(() => conflictsIn(result), [result]);
-  // Opens at the first conflict: the result at its markers, both sides where they first differ.
-  const views = useRef<{ current?: EditorView; incoming?: EditorView; result?: EditorView }>({});
-  const revealed = useRef(false);
-  useEffect(() => {
-    if (!sides || revealed.current || !views.current.result) return;
-    revealed.current = true;
-    const diff = firstDifference(sides.current, sides.incoming);
-    reveal(views.current.current, diff);
-    reveal(views.current.incoming, diff);
-    reveal(views.current.result, conflicts[0]?.start ?? 0);
-  });
+  // Opens at the first conflict: the result at its markers, both sides where they first differ (once each editor is
+  // laid out).
+  const diffLine = useMemo(() => (sides ? firstDifference(sides.current, sides.incoming) : 0), [sides]);
+  const revealOnCreate = (line: (v: EditorView) => number) => (v: EditorView) => { setTimeout(() => reveal(v, line(v)), 50); };
+  const atDifference = revealOnCreate(() => diffLine);
+  const atConflict = revealOnCreate((v) => conflictsIn(v.state.doc.toString())[0]?.start ?? 0);
   const take = (i: number, how: 'current' | 'incoming' | 'both') => {
     const lines = result.split('\n');
     const c = conflicts[i];
@@ -61,8 +56,8 @@ export default function MergeEditor({ file, theme, onClose, onDone, onNotice }: 
       {sides && (
         <>
           <div className="merge-sides">
-            <div><h4>Current (ours)</h4><CodeMirror value={sides.current} theme={t} editable={false} basicSetup={SETUP} height="200px" aria-label="Current" onCreateEditor={(v) => { views.current.current = v; }} /></div>
-            <div><h4>Incoming (theirs)</h4><CodeMirror value={sides.incoming} theme={t} editable={false} basicSetup={SETUP} height="200px" aria-label="Incoming" onCreateEditor={(v) => { views.current.incoming = v; }} /></div>
+            <div><h4>Current (ours)</h4><CodeMirror value={sides.current} theme={t} editable={false} basicSetup={SETUP} height="200px" aria-label="Current" onCreateEditor={atDifference} /></div>
+            <div><h4>Incoming (theirs)</h4><CodeMirror value={sides.incoming} theme={t} editable={false} basicSetup={SETUP} height="200px" aria-label="Incoming" onCreateEditor={atDifference} /></div>
           </div>
           <div className="merge-conflicts" role="toolbar" aria-label="Conflicts">
             {conflicts.map((c, i) => (
@@ -75,7 +70,7 @@ export default function MergeEditor({ file, theme, onClose, onDone, onNotice }: 
             ))}
           </div>
           <h4>Result</h4>
-          <CodeMirror value={result} theme={t} basicSetup={SETUP} height="240px" onChange={setResult} aria-label="Result" onCreateEditor={(v) => { views.current.result = v; }} />
+          <CodeMirror value={result} theme={t} basicSetup={SETUP} height="240px" onChange={setResult} aria-label="Result" onCreateEditor={atConflict} />
         </>
       )}
     </section>
