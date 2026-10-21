@@ -379,3 +379,38 @@ test('F42 Generate missing JSX attributes', async ({ page }) => {
   await open(page, 'src/App.tsx', 'import { Button } from "./Button";\nexport const App = () => <Button />;\n');
   await convert(page, '<Button', /^Add missing attributes$/, '<Button label={""} />', false, 2);
 });
+
+test('F31 Extract JSX into React component', async ({ page }) => {
+  await withReact();
+  await open(page, 'src/List.tsx', 'export function List({ items, title }: { items: string[]; title: string }) {\n  const count = items.length;\n  return (\n    <section>\n      <header><h2>{title}</h2><small>{count}</small></header>\n      <ul>{items.map((i) => <li key={i}>{i}</li>)}</ul>\n    </section>\n  );\n}\n');
+  await convert(page, '<header><h2>{title}</h2><small>{count}</small></header>', /^Extract JSX into component$/, /function NewComponent\(\{ title, count \}: \{ title: string; count: number \}\) \{\s*return \(\s*<header><h2>\{title\}<\/h2><small>\{count\}<\/small><\/header>\s*\);\s*\}\s*export function List[\s\S]*<NewComponent title=\{title\} count=\{count\} \/>/, true);
+});
+test('F33 Convert class components to functional components', async ({ page }) => {
+  await withReact();
+  await open(page, 'src/Counter.tsx', 'import React from "react";\ntype P = { step: number };\ntype S = { count: number };\nexport class Counter extends React.Component<P, S> {\n  state = { count: 0 };\n  timer = 0;\n  componentDidMount() {\n    document.title = String(this.state.count);\n  }\n  componentWillUnmount() {\n    clearInterval(this.timer);\n  }\n  increment() {\n    this.setState({ count: this.state.count + this.props.step });\n  }\n  render() {\n    return <button onClick={() => this.increment()}>{this.state.count}</button>;\n  }\n}\n');
+  await convert(page, 'class Counter', /^Convert to function component$/, /import React, \{ useState, useEffect \} from "react";[\s\S]*export function Counter\(props: P\) \{\s*const \[count, setCount\] = useState<S\['count'\]>\(0\);\s*useEffect\(\(\) => \{\s*document\.title = String\(count\);\s*return \(\) => \{\s*clearInterval\(timer\);\s*\};\s*\}, \[\]\);\s*const timer = 0;\s*const increment = \(\) => \{\s*setCount\(count \+ props\.step\);\s*\};\s*return <button onClick=\{\(\) => increment\(\)\}>\{count\}<\/button>;\s*\}/, false, 7);
+});
+test('F34 Generate React component props; F35 Generate TypeScript props interfaces', async ({ page }) => {
+  await withReact();
+  await fs.writeFile(path.join(temp, 'src/App.tsx'), 'import { Badge } from "./Badge";\nexport const App = () => <div><Badge text="new" count={3} highlighted /></div>;\n');
+  await open(page, 'src/Badge.tsx', 'export function Badge() {\n  return <span />;\n}\n');
+  await convert(page, 'function Badge', /^Generate props from usages$/, 'export function Badge({ text, count, highlighted }: { text: string; count: number; highlighted: boolean }) {', false, 10);
+  // The inline props type becomes an interface.
+  await convert(page, 'function Badge', /^Generate interface BadgeProps$/, /export interface BadgeProps \{\n  text: string;\n  count: number;\n  highlighted: boolean;\n\}\n\nexport function Badge\(\{ text, count, highlighted \}: BadgeProps\) \{/, false, 10);
+  // Untyped destructured props: types from usages and defaults.
+  await setDoc(page, 'export function Badge({ text, count, tone = "info" }) {\n  return <span className={tone}>{text}{count}</span>;\n}\n');
+  await convert(page, 'function Badge', /^Generate interface BadgeProps$/, /export interface BadgeProps \{\n  text: string;\n  count: number;\n  tone\?: string;\n\}\n\nexport function Badge\(\{ text, count, tone = "info" \}: BadgeProps\)/, false, 10);
+});
+test('F43 Convert inline JSX styles to CSS classes', async ({ page }) => {
+  await withReact();
+  await open(page, 'src/Card.tsx', 'export function Card() {\n  return <div className="card" style={{ marginTop: 8, color: "red", opacity: 0.5 }}>Hi</div>;\n}\n');
+  await convert(page, 'style=', /^Move inline styles to a CSS class$/, /^import "\.\/Card\.css";\nexport function Card\(\) \{\n  return <div className="card card-div">Hi<\/div>;/, false, 2);
+  await approve(page, /Move inline styles to a CSS class: 1 other file/);
+  expect(await fs.readFile(path.join(temp, 'src/Card.css'), 'utf8')).toBe('.card-div {\n  margin-top: 8px;\n  color: red;\n  opacity: 0.5;\n}\n');
+});
+test('F44 Extract inline event handlers; F45 Convert inline callbacks to named functions', async ({ page }) => {
+  await withReact();
+  await open(page, 'src/Todo.tsx', 'import { useState } from "react";\nexport function Todo({ items }: { items: string[] }) {\n  const [done, setDone] = useState(0);\n  return (\n    <ul onClick={() => setDone(done + 1)}>\n      {items.map((item) => <li key={item}>{item}</li>)}\n    </ul>\n  );\n}\n');
+  await convert(page, 'onClick', /^Extract handler handleClick$/, /  const handleClick = \(\) => setDone\(done \+ 1\);\n  return \(\n    <ul onClick=\{handleClick\}>/, false, 2);
+  await convert(page, '(item) =>', /^Convert callback to named function renderItem$/, /  function renderItem\(item\) \{\s*return <li key=\{item\}>\{item\}<\/li>;\s*\}\n  return \([\s\S]*\{items\.map\(renderItem\)\}/, false, 1);
+});
