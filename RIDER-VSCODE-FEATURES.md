@@ -80,7 +80,7 @@ Legend: `[x]` done · `[ ]` to do.
 
 ## Refactoring & Code Transformation
 
-- [ ] 61. Change method signature
+- [x] 61. Change method signature — Code ▸ Refactor ▸ Change Signature… (reorder, remove, rename; declaration, overrides and every call; other files as diffs) (2026-10-21)
 - [x] 62. Extract method — Ctrl+Alt+M
 - [x] 63. Extract interface
 - [ ] 64. Extract superclass
@@ -399,3 +399,4 @@ Legend: `[x]` done · `[ ]` to do.
 - 2026-10-21 355: An interpolated string becomes string.Format with numbered holes.
 - 2026-10-21 91: A positional record becomes an equivalent class.
 - 2026-10-21 342: Members with a base or interface member get /// <inheritdoc/>.
+- 2026-10-21 61: A Change Signature dialog: parameters reordered, removed and renamed; the language service updates the declaration, overrides, implementations and calls (named arguments after an omitted optional one).

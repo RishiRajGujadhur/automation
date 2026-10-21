@@ -311,6 +311,7 @@ export function riderKeys(file = ''): Extension {
     ['KeyG', false, 'generate-code', () => runRider('generate-code', 'key')],
     ['KeyM', true, 'move-type-to-file', () => runRider('move-type-to-file', 'key')],
     ['KeyB', false, 'secondary-sidebar', () => runRider('secondary-sidebar', 'key')],
+    ['KeyF', false, 'introduce-field', () => runRider('introduce-field', 'key')],
     ['KeyZ', false, 'rollback-lines', (v) => { if (!rollbackLines(v)) runRider('rollback-lines', 'key'); return true; }],
   ];
   const ctrlAlt = EditorView.domEventHandlers({

@@ -104,6 +104,8 @@ sealed partial class LanguageService
             "classify" => await Classify(doc, (int?)req["from"] ?? 0, (int?)req["to"] ?? text.Length),
             "metadataSource" => await MetadataSource(doc, Math.Min(Pos(text), text.Length)),
             "decompile" => await DecompileAt(doc, Math.Min(Pos(text), text.Length)),
+            "signatureInfo" => await SignatureInfo(doc, Math.Min(Pos(text), text.Length)),
+            "refactor" => await Refactor(doc, Math.Min(Pos(text), text.Length), req["endLine"] is null ? Math.Min(Pos(text), text.Length) : text.Lines[Math.Clamp((int)req["endLine"]! - 1, 0, text.Lines.Count - 1)].Start + (int)req["endColumn"]! - 1, req),
             "applyAction" => await ApplyAction((string)req["actionId"]!),
             "previewAction" => await PreviewAction((string)req["actionId"]!),
             _ => throw new InvalidOperationException($"Unknown operation {op}."),

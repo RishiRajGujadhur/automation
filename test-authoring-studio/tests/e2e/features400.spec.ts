@@ -764,3 +764,124 @@ test('342 Inherit XML documentation from base members', async ({ page }) => {
   await csCommand(page, /^Inherit Documentation$/);
   await expect.poll(() => docText(page), { timeout: 60_000 }).toContain('{\n    /// <inheritdoc/>\n    public override void Run() { }');
 });
+
+
+const refactorMenu = async (page: Page, item: RegExp) => { await page.getByRole('button', { name: 'Code menu' }).click(); await page.getByRole('menuitem', { name: /^Refactor/ }).click(); await page.getByRole('menuitem', { name: item }).click(); };
+const RF = 'namespace Fixtures.Steps;\npublic class Base { }\npublic class C : Base\n{\n    public int Add(int a, int b, int unused) => a + b;\n    public int Use() => Add(1, 2, 3);\n    private int Twice(int v) => v * 2;\n    public int Caller()\n    {\n        return Twice(3);\n    }\n    public string Name() => "c";\n    public static int Helper() => 1;\n    public int H() => C.Helper();\n    private readonly int limit = 10;\n    public int Lim() => limit + 1;\n    public C() { }\n}\npublic static class Util { }\npublic class Maker { public C Make() => new C(); }\n';
+const escapeRe = (s: string) => new RegExp(s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'));
+async function refactorAt(page: Page, at: string, offset: number, item: RegExp, expectText: RegExp | string, source = RF) {
+  needsLang();
+  await open(page, CS);
+  await setDoc(page, source);
+  await caretAt(page, at, offset);
+  await refactorMenu(page, item);
+  await expect.poll(() => docText(page), { timeout: 60_000 }).toMatch(typeof expectText === 'string' ? escapeRe(expectText) : expectText);
+}
+const selectRange = (page: Page, text: string) => page.evaluate((t) => { const v = (window as unknown as { __activeEditor: () => { view: { state: { doc: { toString(): string } }; dispatch(x: unknown): void; focus(): void } } }).__activeEditor().view; const i = v.state.doc.toString().indexOf(t); v.dispatch({ selection: { anchor: i, head: i + t.length } }); v.focus(); }, text);
+test('99 Remove unused parameters', async ({ page }) => {
+  await refactorAt(page, 'int Add(', 5, /^Remove Unused Parameters$/, 'public int Add(int a, int b) => a + b;');
+  expect(await docText(page)).toContain('public int Use() => Add(1, 2);');
+});
+test('61 Change method signature (rename, remove, reorder) across files', async ({ page }) => {
+  needsLang();
+  await fs.writeFile(path.join(temp, 'Steps/Other.cs'), 'namespace Fixtures.Steps;\npublic class Other { public int X(C c) => c.Add(7, 8, 9); }\n');
+  expect((await page.request.post('/api/workspace', { data: { repositoryRoot: temp, targetProject: '.' } })).ok()).toBe(true);
+  await open(page, CS);
+  await setDoc(page, RF);
+  await caretAt(page, 'int Add(', 5);
+  await refactorMenu(page, /^Change Signature/);
+  const dlg = page.getByRole('dialog', { name: 'Change Signature' });
+  await dlg.getByLabel('Name of parameter a').fill('first');
+  await dlg.getByLabel('Remove parameter unused').check();
+  await dlg.getByRole('button', { name: 'Move b up' }).click();
+  await expect(dlg.getByLabel('New signature')).toContainText('Add(int b, int first)');
+  await dlg.getByRole('button', { name: 'Refactor' }).click();
+  await expect.poll(() => docText(page), { timeout: 60_000 }).toContain('public int Add(int b, int first) => first + b;');
+  expect(await docText(page)).toContain('public int Use() => Add(2, 1);');
+  // The other file: a diff to approve.
+  const previews = page.getByRole('dialog', { name: /Change signature of Add: 1 other file/ });
+  await expect(previews).toBeVisible();
+  await previews.getByRole('button', { name: /Apply|Approve/ }).first().click();
+  await expect.poll(() => fs.readFile(path.join(temp, 'Steps/Other.cs'), 'utf8')).toContain('c.Add(8, 7)');
+});
+test('98 Reorder method parameters', async ({ page }) => {
+  needsLang();
+  await open(page, CS);
+  await setDoc(page, RF);
+  await caretAt(page, 'int Add(', 5);
+  await refactorMenu(page, /^Reorder Parameters/);
+  const dlg = page.getByRole('dialog', { name: 'Reorder Parameters' });
+  await dlg.getByRole('button', { name: 'Move unused up' }).click();
+  await dlg.getByRole('button', { name: 'Move unused up' }).click();
+  await dlg.getByRole('button', { name: 'Refactor' }).click();
+  await expect.poll(() => docText(page), { timeout: 60_000 }).toContain('public int Add(int unused, int a, int b) => a + b;');
+  expect(await docText(page)).toContain('Add(3, 1, 2)');
+});
+test('85 Convert LINQ to loops', async ({ page }) => {
+  await refactorAt(page, 'var r =', 2, /^Convert LINQ to Loop$/, /var r = new List<int>\(\);\s+foreach \(var x in xs\)\s+\{\s+if \(!\(x > 1\)\) continue;\s+var x2 = x \* 2;\s+r\.Add\(x2\);/, 'using System.Linq;\nusing System.Collections.Generic;\nnamespace Fixtures.Steps;\npublic class A\n{\n    public List<int> M(List<int> xs)\n    {\n        var r = xs.Where(x => x > 1).Select(x => x * 2).ToList();\n        return r;\n    }\n}\n');
+});
+test('88 Convert methods to local functions', async ({ page }) => {
+  await refactorAt(page, 'int Twice', 5, /^Convert Method to Local Function$/, /return Twice\(3\);\s+int Twice\(int v\) => v \* 2;\s+\}/);
+  expect(await docText(page)).not.toContain('private int Twice');
+});
+test('67 Extract field', async ({ page }) => {
+  needsLang();
+  await open(page, CS);
+  await setDoc(page, 'namespace Fixtures.Steps;\npublic class P\n{\n    public string M() => System.Environment.GetEnvironmentVariable("HOME") ?? "";\n}\n');
+  await selectRange(page, 'System.Environment.GetEnvironmentVariable("HOME")');
+  await refactorMenu(page, /^Introduce Field/);
+  await expect.poll(() => docText(page), { timeout: 60_000 }).toContain('_environmentVariable = System.Environment.GetEnvironmentVariable("HOME");');
+  expect(await docText(page)).toContain('=> _environmentVariable ?? "";');
+});
+test('68 Extract property', async ({ page }) => {
+  needsLang();
+  await open(page, CS);
+  await setDoc(page, 'namespace Fixtures.Steps;\npublic class P\n{\n    private int a = 1, b = 2;\n    public int M() => (a + b) * 2;\n}\n');
+  await selectRange(page, 'a + b');
+  await refactorMenu(page, /^Introduce Property$/);
+  await expect.poll(() => docText(page), { timeout: 60_000 }).toMatch(/private int Value => a \+ b;/);
+  expect(await docText(page)).toContain('=> (Value) * 2;');
+});
+test('72 Inline field', async ({ page }) => {
+  await refactorAt(page, 'limit = 10', 2, /^Inline Field$/, 'public int Lim() => 10 + 1;');
+  expect(await docText(page)).not.toContain('private readonly int limit');
+});
+test('75 Pull members up', async ({ page }) => {
+  await refactorAt(page, 'string Name()', 9, /^Pull Members Up$/, /public class Base\s*\{\s*public string Name\(\) => "c";\s*\}/);
+});
+test('76 Push members down', async ({ page }) => {
+  await refactorAt(page, 'Shout()', 2, /^Push Members Down$/, /public class Dog : Animal\s*\{\s*public string Shout\(\) => "!";\s*\}/, 'namespace Fixtures.Steps;\npublic class Animal\n{\n    public string Shout() => "!";\n}\npublic class Dog : Animal { }\npublic class Cat : Animal { }\n');
+  const d = await docText(page);
+  expect(d).toMatch(/public class Cat : Animal\s*\{\s*public string Shout\(\) => "!";\s*\}/);
+  expect(d).toMatch(/public class Animal\s*\{\s*\}/);
+});
+test('64 Extract superclass', async ({ page }) => {
+  needsLang();
+  await open(page, CS);
+  await setDoc(page, 'namespace Fixtures.Steps;\npublic class Report\n{\n    public string Title { get; set; } = "";\n    public string Render() => Title;\n    private int secret = 1;\n}\n');
+  await caretAt(page, 'class Report', 7);
+  page.once('dialog', (dlg) => void dlg.accept('ReportBase'));
+  await refactorMenu(page, /^Extract Superclass/);
+  await expect.poll(() => docText(page), { timeout: 60_000 }).toMatch(/public abstract class ReportBase\s*\{[\s\S]*public string Title[\s\S]*public string Render\(\) => Title;[\s\S]*\}\s*public class Report : ReportBase/);
+  expect(await docText(page)).toMatch(/class Report : ReportBase\s*\{\s*private int secret = 1;\s*\}/);
+});
+test('74 Move members', async ({ page }) => {
+  needsLang();
+  await open(page, CS);
+  await setDoc(page, RF);
+  await caretAt(page, 'int Helper()', 5);
+  page.once('dialog', (dlg) => void dlg.accept('Util'));
+  await refactorMenu(page, /^Move Static Members/);
+  await expect.poll(() => docText(page), { timeout: 60_000 }).toContain('public int H() => Util.Helper();');
+  expect(await docText(page)).toMatch(/public static class Util\s*\{\s*public static int Helper\(\) => 1;\s*\}/);
+});
+test('82 Introduce factory method', async ({ page }) => {
+  await refactorAt(page, 'public C() { }', 8, /^Introduce Factory Method$/, 'public static C Create() => new C();');
+  expect(await docText(page)).toContain('public C() { }');
+});
+test('83 Replace constructor with factory', async ({ page }) => {
+  await refactorAt(page, 'public C() { }', 8, /^Replace Constructor with Factory Method$/, 'private C() { }');
+  const d = await docText(page);
+  expect(d).toContain('public static C Create() => new C();');
+  expect(d).toContain('public C Make() => C.Create();');
+});

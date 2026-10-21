@@ -10,6 +10,7 @@ import { toggleZen } from '../vscode/zenMode';
 import { layoutState } from './layoutModes';
 import { splitEditor, toggleMaximizeGroup } from '../vscode/editorGroups';
 import { api } from '../api';
+import { refactorCommands } from './refactor400';
 import { generateIEquatable, generateComparison, generateAsyncDisposable, interpolationToFormatCmd, recordToClassCmd } from '../editor/csharpGen';
 import type { EditorView } from '@codemirror/view';
 
@@ -46,6 +47,7 @@ let failureAt = -1;
 export function moreCommands3(h: MoreHelpers): RiderCommand[] {
   const tokens = () => viewOptions().todoTokens ?? DEFAULT_TODO_TOKENS;
   return [
+    ...refactorCommands(h),
     { id: 'find-in-selection', label: 'Find in Selection', menu: 'Edit', group: true, run: h.inEditor((v) => findInSelection(v) || h.notice('Select the text to search in first.')) },
     { id: 'vs-zen-mode', label: 'Zen Mode', menu: 'View', group: true, shortcut: 'Ctrl K, Z', checked: () => layoutState().mode === 'vszen', run: () => toggleZen() },
     { id: 'split-right', label: 'Split Editor Right', menu: 'View', group: true, run: () => splitEditor('right') },
