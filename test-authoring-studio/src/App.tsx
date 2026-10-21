@@ -62,6 +62,7 @@ import TestExplorer from './testing/TestExplorer';
 import SearchView from './search/SearchView';
 import GitView from './git/GitView';
 import StatusBarItems, { ProblemsStatus, TOGGLE_PROBLEMS_EVENT } from './StatusBarItems';
+import StatusBarMenu from './StatusBarMenu';
 import GoToAll from './search/GoToAll';
 import { runTests, getTestRun, discoverTests, useTestRun, outcomeOf, combine, type DiscoveredTest } from './testing/store';
 import type { RunMark } from './editor/runGutter';
@@ -2461,6 +2462,7 @@ export default function App() {
           </button>
         </span>
       </footer>
+      <StatusBarMenu />
       <BusyTitle />
       <Toast.Provider swipeDirection={typeof window !== 'undefined' && matchMedia('(max-width: 640px)').matches ? 'down' : 'right'} duration={6000}>
         <Toast.Root

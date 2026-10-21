@@ -630,3 +630,28 @@ test('W29 Problems status item: counts of the open files, click or Ctrl+Shift+M 
   await page.keyboard.press('Control+Shift+M');
   await expect(problems.first()).toBeVisible();
 });
+
+test('W30 Status bar context menu: hide and show items, Hide Status Bar', async ({ page }) => {
+  await start(page);
+  await open(page, 'Steps/AuthSteps.cs');
+  const bar = page.locator('footer.status-bar');
+  const encoding = bar.getByRole('button', { name: /^Select Encoding/ });
+  await expect(encoding).toBeVisible();
+  await bar.click({ button: 'right', position: { x: 300, y: 10 } });
+  const menu = page.getByRole('menu', { name: 'Status bar' });
+  await expect(menu.getByRole('menuitemcheckbox', { name: /Editor Encoding/ })).toHaveAttribute('aria-checked', 'true');
+  await menu.getByRole('menuitemcheckbox', { name: /Editor Encoding/ }).click();
+  await expect(encoding).toBeHidden();
+  await expect(menu.getByRole('menuitemcheckbox', { name: /Editor Encoding/ })).toHaveAttribute('aria-checked', 'false');
+  await page.keyboard.press('Escape');
+  // Kept after a reload.
+  await page.reload();
+  await open(page, 'Steps/AuthSteps.cs');
+  await expect(bar.getByRole('button', { name: /^Line separators/ })).toBeVisible();
+  await expect(encoding).toBeHidden();
+  await bar.click({ button: 'right', position: { x: 300, y: 10 } });
+  await menu.getByRole('menuitemcheckbox', { name: /Editor Encoding/ }).click();
+  await expect(encoding).toBeVisible();
+  await menu.getByRole('menuitem', { name: 'Hide Status Bar' }).click();
+  await expect(bar).toBeHidden();
+});
