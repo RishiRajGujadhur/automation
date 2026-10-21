@@ -21,6 +21,7 @@ import Dashboard, { ContextBar } from './Dashboard';
 import type { GeneratorSeed } from './TestGenerator';
 import TestDesign, { designTools } from './TestDesign';
 import ActivityBar from './ActivityBar';
+import PanelSash from './PanelSash';
 import CreateStepDialog from './CreateStepDialog';
 import CodeEditor from './editor/CodeEditor';
 import { readDraft, sha256, useAutoSave, unsavedFiles, editedThisSession, UNSAVED_EVENT } from './editor/autosave';
@@ -110,6 +111,7 @@ import {
   Circle,
   Settings2,
   ChevronDown,
+  ChevronUp,
   ChevronRight,
   Folder,
   Search,
@@ -1193,8 +1195,14 @@ export default function App() {
   useEffect(() => { const h = () => setSecondary((s) => (s ? null : 'structure')); window.addEventListener('tas:secondary-sidebar', h); return () => window.removeEventListener('tas:secondary-sidebar', h); }, []); // eslint-disable-line react-hooks/exhaustive-deps
   const setDockSide = (side: 'bottom' | 'left' | 'right') => setSetting('workbench.panel.defaultLocation', side);
   const inEditor = tab === 'Features' && (view === 'code' || view === 'editor');
+  // The panel's size (VS Code's sash; 0 = the default) and Maximize Panel Size (the editors give way).
+  const [panelSize, setPanelSize] = useLocalState<{ h: number; w: number }>('panelSize', { h: 0, w: 0 });
+  const [panelMax, setPanelMax] = useState(false);
+  const dockRef = useRef<HTMLDivElement>(null);
+  const panelStyle = { ...(panelSize.h ? { '--panel-h': `${panelSize.h}px` } : {}), ...(panelSize.w ? { '--panel-w': `${panelSize.w}px` } : {}) } as React.CSSProperties;
   const dock = inEditor && dockShows ? (
-    <div className={`dock dock-${dockSide}`}>
+    <div ref={dockRef} className={`dock dock-${dockSide} ${panelSize[dockSide === 'bottom' ? 'h' : 'w'] ? 'dock-sized' : ''} ${panelMax ? 'dock-max' : ''}`} style={panelStyle}>
+      {!panelMax && <PanelSash side={dockSide} size={dockSide === 'bottom' ? panelSize.h : panelSize.w} onSize={(px) => setPanelSize(dockSide === 'bottom' ? { ...panelSize, h: px } : { ...panelSize, w: px })} panel={() => dockRef.current} />}
       <div className="dock-bar">
         {dockOpen.length > 1 && (
           <div className="dock-tabs" role="tablist" aria-label="Panel">
@@ -1202,6 +1210,7 @@ export default function App() {
           </div>
         )}
         <button className="icon-button dock-move" aria-label={dockSide === 'bottom' ? 'Move panel right' : 'Move panel to the bottom'} title={dockSide === 'bottom' ? 'Move panel right' : 'Move panel to the bottom'} onClick={() => setDockSide(dockSide === 'bottom' ? 'right' : 'bottom')}>{dockSide === 'bottom' ? <PanelRight size={13} /> : <PanelBottom size={13} />}</button>
+        <button className="icon-button dock-maximize" aria-label={panelMax ? 'Restore Panel Size' : 'Maximize Panel Size'} aria-pressed={panelMax} title={panelMax ? 'Restore Panel Size' : 'Maximize Panel Size'} onClick={() => setPanelMax((m) => !m)}>{(dockSide === 'bottom') === panelMax ? <ChevronDown size={13} /> : <ChevronUp size={13} />}</button>
       </div>
       {dockShows === 'build' && <BuildPanel onOpen={(file, line, column) => editFile(file, line, column)} onNotice={setNotice} onClose={() => setBuildOpen(false)} />}
       {dockShows && dockShows in RIDER_TOOLS && <RiderToolWindow tool={dockShows as RiderTool} onOpen={(file, line, column) => navigateTo({ file, line, column })} onNotice={setNotice} onClose={() => closeRiderTool(dockShows as RiderTool)} />}

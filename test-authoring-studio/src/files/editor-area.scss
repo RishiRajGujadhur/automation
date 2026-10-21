@@ -3986,3 +3986,24 @@ html[data-activity-bar='right'] .app-body > .activity-bar { order: 99; border-le
 .public-api-changes { margin: 4px 0 8px; padding-left: 16px; font-size: 12px; li { margin: 2px 0; } }
 .api-removed, .api-changed { color: var(--danger, #f85149); }
 .api-added { color: var(--success, #2ea043); }
+
+/* Panel sash and Maximize Panel Size (GUI-QOL.md G1, G2). */
+.dock { position: relative; }
+.panel-sash {
+  position: absolute;
+  z-index: 8;
+  touch-action: none;
+  outline: none;
+  &::after { content: ''; position: absolute; background: transparent; transition: background 0.1s 0.15s; }
+  &:hover::after, &.dragging::after, &:focus-visible::after { background: var(--accent, #6d5ce8); }
+}
+.panel-sash-bottom { top: -3px; left: 0; right: 0; height: 7px; cursor: row-resize; &::after { left: 0; right: 0; top: 2px; height: 2px; } }
+.panel-sash-right { left: -3px; top: 0; bottom: 0; width: 7px; cursor: col-resize; &::after { top: 0; bottom: 0; left: 2px; width: 2px; } }
+.panel-sash-left { right: -3px; top: 0; bottom: 0; width: 7px; cursor: col-resize; &::after { top: 0; bottom: 0; left: 2px; width: 2px; } }
+.dock-bottom.dock-sized > .debug-panel { height: var(--panel-h); min-height: 0; }
+.dock-right.dock-sized, .dock-left.dock-sized { width: var(--panel-w); }
+// Maximized: the editors give way to the panel.
+.main-content:has(> .dock-bottom.dock-max) > .editor-split { display: none !important; }
+.dock-bottom.dock-max { flex: 1; min-height: 0; > .debug-panel { flex: 1; height: auto; min-height: 0; } }
+.editor-split:has(> .dock-max) > .editor-area { display: none !important; }
+.dock-right.dock-max, .dock-left.dock-max { flex: 1; width: auto; }
