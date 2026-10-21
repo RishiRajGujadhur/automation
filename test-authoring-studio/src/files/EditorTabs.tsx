@@ -10,6 +10,8 @@ import { UNSAVED_EVENT, unsavedFiles } from '../editor/autosave';
 import { tabs as tabSettings } from '../vscode/workbenchTabs';
 import { useSettings } from '../vscode/settings';
 import { SELECT_IN_EXPLORER } from '../SolutionExplorer';
+/** Double-click on a tab (not a preview tab): the editor takes the window, side bar and panel hidden (VS Code). */
+export const TOGGLE_MAXIMIZED_EDITOR = 'tas:toggle-maximized-editor';
 import { useTabs, activateTab, closeOthers, closeToRight, closeToLeft, unpinAll, sortTabs, closeOfType, closeAll, closeSaved, moveTabTo, setPinned, keepTab, type EditorTab } from './tabs';
 import { fileType } from './fileTypes';
 import { api } from '../api';
@@ -116,7 +118,7 @@ export default function EditorTabs({ onClose, onSplit, children }: { onClose: (f
                 ...(featureOn('tab-reveal') ? [{ label: 'Reveal in Explorer', onSelect: () => { activateTab(t.file); requestAnimationFrame(() => window.dispatchEvent(new Event(SELECT_IN_EXPLORER))); } }] : []),
                 ...(onSplit && !t.file.endsWith('.feature') ? ['separator' as const, { label: 'Split Right', onSelect: () => onSplit(t.file) }] : []),
               ]}>
-                <div className={`editor-tab ${selected ? 'active' : ''} ${unsaved ? 'unsaved' : ''} ${t.pinned ? 'pinned' : ''} ${t.preview ? 'preview' : ''}`} onDoubleClick={() => keepTab(t.file)} data-menu-row style={{ '--file-color': color } as React.CSSProperties}>
+                <div className={`editor-tab ${selected ? 'active' : ''} ${unsaved ? 'unsaved' : ''} ${t.pinned ? 'pinned' : ''} ${t.preview ? 'preview' : ''}`} onDoubleClick={() => { if (t.preview || !featureOn('tab-maximize')) keepTab(t.file); else window.dispatchEvent(new Event(TOGGLE_MAXIMIZED_EDITOR)); }} data-menu-row style={{ '--file-color': color } as React.CSSProperties}>
                   <button aria-current={selected ? 'true' : undefined} title={t.file} className="editor-tab-label" onClick={() => activateTab(t.file)} onAuxClick={(e) => { if (e.button === 1) { e.preventDefault(); onClose(t.file); } }}>
                     <Icon size={14} aria-hidden="true" />
                     <span>{base(t.file)}</span>

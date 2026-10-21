@@ -150,7 +150,39 @@ test('G5 Index status in the status bar; the Explorer gets the full height', asy
   const bar = (await status.boundingBox())!;
   expect(Math.abs(sidebar.y + sidebar.height - bar.y)).toBeLessThan(3);
   await item.click();
-  await expect(page.getByText('Repository index refreshed.')).toBeVisible();
+  await expect(page.getByText('Repository index refreshed.', { exact: true })).toBeVisible();
   // The full folder path on the workspace name.
   await expect(status.locator('span[title]').filter({ hasText: /^fixtures$/ })).toHaveAttribute('title', /fixtures$/);
+});
+
+test('G6 Back and Forward buttons beside the search box', async ({ page }) => {
+  await open(page);
+  const nav = page.getByRole('group', { name: 'Navigation' });
+  const back = nav.getByRole('button', { name: 'Go Back' });
+  const forward = nav.getByRole('button', { name: 'Go Forward' });
+  await expect(forward).toBeDisabled();
+  await page.getByRole('navigation').getByRole('button', { name: 'SearchSteps.cs', exact: true }).first().click();
+  const active = page.locator('.editor-tab-label[aria-current="true"]');
+  await expect(active).toHaveAttribute('title', 'Steps/SearchSteps.cs');
+  await expect(back).toBeEnabled();
+  await back.click();
+  await expect(active).toHaveAttribute('title', 'Steps/AuthSteps.cs');
+  await expect(forward).toBeEnabled();
+  await forward.click();
+  await expect(active).toHaveAttribute('title', 'Steps/SearchSteps.cs');
+  await expect(forward).toBeDisabled();
+});
+
+test('G7 Double-click an editor tab to maximize the editor; again to restore', async ({ page }) => {
+  await open(page);
+  await structure(page);
+  const tab = page.locator('.editor-tab', { hasText: 'AuthSteps.cs' });
+  // A preview tab is kept open first (as before).
+  if (await tab.evaluate((e) => e.classList.contains('preview'))) { await tab.dblclick(); await expect(tab).not.toHaveClass(/preview/); }
+  await tab.dblclick();
+  await expect(page.locator('#feature-sidebar')).toBeHidden();
+  await expect(page.locator('.dock')).toBeHidden();
+  await tab.dblclick();
+  await expect(page.locator('#feature-sidebar')).toBeVisible();
+  await expect(page.locator('.dock')).toBeVisible();
 });

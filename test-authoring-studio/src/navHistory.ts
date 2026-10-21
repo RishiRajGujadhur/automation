@@ -49,6 +49,8 @@ function move(step: number) {
 }
 export const back = () => move(-1);
 export const forward = () => move(1);
+export const canGoBack = () => index > 0;
+export const canGoForward = () => index >= 0 && index < stack.length - 1;
 export const recentFiles = () => { loadRecent(); return recent; };
 /** Clear Recent Files (Visual Studio's File ▸ Recent Files ▸ clear, Rider's Clear Recent Files). */
 export function clearRecent() { recent = []; keepRecent(); stack = stack.slice(index >= 0 ? index : 0, index + 1); index = stack.length - 1; emit(); }

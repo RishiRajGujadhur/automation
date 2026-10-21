@@ -4017,3 +4017,6 @@ html[data-activity-bar='right'] .app-body > .activity-bar { order: 99; border-le
   button[aria-pressed='true'] { color: var(--text-strong); }
   button[aria-pressed='false'] { color: var(--text-muted); }
 }
+
+/* Back / Forward beside the search box (GUI-QOL.md G6). */
+.nav-buttons { display: inline-flex; align-items: center; gap: 1px; margin-right: 4px; button:disabled { opacity: 0.35; } }

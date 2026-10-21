@@ -1537,7 +1537,9 @@ app.post('/api/debug/start', async (req, res) => {
   if ((await projectInfo(root, project)).legacy) throw new Error(`${project} is a classic .NET Framework project. The studio's debugger (netcoredbg) debugs .NET 6+ projects only; debug this one in Visual Studio, or migrate it to an SDK-style project targeting .NET 8 or later.`);
   await confined(root, project);
   const label = body.file ? (body.scenario ? `${body.scenario} — ${body.file}` : body.file) : project;
-  void debug.start({ root, project, filter: body.filter, label, featureFile: body.file, scenario: body.scenario });
+  // A second start while a session runs is refused here: thrown inside the un-awaited start it crashed the server.
+  if (debug.active) { res.status(409).json({ error: 'A debugging session is already running. Stop it first (Shift+F5).' }); return; }
+  debug.start({ root, project, filter: body.filter, label, featureFile: body.file, scenario: body.scenario }).catch((e: Error) => console.error(`Debugging failed to start: ${e.message}`));
   res.json(debug.state);
 });
 app.post('/api/debug/control', async (req, res) => {

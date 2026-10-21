@@ -25,7 +25,7 @@ import PanelSash from './PanelSash';
 import CreateStepDialog from './CreateStepDialog';
 import CodeEditor from './editor/CodeEditor';
 import { readDraft, sha256, useAutoSave, unsavedFiles, editedThisSession, UNSAVED_EVENT } from './editor/autosave';
-import EditorTabs, { EditorActions } from './files/EditorTabs';
+import EditorTabs, { EditorActions, TOGGLE_MAXIMIZED_EDITOR } from './files/EditorTabs';
 import OpenSolution from './OpenSolution';
 import StartWindow from './StartWindow';
 import SaveRecording from './SaveRecording';
@@ -53,7 +53,7 @@ import { studioLog } from './outputLog';
 import RecentPopup from './RecentPopup';
 import LocalHistory from './LocalHistory';
 import { useBookmarks, removeBookmark, bookmarkLists, getActiveList, setActiveList, moveBookmark, renameList, deleteList, listOf, DEFAULT_LIST } from './editor/bookmarks';
-import { visitFile, back as navBack, forward as navForward, reveal } from './navHistory';
+import { visitFile, visit as visitLocation, back as navBack, forward as navForward, canGoBack, canGoForward, useNavHistory, reveal } from './navHistory';
 import { useKeybindings, KeybindingEditor } from './keybindings';
 import BuildPanel from './build/BuildPanel';
 import TestExplorer from './testing/TestExplorer';
@@ -112,6 +112,7 @@ import {
   Settings2,
   ChevronDown,
   ChevronUp,
+  ArrowLeft,
   ChevronRight,
   Folder,
   Search,
@@ -595,7 +596,19 @@ export default function App() {
     setDebugOpen(true);
     startDebugging({ file: feature.file, scenario }).catch((e) => setNotice((e as Error).message));
   };
-  useEffect(() => { if (openEditors.active) visitFile(openEditors.active); }, [openEditors.active]);
+  // An editor that becomes active is a place to go back to (VS Code records opened editors, not only cursor jumps).
+  useEffect(() => {
+    const f = openEditors.active;
+    if (!f) return;
+    visitFile(f);
+    const t = setTimeout(() => {
+      const a = focusedEditor();
+      const head = a?.file === f ? a.view.state.selection.main.head : 0;
+      const line = a?.file === f ? a.view.state.doc.lineAt(head) : undefined;
+      visitLocation({ file: f, line: line?.number ?? 1, column: line ? head - line.from + 1 : 1, text: line?.text.trim().slice(0, 120) });
+    }, 0);
+    return () => clearTimeout(t);
+  }, [openEditors.active]);
   // Back / Forward / Recent Locations (Rider): open the file, then put the cursor on the line once its editor is there.
   const navigateTo = (loc: { file: string; line?: number; column?: number }) => {
     if (loc.file.endsWith('.feature') && fileSrc.kind !== 'browser') { setTab('Features'); setView('editor'); if (feature?.file !== loc.file) void loadFeature(loc.file); else openTab(loc.file, 'feature'); }
@@ -1204,6 +1217,17 @@ export default function App() {
   const [panelMax, setPanelMax] = useState(false);
   const dockRef = useRef<HTMLDivElement>(null);
   const panelStyle = { ...(panelSize.h ? { '--panel-h': `${panelSize.h}px` } : {}), ...(panelSize.w ? { '--panel-w': `${panelSize.w}px` } : {}) } as React.CSSProperties;
+  // Maximized editor (double-click a tab): side bar, panel and secondary side bar hidden; the same again restores them.
+  const restoreLayout = useRef<{ sidebar: boolean; panelHidden: boolean; secondary: RiderTool | null } | null>(null);
+  useEffect(() => {
+    const h = () => {
+      if (restoreLayout.current) { const r = restoreLayout.current; restoreLayout.current = null; setPrefs({ sidebar: r.sidebar }); setPanelHidden(r.panelHidden); setSecondary(r.secondary); return; }
+      restoreLayout.current = { sidebar: !!prefs.sidebar, panelHidden, secondary };
+      setPrefs({ sidebar: false }); setPanelHidden(true); setSecondary(null);
+    };
+    window.addEventListener(TOGGLE_MAXIMIZED_EDITOR, h);
+    return () => window.removeEventListener(TOGGLE_MAXIMIZED_EDITOR, h);
+  });
   const dock = inEditor && dockShows ? (
     <div ref={dockRef} className={`dock dock-${dockSide} ${panelSize[dockSide === 'bottom' ? 'h' : 'w'] ? 'dock-sized' : ''} ${panelMax ? 'dock-max' : ''}`} style={panelStyle} hidden={panelHidden}>
       {!panelMax && <PanelSash side={dockSide} size={dockSide === 'bottom' ? panelSize.h : panelSize.w} onSize={(px) => setPanelSize(dockSide === 'bottom' ? { ...panelSize, h: px } : { ...panelSize, w: px })} panel={() => dockRef.current} />}
@@ -1375,6 +1399,9 @@ export default function App() {
             </li>
           </ol>
         </nav>
+        {vscode && featureOn('nav-buttons') && (
+          <NavButtons onGo={navigateTo} />
+        )}
         {vscode && (
           <button className="command-center" onClick={() => setPaletteOpen(true)} aria-label="Search pages, commands and steps (Ctrl+K)">
             <Search size={13} aria-hidden="true" />
@@ -2806,5 +2833,16 @@ export default function App() {
       </div>
     </div>
     </AppMenu>
+  );
+}
+
+/** Back and Forward beside the search box (VS Code's command center): the navigation history (Alt+← / Alt+→). */
+function NavButtons({ onGo }: { onGo: (l: { file: string; line: number; column: number }) => void }) {
+  useNavHistory();
+  return (
+    <span className="nav-buttons" role="group" aria-label="Navigation">
+      <IconButton label="Go Back" shortcut="Alt+←" disabled={!canGoBack()} onClick={() => { const l = navBack(); if (l) onGo(l); }}><ArrowLeft size={15} /></IconButton>
+      <IconButton label="Go Forward" shortcut="Alt+→" disabled={!canGoForward()} onClick={() => { const l = navForward(); if (l) onGo(l); }}><ArrowRight size={15} /></IconButton>
+    </span>
   );
 }

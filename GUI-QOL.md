@@ -10,11 +10,12 @@ Workbench improvements that make the studio feel like VS Code and Visual Studio 
 | G3 | [x] | Layout controls in the title bar: Toggle Primary Side Bar, Toggle Panel, Toggle Secondary Side Bar | VS Code title bar |
 | G4 | [x] | Activity bar badges: pending Git changes, failed tests | VS Code |
 | G5 | [x] | Index status in the status bar (rescan on click); the Explorer gets the full height | VS Code / Visual Studio background tasks |
-| G6 | [ ] | Back and Forward buttons beside the search box | VS Code command center |
-| G7 | [ ] | Double-click an editor tab to maximize the editor (side bar and panel hidden); again to restore | VS Code |
+| G6 | [x] | Back and Forward buttons beside the search box | VS Code command center |
+| G7 | [x] | Double-click an editor tab to maximize the editor (side bar and panel hidden); again to restore | VS Code |
 
 ## Progress log
 - 2026-10-21: G1, G2.
 - 2026-10-21: G3. Toggle Panel hides the panel without stopping its tool windows (a terminal keeps its shell). Fixed on the way: a terminal whose page closed without stopping it kept its PowerShell running (and its folder locked) until eight more were opened; the server now stops it 15 s after the last listener leaves.
 - 2026-10-21: G4. The Git status poll moved into a shared store (`src/git/statusStore.ts`): the status bar and the badge use one poll.
 - 2026-10-21: G5. The counts and the last scan time are in the tooltip; the folder name in the status bar shows the full path on hover.
+- 2026-10-21: G6, G7. An editor that becomes active is now a Back / Forward location (it took a click in the editor before). G7 keeps a preview tab open on its first double-click, as before. Fixed on the way: starting the debugger while a session ran crashed the API server (an unhandled rejection); it now answers 409. X70 / X150 tests updated for semantic highlighting and the IDE0130 info.

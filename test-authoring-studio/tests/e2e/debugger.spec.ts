@@ -121,6 +121,11 @@ test('Breakpoint settings: hit count (right-click in the margin), tracepoint log
     await request.post('/api/debug/breakpoints', { data: { file: steps, breakpoints: [{ line: addLine, logMessage: 'sum of {First} and {Second}' }] } });
 
     await request.post('/api/debug/start', { data: { project: 'Calculator.csproj', filter: 'FullyQualifiedName~Calculator.Tests.CalculatorTests.AddsCases' } });
+    // A second start while the session runs is refused, and the server keeps running (it used to crash).
+    const again = await request.post('/api/debug/start', { data: { project: 'Calculator.csproj' } });
+    expect(again.status()).toBe(409);
+    expect((await again.json()).error).toContain('already running');
+    expect((await request.get('/api/health')).ok()).toBe(true);
     await expect.poll(async () => (await state()).status, { timeout: 240_000, intervals: [1000] }).toBe('paused');
     let s = await state();
     expect(s.frames[0]).toMatchObject({ file: 'Tests/CalculatorTests.cs' });

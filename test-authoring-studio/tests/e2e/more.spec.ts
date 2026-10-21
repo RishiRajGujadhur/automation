@@ -323,7 +323,10 @@ test('X70 Fade unnecessary usings: unused usings are greyed out', async ({ page,
   await fs.writeFile(path.join(root, 'Steps/Clock.cs'), ['using System.Globalization;', 'using System.Text;', 'namespace Demo;', 'public class Clock { public CultureInfo Culture() => CultureInfo.InvariantCulture; }', ''].join('\n'));
   expect((await request.post('/api/workspace', { data: { repositoryRoot: root, targetProject: '.' } })).ok()).toBe(true);
   const src = await openCs(page, 'Steps/Clock.cs', 'public class Clock');
-  await expect(src.locator('.cm-unnecessary')).toHaveText('using System.Text;', { timeout: 90_000 });
+  // The unused using is faded (split into one span per token by semantic highlighting); the used one is not.
+  await expect(src.locator('.cm-line', { hasText: 'using System.Text;' }).locator('.cm-unnecessary').first()).toBeVisible({ timeout: 90_000 });
+  await expect.poll(() => src.locator('.cm-line', { hasText: 'using System.Text;' }).locator('.cm-unnecessary').allTextContents().then((t) => t.join(''))).toBe('using System.Text;');
+  await expect(src.locator('.cm-line', { hasText: 'using System.Globalization;' }).locator('.cm-unnecessary')).toHaveCount(0);
 });
 
 test('X76 Tags window: tags with their scenarios; a scenario opens', async ({ page }) => {
@@ -738,7 +741,7 @@ test('X150 Copy Problems in File', async ({ page, request, context }) => {
   await openCs(page, 'Steps/Broken3.cs', 'public class Broken3');
   await expect(page.locator('.code-editor:not([hidden]) .cm-lintRange-error').first()).toBeAttached({ timeout: 30_000 });
   await menuItem(page, 'Edit', /^Copy Problems in File/);
-  await expect.poll(() => page.evaluate(() => navigator.clipboard.readText())).toMatch(/^Steps\/Broken3\.cs:4:\d+: error: /);
+  await expect.poll(() => page.evaluate(() => navigator.clipboard.readText())).toMatch(/^Steps\/Broken3\.cs:4:\d+: error: /m); // after IDE0130 (info) on line 1
 });
 
 test('X151 Full Screen', async ({ page }) => {
