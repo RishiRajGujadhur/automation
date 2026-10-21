@@ -10,7 +10,7 @@ import { gateSource } from '../../vscode/suggestions';
  * TypeScript / JavaScript in the editor (FRONTEND-100.md): the TypeScript service's diagnostics (unused code faded),
  * completions with auto-imports, and Quick Info on hover. Requests carry the editor's text.
  */
-type WebDiagnostic = { from: number; to: number; severity: 'error' | 'warning' | 'info'; message: string; code: number; unnecessary: boolean; deprecated: boolean };
+type WebDiagnostic = { from: number; to: number; severity: 'error' | 'warning' | 'info'; message: string; code: number; rule?: string; unnecessary: boolean; deprecated: boolean };
 type Item = { label: string; kind: string; sort: string; insert?: string; source?: string; data?: string; replace?: { from: number; to: number } };
 
 export const scriptLinter = (file: string) => linter(async (view) => {
@@ -21,7 +21,7 @@ export const scriptLinter = (file: string) => linter(async (view) => {
       from: d.from, to: Math.min(doc.length, Math.max(d.from + 1, d.to)),
       severity: d.severity === 'info' && d.unnecessary ? 'hint' : d.severity,
       ...(d.unnecessary ? { markClass: 'cm-unnecessary' } : d.deprecated ? { markClass: 'cm-deprecated' } : {}),
-      source: 'TypeScript', message: `TS${d.code}: ${d.message}`,
+      source: d.rule ? 'React Hooks' : 'TypeScript', message: d.rule ? `${d.message} (${d.rule})` : `TS${d.code}: ${d.message}`,
     }));
   } catch { return []; }
 }, { delay: 500 });

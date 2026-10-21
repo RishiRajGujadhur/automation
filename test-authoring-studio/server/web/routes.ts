@@ -6,6 +6,7 @@ import { listActions, applyAction, prefs, fmt, changesOf } from './tsActions.js'
 import './customs/index.js';
 import { editsForMove } from './customs/modules.js';
 import { importCycles } from './analysis.js';
+import { hookProblemsLoaded } from './hooksLint.js';
 import { declarationSource, toOriginal, toGenerated } from './navigation.js';
 
 /**
@@ -29,7 +30,9 @@ export function webRoutes(app: Express, root: () => string) {
       severity: d.category === ts.DiagnosticCategory.Error ? 'error' : d.category === ts.DiagnosticCategory.Warning ? 'warning' : 'info',
       message: ts.flattenDiagnosticMessageText(d.messageText, '\n'), unnecessary: !!d.reportsUnnecessary, deprecated: !!d.reportsDeprecated,
     }));
-    res.json(out);
+    // React Hooks rules (F46–F48): missing dependencies, hooks called conditionally or outside components.
+    const hooks = (await hookProblemsLoaded(b.file, b.source)).map((h) => ({ from: h.from, to: h.to, code: 0, severity: h.severity, message: h.message, rule: h.rule, unnecessary: false, deprecated: false }));
+    res.json([...out, ...hooks]);
   });
 
   app.post('/api/web/complete', async (req, res) => {

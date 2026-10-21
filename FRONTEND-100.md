@@ -56,9 +56,9 @@ Status: `[x]` done, `[ ]` to do. Before this list, JS / TS / HTML / CSS files op
 - [x] F43 Convert inline JSX styles to CSS classes
 - [x] F44 Extract inline event handlers
 - [x] F45 Convert inline callbacks to named functions
-- [ ] F46 Detect missing React Hook dependencies
-- [ ] F47 Apply React Hook dependency fixes
-- [ ] F48 Detect invalid Hook usage
+- [x] F46 Detect missing React Hook dependencies
+- [x] F47 Apply React Hook dependency fixes
+- [x] F48 Detect invalid Hook usage
 - [ ] F49 Navigate React context providers
 - [ ] F50 React component prop type validation
 
@@ -126,3 +126,4 @@ Status: `[x]` done, `[ ]` to do. Before this list, JS / TS / HTML / CSS files op
 - 2026-10-21: F26, F27, F28, F29, F30. Studio actions (customs/expressions.ts): Introduce object destructuring for a variable used only through property reads; destructuring back to property access (references filtered to the variable, shorthand keys kept); null checks to ??. Optional chaining and template strings are TypeScript refactorings. Convert to CommonJS is now offered in JavaScript files only.
 - 2026-10-21: F32, F36, F37, F38, F39, F40, F41, F42. From the TypeScript service and CodeMirror's JSX mode: Extract to constant on JSX, F12 to the component, Shift+F12 usages, F2 on a tag (opening and closing tags, declaration) or an attribute (props type and usages), tags closed as you type, components auto-imported from completion, Add missing attributes.
 - 2026-10-21: F31, F33, F34, F35, F43, F44, F45. Studio actions on the TypeScript tree (customs/react.ts): JSX to a component with the locals it uses as typed props; class components to function components (state to useState, mount / unmount to useEffect, this.* rewritten, hooks imported); props generated from the attributes of every usage; props types moved to an interface NameProps (types from usages and defaults); style={{…}} to a class in the component's stylesheet (created and imported when missing, CSS module aware, a diff to approve); inline JSX handlers to handleX constants; inline callbacks to named functions (renderItem for JSX maps).
+- 2026-10-21: F46, F47, F48. eslint-plugin-react-hooks (exhaustive-deps, rules-of-hooks) run in-process with ESLint 9's Linter and Babel 7's parser (server/web/hooksLint.ts), loaded on first use: warnings and errors in the editor, and Update the dependencies array as a Quick Action. Babel 8's parser was not usable: it parses in a worker thread and blocks the API waiting for it.

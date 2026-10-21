@@ -414,3 +414,24 @@ test('F44 Extract inline event handlers; F45 Convert inline callbacks to named f
   await convert(page, 'onClick', /^Extract handler handleClick$/, /  const handleClick = \(\) => setDone\(done \+ 1\);\n  return \(\n    <ul onClick=\{handleClick\}>/, false, 2);
   await convert(page, '(item) =>', /^Convert callback to named function renderItem$/, /  function renderItem\(item\) \{\s*return <li key=\{item\}>\{item\}<\/li>;\s*\}\n  return \([\s\S]*\{items\.map\(renderItem\)\}/, false, 1);
 });
+
+test('F46 Detect missing React Hook dependencies; F47 Apply React Hook dependency fixes', async ({ page }) => {
+  await withReact();
+  const editor = await open(page, 'src/Clock.tsx', 'import { useEffect, useState } from "react";\nexport function Clock({ step }: { step: number }) {\n  const [n, setN] = useState<number>(0);\n  useEffect(() => {\n    document.title = String(n + step);\n  }, []);\n  return <b>{n}</b>;\n}\n');
+  const warning = editor.locator('.cm-lintRange-warning').first();
+  await expect(warning).toBeVisible({ timeout: 30_000 });
+  await warning.hover();
+  await expect(page.locator('.cm-tooltip-lint')).toContainText("React Hook useEffect has missing dependencies: 'n' and 'step'");
+  await convert(page, '[]);', /^Update the dependencies array to be: \[n, step\]$/, '  }, [n, step]);', false, 1);
+});
+test('F48 Detect invalid Hook usage', async ({ page }) => {
+  await withReact();
+  const editor = await open(page, 'src/Panel.tsx', 'import { useState } from "react";\nexport function Panel({ open }: { open: boolean }) {\n  if (open) {\n    const [x] = useState(1);\n    return <p>{x}</p>;\n  }\n  return null;\n}\nexport function helper() {\n  return useState(0);\n}\n');
+  const errors = editor.locator('.cm-lintRange-error');
+  await expect(errors).toHaveCount(2, { timeout: 30_000 });
+  await errors.first().hover();
+  await expect(page.locator('.cm-tooltip-lint')).toContainText('React Hook "useState" is called conditionally');
+  await page.mouse.move(0, 0);
+  await errors.nth(1).hover();
+  await expect(page.locator('.cm-tooltip-lint')).toContainText('React Hook "useState" is called in function "helper"');
+});

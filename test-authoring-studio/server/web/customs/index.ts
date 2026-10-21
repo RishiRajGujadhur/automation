@@ -7,3 +7,4 @@ import './functions.js';
 import './imports.js';
 import './expressions.js';
 import './react.js';
+import './hooks.js';
