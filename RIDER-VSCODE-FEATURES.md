@@ -142,7 +142,7 @@ Legend: `[x]` done · `[ ]` to do.
 - [x] 117. Quick-fix previews — Quick Actions: the highlighted action's diff beside the list (2026-10-21)
 - [x] 118. Bulk quick-fix application — Quick Actions: '… (fix all in document / project / solution)' with Roslyn's Fix All (2026-10-21)
 - [ ] 119. Duplicate code detection
-- [ ] 120. Structural Search and Replace templates
+- [x] 120. Structural Search and Replace templates — Search with Pattern: built-in templates and Save as Template / Delete Template (2026-10-21)
 - [ ] 121. Dependency cycle detection
 - [ ] 122. Layer dependency rules
 - [x] 123. Namespace consistency inspections — IDE0130: namespace does not match the folder (root namespace + folder from the project), fix in Quick Actions (2026-10-21)
@@ -414,3 +414,4 @@ Legend: `[x]` done · `[ ]` to do.
 - 2026-10-21 82: A static Create method beside the constructor.
 - 2026-10-21 83: The constructor becomes private; new T(...) outside the class becomes T.Create(...).
 - 2026-10-21 214: An ambiguous type name offers a using alias for each candidate, or the fully qualified name.
+- 2026-10-21 120: Structural search templates: a built-in catalogue (null checks, Any(), NUnit Assert.That, Task.Result…) and saved ones.

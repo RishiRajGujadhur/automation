@@ -890,3 +890,22 @@ test('214 Import alias generation', async ({ page }) => {
   await analyzerFix(page, 'using System.Threading;\nusing System.Timers;\nnamespace Fixtures.Steps;\npublic class P\n{\n    private Timer? t;\n    public object? T => t;\n}\n',
     [{ cls: '.cm-lintRange-error', text: 'Timer' }], 'Timer?', /^using Timer = System\.Timers\.Timer;$/, (d) => d.includes('using Timer = System.Timers.Timer;'), );
 });
+
+test('120 Structural Search and Replace templates', async ({ page }) => {
+  needsLang();
+  await fs.writeFile(path.join(temp, 'Steps/Counts.cs'), 'using System.Linq;\nusing System.Collections.Generic;\nnamespace Fixtures.Steps;\npublic class Counts { public bool Has(List<int> xs) => xs.Count() > 0; }\n');
+  expect((await page.request.post('/api/workspace', { data: { repositoryRoot: temp, targetProject: '.' } })).ok()).toBe(true);
+  await open(page, CS);
+  await menuItem(page, 'Navigate', /^Search with Pattern/);
+  const ssr = page.getByLabel('Search with Pattern');
+  await ssr.getByLabel('Template').selectOption('Count() > 0 → Any()');
+  await expect(ssr.getByLabel('Search pattern')).toHaveValue('$x$.Count() > 0');
+  await expect(ssr.getByLabel('Replace pattern')).toHaveValue('$x$.Any()');
+  await ssr.getByRole('button', { name: 'Find' }).click();
+  await expect(ssr.getByLabel('Pattern matches')).toContainText('Steps/Counts.cs:4', { timeout: 60_000 });
+  // Saved as a template of my own.
+  await ssr.getByLabel('Search pattern').fill('$x$.Count() >= 1');
+  page.once('dialog', (d) => void d.accept('At least one'));
+  await ssr.getByRole('button', { name: 'Save as Template…' }).click();
+  await expect(ssr.getByLabel('Template').locator('optgroup[label="Saved"] option')).toHaveText(['At least one']);
+});
