@@ -109,7 +109,7 @@ export default function QuickInput() {
   const page = Math.max(1, Math.floor((list.current?.clientHeight ?? ROW * 20) / ROW) - 1);
   const message = provider?.message?.(filter);
   return (
-    <div className="quick-input-widget" role="dialog" aria-label="Quick Input" onMouseDown={(e) => { if (e.target === e.currentTarget) e.preventDefault(); }}>
+    <div className={`quick-input-widget${quickOpen.position() === 'center' ? ' center' : ''}`} role="dialog" aria-label="Quick Input" onMouseDown={(e) => { if (e.target === e.currentTarget) e.preventDefault(); }}>
       <div className="quick-input-header">
         <div className="quick-input-filter">
           <input

@@ -423,3 +423,10 @@ test('W19 Command palette: similar commands when no title contains the words', a
   await quickBox(page).fill('>zzzzqqq');
   await expect(quick(page).getByText('No matching commands')).toBeVisible();
 });
+
+test('W20 workbench.quickInput.position: top or center', async ({ page }) => {
+  await start(page, { 'workbench.quickInput.position': 'center' });
+  await page.keyboard.press('Control+p');
+  const y = (await quick(page).boundingBox())!.y;
+  expect(y).toBeGreaterThan(page.viewportSize()!.height * 0.15);
+});
