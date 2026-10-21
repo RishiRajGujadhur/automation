@@ -1,10 +1,14 @@
 import { existsSync, readFileSync, readdirSync } from 'node:fs';
 import path from 'node:path';
-import htmlLs, { type HTMLDocument, type Node as HtmlNode, type IHTMLDataProvider } from 'vscode-html-languageservice';
-import cssLs from 'vscode-css-languageservice';
+import * as htmlNs from 'vscode-html-languageservice';
+import type { HTMLDocument, Node as HtmlNode, IHTMLDataProvider } from 'vscode-html-languageservice';
+import * as cssNs from 'vscode-css-languageservice';
 import { TextDocument } from 'vscode-languageserver-textdocument';
 
-// CommonJS packages under Node: their re-exports are not ESM named exports, so take them from the module object.
+// CommonJS under Node (re-exports are not ESM named exports: take them from the module object); the desktop bundle
+// uses their ESM build, where they are plain named exports.
+const htmlLs = (htmlNs as unknown as { default?: typeof htmlNs }).default ?? htmlNs;
+const cssLs = (cssNs as unknown as { default?: typeof cssNs }).default ?? cssNs;
 const { getLanguageService: htmlService, getDefaultHTMLDataProvider, newHTMLDataProvider, TokenType } = htmlLs;
 const { getCSSLanguageService } = cssLs;
 

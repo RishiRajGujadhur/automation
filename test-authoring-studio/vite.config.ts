@@ -7,6 +7,9 @@ import { readSettings } from './server/settings';
 const { webPort, apiPort } = readSettings();
 export default defineConfig({
   plugins: [react(), tailwindcss()],
+  // Pre-bundled at startup: found later (the editor loads them on demand), they make Vite re-optimize mid-session and
+  // reload open pages ("Outdated Optimize Dep").
+  optimizeDeps: { include: ['@codemirror/lang-javascript', '@codemirror/lang-html', '@codemirror/lang-css', '@codemirror/lang-sass', '@codemirror/lang-less'] },
   server: {
     host: '127.0.0.1',
     port: webPort,

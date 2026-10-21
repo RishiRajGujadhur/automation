@@ -40,6 +40,22 @@ test('starts the bundled API and loads the studio', async () => {
   await expect(page).toHaveTitle(/TestAuthoring Studio/);
 });
 
+test('front-end language services work in the bundled API (FRONTEND-100.md)', async () => {
+  const post = (url: string, body: unknown) => page.evaluate(([u, b]) => fetch(u, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(b) }).then((r) => r.json()), [url, body] as const);
+  // TypeScript 5 (typescript5 beside the bundle, with its lib .d.ts files): a type error.
+  const ts = await post('/api/web/diagnostics', { file: 'smoke.ts', source: 'const n: number = "x";\n' }) as { message: string }[];
+  expect(Array.isArray(ts), JSON.stringify(ts)).toBe(true);
+  expect(ts.map((d) => d.message).join()).toContain("Type 'string' is not assignable to type 'number'");
+  // ESLint + react-hooks + Babel, loaded on first use.
+  const hooks = await post('/api/web/diagnostics', { file: 'smoke.jsx', source: 'import { useState } from "react";\nexport function A({ on }) { if (on) { useState(1); } return null; }\n' }) as { message: string }[];
+  expect(hooks.map((d) => d.message).join()).toContain('called conditionally');
+  // HTML and CSS language services.
+  const html = await post('/api/web/markup/complete', { file: 'smoke.html', source: '<sec', pos: 4 }) as { label: string }[];
+  expect(html.map((i) => i.label)).toContain('section');
+  const css = await post('/api/web/style/complete', { file: 'smoke.css', source: '.a { backgr }', pos: 11 }) as { label: string }[];
+  expect(css.map((i) => i.label)).toContain('background-color');
+});
+
 test('exposes the desktop bridge, and no Node globals', async () => {
   const info = await page.evaluate(() => ({ bridge: typeof (window as any).desktop?.pickFolder, openSolution: typeof (window as any).desktop?.openSolution, platform: (window as any).desktop?.platform, require: typeof (window as any).require, process: typeof (window as any).process }));
   expect(info).toEqual({ bridge: 'function', openSolution: 'function', platform: process.platform, require: 'undefined', process: 'undefined' });

@@ -5,7 +5,7 @@
 //   4. the Electron main process (ESM) and preload (CommonJS, required for sandboxed preloads) into out/.
 import { build } from 'esbuild';
 import { execSync } from 'node:child_process';
-import { cpSync, existsSync, mkdirSync, rmSync, writeFileSync, readdirSync, statSync } from 'node:fs';
+import { cpSync, existsSync, mkdirSync, rmSync, writeFileSync, readFileSync, readdirSync, statSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -26,15 +26,21 @@ rmSync(app, { recursive: true, force: true });
 mkdirSync(path.join(app, 'server'), { recursive: true });
 
 // ESM output that still needs `require` for CommonJS dependencies (express et al.).
-const banner = { js: "import { createRequire as __cr } from 'node:module'; const require = __cr(import.meta.url);" };
+// CommonJS code in the ESM bundle (ESLint's config loader) reads require and __filename / __dirname.
+const banner = { js: "import { createRequire as __cr } from 'node:module'; import { fileURLToPath as __fu } from 'node:url'; import { dirname as __dn } from 'node:path'; const require = __cr(import.meta.url); const __filename = __fu(import.meta.url); const __dirname = __dn(__filename);" };
 // typescript5 (the front-end language service) loads its lib.*.d.ts files from its own folder, so it stays a real module.
-const external = ['playwright', 'playwright-core', 'chromium-bidi', 'fsevents', 'electron', 'typescript5'];
+// ESLint + react-hooks + Babel's parser (front-end Hooks checks) resolve files at run time: copied, not bundled.
+const HOOKS_LINT = ['eslint', 'eslint-plugin-react-hooks', '@babel/eslint-parser', '@babel/core'];
+const external = ['playwright', 'playwright-core', 'chromium-bidi', 'fsevents', 'electron', 'typescript5', ...HOOKS_LINT];
 step('Bundling the studio API…');
 await build({
   entryPoints: [path.join(studio, 'server/index.ts')],
   outfile: path.join(app, 'server/index.mjs'),
   bundle: true, platform: 'node', format: 'esm', target: 'node22', sourcemap: true, banner, external,
   logLevel: 'warning',
+  // VS Code's HTML / CSS language services: their ESM build (the UMD one loads its parts with require calls esbuild
+  // cannot follow).
+  alias: { 'vscode-css-languageservice': path.join(studio, 'node_modules/vscode-css-languageservice/lib/esm/cssLanguageService.js'), 'vscode-html-languageservice': path.join(studio, 'node_modules/vscode-html-languageservice/lib/esm/htmlLanguageService.js') },
   // The studio resolves node_modules from its own folder; point esbuild there too.
   nodePaths: [path.join(studio, 'node_modules')],
 });
@@ -92,12 +98,26 @@ try {
 const scanner = path.join(studio, 'scanner/bin/Release');
 if (!existsSync(path.join(scannerOut, exeName)) && existsSync(scanner)) cpSync(scanner, path.join(app, 'scanner/bin/Release'), { recursive: true });
 // The API bundle sits outside app.asar (worker threads and the scanner need real files), so modules it keeps
-// external must sit beside it: Playwright drives the recorder and selector verification.
+// external must sit beside it: Playwright drives the recorder and selector verification; typescript5 is the
+// front-end language service (installed with the studio, not the desktop app).
 for (const mod of ['playwright', 'playwright-core', 'typescript5']) {
-  const src = path.join(root, 'node_modules', mod);
-  if (existsSync(src)) cpSync(src, path.join(app, 'node_modules', mod), { recursive: true, dereference: true });
-  else console.warn(`  ${mod} not installed; recording will be unavailable.`);
+  const src = [path.join(root, 'node_modules', mod), path.join(studio, 'node_modules', mod)].find((p) => existsSync(p));
+  if (src) cpSync(src, path.join(app, 'node_modules', mod), { recursive: true, dereference: true });
+  else console.warn(`  ${mod} not installed; ${mod === 'typescript5' ? 'JavaScript / TypeScript features' : 'recording'} will be unavailable.`);
 }
+// ESLint, the React Hooks rules and Babel's parser (FRONTEND-100.md F46–F48) resolve their own files at run time,
+// so they stay external too: each is copied with its dependencies (the studio's flat node_modules).
+const copied = new Set();
+const copyWithDeps = (mod) => {
+  if (copied.has(mod)) return;
+  copied.add(mod);
+  const src = path.join(studio, 'node_modules', mod);
+  if (!existsSync(src)) return;
+  cpSync(src, path.join(app, 'node_modules', mod), { recursive: true, dereference: true });
+  const pkg = JSON.parse(readFileSync(path.join(src, 'package.json'), 'utf8'));
+  for (const dep of Object.keys({ ...pkg.dependencies, ...pkg.optionalDependencies })) copyWithDeps(dep);
+};
+for (const mod of HOOKS_LINT) copyWithDeps(mod);
 // settings.ts locates its root by package name when STUDIO_DATA is unset; keep that lookup working too.
 writeFileSync(path.join(app, 'package.json'), JSON.stringify({ name: 'test-authoring-studio', private: true, type: 'module' }, null, 2));
 

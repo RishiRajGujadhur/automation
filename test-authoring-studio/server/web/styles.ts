@@ -1,6 +1,6 @@
 import { readFileSync, readdirSync, existsSync } from 'node:fs';
 import path from 'node:path';
-import cssLs from 'vscode-css-languageservice';
+import * as cssNs from 'vscode-css-languageservice';
 import { TextDocument } from 'vscode-languageserver-textdocument';
 
 /**
@@ -10,6 +10,8 @@ import { TextDocument } from 'vscode-languageserver-textdocument';
  * selector names used in the markup, container queries, custom properties / SCSS / LESS symbols across files,
  * partial resolution, shorthand and unit conversions.
  */
+// CommonJS under Node, ESM in the desktop bundle: the functions are on the default export or the namespace.
+const cssLs = (cssNs as unknown as { default?: typeof cssNs }).default ?? cssNs;
 const { getCSSLanguageService, getSCSSLanguageService, getLESSLanguageService } = cssLs;
 const services = { css: getCSSLanguageService(), scss: getSCSSLanguageService(), less: getLESSLanguageService() };
 const lint = { vendorPrefix: 'warning', compatibleVendorPrefixes: 'warning', duplicateProperties: 'warning', emptyRules: 'ignore', unknownVendorSpecificProperties: 'ignore' } as const;

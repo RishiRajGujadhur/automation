@@ -19,12 +19,13 @@ machine; nothing is uploaded.
 | Testing | **Coverage and test runs** | Line and branch coverage (partly covered lines in yellow, branch % per run), test history, Run Repeatedly, continuous testing on save, impacted tests from uncommitted changes, go to the next failure. |
 | Git | **History editing and merges** | Interactive rebase (reword, squash, fixup, drop, reorder), squash to HEAD, a three-way merge editor, compare commits, worktrees, bisect, changelists, commit templates, inline blame, stage selected lines. |
 | Projects | **Project Properties** | Property pages for a `.csproj` with effective values from the .NET SDK and `Directory.Build.props`; every change to a project file is a diff written only when you approve it. |
+| Front end | **JavaScript, TypeScript, React, HTML, CSS** | A TypeScript language service with 40+ refactorings (type alias ⇄ interface, async ⇄ promises, CommonJS ⇄ ES modules, destructuring, `??`, JS to TS…), auto-imports and import updates on move; React actions (extract component, class to function component, props interfaces, Hooks dependency checks via eslint-plugin-react-hooks); HTML completion, validation, accessibility and ARIA checks; CSS / SCSS / LESS completion, colour picker, shorthands, specificity, partials and CSS Modules. See [FRONTEND-100.md](FRONTEND-100.md). |
 | Editor | **VS Code settings** | A settings editor with a category tree, `settings.json` import / export and `@modified`; minimap with section headers, bracket pair guides, sticky scroll, rulers, word wrap, whitespace, semantic highlighting, inactive `#if` regions, format and organize usings on save. |
 | Workbench | **Layout** | Editor groups (split right or down, move, lock, maximize), floating editor windows, Zen Mode, a secondary sidebar, activity bar and panel positions. |
 | Workbench | **VS Code-style ease of use** | A resizable panel (drag its edge) with Maximize Panel Size, layout buttons and Back / Forward in the title bar, badges on the activity bar for Git changes and failed tests, index status in the status bar, double-click a tab to maximize the editor. See [GUI-QOL.md](GUI-QOL.md). |
 
 Every optional feature has a switch under **Settings ▸ Features**. Progress and details:
-[RIDER-VSCODE-FEATURES.md](RIDER-VSCODE-FEATURES.md), [VSCODE-20.md](VSCODE-20.md), [ADVANCED-20.md](ADVANCED-20.md),
+[RIDER-VSCODE-FEATURES.md](RIDER-VSCODE-FEATURES.md), [FRONTEND-100.md](FRONTEND-100.md), [VSCODE-20.md](VSCODE-20.md), [ADVANCED-20.md](ADVANCED-20.md),
 [CSHARP-20.md](CSHARP-20.md), [DEBUG-20.md](DEBUG-20.md), [REQNROLL.md](REQNROLL.md) and [SPY.md](SPY.md).
 
 ## Screenshots
