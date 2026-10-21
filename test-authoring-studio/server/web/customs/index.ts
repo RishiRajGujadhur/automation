@@ -3,3 +3,4 @@ import './types.js';
 import './annotations.js';
 import './modules.js';
 import './docs.js';
+import './functions.js';

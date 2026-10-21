@@ -20,6 +20,11 @@ export const prefs: ts.UserPreferences = {
 };
 export const fmt = (): ts.FormatCodeSettings => ({ ...ts.getDefaultFormatCodeSettings('\n'), indentSize: 2, tabSize: 2, convertTabsToSpaces: true, semicolons: ts.SemicolonPreference.Ignore });
 
+/** Text with TypeScript's formatting applied to a range of it (a rewritten function, say); the editor text is restored. */
+export function formatRange(c: Context, text: string, start: number, end: number) {
+  c.project.setText(c.file, text);
+  try { return applyEdits(text, c.project.service.getFormattingEditsForRange(c.abs, start, end, fmt())); } finally { c.project.setText(c.file, c.text); }
+}
 function context(project: TsProject, file: string, text: string, from: number, to: number): Context {
   const abs = project.setText(file, text);
   const program = project.service.getProgram()!;

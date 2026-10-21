@@ -178,3 +178,25 @@ test('F13 Convert promise chains to async/await', async ({ page }) => {
   await open(page, 'src/api.ts', 'export function load(url: string) {\n  return fetch(url).then((r) => r.json()).then((data) => data.items);\n}\n');
   await convert(page, 'load', /^Convert to async function$/, /export async function load\(url: string\) \{\s*const r = await fetch\(url\);\s*const data = await r\.json\(\);\s*return data\.items;\s*\}/, false, 1);
 });
+
+test('F12 Convert callbacks to promises', async ({ page }) => {
+  await open(page, 'src/files.js', 'import fs from "node:fs";\nfs.readFile("a.txt", "utf8", (err, data) => {\n  if (err) {\n    console.error(err);\n    return;\n  }\n  console.log(data.length);\n});\n');
+  await convert(page, 'readFile', /^Convert callback to promise$/, /new Promise\(\(resolve, reject\) => fs\.readFile\("a\.txt", "utf8", \(err, data\) => \(err \? reject\(err\) : resolve\(data\)\)\)\)\n  \.then\(\(data\) => \{\n    console\.log\(data\.length\);\n  \}\)\n  \.catch\(\(err\) => \{\n    console\.error\(err\);\n    return;\n  \}\)/, false, 2);
+});
+test('F14 Convert async/await to promise chains', async ({ page }) => {
+  await open(page, 'src/api.ts', 'export async function load(url: string) {\n  const r = await fetch(url);\n  const data = await r.json();\n  return data.items;\n}\n');
+  await convert(page, 'load', /^Convert to promise chain \(\.then\)$/, 'export function load(url: string) {\n  return fetch(url).then((r) => {\n    return r.json().then((data) => {\n      return data.items;\n    });\n  });\n}', false, 1);
+});
+test('F15 Convert function declarations to arrow functions', async ({ page }) => {
+  await open(page, 'src/util.ts', 'export async function twice<T>(x: T): Promise<T[]> {\n  return [x, x];\n}\nfunction usesThis(this: Date) { return this.getTime(); }\n');
+  await convert(page, 'twice', /^Convert to arrow function$/, 'export const twice = async <T>(x: T): Promise<T[]> => {\n  return [x, x];\n};', false, 1);
+  // A function that uses `this` is not offered.
+  await caretAt(page, 'usesThis', 1);
+  await page.keyboard.press('Control+.');
+  await expect(page.getByRole('listbox', { name: 'Quick Actions' })).toBeVisible({ timeout: 30_000 });
+  await expect(page.getByRole('option', { name: 'Convert to arrow function' })).toHaveCount(0);
+});
+test('F16 Convert arrow functions to function declarations', async ({ page }) => {
+  await open(page, 'src/util.ts', 'export const square = (n: number) => n * n;\n');
+  await convert(page, 'square', /^Convert to named function$/, /export function square\(n: number\) \{\s*return n \* n;\s*\}/, false, 1);
+});

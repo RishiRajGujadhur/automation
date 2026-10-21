@@ -20,11 +20,11 @@ Status: `[x]` done, `[ ]` to do. Before this list, JS / TS / HTML / CSS files op
 - [x] F9 Convert JavaScript to TypeScript
 - [x] F10 Generate JSDoc annotations
 - [x] F11 Infer types from JSDoc
-- [ ] F12 Convert callbacks to promises
+- [x] F12 Convert callbacks to promises
 - [x] F13 Convert promise chains to async/await
-- [ ] F14 Convert async/await to promise chains
-- [ ] F15 Convert function declarations to arrow functions
-- [ ] F16 Convert arrow functions to function declarations
+- [x] F14 Convert async/await to promise chains
+- [x] F15 Convert function declarations to arrow functions
+- [x] F16 Convert arrow functions to function declarations
 - [ ] F17 Convert CommonJS to ES modules
 - [ ] F18 Convert ES modules to CommonJS
 - [ ] F19 Organize ES module imports
@@ -119,3 +119,4 @@ Status: `[x]` done, `[ ]` to do. Before this list, JS / TS / HTML / CSS files op
 - 2026-10-21: F6, F7, F8. Studio actions on the type checker (customs/annotations.ts): explicit type arguments from the resolved signature, an annotation from the inferred type (literals widened), and removal when the initializer gives the same type.
 - 2026-10-21: F9, F22. Convert to TypeScript renames the file (imports follow) and shows its typed text (JSDoc types moved into annotations, parameters typed from usage) as a diff to approve. An Explorer rename or move of a script or folder updates the imports that point at it (getEditsForFileRename), as diffs to approve. Fixed on the way: the Explorer did not list .ts / .js / .html / .css files.
 - 2026-10-21: F10, F11, F13. Generate JSDoc comment (Quick Action, or /** then Enter above a declaration) from TypeScript's doc template; Annotate with type from JSDoc and Convert to async function from the TypeScript service.
+- 2026-10-21: F12, F14, F15, F16. Studio actions (customs/functions.ts): a Node-style callback becomes a Promise with .then / .catch; an async function becomes a .then chain (not offered with try/catch); a function declaration becomes a const arrow function (not offered when it uses this, arguments, overloads or is a generator); the rewritten code is formatted. Arrow to function declaration: TypeScript's Convert to named function.
