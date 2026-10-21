@@ -83,7 +83,7 @@ Legend: `[x]` done · `[ ]` to do.
 - [x] 61. Change method signature — Code ▸ Refactor ▸ Change Signature… (reorder, remove, rename; declaration, overrides and every call; other files as diffs) (2026-10-21)
 - [x] 62. Extract method — Ctrl+Alt+M
 - [x] 63. Extract interface
-- [ ] 64. Extract superclass
+- [x] 64. Extract superclass — Code ▸ Refactor ▸ Extract Superclass… (2026-10-21)
 - [x] 65. Extract local variable — Ctrl+Alt+V
 - [x] 66. Extract constant — Quick Actions: Introduce constant
 - [x] 67. Extract field — Code ▸ Refactor ▸ Introduce Field (Ctrl+Alt+F) (2026-10-21)
@@ -409,3 +409,4 @@ Legend: `[x]` done · `[ ]` to do.
 - 2026-10-21 72: A field never assigned after its declaration is replaced by its value and removed.
 - 2026-10-21 75: The member moves to the base class (in any file of the solution).
 - 2026-10-21 76: The member moves from the base class into each derived class.
+- 2026-10-21 64: The public instance methods and properties of a class move to a new abstract base class.
