@@ -909,3 +909,26 @@ test('120 Structural Search and Replace templates', async ({ page }) => {
   await ssr.getByRole('button', { name: 'Save as Template…' }).click();
   await expect(ssr.getByLabel('Template').locator('optgroup[label="Saved"] option')).toHaveText(['At least one']);
 });
+
+test('52 Named bookmark lists', async ({ page }) => {
+  await open(page, CS);
+  const bookmarkLine = async (text: string) => { await caretAt(page, text, 0); await page.keyboard.press('Control+k'); await page.keyboard.press('Control+k'); };
+  const openList = async () => { await page.getByLabel(`Source of ${CS}`).click(); await page.keyboard.press('Control+k'); await page.keyboard.press('Control+b'); };
+  await bookmarkLine('namespace Demo');
+  await openList();
+  const dlg = page.getByRole('dialog');
+  page.once('dialog', (d) => void d.accept('Login flow'));
+  await dlg.getByRole('button', { name: 'New List…' }).click();
+  await expect(dlg.getByLabel('Active bookmark list')).toHaveValue('Login flow');
+  await page.keyboard.press('Escape');
+  await bookmarkLine('public class AuthSteps');
+  await openList();
+  await expect(dlg.getByRole('list', { name: 'Login flow' })).toContainText('AuthSteps.cs:4');
+  await expect(dlg.getByRole('list', { name: 'Bookmarks' })).toContainText('AuthSteps.cs:2');
+  // Move the first one into the new list.
+  await dlg.getByLabel('Move bookmark Steps/AuthSteps.cs:2 to list').selectOption('Login flow');
+  await expect(dlg.getByRole('list', { name: 'Login flow' }).locator('.bookmark-row')).toHaveCount(2);
+  // Deleting the list keeps its bookmarks (in the default list).
+  await dlg.getByRole('button', { name: 'Delete List' }).click();
+  await expect(dlg.getByRole('list', { name: 'Bookmarks' }).locator('.bookmark-row')).toHaveCount(2);
+});

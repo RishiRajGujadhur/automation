@@ -7,7 +7,7 @@ import { EditorView, GutterMarker, gutter, keymap, ViewPlugin, type ViewUpdate }
  * file's bookmarks in the margin and moves them with edits; the Bookmarks list jumps to any of them.
  */
 /** `digit`: a numbered bookmark (Rider's mnemonic bookmarks: Ctrl+Shift+digit sets it, Ctrl+digit jumps). */
-export type Bookmark = { file: string; line: number; text: string; digit?: string };
+export type Bookmark = { file: string; line: number; text: string; digit?: string; list?: string };
 const KEY = () => `tas:bookmarks:${location.pathname}`;
 let marks: Bookmark[] = (() => { try { return JSON.parse(localStorage.getItem(KEY()) ?? '[]') as Bookmark[]; } catch { return []; } })();
 const listeners = new Set<() => void>();
@@ -20,6 +20,21 @@ export const getBookmarks = () => marks;
 export const useBookmarks = () => useSyncExternalStore((l) => { listeners.add(l); return () => listeners.delete(l); }, () => marks);
 export const removeBookmark = (b: Bookmark) => save(marks.filter((m) => !(m.file === b.file && m.line === b.line)));
 export const bookmarkByDigit = (digit: string) => marks.find((m) => m.digit === digit);
+/* Named bookmark lists (Rider's bookmark lists): new bookmarks go to the active list; a list can be renamed or deleted. */
+export const DEFAULT_LIST = 'Bookmarks';
+const LIST_KEY = () => `tas:bookmarkList:${location.pathname}`;
+let activeList = (() => { try { return localStorage.getItem(LIST_KEY()) ?? DEFAULT_LIST; } catch { return DEFAULT_LIST; } })();
+let extraLists: string[] = (() => { try { return JSON.parse(localStorage.getItem(`${LIST_KEY()}:all`) ?? '[]') as string[]; } catch { return []; } })();
+export const listOf = (b: Bookmark) => b.list ?? DEFAULT_LIST;
+export const getActiveList = () => activeList;
+export const bookmarkLists = () => [...new Set([DEFAULT_LIST, ...extraLists, ...marks.map(listOf)])];
+function saveLists() { try { localStorage.setItem(LIST_KEY(), activeList); localStorage.setItem(`${LIST_KEY()}:all`, JSON.stringify(extraLists)); } catch { /* storage blocked */ } save([...marks]); }
+export function setActiveList(name: string) { const n = name.trim() || DEFAULT_LIST; activeList = n; if (!extraLists.includes(n) && n !== DEFAULT_LIST) extraLists = [...extraLists, n]; saveLists(); }
+export function moveBookmark(b: Bookmark, list: string) { save(marks.map((m) => (m.file === b.file && m.line === b.line ? { ...m, list: list === DEFAULT_LIST ? undefined : list } : m))); }
+export function renameList(from: string, to: string) { const t = to.trim(); if (!t || from === DEFAULT_LIST) return; extraLists = extraLists.map((l) => (l === from ? t : l)); if (activeList === from) activeList = t; marks = marks.map((m) => (listOf(m) === from ? { ...m, list: t } : m)); saveLists(); }
+/** A deleted list's bookmarks go back to the default list. */
+export function deleteList(name: string) { if (name === DEFAULT_LIST) return; extraLists = extraLists.filter((l) => l !== name); if (activeList === name) activeList = DEFAULT_LIST; marks = marks.map((m) => (listOf(m) === name ? { ...m, list: undefined } : m)); saveLists(); }
+
 /** Clear All Bookmarks (Visual Studio's Bookmarks window ▸ Delete All). */
 export const clearBookmarks = () => save([]);
 
@@ -54,7 +69,7 @@ export function bookmarks(file: string): Extension {
   const toggle = (view: EditorView) => {
     const line = view.state.doc.lineAt(view.state.selection.main.head);
     const has = marks.some((m) => m.file === file && m.line === line.number);
-    save(has ? marks.filter((m) => !(m.file === file && m.line === line.number)) : [...marks, { file, line: line.number, text: line.text.trim().slice(0, 120) }]);
+    save(has ? marks.filter((m) => !(m.file === file && m.line === line.number)) : [...marks, { file, line: line.number, text: line.text.trim().slice(0, 120), ...(activeList !== DEFAULT_LIST ? { list: activeList } : {}) }]);
     return true;
   };
   /** Ctrl+Shift+digit: a numbered bookmark on this line (again: removed); the digit moves from wherever it was. */

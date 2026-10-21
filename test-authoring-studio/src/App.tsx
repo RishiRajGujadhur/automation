@@ -51,7 +51,7 @@ import { activityBarLocation, panelLocation } from './vscode/workbenchLayout';
 import { studioLog } from './outputLog';
 import RecentPopup from './RecentPopup';
 import LocalHistory from './LocalHistory';
-import { useBookmarks, removeBookmark } from './editor/bookmarks';
+import { useBookmarks, removeBookmark, bookmarkLists, getActiveList, setActiveList, moveBookmark, renameList, deleteList, listOf, DEFAULT_LIST } from './editor/bookmarks';
 import { visitFile, back as navBack, forward as navForward, reveal } from './navHistory';
 import { useKeybindings, KeybindingEditor } from './keybindings';
 import BuildPanel from './build/BuildPanel';
@@ -604,6 +604,8 @@ export default function App() {
   };
   const [recentMode, setRecentMode] = useState<'files' | 'locations'>('files');
   const bookmarkList = useBookmarks();
+  // Re-render the Bookmarks window when the active list changes (it is not part of the bookmarks themselves).
+  const [, setBookmarkTick] = useState(0);
   // Ctrl+K Ctrl+W: the Bookmarks window (Visual Studio).
   const chordK = useRef(0);
   // Alt+6: TODO window (Rider's tool window number).
@@ -2434,20 +2436,30 @@ export default function App() {
                 {modal === 'bookmarks' && (
                   <div className="hooks-list">
                     <p className="subtle">{bookmarkList.length ? `Ctrl+K Ctrl+K toggles a bookmark on the current line; Ctrl+K Ctrl+N / Ctrl+K Ctrl+P go to the next / previous one in a file; ${desktop ? 'Ctrl+K Ctrl+W' : 'Ctrl+K Ctrl+B'} opens this list.` : 'No bookmarks yet: put the cursor on a line and press Ctrl+K Ctrl+K.'}</p>
-                    {bookmarkList.length > 0 && (
-                      <ul aria-label="Bookmarks">
-                        {bookmarkList.map((b) => (
+                    {featureOn('bookmark-lists') && (
+                      <div className="button-row bookmark-lists" role="toolbar" aria-label="Bookmark lists">
+                        <label className="git-amend">New bookmarks go to <select aria-label="Active bookmark list" value={getActiveList()} onChange={(e) => { setActiveList(e.target.value); setBookmarkTick((t) => t + 1); }}>{bookmarkLists().map((l) => <option key={l} value={l}>{l}</option>)}</select></label>
+                        <button className="button" onClick={() => { const n = window.prompt('New bookmark list:', '')?.trim(); if (n) { setActiveList(n); setBookmarkTick((t) => t + 1); } }}>New List…</button>
+                        {getActiveList() !== DEFAULT_LIST && <button className="button" onClick={() => { const n = window.prompt(`Rename list ${getActiveList()} to:`, getActiveList())?.trim(); if (n) { renameList(getActiveList(), n); setBookmarkTick((t) => t + 1); } }}>Rename List…</button>}
+                        {getActiveList() !== DEFAULT_LIST && <button className="button" onClick={() => { deleteList(getActiveList()); setBookmarkTick((t) => t + 1); }}>Delete List</button>}
+                      </div>
+                    )}
+                    {bookmarkList.length > 0 && (featureOn('bookmark-lists') ? bookmarkLists() : [null]).map((list) => (
+                      <ul key={list ?? 'all'} aria-label={list ?? 'Bookmarks'}>
+                        {list && <li className="bookmark-list-head"><strong>{list}</strong> <small>{bookmarkList.filter((b) => listOf(b) === list).length}</small></li>}
+                        {bookmarkList.filter((b) => !list || listOf(b) === list).map((b) => (
                           <li key={`${b.file}:${b.line}`} className="bookmark-row">
                             <button onClick={() => { setModal(undefined); navigateTo({ file: b.file, line: b.line }); }}>
                               <span className="hook-kind">{b.file.split('/').pop()}:{b.line}</span>
                               <span><code>{b.text || '(empty line)'}</code></span>
                               <small>{b.file}</small>
                             </button>
+                            {featureOn('bookmark-lists') && bookmarkLists().length > 1 && <select className="bookmark-move" aria-label={`Move bookmark ${b.file}:${b.line} to list`} value={listOf(b)} onChange={(e) => moveBookmark(b, e.target.value)}>{bookmarkLists().map((l) => <option key={l} value={l}>{l}</option>)}</select>}
                             <button className="icon-button" aria-label={`Remove bookmark ${b.file}:${b.line}`} onClick={() => removeBookmark(b)}><X size={13} /></button>
                           </li>
                         ))}
                       </ul>
-                    )}
+                    ))}
                   </div>
                 )}
                 {modal === 'recent' && <RecentPopup mode={recentMode} onMode={setRecentMode} onOpen={(loc) => { setModal(undefined); navigateTo(loc); }} />}

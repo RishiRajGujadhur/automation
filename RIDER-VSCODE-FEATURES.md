@@ -68,7 +68,7 @@ Legend: `[x]` done · `[ ]` to do.
 - [x] 49. Structural search — Search with Pattern
 - [x] 50. Search Everywhere — Shift twice
 - [x] 51. Bookmarks with mnemonics — numbered bookmarks (Ctrl+Shift+digit)
-- [ ] 52. Named bookmark lists
+- [x] 52. Named bookmark lists — Bookmarks window: lists (new, rename, delete), active list for new bookmarks, move a bookmark (2026-10-21)
 - [x] 53. Navigation history — Back / Forward
 - [x] 54. CodeLens references
 - [x] 55. Code Vision annotations — authors above scenarios, step usages
@@ -415,3 +415,4 @@ Legend: `[x]` done · `[ ]` to do.
 - 2026-10-21 83: The constructor becomes private; new T(...) outside the class becomes T.Create(...).
 - 2026-10-21 214: An ambiguous type name offers a using alias for each candidate, or the fully qualified name.
 - 2026-10-21 120: Structural search templates: a built-in catalogue (null checks, Any(), NUnit Assert.That, Task.Result…) and saved ones.
+- 2026-10-21 52: Bookmarks grouped in named lists; new bookmarks go to the active list; a deleted list's bookmarks return to Bookmarks.
