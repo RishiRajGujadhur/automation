@@ -49,7 +49,7 @@ Legend: `[x]` done · `[ ]` to do.
 - [x] W31. Notifications bell with a dot for unread and a slashed bell in Do Not Disturb
 - [x] W32. Git blame of the caret line in the status bar (git.blame.statusBarItem.enabled)
 - [x] W33. Branch item → Checkout to… quick pick (branches, tags, Create new branch…)
-- [ ] W34. Sync item `↓n ↑n` (pull and push) with a spinner while syncing
+- [x] W34. Sync item `↓n ↑n` (pull and push) with a spinner while syncing
 - [ ] W35. Editor selection: `Ln, Col` and `(n selected)` with VS Code's format
 
 ## Notifications
@@ -327,3 +327,4 @@ Legend: `[x]` done · `[ ]` to do.
 - 2026-10-21: W31. VS Code's bell, always the last status bar item: a dot when there are new notifications, slashed in Do Not Disturb; a click opens or closes the Notifications window.
 - 2026-10-21: W32. git.blame.statusBarItem.enabled: the caret line's author and age in the status bar (commit summary and hash in the tooltip); a click opens the Git Log.
 - 2026-10-21: W33. The branch item opens VS Code's Checkout to…: Create new branch… (an input box with Git's branch-name validation), then branches, remote branches and tags (newest first). Rider's Branches popup stays under Tools ▸ Branches…. The Quick Input gained VS Code's InputBox.
+- 2026-10-21: W34. VS Code's sync item beside the branch: incoming ↓ and outgoing ↑ counts; a click pulls and pushes (fetches when even) with a spinning icon; Publish Branch (cloud) when the branch has no upstream.

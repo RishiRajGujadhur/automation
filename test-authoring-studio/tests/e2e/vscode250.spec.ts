@@ -725,3 +725,24 @@ test('W33 Branch item: Checkout to… (branches, tags, Create new branch with va
   await page.keyboard.press('Enter');
   await expect.poll(() => execSync('git branch --show-current', { cwd: temp }).toString().trim()).toBe('topic/new');
 });
+
+test('W34 Sync item: incoming / outgoing counts, a click pushes; Publish Branch without an upstream', async ({ page }) => {
+  gitInit(temp);
+  const remote = await fs.mkdtemp(path.join(os.tmpdir(), 'studio-w250-remote-'));
+  try {
+    execSync(`git init -q --bare "${remote}"`);
+    execSync(`git remote add origin "${remote}"`, { cwd: temp });
+    await start(page);
+    const bar = page.locator('footer.status-bar');
+    await bar.getByRole('button', { name: 'Publish Branch' }).click();
+    await expect(bar.getByRole('button', { name: /^Synchronize Changes: 0 incoming, 0 outgoing/ })).toBeVisible({ timeout: 20_000 });
+    await fs.writeFile(path.join(temp, 'new.txt'), 'x\n');
+    execSync('git add -A && git commit -q -m "Second"', { cwd: temp });
+    await page.evaluate(() => window.dispatchEvent(new Event('tas:git-changed')));
+    const sync = bar.getByRole('button', { name: /^Synchronize Changes: 0 incoming, 1 outgoing/ });
+    await expect(sync).toHaveText('0↓ 1↑');
+    await sync.click();
+    await expect(bar.getByRole('button', { name: /^Synchronize Changes: 0 incoming, 0 outgoing/ })).toBeVisible({ timeout: 20_000 });
+    expect(execSync('git log --oneline -1 main', { cwd: remote }).toString()).toContain('Second');
+  } finally { await fs.rm(remote, { recursive: true, force: true }).catch(() => {}); }
+});

@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { api } from './api';
 import { GitBranch, CircleX, TriangleAlert, ArrowUp, ArrowDown, Loader, Bell, FlaskConical, MemoryStick } from 'lucide-react';
 import { useBuild } from './build/store';
 import { useTestRun } from './testing/store';
@@ -59,6 +60,21 @@ function BlameStatus({ file, line }: { file: string; line: number }) {
   }, [file, line]);
   if (!b || !gitSettings.blameStatusBar() || /^0+$/.test(b.hash)) return null;
   return <button className="status-item blame-status" aria-label={`Blame: ${b.author}, ${relativeDay(b.when)}`} title={`${b.author} · ${b.when} · ${b.summary} (${b.hash.slice(0, 8)})`} onClick={() => runRider('tool-gitlog', 'menu')}><span className="codicon codicon-git-commit" aria-hidden="true" />{b.author}, {relativeDay(b.when)}</button>;
+}
+function SyncStatus({ upstream, ahead, behind }: { upstream?: string; ahead: number; behind: number }) {
+  const [busy, setBusy] = useState(false);
+  const run = async () => {
+    if (busy) return;
+    setBusy(true);
+    try {
+      if (upstream && behind > 0) await api('/git/sync', { action: 'pull' });
+      if (!upstream || ahead > 0) await api('/git/sync', { action: 'push' });
+      if (upstream && !ahead && !behind) await api('/git/sync', { action: 'fetch' });
+    } catch (e) { window.dispatchEvent(new CustomEvent('tas:notice', { detail: (e as Error).message })); }
+    finally { setBusy(false); window.dispatchEvent(new Event('tas:git-changed')); }
+  };
+  if (!upstream) return <button className="status-item sync-status" aria-label="Publish Branch" title="Publish Branch" onClick={() => void run()}><span className={`codicon codicon-${busy ? 'sync codicon-modifier-spin' : 'cloud-upload'}`} aria-hidden="true" /></button>;
+  return <button className="status-item sync-status" aria-label={`Synchronize Changes: ${behind} incoming, ${ahead} outgoing`} title={`${upstream}: ${behind} incoming / ${ahead} outgoing — Synchronize Changes`} onClick={() => void run()}><span className={`codicon codicon-sync${busy ? ' codicon-modifier-spin' : ''}`} aria-hidden="true" />{behind}↓ {ahead}↑</button>;
 }
 /** VS Code's problems item (W29): ⊗ errors ⚠ warnings ⓘ infos; a click (or Ctrl+Shift+M) toggles the Problems panel. */
 export function ProblemsStatus() {
@@ -153,6 +169,8 @@ export default function StatusBarItems({ repository, onGit, onErrors }: { reposi
           {git.behind > 0 && <><ArrowDown size={11} />{git.behind}</>}
         </button>
       )}
+      {/* VS Code's sync item (W34): ↓ incoming ↑ outgoing; a click pulls then pushes (Publish Branch without an upstream). */}
+      {git?.repo && git.branch && <SyncStatus upstream={git.upstream} ahead={git.ahead} behind={git.behind} />}
       {/* VS Code's bell (W31), always last: a dot for unread notifications, slashed in Do Not Disturb. */}
       <button className="status-item notifications-bell" aria-label={view.doNotDisturb ? 'Notifications (Do Not Disturb)' : unread > 0 ? `Notifications: ${unread} new` : 'Notifications: none new'} title={view.doNotDisturb ? 'Do Not Disturb' : 'Notifications'} onClick={() => window.dispatchEvent(new Event(TOGGLE_NOTIFICATIONS_EVENT))}>
         <span className={`codicon codicon-${view.doNotDisturb ? 'bell-slash' : unread > 0 ? 'bell-dot' : 'bell'}`} aria-hidden="true" />
