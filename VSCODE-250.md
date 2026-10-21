@@ -26,7 +26,7 @@ Legend: `[x]` done · `[ ]` to do.
 - [x] W10. Quick text search (`%`): lines matching the text across files, open at the match
 - [x] W11. Open to the side from Quick Open (Ctrl+Enter / the split button)
 - [x] W12. Remove from Recently Opened (× on a recent entry)
-- [ ] W13. workbench.quickOpen.closeOnFocusLost
+- [x] W13. workbench.quickOpen.closeOnFocusLost
 - [ ] W14. workbench.quickOpen.preserveInput / workbench.commandPalette.preserveInput
 - [ ] W15. workbench.commandPalette.history (how many recent commands)
 - [ ] W16. Quick Input history: Ctrl+↑ / Ctrl+↓ (quickInput.history) cycles earlier queries
@@ -306,3 +306,4 @@ Legend: `[x]` done · `[ ]` to do.
 - 2026-10-21: W10. Matching lines across the workspace in the Quick Input, the match highlighted, grouped under each file; Enter opens the file at the match.
 - 2026-10-21: W11. Ctrl+Enter or a row's split button opens the file in the side editor group. Enter pressed while results are still loading now opens the first result once they arrive (it took the previous list's).
 - 2026-10-21: W12. A × on each recently opened file removes it from the list (and from Recent Files); the list refreshes in place.
+- 2026-10-21: W13. Settings ▸ Workbench ▸ Quick Open: Close On Focus Lost (default on); off keeps the Quick Input open until Escape or a choice.

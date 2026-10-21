@@ -279,3 +279,23 @@ test('W12 Quick Open: Remove from Recently Opened', async ({ page }) => {
   await expect(rows(page).first()).toContainText('AuthSteps.cs');
   await expect(rows(page).first().getByRole('button', { name: 'Remove from Recently Opened' })).toHaveCount(0);
 });
+
+test('W13 workbench.quickOpen.closeOnFocusLost', async ({ page }) => {
+  await start(page);
+  await open(page, 'Steps/AuthSteps.cs');
+  // Default: a click elsewhere closes it.
+  await page.keyboard.press('Control+p');
+  await page.getByLabel('Source of Steps/AuthSteps.cs').click();
+  await expect(quick(page)).toBeHidden();
+  // Off: it stays until Escape.
+  await page.evaluate(() => localStorage.setItem('tas:settings', JSON.stringify({ 'workbench.quickOpen.closeOnFocusLost': false })));
+  await page.reload();
+  await expect(page.getByText('Repository indexed')).toBeVisible();
+  await page.keyboard.press('Control+p');
+  await expect(quick(page)).toBeVisible();
+  await page.locator('.status-bar, footer').first().click({ position: { x: 5, y: 5 } }).catch(() => page.mouse.click(5, 5));
+  await expect(quick(page)).toBeVisible();
+  await quickBox(page).focus();
+  await page.keyboard.press('Escape');
+  await expect(quick(page)).toBeHidden();
+});

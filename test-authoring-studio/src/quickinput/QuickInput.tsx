@@ -1,6 +1,7 @@
 import { Fragment, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { closeQuickInput, providerFor, rememberQuery, useQuickInput, type QuickItem, type QuickProvider } from './store';
 import type { Match } from './fuzzy';
+import { quickOpen } from '../vscode/quickOpen';
 import './quickInput.scss';
 
 /** A label with its matched ranges in bold (VS Code's highlighted label). */
@@ -115,7 +116,7 @@ export default function QuickInput() {
             spellCheck={false}
             autoComplete="off"
             onChange={(e) => setValue(e.target.value)}
-            onBlur={(e) => { if (!e.currentTarget.closest('.quick-input-widget')?.contains(e.relatedTarget as Node)) close(); }}
+            onBlur={(e) => { if (quickOpen.closeOnFocusLost() && !e.currentTarget.closest('.quick-input-widget')?.contains(e.relatedTarget as Node)) close(); }}
             onKeyDown={(e) => {
               const n = items.length;
               if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); close(); }
