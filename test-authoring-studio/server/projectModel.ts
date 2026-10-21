@@ -26,7 +26,7 @@ export function classifyFile(rel: string): Layer {
   return 'Other';
 }
 // Front-end files too (FRONTEND-100.md): scripts, markup, styles and source maps.
-const tracked = /\.(feature|cs|xml|csproj|sln|slnx|props|targets|json|config|runsettings|ya?ml|csv|txt|resx|md|http|rest|ps1|sh|sql|ini|[cm]?[jt]sx?|html?|xhtml|css|scss|sass|less|vue|svelte|map)$/i;
+const tracked = /\.(feature|cs|xml|csproj|sln|slnx|props|targets|json|config|runsettings|ya?ml|csv|txt|resx|md|http|rest|ps1|sh|sql|ini|[cm]?[jt]sx?|html?|xhtml|css|scss|sass|less|vue|svelte|map|log|toml|py|psd1|diff|patch|jsonc|code-snippets|code-workspace|properties)$/i;
 
 /** Repository model: per-layer files plus classification indicators (rules §1–3, §11). */
 export async function projectModel(config: Config, index: Index) {

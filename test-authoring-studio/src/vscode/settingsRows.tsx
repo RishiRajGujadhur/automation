@@ -20,10 +20,10 @@ export function settingCategories() {
 
 const slug = (key: string) => key.replace(/\W/g, '-');
 /** A text box that applies on Enter or when it loses focus (strings, regular expressions, column lists). */
-function TextSetting({ def, value, numbers }: { def: SettingDef; value: string; numbers?: boolean }) {
+function TextSetting({ def, value, numbers, object }: { def: SettingDef; value: string; numbers?: boolean; object?: boolean }) {
   const [text, setText] = useState(value);
   useEffect(() => setText(value), [value]);
-  const apply = () => setSetting(def.key, numbers ? parseNumbers(text) : text);
+  const apply = () => { if (object) { try { setSetting(def.key, JSON.parse(text || '{}')); } catch { setText(value); } return; } setSetting(def.key, numbers ? parseNumbers(text) : text); };
   return <input id={`setting-${slug(def.key)}`} className="settings-text" aria-label={def.title} value={text} spellCheck={false} onChange={(e) => setText(e.target.value)} onBlur={apply} onKeyDown={(e) => { if (e.key === 'Enter') apply(); }} />;
 }
 function control(d: SettingDef): ReactNode {
@@ -38,6 +38,7 @@ function control(d: SettingDef): ReactNode {
     }
     case 'string': return <TextSetting def={d} value={String(v)} />;
     case 'numbers': return <TextSetting def={d} value={(v as number[]).join(', ')} numbers />;
+    case 'object': return <TextSetting def={d} value={JSON.stringify(v)} object />;
   }
 }
 /** Settings ▸ Text Editor / Workbench rows: a control per setting, a bar and a reset button when changed. */

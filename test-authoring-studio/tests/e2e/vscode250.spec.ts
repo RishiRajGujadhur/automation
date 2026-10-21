@@ -486,7 +486,38 @@ test('W23 Change Language Mode: status bar item and Ctrl+K M, per file, colourin
   await again.locator('.cm-line').first().click();
   await page.keyboard.press('Control+k');
   await page.keyboard.press('m');
-  await expect(rows(page).first()).toContainText('Reset to Plain Text');
-  await rows(page).first().click();
+  await rows(page).filter({ hasText: 'Reset to Plain Text' }).click();
   await expect(item).toHaveText('Plain Text');
+});
+
+test('W24 files.associations: Configure File Association for .ext, and the setting', async ({ page }) => {
+  await fs.writeFile(path.join(temp, 'app.log'), 'name: demo\ncount: 3\n');
+  await fs.writeFile(path.join(temp, 'other.log'), 'a: 1\n');
+  await start(page);
+  await open(page, 'app.log');
+  const item = page.locator('footer.status-bar').getByRole('button', { name: /^Select Language Mode/ });
+  await expect(item).toHaveText('Plain Text');
+  await item.click();
+  await rows(page).filter({ hasText: "Configure File Association for '.log'..." }).click();
+  await expect(quickBox(page)).toHaveAttribute('placeholder', "Select Language Mode to Associate with '.log'");
+  await page.keyboard.type('yaml');
+  await page.keyboard.press('Enter');
+  await expect(item).toHaveText('YAML');
+  expect(JSON.parse((await page.evaluate(() => localStorage.getItem('tas:settings')))!)).toEqual({ 'files.associations': { '*.log': 'yaml' } });
+  // Every .log file.
+  await open(page, 'other.log');
+  await expect(item).toHaveText('YAML');
+  // Edited in Settings (JSON value): a folder pattern.
+  await page.keyboard.press('Control+,');
+  const d = page.getByRole('dialog', { name: 'Preferences' });
+  await d.getByRole('searchbox', { name: 'Search settings' }).fill('files.associations');
+  const box = d.locator('[data-setting-id="files.associations"]').getByRole('textbox', { name: 'Associations' });
+  await box.fill('{"*.log": "ini"}');
+  await box.press('Enter');
+  await d.getByRole('searchbox', { name: 'Search settings' }).focus();
+  await page.keyboard.press('Escape');
+  await page.keyboard.press('Escape');
+  await expect(d).toBeHidden();
+  await page.getByLabel('Source of other.log').click();
+  await expect(item).toHaveText('Ini');
 });

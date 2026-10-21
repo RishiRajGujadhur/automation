@@ -15,7 +15,7 @@ import { diff } from '@codemirror/legacy-modes/mode/diff';
 import { webLanguage } from './web/languages';
 import { xmlExtensions } from './xml';
 import { gherkinSyntaxExtensions } from './gherkin';
-import { setting } from '../vscode/settings';
+import { onSettingsChanged, setting } from '../vscode/settings';
 
 /**
  * Language modes (VSCODE-250.md W23 / W24): VS Code's language ids with their names and file extensions. A file's
@@ -63,6 +63,8 @@ let chosen: Record<string, string> = (() => { try { return JSON.parse(localStora
 let version = 0;
 const listeners = new Set<() => void>();
 const emit = () => { version++; for (const l of listeners) l(); };
+/** Editors and the status bar look again (files.associations changed). */
+export const notifyLanguageModes = () => emit();
 export const onLanguageModes = (l: () => void) => { listeners.add(l); return () => { listeners.delete(l); }; };
 export const useLanguageModes = () => useSyncExternalStore((l) => { listeners.add(l); return () => listeners.delete(l); }, () => version);
 export function setLanguageMode(file: string, id: string | undefined) {
@@ -85,3 +87,7 @@ export function associatedLanguage(file: string) {
 }
 /** The language mode of a file: chosen, associated or by extension. */
 export const languageOf = (file: string) => chosen[file] ?? associatedLanguage(file) ?? naturalLanguage(file);
+
+// Settings ▸ files.associations edited: editors recolour (only when the associations themselves changed).
+let lastAssociations = JSON.stringify(setting('files.associations') ?? {});
+onSettingsChanged(() => { const now = JSON.stringify(setting('files.associations') ?? {}); if (now !== lastAssociations) { lastAssociations = now; emit(); } });

@@ -12,7 +12,7 @@ export type SettingDef = {
   category: string;
   title: string;
   description: string;
-  type: 'boolean' | 'number' | 'enum' | 'string' | 'numbers';
+  type: 'boolean' | 'number' | 'enum' | 'string' | 'numbers' | 'object';
   default: unknown;
   options?: SettingOption[];
   min?: number;
@@ -47,6 +47,8 @@ export function valid(d: SettingDef, v: unknown): boolean {
     case 'enum': return typeof v === 'string' && !!d.options?.some((o) => o.value === v);
     case 'string': return typeof v === 'string';
     case 'numbers': return Array.isArray(v) && v.every((n) => typeof n === 'number' && Number.isFinite(n) && n >= 0);
+    // Objects of strings (files.associations, files.exclude…): edited as JSON.
+    case 'object': return !!v && typeof v === 'object' && !Array.isArray(v) && Object.values(v).every((x) => typeof x === 'string' || typeof x === 'boolean');
   }
 }
 function changed() {
