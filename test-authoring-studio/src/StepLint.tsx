@@ -64,8 +64,8 @@ export default function StepLint({ steps, activeLine, onReplace, onSource, revis
                 </HoverCard.Root>
               ) : (
                 <span className="meta">
-                  {st?.status === 'Ambiguous' ? 'ambiguous' : st ? 'needs binding' : '…'}
-                  {st && st.status !== 'Ambiguous' && <button className="text-button create-step" onClick={() => requestCreateStep({ keyword: s.resolved, text: s.text })}>Create</button>}
+                  {st?.status === 'Ambiguous' ? 'multiple matches' : st ? 'unbound' : '…'}
+                  {st && st.status !== 'Ambiguous' && <button className="text-button create-step" aria-label={`Create binding for ${s.keyword} ${s.text}`} onClick={() => requestCreateStep({ keyword: s.resolved, text: s.text })}>Create binding</button>}
                 </span>
               )}
             </li>

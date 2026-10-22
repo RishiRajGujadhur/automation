@@ -23,5 +23,5 @@ test('Record steps in the Test Generator appends Gherkin and offers selector cha
   await expect(editor).toContainText('When the user clicks the "Place order" button');
   await expect(page.getByText('Selectors from this recording')).toBeVisible();
   await expect(page.getByRole('radio', { name: /Existing \(\d+\)/ })).toBeVisible();
-  await expect(page.locator('.step-lint')).toContainText('needs binding');
+  await expect(page.locator('.step-lint')).toContainText('unbound');
 });
