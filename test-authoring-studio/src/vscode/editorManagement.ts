@@ -28,3 +28,5 @@ export const pinnedTabSizing = defineSetting<'normal' | 'compact' | 'shrink'>({
   key: 'workbench.editor.pinnedTabSizing', category: C, title: 'Pinned Tab Sizing', type: 'enum', default: 'normal', description: 'Controls the size of pinned editor tabs.',
   options: [{ value: 'normal', description: 'A pinned tab inherits the look of non pinned tabs.' }, { value: 'compact', description: 'A pinned tab will show in a compact form with only icon or first letter of the editor name.' }, { value: 'shrink', description: 'A pinned tab shrinks to a compact fixed size showing parts of the editor name.' }],
 });
+/** workbench.editor.showIcons (W77): file icons in the tabs. */
+export const showTabIcons = defineSetting<boolean>({ key: 'workbench.editor.showIcons', category: C, title: 'Show Icons', type: 'boolean', default: true, description: 'Controls whether opened editors should show with an icon or not.' });

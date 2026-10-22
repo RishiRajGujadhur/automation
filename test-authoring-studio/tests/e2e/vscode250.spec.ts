@@ -1531,3 +1531,14 @@ test('W76 workbench.editor.pinnedTabSizing: compact pinned tabs show their icon 
     expect(w).toBeLessThan(Math.min(max, normal));
   }
 });
+
+test('W77 workbench.editor.showIcons', async ({ page }) => {
+  await start(page);
+  await open(page, 'Steps/AuthSteps.cs');
+  const icon = page.locator('.editor-tab-label', { hasText: 'AuthSteps.cs' }).locator('svg').first();
+  await expect(icon).toBeVisible();
+  await page.evaluate(() => localStorage.setItem('tas:settings', JSON.stringify({ 'workbench.editor.showIcons': false })));
+  await page.reload();
+  await expect(page.locator('.editor-tab-label', { hasText: 'AuthSteps.cs' })).toBeVisible();
+  await expect(icon).toBeHidden();
+});

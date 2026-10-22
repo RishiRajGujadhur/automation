@@ -81,3 +81,4 @@ html[data-tree-guides='onHover'] .sidebar:hover .folder-children[style*='--guide
 // workbench.editor.pinnedTabSizing (W76).
 .editor-tabs[data-pinned-sizing='compact'] .editor-tab.pinned .editor-tab-label { > span, > small, > .tab-badge { display: none; } }
 .editor-tabs[data-pinned-sizing='shrink'] .editor-tab.pinned { max-width: 80px; .editor-tab-label { overflow: hidden; > span { overflow: hidden; text-overflow: ellipsis; } > small { display: none; } } }
+.editor-tabs[data-tab-icons='off'] .editor-tab-label > svg:first-child { display: none; }
