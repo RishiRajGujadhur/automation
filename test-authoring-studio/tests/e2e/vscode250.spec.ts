@@ -1586,3 +1586,16 @@ test('W79 Editor group "…" menu: Show Opened Editors, Close Saved, preview edi
   const d = page.getByRole('dialog', { name: 'Preferences' });
   await expect(d.getByRole('searchbox', { name: 'Search settings' })).toHaveValue('workbench.editor');
 });
+
+test('W80 Tab context menu: Keep Open for a preview tab, Split Down', async ({ page }) => {
+  await start(page, { 'workbench.editor.enablePreview': true });
+  await page.locator('#feature-sidebar').getByRole('button', { name: 'SearchSteps.cs', exact: true }).first().click();
+  const tab = page.locator('.editor-tab', { hasText: 'SearchSteps.cs' });
+  await expect(tab).toHaveClass(/preview/);
+  await tab.click({ button: 'right' });
+  await page.getByRole('menuitem', { name: 'Keep Open' }).click();
+  await expect(tab).not.toHaveClass(/preview/);
+  await tab.click({ button: 'right' });
+  await page.getByRole('menuitem', { name: 'Split Down' }).click();
+  await expect(page.locator('.editor-split.down')).toBeVisible();
+});

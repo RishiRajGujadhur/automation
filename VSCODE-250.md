@@ -101,7 +101,7 @@ Legend: `[x]` done · `[ ]` to do.
 - [x] W77. workbench.editor.showIcons
 - [x] W78. workbench.editor.revealIfOpen
 - [x] W79. Editor actions "…" menu: Show Opened Editors, Close All, Close Saved, Configure Editors, Toggle Keep Editors Open
-- [ ] W80. Tab context menu: Close Others, Close to the Right, Copy Relative Path, Keep Open, Split Up / Down / Left / Right
+- [x] W80. Tab context menu: Keep Open (preview tabs), Split Down beside Split Right (Close Others / to the Right and Copy Relative Path were there)
 - [ ] W81. Close Saved Editors in Group (Ctrl+K U), Close Group (Ctrl+K W), Close All Groups (Ctrl+K Ctrl+Shift+W)
 - [ ] W82. Revert File, Save without Formatting (Ctrl+K S)
 - [ ] W83. Breadcrumbs: click a segment for a picker of siblings / symbols (VS Code)
@@ -371,3 +371,4 @@ Legend: `[x]` done · `[ ]` to do.
 - 2026-10-22: W77. workbench.editor.showIcons: editor tabs with or without their file icons.
 - 2026-10-22: W78. workbench.editor.revealIfOpen: opening a file that is open only in the side editor group shows it there instead of opening it again in the main group.
 - 2026-10-22: W79. VS Code's '…' at the end of the tab bar: Show Opened Editors, Close All, Close Saved, Enable Preview Editors and Configure Editors (Settings filtered to workbench.editor).
+- 2026-10-22: W80. A preview tab's context menu has Keep Open; every tab offers Split Down beside Split Right.
