@@ -30,10 +30,12 @@ test('fresh web workbench shows the editor and lets users enable pages in Settin
 
   await page.keyboard.press('Control+,');
   await page.getByRole('dialog').getByRole('navigation', { name: 'Settings categories' }).getByRole('button', { name: 'Pages' }).click();
-  await page.getByRole('dialog').getByRole('button', { name: 'Editor only' }).click();
+  await page.getByRole('dialog').locator('#setting-workbench-pages-dashboard').click();
   await page.keyboard.press('Escape');
   await expect(page).toHaveURL(/#\/features\/editor$/);
   await expect(activity.getByRole('button', { name: 'Dashboard' })).toHaveCount(0);
+  await expect(activity.getByRole('button', { name: 'Test Generator' })).toBeVisible();
+  await expect(activity.getByRole('button', { name: 'Playwright Recorder' })).toBeVisible();
 });
 
 test('classic and mobile navigation honor the same page switches', async ({ page }) => {
@@ -46,7 +48,8 @@ test('classic and mobile navigation honor the same page switches', async ({ page
 
   await page.keyboard.press('Control+,');
   await page.getByRole('dialog').getByRole('navigation', { name: 'Settings categories' }).getByRole('button', { name: 'Pages' }).click();
-  await page.getByRole('dialog').getByRole('button', { name: 'Show all' }).click();
+  await page.getByRole('dialog').locator('#setting-workbench-pages-dashboard').click();
+  await page.getByRole('dialog').locator('#setting-workbench-pages-recorder').click();
   await page.keyboard.press('Escape');
   await expect(classic.getByRole('button', { name: 'Dashboard' })).toBeVisible();
   await expect(page.locator('.recorder-tab')).toBeVisible();

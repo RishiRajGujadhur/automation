@@ -18,7 +18,6 @@ import { defaultPrefs } from './radix2';
 import { settingCategories, settingRows } from './vscode/settingsRows';
 import { exportSettings, importSettings, useSettings } from './vscode/settings';
 import { setControlProfile } from './vscode/uiControls';
-import { setPageProfile } from './vscode/pageVisibility';
 import { isDesktop } from './desktop';
 import { FEATURES, GROUPS, featureOn, featurePreset, setFeature, setFeaturePreset, setFeatures, useFeatures, featureChanged } from './features';
 
@@ -281,7 +280,6 @@ export default function StudioSettings({ onNotice, onWorkspace, shortcuts, onClo
     }),
     // VS Code–style settings
     ...(!isDesktop ? [
-      { id: 'page-profile', section: 'Pages', title: 'Visible pages', description: 'Start with the editor, then enable the pages and side views you use. The editor stays available.', keywords: 'pages navigation dashboard editor recorder hide show', control: <span className="button-row"><Button size="small" onClick={() => setPageProfile('editor')}>Editor only</Button><Button size="small" variant="ghost" onClick={() => setPageProfile('all')}>Show all</Button></span> } as Row,
       { id: 'button-profile', section: 'Workbench ▸ Buttons', title: 'Button profile', description: 'Restore the compact essential set or show every workbench button. Individual switches below can then be adjusted.', keywords: 'buttons controls toolbar essentials all reset', control: <span className="button-row"><Button size="small" onClick={() => setControlProfile('essentials')}>Essentials</Button><Button size="small" variant="ghost" onClick={() => setControlProfile('all')}>Show all</Button></span> } as Row,
     ] : []),
     ...settingRows(),

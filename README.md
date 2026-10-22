@@ -21,7 +21,7 @@ machine; nothing is uploaded.
 
 The desktop and web apps share the core authoring features. Optional capabilities can be managed in **Settings > Features**. Detailed inventories and progress: [RIDER-VSCODE-FEATURES.md](RIDER-VSCODE-FEATURES.md), [FRONTEND-100.md](FRONTEND-100.md), [VSCODE-20.md](VSCODE-20.md), [ADVANCED-20.md](ADVANCED-20.md), [CSHARP-20.md](CSHARP-20.md), [DEBUG-20.md](DEBUG-20.md), [REQNROLL.md](REQNROLL.md), [SPY.md](SPY.md) and [GUI-QOL.md](GUI-QOL.md).
 
-In the web app, a fresh session opens the feature editor with other pages hidden from navigation. **Settings > Pages** enables the Dashboard, Test Generator, Recorder and other pages or side views individually, with **Editor only** and **Show all** presets. **Settings > General > Show Guide Me button** controls the tour button; it is hidden initially. **Settings > Workbench > Buttons** controls individual buttons in the activity bar, title bar, Explorer, editor, test, build and debug tools, and status bar.
+In the web app, a fresh session opens the feature editor with other pages hidden from navigation. **Settings > Pages** controls visibility for the Dashboard, Test Generator, Recorder and each other page or side view individually. **Settings > General > Show Guide Me button** controls the tour button; it is hidden initially. **Settings > Workbench > Buttons** controls individual buttons in the activity bar, title bar, Explorer, editor, test, build and debug tools, and status bar.
 
 ## Screenshots
 

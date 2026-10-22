@@ -1,4 +1,4 @@
-import { defineSetting, importSettings, setSetting } from './settings';
+import { defineSetting, setSetting } from './settings';
 import { isDesktop } from '../desktop';
 
 /** Optional web pages and side views. The feature editor is always available. */
@@ -44,8 +44,3 @@ export const setPageVisible = (name: string, visible: boolean) => {
   setSetting(keyOf(id), visible);
   if (visible && activityButtons[id]) setSetting(`workbench.controls.${activityButtons[id]}`, true);
 };
-
-export const setPageProfile = (profile: 'editor' | 'all') => isDesktop ? 0 : importSettings(JSON.stringify({
-  ...Object.fromEntries(pages.map(([id]) => [keyOf(id), profile === 'all'])),
-  ...(profile === 'all' ? Object.fromEntries(Object.values(activityButtons).map((id) => [`workbench.controls.${id}`, true])) : {}),
-}));

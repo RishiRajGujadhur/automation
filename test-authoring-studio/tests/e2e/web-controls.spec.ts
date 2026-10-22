@@ -36,7 +36,7 @@ test('web workbench starts with essential controls and restores optional buttons
   await page.getByRole('dialog').getByRole('navigation', { name: 'Settings categories' }).getByRole('button', { name: 'Buttons' }).click();
   await page.getByRole('dialog').getByRole('button', { name: 'Essentials' }).click();
   await page.getByRole('dialog').getByRole('navigation', { name: 'Settings categories' }).getByRole('button', { name: 'Pages' }).click();
-  await page.getByRole('dialog').getByRole('button', { name: 'Editor only' }).click();
+  await page.getByRole('dialog').locator('#setting-workbench-pages-test-design').click();
   await page.keyboard.press('Escape');
   await expect(page.getByRole('navigation', { name: 'Main' }).getByRole('button', { name: 'Test Design' })).toHaveCount(0);
   await expect(page.getByRole('button', { name: 'Guide me' })).toBeVisible();
