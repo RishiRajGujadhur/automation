@@ -74,6 +74,7 @@ import './files/untitled';
 import './files/keepEditor';
 import './files/deletedWatch';
 import { CLOSE_SPLIT_EVENT } from './files/groupCommands';
+import './files/fileCommands';
 import { NOTIFICATION_CENTER_EVENT } from './notificationCommands';
 import GoToAll from './search/GoToAll';
 import { runTests, getTestRun, discoverTests, useTestRun, outcomeOf, combine, type DiscoveredTest } from './testing/store';

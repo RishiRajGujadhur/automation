@@ -8,6 +8,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import CodeMirror, { type ReactCodeMirrorRef } from '@uiw/react-codemirror';
 import type { ViewUpdate } from '@codemirror/view';
 import { StreamLanguage } from '@codemirror/language';
+import { REVERT_FILE_EVENT, SAVE_FILE_EVENT } from '../files/fileCommands';
 import { languageOf as languageModeOf, languageById, naturalLanguage, useLanguageModes } from './languageMode';
 import { csharp } from '@codemirror/legacy-modes/mode/clike';
 import { forEachDiagnostic, linter, lintGutter, type Diagnostic } from '@codemirror/lint';
@@ -56,7 +57,7 @@ import { IconButton } from '../radix2';
 import DiffApproval from '../DiffApproval';
 import { useEditorTheme } from '../themes';
 import { labelled } from './a11y';
-import { readDraft, useAutoSave, editedThisSession } from './autosave';
+import { readDraft, useAutoSave, editedThisSession, UNSAVED_EVENT } from './autosave';
 import { xmlExtensions } from './xml';
 import { breakpoints } from './breakpoints';
 import { gherkinSyntaxExtensions } from './gherkin';
@@ -296,6 +297,18 @@ export default function CodeEditor({ file, reveal, active = true, onNotice, onIn
   useEffect(() => { if (loaded) loadLenses(); }, [loaded]); // eslint-disable-line react-hooks/exhaustive-deps
   // After a save the server re-indexes (about 1.5 s): refresh the lenses then.
   useEffect(() => { if (auto.state !== 'saved') return; const t = setTimeout(loadLenses, 2500); return () => clearTimeout(t); }, [auto.state]); // eslint-disable-line react-hooks/exhaustive-deps
+  // File: Revert File / Save without Formatting (VSCODE-250.md W82): the shell asks this editor by file.
+  useEffect(() => {
+    const revert = (e: Event) => {
+      if ((e as CustomEvent<string>).detail !== file) return;
+      try { localStorage.removeItem(`tas:unsaved:${file}`); } catch { /* storage blocked */ }
+      readFile(file).then((r) => { setLoaded({ file, ...r }); setText(r.source); setRestorable(null); window.dispatchEvent(new Event(UNSAVED_EVENT)); }, (err: Error) => onNotice?.(err.message));
+    };
+    const save = (e: Event) => { if ((e as CustomEvent<string>).detail === file) void saveRef.current(); };
+    window.addEventListener(REVERT_FILE_EVENT, revert);
+    window.addEventListener(SAVE_FILE_EVENT, save);
+    return () => { window.removeEventListener(REVERT_FILE_EVENT, revert); window.removeEventListener(SAVE_FILE_EVENT, save); };
+  });
   // Another editor's rename (or a file operation) changed this file on disk: reload it unless it has unsaved edits.
   useEffect(() => {
     const h = (e: Event) => {

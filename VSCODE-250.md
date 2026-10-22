@@ -103,7 +103,7 @@ Legend: `[x]` done · `[ ]` to do.
 - [x] W79. Editor actions "…" menu: Show Opened Editors, Close All, Close Saved, Configure Editors, Toggle Keep Editors Open
 - [x] W80. Tab context menu: Keep Open (preview tabs), Split Down beside Split Right (Close Others / to the Right and Copy Relative Path were there)
 - [x] W81. Close Saved Editors in Group (Ctrl+K U), Close Group (Ctrl+K W), Close All Groups (Ctrl+K Ctrl+Shift+W)
-- [ ] W82. Revert File, Save without Formatting (Ctrl+K S)
+- [x] W82. Revert File, Save without Formatting (Ctrl+K S)
 - [ ] W83. Breadcrumbs: click a segment for a picker of siblings / symbols (VS Code)
 - [ ] W84. Breadcrumbs: Focus and Select Breadcrumbs (Ctrl+Shift+.) / Focus Breadcrumbs (Ctrl+Shift+;)
 - [ ] W85. breadcrumbs.filePath / breadcrumbs.symbolPath / breadcrumbs.icons
@@ -373,3 +373,4 @@ Legend: `[x]` done · `[ ]` to do.
 - 2026-10-22: W79. VS Code's '…' at the end of the tab bar: Show Opened Editors, Close All, Close Saved, Enable Preview Editors and Configure Editors (Settings filtered to workbench.editor).
 - 2026-10-22: W80. A preview tab's context menu has Keep Open; every tab offers Split Down beside Split Right.
 - 2026-10-22: W81. VS Code's View: Close Saved Editors in Group (Ctrl+K U), Close All Editors in Group (Ctrl+K W) and Close All Editor Groups (Ctrl+K Ctrl+Shift+W, the side group too), in editors and elsewhere; pinned tabs stay.
+- 2026-10-22: W82. File: Revert File reloads the editor from disk, dropping its unsaved changes; File: Save without Formatting (Ctrl+K S) writes the text as it is (no format on save, code actions or trimming).

@@ -1628,3 +1628,25 @@ test('W81 Ctrl+K U closes saved editors, Ctrl+K W the group, Close All Editor Gr
   await expect(page.getByLabel('Source of Support/Hooks.cs')).toHaveCount(0);
   await expect(page.locator('.editor-tab')).toHaveCount(0);
 });
+
+test('W82 File: Revert File; File: Save without Formatting (Ctrl+K S) skips trimming and formatting', async ({ page }) => {
+  await start(page, { 'files.trimTrailingWhitespace': true });
+  const src = await open(page, 'Steps/SearchSteps.cs');
+  const before = await fs.readFile(path.join(temp, 'Steps/SearchSteps.cs'), 'utf8');
+  await src.click();
+  await page.keyboard.press('Control+End');
+  await page.keyboard.type('// junk');
+  await page.keyboard.press('Control+Shift+P');
+  await quickBox(page).fill('>Revert File');
+  await expect(rows(page).first()).toContainText('Revert File');
+  await page.keyboard.press('Enter');
+  await expect.poll(() => docText(page)).not.toContain('// junk');
+  // Ctrl+K S: the trailing spaces stay.
+  await src.click();
+  await page.keyboard.press('Control+End');
+  await page.keyboard.type('// kept   ');
+  await page.keyboard.press('Control+k');
+  await page.keyboard.press('s');
+  await expect.poll(() => fs.readFile(path.join(temp, 'Steps/SearchSteps.cs'), 'utf8')).toContain('// kept   ');
+  expect(before).not.toContain('// kept');
+});

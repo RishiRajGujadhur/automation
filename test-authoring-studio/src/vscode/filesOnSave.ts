@@ -90,7 +90,11 @@ export function changedLineRanges(a: string, b: string): [number, number][] {
   return out;
 }
 /** Everything a save does to the text: code actions, formatting, then the Files settings. */
+let skipOnce = false;
+/** The next save writes the text as it is: File: Save without Formatting (W82). */
+export const skipSaveParticipantsOnce = () => { skipOnce = true; };
 export async function transformOnSave(file: string, text: string, saved: string): Promise<string> {
+  if (skipOnce) { skipOnce = false; return text; }
   let t = text;
   try {
     const { api } = await import('../api');
