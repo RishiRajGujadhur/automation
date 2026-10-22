@@ -10,7 +10,7 @@ import { ChevronDown } from 'lucide-react';
 import type { AppThemeId, EditorThemeId } from './themes';
 import { accentById, type AccentId } from './accents';
 import { DEFAULT_PRESET, isEnabled, snapshot } from './algorithms/registry';
-import { syncDesktopTheme } from './desktop';
+import { isDesktop, syncDesktopTheme } from './desktop';
 
 /* ------------------------------------------------------------------ Tooltip + IconButton */
 export function Tip({ content, shortcut, children, side = 'bottom' }: { content: ReactNode; shortcut?: string; children: ReactNode; side?: 'top' | 'bottom' | 'left' | 'right' }) {
@@ -180,7 +180,8 @@ export function algorithmOn(id: string) {
 }/** Applies preferences as data attributes on <html> so plain CSS can respond. */
 export function PrefsProvider({ children }: { children: ReactNode }) {
   const [prefs, set] = useState<Prefs>(() => {
-    try { return { ...defaultPrefs, ...JSON.parse(localStorage.getItem('tas:prefs') ?? '{}') }; } catch { return defaultPrefs; }
+    const defaults = isDesktop ? defaultPrefs : { ...defaultPrefs, mode: 'advanced' as const };
+    try { return { ...defaults, ...JSON.parse(localStorage.getItem('tas:prefs') ?? '{}') }; } catch { return defaults; }
   });
   useEffect(() => {
     try { localStorage.setItem('tas:prefs', JSON.stringify(prefs)); } catch { /* ignore */ }

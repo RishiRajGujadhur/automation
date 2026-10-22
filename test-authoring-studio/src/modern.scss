@@ -724,6 +724,9 @@ p,
   font-size: 12px;
   .text-button {
     margin: 0;
+    min-height: 24px;
+    display: inline-flex;
+    align-items: center;
   }
   &.done {
     color: #9aa4ba;

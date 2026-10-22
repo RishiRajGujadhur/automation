@@ -21,13 +21,13 @@ machine; nothing is uploaded.
 
 The desktop and web apps share the core authoring features. Optional capabilities can be managed in **Settings > Features**. Detailed inventories and progress: [RIDER-VSCODE-FEATURES.md](RIDER-VSCODE-FEATURES.md), [FRONTEND-100.md](FRONTEND-100.md), [VSCODE-20.md](VSCODE-20.md), [ADVANCED-20.md](ADVANCED-20.md), [CSHARP-20.md](CSHARP-20.md), [DEBUG-20.md](DEBUG-20.md), [REQNROLL.md](REQNROLL.md), [SPY.md](SPY.md) and [GUI-QOL.md](GUI-QOL.md).
 
-In the web app, **Settings > General > Show Guide Me button** controls the tour button; it is hidden initially. **Settings > Workbench > Buttons** controls individual buttons in the activity bar, title bar, Explorer, editor, test, build and debug tools, and status bar. This keeps the VS Code style shell compact while retaining Visual Studio and Rider tools when needed.
+In the web app, a fresh session opens the feature editor with other pages hidden from navigation. **Settings > Pages** enables the Dashboard, Test Generator, Recorder and other pages or side views individually, with **Editor only** and **Show all** presets. **Settings > General > Show Guide Me button** controls the tour button; it is hidden initially. **Settings > Workbench > Buttons** controls individual buttons in the activity bar, title bar, Explorer, editor, test, build and debug tools, and status bar.
 
 ## Screenshots
 
 ### Web workbench
 
-Current web app with the essential button profile, using the sample repository. The animated tour moves through the dashboard, feature editor, test generator, and button settings:
+Current web app with the editor-first navigation and essential button profile, using the sample repository. The animated tour moves through the feature editor, optional dashboard, test generator, page settings, and button settings:
 
 ![Animated tour of the web workbench](docs/screenshots/web-workbench-tour.gif)
 
@@ -38,6 +38,8 @@ Current web app with the essential button profile, using the sample repository. 
 | Test generator | Button visibility settings |
 | --- | --- |
 | <img src="docs/screenshots/web-test-generator.png" alt="Test generator showing scenario steps and binding matches" width="480"> | <img src="docs/screenshots/web-button-settings.png" alt="Settings page for optional workbench buttons" width="480"> |
+
+![Page visibility settings](docs/screenshots/web-page-settings.png)
 
 The gallery below contains running-app captures of the Windows desktop build using a temporary Calculator sample repository. It covers authoring, debugging, Git, and the workbench tools.
 

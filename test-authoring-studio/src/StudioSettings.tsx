@@ -18,6 +18,7 @@ import { defaultPrefs } from './radix2';
 import { settingCategories, settingRows } from './vscode/settingsRows';
 import { exportSettings, importSettings, useSettings } from './vscode/settings';
 import { setControlProfile } from './vscode/uiControls';
+import { setPageProfile } from './vscode/pageVisibility';
 import { isDesktop } from './desktop';
 import { FEATURES, GROUPS, featureOn, featurePreset, setFeature, setFeaturePreset, setFeatures, useFeatures, featureChanged } from './features';
 
@@ -33,6 +34,7 @@ export const cachedKeys = () => {
 type Section = { id: string; label: string; icon: LucideIcon; sub?: boolean };
 const baseSections: Section[] = [
   { id: 'General', label: 'General', icon: Settings2 },
+  { id: 'Pages', label: 'Pages', icon: AppWindow },
   { id: 'Appearance', label: 'Appearance', icon: Palette },
   { id: 'Code editor', label: 'Code editor', icon: Code2 },
   { id: 'Accessibility', label: 'Accessibility', icon: Accessibility },
@@ -104,7 +106,7 @@ export default function StudioSettings({ onNotice, onWorkspace, shortcuts, onClo
   const rows: Row[] = useMemo(() => [
     // General
     {
-      id: 'mode', section: 'General', title: 'Interface mode (Basic / Advanced)', description: 'Basic shows Dashboard, Test Generator and Playwright Recorder. Advanced adds Features, Dictionary Inspector and the ⋯ menu (Step Catalog, Backgrounds, Selectors, Project Explorer, Config). Ctrl/Cmd+Shift+A switches.', keywords: 'basic advanced simple navigation menu hide pages',
+      id: 'mode', section: 'General', title: 'Interface mode (Basic / Advanced)', description: isDesktop ? 'Basic shows Dashboard, Test Generator and Playwright Recorder. Advanced adds Features, Dictionary Inspector and more tools. Ctrl/Cmd+Shift+A switches.' : 'Choose your interface mode here. Settings > Pages controls which pages appear in navigation. Ctrl/Cmd+Shift+A switches modes.', keywords: 'basic advanced simple navigation menu hide pages',
       control: <Segmented label="Interface mode" value={prefs.mode} onValueChange={(v) => setPrefs({ mode: v })} options={[{ value: 'basic', label: 'Basic' }, { value: 'advanced', label: 'Advanced' }]} />,
     },
     { id: 'project-model', section: 'General', title: 'Show project model', description: 'The panel beside the Test Generator listing project files by layer, with the files the current test touches highlighted.', keywords: 'project model sidebar panel generator layers files', control: sw('pref-project-model', prefs.showProjectModel, (v) => setPrefs({ showProjectModel: v }), 'Show project model') },
@@ -278,7 +280,10 @@ export default function StudioSettings({ onNotice, onWorkspace, shortcuts, onClo
       ];
     }),
     // VS Code–style settings
-    ...(!isDesktop ? [{ id: 'button-profile', section: 'Workbench ▸ Buttons', title: 'Button profile', description: 'Restore the compact essential set or show every workbench button. Individual switches below can then be adjusted.', keywords: 'buttons controls toolbar essentials all reset', control: <span className="button-row"><Button size="small" onClick={() => setControlProfile('essentials')}>Essentials</Button><Button size="small" variant="ghost" onClick={() => setControlProfile('all')}>Show all</Button></span> } as Row] : []),
+    ...(!isDesktop ? [
+      { id: 'page-profile', section: 'Pages', title: 'Visible pages', description: 'Start with the editor, then enable the pages and side views you use. The editor stays available.', keywords: 'pages navigation dashboard editor recorder hide show', control: <span className="button-row"><Button size="small" onClick={() => setPageProfile('editor')}>Editor only</Button><Button size="small" variant="ghost" onClick={() => setPageProfile('all')}>Show all</Button></span> } as Row,
+      { id: 'button-profile', section: 'Workbench ▸ Buttons', title: 'Button profile', description: 'Restore the compact essential set or show every workbench button. Individual switches below can then be adjusted.', keywords: 'buttons controls toolbar essentials all reset', control: <span className="button-row"><Button size="small" onClick={() => setControlProfile('essentials')}>Essentials</Button><Button size="small" variant="ghost" onClick={() => setControlProfile('all')}>Show all</Button></span> } as Row,
+    ] : []),
     ...settingRows(),
     {
       id: 'settings-json', section: 'Workbench', title: 'Settings (JSON)', description: 'Copy the changed settings as settings.json, or apply a settings.json (unknown ids and invalid values are skipped).', keywords: 'settings.json json export import copy share',
@@ -348,7 +353,7 @@ export default function StudioSettings({ onNotice, onWorkspace, shortcuts, onClo
       </nav>
       <div className="settings-content" ref={contentRef}>
         {grouped.map(({ s, items }) => (
-          <section key={s.id} className={`settings-section ${s.id === 'Workbench ▸ Buttons' ? 'button-settings-section' : ''}`} aria-labelledby={`settings-${s.id.replace(/\W/g, '')}`}>
+          <section key={s.id} className={`settings-section ${s.id === 'Workbench ▸ Buttons' || s.id === 'Pages' ? 'button-settings-section' : ''}`} aria-labelledby={`settings-${s.id.replace(/\W/g, '')}`}>
             <h2 id={`settings-${s.id.replace(/\W/g, '')}`} className={s.sub ? 'settings-subheading' : ''}>{s.label}</h2>
             {items.map((r) => (
               <div key={r.id} data-setting-id={r.id} className={`settings-row ${r.block && !r.control ? 'stacked' : ''} ${r.sub ? 'sub' : ''} ${r.modified ? 'modified' : ''}`}>

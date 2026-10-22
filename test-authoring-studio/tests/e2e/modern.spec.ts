@@ -3,7 +3,7 @@ import { test, expect } from '@playwright/test';
 test('Radix dialog, alert dialog, tabs, accordion, tooltip, toast, preferences and deep links', async ({ page }) => {
   const errors: string[] = [];
   page.on('pageerror', (e) => errors.push(e.message));
-  await page.goto('/');
+  await page.goto('/#/features/recorder');
   await expect(page.getByText('Repository indexed')).toBeVisible();
 
   // Deep link reflects the page and survives reload/back.

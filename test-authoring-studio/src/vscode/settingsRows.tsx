@@ -2,6 +2,7 @@ import { useEffect, useState, type ReactNode } from 'react';
 import { RotateCcw } from 'lucide-react';
 import { Checkbox, Select } from '../radix';
 import { SETTINGS, parseNumbers, resetSetting, setSetting, setting, settingModified, type SettingDef } from './settings';
+import { setPageVisible } from './pageVisibility';
 
 /** What the Settings page needs for one VS Code–style setting (its own Row type has the same fields). */
 export type SettingRow = { id: string; section: string; title: string; description?: string; keywords?: string; control?: ReactNode; modified?: boolean; meta?: ReactNode };
@@ -30,7 +31,7 @@ function control(d: SettingDef): ReactNode {
   const v = setting<unknown>(d.key);
   const id = `setting-${slug(d.key)}`;
   switch (d.type) {
-    case 'boolean': return <Checkbox id={id} checked={!!v} onCheckedChange={(x) => setSetting(d.key, x)} label={d.description} />;
+    case 'boolean': return <Checkbox id={id} checked={!!v} onCheckedChange={(x) => d.category === 'Pages' ? setPageVisible(d.title, x) : setSetting(d.key, x)} label={<><span className="sr-only">{d.title}: </span>{d.description}</>} />;
     case 'number': return <input id={id} type="number" className="settings-number" aria-label={d.title} min={d.min} max={d.max} step={d.step ?? 1} value={String(v)} onChange={(e) => { const n = Number(e.target.value); if (e.target.value !== '' && Number.isFinite(n)) setSetting(d.key, Math.max(d.min ?? -Infinity, Math.min(d.max ?? Infinity, n))); }} />;
     case 'enum': {
       const o = d.options?.find((x) => x.value === v);

@@ -3,6 +3,7 @@ import { featureOn } from './features';
 import { Command } from 'cmdk';
 import { Search, History } from 'lucide-react';
 import { useStepSearch } from './useStepSearch';
+import { pageVisible } from './vscode/pageVisibility';
 import type { Binding } from './types';
 
 export type PaletteCommand = { label: string; run: () => void; shortcut?: string; /** Last use (ms): recently used commands come first. */ recent?: number };
@@ -15,8 +16,9 @@ export default function SearchPalette({ open, onOpenChange, onNavigate, onAdd, r
   useEffect(() => { if (open && featureOn('palette-last')) { setQuery(lastQuery.current); requestAnimationFrame(() => document.querySelector<HTMLInputElement>('.command-palette input')?.select()); } }, [open]); // eslint-disable-line react-hooks/exhaustive-deps
   const { data, loading, error } = useStepSearch(query, 0, 8, '', revision);
   const q = query.toLowerCase();
-  const recent = recentPages.filter((p) => pages.includes(p)).slice(0, 3);
-  const ordered = [...recent, ...pages.filter((p) => !recent.includes(p))].filter((p) => p.toLowerCase().includes(q));
+  const availablePages = pages.filter(pageVisible);
+  const recent = recentPages.filter((p) => availablePages.includes(p)).slice(0, 3);
+  const ordered = [...recent, ...availablePages.filter((p) => !recent.includes(p))].filter((p) => p.toLowerCase().includes(q));
   const cmds = commands.filter((c) => c.label.toLowerCase().includes(q)).map((c, i) => ({ c, i })).sort((a, b) => (b.c.recent ?? 0) - (a.c.recent ?? 0) || a.i - b.i).map((x) => x.c);
   const close = () => { lastQuery.current = query; onOpenChange(false); setQuery(''); };
   return (

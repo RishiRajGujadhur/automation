@@ -11,7 +11,11 @@ async function audit(page: Page, name: string) {
 async function advanced(page: Page, hash = '/#/dashboard', showAllActivity = false) {
   await page.addInitScript((all) => {
     if (!localStorage.getItem('tas:prefs')) localStorage.setItem('tas:prefs', JSON.stringify({ mode: 'advanced' }));
-    if (all) localStorage.setItem('tas:settings', JSON.stringify(Object.fromEntries(['generator', 'dictionary', 'design', 'steps', 'backgrounds', 'selectors', 'project'].map((id) => [`workbench.controls.activity-${id}`, true]))));
+    if (all) localStorage.setItem('tas:settings', JSON.stringify(Object.fromEntries([
+      'dashboard', 'test-generator', 'recorder', 'scenario-builder', 'spy', 'dictionary-inspector',
+      'test-design', 'step-catalog', 'backgrounds', 'selectors', 'project-explorer', 'config',
+      'search', 'testing', 'git',
+    ].map((id) => [`workbench.pages.${id}`, true]))));
   }, showAllActivity);
   await page.goto(hash);
   await expect(page.getByText('Repository indexed')).toBeVisible();

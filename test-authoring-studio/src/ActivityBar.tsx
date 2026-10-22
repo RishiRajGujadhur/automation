@@ -10,13 +10,14 @@ import { iconClickBehavior } from './vscode/workbenchLayout';
 import { runRider } from './rider/commands';
 import { openCommandPalette } from './quickinput/providers';
 import { activityControlId, controlVisible } from './vscode/uiControls';
+import { pageVisible } from './vscode/pageVisibility';
 import { useSettings } from './vscode/settings';
 
 export type ActivityItem = { id: string; label: string; icon: LucideIcon; shortcut?: string; advanced?: boolean };
 /** VS Code-style activity bar: one icon per page. Features toggles the explorer when it is already active. */
 export const activityItems: ActivityItem[] = [
   { id: 'Dashboard', label: 'Dashboard', icon: LayoutDashboard, shortcut: 'Alt+1' },
-  { id: 'Features', label: 'Features (Explorer)', icon: Files, shortcut: 'Ctrl+B', advanced: true },
+  { id: 'Features', label: 'Features (Explorer)', icon: Files, shortcut: 'Ctrl+B' },
   { id: 'Search', label: 'Search (Find in Files)', icon: Search, shortcut: 'Ctrl+Shift+F', advanced: true },
   { id: 'Testing', label: 'Test Explorer', icon: TestTubeDiagonal, advanced: true },
   { id: 'Git', label: 'Git Changes', icon: GitBranch, advanced: true },
@@ -43,7 +44,7 @@ export default function ActivityBar({ active, basic, sidebarOpen, onSelect, onTo
   const [userHidden, setUserHidden] = useLocalState<string[]>('activityHidden', []);
   const [order, setOrder] = useLocalState<string[]>('activityOrder', []);
   const rank = (id: string) => { const i = order.indexOf(id); return i < 0 ? 1000 + activityItems.findIndex((x) => x.id === id) : i; };
-  const all = activityItems.filter((i) => (!basic || !i.advanced) && (controlVisible(activityControlId[i.id]) || i.id === active)).sort((a, b) => rank(a.id) - rank(b.id));
+  const all = activityItems.filter((i) => (!basic || !i.advanced) && ((pageVisible(i.id) && controlVisible(activityControlId[i.id])) || i.id === active)).sort((a, b) => rank(a.id) - rank(b.id));
   const items = all.filter((i) => !userHidden.includes(i.id) || i.id === active);
   const [menu, setMenu] = useState<{ x: number; y: number; id?: string }>();
   const dragged = useRef<string | null>(null);

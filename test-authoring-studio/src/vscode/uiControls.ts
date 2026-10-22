@@ -12,14 +12,14 @@ const controls = [
   ['activity-search', 'Search', true, ''],
   ['activity-testing', 'Test Explorer', true, ''],
   ['activity-git', 'Git Changes', true, ''],
-  ['activity-generator', 'Test Generator', false, ''],
+  ['activity-generator', 'Test Generator', true, ''],
   ['activity-recorder', 'Playwright Recorder', true, ''],
-  ['activity-dictionary', 'Dictionary Inspector', false, ''],
-  ['activity-design', 'Test Design', false, ''],
-  ['activity-steps', 'Step Catalog', false, ''],
-  ['activity-backgrounds', 'Backgrounds', false, ''],
-  ['activity-selectors', 'Selectors', false, ''],
-  ['activity-project', 'Project Explorer', false, ''],
+  ['activity-dictionary', 'Dictionary Inspector', true, ''],
+  ['activity-design', 'Test Design', true, ''],
+  ['activity-steps', 'Step Catalog', true, ''],
+  ['activity-backgrounds', 'Backgrounds', true, ''],
+  ['activity-selectors', 'Selectors', true, ''],
+  ['activity-project', 'Project Explorer', true, ''],
   // Title bar
   ['nav-back', 'Go Back', true, '.app-header .nav-buttons button[aria-label="Go Back"]'],
   ['nav-forward', 'Go Forward', true, '.app-header .nav-buttons button[aria-label="Go Forward"]'],
@@ -88,7 +88,7 @@ const controls = [
 
 const getters = Object.fromEntries((isDesktop ? [] : controls).map(([id, title, essential]) => [id, defineSetting<boolean>({
   key: `workbench.controls.${id}`, category: 'Workbench ▸ Buttons', title, type: 'boolean', default: essential,
-  description: id.startsWith('activity-') ? 'Visible in the activity bar' : 'Visible in the workbench',
+  description: id.startsWith('activity-') ? 'Visible in the activity bar when this page is enabled' : 'Visible in the workbench',
 })])) as Record<string, () => boolean>;
 
 export const controlVisible = (id: string) => isDesktop || (getters[id]?.() ?? true);

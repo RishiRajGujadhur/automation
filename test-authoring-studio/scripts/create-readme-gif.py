@@ -5,9 +5,10 @@ from PIL import Image
 
 screenshots = Path(__file__).resolve().parents[2] / "docs" / "screenshots"
 names = (
-    "web-dashboard.png",
     "web-feature-editor.png",
+    "web-dashboard.png",
     "web-test-generator.png",
+    "web-page-settings.png",
     "web-button-settings.png",
 )
 frames = []
@@ -20,7 +21,7 @@ frames[0].save(
     screenshots / "web-workbench-tour.gif",
     save_all=True,
     append_images=frames[1:],
-    duration=[1700, 2100, 2100, 2200],
+    duration=[1700, 1900, 1900, 2100, 2100],
     loop=0,
     optimize=True,
     disposal=2,

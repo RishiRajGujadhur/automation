@@ -30,7 +30,7 @@ test('capture current web workbench pages', async ({ page }) => {
   await expect(page.locator('.solution-explorer')).toBeVisible();
   await shot('web-feature-editor.png');
 
-  await page.getByRole('navigation', { name: 'Main' }).getByRole('button', { name: 'Dashboard' }).click();
+  await page.goto('/#/dashboard');
   await page.getByRole('button', { name: 'Generate a test from inputs' }).click();
   await expect(page.getByText('Test Generator', { exact: true }).first()).toBeVisible();
   await page.getByRole('button', { name: 'Next: Scenario' }).click();
@@ -41,4 +41,7 @@ test('capture current web workbench pages', async ({ page }) => {
   await expect(settings).toBeVisible();
   await settings.getByRole('navigation', { name: 'Settings categories' }).getByRole('button', { name: 'Buttons' }).click();
   await shot('web-button-settings.png');
+  await settings.getByRole('navigation', { name: 'Settings categories' }).getByRole('button', { name: 'Pages' }).click();
+  await settings.getByRole('navigation', { name: 'Settings categories' }).evaluate((nav) => { nav.scrollTop = 0; });
+  await shot('web-page-settings.png');
 });

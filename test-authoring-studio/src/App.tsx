@@ -52,6 +52,7 @@ import { zenSilent } from './vscode/zenMode';
 import { sideBySide, useMaximizedGroup } from './vscode/editorGroups';
 import { useSettings, setSetting, resetSetting } from './vscode/settings';
 import { showGuideMe } from './vscode/uiControls';
+import { pageVisible } from './vscode/pageVisibility';
 import { activityBarLocation, panelAlignment, panelLocation } from './vscode/workbenchLayout';
 import { studioLog } from './outputLog';
 import RecentPopup from './RecentPopup';
@@ -230,8 +231,8 @@ const moreTabs = [
 const NO_MARKS: RunMark[] = [];
 const shortcuts: [string, string][] = [
   ['Ctrl/Cmd + K', 'Command palette: go to any page or add a step'],
-  ['Alt + 1…4', 'Main pages in navigation order (Basic: Dashboard, Test Generator, Recorder)'],
-  ['Alt + 5', 'Test Design (Advanced mode)'],
+  ['Alt + 1…4', 'Visible main pages in navigation order'],
+  ['Alt + 5', 'Test Design when shown'],
   ['Ctrl/Cmd + Shift + A', 'Switch between Basic and Advanced mode'],
   ['/', 'Search feature files'],
   ['?', 'Show this shortcut list'],
@@ -277,8 +278,8 @@ export default function App() {
   }), []);
   const [config, setConfig] = useState<any>();
   const { prefs: startPrefs } = usePrefs();
-  const [tab, setTab] = useLocalState('tab', startPrefs.mode === 'advanced' ? 'Features' : 'Dashboard');
-  const [view, setView] = useLocalState('view', 'recorder');
+  const [tab, setTab] = useLocalState(desktop ? 'tab' : 'tab-v2', desktop && startPrefs.mode !== 'advanced' ? 'Dashboard' : 'Features');
+  const [view, setView] = useLocalState(desktop ? 'view' : 'view-v2', desktop ? 'recorder' : 'editor');
   const [feature, setFeature] = useState<Feature>();
   const [source, setSource] = useState('');
   const [query, setQuery] = useState('');
@@ -588,7 +589,7 @@ export default function App() {
   const closeSplitTabRef = useRef(closeSplitTab);
   closeSplitTabRef.current = closeSplitTab;
   // Split Editor Right / Down (workbench.editor.openSideBySideDirection) and Maximize Editor Group.
-  useSettings();
+  const settingsVersion = useSettings();
   const sideBySideDir = sideBySide();
   const maximizedGroup = useMaximizedGroup();
   useEffect(() => { const h = () => { const f = getTabs().active; if (f) setSplitFile(f); }; window.addEventListener('tas:split-active', h); return () => window.removeEventListener('tas:split-active', h); }, []); // eslint-disable-line react-hooks/exhaustive-deps
@@ -814,10 +815,19 @@ export default function App() {
   const { prefs, setPrefs } = usePrefs();
   const basic = prefs.mode !== 'advanced';
   modeRef.current = prefs.mode;
-  // Basic mode: Dashboard, Test Generator and the Playwright Recorder. Advanced: every page.
-  const navTabs = basic ? tabs.filter((t) => t.name === 'Dashboard' || t.name === 'Test Generator') : tabs;
+  const previousSettingsVersion = useRef(settingsVersion);
+  useEffect(() => {
+    if (previousSettingsVersion.current === settingsVersion) return;
+    previousSettingsVersion.current = settingsVersion;
+    if (!pageVisible(tab) || (tab === 'Features' && ((view === 'recorder' && !pageVisible('Recorder')) || (view === 'builder' && !pageVisible('Scenario Builder')) || (view === 'spy' && !pageVisible('Spy'))))) {
+      setTab('Features');
+      setView('editor');
+    }
+  }, [settingsVersion, tab, view, setTab, setView]);
+  // Page switches decide which destinations appear; the feature editor always remains available.
+  const navTabs = tabs.filter((t) => pageVisible(t.name) && (!desktop || !basic || ['Dashboard', 'Test Generator', 'Features'].includes(t.name)));
   const onRecorder = tab === 'Features' && view === 'recorder';
-  const hiddenInBasic = basic && !['Dashboard', 'Test Generator'].includes(tab) && !onRecorder;
+  const hiddenInBasic = !!desktop && basic && !['Dashboard', 'Test Generator', 'Features'].includes(tab);
   // VS Code-style shell (activity bar, slim title bar, full-height editor) unless the classic tab layout is chosen.
   const vscode = prefs.layout !== 'classic';
   const featureViewSwitch = (
@@ -827,7 +837,7 @@ export default function App() {
         { id: 'builder', icon: Blocks, label: 'Builder' },
         { id: 'recorder', icon: Circle, label: 'Recorder' },
         { id: 'spy', icon: ScanSearch, label: 'Spy' },
-      ].map((v) => (
+      ].filter((v) => v.id === 'editor' || pageVisible(v.label === 'Builder' ? 'Scenario Builder' : v.label) || view === v.id).map((v) => (
         <ToggleGroup.Item key={v.id} value={v.id} className="segmented-item" aria-label={v.label}>
           <v.icon size={14} aria-hidden="true" />
           {v.label}
@@ -837,7 +847,7 @@ export default function App() {
   );
   const setMode = (mode: 'basic' | 'advanced') => {
     setPrefs({ mode });
-    setNotice(mode === 'advanced' ? 'Advanced mode: every page is in the navigation.' : 'Basic mode: Dashboard, Test Generator and Playwright Recorder. Other pages stay reachable from Ctrl/Cmd+K.');
+    setNotice(desktop ? (mode === 'advanced' ? 'Advanced mode: every page is in the navigation.' : 'Basic mode: Dashboard, Test Generator and Playwright Recorder. Other pages stay reachable from Ctrl/Cmd+K.') : `Interface mode: ${mode}. Choose visible pages in Settings > Pages.`);
   };
   const confirm = useConfirm();
   const [sidebarWidth, setSidebarWidth] = useLocalState('sidebarWidth', SIDEBAR_DEFAULT);
@@ -1029,14 +1039,11 @@ export default function App() {
       const typing = /^(INPUT|TEXTAREA|SELECT)$/.test((e.target as HTMLElement)?.tagName) || (e.target as HTMLElement)?.isContentEditable;
       if (e.altKey && /^[1-4]$/.test(e.key)) {
         e.preventDefault();
-        const n = Number(e.key);
-        if (modeRef.current !== 'advanced') {
-          if (n === 1) setTab('Dashboard');
-          if (n === 2) setTab('Test Generator');
-          if (n === 3) { setTab('Features'); setView('recorder'); }
-        } else setTab(tabs[n - 1].name);
+        const visible = tabs.filter((t) => pageVisible(t.name) && (!desktop || modeRef.current === 'advanced' || ['Dashboard', 'Test Generator', 'Features'].includes(t.name)));
+        const target = visible[Number(e.key) - 1];
+        if (target) { setTab(target.name); if (target.name === 'Features') setView('editor'); }
       }
-      if (e.altKey && e.key === '5' && modeRef.current === 'advanced') { e.preventDefault(); setTab('Test Design'); }
+      if (e.altKey && e.key === '5' && (!desktop || modeRef.current === 'advanced') && pageVisible('Test Design')) { e.preventDefault(); setTab('Test Design'); }
       if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key.toLowerCase() === 'a') {
         e.preventDefault();
         setPrefs({ mode: modeRef.current === 'advanced' ? 'basic' : 'advanced' });
@@ -1314,18 +1321,18 @@ export default function App() {
     ...navTabs.map((t) => ({ group: 'Page' as const, label: t.name, run: () => navigate(t.name) })),
   ]);
   const menuProps = {
-    pages: basic ? [] : moreTabs.map((t) => ({ ...t })),
+    pages: basic && desktop ? [] : moreTabs.filter((t) => pageVisible(t.name)).map((t) => ({ ...t })),
     primary: navTabs.map((t, i) => ({ name: t.name, icon: t.icon, hint: `Alt+${i + 1}` })),
     active: tab,
     onNavigate: navigate,
     commands: [
         { label: basic ? 'Switch to Advanced mode' : 'Switch to Basic mode', icon: SlidersHorizontal, run: () => setMode(basic ? 'advanced' : 'basic'), shortcut: 'Ctrl Shift A' },
         { label: 'Command palette', icon: CommandIcon, run: () => setPaletteOpen(true), shortcut: 'Ctrl K' },
-        { label: 'Start a recording', icon: Circle, run: () => { setTab('Features'); setView('recorder'); setModal('record'); } },
+        ...(pageVisible('Recorder') ? [{ label: 'Start a recording', icon: Circle, run: () => { setTab('Features'); setView('recorder'); setModal('record'); } }] : []),
         { label: 'View: Output', icon: ScrollText, run: () => openOutput() },
         { label: 'View: TODO', icon: ScrollText, run: () => openTodo() },
         { label: 'View: Bookmarks', icon: ScrollText, run: () => setModal('bookmarks') },
-        { label: 'Spy: find elements and selectors on a page', icon: ScanSearch, run: () => { setTab('Features'); setView('spy'); } },
+        ...(pageVisible('Spy') ? [{ label: 'Spy: find elements and selectors on a page', icon: ScanSearch, run: () => { setTab('Features'); setView('spy'); } }] : []),
         { label: 'New feature', icon: Plus, run: () => beginFeature() },
         { label: 'Rescan repository', icon: RefreshCw, disabled: busy, run: () => work(async () => { setIndex(await api('/scan', {})); setNotice('Repository index refreshed.'); }) },
         { label: 'Workspace settings', icon: Settings2, run: () => setModal('settings') },
@@ -1597,7 +1604,7 @@ export default function App() {
           </span>
         )}
         {vscode && tab === 'Features' && featureViewSwitch}
-        {vscode && !basic && <AppMenuButton {...menuProps} />}
+        {vscode && (!basic || !desktop) && <AppMenuButton {...menuProps} />}
         {vscode && featureOn('layout-controls') && (
           <div className="layout-controls" role="group" aria-label="Layout">
             <IconButton label="Customize Layout…" onClick={() => customizeLayout()}><span className="codicon codicon-layout" aria-hidden="true" /></IconButton>
@@ -1669,7 +1676,7 @@ export default function App() {
             </NavigationMenu.Link>
             </NavigationMenu.Item>
           ))}
-          {!basic && moreTabs.filter((t) => t.name === tab).map((t) => (
+          {(!basic || !desktop) && moreTabs.filter((t) => t.name === tab && pageVisible(t.name)).map((t) => (
             <NavigationMenu.Item key={t.name}>
               <button className="nav-tab active" aria-current="page">
                 <Icon icon={t.icon} />
@@ -1677,10 +1684,10 @@ export default function App() {
               </button>
             </NavigationMenu.Item>
           ))}
-          {!basic && <NavigationMenu.Item><AppMenuButton {...menuProps} /></NavigationMenu.Item>}
+          {(!basic || !desktop) && <NavigationMenu.Item><AppMenuButton {...menuProps} /></NavigationMenu.Item>}
         </NavigationMenu.List>
         </NavigationMenu.Root>
-        <button
+        {pageVisible('Recorder') && <button
           className={`recorder-tab ${view === 'recorder' && tab === 'Features' ? 'selected' : ''}`}
           onClick={() => {
             setTab('Features');
@@ -1689,7 +1696,7 @@ export default function App() {
         >
           <span className="record-dot" />
           Playwright Recorder<Badge>β</Badge>
-        </button>
+        </button>}
         <div className="nav-trailing">
           {tab === 'Features' ? featureViewSwitch : <span className="local-state"><span aria-hidden="true" />Local workspace</span>}
         </div>
@@ -1698,7 +1705,7 @@ export default function App() {
         {vscode && !(viewOpts.hideActivityBar && featureOn('toggle-activity-bar')) && activityBarLocation() !== 'hidden' && (
           <ActivityBar
             active={tab === 'Features' && view === 'recorder' ? 'Recorder' : tab === 'Features' && sidebarView === 'tests' ? 'Testing' : tab === 'Features' && sidebarView === 'search' ? 'Search' : tab === 'Features' && sidebarView === 'git' ? 'Git' : tab}
-            basic={basic}
+            basic={!!desktop && basic}
             sidebarOpen={prefs.sidebar}
             onSelect={(id) => withTransition(() => { if (id === 'Testing') { showTests(); return; } if (id === 'Search') { showSearch(); return; } if (id === 'Git') { showGit(); return; } if (id === 'Features') setSidebarView('explorer'); if (id === 'Recorder') { setTab('Features'); setView('recorder'); } else { setTab(id); if (id === 'Features' && view === 'recorder') setView('editor'); if (id === 'Features') setPrefs({ sidebar: true }); } setCatalogQuery(''); })}
             onToggleSidebar={() => setPrefs({ sidebar: !prefs.sidebar })}
@@ -2545,7 +2552,7 @@ export default function App() {
             <span>{t.name.replace('Dictionary Inspector', 'Dictionary').replace('Test Generator', 'Generator')}</span>
           </button>
         ))}
-        {basic ? (
+        {basic && pageVisible('Recorder') ? (
           <button className={onRecorder ? 'active' : ''} aria-current={onRecorder ? 'page' : undefined} onClick={() => { setTab('Features'); setView('recorder'); }}>
             <Circle size={20} />
             <span>Recorder</span>
