@@ -1,6 +1,7 @@
 import { useSyncExternalStore } from 'react';
 import { api } from '../api';
 import { files } from '../vscode/files';
+import { setting } from '../vscode/settings';
 import { encodingOf, noteRead, noteSaved, reopenEncoding, type EncodingId } from './encoding';
 import { readText, writeText, browserRoot, copyPath as fsaCopy, deletePath as fsaDelete, renamePath as fsaRename } from './fsa';
 
@@ -52,7 +53,7 @@ export async function renamePath(from: string, to: string) {
 }
 export async function copyPath(from: string, to: string): Promise<string> {
   if (isBrowser()) return fsaCopy(from, to);
-  return (await api<{ file: string }>('/file/copy', { from, to })).file;
+  return (await api<{ file: string }>('/file/copy', { from, to, naming: setting('explorer.incrementalNaming') })).file;
 }
 export async function deletePath(file: string) {
   if (isBrowser()) await fsaDelete(file); else await api('/file/delete', { file, approved: true });

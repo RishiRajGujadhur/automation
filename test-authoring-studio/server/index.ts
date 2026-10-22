@@ -1179,13 +1179,28 @@ app.post('/api/file/create', async (req, res) => {
   afterFileChange([file]);
   res.json({ ok: true, file });
 });
+/**
+ * The name a pasted copy gets when the destination exists (explorer.incrementalNaming, VSCODE-250.md W99):
+ * Visual Studio's "Name - Copy.ext", VS Code's simple "Name copy.ext" / "Name copy 2.ext", smart "Name1.ext" (a
+ * trailing number goes up), or disabled (refused).
+ */
+async function freeCopyName(dest: string, naming: 'visualStudio' | 'simple' | 'smart' | 'disabled') {
+  if (!(await exists(dest))) return dest;
+  if (naming === 'disabled') throw new Error(`${path.basename(dest)} already exists there.`);
+  const ext = path.extname(dest), stem = dest.slice(0, dest.length - ext.length);
+  const smart = /^(.*?)(\d+)$/.exec(stem);
+  for (let n = 1; ; n++) {
+    const next = naming === 'simple' ? `${stem} copy${n > 1 ? ` ${n}` : ''}${ext}`
+      : naming === 'smart' ? (smart ? `${smart[1]}${String(Number(smart[2]) + n).padStart(smart[2].length, '0')}${ext}` : `${stem}${n}${ext}`)
+        : `${stem} - Copy${n > 1 ? ` (${n})` : ''}${ext}`;
+    if (!(await exists(next))) return next;
+  }
+}
 app.post('/api/file/copy', async (req, res) => {
-  const { from, to } = z.object({ from: z.string().min(1).max(400), to: z.string().min(1).max(400) }).parse(req.body);
+  const { from, to, naming } = z.object({ from: z.string().min(1).max(400), to: z.string().min(1).max(400), naming: z.enum(['visualStudio', 'simple', 'smart', 'disabled']).optional() }).parse(req.body);
   const src = await confined(config.repositoryRoot, from);
   let dest = await confined(config.repositoryRoot, to, false);
-  // Like Visual Studio: pasting onto an existing name makes "Name - Copy.ext", "Name - Copy (2).ext"…
-  const ext = path.extname(dest), stem = dest.slice(0, dest.length - ext.length);
-  for (let n = 1; await exists(dest); n++) dest = `${stem} - Copy${n > 1 ? ` (${n})` : ''}${ext}`;
+  dest = await freeCopyName(dest, naming ?? 'visualStudio');
   await fs.mkdir(path.dirname(dest), { recursive: true });
   await fs.cp(src, dest, { recursive: true, errorOnExist: true, force: false });
   const file = path.relative(config.repositoryRoot, dest).replaceAll('\\', '/');

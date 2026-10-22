@@ -1921,3 +1921,21 @@ test('W98 Explorer Find: Ctrl+Alt+F in the Explorer, filter or highlight mode', 
   await expect(side.getByRole('button', { name: 'SearchSteps.cs', exact: true })).toBeVisible();
   await expect(side.getByRole('button', { name: 'AuthSteps.cs', exact: true }).locator('mark')).toHaveText('Auth');
 });
+
+test('W99 explorer.incrementalNaming: simple ("copy") and smart (the number goes up)', async ({ page }) => {
+  await fs.writeFile(path.join(temp, 'Steps/Page2.cs'), '');
+  const side = page.locator('#feature-sidebar');
+  const copyPaste = async (name: string) => {
+    await side.getByRole('button', { name, exact: true }).click({ button: 'right' });
+    await page.getByRole('menuitem', { name: /^Copy Ctrl C/ }).click();
+    await side.getByRole('button', { name, exact: true }).click({ button: 'right' });
+    await page.getByRole('menuitem', { name: /^Paste/ }).click();
+  };
+  await start(page, { 'explorer.incrementalNaming': 'simple' });
+  await copyPaste('AuthSteps.cs');
+  await expect.poll(() => fs.stat(path.join(temp, 'Steps/AuthSteps copy.cs')).then(() => true, () => false)).toBe(true);
+  await page.evaluate(() => localStorage.setItem('tas:settings', JSON.stringify({ 'explorer.incrementalNaming': 'smart' })));
+  await page.reload();
+  await copyPaste('Page2.cs');
+  await expect.poll(() => fs.stat(path.join(temp, 'Steps/Page3.cs')).then(() => true, () => false)).toBe(true);
+});
