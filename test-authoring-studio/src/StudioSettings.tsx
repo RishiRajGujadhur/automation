@@ -86,7 +86,7 @@ export default function StudioSettings({ onNotice, onWorkspace, shortcuts, onClo
   // VS Code–style settings (Text Editor, Workbench and their sub-categories) follow Code editor in the list.
   const settingsVersion = useSettings();
   const sections = useMemo(() => {
-    const extra: Section[] = settingCategories().flatMap((t) => [...(baseSections.some((s) => s.id === t.id) ? [] : [{ id: t.id, label: t.id, icon: t.id === 'Workbench' ? AppWindow : Type }]), ...t.subs.map((c) => ({ id: c, label: c.split(' ▸ ')[1], icon: Type, sub: true }))]);
+    const extra: Section[] = settingCategories().flatMap((t) => [...(baseSections.some((s) => s.id === t.id) ? [] : [{ id: t.id, label: t.id, icon: t.id === 'Workbench' ? AppWindow : Type }]), ...t.subs.map((c) => ({ id: c, label: c === 'Workbench ▸ Appearance' ? 'Workbench theme' : c.split(' ▸ ')[1], icon: Type, sub: true }))]);
     const i = baseSections.findIndex((x) => x.id === 'Code editor') + 1;
     return [...baseSections.slice(0, i), ...extra, ...baseSections.slice(i)];
   }, []);
