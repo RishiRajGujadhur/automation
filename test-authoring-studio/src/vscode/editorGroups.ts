@@ -40,4 +40,7 @@ registerRider([
   { id: 'layout-single', label: 'View: Single Column Editor Layout', menu: 'View', submenu: 'Editor Layout', group: true, run: () => window.dispatchEvent(new Event('tas:close-split')) },
   { id: 'layout-two-columns', label: 'View: Two Columns Editor Layout', menu: 'View', submenu: 'Editor Layout', run: () => splitEditor('right') },
   { id: 'layout-two-rows', label: 'View: Two Rows Editor Layout', menu: 'View', submenu: 'Editor Layout', run: () => splitEditor('down') },
+  // W90: the side group's editors join the main group.
+  { id: 'join-groups', label: 'View: Join Editor Group with Next Group', menu: 'View', submenu: 'Editor Layout', group: true, run: () => window.dispatchEvent(new Event('tas:join-groups')) },
+  { id: 'join-all-groups', label: 'View: Join All Editor Groups', menu: 'View', submenu: 'Editor Layout', run: () => window.dispatchEvent(new Event('tas:join-groups')) },
 ]);

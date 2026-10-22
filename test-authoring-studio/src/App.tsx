@@ -549,6 +549,14 @@ export default function App() {
     setSplitTabs((t) => (t.includes(f) ? t : [...t, f]));
     setSplitActive(f);
   };
+  // View: Join Editor Groups (W90): the side group's editors move into the main group, which keeps the focus.
+  const splitTabsRef = useRef<string[]>([]);
+  splitTabsRef.current = splitTabs.length ? splitTabs : splitFile ? [splitFile] : [];
+  useEffect(() => {
+    const h = () => { const files = splitTabsRef.current; if (!files.length) return; for (const f of files) openTab(f); setSplitFileRef.current(null); };
+    window.addEventListener('tas:join-groups', h);
+    return () => window.removeEventListener('tas:join-groups', h);
+  }, []);
   // View: Close All Editor Groups (W81) closes the side group too.
   useEffect(() => { const h = () => setSplitFileRef.current(null); window.addEventListener(CLOSE_SPLIT_EVENT, h); return () => window.removeEventListener(CLOSE_SPLIT_EVENT, h); }, []);
   setSplitFileRef.current = setSplitFile;

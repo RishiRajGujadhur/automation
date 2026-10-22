@@ -1771,3 +1771,21 @@ test('W89 View ▸ Editor Layout: Two Columns, Two Rows, Single', async ({ page 
   await palette('View: Single Column Editor Layout');
   await expect(page.locator('.editor-split.single')).toBeVisible();
 });
+
+test('W90 View: Join All Editor Groups moves the side group into the main one', async ({ page }) => {
+  await start(page);
+  await open(page, 'Steps/AuthSteps.cs');
+  await page.keyboard.press('Control+p');
+  await quickBox(page).fill('hooks');
+  await expect(rows(page).first()).toContainText('Hooks.cs');
+  await page.keyboard.press('Control+Enter');
+  await expect(page.getByLabel('Source of Support/Hooks.cs')).toBeVisible();
+  const mainTabs = page.getByRole('group', { name: 'Open editors' }).locator('.editor-tab', { hasText: 'Hooks.cs' });
+  await expect(mainTabs).toHaveCount(0);
+  await page.keyboard.press('Control+Shift+P');
+  await quickBox(page).fill('>Join All Editor Groups');
+  await expect(rows(page).first()).toContainText('Join All Editor Groups');
+  await page.keyboard.press('Enter');
+  await expect(page.locator('.editor-split.single')).toBeVisible();
+  await expect(mainTabs).toHaveCount(1);
+});
