@@ -1415,3 +1415,12 @@ test('W68 workbench.editor.labelFormat: default (folders only for same names), s
   }
   await expect(page.locator('.editor-tab-label', { hasText: 'AuthSteps.cs' }).last().locator('small')).toHaveText(path.join(temp, 'Other', 'Deep'));
 });
+
+test('W69 workbench.editor.wrapTabs: many tabs wrap into rows', async ({ page }) => {
+  for (let i = 0; i < 14; i++) await fs.writeFile(path.join(temp, `LongFileName${i}.txt`), 'x\n');
+  await start(page, { 'workbench.editor.wrapTabs': true });
+  for (let i = 0; i < 14; i++) await open(page, `LongFileName${i}.txt`);
+  const tops = await page.locator('.editor-tab').evaluateAll((els) => [...new Set(els.map((e) => Math.round(e.getBoundingClientRect().top)))]);
+  expect(tops.length).toBeGreaterThan(1);
+  await expect(page.getByRole('button', { name: 'Show next tabs' })).toHaveCount(0);
+});

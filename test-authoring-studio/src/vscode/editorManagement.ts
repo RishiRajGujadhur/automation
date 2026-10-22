@@ -17,3 +17,5 @@ export const labelFormat = defineSetting<'default' | 'short' | 'medium' | 'long'
     { value: 'long', description: 'Show the name of the file followed by its absolute path.' },
   ],
 });
+/** workbench.editor.wrapTabs (W69): tabs wrap into rows instead of scrolling (as Visual Studio's multiple rows). */
+export const wrapTabs = defineSetting<boolean>({ key: 'workbench.editor.wrapTabs', category: C, title: 'Wrap Tabs', type: 'boolean', default: false, description: 'Controls whether tabs should be wrapped over multiple lines when exceeding available space or whether a scrollbar should appear instead.' });

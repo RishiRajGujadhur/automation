@@ -17,6 +17,7 @@ import { fileType } from './fileTypes';
 import { api } from '../api';
 import { isBrowser } from './provider';
 import { tabDescription } from './tabLabel';
+import { wrapTabs } from '../vscode/editorManagement';
 import { untitledLabel } from './untitled';
 import { decorationBadges, decorationClass, decorationColors, useFileDecorations } from './decorations';
 import { untitledTabLabel, useUntitledLabels } from './untitledHint';
@@ -43,7 +44,7 @@ export default function EditorTabs({ onClose, onSplit, children }: { onClose: (f
   useSettings();
   // File decorations (W66 / W67): problems and Git status on the tabs.
   const deco = useFileDecorations();
-  const multiRow = !!vo.multiRowTabs && featureOn('multi-row-tabs');
+  const multiRow = (!!vo.multiRowTabs && featureOn('multi-row-tabs')) || wrapTabs();
   // Workbench ▸ Editor Management settings.
   // Show pinned tabs in a separate row (Visual Studio): a row break after the last pinned tab.
   const pinnedRow = !!vo.pinnedRow && featureOn('pinned-row');

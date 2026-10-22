@@ -858,3 +858,6 @@ html[data-activity-bar='top'] .app-body {
   &[data-sidebar-open='false'] > .activity-bar { display: none; }
 }
 html[data-activity-bar='top'][data-side-bar='right'] .app-body > .activity-bar { left: auto; right: 0; }
+// Tabs in several rows (workbench.editor.wrapTabs, Visual Studio's multiple rows) in the VS Code layout too (W69).
+.editor-tabs.multi-row .tab-strip { flex-wrap: wrap; overflow: visible; height: auto; max-height: none; }
+.editor-tabs.multi-row .tab-strip .editor-tab { flex: none; }
