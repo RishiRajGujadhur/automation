@@ -107,6 +107,11 @@
   border-color: #9a75e440;
   color: #d6c9f7;
 }
+.explorer-file.multi-selected {
+  background: var(--vscode-list-inactiveSelectionBackground, #37373d);
+  outline: 1px solid var(--vscode-list-focusOutline, #0078d4);
+  outline-offset: -1px;
+}
 .explorer-file.selected svg {
   color: #bca0f0;
 }

@@ -1972,3 +1972,24 @@ test('W102 Explorer: files dropped from the desktop onto a folder are copied int
   await expect.poll(() => fs.readFile(path.join(temp, 'Support/Dropped.md'), 'utf8').catch(() => '')).toBe('dropped text');
   await expect(page.locator('#feature-sidebar').getByRole('button', { name: 'Dropped.md', exact: true })).toBeVisible();
 });
+
+test('W103 Explorer multi-select: Ctrl and Shift click, then delete or copy them all', async ({ page }) => {
+  for (const n of ['A1.cs', 'A2.cs', 'A3.cs']) await fs.writeFile(path.join(temp, `Steps/${n}`), '');
+  await start(page, { 'explorer.confirmDelete': false });
+  const side = page.locator('#feature-sidebar');
+  const row = (n: string) => side.getByRole('button', { name: n, exact: true });
+  await row('A1.cs').click();
+  await row('A3.cs').click({ modifiers: ['Shift'] });
+  await expect(side.locator('.explorer-file.multi-selected')).toHaveCount(3);
+  await row('A2.cs').click({ modifiers: ['Control'] });
+  await expect(side.locator('.explorer-file.multi-selected')).toHaveCount(2);
+  await row('A3.cs').click({ button: 'right' });
+  await page.getByRole('menuitem', { name: /^Copy Ctrl C/ }).click();
+  await side.getByRole('button', { name: /folder Support$/ }).first().click({ button: 'right' });
+  await page.getByRole('menuitem', { name: /^Paste/ }).click();
+  await expect.poll(() => fs.readdir(path.join(temp, 'Support')).then((f) => f.filter((x) => /^A\d\.cs$/.test(x)).sort())).toEqual(['A1.cs', 'A3.cs']);
+  await row('A1.cs').first().click();
+  await row('A2.cs').click({ modifiers: ['Control'] });
+  await row('A2.cs').press('Delete');
+  await expect.poll(() => fs.readdir(path.join(temp, 'Steps')).then((f) => f.filter((x) => /^A\d\.cs$/.test(x)))).toEqual(['A3.cs']);
+});

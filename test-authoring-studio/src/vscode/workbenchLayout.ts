@@ -65,3 +65,7 @@ if (typeof window !== 'undefined') {
     el.scrollBy({ top: e.deltaY * px * factor, left: e.deltaX * px * factor, behavior: smooth ? 'smooth' : 'auto' });
   }, { passive: false });
 }
+/** workbench.list.multiSelectModifier (VSCODE-250.md W103): the modifier that adds to a selection; the other opens to the side. */
+export const listSettings = {
+  multiSelectModifier: defineSetting<'ctrlCmd' | 'alt'>({ key: 'workbench.list.multiSelectModifier', category: 'Workbench ▸ Appearance', title: 'List: Multi Select Modifier', type: 'enum', default: 'ctrlCmd', description: 'The modifier to be used to add an item in trees and lists to a multi-selection with the mouse (for example in the explorer, open editors and scm view). The "Open to Side" mouse gestures use the other modifier.', options: [{ value: 'ctrlCmd', description: 'Maps to Control on Windows and Linux and to Command on macOS.' }, { value: 'alt', description: 'Maps to Alt on Windows and Linux and to Option on macOS.' }] }),
+};

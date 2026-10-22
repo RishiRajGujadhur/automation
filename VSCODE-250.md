@@ -126,7 +126,7 @@ Legend: `[x]` done · `[ ]` to do.
 - [x] W100. files.exclude (hide **/.git, **/bin…) with "Show excluded files" toggle
 - [x] W101. explorer.excludeGitIgnore
 - [x] W102. Explorer: files dragged in from the desktop onto a folder are copied into it (Select for Compare already existed)
-- [ ] W103. Explorer: multi-select with Ctrl / Shift, delete or copy several
+- [x] W103. Explorer: multi-select with Ctrl / Shift, delete or copy several
 - [ ] W104. Explorer: Undo / Redo file operations (Ctrl+Z, explorer.enableUndo)
 - [ ] W105. Explorer: Copy Relative Path (Ctrl+K Ctrl+Shift+Alt+C) and explorer.copyRelativePathSeparator
 - [ ] W106. Explorer: Open With… (text editor / preview)
@@ -394,3 +394,4 @@ Legend: `[x]` done · `[ ]` to do.
 - 2026-10-22: W100. files.exclude (VS Code's globs: **/.git, *.log, **/*.{js,map}…) hides files from the Explorer unless Show All Files is on.
 - 2026-10-22: W101. explorer.excludeGitIgnore: files Git ignores (asked with git check-ignore) are hidden from the Explorer like files.exclude; Show All Files shows them.
 - 2026-10-22: W102. Text files dragged from the desktop (or Windows Explorer) onto an Explorer folder are copied into it, as in VS Code; too-large files are refused.
+- 2026-10-22: W103. Explorer multi-select (Ctrl toggles, Shift ranges, workbench.list.multiSelectModifier; Alt+click opens to the side), Copy/Cut/Delete act on the selection with one confirmation.

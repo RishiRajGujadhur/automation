@@ -4,6 +4,7 @@ import { openInputBox } from './quickinput/store';
 import { treeIndent } from './vscode/workbenchLayout';
 import { nestFiles } from './files/fileNesting';
 import { globMatcher } from './files/glob';
+import { listSettings } from './vscode/workbenchLayout';
 import { files as files_ } from './vscode/files';
 import { useSettings } from './vscode/settings';
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
@@ -56,13 +57,13 @@ type Props = {
   onNotice?: (message: string) => void;
   onConfirm?: (o: { title: string; description: string; confirm: string; danger?: boolean }) => Promise<boolean>;
 };
-export type FileOp = { kind: 'rename' | 'copy' | 'delete'; from: string; to?: string; folder?: boolean };
+export type FileOp = { kind: 'rename' | 'copy' | 'delete'; from: string; to?: string; folder?: boolean; /** Delete of a multi-selection (W103): every path, one confirmation. */ paths?: string[] };
 /** Select for Compare (VS Code / Rider): the first file of a two-file comparison. */
 let compareLeft: string | null = null;
 /** Asks RiderHost to show the difference of two files (detail: { left, right }). */
 export const COMPARE_FILES_EVENT = 'tas:compare-files';
 /** Explorer clipboard (Copy / Cut, then Paste on a folder or beside a file), kept while the app is open. */
-let clipboard: { mode: 'copy' | 'cut'; path: string } | null = null;
+let clipboard: { mode: 'copy' | 'cut'; path: string; paths?: string[] } | null = null;
 /** Layers hidden until "Show all files" (build output and unclassified files). */
 const HIDDEN_LAYERS = new Set(['Output', 'Other']);
 const icon = (file: string) => (file.endsWith('.feature') ? FileText : file.endsWith('.xml') ? Braces : file.endsWith('.csproj') || file.endsWith('.json') || file.endsWith('.config') ? FileCog : FileCode2);
@@ -124,10 +125,39 @@ export default function SolutionExplorer({ features, revision, activeFile, query
   const join = (dir: string, name: string) => (dir ? `${dir}/${name}` : name);
   const paste = async (folder: string) => {
     if (!clip || !onFileOp) return;
-    const to = join(folder, clip.path.split('/').pop()!);
-    if (clip.mode === 'cut') { if (to !== clip.path) await onFileOp({ kind: 'rename', from: clip.path, to }); setClipboard(null); }
-    else await onFileOp({ kind: 'copy', from: clip.path, to });
+    for (const from of clip.paths ?? [clip.path]) {
+      const to = join(folder, from.split('/').pop()!);
+      if (clip.mode === 'cut') { if (to !== from) await onFileOp({ kind: 'rename', from, to }); }
+      else await onFileOp({ kind: 'copy', from, to });
+    }
+    if (clip.mode === 'cut') setClipboard(null);
   };
+  // Explorer multi-select (VS Code's list selection, W103): Ctrl toggles a row, Shift selects the range from the anchor.
+  const [picked, setPicked] = useState<Set<string>>(new Set());
+  const anchor = useRef<string | null>(null);
+  const pick = (path: string, e: React.MouseEvent): boolean => {
+    const ctrl = listSettings.multiSelectModifier() === 'alt' ? e.altKey : e.ctrlKey || e.metaKey;
+    if (e.shiftKey && anchor.current) {
+      const rows = [...document.querySelectorAll<HTMLElement>('.solution-explorer [data-path]')].map((r) => r.dataset.path!);
+      const a = rows.indexOf(anchor.current), b = rows.indexOf(path);
+      if (a >= 0 && b >= 0) { setPicked(new Set(rows.slice(Math.min(a, b), Math.max(a, b) + 1))); return true; }
+    }
+    if (ctrl) {
+      setPicked((prev) => { const next = new Set(prev.size ? prev : activeFile && activeFile !== path ? [activeFile] : []); if (next.has(path)) next.delete(path); else next.add(path); return next; });
+      anchor.current = path;
+      return true;
+    }
+    anchor.current = path;
+    if (picked.size) setPicked(new Set());
+    return false;
+  };
+  /** The rows a key or menu command acts on: the multi-selection when the row is part of it. */
+  const targets = (path: string) => (picked.size > 1 && picked.has(path) ? [...picked] : [path]);
+  const deleteRows = (path: string, folder: boolean) => {
+    const all = targets(path);
+    void onFileOp?.(all.length > 1 ? { kind: 'delete', from: all[0], paths: all } : { kind: 'delete', from: path, folder }).then(() => setPicked(new Set()));
+  };
+  const copyRows = (mode: 'copy' | 'cut', path: string) => { const all = targets(path); setClipboard(all.length > 1 ? { mode, path: all[0], paths: all } : { mode, path }); };
   const commitRename = async (path: string, name: string, folder: boolean) => {
     setRenaming(null);
     const next = name.trim();
@@ -181,21 +211,22 @@ export default function SolutionExplorer({ features, revision, activeFile, query
   /** Edit entries shared by file and folder context menus. */
   const editItems = (path: string, folder: boolean) => onFileOp ? [
     'separator' as const,
-    { label: 'Cut', icon: Scissors, shortcut: 'Ctrl X', onSelect: () => setClipboard({ mode: 'cut', path }) },
-    { label: 'Copy', icon: Copy, shortcut: 'Ctrl C', onSelect: () => setClipboard({ mode: 'copy', path }) },
+    { label: 'Cut', icon: Scissors, shortcut: 'Ctrl X', onSelect: () => copyRows('cut', path) },
+    { label: 'Copy', icon: Copy, shortcut: 'Ctrl C', onSelect: () => copyRows('copy', path) },
     { label: 'Paste', icon: ClipboardPaste, shortcut: 'Ctrl V', disabled: !clip, onSelect: () => void paste(folder ? path : dirOf(path)) },
     'separator' as const,
     { label: 'Rename', icon: TextCursorInput, shortcut: 'F2', onSelect: () => setRenaming(path) },
-    { label: 'Delete', icon: Trash2, shortcut: 'Del', onSelect: () => void onFileOp({ kind: 'delete', from: path, folder }) },
+    { label: 'Delete', icon: Trash2, shortcut: 'Del', onSelect: () => deleteRows(path, folder) },
   ] : [];
   /** F2, Delete, Ctrl+C / Ctrl+X / Ctrl+V on a focused Explorer row. */
   const rowKeys = (path: string, folder: boolean) => (e: React.KeyboardEvent) => {
     if (!onFileOp) return;
     const mod = e.ctrlKey || e.metaKey;
     if (e.key === 'F2') { e.preventDefault(); setRenaming(path); }
-    else if (e.key === 'Delete') { e.preventDefault(); void onFileOp({ kind: 'delete', from: path, folder }); }
-    else if (mod && e.key.toLowerCase() === 'c') { e.preventDefault(); setClipboard({ mode: 'copy', path }); }
-    else if (mod && e.key.toLowerCase() === 'x') { e.preventDefault(); setClipboard({ mode: 'cut', path }); }
+    else if (e.key === 'Delete') { e.preventDefault(); deleteRows(path, folder); }
+    else if (mod && e.key.toLowerCase() === 'c') { e.preventDefault(); copyRows('copy', path); }
+    else if (mod && e.key.toLowerCase() === 'x') { e.preventDefault(); copyRows('cut', path); }
+    else if (e.key === 'Escape' && picked.size) { e.preventDefault(); setPicked(new Set()); }
     else if (mod && e.key.toLowerCase() === 'v') { e.preventDefault(); void paste(folder ? path : dirOf(path)); }
   };
   const [serverSolution, setSolution] = useState<Solution>();
@@ -434,12 +465,19 @@ export default function SolutionExplorer({ features, revision, activeFile, query
               </button>
             ) : <span className="se-twisty-space" style={{ marginLeft: 4 + depth * IND }} />}
             {renaming === path && !extra?.linked ? renameBox(path, false) : <button
-              className={`explorer-file ${isActive(path) && !extra?.linked ? 'selected' : ''} ${clip?.mode === 'cut' && clip.path === path ? 'cut' : ''}`}
+              className={`explorer-file ${isActive(path) && !extra?.linked ? 'selected' : ''} ${picked.has(path) && !extra?.linked ? 'multi-selected' : ''} ${clip?.mode === 'cut' && (clip.paths ?? [clip.path]).includes(path) ? 'cut' : ''}`}
+              aria-selected={picked.size ? picked.has(path) : undefined}
               onKeyDown={extra?.linked ? undefined : rowKeys(path, false)}
               draggable={featureOn('drag-path')} onDragStart={(e) => { e.dataTransfer.setData('text/plain', path); e.dataTransfer.setData('application/x-tas-path', path); e.dataTransfer.effectAllowed = 'copyMove'; }} data-path={extra?.linked ? undefined : path}
               title={extra?.note ? `${path} · ${extra.note}` : path}
               aria-current={isActive(path) && !extra?.linked ? 'page' : undefined}
-              onClick={(e) => { if ((e.ctrlKey || e.metaKey) && featureOn('ctrl-click-side') && !path.endsWith('.feature') && !browserSolution) { window.dispatchEvent(new CustomEvent('tas:open-split', { detail: path })); return; } open(path); }}
+              onClick={(e) => {
+                // workbench.list.multiSelectModifier: the other modifier (Alt by default) opens to the side.
+                const side = listSettings.multiSelectModifier() === 'alt' ? e.ctrlKey || e.metaKey : e.altKey;
+                if (side && featureOn('ctrl-click-side') && !path.endsWith('.feature') && !browserSolution) { window.dispatchEvent(new CustomEvent('tas:open-split', { detail: path })); return; }
+                if (!extra?.linked && pick(path, e)) return;
+                open(path);
+              }}
               onDoubleClick={() => keepTab(path)}
               onAuxClick={(e) => { if (e.button === 1 && featureOn('explorer-middle-click')) { e.preventDefault(); open(path); setTimeout(() => keepTab(path)); } }}
             >

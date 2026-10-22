@@ -460,7 +460,11 @@ export default function App() {
   const fileOp = async (op: FileOp) => {
     const name = op.from.split('/').pop();
     try {
-      if (op.kind === 'delete') {
+      if (op.kind === 'delete' && op.paths) {
+        // A multi-selection (W103): one confirmation for all of them.
+        if (explorerSettings.confirmDelete() && !(await confirm({ title: `Delete ${op.paths.length} items?`, description: op.paths.join('\n'), confirm: 'Delete', danger: true }))) return;
+        for (const p of op.paths) { await deletePath(p); deletedPath(p); }
+      } else if (op.kind === 'delete') {
         // explorer.confirmDelete (W97).
         if (explorerSettings.confirmDelete() && !(await confirm({ title: `Delete ${name}?`, description: op.folder ? `The folder ${op.from} and everything in it will be deleted from disk.` : `${op.from} will be deleted from disk.`, confirm: 'Delete', danger: true }))) return;
         await deletePath(op.from);

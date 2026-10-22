@@ -471,9 +471,9 @@ test('QL62 Explorer keeps its scroll position after a reload', async ({ page }) 
   await expect.poll(() => tree.evaluate((el) => el.scrollTop)).toBeGreaterThan(40);
 });
 
-test('QL63 Explorer Ctrl+click opens to the side', async ({ page }) => {
+test('QL63 Explorer Alt+click opens to the side', async ({ page }) => {
   await openFeature(page);
-  await nav(page).getByRole('button', { name: 'AuthSteps.cs', exact: true }).first().click({ modifiers: ['Control'] });
+  await nav(page).getByRole('button', { name: 'AuthSteps.cs', exact: true }).first().click({ modifiers: ['Alt'] });
   await expect(page.getByRole('region', { name: 'Split editor Steps/AuthSteps.cs' })).toBeVisible();
 });
 
