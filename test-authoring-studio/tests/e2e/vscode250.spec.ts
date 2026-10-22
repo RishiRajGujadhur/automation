@@ -1789,3 +1789,24 @@ test('W90 View: Join All Editor Groups moves the side group into the main one', 
   await expect(page.locator('.editor-split.single')).toBeVisible();
   await expect(mainTabs).toHaveCount(1);
 });
+
+test('W91 Explorer title actions: New File… (VS Code input box, validated), Refresh Explorer', async ({ page }) => {
+  await start(page);
+  await open(page, 'Steps/AuthSteps.cs');
+  const explorer = page.getByRole('region', { name: 'Explorer' });
+  await explorer.getByRole('button', { name: 'New File…' }).click();
+  // Beside the active file.
+  await expect(quickBox(page)).toHaveValue('Steps/');
+  await page.keyboard.type('Bad|Name.cs');
+  await expect(quick(page).getByRole('status')).toContainText('is not valid');
+  await quickBox(page).fill('Steps/Fresh.cs');
+  await expect(quick(page).getByRole('status')).toContainText('New file in Steps');
+  await page.keyboard.press('Enter');
+  await expect(quick(page)).toBeHidden();
+  await expect(page.getByLabel('Source of Steps/Fresh.cs')).toBeVisible();
+  expect((await fs.stat(path.join(temp, 'Steps/Fresh.cs'))).isFile()).toBe(true);
+  // A file made outside shows after Refresh Explorer.
+  await fs.writeFile(path.join(temp, 'Steps/Outside.cs'), '');
+  await explorer.getByRole('button', { name: 'Refresh Explorer' }).click();
+  await expect(explorer.getByRole('button', { name: 'Outside.cs', exact: true })).toBeVisible();
+});

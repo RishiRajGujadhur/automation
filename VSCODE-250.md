@@ -114,7 +114,7 @@ Legend: `[x]` done · `[ ]` to do.
 - [x] W90. Join Editor Groups / Join All Editor Groups
 
 ## Explorer
-- [ ] W91. Explorer title actions in VS Code style: New File, New Folder, Refresh Explorer, Collapse Folders
+- [x] W91. Explorer title actions in VS Code style: New File… (input box beside the active file), Refresh Explorer
 - [ ] W92. Problems decorations: red / yellow file names with counts, folders inherit (explorer.decorations.colors / badges)
 - [ ] W93. explorer.compactFolders (single-child folders on one row)
 - [ ] W94. explorer.sortOrder (default / mixed / filesFirst / type / modified)
@@ -382,3 +382,4 @@ Legend: `[x]` done · `[ ]` to do.
 - 2026-10-22: W88. File: Compare Active File With… lists the workspace's files in the Quick Input (fuzzy matched) and shows the active editor's text against the chosen file.
 - 2026-10-22: W89. View ▸ Editor Layout: Single Column (closes the side group), Two Columns and Two Rows (the active file in the side group, right or below).
 - 2026-10-22: W90. View: Join Editor Group with Next Group / Join All Editor Groups move the side group's editors into the main group as tabs and close the side group.
+- 2026-10-22: W91. The Explorer title bar gains VS Code's New File… (an input box starting at the active file's folder, with VS Code's name checks) and Refresh Explorer.

@@ -1,3 +1,4 @@
+import { openInputBox } from './quickinput/store';
 import { treeIndent } from './vscode/workbenchLayout';
 import { useSettings } from './vscode/settings';
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
@@ -147,6 +148,17 @@ export default function SolutionExplorer({ features, revision, activeFile, query
     // A file that already exists just opens (QOL-50).
     catch (e) { if (featureOn('new-file-existing') && /already exists/.test((e as Error).message)) { onOpenFile(file); onNotice?.(`${file} already exists; opened it.`); } else onNotice?.((e as Error).message); }
   };
+  /** New File… in VS Code's input box: the path is checked as it is typed (W91 / W108). */
+  const newFileBox = (folder: string) => openInputBox({
+    prompt: `New file in ${folder || 'the workspace root'} (a name, or sub/folder/name)`,
+    value: folder ? `${folder}/` : '',
+    validate: (v) => { const n = v.trim(); if (!n || n.endsWith('/')) return 'A file or folder name must be provided.'; if (/^\s|\s$/.test(v.split('/').pop() ?? '')) return 'Leading or trailing whitespace detected in file or folder name.'; if (/[<>:"|?*]/.test(n)) return `The name **${n}** is not valid as a file or folder name. Please choose a different name.`; if (n.split(/[\\/]/).includes('..')) return 'The path cannot leave the workspace.'; return undefined; },
+    accept: async (v) => {
+      const file = v.trim().replace(/\\/g, '/');
+      try { await api('/file/create', { file, source: '' }); loadSolution(); onOpenFile(file); }
+      catch (e) { if (/already exists/.test((e as Error).message)) { onOpenFile(file); onNotice?.(`${file} already exists; opened it.`); } else onNotice?.((e as Error).message); }
+    },
+  });
   /** Edit entries shared by file and folder context menus. */
   const editItems = (path: string, folder: boolean) => onFileOp ? [
     'separator' as const,
@@ -531,6 +543,9 @@ export default function SolutionExplorer({ features, revision, activeFile, query
           {featureOn('explorer-track') && tool(track ? 'Track Active Item: on' : 'Track Active Item: off', Crosshair, () => setTrack(!track), track)}
           {tool(pendingOnly ? 'Show all changes filter off' : 'Pending changes filter', PencilLine, () => setPendingOnly(!pendingOnly), pendingOnly)}
           {featureOn('explorer-open-filter') && tool(openOnly ? 'Open files filter off' : 'Open files filter', BookOpen, () => setOpenOnly(!openOnly), openOnly)}
+          {/* VS Code's Explorer title actions (W91): New File…, Refresh Explorer, Collapse Folders. */}
+          {!browserSolution && <button className="icon-button se-tool" aria-label="New File…" title="New File…" onClick={() => newFileBox(activeFile && activeFile.includes('/') ? activeFile.slice(0, activeFile.lastIndexOf('/')) : '')}><span className="codicon codicon-new-file" aria-hidden="true" /></button>}
+          <button className="icon-button se-tool" aria-label="Refresh Explorer" title="Refresh Explorer" onClick={() => { loadSolution(); onNotice?.('Explorer refreshed.'); }}><span className="codicon codicon-refresh" aria-hidden="true" /></button>
           {tool('Collapse all folders', ChevronsDownUp, collapseAll)}
           {tool('Show all files', showAll ? Files : SquareStack, () => setShowAll(!showAll), showAll)}
           {tool('New feature', Plus, () => onNew(), undefined, { 'data-tour': 'new-feature' })}
