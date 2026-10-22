@@ -1218,3 +1218,17 @@ test('W57 Ctrl+0 focuses the side bar, Ctrl+Shift+Y the Debug Console, Ctrl+Shif
   await page.keyboard.press('Control+Shift+Y');
   await expect(page.getByRole('region', { name: 'Debugger' })).toBeVisible();
 });
+
+test('W58 workbench.view.alwaysShowHeaderActions', async ({ page }) => {
+  await start(page, {}, { 'tas:pane:open-editors': '1' });
+  const pane = page.getByRole('region', { name: 'Open Editors' });
+  const save = pane.getByRole('button', { name: 'Save All' });
+  await page.mouse.move(800, 400);
+  await expect(save).toBeHidden();
+  await pane.hover();
+  await expect(save).toBeVisible();
+  await page.evaluate(() => localStorage.setItem('tas:settings', JSON.stringify({ 'workbench.view.alwaysShowHeaderActions': true })));
+  await page.reload();
+  await page.mouse.move(800, 400);
+  await expect(save).toBeVisible();
+});

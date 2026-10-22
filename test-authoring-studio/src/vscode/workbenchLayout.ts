@@ -35,3 +35,7 @@ export const iconClickBehavior = defineSetting<'toggle' | 'focus'>({
   key: 'workbench.activityBar.iconClickBehavior', category: C, title: 'Activity Bar: Icon Click Behavior', type: 'enum', default: 'toggle', description: 'Controls the behavior of clicking an Activity Bar icon in the workbench.',
   options: [{ value: 'toggle', description: 'Hide the Primary Side Bar if the clicked item is already visible.' }, { value: 'focus', description: 'Focus the Primary Side Bar if the clicked item is already visible.' }],
 });
+
+/** workbench.view.alwaysShowHeaderActions (VSCODE-250.md W58): view title actions shown always, not only on hover. */
+export const alwaysShowHeaderActions = defineSetting<boolean>({ key: 'workbench.view.alwaysShowHeaderActions', category: C, title: 'View: Always Show Header Actions', type: 'boolean', default: false, description: 'Controls the visibility of view header actions. View header actions may either be always visible, or only visible when that view is focused or hovered over.' });
+if (typeof window !== 'undefined') { const applyHeader = () => { document.documentElement.dataset.headerActions = alwaysShowHeaderActions() ? 'always' : 'hover'; }; onSettingsChanged(applyHeader); applyHeader(); }

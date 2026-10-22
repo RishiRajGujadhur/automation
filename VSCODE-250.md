@@ -77,7 +77,7 @@ Legend: `[x]` done · `[ ]` to do.
 - [x] W55. View: Toggle Maximized Panel, Move Panel Left / Right / Bottom commands
 - [x] W56. Focus parts with F6 / Shift+F6 (Focus Next / Previous Part)
 - [x] W57. Ctrl+0 focus side bar, Ctrl+Shift+Y Debug Console, Ctrl+Shift+U Output (Ctrl+1…9 stay Go to Tab)
-- [ ] W58. workbench.view.alwaysShowHeaderActions
+- [x] W58. workbench.view.alwaysShowHeaderActions
 - [ ] W59. workbench.tree.indent and workbench.tree.renderIndentGuides
 - [ ] W60. workbench.list.smoothScrolling and workbench.list.mouseWheelScrollSensitivity
 
@@ -350,3 +350,4 @@ Legend: `[x]` done · `[ ]` to do.
 - 2026-10-22: W55. VS Code's View: Toggle Maximized Panel, Move Panel Left / Right / To Bottom and Hide Panel in the View menu and the palette (the panel opens first when needed).
 - 2026-10-22: W56. F6 / Shift+F6 (View: Focus Next / Previous Part) move the keyboard focus round the editor, the panel, the status bar, the activity bar and the side bar, as in VS Code.
 - 2026-10-22: W57. VS Code's Ctrl+0 focuses the side bar (opening it), Ctrl+Shift+Y the Debug Console, Ctrl+Shift+U the Output (outside an editor, where it stays Toggle Case); Ctrl+1…9 keep going to a tab.
+- 2026-10-22: W58. workbench.view.alwaysShowHeaderActions: the side bar sections' title actions are always shown instead of only on hover or focus.
