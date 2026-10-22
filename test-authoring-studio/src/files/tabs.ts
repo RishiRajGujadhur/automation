@@ -38,6 +38,12 @@ export const openPositioning = defineSetting<'right' | 'left' | 'first' | 'last'
   key: 'workbench.editor.openPositioning', category: 'Workbench ▸ Editor Management', title: 'Open Positioning', type: 'enum', default: 'right', description: 'Controls where editors open. Select left or right to open editors to the left or right of the currently active one. Select first or last to open editors independently from the currently active one.',
   options: [{ value: 'left' }, { value: 'right' }, { value: 'first' }, { value: 'last' }],
 });
+export const editorLimit = {
+  enabled: defineSetting<boolean>({ key: 'workbench.editor.limit.enabled', category: 'Workbench ▸ Editor Management', title: 'Limit: Enabled', type: 'boolean', default: false, description: 'Controls if the number of opened editors should be limited or not. When enabled, less recently used editors will close to make space for newly opening editors.' }),
+  value: defineSetting<number>({ key: 'workbench.editor.limit.value', category: 'Workbench ▸ Editor Management', title: 'Limit: Value', type: 'number', default: 10, min: 1, max: 100, description: 'Controls the maximum number of opened editors.' }),
+};
+/** Files with unsaved changes (their drafts), which a limit never closes. */
+const dirtyFiles = () => { try { return Object.keys(localStorage).filter((k) => k.startsWith('tas:unsaved:')).map((k) => k.slice(12)); } catch { return []; } };
 function insertAt(tab: EditorTab) {
   const tabs = [...state.tabs];
   const pinned = tabs.filter((t) => t.pinned).length;
@@ -53,6 +59,8 @@ export function openTab(file: string, kind = kindOf(file), preview = false) {
   const tab: EditorTab = preview ? { file, kind, preview: true } : { file, kind };
   const i = preview ? state.tabs.findIndex((t) => t.preview) : -1;
   set({ tabs: i >= 0 ? state.tabs.map((t, j) => (j === i ? tab : t)) : insertAt(tab), active: file });
+  // workbench.editor.limit (W71): beyond the limit the least recently used tabs close (not pinned or unsaved ones).
+  if (editorLimit.enabled()) closeLeastRecent(editorLimit.value(), dirtyFiles());
 }
 /** The preview tab stays open (no longer replaced by the next preview). */
 export function keepTab(file: string) { if (state.tabs.some((t) => t.file === file && t.preview)) set({ ...state, tabs: state.tabs.map((t) => (t.file === file ? { ...t, preview: false } : t)) }); }

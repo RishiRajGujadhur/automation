@@ -1440,3 +1440,11 @@ test('W70 workbench.editor.openPositioning: right of the active tab (default), f
   await open(page, 'Fixtures.csproj');
   expect((await order())[0]).toBe('Fixtures.csproj');
 });
+
+test('W71 workbench.editor.limit: the least recently used tabs close beyond the limit', async ({ page }) => {
+  await start(page, { 'workbench.editor.limit.enabled': true, 'workbench.editor.limit.value': 3 });
+  for (const f of ['Steps/AuthSteps.cs', 'Steps/SearchSteps.cs', 'Support/Hooks.cs', 'Fixtures.csproj']) await open(page, f);
+  await expect(page.locator('.editor-tab')).toHaveCount(3);
+  const titles = await page.locator('.editor-tab-label').evaluateAll((els) => els.map((e) => e.getAttribute('title')));
+  expect(titles).toEqual(expect.arrayContaining(['Steps/SearchSteps.cs', 'Support/Hooks.cs', 'Fixtures.csproj']));
+});
