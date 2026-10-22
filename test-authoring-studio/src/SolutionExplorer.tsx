@@ -167,6 +167,17 @@ export default function SolutionExplorer({ features, revision, activeFile, query
       catch (e) { if (/already exists/.test((e as Error).message)) { onOpenFile(file); onNotice?.(`${file} already exists; opened it.`); } else onNotice?.((e as Error).message); }
     },
   });
+  /** Files dragged in from the desktop (VS Code's drop into the Explorer, W102): text files are copied into the folder. */
+  const dropFiles = async (folder: string, list: File[]) => {
+    const done: string[] = [];
+    for (const f of list) {
+      if (f.size > 1_000_000) { onNotice?.(`${f.name} is too large to copy in (1 MB at most).`); continue; }
+      const file = join(folder, f.name);
+      try { await api('/file/create', { file, source: await f.text() }); done.push(file); }
+      catch (e) { onNotice?.(`${f.name}: ${(e as Error).message}`); }
+    }
+    if (done.length) { loadSolution(); onNotice?.(`Copied ${done.length === 1 ? done[0] : `${done.length} files`} into ${folder || 'the workspace'}.`); }
+  };
   /** Edit entries shared by file and folder context menus. */
   const editItems = (path: string, folder: boolean) => onFileOp ? [
     'separator' as const,
@@ -494,9 +505,9 @@ export default function SolutionExplorer({ features, revision, activeFile, query
           ]}>
             <li>
               <div className={`explorer-folder-row ${activeFolder === n.path ? 'active-folder' : ''} ${dropOn === n.path ? 'drop-target' : ''}`}
-                onDragOver={(e) => { if (onFileOp && featureOn('drag-move') && e.dataTransfer.types.includes('application/x-tas-path')) { e.preventDefault(); e.dataTransfer.dropEffect = 'move'; setDropOn(n.path); if (!expanded && featureOn('drag-expand') && !hoverOpen.current) hoverOpen.current = window.setTimeout(() => { toggle(n.path, true); hoverOpen.current = 0; }, 600); } }}
+                onDragOver={(e) => { if (e.dataTransfer.types.includes('Files') && !e.dataTransfer.types.includes('application/x-tas-path') && !browserSolution) { e.preventDefault(); e.dataTransfer.dropEffect = 'copy'; setDropOn(n.path); return; } if (onFileOp && featureOn('drag-move') && e.dataTransfer.types.includes('application/x-tas-path')) { e.preventDefault(); e.dataTransfer.dropEffect = 'move'; setDropOn(n.path); if (!expanded && featureOn('drag-expand') && !hoverOpen.current) hoverOpen.current = window.setTimeout(() => { toggle(n.path, true); hoverOpen.current = 0; }, 600); } }}
                 onDragLeave={() => { setDropOn(null); clearTimeout(hoverOpen.current); hoverOpen.current = 0; }}
-                onDrop={(e) => { setDropOn(null); const from = e.dataTransfer.getData('application/x-tas-path'); if (!from || !onFileOp || !featureOn('drag-move')) return; e.preventDefault(); const to = join(n.path, from.split('/').pop()!); if (to === from || dirOf(from) === n.path) return; void (!explorerSettings.confirmDragAndDrop() ? Promise.resolve(true) : onConfirm ? onConfirm({ title: `Move ${from.split('/').pop()}?`, description: `${from} moves to ${n.path}/.`, confirm: 'Move' }) : Promise.resolve(window.confirm(`Move ${from} to ${n.path}/?`))).then((ok) => { if (ok) void onFileOp({ kind: 'rename', from, to }); }); }}>
+                onDrop={(e) => { setDropOn(null); if (!e.dataTransfer.getData('application/x-tas-path') && e.dataTransfer.files.length && !browserSolution) { e.preventDefault(); void dropFiles(n.path, [...e.dataTransfer.files]); return; } const from = e.dataTransfer.getData('application/x-tas-path'); if (!from || !onFileOp || !featureOn('drag-move')) return; e.preventDefault(); const to = join(n.path, from.split('/').pop()!); if (to === from || dirOf(from) === n.path) return; void (!explorerSettings.confirmDragAndDrop() ? Promise.resolve(true) : onConfirm ? onConfirm({ title: `Move ${from.split('/').pop()}?`, description: `${from} moves to ${n.path}/.`, confirm: 'Move' }) : Promise.resolve(window.confirm(`Move ${from} to ${n.path}/?`))).then((ok) => { if (ok) void onFileOp({ kind: 'rename', from, to }); }); }}>
                 {renaming === n.path ? <span className="explorer-folder" style={{ paddingLeft: 4 + depth * IND }}><Folder size={14} />{renameBox(n.path, true)}</span> : <button className={`explorer-folder ${clip?.mode === 'cut' && clip.path === n.path ? 'cut' : ''} ${explorerDeco.colors() ? folderDeco(n.path) : ''}`} style={{ paddingLeft: 4 + depth * IND }} title={featureOn('folder-count') ? `${n.path} · ${folderCount(n.path)} file${folderCount(n.path) === 1 ? '' : 's'}` : n.path} aria-label={`${expanded ? 'Collapse' : 'Expand'} folder ${n.path}`} aria-expanded={expanded}
                   onKeyDown={rowKeys(n.path, true)}
                   onClick={() => { onFolder(n.path); if (!searching) toggle(n.path); }}>

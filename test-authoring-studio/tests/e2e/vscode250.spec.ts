@@ -1962,3 +1962,13 @@ test('W101 explorer.excludeGitIgnore hides what .gitignore leaves out', async ({
   await expect(side.getByRole('button', { name: 'AuthSteps.cs', exact: true })).toBeVisible();
   await expect(side.getByRole('button', { name: 'scratch.tmp.txt', exact: true })).toHaveCount(0);
 });
+
+test('W102 Explorer: files dropped from the desktop onto a folder are copied into it', async ({ page }) => {
+  await start(page);
+  const folder = page.locator('#feature-sidebar').getByRole('button', { name: /folder Support$/ }).first();
+  const dt = await page.evaluateHandle(() => { const d = new DataTransfer(); d.items.add(new File(['dropped text'], 'Dropped.md', { type: 'text/markdown' })); return d; });
+  await folder.dispatchEvent('dragover', { dataTransfer: dt });
+  await folder.dispatchEvent('drop', { dataTransfer: dt });
+  await expect.poll(() => fs.readFile(path.join(temp, 'Support/Dropped.md'), 'utf8').catch(() => '')).toBe('dropped text');
+  await expect(page.locator('#feature-sidebar').getByRole('button', { name: 'Dropped.md', exact: true })).toBeVisible();
+});
