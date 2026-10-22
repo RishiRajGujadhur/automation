@@ -1188,3 +1188,21 @@ test('W55 Panel commands: Toggle Maximized Panel, Move Panel Left / Right / To B
   await palette('View: Hide Panel');
   await expect(dock).toBeHidden();
 });
+
+test('W56 Focus Next / Previous Part: F6 and Shift+F6 go round the editor, status bar, activity bar and side bar', async ({ page }) => {
+  await start(page);
+  const src = await open(page, 'Steps/AuthSteps.cs');
+  await src.click();
+  const where = () => page.evaluate(() => { const a = document.activeElement; return a?.closest('main.main-content') ? 'editor' : a?.closest('.dock') ? 'panel' : a?.closest('footer.status-bar') ? 'status' : a?.closest('nav.activity-bar') ? 'activity' : a?.closest('#feature-sidebar') ? 'side' : 'other'; });
+  await page.keyboard.press('F6');
+  await expect.poll(where).toBe('status');
+  await page.keyboard.press('F6');
+  await expect.poll(where).toBe('activity');
+  await page.keyboard.press('F6');
+  await expect.poll(where).toBe('side');
+  await page.keyboard.press('F6');
+  await expect.poll(where).toBe('editor');
+  await expect(src).toBeFocused();
+  await page.keyboard.press('Shift+F6');
+  await expect.poll(where).toBe('side');
+});

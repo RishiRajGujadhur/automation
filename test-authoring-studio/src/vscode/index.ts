@@ -27,3 +27,4 @@ import './quickOpen';
 import './files';
 import './git';
 import './menuBar';
+import './focusParts';
