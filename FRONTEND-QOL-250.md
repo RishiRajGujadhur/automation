@@ -5,3 +5,4 @@ This tracks **additional** improvements beyond the existing features in `FRONTEN
 | # | Improvement | Verification | Source |
 |---|---|---|---|
 | 1 | Expand Emmet HTML abbreviations at the caret from the editor context menu, with editable snippet fields. | Build and focused test | Microsoft's MIT-licensed [`@vscode/emmet-helper`](https://github.com/microsoft/vscode-emmet-helper); [VS Code Emmet documentation](https://code.visualstudio.com/docs/languages/emmet) |
+| 2 | Press Tab after a structural HTML Emmet abbreviation to expand it without opening a menu; ordinary Tab behavior remains available. | Focused browser test | [VS Code Emmet Tab setting](https://code.visualstudio.com/docs/languages/emmet#_using-tab-for-emmet-expansions) |

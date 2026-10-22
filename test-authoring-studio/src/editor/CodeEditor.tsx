@@ -9,6 +9,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import CodeMirror, { type ReactCodeMirrorRef } from '@uiw/react-codemirror';
 import type { ViewUpdate } from '@codemirror/view';
 import { StreamLanguage } from '@codemirror/language';
+import { Prec } from '@codemirror/state';
 import { REVERT_FILE_EVENT, SAVE_FILE_EVENT } from '../files/fileCommands';
 import { languageOf as languageModeOf, languageById, naturalLanguage, useLanguageModes } from './languageMode';
 import { csharp } from '@codemirror/legacy-modes/mode/clike';
@@ -494,6 +495,7 @@ export default function CodeEditor({ file, reveal, active = true, onNotice, onIn
     coverageGutter(),
     ...(commentTokenFor(file) === '//' ? [braceFolding(), stickyScroll(braceRange)] : []),
     ...(commentTokenFor(file) ? [vsKeys(commentTokenFor(file))] : []),
+    ...(HTML_FILE.test(file) ? [Prec.highest(keymap.of([{ key: 'Tab', run: (view) => expandHtmlAtCursor(view, file, true) }]))] : []),
     keymap.of([
       { key: 'Mod-s', preventDefault: true, run: () => { void saveRef.current(); return true; } },
       ...(isCs && !browser ? [{ key: 'Mod-r Mod-g', preventDefault: true, run: () => { void organizeRef.current(); return true; } }] : []),

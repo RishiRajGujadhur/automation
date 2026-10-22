@@ -22,6 +22,13 @@ test('1: expands an HTML Emmet abbreviation with editable fields', async ({ page
     await page.getByRole('menuitem', { name: 'Expand Emmet Abbreviation' }).click();
     await expect(editor).toContainText('<li class="item">');
     await expect(editor).toContainText('</ul>');
+    await page.evaluate(() => {
+      const view = (window as unknown as { __activeEditor: () => { view: { state: { doc: { length: number } }; dispatch(change: unknown): void; focus(): void } } }).__activeEditor().view;
+      view.dispatch({ changes: { from: 0, to: view.state.doc.length, insert: 'nav>ul>li*2' }, selection: { anchor: 'nav>ul>li*2'.length } });
+      view.focus();
+    });
+    await page.keyboard.press('Tab');
+    await expect(editor).toContainText('<nav>');
   } finally {
     await request.post('/api/workspace', { data: previous });
     await fs.rm(root, { recursive: true, force: true, maxRetries: 5 });
