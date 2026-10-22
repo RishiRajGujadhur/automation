@@ -19,3 +19,5 @@ export const labelFormat = defineSetting<'default' | 'short' | 'medium' | 'long'
 });
 /** workbench.editor.wrapTabs (W69): tabs wrap into rows instead of scrolling (as Visual Studio's multiple rows). */
 export const wrapTabs = defineSetting<boolean>({ key: 'workbench.editor.wrapTabs', category: C, title: 'Wrap Tabs', type: 'boolean', default: false, description: 'Controls whether tabs should be wrapped over multiple lines when exceeding available space or whether a scrollbar should appear instead.' });
+/** workbench.editor.scrollToSwitchTabs (W74): the mouse wheel over the tabs switches between them. */
+export const scrollToSwitchTabs = defineSetting<boolean>({ key: 'workbench.editor.scrollToSwitchTabs', category: C, title: 'Scroll To Switch Tabs', type: 'boolean', default: false, description: 'Controls whether scrolling over tabs will open them or not. By default tabs will only reveal upon scrolling, but not open.' });

@@ -95,7 +95,7 @@ Legend: `[x]` done · `[ ]` to do.
 - [x] W71. workbench.editor.limit.enabled / value (closes the least recently used tabs)
 - [x] W72. workbench.editor.focusRecentEditorAfterClose
 - [x] W73. workbench.editor.closeOnFileDelete
-- [ ] W74. workbench.editor.scrollToSwitchTabs
+- [x] W74. workbench.editor.scrollToSwitchTabs
 - [ ] W75. workbench.editor.mouseBackForwardToNavigate
 - [ ] W76. workbench.editor.pinnedTabSizing (normal / compact / shrink)
 - [ ] W77. workbench.editor.showIcons
@@ -365,3 +365,4 @@ Legend: `[x]` done · `[ ]` to do.
 - 2026-10-22: W71. workbench.editor.limit.enabled / value: beyond the limit the least recently used tabs close as new ones open (pinned and unsaved tabs stay).
 - 2026-10-22: W72. workbench.editor.focusRecentEditorAfterClose: closing the active tab goes back to the tab used last (default), or with it off to its neighbour, as in VS Code.
 - 2026-10-22: W73. workbench.editor.closeOnFileDelete: a file deleted outside the studio keeps its tab (struck through, '(deleted)') as in VS Code, and saving writes it back; on, the tab closes. Deleting from the Explorer still closes it.
+- 2026-10-22: W74. workbench.editor.scrollToSwitchTabs: the mouse wheel over the tab strip switches to the next or previous tab instead of scrolling the strip.

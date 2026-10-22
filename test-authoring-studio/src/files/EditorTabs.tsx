@@ -12,12 +12,12 @@ import { useSettings } from '../vscode/settings';
 import { SELECT_IN_EXPLORER } from '../SolutionExplorer';
 /** Double-click on a tab (not a preview tab): the editor takes the window, side bar and panel hidden (VS Code). */
 export const TOGGLE_MAXIMIZED_EDITOR = 'tas:toggle-maximized-editor';
-import { useTabs, activateTab, closeOthers, closeToRight, closeToLeft, unpinAll, sortTabs, closeOfType, closeAll, closeSaved, moveTabTo, setPinned, keepTab, type EditorTab } from './tabs';
+import { useTabs, activateTab, closeOthers, closeToRight, closeToLeft, unpinAll, sortTabs, closeOfType, closeAll, closeSaved, moveTabTo, setPinned, keepTab, cycleTab, type EditorTab } from './tabs';
 import { fileType } from './fileTypes';
 import { api } from '../api';
 import { isBrowser } from './provider';
 import { tabDescription } from './tabLabel';
-import { wrapTabs } from '../vscode/editorManagement';
+import { scrollToSwitchTabs, wrapTabs } from '../vscode/editorManagement';
 import { untitledLabel } from './untitled';
 import { decorationBadges, decorationClass, decorationColors, useFileDecorations } from './decorations';
 import { untitledTabLabel, useUntitledLabels } from './untitledHint';
@@ -101,7 +101,7 @@ export default function EditorTabs({ onClose, onSplit, children }: { onClose: (f
     <ActionsSlot.Provider value={slot}>
       <div data-show-tabs={tabSettings.show()} data-tab-actions={tabSettings.actionLocation()} data-tab-sizing={tabSettings.sizing()} style={{ '--tab-fixed-width': `${tabSettings.fixedWidth()}px` } as React.CSSProperties} className={`editor-tabs ${tabSettings.highlightModified() ? 'highlight-modified' : ''} ${multiRow ? 'multi-row' : ''} ${pinnedRow && lastPinned >= 0 && lastPinned < tabs.length - 1 ? 'pinned-row' : ''} ${vo.colorTabs && featureOn('color-tabs') ? 'colorized' : ''}`} onDoubleClick={(e) => { if (featureOn('tabstrip-new') && !(e.target as HTMLElement).closest('.editor-tab, button, a, input, [role="toolbar"]')) runRider('new-scratch', 'menu'); }}>
         {overflow.left && <button className="tab-scroll" aria-label="Show previous tabs" onClick={() => reveal(-1)}><ChevronLeft size={14} /></button>}
-        <div className="tab-strip" role="group" aria-label="Open editors" ref={strip} onScroll={measure} onWheel={(e) => { if (strip.current && e.deltaY) strip.current.scrollLeft += e.deltaY; }}>
+        <div className="tab-strip" role="group" aria-label="Open editors" ref={strip} onScroll={measure} onWheel={(e) => { if (scrollToSwitchTabs() && e.deltaY) { cycleTab(e.deltaY > 0 ? 1 : -1); return; } if (strip.current && e.deltaY) strip.current.scrollLeft += e.deltaY; }}>
           {tabs.map((t: EditorTab, i: number) => {
             const { icon: Icon, color } = fileType(t.file);
             const selected = t.file === active;

@@ -1487,3 +1487,15 @@ test('W73 workbench.editor.closeOnFileDelete: deleted outside the studio, the ta
   await fs.rm(path.join(temp, 'Support/Hooks.cs'));
   await expect(page.locator('.editor-tab', { hasText: 'Hooks.cs' })).toHaveCount(0, { timeout: 15_000 });
 });
+
+test('W74 workbench.editor.scrollToSwitchTabs: the wheel over the tabs switches them', async ({ page }) => {
+  const activeTitle = () => page.locator('.editor-tab-label[aria-current="true"]').getAttribute('title');
+  await start(page, { 'workbench.editor.scrollToSwitchTabs': true, 'workbench.editor.openPositioning': 'last' });
+  await open(page, 'Steps/AuthSteps.cs');
+  await open(page, 'Steps/SearchSteps.cs');
+  await page.locator('.tab-strip').hover();
+  await page.mouse.wheel(0, -100);
+  await expect.poll(activeTitle).toBe('Steps/AuthSteps.cs');
+  await page.mouse.wheel(0, 100);
+  await expect.poll(activeTitle).toBe('Steps/SearchSteps.cs');
+});
