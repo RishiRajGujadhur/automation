@@ -71,7 +71,7 @@ Legend: `[x]` done · `[ ]` to do.
 - [x] W49. Activity bar at the top of the side bar (workbench.activityBar.location: top)
 - [x] W50. workbench.activityBar.iconClickBehavior (toggle / focus)
 - [x] W51. Side bar views as collapsible sections with headers and title actions (Explorer: Open Editors, folder, Outline, Timeline)
-- [ ] W52. Outline view (follow cursor, sort by position / name / category, filter on type)
+- [x] W52. Outline view (follow cursor, sort by position / name / category, filter on type)
 - [ ] W53. Timeline view: Local History and Git commits of the active file, open diff
 - [x] W54. Open Editors view (groups, dirty dot, close, Save All, Close All)
 - [ ] W55. View: Toggle Maximized Panel, Move Panel Left / Right / Bottom commands
@@ -345,3 +345,4 @@ Legend: `[x]` done · `[ ]` to do.
 - 2026-10-22: W49. workbench.activityBar.location gained VS Code's top: the icons run across the top of the primary side bar (overflow in the ☰ menu) and hide with it.
 - 2026-10-22: W50. workbench.activityBar.iconClickBehavior: clicking the icon of the side bar view already shown hides the side bar (toggle, VS Code's default; Search, Test Explorer and Git Changes now do this too) or focuses it (focus).
 - 2026-10-22: W51, W54. Side bar views get VS Code's collapsible sections (chevron, upper-case title, a count when collapsed, title actions on hover, state kept); the Explorer's first one is Open Editors: every open editor (active and preview marked, unsaved with a dot), click to switch, × to close, Save All and Close All.
+- 2026-10-22: W52. Explorer ▸ Outline: the active editor's symbols as a tree with VS Code's symbol icons; Follow Cursor marks the symbol at the caret; Sort By Position / Name / Category; a filter; a click goes to the symbol.

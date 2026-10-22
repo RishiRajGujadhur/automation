@@ -41,3 +41,13 @@
     small { color: var(--text-muted); font-size: 11.5px; overflow: hidden; text-overflow: ellipsis; }
   }
 }
+.view-pane-empty { margin: 4px 8px; color: var(--text-muted); font-size: 12px; list-style: none; }
+.view-pane-filter { width: calc(100% - 8px); margin: 2px 4px 4px; padding: 2px 6px; font: inherit; font-size: 12px; color: var(--text); background: var(--bg); border: 1px solid var(--border); border-radius: 3px; }
+.outline-tree {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  li { display: flex; height: 22px; border-radius: 3px; }
+  li.active { background: color-mix(in srgb, var(--accent, #0078d4) 22%, transparent); }
+  button { flex: 1; min-width: 0; display: flex; align-items: center; gap: 5px; border: 0; background: none; color: var(--text); font: inherit; font-size: 13px; text-align: left; cursor: pointer; white-space: nowrap; overflow: hidden; span:last-child { overflow: hidden; text-overflow: ellipsis; } }
+}

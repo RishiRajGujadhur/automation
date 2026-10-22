@@ -1119,3 +1119,27 @@ test('W51 / W54 Explorer view panes: Open Editors (collapsible, kept), close, Sa
   await page.reload();
   await expect(page.getByRole('region', { name: 'Open Editors' }).getByRole('button', { name: /OPEN EDITORS/ })).toHaveAttribute('aria-expanded', 'true');
 });
+
+test('W52 Outline view: symbols of the active editor, follows the cursor, sort, filter, click goes there', async ({ page }) => {
+  await fs.writeFile(path.join(temp, 'shapes.ts'), SHAPES);
+  await start(page);
+  const src = await open(page, 'shapes.ts');
+  const pane = page.getByRole('region', { name: 'Outline' });
+  await pane.getByRole('button', { name: /^OUTLINE/ }).click();
+  const tree = pane.getByRole('list', { name: 'Outline' });
+  await expect(tree.locator('li').first()).toContainText('Shape');
+  await expect(tree.locator('li')).toHaveCount(10);
+  // Follow Cursor: the symbol at the caret is marked.
+  await src.locator('.cm-line').nth(17).click();
+  await expect(tree.locator('li[aria-current="true"]')).toContainText('perimeter');
+  // A click goes to the symbol.
+  await tree.getByRole('button', { name: /^total/ }).click();
+  await expect.poll(() => caretLine(page)).toBe(22);
+  // Sort by name, then filter.
+  await pane.hover();
+  await pane.getByRole('button', { name: 'Sort By: Position' }).click();
+  await expect(tree.locator('li').first()).toContainText('area');
+  await pane.getByLabel('Filter outline').fill('sq');
+  await expect(tree.locator('li')).toHaveCount(1);
+  await expect(tree.locator('li')).toContainText('Square');
+});
