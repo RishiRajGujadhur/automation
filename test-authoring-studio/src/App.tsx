@@ -830,21 +830,22 @@ export default function App() {
   const hiddenInBasic = !!desktop && basic && !['Dashboard', 'Test Generator', 'Features'].includes(tab);
   // VS Code-style shell (activity bar, slim title bar, full-height editor) unless the classic tab layout is chosen.
   const vscode = prefs.layout !== 'classic';
-  const featureViewSwitch = (
+  const featureViewOptions = [
+    { id: 'editor', icon: null, label: 'Editor' },
+    { id: 'builder', icon: Blocks, label: 'Builder' },
+    { id: 'recorder', icon: Circle, label: 'Recorder' },
+    { id: 'spy', icon: ScanSearch, label: 'Spy' },
+  ].filter((v) => v.id === 'editor' || pageVisible(v.label === 'Builder' ? 'Scenario Builder' : v.label) || view === v.id);
+  const featureViewSwitch = featureViewOptions.length > 1 ? (
     <ToggleGroup.Root type="single" className="segmented" aria-label="Feature view" value={view === 'code' ? 'editor' : view} onValueChange={(v) => { if (v) withTransition(() => setView(v)); }}>
-      {[
-        { id: 'editor', icon: Code2, label: 'Editor' },
-        { id: 'builder', icon: Blocks, label: 'Builder' },
-        { id: 'recorder', icon: Circle, label: 'Recorder' },
-        { id: 'spy', icon: ScanSearch, label: 'Spy' },
-      ].filter((v) => v.id === 'editor' || pageVisible(v.label === 'Builder' ? 'Scenario Builder' : v.label) || view === v.id).map((v) => (
+      {featureViewOptions.map((v) => (
         <ToggleGroup.Item key={v.id} value={v.id} className="segmented-item" aria-label={v.label}>
-          <v.icon size={14} aria-hidden="true" />
+          {v.icon && <v.icon size={14} aria-hidden="true" />}
           {v.label}
         </ToggleGroup.Item>
       ))}
     </ToggleGroup.Root>
-  );
+  ) : null;
   const setMode = (mode: 'basic' | 'advanced') => {
     setPrefs({ mode });
     setNotice(desktop ? (mode === 'advanced' ? 'Advanced mode: every page is in the navigation.' : 'Basic mode: Dashboard, Test Generator and Playwright Recorder. Other pages stay reachable from Ctrl/Cmd+K.') : `Interface mode: ${mode}. Choose visible pages in Settings > Pages.`);
@@ -1487,11 +1488,7 @@ export default function App() {
       )}
       {guideOpen && <StudioTour onNavigate={navigateTour} onFinish={finishTour} />}
       <header className="app-header">
-        <div className="brand">
-          <span className="brand-word" aria-label="TestAuthoring Studio">
-            <span className="brand-accent">TestAuthoring</span>
-            <span className="brand-light"> Studio</span>
-          </span>
+        <div className="brand" role="img" aria-label="TestAuthoring Studio">
           <Badge tone="purple">LOCAL</Badge>
         </div>
         {/* window.menuBarVisibility = compact (VS Code, W44): a ☰ that shows the menus (the native menu on desktop). */}

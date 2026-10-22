@@ -29,6 +29,23 @@ for (const [theme, editorBackground] of Object.entries({
   });
 }
 
+test('Linear inspired theme styles the workspace and editor with accessible contrast', async ({ page }) => {
+  await prefs('linear')(page);
+  await page.goto('/#/features/editor');
+  await expect(page.getByText('Repository indexed')).toBeVisible();
+  await expect(page.locator('html')).toHaveAttribute('data-theme', 'linear');
+  await expect.poll(() => page.locator('.gherkin-editor .cm-editor').evaluate((el) => getComputedStyle(el).backgroundColor)).toBe('rgb(32, 33, 38)');
+  await expect(page.locator('.brand')).toHaveAttribute('aria-label', 'TestAuthoring Studio');
+  await expect(page.locator('.brand-word')).toHaveCount(0);
+  await expect(page.getByRole('radio', { name: 'Editor' }).locator('svg')).toHaveCount(0);
+  await page.keyboard.press('Control+,');
+  const dialog = page.getByRole('dialog', { name: 'Preferences' });
+  await dialog.getByRole('navigation', { name: 'Settings categories' }).getByRole('button', { name: 'Appearance' }).click();
+  await expect(dialog.getByRole('radio', { name: 'Linear Inspired' })).toHaveAttribute('aria-checked', 'true');
+  const accessibility = await new AxeBuilder({ page }).withTags(TAGS).analyze();
+  expect(accessibility.violations.map((violation) => `${violation.id}: ${violation.nodes.map((node) => `${node.target.join(' ')} ${node.failureSummary}`).join(', ')}`)).toEqual([]);
+});
+
 for (const theme of ['light', 'matrix', 'midnight', 'nord']) {
   test(`theme "${theme}" meets WCAG 2.2 AA on key pages`, async ({ page }) => {
     await prefs(theme)(page);
@@ -57,8 +74,8 @@ test('theme picker, editor theme, accent logo and native scrollbars', async ({ p
   const nav = dialog.getByRole('navigation', { name: 'Settings categories' });
   await nav.getByRole('button', { name: 'Appearance' }).click();
   await dialog.getByRole('radio', { name: 'teal' }).click();
-  const logo = await page.locator('.brand-accent').evaluate((el) => getComputedStyle(el).color);
-  expect(logo).toBe('rgb(95, 212, 196)'); // wordmark and vector mark use the teal accent #5fd4c4
+  const logo = await page.locator('.brand').evaluate((el) => getComputedStyle(el, '::before').backgroundColor);
+  expect(logo).toBe('rgb(95, 212, 196)'); // vector mark uses the teal accent #5fd4c4
   const scroll = await page.evaluate(() => getComputedStyle(document.documentElement).scrollbarColor);
   // Chromium reports scrollbar-color as color(srgb r g b / a); #5fd4c4 = 0.3725 0.8314 0.7686.
   expect(scroll).toMatch(/95, 212, 196|5fd4c4|0\.37\d* 0\.83\d* 0\.76/i);

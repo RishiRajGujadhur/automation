@@ -79,18 +79,18 @@ test('nested feature search preserves ancestry and new drafts use the selected f
       true,
     );
     await page.goto('/');
-    await expect(page.getByRole('button', { name: 'Create.feature', exact: true })).toHaveCount(2);
+    await expect(page.getByRole('button', { name: /^Create\.feature(?: |$)/ })).toHaveCount(2);
     await page
       .getByRole('button', { name: 'Collapse folder Features/Payroll', exact: true })
       .click();
-    await expect(page.getByRole('button', { name: 'Create.feature', exact: true })).toHaveCount(0);
+    await expect(page.getByRole('button', { name: 'Collapse folder Features/Payroll/Salary', exact: true })).toHaveCount(0);
     await page.getByRole('textbox', { name: 'Search Explorer' }).fill('payroll salary');
     await expect(
       page.getByRole('button', { name: 'Collapse folder Features/Payroll/Salary', exact: true }),
     ).toBeVisible();
-    await expect(page.getByRole('button', { name: 'Create.feature', exact: true })).toHaveCount(1);
-    await page.getByRole('button', { name: 'Create.feature', exact: true }).click();
-    await page.getByRole('radio', { name: 'Editor' }).click();
+    const salaryFeature = page.locator('.explorer-file[data-path="Features/Payroll/Salary/Create.feature"]');
+    await expect(salaryFeature).toBeVisible();
+    await salaryFeature.click();
     await expect(
       page.getByRole('heading', { name: 'Features/Payroll/Salary/Create.feature', exact: true }),
     ).toBeVisible();

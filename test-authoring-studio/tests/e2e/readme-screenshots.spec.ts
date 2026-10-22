@@ -62,3 +62,13 @@ test('capture Monokai inspired themes', async ({ page }) => {
   await page.keyboard.press('Escape');
   await page.screenshot({ path: path.join(out, 'web-monokai-light.png'), animations: 'disabled' });
 });
+
+test('capture Linear inspired theme', async ({ page }) => {
+  await page.addInitScript(() => {
+    localStorage.setItem('tas:prefs', JSON.stringify({ mode: 'advanced', layout: 'vscode', theme: 'linear', editorTheme: 'auto' }));
+  });
+  await page.goto('/#/features/editor');
+  await expect(page.getByText('Repository indexed')).toBeVisible({ timeout: 60_000 });
+  await page.evaluate(() => document.fonts.ready);
+  await page.screenshot({ path: path.join(out, 'web-linear-theme.png'), animations: 'disabled' });
+});

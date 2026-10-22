@@ -6,13 +6,14 @@ import * as tm from 'thememirror';
 import { usePrefs } from './radix2';
 
 /* ------------------------------------------------------------------ App themes */
-export type AppThemeId = 'studio' | 'midnight' | 'nord' | 'light' | 'matrix' | 'monokai' | 'monokai-machine' | 'monokai-octagon' | 'monokai-ristretto' | 'monokai-spectrum' | 'monokai-light';
+export type AppThemeId = 'studio' | 'midnight' | 'nord' | 'light' | 'matrix' | 'linear' | 'monokai' | 'monokai-machine' | 'monokai-octagon' | 'monokai-ristretto' | 'monokai-spectrum' | 'monokai-light';
 export const appThemes: { id: AppThemeId; label: string; description: string; dark: boolean; editor: EditorThemeId; swatch: [string, string, string] }[] = [
   { id: 'studio', label: 'Studio Dark', description: 'The default deep-indigo workspace.', dark: true, editor: 'studio-dark', swatch: ['#0b0e16', '#121722', '#aa94ff'] },
   { id: 'midnight', label: 'Midnight', description: 'Cool navy surfaces with softer contrast.', dark: true, editor: 'cobalt', swatch: ['#0a1426', '#10203a', '#7fb2ff'] },
   { id: 'nord', label: 'Nord', description: 'Arctic slate greys inspired by the Nord palette.', dark: true, editor: 'studio-dark', swatch: ['#2e3440', '#3b4252', '#88c0d0'] },
   { id: 'light', label: 'Light', description: 'Bright surfaces for daylight and print-like reading.', dark: false, editor: 'studio-light', swatch: ['#f6f7fb', '#ffffff', '#6d4ae0'] },
   { id: 'matrix', label: 'Matrix', description: 'Phosphor green on black, monospace everywhere.', dark: true, editor: 'matrix', swatch: ['#000000', '#03140a', '#00ff41'] },
+  { id: 'linear', label: 'Linear Inspired', description: 'Quiet graphite surfaces with restrained periwinkle and blue.', dark: true, editor: 'linear', swatch: ['#202126', '#2b2c33', '#8988c9'] },
   { id: 'monokai', label: 'Monokai Inspired', description: 'Warm charcoal with vivid yellow, coral and green syntax.', dark: true, editor: 'monokai', swatch: ['#272822', '#34352f', '#e6db74'] },
   { id: 'monokai-machine', label: 'Monokai Inspired · Machine', description: 'Cool blue charcoal with mint and amber accents.', dark: true, editor: 'monokai-machine', swatch: ['#1f252c', '#2b323b', '#7ddac5'] },
   { id: 'monokai-octagon', label: 'Monokai Inspired · Octagon', description: 'Muted plum surfaces with rose and lavender syntax.', dark: true, editor: 'monokai-octagon', swatch: ['#282433', '#352f40', '#e6a4c4'] },
@@ -66,7 +67,7 @@ const studioLight = tm.createTheme({
   ],
 });
 type MonokaiPalette = { background: string; foreground: string; gutter: string; keyword: string; string: string; comment: string; number: string; type: string; property: string; operator: string; selection: string; line: string; invalid: string; light?: boolean };
-const monokaiEditor = (p: MonokaiPalette) => tm.createTheme({
+const paletteEditor = (p: MonokaiPalette) => tm.createTheme({
   variant: p.light ? 'light' : 'dark',
   settings: { background: p.background, foreground: p.foreground, caret: p.keyword, selection: p.selection, lineHighlight: p.line, gutterBackground: p.background, gutterForeground: p.gutter },
   styles: [
@@ -89,13 +90,15 @@ const monokaiPalettes = {
   'monokai-spectrum': { background: '#18191b', foreground: '#f5f5f2', gutter: '#a3a6a7', keyword: '#ff75a0', string: '#f2dd83', comment: '#a3a6a7', number: '#b5e56f', type: '#78dce8', property: '#f2dd83', operator: '#f5f5f2', selection: '#3c4042', line: '#252629', invalid: '#ff75a0' },
   'monokai-light': { background: '#fffdf8', foreground: '#302c2d', gutter: '#665f60', keyword: '#a52d67', string: '#6b5b00', comment: '#665f60', number: '#426c19', type: '#165c75', property: '#795800', operator: '#38343a', selection: '#e6dbcf', line: '#f5f1e8', invalid: '#a42b40', light: true },
 } satisfies Record<string, MonokaiPalette>;
-export type EditorThemeId = 'auto' | 'studio-dark' | 'one-dark' | 'matrix' | 'studio-light' | keyof typeof monokaiPalettes | 'amy' | 'ayu-light' | 'barf' | 'bespin' | 'birds-of-paradise' | 'boys-and-girls' | 'clouds' | 'cobalt' | 'cool-glow' | 'dracula' | 'espresso' | 'noctis-lilac' | 'rose-pine-dawn' | 'smoothy' | 'solarized-light' | 'tomorrow';
+const linearEditor = paletteEditor({ background: '#202126', foreground: '#e3e4eb', gutter: '#a2a5b4', keyword: '#c0a9ee', string: '#a8d8c3', comment: '#a2a5b4', number: '#d7c393', type: '#a9c6ed', property: '#c7bee9', operator: '#d6d8e2', selection: '#424452', line: '#2b2c33', invalid: '#efa4ae' });
+export type EditorThemeId = 'auto' | 'studio-dark' | 'one-dark' | 'matrix' | 'studio-light' | 'linear' | keyof typeof monokaiPalettes | 'amy' | 'ayu-light' | 'barf' | 'bespin' | 'birds-of-paradise' | 'boys-and-girls' | 'clouds' | 'cobalt' | 'cool-glow' | 'dracula' | 'espresso' | 'noctis-lilac' | 'rose-pine-dawn' | 'smoothy' | 'solarized-light' | 'tomorrow';
 export const editorThemes: { id: Exclude<EditorThemeId, 'auto'>; label: string; dark: boolean; ext: Extension; source: string }[] = [
   { id: 'studio-dark', label: 'Studio Dark', dark: true, ext: studioDark, source: 'Studio (WCAG AA)' },
   { id: 'one-dark', label: 'One Dark', dark: true, ext: oneDark, source: 'CodeMirror' },
   { id: 'matrix', label: 'Matrix', dark: true, ext: matrix, source: 'Studio' },
   { id: 'studio-light', label: 'Studio Light', dark: false, ext: studioLight, source: 'Studio (WCAG AA)' },
-  ...Object.entries(monokaiPalettes).map(([id, palette]) => ({ id: id as keyof typeof monokaiPalettes, label: appThemes.find((theme) => theme.id === id)?.label ?? id, dark: !('light' in palette && palette.light), ext: monokaiEditor(palette), source: 'Studio · Monokai inspired' })),
+  { id: 'linear', label: 'Linear Inspired', dark: true, ext: linearEditor, source: 'Studio · Linear inspired' },
+  ...Object.entries(monokaiPalettes).map(([id, palette]) => ({ id: id as keyof typeof monokaiPalettes, label: appThemes.find((theme) => theme.id === id)?.label ?? id, dark: !('light' in palette && palette.light), ext: paletteEditor(palette), source: 'Studio · Monokai inspired' })),
   { id: 'amy', label: 'Amy', dark: true, ext: tm.amy, source: 'ThemeMirror' },
   { id: 'barf', label: 'Barf', dark: true, ext: tm.barf, source: 'ThemeMirror' },
   { id: 'bespin', label: 'Bespin', dark: true, ext: tm.bespin, source: 'ThemeMirror' },

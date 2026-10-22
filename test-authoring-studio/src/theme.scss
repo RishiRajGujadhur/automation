@@ -68,6 +68,10 @@
   --bg: #272822; --surface: #34352f; --surface-2: #2c2d27; --surface-3: #41423888;
   --chrome: #20211d; --border: #55564b; --text: #e8e8df; --text-strong: #f8f8f2; --text-muted: #bcbba9;
 }
+:root[data-theme='linear'] {
+  --bg: #202126; --surface: #2b2c33; --surface-2: #25262c; --surface-3: #38394488;
+  --chrome: #1b1c21; --border: #494b58; --text: #d7d9e2; --text-strong: #f1f1f5; --text-muted: #adafbd;
+}
 :root[data-theme='monokai-machine'] {
   --bg: #1f252c; --surface: #2b323b; --surface-2: #242c34; --surface-3: #3a465088;
   --chrome: #1a2026; --border: #475660; --text: #dce4e8; --text-strong: #f0f4f5; --text-muted: #aebfc7;
@@ -221,7 +225,6 @@
   }
   .nav-tab,
   .workspace-breadcrumb li,
-  .brand-light,
   .stepper-step,
   .field-label,
   .settings-nav-item,
@@ -675,6 +678,7 @@
 :root[data-theme='midnight'],
 :root[data-theme='nord'],
 :root[data-theme='matrix'],
+:root[data-theme='linear'],
 :root[data-theme^='monokai']:not([data-theme='monokai-light']) {
   .nav-tab.active,
   .settings-nav-item.active,
@@ -707,6 +711,7 @@
 // Links on dark themes: a lightened accent keeps ≥ 4.5:1 on mid-tone surfaces such as Nord.
 :root[data-theme='midnight'],
 :root[data-theme='nord'],
+:root[data-theme='linear'],
 :root[data-theme^='monokai']:not([data-theme='monokai-light']) {
   .text-button,
   a:not(.button) {
@@ -730,6 +735,7 @@
 :root[data-theme='midnight'],
 :root[data-theme='nord'],
 :root[data-theme='matrix'],
+:root[data-theme='linear'],
 :root[data-theme^='monokai']:not([data-theme='monokai-light']) {
   .kw,
   .badge.purple {
@@ -742,6 +748,7 @@
 :root[data-theme='midnight'],
 :root[data-theme='nord'],
 :root[data-theme='matrix'],
+:root[data-theme='linear'],
 :root[data-theme^='monokai']:not([data-theme='monokai-light']) {
   .segmented-item[data-state='on'],
   .segmented-item[data-state='active'],
@@ -773,18 +780,9 @@
   color: var(--text-strong) !important;
 }
 
-// ---- Text-only wordmark (follows the accent) ----
+// ---- Compact logo ----
 .brand {
   gap: 10px;
-}
-.brand-word {
-  font-size: 15px;
-  font-weight: 700;
-  letter-spacing: -0.3px;
-  white-space: nowrap;
-}
-.brand-accent {
-  color: var(--accent-text, var(--accent));
 }
 .button.primary {
   color: var(--on-accent, #fff) !important;
@@ -858,12 +856,6 @@
   border: 1px solid #ffffff33;
 }
 @media (max-width: 640px) {
-  .brand > span.brand-word {
-    display: inline !important;
-    .brand-light {
-      display: none;
-    }
-  }
   .mode-switch {
     display: none;
   }

@@ -806,13 +806,14 @@ html[data-side-bar='right'] .app-body {
     .guide-button { font-size: 0; gap: 0; padding-inline: 7px; }
   }
 }
-// Below 1700 px: the product name shortens to "TA" (VS Code shows only its icon there) and the page's section crumb goes.
+// Below 1700 px: omit the page's section crumb to preserve editor space.
 @media (max-width: 1700px) {
   :root[data-layout='vscode'] .app-header {
-    .brand-word { font-size: 0; }
-    .brand-word .brand-accent::before { content: 'TA'; font-size: 15px; }
     .crumb-section { display: none; }
   }
+}
+:root[data-layout='vscode'] .app-header .segmented-item[aria-label='Editor'] {
+  font-size: 11px;
 }
 
 // window.menuBarVisibility (W44): compact, toggle and hidden keep the menus out until they are revealed.

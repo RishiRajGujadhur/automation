@@ -11,7 +11,7 @@ test('fresh web workbench shows the editor and lets users enable pages in Settin
   await expect(activity.getByRole('button', { name: 'Dashboard' })).toHaveCount(0);
   await expect(activity.getByRole('button', { name: 'Test Generator' })).toHaveCount(0);
   await expect(activity.getByRole('button', { name: 'Playwright Recorder' })).toHaveCount(0);
-  await expect(page.getByRole('radio', { name: 'Editor' })).toBeVisible();
+  await expect(page.getByRole('radiogroup', { name: 'Feature view' })).toHaveCount(0);
   await expect(page.getByRole('radio', { name: 'Builder' })).toHaveCount(0);
 
   await page.keyboard.press('Control+,');
@@ -25,6 +25,8 @@ test('fresh web workbench shows the editor and lets users enable pages in Settin
   await expect(activity.getByRole('button', { name: 'Dashboard' })).toBeVisible();
   await expect(activity.getByRole('button', { name: 'Test Generator' })).toBeVisible();
   await expect(activity.getByRole('button', { name: 'Playwright Recorder' })).toBeVisible();
+  await expect(page.getByRole('radio', { name: 'Editor' })).toBeVisible();
+  await expect(page.getByRole('radio', { name: 'Editor' }).locator('svg')).toHaveCount(0);
   await activity.getByRole('button', { name: 'Dashboard' }).click();
   await expect(page).toHaveURL(/#\/dashboard$/);
 

@@ -67,7 +67,13 @@ test('feature editor full-screen toggle and compact header', async ({ page }) =>
   const header = page.getByRole('banner');
   expect((await header.boundingBox())!.height).toBeLessThanOrEqual(52);
   await expect(page.getByRole('navigation', { name: 'Breadcrumb' }).getByRole('heading', { level: 1 })).toBeVisible();
-  await expect(page.getByRole('radio', { name: 'Editor' })).toBeVisible();
+  await expect(page.locator('.brand-word')).toHaveCount(0);
+  await expect(page.getByRole('radio', { name: 'Editor' }).locator('svg')).toHaveCount(0);
+  await page.keyboard.press('Control+,');
+  const settings = page.getByRole('dialog', { name: 'Preferences' });
+  await settings.getByRole('navigation', { name: 'Settings categories' }).getByRole('button', { name: 'Buttons' }).click();
+  await settings.locator('#setting-workbench-controls-editor-fullscreen').click();
+  await page.keyboard.press('Escape');
   await page.getByRole('button', { name: 'Full screen editor' }).click();
   const editor = page.locator('.gherkin-editor');
   await expect(editor).toHaveClass(/is-fullscreen/);
