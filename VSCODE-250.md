@@ -97,7 +97,7 @@ Legend: `[x]` done · `[ ]` to do.
 - [x] W73. workbench.editor.closeOnFileDelete
 - [x] W74. workbench.editor.scrollToSwitchTabs
 - [x] W75. workbench.editor.mouseBackForwardToNavigate
-- [ ] W76. workbench.editor.pinnedTabSizing (normal / compact / shrink)
+- [x] W76. workbench.editor.pinnedTabSizing (normal / compact / shrink)
 - [ ] W77. workbench.editor.showIcons
 - [ ] W78. workbench.editor.revealIfOpen
 - [ ] W79. Editor actions "…" menu: Show Opened Editors, Close All, Close Saved, Configure Editors, Toggle Keep Editors Open
@@ -367,3 +367,4 @@ Legend: `[x]` done · `[ ]` to do.
 - 2026-10-22: W73. workbench.editor.closeOnFileDelete: a file deleted outside the studio keeps its tab (struck through, '(deleted)') as in VS Code, and saving writes it back; on, the tab closes. Deleting from the Explorer still closes it.
 - 2026-10-22: W74. workbench.editor.scrollToSwitchTabs: the mouse wheel over the tab strip switches to the next or previous tab instead of scrolling the strip.
 - 2026-10-22: W75. workbench.editor.mouseBackForwardToNavigate (default on): mouse buttons 4 and 5 go Back and Forward through the editor locations, instead of the browser's history.
+- 2026-10-22: W76. workbench.editor.pinnedTabSizing: pinned tabs as wide as normal ones, compact (icon only, name in the tooltip) or shrunk to a fixed width.

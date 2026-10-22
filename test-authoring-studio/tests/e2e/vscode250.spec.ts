@@ -1515,3 +1515,19 @@ test('W75 workbench.editor.mouseBackForwardToNavigate: mouse buttons 4 / 5 go Ba
   await mouse(4);
   await expect.poll(activeTitle).toBe('Steps/SearchSteps.cs');
 });
+
+test('W76 workbench.editor.pinnedTabSizing: compact pinned tabs show their icon only', async ({ page }) => {
+  await start(page);
+  await open(page, 'Steps/AuthSteps.cs');
+  await page.locator('.editor-tab-label', { hasText: 'AuthSteps.cs' }).click({ button: 'right' });
+  await page.getByRole('menuitem', { name: 'Pin' }).click();
+  const tab = page.locator('.editor-tab.pinned');
+  const normal = (await tab.boundingBox())!.width;
+  for (const [mode, max] of [['compact', 64], ['shrink', 81]] as const) {
+    await page.evaluate((m) => localStorage.setItem('tas:settings', JSON.stringify({ 'workbench.editor.pinnedTabSizing': m })), mode);
+    await page.reload();
+    await expect(tab).toBeVisible();
+    const w = (await tab.boundingBox())!.width;
+    expect(w).toBeLessThan(Math.min(max, normal));
+  }
+});

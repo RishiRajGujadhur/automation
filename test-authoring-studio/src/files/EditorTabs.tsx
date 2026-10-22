@@ -17,7 +17,7 @@ import { fileType } from './fileTypes';
 import { api } from '../api';
 import { isBrowser } from './provider';
 import { tabDescription } from './tabLabel';
-import { scrollToSwitchTabs, wrapTabs } from '../vscode/editorManagement';
+import { pinnedTabSizing, scrollToSwitchTabs, wrapTabs } from '../vscode/editorManagement';
 import { untitledLabel } from './untitled';
 import { decorationBadges, decorationClass, decorationColors, useFileDecorations } from './decorations';
 import { untitledTabLabel, useUntitledLabels } from './untitledHint';
@@ -99,7 +99,7 @@ export default function EditorTabs({ onClose, onSplit, children }: { onClose: (f
 
   return (
     <ActionsSlot.Provider value={slot}>
-      <div data-show-tabs={tabSettings.show()} data-tab-actions={tabSettings.actionLocation()} data-tab-sizing={tabSettings.sizing()} style={{ '--tab-fixed-width': `${tabSettings.fixedWidth()}px` } as React.CSSProperties} className={`editor-tabs ${tabSettings.highlightModified() ? 'highlight-modified' : ''} ${multiRow ? 'multi-row' : ''} ${pinnedRow && lastPinned >= 0 && lastPinned < tabs.length - 1 ? 'pinned-row' : ''} ${vo.colorTabs && featureOn('color-tabs') ? 'colorized' : ''}`} onDoubleClick={(e) => { if (featureOn('tabstrip-new') && !(e.target as HTMLElement).closest('.editor-tab, button, a, input, [role="toolbar"]')) runRider('new-scratch', 'menu'); }}>
+      <div data-pinned-sizing={pinnedTabSizing()} data-show-tabs={tabSettings.show()} data-tab-actions={tabSettings.actionLocation()} data-tab-sizing={tabSettings.sizing()} style={{ '--tab-fixed-width': `${tabSettings.fixedWidth()}px` } as React.CSSProperties} className={`editor-tabs ${tabSettings.highlightModified() ? 'highlight-modified' : ''} ${multiRow ? 'multi-row' : ''} ${pinnedRow && lastPinned >= 0 && lastPinned < tabs.length - 1 ? 'pinned-row' : ''} ${vo.colorTabs && featureOn('color-tabs') ? 'colorized' : ''}`} onDoubleClick={(e) => { if (featureOn('tabstrip-new') && !(e.target as HTMLElement).closest('.editor-tab, button, a, input, [role="toolbar"]')) runRider('new-scratch', 'menu'); }}>
         {overflow.left && <button className="tab-scroll" aria-label="Show previous tabs" onClick={() => reveal(-1)}><ChevronLeft size={14} /></button>}
         <div className="tab-strip" role="group" aria-label="Open editors" ref={strip} onScroll={measure} onWheel={(e) => { if (scrollToSwitchTabs() && e.deltaY) { cycleTab(e.deltaY > 0 ? 1 : -1); return; } if (strip.current && e.deltaY) strip.current.scrollLeft += e.deltaY; }}>
           {tabs.map((t: EditorTab, i: number) => {
