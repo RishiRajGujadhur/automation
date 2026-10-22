@@ -30,3 +30,5 @@ export const pinnedTabSizing = defineSetting<'normal' | 'compact' | 'shrink'>({
 });
 /** workbench.editor.showIcons (W77): file icons in the tabs. */
 export const showTabIcons = defineSetting<boolean>({ key: 'workbench.editor.showIcons', category: C, title: 'Show Icons', type: 'boolean', default: true, description: 'Controls whether opened editors should show with an icon or not.' });
+/** workbench.editor.revealIfOpen (W78): a file already open in another editor group is shown there. */
+export const revealIfOpen = defineSetting<boolean>({ key: 'workbench.editor.revealIfOpen', category: C, title: 'Reveal If Open', type: 'boolean', default: false, description: 'Controls whether an editor is revealed in any of the visible groups if opened. If disabled, an editor will prefer to open in the currently active editor group.' });

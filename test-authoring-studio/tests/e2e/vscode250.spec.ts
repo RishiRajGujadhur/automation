@@ -1542,3 +1542,22 @@ test('W77 workbench.editor.showIcons', async ({ page }) => {
   await expect(page.locator('.editor-tab-label', { hasText: 'AuthSteps.cs' })).toBeVisible();
   await expect(icon).toBeHidden();
 });
+
+test('W78 workbench.editor.revealIfOpen: a file open in the side group is shown there, not opened again', async ({ page }) => {
+  const sideOpen = async () => { await page.keyboard.press('Control+p'); await quickBox(page).fill('searchsteps'); await expect(rows(page).first()).toContainText('SearchSteps.cs'); await page.keyboard.press('Control+Enter'); };
+  const quickOpen = async () => { await page.keyboard.press('Control+p'); await quickBox(page).fill('searchsteps'); await expect(rows(page).first()).toContainText('SearchSteps.cs'); await page.keyboard.press('Enter'); };
+  const mainTab = page.getByRole('group', { name: 'Open editors' }).locator('.editor-tab', { hasText: 'SearchSteps.cs' });
+  await start(page, { 'workbench.editor.revealIfOpen': true });
+  await open(page, 'Steps/AuthSteps.cs');
+  await sideOpen();
+  await expect(page.getByLabel('Source of Steps/SearchSteps.cs')).toBeVisible();
+  await quickOpen();
+  await page.waitForTimeout(500);
+  await expect(mainTab).toHaveCount(0);
+  // Off (the default): it opens in the main group too.
+  await page.evaluate(() => localStorage.setItem('tas:settings', '{}'));
+  await page.reload();
+  await expect(page.getByLabel('Source of Steps/SearchSteps.cs')).toBeVisible();
+  await quickOpen();
+  await expect(mainTab).toHaveCount(1);
+});

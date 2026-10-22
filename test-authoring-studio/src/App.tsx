@@ -94,7 +94,7 @@ import { openQuickInput, openQuickPick } from './quickinput/store';
 import { commandCenter, menuBarVisibility, revealMenuBar } from './vscode/menuBar';
 import { openCommandPalette, openQuickOpen, runPaletteCommand, setPaletteCommands, type PaletteEntry } from './quickinput/providers';
 import { setOpenViews } from './quickinput/help';
-import { editorPreview, mouseBackForward } from './vscode/editorManagement';
+import { editorPreview, mouseBackForward, revealIfOpen } from './vscode/editorManagement';
 import { customizeLayout, setLayoutParts, resetLayoutSettings } from './quickinput/layoutPick';
 import { CLOSE_EDITOR_EVENT } from './quickinput/editors';
 import { SelectorCatalogue, BackgroundCatalogue } from './Catalogues';
@@ -337,6 +337,12 @@ export default function App() {
   const editFileRef = useRef<(file: string, line?: number, column?: number, preview?: boolean) => void>(() => {});
   useEffect(() => { const h = (e: Event) => { const d = (e as CustomEvent<{ file: string; line: number; column?: number; preview?: boolean }>).detail; editFileRef.current(d.file, d.line, d.column, !!d.preview); }; window.addEventListener('tas:open-location', h); return () => window.removeEventListener('tas:open-location', h); }, []);
   const editFile = (file: string, line?: number, column?: number, preview = false) => {
+    // workbench.editor.revealIfOpen (W78): a file open only in the side group is shown there.
+    if (revealIfOpen() && !getTabs().tabs.some((t) => t.file === file) && (splitTabs.includes(file) || splitFile === file)) {
+      setSplitActive(file);
+      if (line) setTimeout(() => reveal(file, line, column ?? 1), 60);
+      return;
+    }
     const kind = kindOf(file);
     if (line) setCodeLines((l) => ({ ...l, [file]: { line, column } }));
     openTab(file, kind, preview);
