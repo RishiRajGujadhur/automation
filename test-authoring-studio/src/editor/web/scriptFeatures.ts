@@ -1,10 +1,13 @@
-import { autocompletion, type Completion, type CompletionContext, type CompletionResult } from '@codemirror/autocomplete';
+import { autocompletion, snippet, type Completion, type CompletionContext, type CompletionResult } from '@codemirror/autocomplete';
 import { linter, type Diagnostic } from '@codemirror/lint';
 import { EditorView, hoverTooltip, keymap } from '@codemirror/view';
 import { Prec } from '@codemirror/state';
 import type { Extension } from '@codemirror/state';
 import { api } from '../../api';
 import { gateSource } from '../../vscode/suggestions';
+import { doComplete } from '@vscode/emmet-helper';
+import { TextDocument } from 'vscode-languageserver-textdocument';
+import { cmSnippet } from './markupFeatures';
 
 /**
  * TypeScript / JavaScript in the editor (FRONTEND-100.md): the TypeScript service's diagnostics (unused code faded),
@@ -50,6 +53,25 @@ async function complete(file: string, ctx: CompletionContext): Promise<Completio
   return { from: r.from ?? word?.from ?? ctx.pos, options, validFor: /^[\w$]*$/ };
 }
 
+/** Offer React-compatible Emmet snippets when a structural abbreviation is explicitly typed. */
+function jsxEmmetComplete(file: string, ctx: CompletionContext): CompletionResult | null {
+  if (!/\.(jsx|tsx)$/i.test(file)) return null;
+  const document = TextDocument.create(file, 'jsx', 1, ctx.state.doc.toString());
+  const items = doComplete(document, document.positionAt(ctx.pos), 'jsx', {})?.items ?? [];
+  const options: Completion[] = [];
+  let from = ctx.pos;
+  for (const item of items) {
+    const edit = item.textEdit;
+    if (!edit || !('range' in edit) || !/[>+*#.$\[\]{}^]/.test(item.label)) continue;
+    const start = document.offsetAt(edit.range.start);
+    from = Math.min(from, start);
+    options.push({ label: item.label, type: 'type', detail: 'Emmet', info: typeof item.documentation === 'string' ? item.documentation : undefined,
+      apply: (view: EditorView) => snippet(cmSnippet(edit.newText.replace(/\t/g, '  ')))(view, null, start, document.offsetAt(edit.range.end)),
+    });
+  }
+  return options.length ? { from, options } : null;
+}
+
 const quickInfo = (file: string) => hoverTooltip(async (view, pos) => {
   const r = await api<{ text: string; doc: string; from: number; to: number } | null>('/web/quickinfo', { file, source: view.state.doc.toString(), pos }).catch(() => null);
   if (!r?.text) return null;
@@ -88,7 +110,7 @@ export function scriptFeatures(file: string): Extension[] {
   return [
     jsdocOnEnter(file),
     scriptLinter(file),
-    autocompletion({ override: [gateSource((ctx) => complete(file, ctx))], activateOnTyping: true, maxRenderedOptions: 80, icons: true }),
+    autocompletion({ override: [gateSource((ctx) => complete(file, ctx)), gateSource((ctx) => jsxEmmetComplete(file, ctx))], activateOnTyping: true, maxRenderedOptions: 80, icons: true }),
     quickInfo(file),
   ];
 }

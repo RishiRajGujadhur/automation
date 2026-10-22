@@ -148,6 +148,16 @@ test('4: expands JSX Emmet with React className attributes', async ({ page, requ
     await page.getByRole('menuitem', { name: 'Wrap JSX with Emmet Abbreviation…' }).click();
     await expect(editor).toContainText('<section className="card">');
     await expect(editor).toContainText('<p>Hello</p>');
+    await page.evaluate(() => {
+      const view = (window as unknown as { __activeEditor: () => { view: { state: { doc: { length: number } }; dispatch(change: unknown): void; focus(): void } } }).__activeEditor().view;
+      view.dispatch({ changes: { from: 0, to: view.state.doc.length, insert: 'ul>li.item*2' }, selection: { anchor: 'ul>li.item*2'.length } });
+      view.focus();
+    });
+    await page.keyboard.press('Control+Space');
+    const emmetOption = page.locator('.cm-tooltip-autocomplete li').filter({ has: page.locator('.cm-completionLabel', { hasText: 'ul>li.item*2' }) }).first();
+    await expect(emmetOption).toContainText('Emmet');
+    await emmetOption.click();
+    await expect(editor).toContainText('className="item"');
   } finally {
     await request.post('/api/workspace', { data: previous });
     await fs.rm(root, { recursive: true, force: true, maxRetries: 5 });
