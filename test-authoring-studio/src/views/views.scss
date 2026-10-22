@@ -104,3 +104,7 @@ html[data-tree-guides='onHover'] .sidebar:hover .folder-children[style*='--guide
   .crumb-part { display: inline-flex; align-items: center; gap: 4px; padding: 0 4px; border: 0; border-radius: 3px; background: transparent; color: inherit; font-size: 12px; cursor: pointer; .codicon { font-size: 13px; } }
   .crumb-part:hover, .crumb-part:focus-visible { background: color-mix(in srgb, var(--text) 10%, transparent); color: var(--text); }
 }
+// Explorer problem decorations (W92).
+.se-problems { margin-left: auto; padding-right: 4px; font-size: 11px; font-weight: 600; &.deco-error { color: #f88070; } &.deco-warning { color: #cca700; } }
+.explorer-folder.se-folder-deco.deco-error > span { color: #f88070; }
+.explorer-folder.se-folder-deco.deco-warning > span { color: #cca700; }

@@ -30,3 +30,4 @@ import './menuBar';
 import './focusParts';
 import './editorManagement';
 import './appearance';
+import './explorer';

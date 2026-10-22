@@ -1810,3 +1810,21 @@ test('W91 Explorer title actions: New File… (VS Code input box, validated), Re
   await explorer.getByRole('button', { name: 'Refresh Explorer' }).click();
   await expect(explorer.getByRole('button', { name: 'Outside.cs', exact: true })).toBeVisible();
 });
+
+test('W92 Explorer problem decorations: red names with counts, folders too (explorer.decorations.*)', async ({ page }) => {
+  await fs.mkdir(path.join(temp, 'web'), { recursive: true });
+  await fs.writeFile(path.join(temp, 'web/bad.ts'), 'const n: number = "x";\nconst m: number = "y";\n');
+  await start(page);
+  await open(page, 'web/bad.ts');
+  const side = page.locator('#feature-sidebar');
+  const row = side.getByRole('button', { name: /^bad\.ts/ }).first();
+  await expect(row.locator('.se-problems')).toHaveText('2', { timeout: 30_000 });
+  await expect(row.locator('.se-deco')).toHaveClass(/deco-error/);
+  await expect(side.getByRole('button', { name: /folder web$/ }).first()).toHaveClass(/deco-error/);
+  await page.evaluate(() => localStorage.setItem('tas:settings', JSON.stringify({ 'explorer.decorations.badges': false, 'explorer.decorations.colors': false })));
+  await page.reload();
+  await expect(page.getByLabel('Source of web/bad.ts')).toBeVisible();
+  await page.waitForTimeout(2000);
+  await expect(side.locator('.se-problems')).toHaveCount(0);
+  await expect(side.locator('.deco-error')).toHaveCount(0);
+});

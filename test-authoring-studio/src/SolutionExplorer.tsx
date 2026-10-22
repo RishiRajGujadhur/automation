@@ -1,3 +1,5 @@
+import { useFileDecorations, decoratedFiles } from './files/decorations';
+import { explorerDeco } from './vscode/explorer';
 import { openInputBox } from './quickinput/store';
 import { treeIndent } from './vscode/workbenchLayout';
 import { useSettings } from './vscode/settings';
@@ -101,6 +103,9 @@ export default function SolutionExplorer({ features, revision, activeFile, query
   useSettings();
   // workbench.tree.indent (W59): the indent of each tree level.
   const IND = treeIndent();
+  // Problems of the open files (W92): file names coloured with a count; folders take the colour of what they hold.
+  const deco = useFileDecorations();
+  const folderDeco = (folder: string) => { let w = false; for (const f of decoratedFiles()) if (f.startsWith(`${folder}/`)) { const d = deco(f); if (d.errors) return 'se-folder-deco deco-error'; if (d.warnings) w = true; } return w ? 'se-folder-deco deco-warning' : ''; };
   // After a rename, copy or delete the tree reloads itself too (not only when the index revision changes).
   const loads = useRef(0);
   const loadSolution = () => { const n = ++loads.current; api<Solution>('/solution').then((s) => { if (n === loads.current) setSolution(s); }).catch(() => {}); };
@@ -402,8 +407,10 @@ export default function SolutionExplorer({ features, revision, activeFile, query
               onAuxClick={(e) => { if (e.button === 1 && featureOn('explorer-middle-click')) { e.preventDefault(); open(path); setTimeout(() => keepTab(path)); } }}
             >
               <Icon size={14} aria-hidden="true" style={{ color: extra?.linked ? undefined : fileType(path).color }} />
-              <span>{featureOn('explorer-search-mark') ? markQuery(name, query) : name}</span>
+              <span className={explorerDeco.colors() ? `se-deco ${(() => { const d = deco(path); return d.errors ? 'deco-error' : d.warnings ? 'deco-warning' : ''; })()}` : undefined}>{featureOn('explorer-search-mark') ? markQuery(name, query) : name}</span>
               {extra?.note && <small>{extra.note}</small>}
+              {/* VS Code's problem badge (W92): the file's errors and warnings. */}
+              {explorerDeco.badges() && (() => { const d = deco(path); const n = d.errors + d.warnings; return n ? <span className={`se-problems ${d.errors ? 'deco-error' : 'deco-warning'}`} aria-label={`${d.errors} errors, ${d.warnings} warnings`}>{n > 9 ? '9+' : n}</span> : null; })()}
             </button>}
             {gitFiles.has(path) && !extra?.linked && <span className={`se-git se-git-${gitFiles.get(path) === '?' ? 'u' : gitFiles.get(path)!.toLowerCase()}`} title={{ M: 'Modified', A: 'Added', D: 'Deleted', R: 'Renamed', U: 'Conflict', '?': 'Untracked' }[gitFiles.get(path)!] ?? 'Changed'} aria-label={`Git: ${{ M: 'modified', A: 'added', D: 'deleted', R: 'renamed', U: 'conflict', '?': 'untracked' }[gitFiles.get(path)!] ?? 'changed'}`}>{gitFiles.get(path) === '?' ? 'U' : gitFiles.get(path)}</span>}
             {unsaved && <span className="se-dirty" role="img" title="Unsaved changes" aria-label={`${name} has unsaved changes`}>●</span>}
@@ -445,7 +452,7 @@ export default function SolutionExplorer({ features, revision, activeFile, query
                 onDragOver={(e) => { if (onFileOp && featureOn('drag-move') && e.dataTransfer.types.includes('application/x-tas-path')) { e.preventDefault(); e.dataTransfer.dropEffect = 'move'; setDropOn(n.path); if (!expanded && featureOn('drag-expand') && !hoverOpen.current) hoverOpen.current = window.setTimeout(() => { toggle(n.path, true); hoverOpen.current = 0; }, 600); } }}
                 onDragLeave={() => { setDropOn(null); clearTimeout(hoverOpen.current); hoverOpen.current = 0; }}
                 onDrop={(e) => { setDropOn(null); const from = e.dataTransfer.getData('application/x-tas-path'); if (!from || !onFileOp || !featureOn('drag-move')) return; e.preventDefault(); const to = join(n.path, from.split('/').pop()!); if (to === from || dirOf(from) === n.path) return; void (onConfirm ? onConfirm({ title: `Move ${from.split('/').pop()}?`, description: `${from} moves to ${n.path}/.`, confirm: 'Move' }) : Promise.resolve(window.confirm(`Move ${from} to ${n.path}/?`))).then((ok) => { if (ok) void onFileOp({ kind: 'rename', from, to }); }); }}>
-                {renaming === n.path ? <span className="explorer-folder" style={{ paddingLeft: 4 + depth * IND }}><Folder size={14} />{renameBox(n.path, true)}</span> : <button className={`explorer-folder ${clip?.mode === 'cut' && clip.path === n.path ? 'cut' : ''}`} style={{ paddingLeft: 4 + depth * IND }} title={featureOn('folder-count') ? `${n.path} · ${folderCount(n.path)} file${folderCount(n.path) === 1 ? '' : 's'}` : n.path} aria-label={`${expanded ? 'Collapse' : 'Expand'} folder ${n.path}`} aria-expanded={expanded}
+                {renaming === n.path ? <span className="explorer-folder" style={{ paddingLeft: 4 + depth * IND }}><Folder size={14} />{renameBox(n.path, true)}</span> : <button className={`explorer-folder ${clip?.mode === 'cut' && clip.path === n.path ? 'cut' : ''} ${explorerDeco.colors() ? folderDeco(n.path) : ''}`} style={{ paddingLeft: 4 + depth * IND }} title={featureOn('folder-count') ? `${n.path} · ${folderCount(n.path)} file${folderCount(n.path) === 1 ? '' : 's'}` : n.path} aria-label={`${expanded ? 'Collapse' : 'Expand'} folder ${n.path}`} aria-expanded={expanded}
                   onKeyDown={rowKeys(n.path, true)}
                   onClick={() => { onFolder(n.path); if (!searching) toggle(n.path); }}>
                   {expanded ? <ChevronDown size={12} /> : <ChevronRight size={12} />}

@@ -58,5 +58,7 @@ export function useFileDecorations() {
   useSyncExternalStore((l) => { listeners.add(l); return () => listeners.delete(l); }, () => version);
   return (file: string): FileDecoration => ({ ...(problems.get(file) ?? { errors: 0, warnings: 0 }), git: git.get(file) });
 }
+/** Files that have problems now. */
+export const decoratedFiles = () => [...problems.keys()];
 /** VS Code's colour class for a decoration: errors, then warnings, then the Git status. */
 export const decorationClass = (d: FileDecoration) => (d.errors ? 'deco-error' : d.warnings ? 'deco-warning' : d.git === 'U' ? 'deco-untracked' : d.git === 'A' ? 'deco-added' : d.git === 'D' ? 'deco-deleted' : d.git ? 'deco-modified' : '');
