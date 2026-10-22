@@ -1,4 +1,5 @@
 import { api } from '../api';
+import { activeEditor } from '../editor/activeEditor';
 import { recentFiles, removeRecent } from '../navHistory';
 import { fileType } from '../files/fileTypes';
 import { featureOn } from '../features';
@@ -10,7 +11,17 @@ import { CONFIGURE_KEYBINDING_EVENT } from '../keybindings';
 import { closeQuickInput, lastQuery, openQuickInput, refreshQuickInput, registerQuickAccess, type QuickItem } from './store';
 
 /** Opens a file (and line) in the editor, as Go to All does. */
-export const openLocation = (file: string, line?: number, column?: number, preview?: boolean) => window.dispatchEvent(new CustomEvent('tas:open-location', { detail: { file, line, column, preview } }));
+export function openLocation(file: string, line?: number, column?: number, preview?: boolean) {
+  window.dispatchEvent(new CustomEvent('tas:open-location', { detail: { file, line, column, preview } }));
+  // As in VS Code the opened editor takes the focus (which also makes it a Back / Forward location).
+  let tries = 0;
+  const focus = () => {
+    const a = activeEditor();
+    if (a && a.file === file && a.view.dom.isConnected) { if (!a.view.hasFocus) a.view.focus(); return; }
+    if (++tries < 40) setTimeout(focus, 50);
+  };
+  setTimeout(focus, 30);
+}
 
 const fileIcon = (f: string) => { const t = fileType(f); return <t.icon size={16} style={{ color: t.color }} aria-hidden="true" />; };
 const split = (f: string) => { const i = f.lastIndexOf('/'); return { name: f.slice(i + 1), dir: i > 0 ? f.slice(0, i) : '' }; };
