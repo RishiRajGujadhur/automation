@@ -1,5 +1,12 @@
 import type { EditorState, Extension } from '@codemirror/state';
 import { EditorView, ViewPlugin, type ViewUpdate } from '@codemirror/view';
+import { defineSetting } from '../vscode/settings';
+
+/** editor.stickyScroll.maxLineCount / scrollWithEditor (VSCODE-250.md W86). */
+export const stickySettings = {
+  maxLineCount: defineSetting<number>({ key: 'editor.stickyScroll.maxLineCount', category: 'Text Editor ▸ Sticky Scroll', title: 'Max Line Count', type: 'number', default: 5, min: 1, max: 20, description: 'Defines the maximum number of sticky lines to show.' }),
+  scrollWithEditor: defineSetting<boolean>({ key: 'editor.stickyScroll.scrollWithEditor', category: 'Text Editor ▸ Sticky Scroll', title: 'Scroll With Editor', type: 'boolean', default: true, description: 'Enable scrolling of Sticky Scroll with the editor\'s horizontal scrollbar.' }),
+};
 
 type RangeFn = (state: EditorState, lineStart: number, lineEnd: number) => { from: number; to: number } | null;
 
@@ -7,7 +14,7 @@ type RangeFn = (state: EditorState, lineStart: number, lineEnd: number) => { fro
  * Sticky scroll (VS 2022 / VS Code): the lines that open the blocks around the first visible line (namespace, class,
  * method; Feature, Scenario) stay pinned at the top of the editor; clicking one goes there.
  */
-export function stickyScroll(range: RangeFn, max = 4): Extension {
+export function stickyScroll(range: RangeFn): Extension {
   return ViewPlugin.fromClass(class {
     dom: HTMLDivElement;
     key = '';
@@ -21,7 +28,11 @@ export function stickyScroll(range: RangeFn, max = 4): Extension {
       view.scrollDOM.addEventListener('scroll', this.onScroll, { passive: true });
       this.onScroll();
     }
-    onScroll() { cancelAnimationFrame(this.frame); this.frame = requestAnimationFrame(() => this.render()); }
+    onScroll() {
+      // Horizontal scrolling moves the sticky lines too (scrollWithEditor).
+      this.dom.style.transform = stickySettings.scrollWithEditor() ? `translateX(${-this.view.scrollDOM.scrollLeft}px)` : '';
+      cancelAnimationFrame(this.frame); this.frame = requestAnimationFrame(() => this.render());
+    }
     update(u: ViewUpdate) { if (u.docChanged || u.geometryChanged || u.viewportChanged) this.onScroll(); }
     render() {
       const { view } = this;
@@ -33,13 +44,13 @@ export function stickyScroll(range: RangeFn, max = 4): Extension {
       const lines: number[] = [];
       // Walk up (bounded) collecting the lines whose block contains the first visible line.
       let pos = top;
-      for (let n = topLine - 1, steps = 0; n >= 1 && steps < 2000 && lines.length < 12; n--, steps++) {
+      for (let n = topLine - 1, steps = 0; n >= 1 && steps < 2000 && lines.length < 20; n--, steps++) {
         const l = doc.line(n);
         const r = range(view.state, l.from, l.to);
         if (r && r.to >= pos) { lines.unshift(n); pos = l.from; }
       }
       // Pinned lines cover the lines under them: drop the innermost while it would hide itself.
-      const shown = lines.slice(-max);
+      const shown = lines.slice(-stickySettings.maxLineCount());
       this.show(shown);
     }
     show(lines: number[]) {

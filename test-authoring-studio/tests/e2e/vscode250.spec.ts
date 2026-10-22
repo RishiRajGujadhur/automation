@@ -1702,3 +1702,20 @@ test('W85 breadcrumbs.filePath, breadcrumbs.symbolPath and breadcrumbs.icons', a
   await expect(crumbs.getByRole('button', { name: 'Symbol: Square' })).toHaveCount(0);
   await expect(crumbs.locator('.crumb-part svg, .crumb-part .codicon')).toHaveCount(0);
 });
+
+test('W86 editor.stickyScroll.maxLineCount', async ({ page }) => {
+  const body = Array.from({ length: 150 }, (_, i) => `                    var x${i} = ${i};`).join('\n');
+  await fs.writeFile(path.join(temp, 'Steps/Deep.cs'), `namespace Demo\n{\n    public class Deep\n    {\n        public void Run()\n        {\n            if (true)\n            {\n                for (var i = 0; i < 1; i++)\n                {\n${body}\n                }\n            }\n        }\n    }\n}\n`);
+  const sticky = async (settings: Record<string, unknown>) => {
+    await page.evaluate((s) => localStorage.setItem('tas:settings', JSON.stringify(s)), settings);
+    await page.reload();
+    const src = await open(page, 'Steps/Deep.cs');
+    await src.click();
+    await page.evaluate(() => { const v = (window as unknown as { __activeEditor: () => { view: { scrollDOM: HTMLElement } } }).__activeEditor().view; v.scrollDOM.scrollTop = 1500; v.scrollDOM.dispatchEvent(new Event('scroll')); });
+    await page.waitForTimeout(400);
+    return page.locator('.code-editor:not([hidden]) .cm-sticky-line').count();
+  };
+  await start(page);
+  expect(await sticky({})).toBe(5);
+  expect(await sticky({ 'editor.stickyScroll.maxLineCount': 2 })).toBe(2);
+});

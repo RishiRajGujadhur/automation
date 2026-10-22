@@ -107,7 +107,7 @@ Legend: `[x]` done · `[ ]` to do.
 - [x] W83. Breadcrumbs: click a segment for a picker of siblings / symbols (VS Code)
 - [x] W84. Breadcrumbs: Focus and Select Breadcrumbs (Ctrl+Shift+.) / Focus Breadcrumbs (Ctrl+Shift+;)
 - [x] W85. breadcrumbs.filePath / breadcrumbs.symbolPath / breadcrumbs.icons
-- [ ] W86. editor.stickyScroll.maxLineCount and scrollWithEditor
+- [x] W86. editor.stickyScroll.maxLineCount and scrollWithEditor
 - [ ] W87. Editor: Toggle Sticky Scroll / Minimap / Render Whitespace / Word Wrap from the View ▸ Appearance menu
 - [ ] W88. Compare Active File With… / Compare New Untitled Text Files
 - [ ] W89. Editor Layout: Single, Two Columns, Three Columns, Two Rows, Grid (2×2)
@@ -377,3 +377,4 @@ Legend: `[x]` done · `[ ]` to do.
 - 2026-10-22: W83. Every editor gets VS Code's breadcrumbs: its folders and the file (each opens a picker of what sits beside it; folders lead into Quick Open) and, for files without the C# navigation bar (TypeScript, HTML, CSS, Markdown…), the symbols around the caret with pickers of their siblings.
 - 2026-10-22: W84. Focus Breadcrumbs (Ctrl+Shift+;) puts the focus on the last breadcrumb, Focus and Select Breadcrumbs (Ctrl+Shift+.) also opens its picker; ←/→ move along them and Escape goes back to the editor.
 - 2026-10-22: W85. breadcrumbs.filePath and breadcrumbs.symbolPath (on / off / last element only) and breadcrumbs.icons.
+- 2026-10-22: W86. editor.stickyScroll.maxLineCount (VS Code's 5 by default, up to 20) and editor.stickyScroll.scrollWithEditor (the pinned lines follow horizontal scrolling).
