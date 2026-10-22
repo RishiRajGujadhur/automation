@@ -44,3 +44,24 @@ if (typeof window !== 'undefined') { const applyHeader = () => { document.docume
 export const treeIndent = defineSetting<number>({ key: 'workbench.tree.indent', category: 'Workbench ▸ Appearance', title: 'Tree: Indent', type: 'number', default: 8, min: 4, max: 40, description: 'Controls tree indentation in pixels.' });
 export const treeIndentGuides = defineSetting<'none' | 'onHover' | 'always'>({ key: 'workbench.tree.renderIndentGuides', category: 'Workbench ▸ Appearance', title: 'Tree: Render Indent Guides', type: 'enum', default: 'onHover', description: 'Controls whether the tree should render indent guides.', options: [{ value: 'none' }, { value: 'onHover' }, { value: 'always' }] });
 if (typeof window !== 'undefined') { const applyGuides = () => { document.documentElement.dataset.treeGuides = treeIndentGuides(); }; onSettingsChanged(applyGuides); applyGuides(); }
+
+/** workbench.list.smoothScrolling / mouseWheelScrollSensitivity (VSCODE-250.md W60): lists and trees (side bar, Quick Input, panes). */
+export const listSmooth = defineSetting<boolean>({ key: 'workbench.list.smoothScrolling', category: 'Workbench ▸ Appearance', title: 'List: Smooth Scrolling', type: 'boolean', default: false, description: 'Controls whether lists and trees have smooth scrolling.' });
+export const listWheel = defineSetting<number>({ key: 'workbench.list.mouseWheelScrollSensitivity', category: 'Workbench ▸ Appearance', title: 'List: Mouse Wheel Scroll Sensitivity', type: 'number', default: 1, min: 0.1, max: 10, step: 0.1, description: 'A multiplier to be used on the deltaX and deltaY of mouse wheel scroll events.' });
+const LISTS = '#feature-sidebar, .quick-input-list, .view-pane-body, .explorer-tree';
+if (typeof window !== 'undefined') {
+  window.addEventListener('wheel', (e) => {
+    const factor = listWheel(), smooth = listSmooth();
+    if ((factor === 1 && !smooth) || e.ctrlKey) return;
+    // Inside a list: the innermost element under the pointer that can scroll.
+    const list = (e.target as HTMLElement).closest?.(LISTS);
+    if (!list) return;
+    let el: HTMLElement | null = e.target as HTMLElement;
+    const scrolls = (x: HTMLElement) => x.scrollHeight > x.clientHeight + 1 && /auto|scroll/.test(getComputedStyle(x).overflowY);
+    while (el && !scrolls(el)) el = el.parentElement;
+    if (!el) return;
+    e.preventDefault();
+    const px = e.deltaMode === 1 ? 18 : e.deltaMode === 2 ? el.clientHeight : 1;
+    el.scrollBy({ top: e.deltaY * px * factor, left: e.deltaX * px * factor, behavior: smooth ? 'smooth' : 'auto' });
+  }, { passive: false });
+}

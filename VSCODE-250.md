@@ -79,7 +79,7 @@ Legend: `[x]` done · `[ ]` to do.
 - [x] W57. Ctrl+0 focus side bar, Ctrl+Shift+Y Debug Console, Ctrl+Shift+U Output (Ctrl+1…9 stay Go to Tab)
 - [x] W58. workbench.view.alwaysShowHeaderActions
 - [x] W59. workbench.tree.indent and workbench.tree.renderIndentGuides
-- [ ] W60. workbench.list.smoothScrolling and workbench.list.mouseWheelScrollSensitivity
+- [x] W60. workbench.list.smoothScrolling and workbench.list.mouseWheelScrollSensitivity
 
 ## Editors and tabs
 - [ ] W61. Empty editor watermark: VS Code logo and Show All Commands / Go to File / Find in Files / Toggle Terminal keys
@@ -352,3 +352,4 @@ Legend: `[x]` done · `[ ]` to do.
 - 2026-10-22: W57. VS Code's Ctrl+0 focuses the side bar (opening it), Ctrl+Shift+Y the Debug Console, Ctrl+Shift+U the Output (outside an editor, where it stays Toggle Case); Ctrl+1…9 keep going to a tab.
 - 2026-10-22: W58. workbench.view.alwaysShowHeaderActions: the side bar sections' title actions are always shown instead of only on hover or focus.
 - 2026-10-22: W59. workbench.tree.indent (VS Code's 8 px by default) sets the Explorer's indent per level; workbench.tree.renderIndentGuides draws a guide line down each folder's children on hover (default), always or never.
+- 2026-10-22: W60. workbench.list.mouseWheelScrollSensitivity multiplies wheel scrolling in the side bar, its sections and the Quick Input list; workbench.list.smoothScrolling animates it.

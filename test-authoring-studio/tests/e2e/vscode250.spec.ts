@@ -1254,3 +1254,27 @@ test('W59 workbench.tree.indent and workbench.tree.renderIndentGuides', async ({
   await page.locator('#feature-sidebar').hover();
   expect(await page.evaluate(() => getComputedStyle(document.querySelector<HTMLElement>('#feature-sidebar .folder-children[style*="--guide-x"]')!, '::before').opacity)).toBe('0');
 });
+
+test('W60 workbench.list.mouseWheelScrollSensitivity scales wheel scrolling in lists', async ({ page }) => {
+  for (let i = 0; i < 60; i++) await fs.writeFile(path.join(temp, `file${String(i).padStart(2, '0')}.txt`), 'x\n');
+  const scrolled = async (settings: Record<string, unknown>) => {
+    await page.evaluate((s) => localStorage.setItem('tas:settings', JSON.stringify(s)), settings);
+    await page.reload();
+    await expect(page.getByText('Repository indexed')).toBeVisible();
+    const item = page.locator('#feature-sidebar').getByText('file02.txt', { exact: true }).first();
+    await expect(item).toBeAttached();
+    // The element that scrolls the Explorer tree.
+    const scroller = async () => item.evaluateHandle((x) => { let e: HTMLElement | null = x as HTMLElement; while (e && !(e.scrollHeight > e.clientHeight + 1 && /auto|scroll/.test(getComputedStyle(e).overflowY))) e = e.parentElement; return e!; });
+    const h = await scroller();
+    await h.evaluate((e) => { (e as HTMLElement).scrollTop = 0; });
+    await item.hover();
+    await page.mouse.wheel(0, 60);
+    await page.waitForTimeout(400);
+    return h.evaluate((e) => (e as HTMLElement).scrollTop);
+  };
+  await start(page);
+  const normal = await scrolled({});
+  const fast = await scrolled({ 'workbench.list.mouseWheelScrollSensitivity': 3 });
+  expect(normal).toBeGreaterThan(0);
+  expect(fast).toBeGreaterThan(normal * 2);
+});
