@@ -64,6 +64,35 @@
   --accent-soft: #00ff411f;
   --font-ui: 'IBM Plex Mono', ui-monospace, monospace;
 }
+:root[data-theme='monokai'] {
+  --bg: #272822; --surface: #34352f; --surface-2: #2c2d27; --surface-3: #41423888;
+  --chrome: #20211d; --border: #55564b; --text: #e8e8df; --text-strong: #f8f8f2; --text-muted: #bcbba9;
+}
+:root[data-theme='monokai-machine'] {
+  --bg: #1f252c; --surface: #2b323b; --surface-2: #242c34; --surface-3: #3a465088;
+  --chrome: #1a2026; --border: #475660; --text: #dce4e8; --text-strong: #f0f4f5; --text-muted: #aebfc7;
+}
+:root[data-theme='monokai-octagon'] {
+  --bg: #282433; --surface: #352f40; --surface-2: #2e2939; --surface-3: #483e5288;
+  --chrome: #211e2a; --border: #574d61; --text: #e9e2ee; --text-strong: #f6f0f8; --text-muted: #bfb3ca;
+}
+:root[data-theme='monokai-ristretto'] {
+  --bg: #302b2a; --surface: #3c3533; --surface-2: #352e2c; --surface-3: #50443e88;
+  --chrome: #292322; --border: #62534c; --text: #eae0d8; --text-strong: #f7eee6; --text-muted: #c7b9ad;
+}
+:root[data-theme='monokai-spectrum'] {
+  --bg: #18191b; --surface: #252629; --surface-2: #202124; --surface-3: #34373a88;
+  --chrome: #131416; --border: #424548; --text: #e9ebea; --text-strong: #fafbf8; --text-muted: #b3b8b7;
+}
+:root[data-theme='monokai-light'] {
+  --bg: #f5f1e8; --surface: #fffdf8; --surface-2: #f9f6ef; --surface-3: #eee7da;
+  --chrome: #f0ebe1; --border: #d4cabd; --text: #373239; --text-strong: #211d23; --text-muted: #615a60;
+  --accent-soft: color-mix(in srgb, var(--accent-strong) 12%, transparent);
+  color-scheme: light;
+}
+:root[data-theme='monokai-light'][data-layout='vscode'] .status-bar {
+  background: #373239 !important;
+}
 
 // ---- Native scrollbars that follow the accent (scrollbar-color / scrollbar-width, CSS Scrollbars L1)
 :root {
@@ -75,15 +104,16 @@
   scrollbar-color: color-mix(in srgb, var(--accent) 50%, transparent) transparent;
 }
 
-// ---- Logo follows the accent
-.brand-mark {
-  background: linear-gradient(135deg, var(--accent), var(--accent-strong)) !important;
-  border-color: color-mix(in srgb, var(--accent) 70%, #fff) !important;
-  box-shadow: 0 0 18px color-mix(in srgb, var(--accent) 30%, transparent) !important;
-  color: color-mix(in srgb, var(--accent-strong) 15%, #fff);
-}
-:root[data-theme='matrix'] .brand-mark {
-  color: #001a06;
+// The compact vector mark follows the selected accent without an extra header badge.
+.brand::before {
+  content: '';
+  display: block;
+  flex: 0 0 19px;
+  width: 19px;
+  height: 19px;
+  background: var(--accent);
+  mask: url('/logo-mark.svg') center / contain no-repeat;
+  -webkit-mask: url('/logo-mark.svg') center / contain no-repeat;
 }
 
 // ---- Header breadcrumb: it reuses the page-heading class (for tests/tools); drop that block's spacing
@@ -244,7 +274,8 @@
   }
 }
 // Light theme: badges and status colours need darker tints to stay ≥ 4.5:1 on white
-:root[data-theme='light'] {
+:root[data-theme='light'],
+:root[data-theme='monokai-light'] {
   .badge.purple, .kw { color: #5b3bd1 !important; }
   .badge.green, .file-state.new, .step-lint li.matched svg { color: #0d7a4f !important; }
   .badge.amber, .badge.teal { color: #8a5a00 !important; }
@@ -643,14 +674,16 @@
 // Dark themes: active states use the lighter accent (accent-strong is for filled buttons)
 :root[data-theme='midnight'],
 :root[data-theme='nord'],
-:root[data-theme='matrix'] {
+:root[data-theme='matrix'],
+:root[data-theme^='monokai']:not([data-theme='monokai-light']) {
   .nav-tab.active,
   .settings-nav-item.active,
   .stepper-step.current .stepper-dot {
     color: var(--accent) !important;
   }
 }
-:root[data-theme='light'] {
+:root[data-theme='light'],
+:root[data-theme='monokai-light'] {
   .recorder-tab {
     color: #9b1c3a !important;
     background: #fde8ee !important;
@@ -673,7 +706,8 @@
 }
 // Links on dark themes: a lightened accent keeps ≥ 4.5:1 on mid-tone surfaces such as Nord.
 :root[data-theme='midnight'],
-:root[data-theme='nord'] {
+:root[data-theme='nord'],
+:root[data-theme^='monokai']:not([data-theme='monokai-light']) {
   .text-button,
   a:not(.button) {
     color: color-mix(in srgb, var(--accent) 50%, #fff) !important;
@@ -695,7 +729,8 @@
 }
 :root[data-theme='midnight'],
 :root[data-theme='nord'],
-:root[data-theme='matrix'] {
+:root[data-theme='matrix'],
+:root[data-theme^='monokai']:not([data-theme='monokai-light']) {
   .kw,
   .badge.purple {
     color: color-mix(in srgb, var(--accent) 55%, #fff) !important;
@@ -706,7 +741,8 @@
 }
 :root[data-theme='midnight'],
 :root[data-theme='nord'],
-:root[data-theme='matrix'] {
+:root[data-theme='matrix'],
+:root[data-theme^='monokai']:not([data-theme='monokai-light']) {
   .segmented-item[data-state='on'],
   .segmented-item[data-state='active'],
   .tabs-trigger[data-state='active'] {

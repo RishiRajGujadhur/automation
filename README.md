@@ -16,6 +16,7 @@ machine; nothing is uploaded.
 | **Test design and reuse** | Apply test-design algorithms, search existing step bindings and selector dictionaries, and review generated feature and C# changes before writing them to the target repository. |
 | **Git and projects** | Review history and diffs, use interactive rebase and three-way merge, and inspect effective `.csproj` properties with an approval diff before writing changes. |
 | **Workbench** | Resizable panels, editor groups, file structure and call hierarchy, terminal, problems, Run Anything, Markdown preview, productivity guide, customizable settings, minimap, and layout controls. The web app starts with essential toolbar buttons and offers 70 individual visibility switches in Settings. |
+| **Appearance** | Compact SVG app mark; workspace and matching editor themes, including six Monokai inspired palettes for dark and light workspaces. |
 | **Front-end languages** | JavaScript and TypeScript refactorings and imports; React actions and Hooks checks; HTML validation and accessibility checks; CSS, SCSS, LESS and CSS Modules support. See [FRONTEND-100.md](FRONTEND-100.md). |
 | **Windows desktop integration** | Native menus and folder selection, recent repositories, remembered window placement and zoom, taskbar progress, and background test-run notifications. |
 
@@ -40,6 +41,16 @@ Current web app with the editor-first navigation and essential button profile, u
 | <img src="docs/screenshots/web-test-generator.png" alt="Test generator showing scenario steps and binding matches" width="480"> | <img src="docs/screenshots/web-button-settings.png" alt="Settings page for optional workbench buttons" width="480"> |
 
 ![Page visibility settings](docs/screenshots/web-page-settings.png)
+
+### Monokai inspired themes
+
+Choose from six original palettes inspired by [Monokai Pro's filters](https://monokai.pro/vscode) in **Settings > Appearance**. Each palette also styles the code editor when its editor theme is set to **Automatic**.
+
+| Warm charcoal | Warm light |
+| --- | --- |
+| <img src="docs/screenshots/web-monokai-dark.png" alt="Feature editor with the Monokai inspired dark theme" width="480"> | <img src="docs/screenshots/web-monokai-light.png" alt="Feature editor with the Monokai inspired light theme" width="480"> |
+
+![Monokai inspired themes in Appearance settings](docs/screenshots/web-monokai-themes.png)
 
 The gallery below contains running-app captures of the Windows desktop build using a temporary Calculator sample repository. It covers authoring, debugging, Git, and the workbench tools.
 

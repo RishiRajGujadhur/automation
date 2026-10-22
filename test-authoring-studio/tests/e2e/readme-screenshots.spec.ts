@@ -45,3 +45,20 @@ test('capture current web workbench pages', async ({ page }) => {
   await settings.getByRole('navigation', { name: 'Settings categories' }).evaluate((nav) => { nav.scrollTop = 0; });
   await shot('web-page-settings.png');
 });
+
+test('capture Monokai inspired themes', async ({ page }) => {
+  await page.addInitScript(() => {
+    localStorage.setItem('tas:prefs', JSON.stringify({ mode: 'advanced', layout: 'vscode', theme: 'monokai', editorTheme: 'auto' }));
+  });
+  await page.goto('/#/features/editor');
+  await expect(page.getByText('Repository indexed')).toBeVisible({ timeout: 60_000 });
+  await page.evaluate(() => document.fonts.ready);
+  await page.screenshot({ path: path.join(out, 'web-monokai-dark.png'), animations: 'disabled' });
+  await page.keyboard.press('Control+,');
+  const settings = page.getByRole('dialog', { name: 'Preferences' });
+  await settings.getByRole('navigation', { name: 'Settings categories' }).getByRole('button', { name: 'Appearance' }).click();
+  await page.screenshot({ path: path.join(out, 'web-monokai-themes.png'), animations: 'disabled' });
+  await settings.getByRole('radiogroup', { name: 'App theme' }).getByRole('radio', { name: 'Monokai Inspired · Light' }).click();
+  await page.keyboard.press('Escape');
+  await page.screenshot({ path: path.join(out, 'web-monokai-light.png'), animations: 'disabled' });
+});

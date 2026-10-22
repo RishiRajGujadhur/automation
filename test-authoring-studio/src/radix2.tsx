@@ -194,10 +194,11 @@ export function PrefsProvider({ children }: { children: ReactNode }) {
     el.dataset.mode = prefs.mode;
     // Accent tokens come from src/accents.ts (contrast-tested). Matrix keeps its own phosphor green.
     const a = accentById(prefs.accent);
-    const vars: Record<string, string> = prefs.theme === 'matrix' ? {} : { '--accent': a.accent, '--accent-strong': a.strong, '--on-accent': a.onStrong, '--accent-text': prefs.theme === 'light' ? a.strong : a.accent, '--accent-soft': (prefs.theme === 'light' ? a.strong : a.accent) + (prefs.theme === 'light' ? '1f' : '24') };
+    const lightTheme = prefs.theme === 'light' || prefs.theme === 'monokai-light';
+    const vars: Record<string, string> = prefs.theme === 'matrix' ? {} : { '--accent': a.accent, '--accent-strong': a.strong, '--on-accent': a.onStrong, '--accent-text': lightTheme ? a.strong : a.accent, '--accent-soft': (lightTheme ? a.strong : a.accent) + (lightTheme ? '1f' : '24') };
     for (const k of ['--accent', '--accent-strong', '--on-accent', '--accent-text', '--accent-soft']) { if (vars[k]) el.style.setProperty(k, vars[k]); else el.style.removeProperty(k); }
     el.dataset.theme = prefs.theme;
-    el.style.colorScheme = prefs.theme === 'light' ? 'light' : 'dark';
+    el.style.colorScheme = lightTheme ? 'light' : 'dark';
     document.querySelector('meta[name="theme-color"]')?.setAttribute('content', getComputedStyle(el).getPropertyValue('--bg').trim() || '#0b0e16');
     el.dataset.focus = String(prefs.focus);
     el.dataset.sidebar = String(prefs.sidebar);

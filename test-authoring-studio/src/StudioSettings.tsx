@@ -134,8 +134,9 @@ export default function StudioSettings({ onNotice, onWorkspace, shortcuts, onClo
       block: (
         <div className="accent-grid" role="radiogroup" aria-label="Accent colour">
           {accents.map((a) => {
-            const text = prefs.theme === 'light' ? a.strong : a.accent;
-            const bg = prefs.theme === 'light' ? '#ffffff' : '#121722';
+            const lightTheme = prefs.theme === 'light' || prefs.theme === 'monokai-light';
+            const text = lightTheme ? a.strong : a.accent;
+            const bg = lightTheme ? '#ffffff' : '#121722';
             return (
               <button key={a.id} role="radio" aria-checked={prefs.accent === a.id} aria-label={a.id} className={`accent-option ${prefs.accent === a.id ? 'selected' : ''}`} onClick={() => setPrefs({ accent: a.id })} title={`${a.label}: text ${contrast(text, bg).toFixed(1)}:1, button ${contrast(a.onStrong, a.strong).toFixed(1)}:1`}>
                 <span className="accent-dot" style={{ background: `linear-gradient(135deg, ${a.accent} 50%, ${a.strong} 50%)` }} aria-hidden="true" />
