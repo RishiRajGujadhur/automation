@@ -1,3 +1,5 @@
+import { treeIndent } from './vscode/workbenchLayout';
+import { useSettings } from './vscode/settings';
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { keepTab, useTabs } from './files/tabs';
 import { fileSource } from './files/provider';
@@ -95,6 +97,9 @@ function buildTree(files: { file: string; layer: string }[], prefix = ''): Node[
 export const SELECT_IN_EXPLORER = 'tas:select-in-explorer';
 
 export default function SolutionExplorer({ features, revision, activeFile, query, activeFolder, onQuery, onSelect, onOpenFile, onFolder, onNew, onSource, browserSolution, onFileOp: fileOpProp, onManagePackages, onNotice, onConfirm }: Props) {
+  useSettings();
+  // workbench.tree.indent (W59): the indent of each tree level.
+  const IND = treeIndent();
   // After a rename, copy or delete the tree reloads itself too (not only when the index revision changes).
   const loads = useRef(0);
   const loadSolution = () => { const n = ++loads.current; api<Solution>('/solution').then((s) => { if (n === loads.current) setSolution(s); }).catch(() => {}); };
@@ -370,10 +375,10 @@ export default function SolutionExplorer({ features, revision, activeFile, query
         <li className={extra?.linked ? 'nested-link' : undefined}>
           <div className="se-row">
             {kids.length > 0 ? (
-              <button className="se-twisty" aria-label={`${expanded ? 'Collapse' : 'Expand'} nested files of ${name}`} aria-expanded={expanded} onClick={() => setOpenNests((prev) => { const next = new Set(prev); if (next.has(path)) next.delete(path); else next.add(path); return next; })} style={{ marginLeft: 4 + depth * 12 }}>
+              <button className="se-twisty" aria-label={`${expanded ? 'Collapse' : 'Expand'} nested files of ${name}`} aria-expanded={expanded} onClick={() => setOpenNests((prev) => { const next = new Set(prev); if (next.has(path)) next.delete(path); else next.add(path); return next; })} style={{ marginLeft: 4 + depth * IND }}>
                 {expanded ? <ChevronDown size={12} /> : <ChevronRight size={12} />}
               </button>
-            ) : <span className="se-twisty-space" style={{ marginLeft: 4 + depth * 12 }} />}
+            ) : <span className="se-twisty-space" style={{ marginLeft: 4 + depth * IND }} />}
             {renaming === path && !extra?.linked ? renameBox(path, false) : <button
               className={`explorer-file ${isActive(path) && !extra?.linked ? 'selected' : ''} ${clip?.mode === 'cut' && clip.path === path ? 'cut' : ''}`}
               onKeyDown={extra?.linked ? undefined : rowKeys(path, false)}
@@ -400,7 +405,8 @@ export default function SolutionExplorer({ features, revision, activeFile, query
       </RowMenu>
     );
   };
-  const render = (ns: Node[], depth: number): ReactNode => <ul className="folder-children">{items(ns, depth)}</ul>;
+  // workbench.tree.renderIndentGuides (W59): a guide line down each folder's children, under its twisty.
+  const render = (ns: Node[], depth: number): ReactNode => <ul className="folder-children" style={depth > 0 ? { '--guide-x': `${10 + (depth - 1) * IND}px` } as React.CSSProperties : undefined}>{items(ns, depth)}</ul>;
   const items = (ns: Node[], depth: number): ReactNode => (
     <>
       {ns.map((n) => {
@@ -427,7 +433,7 @@ export default function SolutionExplorer({ features, revision, activeFile, query
                 onDragOver={(e) => { if (onFileOp && featureOn('drag-move') && e.dataTransfer.types.includes('application/x-tas-path')) { e.preventDefault(); e.dataTransfer.dropEffect = 'move'; setDropOn(n.path); if (!expanded && featureOn('drag-expand') && !hoverOpen.current) hoverOpen.current = window.setTimeout(() => { toggle(n.path, true); hoverOpen.current = 0; }, 600); } }}
                 onDragLeave={() => { setDropOn(null); clearTimeout(hoverOpen.current); hoverOpen.current = 0; }}
                 onDrop={(e) => { setDropOn(null); const from = e.dataTransfer.getData('application/x-tas-path'); if (!from || !onFileOp || !featureOn('drag-move')) return; e.preventDefault(); const to = join(n.path, from.split('/').pop()!); if (to === from || dirOf(from) === n.path) return; void (onConfirm ? onConfirm({ title: `Move ${from.split('/').pop()}?`, description: `${from} moves to ${n.path}/.`, confirm: 'Move' }) : Promise.resolve(window.confirm(`Move ${from} to ${n.path}/?`))).then((ok) => { if (ok) void onFileOp({ kind: 'rename', from, to }); }); }}>
-                {renaming === n.path ? <span className="explorer-folder" style={{ paddingLeft: 4 + depth * 12 }}><Folder size={14} />{renameBox(n.path, true)}</span> : <button className={`explorer-folder ${clip?.mode === 'cut' && clip.path === n.path ? 'cut' : ''}`} style={{ paddingLeft: 4 + depth * 12 }} title={featureOn('folder-count') ? `${n.path} · ${folderCount(n.path)} file${folderCount(n.path) === 1 ? '' : 's'}` : n.path} aria-label={`${expanded ? 'Collapse' : 'Expand'} folder ${n.path}`} aria-expanded={expanded}
+                {renaming === n.path ? <span className="explorer-folder" style={{ paddingLeft: 4 + depth * IND }}><Folder size={14} />{renameBox(n.path, true)}</span> : <button className={`explorer-folder ${clip?.mode === 'cut' && clip.path === n.path ? 'cut' : ''}`} style={{ paddingLeft: 4 + depth * IND }} title={featureOn('folder-count') ? `${n.path} · ${folderCount(n.path)} file${folderCount(n.path) === 1 ? '' : 's'}` : n.path} aria-label={`${expanded ? 'Collapse' : 'Expand'} folder ${n.path}`} aria-expanded={expanded}
                   onKeyDown={rowKeys(n.path, true)}
                   onClick={() => { onFolder(n.path); if (!searching) toggle(n.path); }}>
                   {expanded ? <ChevronDown size={12} /> : <ChevronRight size={12} />}
@@ -452,7 +458,7 @@ export default function SolutionExplorer({ features, revision, activeFile, query
     const deps = openDeps.has(p.file) && !searching;
     const refs = p.references ?? [];
     const count = (p.packages?.length ?? 0) + refs.length + (p.frameworks?.length ?? 0) + (p.assemblies?.length ?? 0);
-    const pad = 4 + depth * 12;
+    const pad = 4 + depth * IND;
     return (
       <li key={key}>
         <RowMenu label={`Project ${p.name}`} items={[
@@ -474,16 +480,16 @@ export default function SolutionExplorer({ features, revision, activeFile, query
             {!searching && (
               <li>
                 <div className="explorer-folder-row">
-                  <button className="explorer-folder" style={{ paddingLeft: pad + 12 }} aria-label={`${deps ? 'Collapse' : 'Expand'} ${p.legacy ? 'References' : 'Dependencies'}`} aria-expanded={deps} onClick={() => setOpenDeps((prev) => { const n = new Set(prev); if (n.has(p.file)) n.delete(p.file); else n.add(p.file); return n; })}>
+                  <button className="explorer-folder" style={{ paddingLeft: pad + IND }} aria-label={`${deps ? 'Collapse' : 'Expand'} ${p.legacy ? 'References' : 'Dependencies'}`} aria-expanded={deps} onClick={() => setOpenDeps((prev) => { const n = new Set(prev); if (n.has(p.file)) n.delete(p.file); else n.add(p.file); return n; })}>
                     {deps ? <ChevronDown size={12} /> : <ChevronRight size={12} />}<Package size={14} /><span>{p.legacy ? 'References' : 'Dependencies'}</span><small>{count}</small>
                   </button>
                 </div>
                 {deps && (
                   <ul className="folder-children se-deps">
-                    {(p.frameworks ?? []).map((f) => <li key={`f:${f}`}><div className="se-row se-leaf" style={{ paddingLeft: pad + 36 }} title="Framework"><Layers size={13} /><span>{f}</span></div></li>)}
-                    {(p.packages ?? []).map((x) => <li key={`p:${x}`}><div className="se-row se-leaf" style={{ paddingLeft: pad + 36 }} title="NuGet package"><Package size={13} /><span>{x}</span></div></li>)}
-                    {(p.assemblies ?? []).map((a) => <li key={`a:${a.name}`}><div className="se-row se-leaf" style={{ paddingLeft: pad + 36 }} title={a.hintPath ? `Assembly: ${a.hintPath}` : 'Framework assembly'}><FileCog size={13} /><span>{a.name}</span></div></li>)}
-                    {refs.map((r) => <li key={`r:${r}`}><div className="se-row se-leaf" style={{ paddingLeft: pad + 36 }} title={`Project reference: ${r}`}><Boxes size={13} /><span>{r.split('/').pop()!.replace(/\.\w+proj$/i, '')}</span></div></li>)}
+                    {(p.frameworks ?? []).map((f) => <li key={`f:${f}`}><div className="se-row se-leaf" style={{ paddingLeft: pad + 3 * IND }} title="Framework"><Layers size={13} /><span>{f}</span></div></li>)}
+                    {(p.packages ?? []).map((x) => <li key={`p:${x}`}><div className="se-row se-leaf" style={{ paddingLeft: pad + 3 * IND }} title="NuGet package"><Package size={13} /><span>{x}</span></div></li>)}
+                    {(p.assemblies ?? []).map((a) => <li key={`a:${a.name}`}><div className="se-row se-leaf" style={{ paddingLeft: pad + 3 * IND }} title={a.hintPath ? `Assembly: ${a.hintPath}` : 'Framework assembly'}><FileCog size={13} /><span>{a.name}</span></div></li>)}
+                    {refs.map((r) => <li key={`r:${r}`}><div className="se-row se-leaf" style={{ paddingLeft: pad + 3 * IND }} title={`Project reference: ${r}`}><Boxes size={13} /><span>{r.split('/').pop()!.replace(/\.\w+proj$/i, '')}</span></div></li>)}
                   </ul>
                 )}
               </li>
@@ -502,7 +508,7 @@ export default function SolutionExplorer({ features, revision, activeFile, query
     return (
       <li key={key}>
         <div className="explorer-folder-row">
-          <button className="explorer-folder se-solution-folder" style={{ paddingLeft: 4 + depth * 12 }} aria-label={`${open ? 'Collapse' : 'Expand'} solution folder ${n.name}`} aria-expanded={open} onClick={() => toggle(key)}>
+          <button className="explorer-folder se-solution-folder" style={{ paddingLeft: 4 + depth * IND }} aria-label={`${open ? 'Collapse' : 'Expand'} solution folder ${n.name}`} aria-expanded={open} onClick={() => toggle(key)}>
             {open ? <ChevronDown size={12} /> : <ChevronRight size={12} />}{open ? <FolderOpen size={14} /> : <Folder size={14} />}<span>{n.name}</span>
           </button>
         </div>

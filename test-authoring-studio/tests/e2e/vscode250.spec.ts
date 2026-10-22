@@ -1232,3 +1232,25 @@ test('W58 workbench.view.alwaysShowHeaderActions', async ({ page }) => {
   await page.mouse.move(800, 400);
   await expect(save).toBeVisible();
 });
+
+test('W59 workbench.tree.indent and workbench.tree.renderIndentGuides', async ({ page }) => {
+  // How far right the Steps folder's file sits compared with the folder (one level of indent).
+  const indentOf = async () => {
+    const side = page.locator('#feature-sidebar');
+    await expect(side.getByRole('button', { name: 'AuthSteps.cs', exact: true }).first()).toBeVisible();
+    const folder = (await side.getByRole('button', { name: /folder Steps$/ }).first().locator('svg').first().boundingBox())!;
+    const file = (await side.getByRole('button', { name: 'AuthSteps.cs', exact: true }).first().locator('svg').first().boundingBox())!;
+    return file.x - folder.x;
+  };
+  await start(page, { 'workbench.tree.indent': 20, 'workbench.tree.renderIndentGuides': 'always' });
+  await expect(page.getByRole('button', { name: /folder Steps$/ }).first()).toBeVisible();
+  const wide = await indentOf();
+  const guide = await page.evaluate(() => { const ul = document.querySelector<HTMLElement>('#feature-sidebar .folder-children[style*="--guide-x"]')!; return getComputedStyle(ul, '::before').opacity; });
+  expect(guide).toBe('1');
+  await page.evaluate(() => localStorage.setItem('tas:settings', JSON.stringify({ 'workbench.tree.indent': 8, 'workbench.tree.renderIndentGuides': 'none' })));
+  await page.reload();
+  await expect(page.getByRole('button', { name: /folder Steps$/ }).first()).toBeVisible();
+  expect(wide - (await indentOf())).toBeCloseTo(12, 0);
+  await page.locator('#feature-sidebar').hover();
+  expect(await page.evaluate(() => getComputedStyle(document.querySelector<HTMLElement>('#feature-sidebar .folder-children[style*="--guide-x"]')!, '::before').opacity)).toBe('0');
+});

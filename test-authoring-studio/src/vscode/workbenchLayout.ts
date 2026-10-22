@@ -39,3 +39,8 @@ export const iconClickBehavior = defineSetting<'toggle' | 'focus'>({
 /** workbench.view.alwaysShowHeaderActions (VSCODE-250.md W58): view title actions shown always, not only on hover. */
 export const alwaysShowHeaderActions = defineSetting<boolean>({ key: 'workbench.view.alwaysShowHeaderActions', category: C, title: 'View: Always Show Header Actions', type: 'boolean', default: false, description: 'Controls the visibility of view header actions. View header actions may either be always visible, or only visible when that view is focused or hovered over.' });
 if (typeof window !== 'undefined') { const applyHeader = () => { document.documentElement.dataset.headerActions = alwaysShowHeaderActions() ? 'always' : 'hover'; }; onSettingsChanged(applyHeader); applyHeader(); }
+
+/** workbench.tree.indent / renderIndentGuides (VSCODE-250.md W59): the Explorer tree's indent and guide lines. */
+export const treeIndent = defineSetting<number>({ key: 'workbench.tree.indent', category: 'Workbench ▸ Appearance', title: 'Tree: Indent', type: 'number', default: 8, min: 4, max: 40, description: 'Controls tree indentation in pixels.' });
+export const treeIndentGuides = defineSetting<'none' | 'onHover' | 'always'>({ key: 'workbench.tree.renderIndentGuides', category: 'Workbench ▸ Appearance', title: 'Tree: Render Indent Guides', type: 'enum', default: 'onHover', description: 'Controls whether the tree should render indent guides.', options: [{ value: 'none' }, { value: 'onHover' }, { value: 'always' }] });
+if (typeof window !== 'undefined') { const applyGuides = () => { document.documentElement.dataset.treeGuides = treeIndentGuides(); }; onSettingsChanged(applyGuides); applyGuides(); }
