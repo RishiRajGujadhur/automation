@@ -118,7 +118,7 @@ Legend: `[x]` done · `[ ]` to do.
 - [x] W92. Problems decorations: red / yellow file names with counts, folders inherit (explorer.decorations.colors / badges)
 - [x] W93. explorer.compactFolders (single-child folders on one row)
 - [x] W94. explorer.sortOrder (default / mixed / filesFirst / type)
-- [ ] W95. File nesting (explorer.fileNesting.enabled / patterns, VS Code's defaults)
+- [x] W95. File nesting (explorer.fileNesting.enabled / patterns, VS Code's defaults)
 - [ ] W96. explorer.autoReveal (true / false / focusNoScroll)
 - [ ] W97. explorer.confirmDelete and explorer.confirmDragAndDrop
 - [ ] W98. Explorer Find (Ctrl+Alt+F): highlight or filter mode
@@ -386,3 +386,4 @@ Legend: `[x]` done · `[ ]` to do.
 - 2026-10-22: W92. Files with errors or warnings are red or yellow in the Explorer with a count badge, and so are the folders that hold them (explorer.decorations.colors / badges).
 - 2026-10-22: W93. explorer.compactFolders (on by default, as in VS Code): a folder that only holds one folder shares its row, e.g. src/main/deep.
 - 2026-10-22: W94. explorer.sortOrder: folders before files (default), files first, mixed, or grouped by type (extension); names compare naturally (2 before 10).
+- 2026-10-22: W95. explorer.fileNesting.enabled / patterns: related files nest under a parent in the Explorer (VS Code's defaults such as *.ts → ${capture}.js, package.json → package-lock.json, plus *.cs → ${capture}.*.cs and appsettings.*.json).

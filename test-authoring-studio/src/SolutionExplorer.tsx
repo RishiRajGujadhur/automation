@@ -2,6 +2,7 @@ import { useFileDecorations, decoratedFiles } from './files/decorations';
 import { explorerDeco, explorerSettings } from './vscode/explorer';
 import { openInputBox } from './quickinput/store';
 import { treeIndent } from './vscode/workbenchLayout';
+import { nestFiles } from './files/fileNesting';
 import { useSettings } from './vscode/settings';
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { keepTab, useTabs } from './files/tabs';
@@ -100,7 +101,7 @@ function buildTree(files: { file: string; layer: string }[], prefix = ''): Node[
 export const SELECT_IN_EXPLORER = 'tas:select-in-explorer';
 
 export default function SolutionExplorer({ features, revision, activeFile, query, activeFolder, onQuery, onSelect, onOpenFile, onFolder, onNew, onSource, browserSolution, onFileOp: fileOpProp, onManagePackages, onNotice, onConfirm }: Props) {
-  useSettings();
+  const settingsVersion = useSettings();
   // workbench.tree.indent (W59): the indent of each tree level.
   const IND = treeIndent();
   // Problems of the open files (W92): file names coloured with a count; folders take the colour of what they hold.
@@ -257,10 +258,13 @@ export default function SolutionExplorer({ features, revision, activeFile, query
   };
   const inProject = (file: string) => projectDirs.some((d) => d === '' || file.startsWith(`${d}/`));
   // Files: the solution model plus any indexed feature it does not know yet (e.g. just created).
+  const patternNest = useMemo(() => nestFiles((solution?.files ?? []).map((f) => f.file)), [solution, settingsVersion]); // eslint-disable-line react-hooks/exhaustive-deps
   const files = useMemo(() => {
     const list = [...(solution?.files ?? [])];
     for (const f of features) { const p = normalizeFeaturePath(f.file); if (!list.some((x) => x.file === p)) list.push({ file: p, layer: 'Feature' }); }
     const codeBehind = new Set(Object.values(solution?.nesting ?? {}).flat().filter((n) => n.kind === 'code-behind').map((n) => n.file));
+    // explorer.fileNesting (W95): children sit under their parent file.
+    for (const kids of patternNest.values()) for (const k of kids) codeBehind.add(k);
     const terms = query.trim().toLowerCase().split(/\s+/).filter(Boolean);
     const featureName = new Map(features.map((f) => [normalizeFeaturePath(f.file), f.name]));
     return list.filter((x) =>
@@ -274,7 +278,7 @@ export default function SolutionExplorer({ features, revision, activeFile, query
       (!openOnly || openSet.has(x.file)) &&
       (!scope || x.file.startsWith(`${scope}/`)) &&
       terms.every((t) => `${x.file} ${featureName.get(x.file) ?? ''}`.toLowerCase().includes(t)));
-  }, [solution, features, query, showAll, pendingOnly, pending, projectDirs, listed, scope, openOnly, openSet]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [solution, features, query, showAll, pendingOnly, pending, projectDirs, listed, scope, openOnly, openSet, patternNest]); // eslint-disable-line react-hooks/exhaustive-deps
   const searching = !!query.trim() || pendingOnly || openOnly;
   // Files per project (deepest project folder wins); files outside every project are "Miscellaneous Files".
   const projects = useMemo(() => solution?.projects ?? [], [solution]);
@@ -372,7 +376,7 @@ export default function SolutionExplorer({ features, revision, activeFile, query
   const isActive = (p: string) => !!activeFile && normalizeFeaturePath(activeFile) === p;
   const fileRow = (path: string, name: string, depth: number, extra?: { linked?: boolean; note?: string }) => {
     const Icon = extra?.linked ? Link2 : fileType(path).icon;
-    const kids = !extra?.linked ? solution?.nesting[path] ?? [] : [];
+    const kids: { file: string; kind: 'steps' | 'code-behind' | 'nested'; steps?: number }[] = !extra?.linked ? [...(solution?.nesting[path] ?? []), ...(patternNest.get(path) ?? []).map((f) => ({ file: f, kind: 'nested' as const }))] : [];
     const expanded = kids.length > 0 && openNests.has(path); // nested files start collapsed, as in Visual Studio
     const unsaved = pending.includes(path);
     return (
@@ -417,7 +421,7 @@ export default function SolutionExplorer({ features, revision, activeFile, query
           </div>
           {expanded && (
             <ul className="folder-children">
-              {kids.map((k) => fileRow(k.file, k.kind === 'code-behind' ? k.file.split('/').pop()! : k.file.split('/').pop()!, depth + 1, k.kind === 'code-behind' ? { note: 'generated' } : { linked: true, note: `${k.steps} step${k.steps === 1 ? '' : 's'}` }))}
+              {kids.map((k) => fileRow(k.file, k.file.split('/').pop()!, depth + 1, k.kind === 'nested' ? undefined : k.kind === 'code-behind' ? { note: 'generated' } : { linked: true, note: `${k.steps} step${k.steps === 1 ? '' : 's'}` }))}
             </ul>
           )}
         </li>

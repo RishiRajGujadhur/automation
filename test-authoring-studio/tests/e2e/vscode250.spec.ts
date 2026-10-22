@@ -1857,3 +1857,21 @@ test('W94 explorer.sortOrder: folders first, files first, mixed, by type', async
     await expect.poll(names, { timeout: 15_000 }).toEqual(want);
   }
 });
+
+test('W95 explorer.fileNesting: related files under their parent (VS Code patterns)', async ({ page }) => {
+  await fs.mkdir(path.join(temp, 'web'), { recursive: true });
+  for (const f of ['web/app.ts', 'web/app.js', 'web/package.json', 'web/package-lock.json', 'web/other.txt']) await fs.writeFile(path.join(temp, f), '');
+  await start(page, { 'explorer.fileNesting.enabled': true });
+  const side = page.locator('#feature-sidebar');
+  await expect(side.getByRole('button', { name: 'app.ts', exact: true })).toBeVisible();
+  await expect(side.getByRole('button', { name: 'app.js', exact: true })).toHaveCount(0);
+  await expect(side.getByRole('button', { name: 'package-lock.json', exact: true })).toHaveCount(0);
+  await side.getByRole('button', { name: 'Expand nested files of app.ts' }).click();
+  await expect(side.getByRole('button', { name: 'app.js', exact: true })).toBeVisible();
+  await side.getByRole('button', { name: 'Expand nested files of package.json' }).click();
+  await expect(side.getByRole('button', { name: 'package-lock.json', exact: true })).toBeVisible();
+  // Off (VS Code's default): every file on its own row.
+  await page.evaluate(() => localStorage.setItem('tas:settings', '{}'));
+  await page.reload();
+  await expect(side.getByRole('button', { name: 'app.js', exact: true })).toBeVisible();
+});
