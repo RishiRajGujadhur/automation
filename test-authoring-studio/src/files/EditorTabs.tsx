@@ -17,7 +17,9 @@ import { fileType } from './fileTypes';
 import { api } from '../api';
 import { isBrowser } from './provider';
 import { tabDescription } from './tabLabel';
-import { pinnedTabSizing, scrollToSwitchTabs, showTabIcons, wrapTabs } from '../vscode/editorManagement';
+import { editorPreview, pinnedTabSizing, scrollToSwitchTabs, showTabIcons, wrapTabs } from '../vscode/editorManagement';
+import { setSetting } from '../vscode/settings';
+import { openQuickInput } from '../quickinput/store';
 import { untitledLabel } from './untitled';
 import { decorationBadges, decorationClass, decorationColors, useFileDecorations } from './decorations';
 import { untitledTabLabel, useUntitledLabels } from './untitledHint';
@@ -156,6 +158,20 @@ export default function EditorTabs({ onClose, onSplit, children }: { onClose: (f
             entries={tabs.map((t) => ({ label: `${dirty.includes(t.file) ? '● ' : ''}${t.file}`, icon: fileType(t.file).icon, onSelect: () => activateTab(t.file) }))} />
         )}
         <div className="editor-tab-actions" ref={setSlot} />
+        {/* VS Code's editor group "…" (W79): Show Opened Editors, Close All / Saved, preview editors, Configure Editors. */}
+        {tabs.length > 0 && (
+          <Dropdown label="More Actions" align="end" trigger={<button className="tab-scroll editor-group-more" aria-label="More Actions…" title="More Actions…"><span className="codicon codicon-ellipsis" aria-hidden="true" /></button>}
+            entries={[
+              { label: 'Show Opened Editors', onSelect: () => openQuickInput('edt ') },
+              'separator',
+              { label: 'Close All', shortcut: 'Ctrl+K W', onSelect: () => closeAll() },
+              { label: 'Close Saved', shortcut: 'Ctrl+K U', onSelect: () => closeSaved(dirty) },
+              'separator',
+              { label: `${editorPreview.enable() ? '✓ ' : ''}Enable Preview Editors`, onSelect: () => setSetting('workbench.editor.enablePreview', !editorPreview.enable()) },
+              'separator',
+              { label: 'Configure Editors', onSelect: () => { try { sessionStorage.setItem('tas:settingsQuery', 'workbench.editor'); } catch { /* storage blocked */ } window.dispatchEvent(new Event('tas:open-preferences')); } },
+            ]} />
+        )}
       </div>
       {children}
     </ActionsSlot.Provider>

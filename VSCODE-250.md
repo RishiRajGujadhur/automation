@@ -100,7 +100,7 @@ Legend: `[x]` done · `[ ]` to do.
 - [x] W76. workbench.editor.pinnedTabSizing (normal / compact / shrink)
 - [x] W77. workbench.editor.showIcons
 - [x] W78. workbench.editor.revealIfOpen
-- [ ] W79. Editor actions "…" menu: Show Opened Editors, Close All, Close Saved, Configure Editors, Toggle Keep Editors Open
+- [x] W79. Editor actions "…" menu: Show Opened Editors, Close All, Close Saved, Configure Editors, Toggle Keep Editors Open
 - [ ] W80. Tab context menu: Close Others, Close to the Right, Copy Relative Path, Keep Open, Split Up / Down / Left / Right
 - [ ] W81. Close Saved Editors in Group (Ctrl+K U), Close Group (Ctrl+K W), Close All Groups (Ctrl+K Ctrl+Shift+W)
 - [ ] W82. Revert File, Save without Formatting (Ctrl+K S)
@@ -370,3 +370,4 @@ Legend: `[x]` done · `[ ]` to do.
 - 2026-10-22: W76. workbench.editor.pinnedTabSizing: pinned tabs as wide as normal ones, compact (icon only, name in the tooltip) or shrunk to a fixed width.
 - 2026-10-22: W77. workbench.editor.showIcons: editor tabs with or without their file icons.
 - 2026-10-22: W78. workbench.editor.revealIfOpen: opening a file that is open only in the side editor group shows it there instead of opening it again in the main group.
+- 2026-10-22: W79. VS Code's '…' at the end of the tab bar: Show Opened Editors, Close All, Close Saved, Enable Preview Editors and Configure Editors (Settings filtered to workbench.editor).

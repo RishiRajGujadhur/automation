@@ -1561,3 +1561,28 @@ test('W78 workbench.editor.revealIfOpen: a file open in the side group is shown 
   await quickOpen();
   await expect(mainTab).toHaveCount(1);
 });
+
+test('W79 Editor group "…" menu: Show Opened Editors, Close Saved, preview editors, Configure Editors', async ({ page }) => {
+  await start(page);
+  await open(page, 'Steps/AuthSteps.cs');
+  await open(page, 'Steps/SearchSteps.cs');
+  const more = page.getByRole('button', { name: 'More Actions…' });
+  await more.click();
+  await page.getByRole('menuitem', { name: 'Show Opened Editors' }).click();
+  await expect(quickBox(page)).toHaveValue('edt ');
+  await page.keyboard.press('Escape');
+  // Close Saved keeps the unsaved one.
+  await page.getByLabel('Source of Steps/SearchSteps.cs').click();
+  await page.keyboard.type('x');
+  await more.click();
+  await page.getByRole('menuitem', { name: /^Close Saved/ }).click();
+  await expect(page.locator('.editor-tab')).toHaveCount(1);
+  await expect(page.locator('.editor-tab')).toContainText('SearchSteps.cs');
+  await more.click();
+  await page.getByRole('menuitem', { name: /Enable Preview Editors/ }).click();
+  expect(await page.evaluate(() => JSON.parse(localStorage.getItem('tas:settings') ?? '{}')['workbench.editor.enablePreview'])).toBe(true);
+  await more.click();
+  await page.getByRole('menuitem', { name: 'Configure Editors' }).click();
+  const d = page.getByRole('dialog', { name: 'Preferences' });
+  await expect(d.getByRole('searchbox', { name: 'Search settings' })).toHaveValue('workbench.editor');
+});

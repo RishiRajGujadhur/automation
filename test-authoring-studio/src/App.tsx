@@ -1341,6 +1341,8 @@ export default function App() {
     window.addEventListener('mouseup', up, true);
     return () => { window.removeEventListener('mousedown', stop, true); window.removeEventListener('mouseup', up, true); };
   }, []);
+  // Settings opened from elsewhere (the editor group's Configure Editors, W79).
+  useEffect(() => { const h = () => setModal('preferences'); window.addEventListener('tas:open-preferences', h); return () => window.removeEventListener('tas:open-preferences', h); }, []);
   const focusKeysRef = useRef({ sideBar: () => {}, debugConsole: () => {}, output: () => {} });
   focusKeysRef.current = {
     sideBar: () => { setPrefs({ sidebar: true }); setTimeout(() => document.querySelector<HTMLElement>('#feature-sidebar button, #feature-sidebar input')?.focus(), 50); },
