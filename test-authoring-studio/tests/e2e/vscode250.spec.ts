@@ -1069,3 +1069,22 @@ test('W49 workbench.activityBar.location: top of the side bar', async ({ page })
   // The rest is in the overflow menu, as in VS Code.
   await expect(bar.getByRole('button', { name: /^More pages/ })).toBeVisible();
 });
+
+test('W50 workbench.activityBar.iconClickBehavior: toggle hides the side bar, focus focuses it', async ({ page }) => {
+  await start(page);
+  const bar = page.getByRole('navigation', { name: 'Main' });
+  const search = bar.getByRole('button', { name: 'Search (Find in Files)' });
+  await search.click();
+  await expect(page.locator('html')).toHaveAttribute('data-sidebar', 'true');
+  await search.click();
+  await expect(page.locator('html')).toHaveAttribute('data-sidebar', 'false');
+  await page.evaluate(() => localStorage.setItem('tas:settings', JSON.stringify({ 'workbench.activityBar.iconClickBehavior': 'focus' })));
+  await page.reload();
+  await expect(page.getByText('Repository indexed')).toBeVisible();
+  await search.click();
+  await expect(page.locator('html')).toHaveAttribute('data-sidebar', 'true');
+  await page.locator('footer.status-bar').click();
+  await search.click();
+  await expect(page.locator('html')).toHaveAttribute('data-sidebar', 'true');
+  await expect.poll(() => page.evaluate(() => !!document.activeElement?.closest('#feature-sidebar'))).toBe(true);
+});

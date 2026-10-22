@@ -69,7 +69,7 @@ Legend: `[x]` done · `[ ]` to do.
 - [x] W47. Activity bar: Accounts and Manage (gear) menus at the bottom
 - [x] W48. Activity bar: right-click to hide / show items, drag to reorder (persisted)
 - [x] W49. Activity bar at the top of the side bar (workbench.activityBar.location: top)
-- [ ] W50. workbench.activityBar.iconClickBehavior (toggle / focus)
+- [x] W50. workbench.activityBar.iconClickBehavior (toggle / focus)
 - [ ] W51. Side bar views as collapsible sections with headers and title actions (Explorer: Open Editors, folder, Outline, Timeline)
 - [ ] W52. Outline view (follow cursor, sort by position / name / category, filter on type)
 - [ ] W53. Timeline view: Local History and Git commits of the active file, open diff
@@ -343,3 +343,4 @@ Legend: `[x]` done · `[ ]` to do.
 - 2026-10-22: W47. The activity bar's bottom has VS Code's Accounts (no accounts: the studio is local; Copy Environment Info) and Manage gear (Command Palette, Settings, Workspace Settings, Keyboard Shortcuts, Themes ▸ Color Theme, Customize Layout). Fixed on the way: the status bar bell was below WCAG's target size in the matrix theme; the Test Design audit got the time its eleven axe runs need.
 - 2026-10-22: W48. Right-click the activity bar: Hide 'item', a checkbox per item and Reset Location and Visibility; items can be dragged into another order. Both are kept; the active page always shows.
 - 2026-10-22: W49. workbench.activityBar.location gained VS Code's top: the icons run across the top of the primary side bar (overflow in the ☰ menu) and hide with it.
+- 2026-10-22: W50. workbench.activityBar.iconClickBehavior: clicking the icon of the side bar view already shown hides the side bar (toggle, VS Code's default; Search, Test Explorer and Git Changes now do this too) or focuses it (focus).

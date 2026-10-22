@@ -6,6 +6,7 @@ import { useGitSummary } from './git/statusStore';
 import { useTestRun } from './testing/store';
 import { featureOn } from './features';
 import { useLocalState } from './ui';
+import { iconClickBehavior } from './vscode/workbenchLayout';
 import { runRider } from './rider/commands';
 import { openCommandPalette } from './quickinput/providers';
 
@@ -27,6 +28,8 @@ export const activityItems: ActivityItem[] = [
   { id: 'Project Explorer', label: 'Project Explorer', icon: FolderTree, advanced: true },
 ];
 const ITEM = 46; // px per activity item
+/** Activity bar items that are side bar views (the others are pages). */
+const SIDE_VIEWS = ['Features', 'Search', 'Testing', 'Git'];
 
 export default function ActivityBar({ active, basic, sidebarOpen, onSelect, onToggleSidebar, onPreferences, onWorkspace, onMore, onShortcuts }: {
   onShortcuts?: () => void;
@@ -97,7 +100,14 @@ export default function ActivityBar({ active, basic, sidebarOpen, onSelect, onTo
             aria-label={i.label}
             aria-current={isActive ? 'page' : undefined}
             aria-expanded={i.id === 'Features' ? sidebarOpen : undefined}
-            onClick={() => (i.id === 'Features' && isActive ? onToggleSidebar() : onSelect(i.id))}
+            onClick={() => {
+              // The active side bar view's icon hides the side bar or focuses it (iconClickBehavior, W50).
+              if (isActive && SIDE_VIEWS.includes(i.id) && (sidebarOpen || i.id !== 'Features')) {
+                if (iconClickBehavior() === 'focus' && sidebarOpen) { document.querySelector<HTMLElement>('#feature-sidebar input, #feature-sidebar button, #feature-sidebar [tabindex="0"]')?.focus(); return; }
+                if (sidebarOpen) { onToggleSidebar(); return; }
+              }
+              if (i.id === 'Features' && isActive) onToggleSidebar(); else onSelect(i.id);
+            }}
           >
             <i.icon size={22} strokeWidth={1.6} aria-hidden="true" />
             {badges[i.id] && <span className={`activity-badge ${badges[i.id]!.tone}`} data-badge={i.id} title={badges[i.id]!.text}>{badges[i.id]!.n > 99 ? '99+' : badges[i.id]!.n}</span>}

@@ -29,3 +29,9 @@ export const panelAlignment = defineSetting<'center' | 'justify' | 'left' | 'rig
     { value: 'justify', description: 'The panel extends under the editor area and both side bars.' },
   ],
 });
+
+/** workbench.activityBar.iconClickBehavior (VSCODE-250.md W50): what clicking the active side bar view's icon does. */
+export const iconClickBehavior = defineSetting<'toggle' | 'focus'>({
+  key: 'workbench.activityBar.iconClickBehavior', category: C, title: 'Activity Bar: Icon Click Behavior', type: 'enum', default: 'toggle', description: 'Controls the behavior of clicking an Activity Bar icon in the workbench.',
+  options: [{ value: 'toggle', description: 'Hide the Primary Side Bar if the clicked item is already visible.' }, { value: 'focus', description: 'Focus the Primary Side Bar if the clicked item is already visible.' }],
+});
