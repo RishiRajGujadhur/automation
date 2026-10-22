@@ -27,9 +27,17 @@ In the web app, **Settings > General > Show Guide Me button** controls the tour 
 
 ### Web workbench
 
-Advanced mode with the essential button profile, using the sample repository:
+Current web app with the essential button profile, using the sample repository. The animated tour moves through the dashboard, feature editor, test generator, and button settings:
 
-![Web workbench with essential buttons](docs/screenshots/web-workbench-essential.png)
+![Animated tour of the web workbench](docs/screenshots/web-workbench-tour.gif)
+
+| Dashboard | Feature editor |
+| --- | --- |
+| <img src="docs/screenshots/web-dashboard.png" alt="Web dashboard with project overview and authoring actions" width="480"> | <img src="docs/screenshots/web-feature-editor.png" alt="Web feature editor with Solution Explorer" width="480"> |
+
+| Test generator | Button visibility settings |
+| --- | --- |
+| <img src="docs/screenshots/web-test-generator.png" alt="Test generator showing scenario steps and binding matches" width="480"> | <img src="docs/screenshots/web-button-settings.png" alt="Settings page for optional workbench buttons" width="480"> |
 
 The gallery below contains running-app captures of the Windows desktop build using a temporary Calculator sample repository. It covers authoring, debugging, Git, and the workbench tools.
 
@@ -98,4 +106,12 @@ npm run pack
 $env:TAS_SCREENSHOTS = '1'
 $env:TAS_EXE = 'release/win-unpacked/TestAuthoring Studio.exe'
 npx playwright test screenshots
+```
+
+To refresh the web captures and animated tour, from `test-authoring-studio/` run:
+
+```powershell
+$env:TAS_README_SCREENSHOTS = '1'
+npx playwright test readme-screenshots.spec.ts
+python scripts/create-readme-gif.py # requires Pillow
 ```

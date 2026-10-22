@@ -1,0 +1,44 @@
+import { test, expect } from '@playwright/test';
+import path from 'node:path';
+
+/** Run with TAS_README_SCREENSHOTS=1 to refresh the web gallery in docs/screenshots. */
+test.skip(!process.env.TAS_README_SCREENSHOTS, 'README capture only');
+test.use({
+  viewport: { width: 1440, height: 900 },
+  storageState: { cookies: [], origins: [] },
+});
+
+const out = path.resolve(import.meta.dirname, '../../../docs/screenshots');
+
+test('capture current web workbench pages', async ({ page }) => {
+  await page.addInitScript(() => {
+    localStorage.setItem('tas:prefs', JSON.stringify({ mode: 'advanced', layout: 'vscode', autoSave: 'off' }));
+  });
+
+  const shot = async (name: string) => {
+    await page.evaluate(() => document.fonts.ready);
+    await page.mouse.move(2, 2);
+    await page.waitForTimeout(350);
+    await page.screenshot({ path: path.join(out, name), animations: 'disabled' });
+  };
+
+  await page.goto('/#/dashboard');
+  await expect(page.getByText('Repository indexed')).toBeVisible({ timeout: 60_000 });
+  await shot('web-dashboard.png');
+
+  await page.goto('/#/features/editor');
+  await expect(page.locator('.solution-explorer')).toBeVisible();
+  await shot('web-feature-editor.png');
+
+  await page.getByRole('navigation', { name: 'Main' }).getByRole('button', { name: 'Dashboard' }).click();
+  await page.getByRole('button', { name: 'Generate a test from inputs' }).click();
+  await expect(page.getByText('Test Generator', { exact: true }).first()).toBeVisible();
+  await page.getByRole('button', { name: 'Next: Scenario' }).click();
+  await shot('web-test-generator.png');
+
+  await page.keyboard.press('Control+,');
+  const settings = page.getByRole('dialog');
+  await expect(settings).toBeVisible();
+  await settings.getByRole('navigation', { name: 'Settings categories' }).getByRole('button', { name: 'Buttons' }).click();
+  await shot('web-button-settings.png');
+});
