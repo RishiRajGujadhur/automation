@@ -71,7 +71,7 @@ test('WCAG 2.2 AA in the VS Code layout', async ({ page }) => {
 
 test('Essentials preset by default; switches are locked until Custom', async ({ page }) => {
   await advanced(page);
-  await page.getByRole('button', { name: 'Preferences' }).click();
+  await page.keyboard.press('Control+,');
   await page.getByRole('dialog').getByRole('button', { name: 'Algorithms' }).click();
   await expect(page.getByRole('combobox', { name: 'Algorithm preset' })).toContainText('Essentials');
   await expect(page.locator('#algo-genetic')).toBeDisabled();
@@ -90,7 +90,7 @@ test('Essentials preset by default; switches are locked until Custom', async ({ 
 
 test('Classic layout is still available from Appearance', async ({ page }) => {
   await advanced(page);
-  await page.getByRole('button', { name: 'Preferences' }).click();
+  await page.keyboard.press('Control+,');
   await page.getByRole('dialog').getByRole('button', { name: 'Appearance' }).click();
   await page.getByRole('radio', { name: 'Classic' }).click();
   await expect(page.locator('html')).toHaveAttribute('data-layout', 'classic');
@@ -101,7 +101,7 @@ test('Test Generator: project model hidden by default, shown from Settings → G
   await advanced(page, '/#/test-generator');
   await expect(page.locator('.generator-sidebar')).toHaveCount(0);
   await expect(page.locator('.wizard-title').first()).toHaveClass(/sr-only/);
-  await page.getByRole('button', { name: 'Preferences' }).click();
+  await page.keyboard.press('Control+,');
   await page.locator('#pref-project-model').click();
   await page.keyboard.press('Escape');
   await expect(page.locator('.generator-sidebar')).toBeVisible();

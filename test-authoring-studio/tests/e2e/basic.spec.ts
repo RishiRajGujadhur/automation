@@ -37,7 +37,7 @@ test('Basic mode is the default and shows Dashboard, Test Generator and Recorder
   await page.keyboard.press('Control+Shift+A');
   await expect(page.locator('html')).toHaveAttribute('data-mode', 'basic');
   await expect(page.getByRole('radio', { name: 'Advanced mode' })).toHaveCount(0); // not on the toolbar any more
-  await page.getByRole('button', { name: 'Preferences' }).click();
+  await page.keyboard.press('Control+,');
   await page.getByRole('dialog').getByRole('radio', { name: 'Advanced' }).click();
   await expect(page.locator('html')).toHaveAttribute('data-mode', 'advanced');
   await page.keyboard.press('Escape');
@@ -48,7 +48,7 @@ test('Basic mode is the default and shows Dashboard, Test Generator and Recorder
 
 test('every accent is selectable and shows its contrast ratio', async ({ page }) => {
   await page.goto('/');
-  await page.getByRole('button', { name: 'Preferences' }).click();
+  await page.keyboard.press('Control+,');
   const dialog = page.getByRole('dialog', { name: 'Preferences' });
   await expect(dialog.getByRole('radio', { name: 'Basic' })).toHaveAttribute('data-state', 'on');
   await dialog.getByRole('navigation', { name: 'Settings categories' }).getByRole('button', { name: 'Appearance' }).click();

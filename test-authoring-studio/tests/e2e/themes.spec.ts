@@ -17,7 +17,7 @@ for (const theme of ['light', 'matrix', 'midnight', 'nord']) {
       const v = r.violations.map((x) => `${x.id}: ${x.nodes.slice(0, 4).map((n) => n.target.join(' ') + ' → ' + (n.failureSummary ?? '').replace(/\s+/g, ' ').slice(40, 150)).join(' || ')}`);
       expect(v, `${theme} ${url}`).toEqual([]);
     }
-    await page.getByRole('button', { name: 'Preferences' }).click();
+    await page.keyboard.press('Control+,');
     await page.waitForTimeout(300);
     const r = await new AxeBuilder({ page }).withTags(TAGS).analyze();
     expect(r.violations.map((x) => x.id + ' ' + x.nodes.map((n) => n.target.join(' ')).slice(0, 3).join(' | ')), `${theme} settings`).toEqual([]);
@@ -28,7 +28,7 @@ test('theme picker, editor theme, accent logo and native scrollbars', async ({ p
   await page.goto('/#/features/editor');
   await expect(page.getByText('Repository indexed')).toBeVisible();
   // Accent drives the logo and the scrollbar colour.
-  await page.getByRole('button', { name: 'Preferences' }).click();
+  await page.keyboard.press('Control+,');
   const dialog = page.getByRole('dialog', { name: 'Preferences' });
   const nav = dialog.getByRole('navigation', { name: 'Settings categories' });
   await nav.getByRole('button', { name: 'Appearance' }).click();

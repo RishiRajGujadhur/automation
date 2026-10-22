@@ -283,12 +283,12 @@ test('QL34 Keyboard shortcuts dialog: filter', async ({ page }) => {
 
 test('QL35 / QL36 Settings remembers its section and search', async ({ page }) => {
   await page.goto('/#/dashboard');
-  await page.getByRole('button', { name: 'Preferences' }).click();
+  await page.keyboard.press('Control+,');
   const dialog = page.getByRole('dialog', { name: 'Preferences' });
   await dialog.getByRole('navigation', { name: 'Settings categories' }).getByRole('button', { name: 'Appearance' }).click();
   await page.keyboard.press('Escape');
   await expect(dialog).toHaveCount(0);
-  await page.getByRole('button', { name: 'Preferences' }).click();
+  await page.keyboard.press('Control+,');
   await expect(dialog.getByRole('navigation', { name: 'Settings categories' }).getByRole('button', { name: 'Appearance' })).toHaveAttribute('aria-current', 'page');
 });
 
@@ -502,7 +502,7 @@ test('QL65 / QL66 Find in Files starts with the selection; Go to All remembers i
 
 test('QL74 Settings: changed feature switches are marked; @modified lists them', async ({ page }) => {
   await page.goto('/#/dashboard');
-  await page.getByRole('button', { name: 'Preferences' }).click();
+  await page.keyboard.press('Control+,');
   const dialog = page.getByRole('dialog', { name: 'Preferences' });
   await dialog.getByRole('navigation', { name: 'Settings categories' }).getByRole('button', { name: 'Features' }).click();
   await dialog.getByRole('switch', { name: 'Copy XPath', exact: true }).click();

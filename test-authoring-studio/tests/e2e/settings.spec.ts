@@ -15,7 +15,7 @@ test('studio settings: port validation, tracing, dashboard stats, card memory an
     await expect(page.getByRole('button', { name: 'Layers' })).toHaveAttribute('aria-expanded', 'false');
 
     // Preferences: hide dashboard stats.
-    await page.getByRole('button', { name: 'Preferences' }).click();
+    await page.keyboard.press('Control+,');
     const dialog = page.getByRole('dialog', { name: 'Preferences' });
     await dialog.getByRole('switch', { name: 'Show dashboard statistics' }).click();
     await expect(page.locator('.stat-grid')).toHaveCount(0);

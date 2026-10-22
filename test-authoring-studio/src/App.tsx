@@ -1623,6 +1623,7 @@ export default function App() {
             onToggleSidebar={() => setPrefs({ sidebar: !prefs.sidebar })}
             onPreferences={() => setModal('preferences')}
             onWorkspace={() => setModal('settings')}
+            onShortcuts={() => setModal('shortcuts')}
             onMore={() => setMode('advanced')}
           />
         )}

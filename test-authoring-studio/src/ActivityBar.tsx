@@ -1,10 +1,12 @@
 import { useLayoutEffect, useRef, useState } from 'react';
-import { LayoutDashboard, Wand2, Files, Circle, Braces, FlaskConical, BookOpen, Blocks, ScanLine, FolderTree, Settings2, SlidersHorizontal, MoreHorizontal, Menu, TestTubeDiagonal, Search, GitBranch, type LucideIcon } from 'lucide-react';
+import { LayoutDashboard, Wand2, Files, Circle, Braces, FlaskConical, BookOpen, Blocks, ScanLine, FolderTree, MoreHorizontal, Menu, TestTubeDiagonal, Search, GitBranch, type LucideIcon } from 'lucide-react';
 import { Tip } from './radix2';
 import { Dropdown } from './radix';
 import { useGitSummary } from './git/statusStore';
 import { useTestRun } from './testing/store';
 import { featureOn } from './features';
+import { runRider } from './rider/commands';
+import { openCommandPalette } from './quickinput/providers';
 
 export type ActivityItem = { id: string; label: string; icon: LucideIcon; shortcut?: string; advanced?: boolean };
 /** VS Code-style activity bar: one icon per page. Features toggles the explorer when it is already active. */
@@ -25,7 +27,8 @@ export const activityItems: ActivityItem[] = [
 ];
 const ITEM = 46; // px per activity item
 
-export default function ActivityBar({ active, basic, sidebarOpen, onSelect, onToggleSidebar, onPreferences, onWorkspace, onMore }: {
+export default function ActivityBar({ active, basic, sidebarOpen, onSelect, onToggleSidebar, onPreferences, onWorkspace, onMore, onShortcuts }: {
+  onShortcuts?: () => void;
   active: string; basic: boolean; sidebarOpen: boolean;
   onSelect: (id: string) => void; onToggleSidebar: () => void; onPreferences: () => void; onWorkspace: () => void; onMore: () => void;
 }) {
@@ -100,8 +103,27 @@ export default function ActivityBar({ active, basic, sidebarOpen, onSelect, onTo
         )}
       </ul>
       <ul className="activity-bottom">
-        <li><Tip content="Workspace settings" side="right"><button className="activity-item" data-tour="workspace" aria-label="Workspace settings" onClick={onWorkspace}><Settings2 size={22} strokeWidth={1.6} aria-hidden="true" /></button></Tip></li>
-        <li><Tip content="Preferences" shortcut="Ctrl+," side="right"><button className="activity-item" aria-label="Preferences" onClick={onPreferences}><SlidersHorizontal size={21} strokeWidth={1.6} aria-hidden="true" /></button></Tip></li>
+        {/* VS Code's Accounts and Manage menus (VSCODE-250.md W47). */}
+        <li>
+          <Dropdown label="Accounts" align="start" trigger={<button className="activity-item" aria-label="Accounts" title="Accounts"><span className="codicon codicon-account" aria-hidden="true" /></button>} entries={[
+            { heading: 'No accounts: the studio works on this computer only' },
+            'separator',
+            { label: 'Copy Environment Info', onSelect: () => runRider('copy-env-info', 'menu') },
+          ]} />
+        </li>
+        <li>
+          <Dropdown label="Manage" align="start" trigger={<button className="activity-item" data-tour="workspace" aria-label="Manage" title="Manage"><span className="codicon codicon-settings-gear" aria-hidden="true" /></button>} entries={[
+            { label: 'Command Palette...', shortcut: 'Ctrl+Shift+P', onSelect: () => openCommandPalette() },
+            'separator',
+            { label: 'Settings', shortcut: 'Ctrl+,', onSelect: onPreferences },
+            { label: 'Workspace Settings', onSelect: onWorkspace },
+            { label: 'Keyboard Shortcuts', shortcut: 'Ctrl+K Ctrl+S', onSelect: () => onShortcuts?.() },
+            'separator',
+            { submenu: 'Themes', items: [{ label: 'Color Theme', shortcut: 'Ctrl+K Ctrl+T', onSelect: () => runRider('quick-theme', 'menu') }] },
+            'separator',
+            { label: 'Customize Layout...', onSelect: () => runRider('customize-layout', 'menu') },
+          ]} />
+        </li>
       </ul>
     </nav>
   );

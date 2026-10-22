@@ -35,7 +35,7 @@ for (const [name, url] of pages) {
 test('WCAG 2.2 AA: dialogs and menus', async ({ page }) => {
   await page.goto('/#/dashboard');
   await expect(page.getByText('Repository indexed')).toBeVisible();
-  await page.getByRole('button', { name: 'Preferences' }).click();
+  await page.keyboard.press('Control+,');
   await expect(page.getByRole('dialog', { name: 'Preferences' })).toBeVisible();
   await page.waitForTimeout(300);
   await audit(page, 'Preferences dialog');

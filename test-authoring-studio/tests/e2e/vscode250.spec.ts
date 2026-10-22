@@ -1010,3 +1010,20 @@ test('W46 window.title and window.titleSeparator', async ({ page }) => {
   await open(page, 'Steps/AuthSteps.cs');
   await expect(page).toHaveTitle('Steps/AuthSteps.cs | TestAuthoring Studio');
 });
+
+test('W47 Activity bar: Accounts and Manage (gear) menus at the bottom', async ({ page }) => {
+  await start(page);
+  const bar = page.getByRole('navigation', { name: 'Main' });
+  await bar.getByRole('button', { name: 'Accounts' }).click();
+  await expect(page.getByRole('menu', { name: 'Accounts' })).toContainText('No accounts');
+  await page.keyboard.press('Escape');
+  await bar.getByRole('button', { name: 'Manage' }).click();
+  const menu = page.getByRole('menu', { name: 'Manage' });
+  for (const item of ['Command Palette...', 'Settings', 'Workspace Settings', 'Keyboard Shortcuts', 'Customize Layout...']) await expect(menu.getByRole('menuitem', { name: new RegExp(`^${item.replace(/\./g, '\.')}`) })).toBeVisible();
+  await menu.getByRole('menuitem', { name: /^Command Palette/ }).click();
+  await expect(quickBox(page)).toHaveValue('>');
+  await page.keyboard.press('Escape');
+  await bar.getByRole('button', { name: 'Manage' }).click();
+  await menu.getByRole('menuitem', { name: /^Settings/ }).click();
+  await expect(page.getByRole('dialog', { name: 'Preferences' })).toBeVisible();
+});

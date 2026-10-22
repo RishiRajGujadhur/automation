@@ -832,3 +832,5 @@ html[data-side-bar='right'] .app-body {
   .command-center-more { flex: none; padding: 0 6px; border-left: 1px solid var(--border); }
   button:hover { background: color-mix(in srgb, var(--text) 8%, transparent); color: var(--text); }
 }
+// The bell is an icon alone: a full-size target (WCAG 2.2 target size).
+.status-bar .notifications-bell { min-width: 24px; min-height: 22px; display: inline-flex; align-items: center; justify-content: center; }

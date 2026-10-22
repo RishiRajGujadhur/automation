@@ -9,6 +9,8 @@ async function audit(page: Page, name: string) {
 const tools = ['Examples generator', 'Logic & techniques', 'Step library', 'Suite optimizer', 'Flow generator', 'Impact & risk', 'Duplicates & smells', 'Results & flakiness', 'Plans & filters', 'Living docs', 'Similarity lab'];
 
 test('every Test Design tool renders and passes WCAG 2.2 AA', async ({ page }) => {
+  // Eleven axe audits: more than the default 30 s.
+  test.setTimeout(120_000);
   await page.goto('/#/test-design');
   await expect(page.getByText('Repository indexed')).toBeVisible();
   for (const name of tools) {
@@ -33,7 +35,7 @@ test('turning an algorithm off removes it from the tools, Turn on restores it', 
   await page.goto('/#/test-design');
   await page.getByRole('tab', { name: 'Flow generator' }).click();
   await expect(page.getByText(/Transitions \d+\/\d+/)).toBeVisible();
-  await page.getByRole('button', { name: 'Preferences' }).click();
+  await page.keyboard.press('Control+,');
   await page.getByRole('dialog').getByRole('button', { name: 'Algorithms' }).click();
   await page.getByRole('button', { name: 'Customize' }).click();
   await page.locator('#algo-fsm-parse').click();
@@ -46,7 +48,7 @@ test('turning an algorithm off removes it from the tools, Turn on restores it', 
 
 test('settings search finds algorithms by what they do, with a tooltip', async ({ page }) => {
   await page.goto('/#/dashboard');
-  await page.getByRole('button', { name: 'Preferences' }).click();
+  await page.keyboard.press('Control+,');
   await page.getByRole('dialog').getByRole('searchbox').fill('phonetic');
   await expect(page.getByRole('heading', { name: 'Soundex About Soundex' })).toBeVisible();
   await page.getByRole('button', { name: 'About Soundex' }).focus();

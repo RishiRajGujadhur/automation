@@ -32,7 +32,7 @@ test('Radix dialog, alert dialog, tabs, accordion, tooltip, toast, preferences a
   await expect(page.getByRole('button', { name: 'Dismiss notification' })).toHaveCount(0);
 
   // Preferences dialog: switch + toggle group drive <html> data attributes.
-  await page.getByRole('button', { name: 'Preferences' }).click();
+  await page.keyboard.press('Control+,');
   await expect(page.getByRole('dialog', { name: 'Preferences' })).toBeVisible();
   const nav = page.getByRole('navigation', { name: 'Settings categories' });
   await nav.getByRole('button', { name: 'Appearance' }).click();
