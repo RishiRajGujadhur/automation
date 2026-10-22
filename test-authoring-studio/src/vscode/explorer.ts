@@ -7,6 +7,10 @@ export const explorerDeco = {
   badges: defineSetting<boolean>({ key: 'explorer.decorations.badges', category: E, title: 'Decorations: Badges', type: 'boolean', default: true, description: 'Controls whether file decorations should use badges.' }),
 };
 export const explorerSettings = {
+  autoReveal: defineSetting<'true' | 'false' | 'focusNoScroll'>({
+    key: 'explorer.autoReveal', category: E, title: 'Auto Reveal', type: 'enum', default: 'true', description: 'Controls whether the Explorer should automatically reveal and select files when opening them.',
+    options: [{ value: 'true', description: 'Files will be revealed and selected.' }, { value: 'false', description: 'Files will not be revealed and selected.' }, { value: 'focusNoScroll', description: 'Files will not be scrolled into view, but will still be focused.' }],
+  }),
   sortOrder: defineSetting<'default' | 'mixed' | 'filesFirst' | 'type'>({
     key: 'explorer.sortOrder', category: E, title: 'Sort Order', type: 'enum', default: 'default', description: 'Controls the property-based sorting of files and folders in the Explorer.',
     options: [{ value: 'default', description: 'Files and folders are sorted by their names. Folders are displayed before files.' }, { value: 'mixed', description: 'Files and folders are sorted by their names. Files are interwoven with folders.' }, { value: 'filesFirst', description: 'Files and folders are sorted by their names. Files are displayed before folders.' }, { value: 'type', description: 'Files and folders are grouped by extension type then sorted by their names. Folders are displayed before files.' }],

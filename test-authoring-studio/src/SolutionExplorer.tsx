@@ -317,7 +317,13 @@ export default function SolutionExplorer({ features, revision, activeFile, query
   // Track Active Item can be turned off (Visual Studio's option; Rider's 'Always Select Opened File').
   const [track, setTrack] = useState(() => { try { return localStorage.getItem('tas:explorerTrack') !== 'false'; } catch { return true; } });
   useEffect(() => { try { localStorage.setItem('tas:explorerTrack', String(track)); } catch { /* storage blocked */ } }, [track]);
-  useEffect(() => { if (activeFile && (track || !featureOn('explorer-track'))) setCollapsed((prev) => { const next = new Set(prev); parentFolders(normalizeFeaturePath(activeFile)).forEach((p) => next.delete(p)); return next; }); }, [activeFile]); // eslint-disable-line react-hooks/exhaustive-deps
+  // explorer.autoReveal (W96): the active file's folders open and (unless focusNoScroll) it scrolls into view; false leaves the tree alone.
+  useEffect(() => {
+    const reveal = explorerSettings.autoReveal();
+    if (!activeFile || reveal === 'false' || !(track || !featureOn('explorer-track'))) return;
+    setCollapsed((prev) => { const next = new Set(prev); parentFolders(normalizeFeaturePath(activeFile)).forEach((p) => next.delete(p)); return next; });
+    if (reveal === 'true') { const f = normalizeFeaturePath(activeFile); setTimeout(() => tree.current?.querySelector<HTMLElement>(`[data-path="${CSS.escape(f)}"]`)?.scrollIntoView({ block: 'nearest' }), 80); }
+  }, [activeFile]); // eslint-disable-line react-hooks/exhaustive-deps
 
   /** Keyboard in the Explorer tree (QOL-50): arrows, Home / End, type to select, Enter. */
   const typed = useRef({ text: '', at: 0 });

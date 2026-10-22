@@ -1875,3 +1875,22 @@ test('W95 explorer.fileNesting: related files under their parent (VS Code patter
   await page.reload();
   await expect(side.getByRole('button', { name: 'app.js', exact: true })).toBeVisible();
 });
+
+test('W96 explorer.autoReveal: the opened file is revealed (folders open, scrolled to); false leaves the tree', async ({ page }) => {
+  await fs.mkdir(path.join(temp, 'Deep/Er/Folder'), { recursive: true });
+  await fs.writeFile(path.join(temp, 'Deep/Er/Folder/Hidden.cs'), 'namespace X;\n');
+  await fs.writeFile(path.join(temp, 'Deep/Other.cs'), 'namespace X;\n');
+  await start(page, { 'explorer.compactFolders': false });
+  const side = page.locator('#feature-sidebar');
+  await side.getByRole('button', { name: /folder Deep$/ }).first().click();
+  await expect(side.getByRole('button', { name: 'Hidden.cs', exact: true })).toHaveCount(0);
+  await open(page, 'Deep/Er/Folder/Hidden.cs');
+  await expect(side.getByRole('button', { name: 'Hidden.cs', exact: true })).toBeVisible();
+  await page.evaluate(() => localStorage.setItem('tas:settings', JSON.stringify({ 'explorer.compactFolders': false, 'explorer.autoReveal': 'false' })));
+  await page.reload();
+  await expect(page.getByText('Repository indexed')).toBeVisible();
+  await side.getByRole('button', { name: /^Collapse folder Deep$/ }).first().click();
+  await open(page, 'Deep/Other.cs');
+  await page.waitForTimeout(500);
+  await expect(side.getByRole('button', { name: 'Other.cs', exact: true })).toHaveCount(0);
+});
