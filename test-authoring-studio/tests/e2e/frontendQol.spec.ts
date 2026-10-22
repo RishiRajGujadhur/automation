@@ -39,6 +39,23 @@ test('1: expands an HTML Emmet abbreviation with editable fields', async ({ page
     await page.getByRole('menuitem', { name: 'Wrap with Emmet Abbreviation…' }).click();
     await expect(editor).toContainText('<section class="card">');
     await expect(editor).toContainText('<p>Hello</p>');
+    await page.evaluate(() => {
+      const view = (window as unknown as { __activeEditor: () => { view: { state: { doc: { length: number } }; dispatch(change: unknown): void; focus(): void } } }).__activeEditor().view;
+      view.dispatch({ changes: { from: 0, to: view.state.doc.length, insert: '<div><p>Hello</p></div>' }, selection: { anchor: 10 } });
+      view.focus();
+    });
+    await page.keyboard.press('Shift+F10');
+    await page.getByRole('menuitem', { name: 'Select Enclosing HTML Element' }).click();
+    await expect.poll(() => page.evaluate(() => {
+      const view = (window as unknown as { __activeEditor: () => { view: { state: { sliceDoc(from: number, to: number): string; selection: { main: { from: number; to: number } } } } } }).__activeEditor().view;
+      return view.state.sliceDoc(view.state.selection.main.from, view.state.selection.main.to);
+    })).toBe('<p>Hello</p>');
+    await page.keyboard.press('Shift+F10');
+    await page.getByRole('menuitem', { name: 'Select Enclosing HTML Element' }).click();
+    await expect.poll(() => page.evaluate(() => {
+      const view = (window as unknown as { __activeEditor: () => { view: { state: { sliceDoc(from: number, to: number): string; selection: { main: { from: number; to: number } } } } } }).__activeEditor().view;
+      return view.state.sliceDoc(view.state.selection.main.from, view.state.selection.main.to);
+    })).toBe('<div><p>Hello</p></div>');
   } finally {
     await request.post('/api/workspace', { data: previous });
     await fs.rm(root, { recursive: true, force: true, maxRetries: 5 });

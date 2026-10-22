@@ -1,4 +1,5 @@
 import { snippet } from '@codemirror/autocomplete';
+import { syntaxTree } from '@codemirror/language';
 import type { EditorView } from '@codemirror/view';
 import { extractAbbreviation, expandAbbreviation, getExpandOptions, isAbbreviationValid } from '@vscode/emmet-helper';
 import { TextDocument } from 'vscode-languageserver-textdocument';
@@ -48,3 +49,19 @@ function wrapSelection(view: EditorView, abbreviation: string, syntax: 'html' | 
 
 export const wrapHtmlSelection = (view: EditorView, abbreviation: string) => wrapSelection(view, abbreviation, 'html');
 export const wrapJsxSelection = (view: EditorView, abbreviation: string) => wrapSelection(view, abbreviation, 'jsx');
+
+/** Select the next enclosing HTML element, moving outward on repeated invocation. */
+export function balanceHtmlOutward(view: EditorView): boolean {
+  const selection = view.state.selection.main;
+  let node = syntaxTree(view.state).resolveInner(selection.head, -1);
+  while (node) {
+    if (node.name === 'Element' && node.from <= selection.from && node.to >= selection.to
+      && (node.from !== selection.from || node.to !== selection.to)) {
+      view.dispatch({ selection: { anchor: node.from, head: node.to }, scrollIntoView: true });
+      view.focus();
+      return true;
+    }
+    node = node.parent!;
+  }
+  return false;
+}
