@@ -1341,3 +1341,16 @@ test('W63 Untitled editors: the empty hint (workbench.editor.empty.hint) and lab
   await expect(page.getByLabel('Source of .tas/untitled/Untitled-2.txt')).toBeVisible();
   await expect(page.locator('.cm-untitled-hint')).toHaveCount(0);
 });
+
+test('W64 Keep Editor (Ctrl+K Enter) turns a preview tab into a normal one', async ({ page }) => {
+  await start(page, {}, { 'tas:prefs': JSON.stringify({ mode: 'advanced', autoSave: 'off', previewTabs: true }) });
+  await page.locator('#feature-sidebar').getByRole('button', { name: 'SearchSteps.cs', exact: true }).first().click();
+  const tab = page.locator('.editor-tab', { hasText: 'SearchSteps.cs' });
+  await expect(tab).toHaveClass(/preview/);
+  await page.getByLabel('Source of Steps/SearchSteps.cs').click();
+  await page.keyboard.press('Control+k');
+  await page.keyboard.press('Enter');
+  await expect(tab).not.toHaveClass(/preview/);
+  // The text is unchanged (no line was inserted).
+  expect(await docText(page)).not.toMatch(/^\n/);
+});

@@ -71,6 +71,7 @@ import OutlineView from './views/OutlineView';
 import TimelineView from './views/TimelineView';
 import EditorWatermark from './views/EditorWatermark';
 import './files/untitled';
+import './files/keepEditor';
 import { NOTIFICATION_CENTER_EVENT } from './notificationCommands';
 import GoToAll from './search/GoToAll';
 import { runTests, getTestRun, discoverTests, useTestRun, outcomeOf, combine, type DiscoveredTest } from './testing/store';
