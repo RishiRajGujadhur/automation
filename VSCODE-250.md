@@ -91,7 +91,7 @@ Legend: `[x]` done · `[ ]` to do.
 - [x] W67. Tab badges: problem counts and Git letters (workbench.editor.decorations.badges)
 - [x] W68. workbench.editor.labelFormat (default / short / medium / long) and duplicate names told apart by folder
 - [x] W69. workbench.editor.wrapTabs
-- [ ] W70. workbench.editor.openPositioning (right / left / first / last)
+- [x] W70. workbench.editor.openPositioning (right / left / first / last)
 - [ ] W71. workbench.editor.limit.enabled / value (closes the least recently used tabs)
 - [ ] W72. workbench.editor.focusRecentEditorAfterClose
 - [ ] W73. workbench.editor.closeOnFileDelete
@@ -361,3 +361,4 @@ Legend: `[x]` done · `[ ]` to do.
 - 2026-10-22: W66, W67. Editor tabs are coloured like VS Code's: red with errors, yellow with warnings, Git colours otherwise (workbench.editor.decorations.colors), and carry a badge with the problem count or the Git letter (M, U, A, D) (workbench.editor.decorations.badges).
 - 2026-10-22: W68. workbench.editor.labelFormat: default shows a tab's folder only when another tab has the same name; short its folder, medium its path in the workspace, long its absolute path.
 - 2026-10-22: W69. workbench.editor.wrapTabs: tabs that do not fit wrap into more rows instead of scrolling. Fixed on the way: View ▸ Tabs in Multiple Rows did not wrap in the VS Code layout.
+- 2026-10-22: W70. workbench.editor.openPositioning: new tabs open right of the active one (VS Code's default), left of it, first or last; pinned tabs stay in front.

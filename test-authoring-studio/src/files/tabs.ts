@@ -1,3 +1,4 @@
+import { defineSetting } from '../vscode/settings';
 import { useSyncExternalStore } from 'react';
 import { fileSource, isBrowser } from './provider';
 import { featureOn } from '../features';
@@ -32,13 +33,26 @@ export const kindOf = (file: string): EditorTab['kind'] => (file.endsWith('.feat
  * Opens (or activates) a tab. A preview tab (Explorer single click, when enabled) replaces the previous preview tab
  * in place; it becomes a normal tab when edited, double-clicked or opened again normally.
  */
+/** workbench.editor.openPositioning (VSCODE-250.md W70): a new tab right or left of the active one, first or last (pinned tabs stay in front). */
+export const openPositioning = defineSetting<'right' | 'left' | 'first' | 'last'>({
+  key: 'workbench.editor.openPositioning', category: 'Workbench ▸ Editor Management', title: 'Open Positioning', type: 'enum', default: 'right', description: 'Controls where editors open. Select left or right to open editors to the left or right of the currently active one. Select first or last to open editors independently from the currently active one.',
+  options: [{ value: 'left' }, { value: 'right' }, { value: 'first' }, { value: 'last' }],
+});
+function insertAt(tab: EditorTab) {
+  const tabs = [...state.tabs];
+  const pinned = tabs.filter((t) => t.pinned).length;
+  const at = tabs.findIndex((t) => t.file === state.active);
+  const where = openPositioning();
+  const i = where === 'last' || (at < 0 && where !== 'first') ? tabs.length : where === 'first' ? pinned : where === 'right' ? at + 1 : at;
+  tabs.splice(Math.max(pinned, Math.min(tabs.length, i)), 0, tab);
+  return tabs;
+}
 export function openTab(file: string, kind = kindOf(file), preview = false) {
   const existing = state.tabs.find((t) => t.file === file);
   if (existing) { set({ tabs: !preview && existing.preview ? state.tabs.map((t) => (t.file === file ? { ...t, preview: false } : t)) : state.tabs, active: file }); return; }
   const tab: EditorTab = preview ? { file, kind, preview: true } : { file, kind };
   const i = preview ? state.tabs.findIndex((t) => t.preview) : -1;
-  const tabs = i >= 0 ? state.tabs.map((t, j) => (j === i ? tab : t)) : [...state.tabs, tab];
-  set({ tabs, active: file });
+  set({ tabs: i >= 0 ? state.tabs.map((t, j) => (j === i ? tab : t)) : insertAt(tab), active: file });
 }
 /** The preview tab stays open (no longer replaced by the next preview). */
 export function keepTab(file: string) { if (state.tabs.some((t) => t.file === file && t.preview)) set({ ...state, tabs: state.tabs.map((t) => (t.file === file ? { ...t, preview: false } : t)) }); }

@@ -1424,3 +1424,19 @@ test('W69 workbench.editor.wrapTabs: many tabs wrap into rows', async ({ page })
   expect(tops.length).toBeGreaterThan(1);
   await expect(page.getByRole('button', { name: 'Show next tabs' })).toHaveCount(0);
 });
+
+test('W70 workbench.editor.openPositioning: right of the active tab (default), first, last', async ({ page }) => {
+  const order = () => page.locator('.editor-tab-label').evaluateAll((els) => els.map((e) => e.getAttribute('title')));
+  await start(page);
+  await open(page, 'Steps/AuthSteps.cs');
+  await open(page, 'Steps/SearchSteps.cs');
+  await page.locator('.editor-tab-label', { hasText: 'AuthSteps.cs' }).click();
+  await open(page, 'Support/Hooks.cs');
+  const o = await order();
+  expect(o.indexOf('Support/Hooks.cs')).toBe(o.indexOf('Steps/AuthSteps.cs') + 1);
+  await page.evaluate(() => localStorage.setItem('tas:settings', JSON.stringify({ 'workbench.editor.openPositioning': 'first' })));
+  await page.reload();
+  await expect(page.locator('.editor-tab-label', { hasText: 'GoogleSearch.feature' })).toBeVisible();
+  await open(page, 'Fixtures.csproj');
+  expect((await order())[0]).toBe('Fixtures.csproj');
+});
