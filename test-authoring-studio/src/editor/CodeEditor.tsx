@@ -3,6 +3,7 @@ import { styleFeatures, colorPreviews } from './web/styleFeatures';
 import { markupFeatures } from './web/markupFeatures';
 import { scriptFeatures } from './web/scriptFeatures';
 import { webKeys } from './web/webKeys';
+import { expandHtmlAtCursor } from './web/emmet';
 import { applyRefactor } from '../rider/refactor400';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import CodeMirror, { type ReactCodeMirrorRef } from '@uiw/react-codemirror';
@@ -552,6 +553,10 @@ export default function CodeEditor({ file, reveal, active = true, onNotice, onIn
       {loaded && (
         <div className={isMd ? `md-layout md-mode-${mdMode}` : 'md-none'}>
         <RowMenu label="Editor actions" items={[
+          ...(HTML_FILE.test(file) ? [{ label: 'Expand Emmet Abbreviation', icon: CodeIcon, onSelect: () => {
+            const view = ref.current?.view;
+            if (view && !expandHtmlAtCursor(view, file)) onNotice?.('Place the cursor after an Emmet abbreviation.');
+          } }, 'separator' as const] : []),
           ...(isCs && !browser ? [
             { label: 'Go To Definition', icon: Navigation, shortcut: 'F12', onSelect: () => csHandlers.current.definition(ref.current!.view!.state.selection.main.head) },
             { label: 'Peek Definition', icon: Eye, shortcut: 'Alt F12', onSelect: () => void csHandlers.current.peek(ref.current!.view!.state.selection.main.head) },
