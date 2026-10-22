@@ -12,6 +12,7 @@ function expandAtCursor(view: EditorView, file: string, syntax: 'html' | 'css' |
   if (!found || !isAbbreviationValid(syntax, found.abbreviation)) return false;
   // Tab is shared with indentation and snippet navigation. Only claim deliberate structural abbreviations.
   if (onTab && syntax === 'html' && !/[>+*#.$\[\]{}^]/.test(found.abbreviation)) return false;
+  if (onTab && syntax === 'css' && !/^[a-z-]+-?\d/i.test(found.abbreviation)) return false;
   const from = document.offsetAt(found.abbreviationRange.start);
   const to = document.offsetAt(found.abbreviationRange.end);
   if (from === to || to !== selection.head) return false;
@@ -26,5 +27,5 @@ function expandAtCursor(view: EditorView, file: string, syntax: 'html' | 'css' |
 }
 
 export const expandHtmlAtCursor = (view: EditorView, file: string, onTab = false) => expandAtCursor(view, file, 'html', onTab);
-export const expandCssAtCursor = (view: EditorView, file: string) => expandAtCursor(view, file, 'css');
+export const expandCssAtCursor = (view: EditorView, file: string, onTab = false) => expandAtCursor(view, file, 'css', onTab);
 export const expandJsxAtCursor = (view: EditorView, file: string) => expandAtCursor(view, file, 'jsx');

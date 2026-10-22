@@ -496,6 +496,7 @@ export default function CodeEditor({ file, reveal, active = true, onNotice, onIn
     ...(commentTokenFor(file) === '//' ? [braceFolding(), stickyScroll(braceRange)] : []),
     ...(commentTokenFor(file) ? [vsKeys(commentTokenFor(file))] : []),
     ...(HTML_FILE.test(file) ? [Prec.highest(keymap.of([{ key: 'Tab', run: (view) => expandHtmlAtCursor(view, file, true) }]))] : []),
+    ...(STYLE_FILE.test(file) ? [Prec.highest(keymap.of([{ key: 'Tab', run: (view) => expandCssAtCursor(view, file, true) }]))] : []),
     keymap.of([
       { key: 'Mod-s', preventDefault: true, run: () => { void saveRef.current(); return true; } },
       ...(isCs && !browser ? [{ key: 'Mod-r Mod-g', preventDefault: true, run: () => { void organizeRef.current(); return true; } }] : []),
