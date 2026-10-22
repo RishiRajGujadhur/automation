@@ -66,6 +66,7 @@ import StatusBarItems, { ProblemsStatus, TOGGLE_PROBLEMS_EVENT, TOGGLE_NOTIFICAT
 import StatusBarMenu from './StatusBarMenu';
 import NotificationToasts from './NotificationToasts';
 import NotificationCenter from './NotificationCenter';
+import OpenEditors from './views/OpenEditors';
 import { NOTIFICATION_CENTER_EVENT } from './notificationCommands';
 import GoToAll from './search/GoToAll';
 import { runTests, getTestRun, discoverTests, useTestRun, outcomeOf, combine, type DiscoveredTest } from './testing/store';
@@ -1641,7 +1642,7 @@ export default function App() {
             <SearchView key={searchKey.n} initialReplace={searchKey.replace} initialInclude={searchKey.include} initialQuery={searchKey.query} onOpen={(file, line, column) => editFile(file, line, column)} onNotice={setNotice} onChanged={() => { api('/scan', {}).then(setIndex, () => {}); }} />
           ) : tab === 'Features' && sidebarView === 'tests' ? (
             <TestExplorer revision={revision} onOpen={(file, line) => editFile(file, line)} onDebug={debugTest} onNotice={setNotice} />
-          ) : <SolutionExplorer
+          ) : <div className="explorer-view"><div className="explorer-tree"><SolutionExplorer
             key={index?.workspace + ':' + config?.repositoryRoot}
             features={fileSrc.kind === 'browser' ? [] : (index?.features ?? [])}
             browserSolution={fileSrc.kind === 'browser' ? browserSol : undefined}
@@ -1663,7 +1664,10 @@ export default function App() {
               setTab('Features');
               setMobileExplorer(false);
             }}
-          />}
+          /></div>
+          {/* VS Code's Explorer sections (W51): Open Editors. */}
+          {vscode && <OpenEditors />}
+          </div>}
         </aside>
         {prefs.sidebar && !prefs.focus && (
           <SidebarResizer width={sidebarWidth} onWidth={setSidebarWidth} onCollapse={() => { setPrefs({ sidebar: false }); setSidebarWidth(SIDEBAR_DEFAULT); setNotice('Explorer hidden. Press Ctrl/Cmd+B to show it again.'); }} label="Resize feature explorer" />

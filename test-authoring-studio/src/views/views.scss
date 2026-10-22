@@ -1,0 +1,43 @@
+// Side bar view panes (VSCODE-250.md W51) and the Explorer's sections.
+.explorer-view {
+  height: 100%;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  > .explorer-tree { flex: 1 1 auto; min-height: 80px; overflow-y: auto; }
+}
+.sidebar:has(> .explorer-view) { overflow: hidden; display: flex; flex-direction: column; padding-bottom: 0; }
+.view-pane {
+  flex: none;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  border-top: 1px solid var(--border);
+  margin: 0 -10px;
+  &.open { flex: 0 1 35%; }
+  .view-pane-header { display: flex; align-items: center; height: 22px; padding-right: 6px; }
+  .view-pane-title {
+    flex: 1; display: flex; align-items: center; gap: 2px; height: 100%; padding: 0 4px; border: 0; background: none;
+    color: var(--text); font: inherit; font-size: 11px; font-weight: 700; letter-spacing: 0.02em; text-align: left; cursor: pointer;
+  }
+  .view-pane-count { margin-left: 6px; padding: 0 5px; border-radius: 9px; font-size: 10px; background: color-mix(in srgb, var(--text-muted) 30%, transparent); }
+  .view-pane-actions { display: none; gap: 1px; .icon-button { width: 20px; height: 20px; } }
+  &:hover .view-pane-actions, &:focus-within .view-pane-actions { display: flex; }
+  .view-pane-body { flex: 1; min-height: 0; overflow-y: auto; padding: 0 4px 4px; }
+}
+.open-editors {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  .open-editor { display: flex; align-items: center; height: 22px; border-radius: 3px; }
+  .open-editor.active { background: color-mix(in srgb, var(--accent, #0078d4) 22%, transparent); }
+  .open-editor.preview span { font-style: italic; }
+  .open-editor-close { width: 20px; height: 20px; visibility: hidden; .codicon-circle-filled { font-size: 10px; } }
+  .open-editor:hover .open-editor-close, .open-editor-close.dirty { visibility: visible; }
+  .open-editor-name {
+    flex: 1; min-width: 0; display: flex; align-items: center; gap: 5px; border: 0; background: none; color: var(--text);
+    font: inherit; font-size: 13px; cursor: pointer; text-align: left; overflow: hidden; white-space: nowrap;
+    span { flex: none; }
+    small { color: var(--text-muted); font-size: 11.5px; overflow: hidden; text-overflow: ellipsis; }
+  }
+}

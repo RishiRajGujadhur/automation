@@ -1088,3 +1088,34 @@ test('W50 workbench.activityBar.iconClickBehavior: toggle hides the side bar, fo
   await expect(page.locator('html')).toHaveAttribute('data-sidebar', 'true');
   await expect.poll(() => page.evaluate(() => !!document.activeElement?.closest('#feature-sidebar'))).toBe(true);
 });
+
+test('W51 / W54 Explorer view panes: Open Editors (collapsible, kept), close, Save All', async ({ page }) => {
+  await start(page);
+  await open(page, 'Steps/AuthSteps.cs');
+  await open(page, 'Steps/SearchSteps.cs');
+  const pane = page.getByRole('region', { name: 'Open Editors' });
+  const title = pane.getByRole('button', { name: /OPEN EDITORS/ });
+  await expect(title).toHaveAttribute('aria-expanded', 'false');
+  // Collapsed: the count of open editors.
+  await expect(pane.locator('.view-pane-count')).toHaveText('3');
+  await title.click();
+  const list = pane.getByRole('list', { name: 'Open Editors' });
+  await expect(list.locator('li')).toHaveCount(3);
+  await expect(list.locator('li.active')).toContainText('SearchSteps.cs');
+  await list.getByRole('button', { name: /AuthSteps\.cs/ }).click();
+  await expect(page.locator('.editor-tab-label[aria-current="true"]')).toHaveAttribute('title', 'Steps/AuthSteps.cs');
+  await list.locator('li', { hasText: 'SearchSteps.cs' }).hover();
+  await list.getByRole('button', { name: 'Close SearchSteps.cs' }).click();
+  await expect(list.locator('li')).toHaveCount(2);
+  // An unsaved editor shows a dot; Save All writes it.
+  await page.getByLabel('Source of Steps/AuthSteps.cs').click();
+  await page.keyboard.press('Control+End');
+  await page.keyboard.type('// edited');
+  await expect(list.locator('.open-editor-close.dirty')).toHaveCount(1);
+  await pane.hover();
+  await pane.getByRole('button', { name: 'Save All' }).click();
+  await expect.poll(() => fs.readFile(path.join(temp, 'Steps/AuthSteps.cs'), 'utf8')).toContain('// edited');
+  // The pane stays open after a reload.
+  await page.reload();
+  await expect(page.getByRole('region', { name: 'Open Editors' }).getByRole('button', { name: /OPEN EDITORS/ })).toHaveAttribute('aria-expanded', 'true');
+});
