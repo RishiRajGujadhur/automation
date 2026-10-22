@@ -3,7 +3,7 @@ import { styleFeatures, colorPreviews } from './web/styleFeatures';
 import { markupFeatures } from './web/markupFeatures';
 import { scriptFeatures } from './web/scriptFeatures';
 import { webKeys } from './web/webKeys';
-import { expandCssAtCursor, expandHtmlAtCursor } from './web/emmet';
+import { expandCssAtCursor, expandHtmlAtCursor, expandJsxAtCursor } from './web/emmet';
 import { applyRefactor } from '../rider/refactor400';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import CodeMirror, { type ReactCodeMirrorRef } from '@uiw/react-codemirror';
@@ -562,6 +562,10 @@ export default function CodeEditor({ file, reveal, active = true, onNotice, onIn
           ...(STYLE_FILE.test(file) ? [{ label: 'Expand CSS Emmet Abbreviation', icon: CodeIcon, onSelect: () => {
             const view = ref.current?.view;
             if (view && !expandCssAtCursor(view, file)) onNotice?.('Place the cursor after a CSS Emmet abbreviation.');
+          } }, 'separator' as const] : []),
+          ...(/\.(jsx|tsx)$/i.test(file) ? [{ label: 'Expand JSX Emmet Abbreviation', icon: CodeIcon, onSelect: () => {
+            const view = ref.current?.view;
+            if (view && !expandJsxAtCursor(view, file)) onNotice?.('Place the cursor after a JSX Emmet abbreviation.');
           } }, 'separator' as const] : []),
           ...(isCs && !browser ? [
             { label: 'Go To Definition', icon: Navigation, shortcut: 'F12', onSelect: () => csHandlers.current.definition(ref.current!.view!.state.selection.main.head) },

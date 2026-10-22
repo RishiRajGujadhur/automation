@@ -59,3 +59,25 @@ test('3: expands a CSS Emmet property abbreviation', async ({ page, request }) =
     await fs.rm(root, { recursive: true, force: true, maxRetries: 5 });
   }
 });
+
+test('4: expands JSX Emmet with React className attributes', async ({ page, request }) => {
+  const previous = (await (await request.get('/api/workspace')).json()).config;
+  const root = await fs.mkdtemp(path.join(os.tmpdir(), 'studio-emmet-jsx-'));
+  try {
+    await fs.writeFile(path.join(root, 'component.tsx'), 'ul>li.item*2');
+    expect((await request.post('/api/workspace', { data: { repositoryRoot: root, targetProject: '.' } })).ok()).toBe(true);
+    await page.goto('/#/features/editor');
+    await expect(page.getByText('Repository indexed')).toBeVisible();
+    await page.evaluate(() => window.dispatchEvent(new CustomEvent('tas:open-location', { detail: { file: 'component.tsx', line: 1 } })));
+    const editor = page.getByLabel('Source of component.tsx');
+    await expect(editor).toBeVisible();
+    await editor.click();
+    await page.keyboard.press('Control+End');
+    await editor.click({ button: 'right' });
+    await page.getByRole('menuitem', { name: 'Expand JSX Emmet Abbreviation' }).click();
+    await expect(editor).toContainText('className="item"');
+  } finally {
+    await request.post('/api/workspace', { data: previous });
+    await fs.rm(root, { recursive: true, force: true, maxRetries: 5 });
+  }
+});
