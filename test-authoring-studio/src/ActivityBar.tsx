@@ -57,7 +57,9 @@ export default function ActivityBar({ active, basic, sidebarOpen, onSelect, onTo
     const el = top.current;
     if (!el) return;
     const measure = () => {
-      const slots = Math.floor((el.clientHeight - 8) / ITEM);
+      // On top of the side bar (W49) the items run across it.
+      const across = document.documentElement.dataset.activityBar === 'top';
+      const slots = across ? Math.floor((el.clientWidth - 4) / 36) : Math.floor((el.clientHeight - 8) / ITEM);
       setFit(slots >= items.length + (basic ? 1 : 0) ? items.length : Math.max(1, slots - 1));
     };
     measure();

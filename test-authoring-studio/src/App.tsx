@@ -1613,7 +1613,7 @@ export default function App() {
           {tab === 'Features' ? featureViewSwitch : <span className="local-state"><span aria-hidden="true" />Local workspace</span>}
         </div>
       </nav>}
-      <div className="app-body">
+      <div className="app-body" style={{ '--sidebar-w': `${sidebarWidth}px` } as React.CSSProperties} data-sidebar-open={prefs.sidebar ? 'true' : 'false'}>
         {vscode && !(viewOpts.hideActivityBar && featureOn('toggle-activity-bar')) && activityBarLocation() !== 'hidden' && (
           <ActivityBar
             active={tab === 'Features' && view === 'recorder' ? 'Recorder' : tab === 'Features' && sidebarView === 'tests' ? 'Testing' : tab === 'Features' && sidebarView === 'search' ? 'Search' : tab === 'Features' && sidebarView === 'git' ? 'Git' : tab}

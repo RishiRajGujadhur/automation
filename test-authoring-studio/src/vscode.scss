@@ -834,3 +834,27 @@ html[data-side-bar='right'] .app-body {
 }
 // The bell is an icon alone: a full-size target (WCAG 2.2 target size).
 .status-bar .notifications-bell { min-width: 24px; min-height: 22px; display: inline-flex; align-items: center; justify-content: center; }
+
+// workbench.activityBar.location: top (W49): the activity bar runs across the top of the primary side bar.
+html[data-activity-bar='top'] .app-body {
+  position: relative;
+  > .activity-bar {
+    position: absolute;
+    left: 0;
+    top: 0;
+    z-index: 5;
+    width: var(--sidebar-w, 260px);
+    height: 35px;
+    flex-direction: row;
+    border-right: 0;
+    border-bottom: 1px solid var(--border);
+    ul { flex-direction: row; padding: 0 2px; }
+    .activity-top { flex: 1; min-width: 0; overflow: hidden; }
+    .activity-item { width: 36px; height: 35px; }
+    .activity-item svg, .activity-item .codicon { transform: scale(0.82); }
+    .activity-item.active::before { left: 6px; right: 6px; top: auto; bottom: 0; width: auto; height: 2px; }
+  }
+  > #feature-sidebar { padding-top: 35px; }
+  &[data-sidebar-open='false'] > .activity-bar { display: none; }
+}
+html[data-activity-bar='top'][data-side-bar='right'] .app-body > .activity-bar { left: auto; right: 0; }

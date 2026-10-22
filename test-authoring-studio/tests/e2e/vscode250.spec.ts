@@ -1052,3 +1052,20 @@ test('W48 Activity bar: right-click hides / shows items, drag reorders, reset', 
   await menu.getByRole('menuitem', { name: 'Reset Location and Visibility' }).click();
   await expect.poll(async () => (await labels())[0]).toBe('Dashboard');
 });
+
+test('W49 workbench.activityBar.location: top of the side bar', async ({ page }) => {
+  await start(page, { 'workbench.activityBar.location': 'top' });
+  const bar = page.getByRole('navigation', { name: 'Main' });
+  const side = (await page.locator('#feature-sidebar').boundingBox())!;
+  const b = (await bar.boundingBox())!;
+  expect(b.height).toBeLessThan(40);
+  expect(Math.abs(b.y - side.y)).toBeLessThan(3);
+  expect(Math.abs(b.width - side.width)).toBeLessThan(3);
+  // The items run across: Dashboard left of Test Generator.
+  const d = (await bar.getByRole('button', { name: 'Dashboard' }).boundingBox())!;
+  const g = (await bar.getByRole('button', { name: 'Search (Find in Files)' }).boundingBox())!;
+  expect(g.x).toBeGreaterThan(d.x);
+  expect(Math.abs(g.y - d.y)).toBeLessThan(3);
+  // The rest is in the overflow menu, as in VS Code.
+  await expect(bar.getByRole('button', { name: /^More pages/ })).toBeVisible();
+});
