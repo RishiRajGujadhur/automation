@@ -82,7 +82,7 @@ Legend: `[x]` done · `[ ]` to do.
 - [x] W60. workbench.list.smoothScrolling and workbench.list.mouseWheelScrollSensitivity
 
 ## Editors and tabs
-- [ ] W61. Empty editor watermark: VS Code logo and Show All Commands / Go to File / Find in Files / Toggle Terminal keys
+- [x] W61. Empty editor watermark: VS Code logo and Show All Commands / Go to File / Find in Files / Toggle Terminal keys
 - [ ] W62. New Untitled Text File (Ctrl+N): Untitled-1 tabs, "Select a language" hint, Save As
 - [ ] W63. workbench.editor.empty.hint and workbench.editor.untitled.labelFormat
 - [ ] W64. Keep Editor (Ctrl+K Enter) turns a preview tab into a normal one
@@ -353,3 +353,4 @@ Legend: `[x]` done · `[ ]` to do.
 - 2026-10-22: W58. workbench.view.alwaysShowHeaderActions: the side bar sections' title actions are always shown instead of only on hover or focus.
 - 2026-10-22: W59. workbench.tree.indent (VS Code's 8 px by default) sets the Explorer's indent per level; workbench.tree.renderIndentGuides draws a guide line down each folder's children on hover (default), always or never.
 - 2026-10-22: W60. workbench.list.mouseWheelScrollSensitivity multiplies wheel scrolling in the side bar, its sections and the Quick Input list; workbench.list.smoothScrolling animates it.
+- 2026-10-22: W61. With no editor open the editor area shows VS Code's watermark: a letterpress mark and Show All Commands, Go to File, Find in Files, Toggle Terminal and Open View with their keys (each clickable); workbench.tips.enabled hides the tips. The Start Window stays below it.

@@ -69,6 +69,7 @@ import NotificationCenter from './NotificationCenter';
 import OpenEditors from './views/OpenEditors';
 import OutlineView from './views/OutlineView';
 import TimelineView from './views/TimelineView';
+import EditorWatermark from './views/EditorWatermark';
 import { NOTIFICATION_CENTER_EVENT } from './notificationCommands';
 import GoToAll from './search/GoToAll';
 import { runTests, getTestRun, discoverTests, useTestRun, outcomeOf, combine, type DiscoveredTest } from './testing/store';
@@ -2147,6 +2148,7 @@ export default function App() {
             {dockSide === 'left' && dock}
             <div className="editor-area">
             <EditorTabs onClose={closeEditor} onSplit={fileSrc.kind === 'browser' ? undefined : (f) => setSplitFile(f)}>
+            {!openEditors.tabs.length && vscode && <EditorWatermark />}
             {!openEditors.tabs.length && (
               <StartWindow onOpenSolution={() => openSolutionDialog()} onOpenFolder={() => void openFolder()} onOpened={solutionOpened} onNotice={setNotice} />
             )}

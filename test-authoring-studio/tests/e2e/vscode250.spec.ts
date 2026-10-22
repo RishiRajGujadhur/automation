@@ -1278,3 +1278,21 @@ test('W60 workbench.list.mouseWheelScrollSensitivity scales wheel scrolling in l
   expect(normal).toBeGreaterThan(0);
   expect(fast).toBeGreaterThan(normal * 2);
 });
+
+test('W61 Empty editor area: VS Code watermark with key tips (workbench.tips.enabled)', async ({ page }) => {
+  await start(page);
+  await open(page, 'Steps/AuthSteps.cs');
+  await page.getByRole('button', { name: 'File menu' }).click();
+  await page.getByRole('menuitem', { name: 'Close All Editors' }).click();
+  const mark = page.getByRole('region', { name: 'Editor watermark' });
+  await expect(mark).toBeVisible();
+  for (const t of ['Show All Commands', 'Go to File', 'Find in Files', 'Toggle Terminal', 'Open View']) await expect(mark.getByRole('button', { name: t })).toBeVisible();
+  await expect(mark.locator('kbd')).toContainText(['Ctrl', 'Shift', 'P']);
+  await mark.getByRole('button', { name: 'Go to File' }).click();
+  await expect(quickBox(page)).toHaveValue('');
+  await page.keyboard.press('Escape');
+  await page.evaluate(() => localStorage.setItem('tas:settings', JSON.stringify({ 'workbench.tips.enabled': false })));
+  await page.reload();
+  await expect(mark).toBeVisible();
+  await expect(mark.getByRole('button', { name: 'Go to File' })).toHaveCount(0);
+});
