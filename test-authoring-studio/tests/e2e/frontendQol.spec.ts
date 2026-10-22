@@ -99,6 +99,16 @@ test('3: expands a CSS Emmet property abbreviation', async ({ page, request }) =
     });
     await page.keyboard.press('Tab');
     await expect(editor).toContainText('padding: 20px;');
+    await page.evaluate(() => {
+      const view = (window as unknown as { __activeEditor: () => { view: { state: { doc: { length: number } }; dispatch(change: unknown): void; focus(): void } } }).__activeEditor().view;
+      view.dispatch({ changes: { from: 0, to: view.state.doc.length, insert: '.box { m10 }' }, selection: { anchor: '.box { m10'.length } });
+      view.focus();
+    });
+    await page.keyboard.press('Control+Space');
+    const option = page.locator('.cm-tooltip-autocomplete li').filter({ hasText: 'margin: 10px;' }).first();
+    await expect(option).toContainText('Emmet');
+    await option.click();
+    await expect(editor).toContainText('margin: 10px;');
   } finally {
     await request.post('/api/workspace', { data: previous });
     await fs.rm(root, { recursive: true, force: true, maxRetries: 5 });

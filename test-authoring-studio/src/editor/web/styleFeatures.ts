@@ -5,6 +5,8 @@ import type { Extension } from '@codemirror/state';
 import { api } from '../../api';
 import { gateSource } from '../../vscode/suggestions';
 import { cmSnippet } from './markupFeatures';
+import { doComplete } from '@vscode/emmet-helper';
+import { TextDocument } from 'vscode-languageserver-textdocument';
 
 /**
  * CSS, SCSS and LESS in the editor (FRONTEND-100.md F71–F95): VS Code's CSS language services through /api/web
@@ -41,6 +43,24 @@ async function complete(file: string, ctx: CompletionContext): Promise<Completio
       },
     })),
   };
+}
+
+/** Numeric Emmet shorthands alongside the CSS language service's normal property suggestions. */
+function emmetComplete(file: string, ctx: CompletionContext): CompletionResult | null {
+  const document = TextDocument.create(file, 'css', 1, ctx.state.doc.toString());
+  const items = doComplete(document, document.positionAt(ctx.pos), 'css', {})?.items ?? [];
+  const options: Completion[] = [];
+  let from = ctx.pos;
+  for (const item of items) {
+    const edit = item.textEdit;
+    if (!edit || !('range' in edit) || !/^[a-z-]+-?\d/i.test(item.filterText ?? '')) continue;
+    const start = document.offsetAt(edit.range.start);
+    from = Math.min(from, start);
+    options.push({ label: item.label, type: 'property', detail: 'Emmet', boost: 50,
+      apply: (view: EditorView) => snippet(cmSnippet(edit.newText))(view, null, start, document.offsetAt(edit.range.end)),
+    });
+  }
+  return options.length ? { from, options } : null;
 }
 
 const hover = (file: string) => hoverTooltip(async (view, pos) => {
@@ -128,7 +148,7 @@ export const colorPreviews = ViewPlugin.fromClass(class {
 export function styleFeatures(file: string): Extension[] {
   return [
     styleLinter(file),
-    autocompletion({ override: [gateSource((ctx) => complete(file, ctx))], activateOnTyping: true, maxRenderedOptions: 100, icons: true }),
+    autocompletion({ override: [gateSource((ctx) => complete(file, ctx)), gateSource((ctx) => emmetComplete(file, ctx))], activateOnTyping: true, maxRenderedOptions: 100, icons: true }),
     hover(file),
     colorPreviews,
   ];
