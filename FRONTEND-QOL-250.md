@@ -10,3 +10,4 @@ This tracks **additional** improvements beyond the existing features in `FRONTEN
 | 4 | Expand JSX/TSX markup abbreviations with React-compatible `className` attributes. | Focused browser test | Microsoft's MIT-licensed [`@vscode/emmet-helper`](https://github.com/microsoft/vscode-emmet-helper) |
 | 5 | Press Tab after numeric CSS Emmet shorthands such as `p20` to insert the full property. | Focused browser test | [VS Code Emmet Tab setting](https://code.visualstudio.com/docs/languages/emmet#_using-tab-for-emmet-expansions) |
 | 6 | Wrap selected HTML text with nested elements from an Emmet abbreviation. | Focused browser test | [VS Code Emmet wrap documentation](https://code.visualstudio.com/docs/languages/emmet#_wrap-with-abbreviation) |
+| 7 | Wrap selected JSX/TSX text with React-compatible Emmet markup. | Focused browser test | [VS Code Emmet wrap documentation](https://code.visualstudio.com/docs/languages/emmet#_wrap-with-abbreviation) |

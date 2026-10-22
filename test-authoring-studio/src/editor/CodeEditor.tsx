@@ -3,7 +3,7 @@ import { styleFeatures, colorPreviews } from './web/styleFeatures';
 import { markupFeatures } from './web/markupFeatures';
 import { scriptFeatures } from './web/scriptFeatures';
 import { webKeys } from './web/webKeys';
-import { expandCssAtCursor, expandHtmlAtCursor, expandJsxAtCursor, wrapHtmlSelection } from './web/emmet';
+import { expandCssAtCursor, expandHtmlAtCursor, expandJsxAtCursor, wrapHtmlSelection, wrapJsxSelection } from './web/emmet';
 import { applyRefactor } from '../rider/refactor400';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import CodeMirror, { type ReactCodeMirrorRef } from '@uiw/react-codemirror';
@@ -572,6 +572,11 @@ export default function CodeEditor({ file, reveal, active = true, onNotice, onIn
           ...(/\.(jsx|tsx)$/i.test(file) ? [{ label: 'Expand JSX Emmet Abbreviation', icon: CodeIcon, onSelect: () => {
             const view = ref.current?.view;
             if (view && !expandJsxAtCursor(view, file)) onNotice?.('Place the cursor after a JSX Emmet abbreviation.');
+          } }, { label: 'Wrap JSX with Emmet Abbreviation…', icon: CodeIcon, onSelect: () => {
+            const view = ref.current?.view;
+            if (!view || view.state.selection.main.empty) { onNotice?.('Select JSX text to wrap.'); return; }
+            const abbreviation = window.prompt('Emmet abbreviation', 'div')?.trim();
+            if (abbreviation && !wrapJsxSelection(view, abbreviation)) onNotice?.('The Emmet abbreviation could not be expanded.');
           } }, 'separator' as const] : []),
           ...(isCs && !browser ? [
             { label: 'Go To Definition', icon: Navigation, shortcut: 'F12', onSelect: () => csHandlers.current.definition(ref.current!.view!.state.selection.main.head) },
