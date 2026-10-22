@@ -1759,3 +1759,15 @@ test('W88 File: Compare Active File With… picks a file from a fuzzy list and s
   await expect(page.getByRole('dialog', { name: 'Compare Files' })).toBeVisible();
   await expect(page.getByText(/OpenLogin|Search/).first()).toBeVisible();
 });
+
+test('W89 View ▸ Editor Layout: Two Columns, Two Rows, Single', async ({ page }) => {
+  await start(page);
+  await open(page, 'Steps/AuthSteps.cs');
+  const palette = async (cmd: string) => { await page.keyboard.press('Control+Shift+P'); await quickBox(page).fill('>' + cmd); await expect(rows(page).first()).toContainText(cmd); await page.keyboard.press('Enter'); };
+  await palette('View: Two Rows Editor Layout');
+  await expect(page.locator('.editor-split.down')).toBeVisible();
+  await palette('View: Two Columns Editor Layout');
+  await expect(page.locator('.editor-split:not(.single):not(.down)')).toBeVisible();
+  await palette('View: Single Column Editor Layout');
+  await expect(page.locator('.editor-split.single')).toBeVisible();
+});

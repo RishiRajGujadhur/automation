@@ -110,7 +110,7 @@ Legend: `[x]` done · `[ ]` to do.
 - [x] W86. editor.stickyScroll.maxLineCount and scrollWithEditor
 - [x] W87. Editor: Toggle Sticky Scroll / Minimap / Render Whitespace / Word Wrap from the View ▸ Appearance menu
 - [x] W88. File: Compare Active File With… (Quick Open's file list, fuzzy)
-- [ ] W89. Editor Layout: Single, Two Columns, Three Columns, Two Rows, Grid (2×2)
+- [x] W89. View ▸ Editor Layout: Single, Two Columns, Two Rows (the studio has one side group)
 - [ ] W90. Join Editor Groups / Join All Editor Groups
 
 ## Explorer
@@ -380,3 +380,4 @@ Legend: `[x]` done · `[ ]` to do.
 - 2026-10-22: W86. editor.stickyScroll.maxLineCount (VS Code's 5 by default, up to 20) and editor.stickyScroll.scrollWithEditor (the pinned lines follow horizontal scrolling).
 - 2026-10-22: W87. View ▸ Appearance: Toggle Word Wrap (Alt+Z), Toggle Minimap, Toggle Render Whitespace and Toggle Sticky Scroll (new editor.stickyScroll.enabled), with their state checked; also in the palette.
 - 2026-10-22: W88. File: Compare Active File With… lists the workspace's files in the Quick Input (fuzzy matched) and shows the active editor's text against the chosen file.
+- 2026-10-22: W89. View ▸ Editor Layout: Single Column (closes the side group), Two Columns and Two Rows (the active file in the side group, right or below).

@@ -1,5 +1,6 @@
 import { useSyncExternalStore } from 'react';
 import { defineSetting, setSetting } from './settings';
+import { registerRider } from '../rider/commands';
 
 /** Split editor direction (VS Code's workbench.editor.openSideBySideDirection) and Maximize Editor Group. */
 export const sideBySide = defineSetting<'right' | 'down'>({
@@ -33,3 +34,10 @@ if (typeof window !== 'undefined') {
     if (k !== 'control' && k !== 'meta') chord = 0;
   }, true);
 }
+
+/** View ▸ Editor Layout (VSCODE-250.md W89): one group, two columns or two rows (the side group with the active file). */
+registerRider([
+  { id: 'layout-single', label: 'View: Single Column Editor Layout', menu: 'View', submenu: 'Editor Layout', group: true, run: () => window.dispatchEvent(new Event('tas:close-split')) },
+  { id: 'layout-two-columns', label: 'View: Two Columns Editor Layout', menu: 'View', submenu: 'Editor Layout', run: () => splitEditor('right') },
+  { id: 'layout-two-rows', label: 'View: Two Rows Editor Layout', menu: 'View', submenu: 'Editor Layout', run: () => splitEditor('down') },
+]);
