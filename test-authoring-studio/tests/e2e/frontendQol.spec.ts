@@ -34,3 +34,28 @@ test('1: expands an HTML Emmet abbreviation with editable fields', async ({ page
     await fs.rm(root, { recursive: true, force: true, maxRetries: 5 });
   }
 });
+
+test('3: expands a CSS Emmet property abbreviation', async ({ page, request }) => {
+  const previous = (await (await request.get('/api/workspace')).json()).config;
+  const root = await fs.mkdtemp(path.join(os.tmpdir(), 'studio-emmet-css-'));
+  try {
+    await fs.writeFile(path.join(root, 'style.css'), '.box { m10 }');
+    expect((await request.post('/api/workspace', { data: { repositoryRoot: root, targetProject: '.' } })).ok()).toBe(true);
+    await page.goto('/#/features/editor');
+    await expect(page.getByText('Repository indexed')).toBeVisible();
+    await page.evaluate(() => window.dispatchEvent(new CustomEvent('tas:open-location', { detail: { file: 'style.css', line: 1 } })));
+    const editor = page.getByLabel('Source of style.css');
+    await expect(editor).toBeVisible();
+    await page.evaluate(() => {
+      const view = (window as unknown as { __activeEditor: () => { view: { state: { doc: { toString(): string } }; dispatch(change: unknown): void; focus(): void } } }).__activeEditor().view;
+      view.dispatch({ selection: { anchor: view.state.doc.toString().indexOf('m10') + 3 } });
+      view.focus();
+    });
+    await editor.click({ button: 'right' });
+    await page.getByRole('menuitem', { name: 'Expand CSS Emmet Abbreviation' }).click();
+    await expect(editor).toContainText('margin: 10px;');
+  } finally {
+    await request.post('/api/workspace', { data: previous });
+    await fs.rm(root, { recursive: true, force: true, maxRetries: 5 });
+  }
+});

@@ -4,19 +4,19 @@ import { extractAbbreviation, expandAbbreviation, getExpandOptions, isAbbreviati
 import { TextDocument } from 'vscode-languageserver-textdocument';
 
 /** Expand the abbreviation directly before the caret, preserving Emmet's editable snippet fields. */
-export function expandHtmlAtCursor(view: EditorView, file: string, onTab = false): boolean {
+function expandAtCursor(view: EditorView, file: string, syntax: 'html' | 'css', onTab = false): boolean {
   const selection = view.state.selection.main;
   if (!selection.empty) return false;
-  const document = TextDocument.create(file, 'html', 1, view.state.doc.toString());
-  const found = extractAbbreviation(document, document.positionAt(selection.head), { type: 'markup' });
-  if (!found || !isAbbreviationValid('html', found.abbreviation)) return false;
+  const document = TextDocument.create(file, syntax, 1, view.state.doc.toString());
+  const found = extractAbbreviation(document, document.positionAt(selection.head), { type: syntax === 'html' ? 'markup' : 'stylesheet' });
+  if (!found || !isAbbreviationValid(syntax, found.abbreviation)) return false;
   // Tab is shared with indentation and snippet navigation. Only claim deliberate structural abbreviations.
-  if (onTab && !/[>+*#.$\[\]{}^]/.test(found.abbreviation)) return false;
+  if (onTab && syntax === 'html' && !/[>+*#.$\[\]{}^]/.test(found.abbreviation)) return false;
   const from = document.offsetAt(found.abbreviationRange.start);
   const to = document.offsetAt(found.abbreviationRange.end);
   if (from === to || to !== selection.head) return false;
   try {
-    const expanded = expandAbbreviation(found.abbreviation, getExpandOptions('html', undefined, found.filter));
+    const expanded = expandAbbreviation(found.abbreviation, getExpandOptions(syntax, undefined, found.filter));
     snippet(expanded.replace(/\t/g, '  '))(view, null, from, to);
     view.focus();
     return true;
@@ -24,3 +24,6 @@ export function expandHtmlAtCursor(view: EditorView, file: string, onTab = false
     return false;
   }
 }
+
+export const expandHtmlAtCursor = (view: EditorView, file: string, onTab = false) => expandAtCursor(view, file, 'html', onTab);
+export const expandCssAtCursor = (view: EditorView, file: string) => expandAtCursor(view, file, 'css');
