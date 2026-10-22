@@ -7,6 +7,16 @@ import { fileOutline, type OutlineItem } from '../rider/outline';
 import { openLocation } from '../quickinput/providers';
 import { openQuickInput } from '../quickinput/store';
 import { isBrowser } from '../files/provider';
+import { defineSetting, useSettings } from '../vscode/settings';
+
+/** breadcrumbs.filePath / symbolPath / icons (VSCODE-250.md W85). */
+const B = 'Workbench ▸ Breadcrumbs';
+const pathOpts = [{ value: 'on', description: 'Show the whole path.' }, { value: 'off', description: 'Do not show it.' }, { value: 'last', description: 'Only show the last element.' }];
+export const crumbSettings = {
+  filePath: defineSetting<'on' | 'off' | 'last'>({ key: 'breadcrumbs.filePath', category: B, title: 'File Path', type: 'enum', default: 'on', description: 'Controls whether and how file paths are shown in the breadcrumbs view.', options: pathOpts }),
+  symbolPath: defineSetting<'on' | 'off' | 'last'>({ key: 'breadcrumbs.symbolPath', category: B, title: 'Symbol Path', type: 'enum', default: 'on', description: 'Controls whether and how symbols are shown in the breadcrumbs view.', options: pathOpts }),
+  icons: defineSetting<boolean>({ key: 'breadcrumbs.icons', category: B, title: 'Icons', type: 'boolean', default: true, description: 'Render breadcrumb items with icons.' }),
+};
 import { activeEditor } from './activeEditor';
 import { registerRider } from '../rider/commands';
 
@@ -68,7 +78,12 @@ export default function FileBreadcrumbs({ file, source, line, symbols = true, on
     const t = setTimeout(() => void fileOutline(file, source).then((o) => { if (live) setOutline(o); }, () => {}), 400);
     return () => { live = false; clearTimeout(t); };
   }, [file, source, symbols]);
-  const parts = file.split('/');
+  useSettings();
+  const allParts = file.split('/');
+  // breadcrumbs.filePath: the whole path, the file only, or nothing.
+  const fp = crumbSettings.filePath();
+  const parts = fp === 'off' ? [] : fp === 'last' ? allParts.slice(-1) : allParts;
+  const offset = allParts.length - parts.length;
   const folderEntries = (folder: string): MenuEntry[] => {
     const c = children(folder);
     return [
@@ -77,8 +92,10 @@ export default function FileBreadcrumbs({ file, source, line, symbols = true, on
     ];
   };
   // The symbols containing the caret, outermost first.
-  const chain = symbols ? outline.filter((it) => it.start <= line && line <= it.end).sort((a, b) => a.depth - b.depth) : [];
-  const siblings = (it: OutlineItem) => outline.filter((o) => o.depth === it.depth && (it.depth === 0 || chain.some((p) => p.depth === it.depth - 1 && p.start <= o.start && o.end <= p.end)));
+  const fullChain = symbols ? outline.filter((it) => it.start <= line && line <= it.end).sort((a, b) => a.depth - b.depth) : [];
+  const sp = crumbSettings.symbolPath();
+  const chain = sp === 'off' ? [] : sp === 'last' ? fullChain.slice(-1) : fullChain;
+  const siblings = (it: OutlineItem) => outline.filter((o) => o.depth === it.depth && (it.depth === 0 || fullChain.some((p) => p.depth === it.depth - 1 && p.start <= o.start && o.end <= p.end)));
   const Icon = fileType(file).icon;
   return (
     <nav className="file-breadcrumbs" aria-label="Breadcrumbs" onKeyDown={(e) => {
@@ -89,13 +106,13 @@ export default function FileBreadcrumbs({ file, source, line, symbols = true, on
       else if (e.key === 'Escape') { e.preventDefault(); activeEditor()?.view.focus(); }
     }}>
       {parts.map((p, i) => {
-        const folder = parts.slice(0, i).join('/');
+        const folder = allParts.slice(0, offset + i).join('/');
         const last = i === parts.length - 1;
         return (
           <span key={i} className="crumb-wrap">
             {i > 0 && <ChevronRight size={12} aria-hidden="true" />}
             <Dropdown label={last ? 'Files beside it' : `Folder ${p}`} entries={folderEntries(folder)} trigger={
-              <button className="crumb-part" aria-label={last ? `File: ${p}` : `Folder: ${p}`}>{last ? <Icon size={13} aria-hidden="true" style={{ color: fileType(file).color }} /> : null}{p}</button>
+              <button className="crumb-part" aria-label={last ? `File: ${p}` : `Folder: ${p}`}>{last && crumbSettings.icons() ? <Icon size={13} aria-hidden="true" style={{ color: fileType(file).color }} /> : null}{p}</button>
             } />
           </span>
         );
@@ -104,7 +121,7 @@ export default function FileBreadcrumbs({ file, source, line, symbols = true, on
         <span key={`${it.line}:${it.label}`} className="crumb-wrap">
           <ChevronRight size={12} aria-hidden="true" />
           <Dropdown label={`Symbols beside ${it.label}`} entries={siblings(it).map((s) => ({ label: s.label, active: s === it, onSelect: () => onGo(s.line, s.column) }))} trigger={
-            <button className="crumb-part" aria-label={`Symbol: ${it.label}`}><span className={`codicon codicon-symbol-${it.kind === 'class' ? 'class' : it.kind === 'method' || it.kind === 'function' ? 'method' : 'field'}`} aria-hidden="true" />{it.label}</button>
+            <button className="crumb-part" aria-label={`Symbol: ${it.label}`}>{crumbSettings.icons() && <span className={`codicon codicon-symbol-${it.kind === 'class' ? 'class' : it.kind === 'method' || it.kind === 'function' ? 'method' : 'field'}`} aria-hidden="true" />}{it.label}</button>
           } />
         </span>
       ))}

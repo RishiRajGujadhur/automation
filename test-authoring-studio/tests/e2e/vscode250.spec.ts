@@ -1689,3 +1689,16 @@ test('W84 Focus Breadcrumbs (Ctrl+Shift+;) and Focus and Select Breadcrumbs (Ctr
   await page.keyboard.press('Control+Shift+Period');
   await expect(page.getByRole('menuitem', { name: 'SearchSteps.cs' })).toBeVisible();
 });
+
+test('W85 breadcrumbs.filePath, breadcrumbs.symbolPath and breadcrumbs.icons', async ({ page }) => {
+  await fs.writeFile(path.join(temp, 'Steps/shapes.ts'), SHAPES);
+  await start(page, { 'breadcrumbs.filePath': 'last', 'breadcrumbs.symbolPath': 'last', 'breadcrumbs.icons': false });
+  const src = await open(page, 'Steps/shapes.ts');
+  const crumbs = page.getByRole('navigation', { name: 'Breadcrumbs' }).first();
+  await expect(crumbs.getByRole('button', { name: 'File: shapes.ts' })).toBeVisible();
+  await expect(crumbs.getByRole('button', { name: 'Folder: Steps' })).toHaveCount(0);
+  await src.locator('.cm-line').nth(17).click();
+  await expect(crumbs.getByRole('button', { name: 'Symbol: perimeter' })).toBeVisible({ timeout: 15_000 });
+  await expect(crumbs.getByRole('button', { name: 'Symbol: Square' })).toHaveCount(0);
+  await expect(crumbs.locator('.crumb-part svg, .crumb-part .codicon')).toHaveCount(0);
+});
