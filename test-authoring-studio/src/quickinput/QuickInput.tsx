@@ -68,6 +68,8 @@ export default function QuickInput() {
   const quickNavigate = useRef(false);
   // Results still loading when Enter is pressed: accept the first of them once they arrive (as VS Code does).
   const deferred = useRef<{ side: boolean } | undefined>(undefined);
+  // The text the shown items belong to: Enter right after typing waits for the new items.
+  const itemsFor = useRef<string | null>(null);
   const provider = pick ? pickProvider(pick) : providerFor(value);
   const filter = pick ? value : provider ? value.slice(provider.prefix.length) : value;
   const providerRef = useRef<QuickProvider | undefined>(provider);
@@ -94,17 +96,18 @@ export default function QuickInput() {
 
   // Items for the current text.
   useEffect(() => {
-    if (!open || !provider) { setItems([]); return; }
+    if (!open || !provider) { setItems([]); itemsFor.current = value; return; }
     const ctl = new AbortController();
     const r = provider.provide(filter, ctl.signal);
-    if (Array.isArray(r)) { setItems(r); setBusy(false); }
-    else { setBusy(true); r.then((x) => { if (!ctl.signal.aborted) { setItems(x); setBusy(false); } }, () => { if (!ctl.signal.aborted) { setItems([]); setBusy(false); } }); }
+    const shown = value;
+    if (Array.isArray(r)) { setItems(r); itemsFor.current = shown; setBusy(false); }
+    else { setBusy(true); r.then((x) => { if (!ctl.signal.aborted) { setItems(x); itemsFor.current = shown; setBusy(false); } }, () => { if (!ctl.signal.aborted) { setItems([]); itemsFor.current = shown; setBusy(false); } }); }
     return () => ctl.abort();
   }, [open, value, session, revision]); // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(() => setActive(0), [value]);
   // A quick pick can start on its current value (e.g. the file's language).
   useEffect(() => { if (pick?.activeId && !value) { const i = items.findIndex((x) => x.id === pick.activeId); if (i > 0) setActive(i); } }, [items]); // eslint-disable-line react-hooks/exhaustive-deps
-  useEffect(() => { if (!busy && deferred.current) { const d = deferred.current; deferred.current = undefined; accept(0, d.side); } }, [busy, items]); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => { if (!busy && deferred.current && itemsFor.current === value) { const d = deferred.current; deferred.current = undefined; accept(0, d.side); } }, [busy, items]); // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(() => { if (open) provider?.onActive?.(items[active], filter); }, [open, items, active]); // eslint-disable-line react-hooks/exhaustive-deps
   // Keep the active row in view.
   useEffect(() => { list.current?.querySelector<HTMLElement>(`[data-index="${active}"]`)?.scrollIntoView({ block: 'nearest' }); }, [active]);
@@ -163,7 +166,7 @@ export default function QuickInput() {
               else if (e.key === 'PageDown') { e.preventDefault(); setActive((a) => Math.min(n - 1, a + page)); }
               else if (e.key === 'PageUp') { e.preventDefault(); setActive((a) => Math.max(0, a - page)); }
               else if (e.key === 'Enter' && pick?.onInput) { e.preventDefault(); e.stopPropagation(); if (pick.validate?.(value)) return; const on = pick.onInput; accepted.current = true; closeQuickInput(); on(value); }
-              else if (e.key === 'Enter') { e.preventDefault(); e.stopPropagation(); if (busy) deferred.current = { side: e.ctrlKey || e.metaKey }; else accept(active, e.ctrlKey || e.metaKey); }
+              else if (e.key === 'Enter') { e.preventDefault(); e.stopPropagation(); if (busy || itemsFor.current !== value) deferred.current = { side: e.ctrlKey || e.metaKey }; else accept(active, e.ctrlKey || e.metaKey); }
               e.stopPropagation();
             }}
           />

@@ -19,7 +19,7 @@ export const advancedEditor = (file: string, kind: EditorKind): Extension[] => f
 /* Z1 Inline Git blame (Visual Studio 2026 "Git line blame", GitLens): who last changed the caret's line, at its end. */
 type Blame = { hash: string; author: string; when: string; summary: string };
 const blames = new Map<string, Promise<Blame[] | null>>();
-export const blameOf = (file: string) => { let p = blames.get(file); if (!p) { p = api<Blame[]>(`/git/blame?file=${encodeURIComponent(file)}`).catch(() => null); blames.set(file, p); } return p; };
+export const blameOf = (file: string) => { if (file.startsWith('.tas/')) return Promise.resolve(null); let p = blames.get(file); if (!p) { p = api<Blame[]>(`/git/blame?file=${encodeURIComponent(file)}`).catch(() => null); blames.set(file, p); } return p; };
 if (typeof window !== 'undefined') window.addEventListener(FILE_SAVED_EVENT, (e) => blames.delete((e as CustomEvent<string>).detail));
 /** "today", "3 days ago", "2 months ago", "1 year ago" from a yyyy-MM-dd date. */
 export function relativeDay(when: string, now = new Date()) {

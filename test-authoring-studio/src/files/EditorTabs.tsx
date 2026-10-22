@@ -16,8 +16,10 @@ import { useTabs, activateTab, closeOthers, closeToRight, closeToLeft, unpinAll,
 import { fileType } from './fileTypes';
 import { api } from '../api';
 import { isBrowser } from './provider';
+import { untitledLabel } from './untitled';
 
-const base = (f: string) => f.split('/').pop()!;
+// An untitled editor (W62) is labelled Untitled-n.
+const base = (f: string) => untitledLabel(f) ?? f.split('/').pop()!;
 
 /** Editors render their toolbar (save state, Save, Run…) into the tab strip, like VS Code's editor actions. */
 const ActionsSlot = createContext<HTMLElement | null>(null);

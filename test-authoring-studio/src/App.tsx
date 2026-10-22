@@ -70,6 +70,7 @@ import OpenEditors from './views/OpenEditors';
 import OutlineView from './views/OutlineView';
 import TimelineView from './views/TimelineView';
 import EditorWatermark from './views/EditorWatermark';
+import './files/untitled';
 import { NOTIFICATION_CENTER_EVENT } from './notificationCommands';
 import GoToAll from './search/GoToAll';
 import { runTests, getTestRun, discoverTests, useTestRun, outcomeOf, combine, type DiscoveredTest } from './testing/store';
@@ -1358,19 +1359,21 @@ export default function App() {
   // Panel alignment: where a full-width bottom panel starts and ends (the side bars it spans).
   const [panelSlot, setPanelSlot] = useState<HTMLDivElement | null>(null);
   const [panelSlotStyle, setPanelSlotStyle] = useState<React.CSSProperties>({});
+  const alignment = panelAlignment();
   useEffect(() => {
-    const a = panelAlignment();
-    if (a === 'center' || a === 'justify') { setPanelSlotStyle({}); return; }
+    // Only a changed style is set: a new object every time would render again, endlessly.
+    const put = (next: React.CSSProperties) => setPanelSlotStyle((prev) => (JSON.stringify(prev) === JSON.stringify(next) ? prev : next));
+    if (alignment === 'center' || alignment === 'justify') { put({}); return; }
     const measure = () => {
       const main = document.querySelector('main.main-content, main')?.getBoundingClientRect();
       if (!main) return;
-      setPanelSlotStyle(a === 'right' ? { marginLeft: main.left } : { marginRight: Math.max(0, window.innerWidth - main.right) });
+      put(alignment === 'right' ? { marginLeft: main.left } : { marginRight: Math.max(0, window.innerWidth - main.right) });
     };
     measure();
     window.addEventListener('resize', measure);
     const t = setInterval(measure, 1000);
     return () => { window.removeEventListener('resize', measure); clearInterval(t); };
-  });
+  }, [alignment]);
   const dock = inEditor && dockShows ? (
     <div ref={dockRef} className={`dock dock-${dockSide} ${panelSize[dockSide === 'bottom' ? 'h' : 'w'] ? 'dock-sized' : ''} ${panelMax ? 'dock-max' : ''}`} style={panelStyle} hidden={panelHidden}>
       {!panelMax && <PanelSash side={dockSide} size={dockSide === 'bottom' ? panelSize.h : panelSize.w} onSize={(px) => setPanelSize(dockSide === 'bottom' ? { ...panelSize, h: px } : { ...panelSize, w: px })} panel={() => dockRef.current} />}

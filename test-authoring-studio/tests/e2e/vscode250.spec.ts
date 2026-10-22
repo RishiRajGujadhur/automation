@@ -1296,3 +1296,24 @@ test('W61 Empty editor area: VS Code watermark with key tips (workbench.tips.ena
   await expect(mark).toBeVisible();
   await expect(mark.getByRole('button', { name: 'Go to File' })).toHaveCount(0);
 });
+
+test('W62 New Untitled Text File: Untitled-1 tab, Ctrl+S asks for a name and writes it there', async ({ page }) => {
+  await start(page);
+  await page.keyboard.press('Control+Shift+P');
+  await quickBox(page).fill('>New Untitled Text File');
+  await expect(rows(page).first()).toContainText('New Untitled Text File');
+  await page.keyboard.press('Enter');
+  const tab = page.locator('.editor-tab-label', { hasText: /^Untitled-1$/ });
+  await expect(tab).toBeVisible();
+  const src = page.getByLabel('Source of .tas/untitled/Untitled-1.txt');
+  await src.click();
+  await page.keyboard.type('hello from an untitled file');
+  await page.keyboard.press('Control+s');
+  await expect(quick(page).getByRole('status')).toContainText('Save As');
+  await quickBox(page).fill('notes/hello.txt');
+  await page.keyboard.press('Enter');
+  await expect.poll(() => fs.readFile(path.join(temp, 'notes/hello.txt'), 'utf8').catch(() => '')).toBe('hello from an untitled file');
+  await expect(page.locator('.editor-tab-label', { hasText: 'hello.txt' })).toBeVisible();
+  await expect(tab).toHaveCount(0);
+  await expect(fs.stat(path.join(temp, '.tas/untitled/Untitled-1.txt'))).rejects.toThrow();
+});

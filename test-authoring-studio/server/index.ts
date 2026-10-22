@@ -219,6 +219,28 @@ app.post('/api/scratch/new', async (req, res) => {
   await excludeTas();
   res.json({ file: `${SCRATCH_DIR}/${name}` });
 });
+// Untitled editors (VS Code's New Untitled Text File, VSCODE-250.md W62): files under .tas/untitled until Save As.
+const UNTITLED_DIR = '.tas/untitled';
+app.post('/api/untitled/new', async (_req, res) => {
+  const dir = path.join(config.repositoryRoot, UNTITLED_DIR);
+  await fs.mkdir(dir, { recursive: true });
+  const used = (await fs.readdir(dir)).map((n) => Number(/^Untitled-(\d+)\./.exec(n)?.[1] ?? 0));
+  const name = `Untitled-${Math.max(0, ...used) + 1}.txt`;
+  await fs.writeFile(path.join(dir, name), '', 'utf8');
+  await excludeTas();
+  res.json({ file: `${UNTITLED_DIR}/${name}` });
+});
+app.post('/api/untitled/save-as', async (req, res) => {
+  const { from, to, source } = z.object({ from: z.string().max(400).regex(/^\.tas\/untitled\/Untitled-\d+\.txt$/), to: z.string().min(1).max(400).regex(editable), source: z.string().max(1_000_000) }).parse(req.body);
+  const src = await confined(config.repositoryRoot, from, false);
+  const target = await confined(config.repositoryRoot, to, false);
+  if (await fs.stat(target).then(() => true, () => false)) { res.status(409).json({ error: `${to} already exists.` }); return; }
+  await fs.mkdir(path.dirname(target), { recursive: true });
+  await fs.writeFile(target, source, 'utf8');
+  await fs.rm(src, { force: true });
+  rescanSoon(500);
+  res.json({ file: to.replaceAll('\\', '/') });
+});
 // Go to Related Files (Rider): a feature's step definition files and code-behind; a step file's features.
 app.get('/api/related', async (req, res) => {
   const file = z.string().min(1).max(400).parse(req.query.file).replaceAll('\\', '/');
