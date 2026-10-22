@@ -4,96 +4,74 @@ A local IDE for **SpecFlow / Reqnroll + Playwright (C#)** test repositories, as 
 (`test-authoring-desktop/`) and a web app (`test-authoring-studio/`) at feature parity. Everything runs on your
 machine; nothing is uploaded.
 
-## Key advanced features
+## Key features
 
-| Area | Feature | What it does |
-| --- | --- | --- |
-| Refactoring | **Change Signature** | Rename, remove and reorder parameters; every call site is updated, other files as diffs to approve. Also Reorder Parameters and Remove Unused Parameters. |
-| Refactoring | **Structural refactorings** | Extract Method / Interface / Superclass, Introduce Variable / Parameter / Field / Property / Factory Method, Inline Field, Pull Members Up, Push Members Down, Move Static Members, Replace Constructor with Factory, LINQ to loop, method to local function. Refactor This (Ctrl+Alt+Shift+T) lists them for the selection. |
-| C# | **Code generation and conversions** | `IEquatable<T>`, comparison members, `IAsyncDisposable`, equality, `ToString`, null checks, unit tests (NUnit, xUnit, MSTest); switch to expression, enum switch cases, tuple to named type, field to auto-property, record to class, interpolation to `string.Format`. |
-| Analysis | **Roslyn analyzers** | The IDE analyzers in the editor, severities from `.editorconfig` / `.globalconfig`, exclusion scopes, a preview of each quick fix, and Fix All in the document or the solution. Dead code, unused members and redundant code are faded. |
-| Analysis | **Solution analysis** | Duplicate code, namespace dependency cycles, layer rules from `layers.json`, control- and data-flow analysis, and Public API tracking against `PublicAPI.Shipped.txt` with breaking changes flagged. |
-| Navigation | **Semantic search and decompiled sources** | Find symbols by kind, type, return type and attribute (`kind:method attr:Given`); go to metadata or decompiled source of framework and NuGet code; method and call hierarchies; peek references; named bookmark lists. |
-| Search | **Search with Pattern** | Structural search and replace with `$placeholders$` and saved templates, previewed per file; search editors that can run again, multiline regex, case-preserving replace, search in the selection or in ignored files. |
-| Debugging | **Breakpoints and inspection** | Conditional, dependent, temporary and function breakpoints, tracepoints, hit counts and labels; edit values while paused; Text, JSON, XML and table visualizers; pinned DataTips; inline values; Threads window. |
-| Testing | **Coverage and test runs** | Line and branch coverage (partly covered lines in yellow, branch % per run), test history, Run Repeatedly, continuous testing on save, impacted tests from uncommitted changes, go to the next failure. |
-| Git | **History editing and merges** | Interactive rebase (reword, squash, fixup, drop, reorder), squash to HEAD, a three-way merge editor, compare commits, worktrees, bisect, changelists, commit templates, inline blame, stage selected lines. |
-| Projects | **Project Properties** | Property pages for a `.csproj` with effective values from the .NET SDK and `Directory.Build.props`; every change to a project file is a diff written only when you approve it. |
-| Front end | **JavaScript, TypeScript, React, HTML, CSS** | A TypeScript language service with 40+ refactorings (type alias ⇄ interface, async ⇄ promises, CommonJS ⇄ ES modules, destructuring, `??`, JS to TS…), auto-imports and import updates on move; React actions (extract component, class to function component, props interfaces, Hooks dependency checks via eslint-plugin-react-hooks); HTML completion, validation, accessibility and ARIA checks; CSS / SCSS / LESS completion, colour picker, shorthands, specificity, partials and CSS Modules. See [FRONTEND-100.md](FRONTEND-100.md). |
-| Editor | **VS Code settings** | A settings editor with a category tree, `settings.json` import / export and `@modified`; minimap with section headers, bracket pair guides, sticky scroll, rulers, word wrap, whitespace, semantic highlighting, inactive `#if` regions, format and organize usings on save. |
-| Workbench | **Layout** | Editor groups (split right or down, move, lock, maximize), floating editor windows, Zen Mode, a secondary sidebar, activity bar and panel positions. |
-| Workbench | **VS Code-style ease of use** | A resizable panel (drag its edge) with Maximize Panel Size, layout buttons and Back / Forward in the title bar, badges on the activity bar for Git changes and failed tests, index status in the status bar, double-click a tab to maximize the editor. See [GUI-QOL.md](GUI-QOL.md). |
+| Area | Highlights |
+| --- | --- |
+| **Test authoring** | Edit Gherkin features, scenarios, backgrounds and tables; browse the solution structure; navigate between bindings and C#; discover tests and review run results in Test Explorer. |
+| **C# editing** | Code completion and navigation, CodeLens, inlay hints, quick fixes, code generation and conversions, plus structural refactorings such as Extract Method, Introduce Variable and Change Signature. Cross-file changes are previewed before they are applied. |
+| **Analysis and search** | Roslyn diagnostics; duplicate-code, dependency and layer analysis; control/data flow; public API compatibility checks; semantic symbol search; structural Search with Pattern and decompiled framework sources. |
+| **Testing and debugging** | Run and debug scenarios, stop on feature-file breakpoints, inspect values with text/JSON/XML/table visualizers, and review line and branch coverage. |
+| **Browser tools** | Record Playwright interactions, inspect pages with Spy, and use the built-in HTTP client to exercise endpoints. |
+| **Test design and reuse** | Apply test-design algorithms, search existing step bindings and selector dictionaries, and review generated feature and C# changes before writing them to the target repository. |
+| **Git and projects** | Review history and diffs, use interactive rebase and three-way merge, and inspect effective `.csproj` properties with an approval diff before writing changes. |
+| **Workbench** | Resizable panels, editor groups, file structure and call hierarchy, terminal, problems, Run Anything, Markdown preview, productivity guide, customizable settings, minimap, and layout controls. |
+| **Front-end languages** | JavaScript and TypeScript refactorings and imports; React actions and Hooks checks; HTML validation and accessibility checks; CSS, SCSS, LESS and CSS Modules support. See [FRONTEND-100.md](FRONTEND-100.md). |
+| **Windows desktop integration** | Native menus and folder selection, recent repositories, remembered window placement and zoom, taskbar progress, and background test-run notifications. |
 
-Every optional feature has a switch under **Settings ▸ Features**. Progress and details:
-[RIDER-VSCODE-FEATURES.md](RIDER-VSCODE-FEATURES.md), [FRONTEND-100.md](FRONTEND-100.md), [VSCODE-20.md](VSCODE-20.md), [ADVANCED-20.md](ADVANCED-20.md),
-[CSHARP-20.md](CSHARP-20.md), [DEBUG-20.md](DEBUG-20.md), [REQNROLL.md](REQNROLL.md) and [SPY.md](SPY.md).
+The desktop and web apps share the core authoring features. Optional capabilities can be managed in **Settings > Features**. Detailed inventories and progress: [RIDER-VSCODE-FEATURES.md](RIDER-VSCODE-FEATURES.md), [FRONTEND-100.md](FRONTEND-100.md), [VSCODE-20.md](VSCODE-20.md), [ADVANCED-20.md](ADVANCED-20.md), [CSHARP-20.md](CSHARP-20.md), [DEBUG-20.md](DEBUG-20.md), [REQNROLL.md](REQNROLL.md), [SPY.md](SPY.md) and [GUI-QOL.md](GUI-QOL.md).
 
 ## Screenshots
 
-Captured from the Windows desktop build on a temporary copy of the Calculator sample (running-app captures, not
-mockups).
+These are running-app captures of the Windows desktop build using a temporary Calculator sample repository. The gallery covers authoring, debugging, Git, and the workbench tools.
 
-**Workbench.** Structure in a panel made taller by dragging its edge; layout buttons and Back / Forward in the title
-bar; a badge with the pending Git changes on the activity bar; the index status in the status bar.
+### Authoring, editing and navigation
 
-![Workbench](docs/screenshots/workbench.png)
+| Feature editor | C# editor | C# refactoring |
+| --- | --- | --- |
+| <img src="docs/screenshots/feature-editor.png" alt="Feature editor" width="320"> | <img src="docs/screenshots/csharp-editor.png" alt="C# editor" width="320"> | <img src="docs/screenshots/csharp-refactoring.png" alt="C# refactoring" width="320"> |
 
-**Change Signature.** Rename a parameter, remove an unused one and move another up; the new signature updates as you
-go, and call sites in other files come back as diffs.
+| Change Signature | Semantic search | Decompiled source |
+| --- | --- | --- |
+| <img src="docs/screenshots/change-signature.png" alt="Change Signature" width="320"> | <img src="docs/screenshots/semantic-search.png" alt="Semantic search" width="320"> | <img src="docs/screenshots/decompiled-source.png" alt="Decompiled source" width="320"> |
 
-![Change Signature](docs/screenshots/change-signature.png)
+| File structure | Call hierarchy | Search with Pattern |
+| --- | --- | --- |
+| <img src="docs/screenshots/file-structure.png" alt="File structure" width="320"> | <img src="docs/screenshots/call-hierarchy.png" alt="Call hierarchy" width="320"> | <img src="docs/screenshots/search-pattern.png" alt="Search with Pattern" width="320"> |
 
-**C# refactoring.** Refactor This lists the refactorings for the selection. The gutter marks members that override
-or are overridden, and the caret's line shows who changed it last.
+### Test runs, debugging and browser tools
 
-![C# refactoring](docs/screenshots/csharp-refactoring.png)
+| Test Explorer | Debugger | Debugger visualizer |
+| --- | --- | --- |
+| <img src="docs/screenshots/test-explorer.png" alt="Test Explorer" width="320"> | <img src="docs/screenshots/debugger.png" alt="Debugger" width="320"> | <img src="docs/screenshots/debugger-visualizer.png" alt="Debugger visualizer" width="320"> |
 
-**Public API.** A saved baseline compared with the current code: removed and changed members are breaking changes,
-added members are not.
+| Branch coverage | Playwright recorder | Spy |
+| --- | --- | --- |
+| <img src="docs/screenshots/branch-coverage.png" alt="Branch coverage" width="320"> | <img src="docs/screenshots/recorder.png" alt="Recorder" width="320"> | <img src="docs/screenshots/spy.png" alt="Spy" width="320"> |
 
-![Public API](docs/screenshots/public-api.png)
+### Git, projects and workbench
 
-**Semantic search.** Symbols found by kind and attribute across the solution; select one to open it.
+| Workbench | Git Log | Interactive rebase |
+| --- | --- | --- |
+| <img src="docs/screenshots/workbench.png" alt="Workbench" width="320"> | <img src="docs/screenshots/git-log.png" alt="Git Log" width="320"> | <img src="docs/screenshots/interactive-rebase.png" alt="Interactive rebase" width="320"> |
 
-![Semantic search](docs/screenshots/semantic-search.png)
+| Three-way merge | Project Properties | Settings editor |
+| --- | --- | --- |
+| <img src="docs/screenshots/merge-editor.png" alt="Merge editor" width="320"> | <img src="docs/screenshots/project-properties.png" alt="Project Properties" width="320"> | <img src="docs/screenshots/settings-editor.png" alt="Settings editor" width="320"> |
 
-**Decompiled source.** Go to the implementation of a framework method, decompiled from its assembly.
+### More tools
 
-![Decompiled source](docs/screenshots/decompiled-source.png)
+| Start window | Productivity guide | Run Anything |
+| --- | --- | --- |
+| <img src="docs/screenshots/start-window.png" alt="Start window" width="320"> | <img src="docs/screenshots/productivity-guide.png" alt="Productivity guide" width="320"> | <img src="docs/screenshots/run-anything.png" alt="Run Anything" width="320"> |
 
-**Search with Pattern.** A structural search with placeholders across the solution, with a replacement to preview.
+| Terminal | Problems | HTTP client |
+| --- | --- | --- |
+| <img src="docs/screenshots/terminal.png" alt="Terminal" width="320"> | <img src="docs/screenshots/problems.png" alt="Problems" width="320"> | <img src="docs/screenshots/http-client.png" alt="HTTP client" width="320"> |
 
-![Search with Pattern](docs/screenshots/search-pattern.png)
-
-**Branch coverage.** One test takes one branch of two: the line is marked partly covered, and Test Explorer shows the
-line and branch rates of the run.
-
-![Branch coverage](docs/screenshots/branch-coverage.png)
-
-**Debugger visualizer.** Paused in a step definition: a list shown as a table, one row per item and a column per
-property.
-
-![Debugger visualizer](docs/screenshots/debugger-visualizer.png)
-
-**Interactive rebase.** Plan a rebase from the Git Log: pick, reword, squash, fix up, drop or reorder commits. Here
-the WIP commit is folded into the one before it and a later fix is moved up and dropped.
-
-![Interactive rebase](docs/screenshots/interactive-rebase.png)
-
-**Three-way merge editor.** Current and incoming changes beside the result, with Accept Current / Incoming / Both per
-conflict and Complete Merge once none are left.
-
-![Merge editor](docs/screenshots/merge-editor.png)
-
-**Project Properties.** Settings the project file does not set show their effective value; changes are previewed as
-a diff of the `.csproj`.
-
-![Project Properties](docs/screenshots/project-properties.png)
-
-**Settings editor.** Categories as a tree (here Text Editor ▸ Minimap), with search, modified markers and
-`settings.json`.
-
-![Settings editor](docs/screenshots/settings-editor.png)
+| Markdown preview | Public API | Desktop settings |
+| --- | --- | --- |
+| <img src="docs/screenshots/markdown-preview.png" alt="Markdown preview" width="320"> | <img src="docs/screenshots/public-api.png" alt="Public API" width="320"> | <img src="docs/screenshots/desktop-settings.png" alt="Desktop settings" width="320"> |
 
 ## Build
 
@@ -105,5 +83,11 @@ npm install && npm run dist
 ```
 
 The .NET helpers need the .NET 10 SDK (a local one in `.tools/dotnet/` works). Architecture notes: [CLAUDE.md](CLAUDE.md).
-To refresh the screenshots, build the desktop app, then from `test-authoring-desktop/` run
-`TAS_SCREENSHOTS=1 TAS_EXE="release/win-unpacked/TestAuthoring Studio.exe" npx playwright test screenshots`.
+To refresh the screenshots, from `test-authoring-desktop/` run:
+
+```powershell
+npm run pack
+$env:TAS_SCREENSHOTS = '1'
+$env:TAS_EXE = 'release/win-unpacked/TestAuthoring Studio.exe'
+npx playwright test screenshots
+```
