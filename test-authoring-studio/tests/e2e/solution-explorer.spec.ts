@@ -1,10 +1,11 @@
 import { test, expect } from '@playwright/test';
 
 test('Solution Explorer: solution → project → dependencies → folders, nesting, open C#, search and filters', async ({ page }) => {
+  await page.addInitScript(() => localStorage.setItem('tas:settings', JSON.stringify({ 'workbench.controls.explorer-pending': true })));
   await page.goto('/#/features/editor');
   const se = page.getByRole('region', { name: 'Explorer' });
   // First page after the dev server starts: the solution model can take a few seconds.
-  await expect(se.getByText("Solution 'fixtures' (1 project)")).toBeVisible({ timeout: 30_000 });
+  await expect(se.getByText('Solution', { exact: true })).toBeVisible({ timeout: 30_000 });
   await expect(se.getByRole('button', { name: 'Collapse project Fixtures' })).toBeVisible();
   await se.getByRole('button', { name: 'Expand Dependencies' }).click();
   await expect(se.getByText('SpecFlow.NUnit')).toBeVisible();

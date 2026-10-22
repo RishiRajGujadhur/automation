@@ -654,15 +654,15 @@ export default function SolutionExplorer({ features, revision, activeFile, query
       </div>
       <label className="search-box">
         <Search size={14} />
-        <input aria-label="Search Explorer" placeholder="Search Explorer (Ctrl+;)" value={query} onChange={(e) => onQuery(e.target.value)} onKeyDown={(e) => { if (e.key === 'Escape' && query) { e.stopPropagation(); onQuery(''); } }} />
+        <input aria-label="Search Explorer" placeholder="Filter files" title="Search Explorer (Ctrl+;)" value={query} onChange={(e) => onQuery(e.target.value)} onKeyDown={(e) => { if (e.key === 'Escape' && query) { e.stopPropagation(); onQuery(''); } }} />
         {query && <button className="icon-button" aria-label="Clear search" onClick={() => onQuery('')}><X size={13} /></button>}
         {/* VS Code's tree find (W98): filter the tree (default) or only highlight what matches. */}
         <button className={`icon-button find-mode ${findMode === 'filter' ? 'on' : ''}`} aria-label={findMode === 'filter' ? 'Find mode: filter' : 'Find mode: highlight'} aria-pressed={findMode === 'filter'} title={findMode === 'filter' ? 'Filter (click to only highlight)' : 'Highlight (click to filter)'} onClick={() => setFindMode(findMode === 'filter' ? 'highlight' : 'filter')}><span className="codicon codicon-list-filter" aria-hidden="true" /></button>
       </label>
       {scope && <div className="se-scope" aria-label="Explorer scope"><Focus size={12} aria-hidden="true" /><span title={scope}>Scoped to <strong>{scope}</strong></span><button className="icon-button" aria-label="Home (show the whole solution)" title="Home" onClick={() => setScope('')}><House size={13} /></button></div>}
-      <div className="explorer-summary" role="status">
-        {pendingOnly ? `${files.length} file${files.length === 1 ? '' : 's'} with unsaved changes` : query.trim() ? `${files.length} matching file${files.length === 1 ? '' : 's'}` : `${features.length} feature file${features.length === 1 ? '' : 's'} · ${files.length} file${files.length === 1 ? '' : 's'}`}
-      </div>
+      {(pendingOnly || query.trim()) && <div className="explorer-summary" role="status">
+        {pendingOnly ? `${files.length} file${files.length === 1 ? '' : 's'} with unsaved changes` : `${files.length} matching file${files.length === 1 ? '' : 's'}`}
+      </div>}
       <nav className="folder-tree se-tree" ref={tree} aria-label="Solution" onKeyDown={treeKeys} onScroll={(e) => { if (featureOn('explorer-scroll')) { const top = e.currentTarget.scrollTop; clearTimeout(scrollSave.current); scrollSave.current = window.setTimeout(() => { try { sessionStorage.setItem(collapsedKey().replace('Collapsed', 'Scroll'), String(top)); } catch { /* storage blocked */ } }, 200); } }}>
         <ul className="folder-children">
           <li>
@@ -670,7 +670,7 @@ export default function SolutionExplorer({ features, revision, activeFile, query
               { label: 'Add New Project…', icon: Plus, onSelect: () => setAdding({ kind: 'new', template: 'nunit', name: '', folder: '' }) },
               { label: 'Add Existing Project…', icon: Boxes, onSelect: () => setAdding({ kind: 'existing', path: '' }) },
             ] : []}>
-            <div className="se-row se-solution" data-menu-row><Layers size={14} aria-hidden="true" /><span title={solution?.solutionFile ?? undefined}>Solution '{solution?.name ?? '…'}' ({projects.length} project{projects.length === 1 ? '' : 's'})</span></div>
+            <div className="se-row se-solution" data-menu-row><Layers size={14} aria-hidden="true" /><span title={solution?.solutionFile ?? `Solution '${solution?.name ?? '…'}' (${projects.length} project${projects.length === 1 ? '' : 's'})`}>{projects.length === 1 && solution?.name?.toLowerCase() === projects[0]?.name.toLowerCase() ? 'Solution' : `Solution '${solution?.name ?? '…'}' (${projects.length} project${projects.length === 1 ? '' : 's'})`}</span></div>
             </RowMenu>
             {adding && (
               <form className="se-add-project" aria-label={adding.kind === 'new' ? 'Add New Project' : 'Add Existing Project'} onSubmit={(e) => { e.preventDefault(); void addProject(); }}>
@@ -712,7 +712,7 @@ export default function SolutionExplorer({ features, revision, activeFile, query
         </ul>
       </nav>
       {!files.length && <p className="explorer-empty">{pendingOnly ? 'No unsaved changes.' : query.trim() ? 'Nothing matches your search.' : 'No files yet.'}</p>}
-      <button className="new-feature" onClick={() => onNew()}><Plus size={15} />New feature</button>
+      {!files.length && <button className="new-feature" onClick={() => onNew()}><Plus size={15} />New feature</button>}
     </section>
   );
 }
