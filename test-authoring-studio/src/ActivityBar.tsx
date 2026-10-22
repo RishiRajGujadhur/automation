@@ -1,10 +1,11 @@
-import { useLayoutEffect, useRef, useState } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { LayoutDashboard, Wand2, Files, Circle, Braces, FlaskConical, BookOpen, Blocks, ScanLine, FolderTree, MoreHorizontal, Menu, TestTubeDiagonal, Search, GitBranch, type LucideIcon } from 'lucide-react';
 import { Tip } from './radix2';
 import { Dropdown } from './radix';
 import { useGitSummary } from './git/statusStore';
 import { useTestRun } from './testing/store';
 import { featureOn } from './features';
+import { useLocalState } from './ui';
 import { runRider } from './rider/commands';
 import { openCommandPalette } from './quickinput/providers';
 
@@ -32,7 +33,23 @@ export default function ActivityBar({ active, basic, sidebarOpen, onSelect, onTo
   active: string; basic: boolean; sidebarOpen: boolean;
   onSelect: (id: string) => void; onToggleSidebar: () => void; onPreferences: () => void; onWorkspace: () => void; onMore: () => void;
 }) {
-  const items = activityItems.filter((i) => !basic || !i.advanced);
+  // W48: items hidden from the right-click menu, and the order they were dragged into (both kept).
+  const [userHidden, setUserHidden] = useLocalState<string[]>('activityHidden', []);
+  const [order, setOrder] = useLocalState<string[]>('activityOrder', []);
+  const rank = (id: string) => { const i = order.indexOf(id); return i < 0 ? 1000 + activityItems.findIndex((x) => x.id === id) : i; };
+  const all = activityItems.filter((i) => !basic || !i.advanced).sort((a, b) => rank(a.id) - rank(b.id));
+  const items = all.filter((i) => !userHidden.includes(i.id) || i.id === active);
+  const [menu, setMenu] = useState<{ x: number; y: number; id?: string }>();
+  const dragged = useRef<string | null>(null);
+  useEffect(() => {
+    if (!menu) return;
+    const close = (e: Event) => { if (!(e.target as HTMLElement).closest?.('.activity-bar-menu')) setMenu(undefined); };
+    const key = (e: KeyboardEvent) => { if (e.key === 'Escape') setMenu(undefined); };
+    window.addEventListener('mousedown', close);
+    window.addEventListener('keydown', key);
+    return () => { window.removeEventListener('mousedown', close); window.removeEventListener('keydown', key); };
+  }, [menu]);
+  const move = (from: string, to: string) => { if (from === to) return; const ids = all.map((i) => i.id).filter((x) => x !== from); ids.splice(ids.indexOf(to), 0, from); setOrder(ids); };
   const top = useRef<HTMLUListElement>(null);
   const [fit, setFit] = useState(items.length);
   // Items that don't fit the window height move into a ☰ overflow menu (like VS Code's "…" in the activity bar).
@@ -64,7 +81,14 @@ export default function ActivityBar({ active, basic, sidebarOpen, onSelect, onTo
   const button = (i: ActivityItem) => {
     const isActive = active === i.id;
     return (
-      <li key={i.id}>
+      <li
+        key={i.id}
+        draggable
+        onDragStart={(e) => { dragged.current = i.id; e.dataTransfer.effectAllowed = 'move'; e.dataTransfer.setData('text/x-activity', i.id); }}
+        onDragOver={(e) => { if (dragged.current) { e.preventDefault(); e.dataTransfer.dropEffect = 'move'; } }}
+        onDrop={(e) => { e.preventDefault(); if (dragged.current) move(dragged.current, i.id); dragged.current = null; }}
+        onContextMenu={(e) => { e.preventDefault(); setMenu({ x: e.clientX, y: e.clientY, id: i.id }); }}
+      >
         <Tip content={badges[i.id] ? `${i.label} · ${badges[i.id]!.text}` : i.label} shortcut={i.shortcut} side="right">
           <button
             className={`activity-item ${isActive ? 'active' : ''}`}
@@ -81,7 +105,15 @@ export default function ActivityBar({ active, basic, sidebarOpen, onSelect, onTo
     );
   };
   return (
-    <nav className="activity-bar" aria-label="Main">
+    <nav className="activity-bar" aria-label="Main" onContextMenu={(e) => { if (!e.defaultPrevented) { e.preventDefault(); setMenu({ x: e.clientX, y: e.clientY }); } }}>
+      {menu && (
+        <div className="status-bar-menu activity-bar-menu" role="menu" aria-label="Activity Bar" style={{ position: 'fixed', left: menu.x + 4, top: Math.min(menu.y, window.innerHeight - 40 - 24 * all.length) }}>
+          {menu.id && <><button role="menuitem" className="context-menu-item" onClick={() => { setUserHidden([...userHidden, menu.id!]); setMenu(undefined); }}><span className="check" />Hide &apos;{all.find((x) => x.id === menu.id)?.label}&apos;</button><div className="context-menu-separator" role="separator" /></>}
+          {all.map((x) => <button key={x.id} role="menuitemcheckbox" aria-checked={!userHidden.includes(x.id)} className="context-menu-item" onClick={() => setUserHidden(userHidden.includes(x.id) ? userHidden.filter((y) => y !== x.id) : [...userHidden, x.id])}><span className="check">{userHidden.includes(x.id) ? '' : '✓'}</span>{x.label}</button>)}
+          <div className="context-menu-separator" role="separator" />
+          <button role="menuitem" className="context-menu-item" onClick={() => { setUserHidden([]); setOrder([]); setMenu(undefined); }}><span className="check" />Reset Location and Visibility</button>
+        </div>
+      )}
       <ul ref={top} className="activity-top">
         {visible.map(button)}
         {hidden.length > 0 && (

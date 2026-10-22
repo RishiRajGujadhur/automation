@@ -1027,3 +1027,28 @@ test('W47 Activity bar: Accounts and Manage (gear) menus at the bottom', async (
   await menu.getByRole('menuitem', { name: /^Settings/ }).click();
   await expect(page.getByRole('dialog', { name: 'Preferences' })).toBeVisible();
 });
+
+test('W48 Activity bar: right-click hides / shows items, drag reorders, reset', async ({ page }) => {
+  await start(page);
+  const bar = page.getByRole('navigation', { name: 'Main' });
+  const design = bar.getByRole('button', { name: 'Test Design' });
+  await design.click({ button: 'right' });
+  const menu = page.getByRole('menu', { name: 'Activity Bar' });
+  await menu.getByRole('menuitem', { name: "Hide 'Test Design'" }).click();
+  await expect(design).toHaveCount(0);
+  await page.reload();
+  await expect(page.getByText('Repository indexed')).toBeVisible();
+  await expect(design).toHaveCount(0);
+  await bar.getByRole('button', { name: 'Dashboard' }).click({ button: 'right' });
+  await expect(menu.getByRole('menuitemcheckbox', { name: /Test Design/ })).toHaveAttribute('aria-checked', 'false');
+  await menu.getByRole('menuitemcheckbox', { name: /Test Design/ }).click();
+  await page.keyboard.press('Escape');
+  await expect(design).toBeVisible();
+  // Drag Git Changes above Dashboard.
+  const labels = () => bar.locator('.activity-top .activity-item').evaluateAll((els) => els.map((e) => e.getAttribute('aria-label')));
+  await bar.getByRole('button', { name: 'Git Changes' }).dragTo(bar.getByRole('button', { name: 'Dashboard' }));
+  await expect.poll(async () => (await labels())[0]).toBe('Git Changes');
+  await bar.getByRole('button', { name: 'Dashboard' }).click({ button: 'right' });
+  await menu.getByRole('menuitem', { name: 'Reset Location and Visibility' }).click();
+  await expect.poll(async () => (await labels())[0]).toBe('Dashboard');
+});
