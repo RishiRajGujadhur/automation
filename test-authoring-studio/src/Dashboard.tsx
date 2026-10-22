@@ -4,7 +4,7 @@ import type { Index } from './types';
 import { Button } from './radix';
 import * as Popover from '@radix-ui/react-popover';
 import { useEffect, useState } from 'react';
-import { CircleCheck, CircleDashed, Info } from 'lucide-react';
+import { CircleDashed, Info } from 'lucide-react';
 import { Meter, usePrefs } from './radix2';
 import { milestones, doneMilestones } from './progress';
 import Card from './Card';
@@ -13,11 +13,13 @@ export function ContextBar({ index, config, recordStatus, revision }: { index?: 
   const { model } = useProjectModel(revision);
   const project = model?.projects[0]?.split('/').pop()?.replace(/\.csproj$/, '') ?? model?.root ?? '…';
   const dictionaries = index?.stats?.dictionaries ?? 0;
+  const framework = model?.frameworks.join(', ');
+  const playwright = model?.packages.some((p) => /playwright/i.test(p));
   return (
     <div className="context-bar" aria-label="Project context">
       <Popover.Root>
         <Popover.Trigger asChild>
-          <button className="context-trigger"><strong>Active project</strong> {project}{model?.frameworks.length ? ` (${model.frameworks.join(', ')}` : ' ('}{model?.packages.some((p) => /playwright/i.test(p)) ? ' / Playwright C#)' : ')'}<Info size={12} /></button>
+          <button className="context-trigger"><strong>Active project</strong> {project}{framework || playwright ? ` (${[framework, playwright && 'Playwright C#'].filter(Boolean).join(' / ')})` : ''}<Info size={12} /></button>
         </Popover.Trigger>
         <Popover.Portal>
           <Popover.Content className="popover" sideOffset={6} collisionPadding={12}>
@@ -25,13 +27,15 @@ export function ContextBar({ index, config, recordStatus, revision }: { index?: 
             <ul>{(model?.projects ?? []).map((x) => <li key={x}><code>{x}</code></li>)}{!model?.projects.length && <li className="subtle">No .csproj found.</li>}</ul>
             <span className="micro-label">PACKAGES</span>
             <ul>{(model?.packages ?? []).map((x) => <li key={x}>{x}</li>)}{!model?.packages.length && <li className="subtle">None detected.</li>}</ul>
+            {config?.repositoryRoot && <p><strong>Root</strong> {config.repositoryRoot}</p>}
+            <p><strong>Browser</strong> Chromium · {recordStatus === 'recording' ? 'recording' : 'idle'}</p>
+            <p><strong>Dictionary fields</strong> {dictionaries}</p>
             <Popover.Arrow className="tooltip-arrow" />
           </Popover.Content>
         </Popover.Portal>
       </Popover.Root>
-      <span><strong>Root</strong> {config?.repositoryRoot.split(/[\\/]/).slice(-2).join('/')}</span>
-      <span><strong>Browser</strong> Chromium (headless: false) · {recordStatus === 'recording' ? 'recording' : 'idle'}</span>
-      <span className={dictionaries ? 'ok' : 'warn'}><span className="status-dot" />{dictionaries ? `${dictionaries} dictionary fields indexed` : 'No dictionary XML found'}</span>
+      {recordStatus === 'recording' && <span className="ok"><span className="status-dot" />Recording</span>}
+      {!dictionaries && <span className="warn"><span className="status-dot" />No dictionary XML found</span>}
     </div>
   );
 }
@@ -82,10 +86,10 @@ export default function Dashboard({ index, revision, onNavigate, recent = [], on
             <Meter value={done.size} max={milestones.length} label="Getting started" tone="purple" />
           </div>
           <ul>
-            {milestones.map((m) => (
-              <li key={m.id} className={done.has(m.id) ? 'done' : ''}>
-                {done.has(m.id) ? <CircleCheck size={15} /> : <CircleDashed size={15} />}
-                {targets[m.id] && !done.has(m.id) ? <button className="text-button" onClick={() => onNavigate(targets[m.id])}>{m.label}</button> : <span>{m.label}</span>}
+            {milestones.filter((m) => !done.has(m.id)).map((m) => (
+              <li key={m.id}>
+                <CircleDashed size={15} />
+                {targets[m.id] ? <button className="text-button" onClick={() => onNavigate(targets[m.id])}>{m.label}</button> : <span>{m.label}</span>}
               </li>
             ))}
           </ul>
