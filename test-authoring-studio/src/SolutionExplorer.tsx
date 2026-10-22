@@ -433,9 +433,21 @@ export default function SolutionExplorer({ features, revision, activeFile, query
     while (cur.children.length === 1 && cur.children[0].kind === 'folder') { cur = cur.children[0] as typeof cur; name = `${name}/${cur.name}`; }
     return cur === n ? n : { ...cur, name };
   };
+  // explorer.sortOrder (W94): folders first (default), mixed, files first, or by type (extension).
+  const sortNodes = (ns: Node[]) => {
+    const order = explorerSettings.sortOrder();
+    const byName = (a: Node, b: Node) => a.name.localeCompare(b.name, undefined, { numeric: true, sensitivity: 'base' });
+    const ext = (n: Node) => (n.kind === 'file' && n.name.includes('.') ? n.name.slice(n.name.lastIndexOf('.') + 1).toLowerCase() : '');
+    const folderRank = (n: Node) => (n.kind === 'folder' ? 0 : 1);
+    return [...ns].sort((a, b) =>
+      order === 'mixed' ? byName(a, b)
+        : order === 'filesFirst' ? folderRank(b) - folderRank(a) || byName(a, b)
+          : order === 'type' ? folderRank(a) - folderRank(b) || ext(a).localeCompare(ext(b)) || byName(a, b)
+            : folderRank(a) - folderRank(b) || byName(a, b));
+  };
   const items = (ns: Node[], depth: number): ReactNode => (
     <>
-      {ns.map(compact).map((n) => {
+      {sortNodes(ns).map(compact).map((n) => {
         if (n.kind === 'file') return fileRow(n.path, n.name, depth);
         const expanded = searching || !collapsed.has(n.path);
         const isFeatureFolder = n.path.split('/')[0].toLowerCase() === 'features' || n.children.some((c) => c.kind === 'file' && c.name.endsWith('.feature'));

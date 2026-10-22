@@ -1841,3 +1841,19 @@ test('W93 explorer.compactFolders: single-child folders share a row', async ({ p
   await expect(side.locator('.explorer-folder > span', { hasText: /^src$/ })).toBeVisible();
   await expect(side.locator('.explorer-folder', { hasText: 'src/main' })).toHaveCount(0);
 });
+
+test('W94 explorer.sortOrder: folders first, files first, mixed, by type', async ({ page }) => {
+  await fs.mkdir(path.join(temp, 'Mix/zeta'), { recursive: true });
+  await fs.writeFile(path.join(temp, 'Mix/zeta/In.cs'), '');
+  await fs.writeFile(path.join(temp, 'Mix/alpha.txt'), '');
+  await fs.writeFile(path.join(temp, 'Mix/beta.cs'), '');
+  const names = () => page.locator('#feature-sidebar').locator('.explorer-folder, .explorer-file').evaluateAll((els) => els
+    .map((e) => (e.getAttribute('aria-label')?.replace(/^(Collapse|Expand) folder /, '') || e.textContent || '').trim())
+    .filter((n) => ['Mix/zeta', 'alpha.txt', 'beta.cs'].includes(n)).map((n) => n.replace('Mix/', '')));
+  await start(page);
+  for (const [sort, want] of [['default', ['zeta', 'alpha.txt', 'beta.cs']], ['filesFirst', ['alpha.txt', 'beta.cs', 'zeta']], ['mixed', ['alpha.txt', 'beta.cs', 'zeta']], ['type', ['zeta', 'beta.cs', 'alpha.txt']]] as const) {
+    await page.evaluate((x) => localStorage.setItem('tas:settings', JSON.stringify({ 'explorer.sortOrder': x })), sort);
+    await page.reload();
+    await expect.poll(names, { timeout: 15_000 }).toEqual(want);
+  }
+});
