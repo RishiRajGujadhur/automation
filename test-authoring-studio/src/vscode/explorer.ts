@@ -7,6 +7,7 @@ export const explorerDeco = {
   badges: defineSetting<boolean>({ key: 'explorer.decorations.badges', category: E, title: 'Decorations: Badges', type: 'boolean', default: true, description: 'Controls whether file decorations should use badges.' }),
 };
 export const explorerSettings = {
+  excludeGitIgnore: defineSetting<boolean>({ key: 'explorer.excludeGitIgnore', category: E, title: 'Exclude Git Ignore', type: 'boolean', default: false, description: 'Controls whether entries in .gitignore should be parsed and excluded from the Explorer. Similar to files.exclude.' }),
   incrementalNaming: defineSetting<'visualStudio' | 'simple' | 'smart' | 'disabled'>({
     key: 'explorer.incrementalNaming', category: E, title: 'Incremental Naming', type: 'enum', default: 'visualStudio', description: 'Controls which naming strategy to use when giving a new name to a duplicated Explorer item on paste.',
     options: [{ value: 'visualStudio', description: 'Visual Studio\'s "Name - Copy.ext" (the studio\'s default).' }, { value: 'simple', description: 'Appends the word "copy" at the end of the duplicated name potentially followed by a number.' }, { value: 'smart', description: 'Adds a number at the end of the duplicated name. If some number is already part of the name, tries to increase that number.' }, { value: 'disabled', description: 'Disables incremental naming: the paste is refused when the name exists.' }],

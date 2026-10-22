@@ -1949,3 +1949,16 @@ test('W100 files.exclude hides matching files; Show all files shows them', async
   await side.getByRole('button', { name: 'Show all files' }).click();
   await expect(side.getByRole('button', { name: 'notes.log.txt', exact: true })).toBeVisible();
 });
+
+test('W101 explorer.excludeGitIgnore hides what .gitignore leaves out', async ({ page }) => {
+  await fs.writeFile(path.join(temp, '.gitignore'), '*.tmp.txt\n');
+  await fs.writeFile(path.join(temp, 'Steps/scratch.tmp.txt'), '');
+  gitInit(temp);
+  await start(page);
+  const side = page.locator('#feature-sidebar');
+  await expect(side.getByRole('button', { name: 'scratch.tmp.txt', exact: true })).toBeVisible();
+  await page.evaluate(() => localStorage.setItem('tas:settings', JSON.stringify({ 'explorer.excludeGitIgnore': true })));
+  await page.reload();
+  await expect(side.getByRole('button', { name: 'AuthSteps.cs', exact: true })).toBeVisible();
+  await expect(side.getByRole('button', { name: 'scratch.tmp.txt', exact: true })).toHaveCount(0);
+});

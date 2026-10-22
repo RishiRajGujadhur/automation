@@ -792,6 +792,14 @@ app.post('/api/git/discard', async (req, res) => {
   rescanSoon(300);
   res.json(await gitStatus(config.repositoryRoot));
 });
+// explorer.excludeGitIgnore (VSCODE-250.md W101): which of these files Git ignores (empty outside a repository).
+app.post('/api/git/ignored', async (req, res) => {
+  const { files } = z.object({ files: z.array(z.string().max(400)).max(20000) }).parse(req.body);
+  if (!files.length) { res.json([]); return; }
+  // check-ignore exits 1 when nothing is ignored; its output is still the answer.
+  const out = await git(config.repositoryRoot, ['check-ignore', '--stdin'], files.join('\n')).catch((e: Error & { stdout?: string }) => e.stdout ?? '');
+  res.json(out.split(/\r?\n/).filter(Boolean).map((f) => f.replaceAll('\\', '/')));
+});
 app.get('/api/git/branches', async (_req, res) => res.json(await gitBranches(config.repositoryRoot)));
 app.post('/api/git/checkout', async (req, res) => {
   const { name, create } = z.object({ name: z.string().trim().min(1).max(200), create: z.boolean().optional() }).parse(req.body);

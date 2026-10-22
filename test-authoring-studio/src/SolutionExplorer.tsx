@@ -262,6 +262,14 @@ export default function SolutionExplorer({ features, revision, activeFile, query
   // Files: the solution model plus any indexed feature it does not know yet (e.g. just created).
   const [findMode, setFindMode] = useState<'filter' | 'highlight'>(() => { try { return localStorage.getItem('tas:explorerFindMode') === 'highlight' ? 'highlight' : 'filter'; } catch { return 'filter'; } });
   useEffect(() => { try { localStorage.setItem('tas:explorerFindMode', findMode); } catch { /* storage blocked */ } }, [findMode]);
+  // explorer.excludeGitIgnore (W101): the files .gitignore leaves out, asked of Git when on.
+  const [gitIgnored, setGitIgnored] = useState<Set<string>>(new Set());
+  useEffect(() => {
+    if (!explorerSettings.excludeGitIgnore() || browserSolution || !solution) { setGitIgnored(new Set()); return; }
+    let live = true;
+    void api<string[]>('/git/ignored', { files: solution.files.map((f) => f.file) }).then((r) => { if (live) setGitIgnored(new Set(r)); }, () => {});
+    return () => { live = false; };
+  }, [solution, settingsVersion]); // eslint-disable-line react-hooks/exhaustive-deps
   const patternNest = useMemo(() => nestFiles((solution?.files ?? []).map((f) => f.file)), [solution, settingsVersion]); // eslint-disable-line react-hooks/exhaustive-deps
   const files = useMemo(() => {
     const list = [...(solution?.files ?? [])];
@@ -275,7 +283,7 @@ export default function SolutionExplorer({ features, revision, activeFile, query
     // files.exclude (W100): hidden unless Show All Files is on.
     const excluded = Object.entries(files_.exclude() ?? {}).filter(([, on]) => on).map(([g]) => globMatcher(g));
     return list.filter((x) =>
-      (showAll || !excluded.some((m) => m(x.file))) &&
+      (showAll || (!excluded.some((m) => m(x.file)) && !gitIgnored.has(x.file))) &&
       !codeBehind.has(x.file) && // nested under its feature instead
       !x.file.endsWith('.csproj') && // the project node stands for it
       // Inside a real project folder every file shows (as in Visual Studio); only build output stays hidden.
@@ -286,7 +294,7 @@ export default function SolutionExplorer({ features, revision, activeFile, query
       (!openOnly || openSet.has(x.file)) &&
       (!scope || x.file.startsWith(`${scope}/`)) &&
       terms.every((t) => `${x.file} ${featureName.get(x.file) ?? ''}`.toLowerCase().includes(t)));
-  }, [solution, features, query, showAll, pendingOnly, pending, projectDirs, listed, scope, openOnly, openSet, patternNest, findMode, settingsVersion]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [solution, features, query, showAll, pendingOnly, pending, projectDirs, listed, scope, openOnly, openSet, patternNest, findMode, settingsVersion, gitIgnored]); // eslint-disable-line react-hooks/exhaustive-deps
   const searching = !!query.trim() || pendingOnly || openOnly;
   // Files per project (deepest project folder wins); files outside every project are "Miscellaneous Files".
   const projects = useMemo(() => solution?.projects ?? [], [solution]);
