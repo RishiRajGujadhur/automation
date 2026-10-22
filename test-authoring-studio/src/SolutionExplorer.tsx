@@ -3,6 +3,8 @@ import { explorerDeco, explorerSettings } from './vscode/explorer';
 import { openInputBox } from './quickinput/store';
 import { treeIndent } from './vscode/workbenchLayout';
 import { nestFiles } from './files/fileNesting';
+import { globMatcher } from './files/glob';
+import { files as files_ } from './vscode/files';
 import { useSettings } from './vscode/settings';
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { keepTab, useTabs } from './files/tabs';
@@ -270,7 +272,10 @@ export default function SolutionExplorer({ features, revision, activeFile, query
     // Find's highlight mode (W98) shows every file and marks the matches instead of filtering.
     const terms = findMode === 'highlight' ? [] : query.trim().toLowerCase().split(/\s+/).filter(Boolean);
     const featureName = new Map(features.map((f) => [normalizeFeaturePath(f.file), f.name]));
+    // files.exclude (W100): hidden unless Show All Files is on.
+    const excluded = Object.entries(files_.exclude() ?? {}).filter(([, on]) => on).map(([g]) => globMatcher(g));
     return list.filter((x) =>
+      (showAll || !excluded.some((m) => m(x.file))) &&
       !codeBehind.has(x.file) && // nested under its feature instead
       !x.file.endsWith('.csproj') && // the project node stands for it
       // Inside a real project folder every file shows (as in Visual Studio); only build output stays hidden.
@@ -281,7 +286,7 @@ export default function SolutionExplorer({ features, revision, activeFile, query
       (!openOnly || openSet.has(x.file)) &&
       (!scope || x.file.startsWith(`${scope}/`)) &&
       terms.every((t) => `${x.file} ${featureName.get(x.file) ?? ''}`.toLowerCase().includes(t)));
-  }, [solution, features, query, showAll, pendingOnly, pending, projectDirs, listed, scope, openOnly, openSet, patternNest, findMode]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [solution, features, query, showAll, pendingOnly, pending, projectDirs, listed, scope, openOnly, openSet, patternNest, findMode, settingsVersion]); // eslint-disable-line react-hooks/exhaustive-deps
   const searching = !!query.trim() || pendingOnly || openOnly;
   // Files per project (deepest project folder wins); files outside every project are "Miscellaneous Files".
   const projects = useMemo(() => solution?.projects ?? [], [solution]);

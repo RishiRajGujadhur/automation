@@ -1939,3 +1939,13 @@ test('W99 explorer.incrementalNaming: simple ("copy") and smart (the number goes
   await copyPaste('Page2.cs');
   await expect.poll(() => fs.stat(path.join(temp, 'Steps/Page3.cs')).then(() => true, () => false)).toBe(true);
 });
+
+test('W100 files.exclude hides matching files; Show all files shows them', async ({ page }) => {
+  await fs.writeFile(path.join(temp, 'Steps/notes.log.txt'), '');
+  await start(page, { 'files.exclude': { '**/*.log.txt': true } });
+  const side = page.locator('#feature-sidebar');
+  await expect(side.getByRole('button', { name: 'AuthSteps.cs', exact: true })).toBeVisible();
+  await expect(side.getByRole('button', { name: 'notes.log.txt', exact: true })).toHaveCount(0);
+  await side.getByRole('button', { name: 'Show all files' }).click();
+  await expect(side.getByRole('button', { name: 'notes.log.txt', exact: true })).toBeVisible();
+});

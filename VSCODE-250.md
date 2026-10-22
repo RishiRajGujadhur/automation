@@ -123,7 +123,7 @@ Legend: `[x]` done · `[ ]` to do.
 - [x] W97. explorer.confirmDelete and explorer.confirmDragAndDrop
 - [x] W98. Explorer Find (Ctrl+Alt+F): highlight or filter mode
 - [x] W99. explorer.incrementalNaming (simple / smart) on paste
-- [ ] W100. files.exclude (hide **/.git, **/bin…) with "Show excluded files" toggle
+- [x] W100. files.exclude (hide **/.git, **/bin…) with "Show excluded files" toggle
 - [ ] W101. explorer.excludeGitIgnore
 - [ ] W102. Explorer: Select for Compare / Compare with Selected
 - [ ] W103. Explorer: multi-select with Ctrl / Shift, delete or copy several
@@ -391,3 +391,4 @@ Legend: `[x]` done · `[ ]` to do.
 - 2026-10-22: W97. explorer.confirmDelete and explorer.confirmDragAndDrop: Delete and moving by drag and drop ask first (default) or act at once.
 - 2026-10-22: W98. Ctrl+Alt+F in the Explorer goes to its find box; a toggle switches between VS Code's two modes: filter the tree (default) or show everything with the matches highlighted (kept).
 - 2026-10-22: W99. explorer.incrementalNaming: a pasted copy of an existing name becomes Visual Studio's 'Name - Copy.ext' (the studio's default), VS Code's simple 'Name copy.ext' / 'Name copy 2.ext', smart 'Page3.ext' from Page2, or is refused (disabled).
+- 2026-10-22: W100. files.exclude (VS Code's globs: **/.git, *.log, **/*.{js,map}…) hides files from the Explorer unless Show All Files is on.
