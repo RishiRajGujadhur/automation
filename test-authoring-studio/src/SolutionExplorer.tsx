@@ -1,5 +1,5 @@
 import { useFileDecorations, decoratedFiles } from './files/decorations';
-import { explorerDeco } from './vscode/explorer';
+import { explorerDeco, explorerSettings } from './vscode/explorer';
 import { openInputBox } from './quickinput/store';
 import { treeIndent } from './vscode/workbenchLayout';
 import { useSettings } from './vscode/settings';
@@ -426,9 +426,16 @@ export default function SolutionExplorer({ features, revision, activeFile, query
   };
   // workbench.tree.renderIndentGuides (W59): a guide line down each folder's children, under its twisty.
   const render = (ns: Node[], depth: number): ReactNode => <ul className="folder-children" style={depth > 0 ? { '--guide-x': `${10 + (depth - 1) * IND}px` } as React.CSSProperties : undefined}>{items(ns, depth)}</ul>;
+  // explorer.compactFolders (W93): a folder holding only one folder shares its row ("a/b/c").
+  const compact = (n: Node): Node => {
+    if (n.kind !== 'folder' || !explorerSettings.compactFolders() || searching) return n;
+    let cur = n, name = n.name;
+    while (cur.children.length === 1 && cur.children[0].kind === 'folder') { cur = cur.children[0] as typeof cur; name = `${name}/${cur.name}`; }
+    return cur === n ? n : { ...cur, name };
+  };
   const items = (ns: Node[], depth: number): ReactNode => (
     <>
-      {ns.map((n) => {
+      {ns.map(compact).map((n) => {
         if (n.kind === 'file') return fileRow(n.path, n.name, depth);
         const expanded = searching || !collapsed.has(n.path);
         const isFeatureFolder = n.path.split('/')[0].toLowerCase() === 'features' || n.children.some((c) => c.kind === 'file' && c.name.endsWith('.feature'));

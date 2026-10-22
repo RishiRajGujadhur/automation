@@ -1828,3 +1828,16 @@ test('W92 Explorer problem decorations: red names with counts, folders too (expl
   await expect(side.locator('.se-problems')).toHaveCount(0);
   await expect(side.locator('.deco-error')).toHaveCount(0);
 });
+
+test('W93 explorer.compactFolders: single-child folders share a row', async ({ page }) => {
+  await fs.mkdir(path.join(temp, 'src/main/deep'), { recursive: true });
+  await fs.writeFile(path.join(temp, 'src/main/deep/Thing.cs'), 'namespace X;\n');
+  await start(page);
+  const side = page.locator('#feature-sidebar');
+  await expect(side.locator('.explorer-folder', { hasText: 'src/main/deep' })).toBeVisible();
+  await expect(side.getByRole('button', { name: 'Thing.cs', exact: true })).toBeVisible();
+  await page.evaluate(() => localStorage.setItem('tas:settings', JSON.stringify({ 'explorer.compactFolders': false })));
+  await page.reload();
+  await expect(side.locator('.explorer-folder > span', { hasText: /^src$/ })).toBeVisible();
+  await expect(side.locator('.explorer-folder', { hasText: 'src/main' })).toHaveCount(0);
+});
