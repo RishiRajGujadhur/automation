@@ -1397,3 +1397,21 @@ test('W66 / W67 Tab decorations: problem colours and counts, Git letters (workbe
   await expect(page.locator('.tab-badge')).toHaveCount(0);
   await expect(page.locator('.editor-tab.deco-error, .editor-tab.deco-modified')).toHaveCount(0);
 });
+
+test('W68 workbench.editor.labelFormat: default (folders only for same names), short, medium, long', async ({ page }) => {
+  await fs.mkdir(path.join(temp, 'Other/Deep'), { recursive: true });
+  await fs.writeFile(path.join(temp, 'Other/Deep/AuthSteps.cs'), 'namespace X;\n');
+  const label = (name: string) => page.locator('.editor-tab-label', { hasText: name }).first().locator('small');
+  await start(page);
+  await open(page, 'Steps/SearchSteps.cs');
+  await expect(label('SearchSteps.cs')).toHaveCount(0);
+  await open(page, 'Steps/AuthSteps.cs');
+  await open(page, 'Other/Deep/AuthSteps.cs');
+  await expect(page.locator('.editor-tab-label', { hasText: 'AuthSteps.cs' }).locator('small')).toHaveText(['Steps', 'Deep']);
+  for (const [format, text] of [['short', 'Steps'], ['medium', 'Steps'], ['long', path.join(temp, 'Steps')]] as const) {
+    await page.evaluate((f) => localStorage.setItem('tas:settings', JSON.stringify({ 'workbench.editor.labelFormat': f })), format);
+    await page.reload();
+    await expect(label('SearchSteps.cs')).toHaveText(text);
+  }
+  await expect(page.locator('.editor-tab-label', { hasText: 'AuthSteps.cs' }).last().locator('small')).toHaveText(path.join(temp, 'Other', 'Deep'));
+});

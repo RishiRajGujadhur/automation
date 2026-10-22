@@ -7,3 +7,13 @@ export const editorPreview = {
   fromQuickOpen: defineSetting<boolean>({ key: 'workbench.editor.enablePreviewFromQuickOpen', category: C, title: 'Enable Preview From Quick Open', type: 'boolean', default: false, description: 'Controls whether editors opened from Quick Open show as preview editors.' }),
   fromCode: defineSetting<boolean>({ key: 'workbench.editor.enablePreviewFromCodeNavigation', category: C, title: 'Enable Preview From Code Navigation', type: 'boolean', default: false, description: 'Controls whether editors remain in preview when a code navigation is started from them (Go to Definition…).' }),
 };
+/** workbench.editor.labelFormat (W68): the description after a tab's name. */
+export const labelFormat = defineSetting<'default' | 'short' | 'medium' | 'long'>({
+  key: 'workbench.editor.labelFormat', category: C, title: 'Label Format', type: 'enum', default: 'default', description: 'Controls the format of the label for an editor.',
+  options: [
+    { value: 'default', description: 'Show the name of the file. When two editors have the same name, their parent folders tell them apart.' },
+    { value: 'short', description: 'Show the name of the file followed by its directory name.' },
+    { value: 'medium', description: 'Show the name of the file followed by its path relative to the workspace folder.' },
+    { value: 'long', description: 'Show the name of the file followed by its absolute path.' },
+  ],
+});

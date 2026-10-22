@@ -16,6 +16,7 @@ import { useTabs, activateTab, closeOthers, closeToRight, closeToLeft, unpinAll,
 import { fileType } from './fileTypes';
 import { api } from '../api';
 import { isBrowser } from './provider';
+import { tabDescription } from './tabLabel';
 import { untitledLabel } from './untitled';
 import { decorationBadges, decorationClass, decorationColors, useFileDecorations } from './decorations';
 import { untitledTabLabel, useUntitledLabels } from './untitledHint';
@@ -129,7 +130,7 @@ export default function EditorTabs({ onClose, onSplit, children }: { onClose: (f
                   <button aria-current={selected ? 'true' : undefined} title={t.file} className="editor-tab-label" onClick={() => activateTab(t.file)} onAuxClick={(e) => { if (e.button === 1) { e.preventDefault(); onClose(t.file); } }}>
                     <Icon size={14} aria-hidden="true" />
                     <span>{base(t.file)}</span>
-                    {dup(t.file) && <small>{t.file.split('/').slice(-2, -1)[0] ?? ''}</small>}
+                    {(() => { const text = tabDescription(t.file, dup(t.file)); return text ? <small>{text}</small> : null; })()}
                     {/* VS Code's tab badges (W67): the problem count, else the Git letter. */}
                     {decorationBadges() && (() => { const d = deco(t.file); const n = d.errors + d.warnings; return n ? <span className="tab-badge" aria-label={`${d.errors} errors, ${d.warnings} warnings`}>{n > 9 ? '9+' : n}</span> : d.git ? <span className="tab-badge git" aria-label={`Git: ${d.git}`}>{d.git}</span> : null; })()}
                   </button>
