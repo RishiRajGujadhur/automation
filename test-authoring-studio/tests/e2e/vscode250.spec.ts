@@ -1674,3 +1674,18 @@ test('W83 Breadcrumbs: folders and file with pickers, symbols around the caret',
   await page.getByRole('menuitem', { name: 'AuthSteps.cs' }).click();
   await expect(page.locator('.editor-tab-label[aria-current="true"]')).toHaveAttribute('title', 'Steps/AuthSteps.cs');
 });
+
+test('W84 Focus Breadcrumbs (Ctrl+Shift+;) and Focus and Select Breadcrumbs (Ctrl+Shift+.)', async ({ page }) => {
+  await start(page);
+  const src = await open(page, 'Steps/AuthSteps.cs');
+  await src.click();
+  await page.keyboard.press('Control+Shift+Semicolon');
+  const crumbs = page.getByRole('navigation', { name: 'Breadcrumbs' }).first();
+  await expect(crumbs.getByRole('button', { name: 'File: AuthSteps.cs' })).toBeFocused();
+  await page.keyboard.press('ArrowLeft');
+  await expect(crumbs.getByRole('button', { name: 'Folder: Steps' })).toBeFocused();
+  await page.keyboard.press('Escape');
+  await expect(src).toBeFocused();
+  await page.keyboard.press('Control+Shift+Period');
+  await expect(page.getByRole('menuitem', { name: 'SearchSteps.cs' })).toBeVisible();
+});

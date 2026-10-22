@@ -7,6 +7,31 @@ import { fileOutline, type OutlineItem } from '../rider/outline';
 import { openLocation } from '../quickinput/providers';
 import { openQuickInput } from '../quickinput/store';
 import { isBrowser } from '../files/provider';
+import { activeEditor } from './activeEditor';
+import { registerRider } from '../rider/commands';
+
+/** The active editor's breadcrumbs: its last part focused, and with `select` its picker open (W84). */
+export function focusBreadcrumbs(select: boolean) {
+  const a = activeEditor();
+  const nav = a?.view.dom.closest('.code-editor')?.querySelector<HTMLElement>('nav.file-breadcrumbs');
+  const parts = nav ? [...nav.querySelectorAll<HTMLElement>('.crumb-part')] : [];
+  const last = parts.at(-1);
+  if (!last) return;
+  last.focus();
+  // Radix menus open on a key, not on a synthetic click.
+  if (select) last.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }));
+}
+registerRider([
+  { id: 'breadcrumbs-focus-select', label: 'Focus and Select Breadcrumbs', menu: 'View', shortcut: 'Ctrl+Shift+.', run: () => focusBreadcrumbs(true) },
+  { id: 'breadcrumbs-focus', label: 'Focus Breadcrumbs', menu: 'View', shortcut: 'Ctrl+Shift+;', run: () => focusBreadcrumbs(false) },
+]);
+if (typeof window !== 'undefined') window.addEventListener('keydown', (e) => {
+  if (!(e.ctrlKey || e.metaKey) || !e.shiftKey || e.altKey || (e.code !== 'Period' && e.code !== 'Semicolon')) return;
+  if (!activeEditor()) return;
+  e.preventDefault();
+  e.stopPropagation();
+  focusBreadcrumbs(e.code === 'Period');
+}, true);
 
 // The workspace's files, shared by every breadcrumb bar (refreshed now and then).
 let files: string[] = [];
@@ -56,7 +81,13 @@ export default function FileBreadcrumbs({ file, source, line, symbols = true, on
   const siblings = (it: OutlineItem) => outline.filter((o) => o.depth === it.depth && (it.depth === 0 || chain.some((p) => p.depth === it.depth - 1 && p.start <= o.start && o.end <= p.end)));
   const Icon = fileType(file).icon;
   return (
-    <nav className="file-breadcrumbs" aria-label="Breadcrumbs">
+    <nav className="file-breadcrumbs" aria-label="Breadcrumbs" onKeyDown={(e) => {
+      // W84: ←/→ move between the parts, Escape goes back to the editor.
+      const parts = [...e.currentTarget.querySelectorAll<HTMLElement>('.crumb-part')];
+      const i = parts.indexOf(document.activeElement as HTMLElement);
+      if (e.key === 'ArrowRight' || e.key === 'ArrowLeft') { e.preventDefault(); parts[Math.max(0, Math.min(parts.length - 1, i + (e.key === 'ArrowRight' ? 1 : -1)))]?.focus(); }
+      else if (e.key === 'Escape') { e.preventDefault(); activeEditor()?.view.focus(); }
+    }}>
       {parts.map((p, i) => {
         const folder = parts.slice(0, i).join('/');
         const last = i === parts.length - 1;
