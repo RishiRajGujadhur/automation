@@ -1499,3 +1499,19 @@ test('W74 workbench.editor.scrollToSwitchTabs: the wheel over the tabs switches 
   await page.mouse.wheel(0, 100);
   await expect.poll(activeTitle).toBe('Steps/SearchSteps.cs');
 });
+
+test('W75 workbench.editor.mouseBackForwardToNavigate: mouse buttons 4 / 5 go Back / Forward', async ({ page }) => {
+  const activeTitle = () => page.locator('.editor-tab-label[aria-current="true"]').getAttribute('title');
+  const mouse = (button: number) => page.evaluate((b) => { document.body.dispatchEvent(new MouseEvent('mousedown', { button: b, bubbles: true, cancelable: true })); document.body.dispatchEvent(new MouseEvent('mouseup', { button: b, bubbles: true, cancelable: true })); }, button);
+  await start(page);
+  const side = page.locator('#feature-sidebar');
+  await side.getByRole('button', { name: 'AuthSteps.cs', exact: true }).first().click();
+  await expect.poll(activeTitle).toBe('Steps/AuthSteps.cs');
+  await side.getByRole('button', { name: 'SearchSteps.cs', exact: true }).first().click();
+  await expect.poll(activeTitle).toBe('Steps/SearchSteps.cs');
+  await expect(page.getByRole('group', { name: 'Navigation' }).getByRole('button', { name: 'Go Back' })).toBeEnabled();
+  await mouse(3);
+  await expect.poll(activeTitle).toBe('Steps/AuthSteps.cs');
+  await mouse(4);
+  await expect.poll(activeTitle).toBe('Steps/SearchSteps.cs');
+});

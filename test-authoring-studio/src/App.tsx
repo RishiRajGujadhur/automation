@@ -94,7 +94,7 @@ import { openQuickInput, openQuickPick } from './quickinput/store';
 import { commandCenter, menuBarVisibility, revealMenuBar } from './vscode/menuBar';
 import { openCommandPalette, openQuickOpen, runPaletteCommand, setPaletteCommands, type PaletteEntry } from './quickinput/providers';
 import { setOpenViews } from './quickinput/help';
-import { editorPreview } from './vscode/editorManagement';
+import { editorPreview, mouseBackForward } from './vscode/editorManagement';
 import { customizeLayout, setLayoutParts, resetLayoutSettings } from './quickinput/layoutPick';
 import { CLOSE_EDITOR_EVENT } from './quickinput/editors';
 import { SelectorCatalogue, BackgroundCatalogue } from './Catalogues';
@@ -1320,6 +1320,21 @@ export default function App() {
   // The panel's size (VS Code's sash; 0 = the default) and Maximize Panel Size (the editors give way).
   const [panelSize, setPanelSize] = useLocalState<{ h: number; w: number }>('panelSize', { h: 0, w: 0 });
   const [panelMax, setPanelMax] = useState(false);
+  // workbench.editor.mouseBackForwardToNavigate (W75): the mouse's back / forward buttons go Back / Forward.
+  const navRef = useRef(navigateTo);
+  navRef.current = navigateTo;
+  useEffect(() => {
+    const stop = (e: MouseEvent) => { if ((e.button === 3 || e.button === 4) && mouseBackForward()) e.preventDefault(); };
+    const up = (e: MouseEvent) => {
+      if ((e.button !== 3 && e.button !== 4) || !mouseBackForward()) return;
+      e.preventDefault();
+      const l = e.button === 3 ? navBack() : navForward();
+      if (l) navRef.current(l);
+    };
+    window.addEventListener('mousedown', stop, true);
+    window.addEventListener('mouseup', up, true);
+    return () => { window.removeEventListener('mousedown', stop, true); window.removeEventListener('mouseup', up, true); };
+  }, []);
   const focusKeysRef = useRef({ sideBar: () => {}, debugConsole: () => {}, output: () => {} });
   focusKeysRef.current = {
     sideBar: () => { setPrefs({ sidebar: true }); setTimeout(() => document.querySelector<HTMLElement>('#feature-sidebar button, #feature-sidebar input')?.focus(), 50); },
