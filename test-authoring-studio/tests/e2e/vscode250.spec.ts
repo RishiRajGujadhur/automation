@@ -1448,3 +1448,21 @@ test('W71 workbench.editor.limit: the least recently used tabs close beyond the 
   const titles = await page.locator('.editor-tab-label').evaluateAll((els) => els.map((e) => e.getAttribute('title')));
   expect(titles).toEqual(expect.arrayContaining(['Steps/SearchSteps.cs', 'Support/Hooks.cs', 'Fixtures.csproj']));
 });
+
+test('W72 workbench.editor.focusRecentEditorAfterClose: the last used tab, or the neighbour', async ({ page }) => {
+  const activeTitle = () => page.locator('.editor-tab-label[aria-current="true"]').getAttribute('title');
+  const run = async () => {
+    for (const f of ['Steps/AuthSteps.cs', 'Steps/SearchSteps.cs', 'Support/Hooks.cs']) await open(page, f);
+    await open(page, 'Steps/AuthSteps.cs');
+    await page.getByRole('button', { name: 'Close AuthSteps.cs' }).click();
+  };
+  await start(page, { 'workbench.editor.openPositioning': 'last' });
+  await run();
+  await expect.poll(activeTitle).toBe('Support/Hooks.cs');
+  await page.evaluate(() => { localStorage.setItem('tas:settings', JSON.stringify({ 'workbench.editor.openPositioning': 'last', 'workbench.editor.focusRecentEditorAfterClose': false })); });
+  await page.reload();
+  await page.getByRole('button', { name: 'File menu' }).click();
+  await page.getByRole('menuitem', { name: 'Close All Editors' }).click();
+  await run();
+  await expect.poll(activeTitle).toBe('Steps/SearchSteps.cs');
+});

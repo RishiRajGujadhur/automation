@@ -38,6 +38,8 @@ export const openPositioning = defineSetting<'right' | 'left' | 'first' | 'last'
   key: 'workbench.editor.openPositioning', category: 'Workbench ▸ Editor Management', title: 'Open Positioning', type: 'enum', default: 'right', description: 'Controls where editors open. Select left or right to open editors to the left or right of the currently active one. Select first or last to open editors independently from the currently active one.',
   options: [{ value: 'left' }, { value: 'right' }, { value: 'first' }, { value: 'last' }],
 });
+/** workbench.editor.focusRecentEditorAfterClose (W72): after closing the active tab, the last one used (else the neighbour). */
+export const focusRecentAfterClose = defineSetting<boolean>({ key: 'workbench.editor.focusRecentEditorAfterClose', category: 'Workbench ▸ Editor Management', title: 'Focus Recent Editor After Close', type: 'boolean', default: true, description: 'Controls whether editors are closed in most recently used order or from left to right.' });
 export const editorLimit = {
   enabled: defineSetting<boolean>({ key: 'workbench.editor.limit.enabled', category: 'Workbench ▸ Editor Management', title: 'Limit: Enabled', type: 'boolean', default: false, description: 'Controls if the number of opened editors should be limited or not. When enabled, less recently used editors will close to make space for newly opening editors.' }),
   value: defineSetting<number>({ key: 'workbench.editor.limit.value', category: 'Workbench ▸ Editor Management', title: 'Limit: Value', type: 'number', default: 10, min: 1, max: 100, description: 'Controls the maximum number of opened editors.' }),
@@ -76,7 +78,7 @@ export function closeTab(file: string) {
   remember([file]);
   const tabs = state.tabs.filter((t) => t.file !== file);
   // The tab used before this one becomes active (Visual Studio's 'activate most recently used'), else its neighbour.
-  const mru = featureOn('mru-close') ? used.find((f) => f !== file && tabs.some((t) => t.file === f)) : undefined;
+  const mru = featureOn('mru-close') && focusRecentAfterClose() ? used.find((f) => f !== file && tabs.some((t) => t.file === f)) : undefined;
   const active = state.active === file ? mru ?? (tabs[i] ?? tabs[i - 1])?.file : state.active;
   set({ tabs, active });
 }
