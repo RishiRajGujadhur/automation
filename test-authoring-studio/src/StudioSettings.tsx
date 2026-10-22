@@ -17,6 +17,8 @@ import { accents, contrast } from './accents';
 import { defaultPrefs } from './radix2';
 import { settingCategories, settingRows } from './vscode/settingsRows';
 import { exportSettings, importSettings, useSettings } from './vscode/settings';
+import { setControlProfile } from './vscode/uiControls';
+import { isDesktop } from './desktop';
 import { FEATURES, GROUPS, featureOn, featurePreset, setFeature, setFeaturePreset, setFeatures, useFeatures, featureChanged } from './features';
 
 type Settings = { webPort: number; apiPort: number; tracing: { enabled: boolean; screenshots: boolean; snapshots: boolean; sources: boolean } };
@@ -84,7 +86,7 @@ export default function StudioSettings({ onNotice, onWorkspace, shortcuts, onClo
   // VS Code–style settings (Text Editor, Workbench and their sub-categories) follow Code editor in the list.
   const settingsVersion = useSettings();
   const sections = useMemo(() => {
-    const extra: Section[] = settingCategories().flatMap((t) => [{ id: t.id, label: t.id, icon: t.id === 'Workbench' ? AppWindow : Type }, ...t.subs.map((c) => ({ id: c, label: c.split(' ▸ ')[1], icon: Type, sub: true }))]);
+    const extra: Section[] = settingCategories().flatMap((t) => [...(baseSections.some((s) => s.id === t.id) ? [] : [{ id: t.id, label: t.id, icon: t.id === 'Workbench' ? AppWindow : Type }]), ...t.subs.map((c) => ({ id: c, label: c.split(' ▸ ')[1], icon: Type, sub: true }))]);
     const i = baseSections.findIndex((x) => x.id === 'Code editor') + 1;
     return [...baseSections.slice(0, i), ...extra, ...baseSections.slice(i)];
   }, []);
@@ -276,6 +278,7 @@ export default function StudioSettings({ onNotice, onWorkspace, shortcuts, onClo
       ];
     }),
     // VS Code–style settings
+    ...(!isDesktop ? [{ id: 'button-profile', section: 'Workbench ▸ Buttons', title: 'Button profile', description: 'Restore the compact essential set or show every workbench button. Individual switches below can then be adjusted.', keywords: 'buttons controls toolbar essentials all reset', control: <span className="button-row"><Button size="small" onClick={() => setControlProfile('essentials')}>Essentials</Button><Button size="small" variant="ghost" onClick={() => setControlProfile('all')}>Show all</Button></span> } as Row] : []),
     ...settingRows(),
     {
       id: 'settings-json', section: 'Workbench', title: 'Settings (JSON)', description: 'Copy the changed settings as settings.json, or apply a settings.json (unknown ids and invalid values are skipped).', keywords: 'settings.json json export import copy share',

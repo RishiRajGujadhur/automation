@@ -9,6 +9,8 @@ import { useLocalState } from './ui';
 import { iconClickBehavior } from './vscode/workbenchLayout';
 import { runRider } from './rider/commands';
 import { openCommandPalette } from './quickinput/providers';
+import { activityControlId, controlVisible } from './vscode/uiControls';
+import { useSettings } from './vscode/settings';
 
 export type ActivityItem = { id: string; label: string; icon: LucideIcon; shortcut?: string; advanced?: boolean };
 /** VS Code-style activity bar: one icon per page. Features toggles the explorer when it is already active. */
@@ -36,11 +38,12 @@ export default function ActivityBar({ active, basic, sidebarOpen, onSelect, onTo
   active: string; basic: boolean; sidebarOpen: boolean;
   onSelect: (id: string) => void; onToggleSidebar: () => void; onPreferences: () => void; onWorkspace: () => void; onMore: () => void;
 }) {
+  useSettings();
   // W48: items hidden from the right-click menu, and the order they were dragged into (both kept).
   const [userHidden, setUserHidden] = useLocalState<string[]>('activityHidden', []);
   const [order, setOrder] = useLocalState<string[]>('activityOrder', []);
   const rank = (id: string) => { const i = order.indexOf(id); return i < 0 ? 1000 + activityItems.findIndex((x) => x.id === id) : i; };
-  const all = activityItems.filter((i) => !basic || !i.advanced).sort((a, b) => rank(a.id) - rank(b.id));
+  const all = activityItems.filter((i) => (!basic || !i.advanced) && (controlVisible(activityControlId[i.id]) || i.id === active)).sort((a, b) => rank(a.id) - rank(b.id));
   const items = all.filter((i) => !userHidden.includes(i.id) || i.id === active);
   const [menu, setMenu] = useState<{ x: number; y: number; id?: string }>();
   const dragged = useRef<string | null>(null);

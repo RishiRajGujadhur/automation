@@ -8,8 +8,11 @@ async function audit(page: Page, name: string) {
   const r = await new AxeBuilder({ page }).withTags(TAGS).exclude('.docs-preview').analyze();
   expect(r.violations.map((v) => `${v.id}: ${v.help} — ${v.nodes.slice(0, 3).map((n) => n.target.join(' ')).join(', ')}`), `${name} has WCAG violations`).toEqual([]);
 }
-async function advanced(page: Page, hash = '/#/dashboard') {
-  await page.addInitScript(() => { if (!localStorage.getItem('tas:prefs')) localStorage.setItem('tas:prefs', JSON.stringify({ mode: 'advanced' })); });
+async function advanced(page: Page, hash = '/#/dashboard', showAllActivity = false) {
+  await page.addInitScript((all) => {
+    if (!localStorage.getItem('tas:prefs')) localStorage.setItem('tas:prefs', JSON.stringify({ mode: 'advanced' }));
+    if (all) localStorage.setItem('tas:settings', JSON.stringify(Object.fromEntries(['generator', 'dictionary', 'design', 'steps', 'backgrounds', 'selectors', 'project'].map((id) => [`workbench.controls.activity-${id}`, true]))));
+  }, showAllActivity);
   await page.goto(hash);
   await expect(page.getByText('Repository indexed')).toBeVisible();
 }
@@ -18,7 +21,7 @@ test('VS Code layout is the default: activity bar, slim title bar, no page scrol
   await advanced(page, '/#/features/editor');
   await expect(page.locator('html')).toHaveAttribute('data-layout', 'vscode');
   const bar = page.getByRole('navigation', { name: 'Main' });
-  await expect(bar.getByRole('button', { name: 'Test Design' })).toBeVisible();
+  await expect(bar.getByRole('button', { name: 'Test Design' })).toHaveCount(0);
   await expect(page.locator('.main-nav')).toHaveCount(0);
   const header = await page.locator('.app-header').boundingBox();
   expect(header!.height).toBeLessThanOrEqual(40);
@@ -29,7 +32,7 @@ test('VS Code layout is the default: activity bar, slim title bar, no page scrol
 });
 
 test('activity bar navigates; Features toggles the explorer like VS Code', async ({ page }) => {
-  await advanced(page);
+  await advanced(page, '/#/dashboard', true);
   const bar = page.getByRole('navigation', { name: 'Main' });
   await bar.getByRole('button', { name: 'Test Design' }).click();
   await expect(page).toHaveURL(/#\/test-design/);
@@ -46,7 +49,7 @@ test('activity bar navigates; Features toggles the explorer like VS Code', async
 
 test('short windows move extra pages into a ☰ overflow menu; nothing is cut off', async ({ page }) => {
   await page.setViewportSize({ width: 1200, height: 560 });
-  await advanced(page);
+  await advanced(page, '/#/dashboard', true);
   const bar = page.getByRole('navigation', { name: 'Main' });
   const more = bar.getByRole('button', { name: /^More pages \(\d+\)$/ });
   await expect(more).toBeVisible();
@@ -91,7 +94,7 @@ test('Essentials preset by default; switches are locked until Custom', async ({ 
 test('Classic layout is still available from Appearance', async ({ page }) => {
   await advanced(page);
   await page.keyboard.press('Control+,');
-  await page.getByRole('dialog').getByRole('button', { name: 'Appearance' }).click();
+  await page.getByRole('dialog').getByRole('button', { name: 'Appearance' }).first().click();
   await page.getByRole('radio', { name: 'Classic' }).click();
   await expect(page.locator('html')).toHaveAttribute('data-layout', 'classic');
   await expect(page.locator('.main-nav')).toBeVisible();
@@ -195,7 +198,7 @@ test('Preview tab (when enabled): single click replaces the italic preview tab; 
 });
 
 test('Move panel: the Build / Debug panel docks on the right of the editors and back', async ({ page }) => {
-  await page.addInitScript(() => { if (!sessionStorage.getItem('seeded')) { localStorage.setItem('tas:prefs', JSON.stringify({ mode: 'advanced' })); localStorage.setItem('tas:buildOpen', 'true'); sessionStorage.setItem('seeded', '1'); } });
+  await page.addInitScript(() => { if (!sessionStorage.getItem('seeded')) { localStorage.setItem('tas:prefs', JSON.stringify({ mode: 'advanced' })); localStorage.setItem('tas:settings', JSON.stringify({ 'workbench.controls.panel-move': true })); localStorage.setItem('tas:buildOpen', 'true'); sessionStorage.setItem('seeded', '1'); } });
   await page.goto('/#/features/editor');
   const build = page.getByRole('region', { name: 'Build' });
   await expect(build).toBeVisible();

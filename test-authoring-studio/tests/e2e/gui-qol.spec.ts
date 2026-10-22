@@ -8,7 +8,7 @@ import { execFileSync } from 'node:child_process';
 test.use({ storageState: { cookies: [], origins: [] } });
 
 async function open(page: Page) {
-  await page.addInitScript(() => { if (!sessionStorage.getItem('seeded')) { localStorage.setItem('tas:prefs', JSON.stringify({ mode: 'advanced', autoSave: 'off' })); sessionStorage.setItem('seeded', '1'); } });
+  await page.addInitScript(() => { if (!sessionStorage.getItem('seeded')) { localStorage.setItem('tas:prefs', JSON.stringify({ mode: 'advanced', autoSave: 'off' })); localStorage.setItem('tas:settings', JSON.stringify({ 'workbench.controls.layout-secondary': true })); sessionStorage.setItem('seeded', '1'); } });
   await page.goto('/#/features/editor');
   await expect(page.getByText('Repository indexed')).toBeVisible();
   await page.getByRole('navigation').getByRole('button', { name: 'AuthSteps.cs', exact: true }).first().click();

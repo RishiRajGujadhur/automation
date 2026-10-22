@@ -15,15 +15,23 @@ machine; nothing is uploaded.
 | **Browser tools** | Record Playwright interactions, inspect pages with Spy, and use the built-in HTTP client to exercise endpoints. |
 | **Test design and reuse** | Apply test-design algorithms, search existing step bindings and selector dictionaries, and review generated feature and C# changes before writing them to the target repository. |
 | **Git and projects** | Review history and diffs, use interactive rebase and three-way merge, and inspect effective `.csproj` properties with an approval diff before writing changes. |
-| **Workbench** | Resizable panels, editor groups, file structure and call hierarchy, terminal, problems, Run Anything, Markdown preview, productivity guide, customizable settings, minimap, and layout controls. |
+| **Workbench** | Resizable panels, editor groups, file structure and call hierarchy, terminal, problems, Run Anything, Markdown preview, productivity guide, customizable settings, minimap, and layout controls. The web app starts with essential toolbar buttons and offers 70 individual visibility switches in Settings. |
 | **Front-end languages** | JavaScript and TypeScript refactorings and imports; React actions and Hooks checks; HTML validation and accessibility checks; CSS, SCSS, LESS and CSS Modules support. See [FRONTEND-100.md](FRONTEND-100.md). |
 | **Windows desktop integration** | Native menus and folder selection, recent repositories, remembered window placement and zoom, taskbar progress, and background test-run notifications. |
 
 The desktop and web apps share the core authoring features. Optional capabilities can be managed in **Settings > Features**. Detailed inventories and progress: [RIDER-VSCODE-FEATURES.md](RIDER-VSCODE-FEATURES.md), [FRONTEND-100.md](FRONTEND-100.md), [VSCODE-20.md](VSCODE-20.md), [ADVANCED-20.md](ADVANCED-20.md), [CSHARP-20.md](CSHARP-20.md), [DEBUG-20.md](DEBUG-20.md), [REQNROLL.md](REQNROLL.md), [SPY.md](SPY.md) and [GUI-QOL.md](GUI-QOL.md).
 
+In the web app, **Settings > General > Show Guide Me button** controls the tour button; it is hidden initially. **Settings > Workbench > Buttons** controls individual buttons in the activity bar, title bar, Explorer, editor, test, build and debug tools, and status bar. This keeps the VS Code style shell compact while retaining Visual Studio and Rider tools when needed.
+
 ## Screenshots
 
-These are running-app captures of the Windows desktop build using a temporary Calculator sample repository. The gallery covers authoring, debugging, Git, and the workbench tools.
+### Web workbench
+
+Advanced mode with the essential button profile, using the sample repository:
+
+![Web workbench with essential buttons](docs/screenshots/web-workbench-essential.png)
+
+The gallery below contains running-app captures of the Windows desktop build using a temporary Calculator sample repository. It covers authoring, debugging, Git, and the workbench tools.
 
 ### Authoring, editing and navigation
 
