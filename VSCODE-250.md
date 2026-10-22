@@ -120,7 +120,7 @@ Legend: `[x]` done · `[ ]` to do.
 - [x] W94. explorer.sortOrder (default / mixed / filesFirst / type)
 - [x] W95. File nesting (explorer.fileNesting.enabled / patterns, VS Code's defaults)
 - [x] W96. explorer.autoReveal (true / false / focusNoScroll)
-- [ ] W97. explorer.confirmDelete and explorer.confirmDragAndDrop
+- [x] W97. explorer.confirmDelete and explorer.confirmDragAndDrop
 - [ ] W98. Explorer Find (Ctrl+Alt+F): highlight or filter mode
 - [ ] W99. explorer.incrementalNaming (simple / smart) on paste
 - [ ] W100. files.exclude (hide **/.git, **/bin…) with "Show excluded files" toggle
@@ -388,3 +388,4 @@ Legend: `[x]` done · `[ ]` to do.
 - 2026-10-22: W94. explorer.sortOrder: folders before files (default), files first, mixed, or grouped by type (extension); names compare naturally (2 before 10).
 - 2026-10-22: W95. explorer.fileNesting.enabled / patterns: related files nest under a parent in the Explorer (VS Code's defaults such as *.ts → ${capture}.js, package.json → package-lock.json, plus *.cs → ${capture}.*.cs and appsettings.*.json).
 - 2026-10-22: W96. explorer.autoReveal: the opened file's folders open in the Explorer and it scrolls into view (true), only opens (focusNoScroll), or the tree is left as it is (false).
+- 2026-10-22: W97. explorer.confirmDelete and explorer.confirmDragAndDrop: Delete and moving by drag and drop ask first (default) or act at once.

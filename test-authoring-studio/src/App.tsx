@@ -96,6 +96,7 @@ import { openQuickInput, openQuickPick } from './quickinput/store';
 import { commandCenter, menuBarVisibility, revealMenuBar } from './vscode/menuBar';
 import { openCommandPalette, openQuickOpen, runPaletteCommand, setPaletteCommands, type PaletteEntry } from './quickinput/providers';
 import { setOpenViews } from './quickinput/help';
+import { explorerSettings } from './vscode/explorer';
 import { editorPreview, mouseBackForward, revealIfOpen } from './vscode/editorManagement';
 import { customizeLayout, setLayoutParts, resetLayoutSettings } from './quickinput/layoutPick';
 import { CLOSE_EDITOR_EVENT } from './quickinput/editors';
@@ -460,7 +461,8 @@ export default function App() {
     const name = op.from.split('/').pop();
     try {
       if (op.kind === 'delete') {
-        if (!(await confirm({ title: `Delete ${name}?`, description: op.folder ? `The folder ${op.from} and everything in it will be deleted from disk.` : `${op.from} will be deleted from disk.`, confirm: 'Delete', danger: true }))) return;
+        // explorer.confirmDelete (W97).
+        if (explorerSettings.confirmDelete() && !(await confirm({ title: `Delete ${name}?`, description: op.folder ? `The folder ${op.from} and everything in it will be deleted from disk.` : `${op.from} will be deleted from disk.`, confirm: 'Delete', danger: true }))) return;
         await deletePath(op.from);
         deletedPath(op.from);
       } else if (op.kind === 'rename') {

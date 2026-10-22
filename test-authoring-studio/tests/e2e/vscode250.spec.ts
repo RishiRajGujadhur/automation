@@ -1894,3 +1894,15 @@ test('W96 explorer.autoReveal: the opened file is revealed (folders open, scroll
   await page.waitForTimeout(500);
   await expect(side.getByRole('button', { name: 'Other.cs', exact: true })).toHaveCount(0);
 });
+
+test('W97 explorer.confirmDelete and explorer.confirmDragAndDrop off: no questions', async ({ page }) => {
+  await fs.writeFile(path.join(temp, 'Steps/Gone.cs'), '');
+  await fs.writeFile(path.join(temp, 'Steps/Moved.cs'), '');
+  await start(page, { 'explorer.confirmDelete': false, 'explorer.confirmDragAndDrop': false });
+  const side = page.locator('#feature-sidebar');
+  await side.getByRole('button', { name: 'Gone.cs', exact: true }).click({ button: 'right' });
+  await page.getByRole('menuitem', { name: 'Delete' }).click();
+  await expect.poll(() => fs.stat(path.join(temp, 'Steps/Gone.cs')).then(() => true, () => false)).toBe(false);
+  await side.getByRole('button', { name: 'Moved.cs', exact: true }).dragTo(side.getByRole('button', { name: /folder Support$/ }).first());
+  await expect.poll(() => fs.stat(path.join(temp, 'Support/Moved.cs')).then(() => true, () => false)).toBe(true);
+});

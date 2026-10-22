@@ -7,6 +7,8 @@ export const explorerDeco = {
   badges: defineSetting<boolean>({ key: 'explorer.decorations.badges', category: E, title: 'Decorations: Badges', type: 'boolean', default: true, description: 'Controls whether file decorations should use badges.' }),
 };
 export const explorerSettings = {
+  confirmDelete: defineSetting<boolean>({ key: 'explorer.confirmDelete', category: E, title: 'Confirm Delete', type: 'boolean', default: true, description: 'Controls whether the Explorer should ask for confirmation when deleting a file.' }),
+  confirmDragAndDrop: defineSetting<boolean>({ key: 'explorer.confirmDragAndDrop', category: E, title: 'Confirm Drag And Drop', type: 'boolean', default: true, description: 'Controls whether the Explorer should ask for confirmation to move files and folders via drag and drop.' }),
   autoReveal: defineSetting<'true' | 'false' | 'focusNoScroll'>({
     key: 'explorer.autoReveal', category: E, title: 'Auto Reveal', type: 'enum', default: 'true', description: 'Controls whether the Explorer should automatically reveal and select files when opening them.',
     options: [{ value: 'true', description: 'Files will be revealed and selected.' }, { value: 'false', description: 'Files will not be revealed and selected.' }, { value: 'focusNoScroll', description: 'Files will not be scrolled into view, but will still be focused.' }],
