@@ -65,3 +65,5 @@ html[data-tree-guides='onHover'] .sidebar:hover .folder-children[style*='--guide
 .watermark-tip { display: grid; grid-template-columns: 1fr auto; gap: 14px; align-items: center; dt { text-align: right; } dd { margin: 0; } }
 .watermark-tip button { border: 0; background: none; color: var(--text-muted); font: inherit; font-size: 13px; cursor: pointer; &:hover { color: var(--text); } }
 .editor-watermark .quick-input-keybinding kbd { font-size: 11px; padding: 1px 5px; border: 1px solid var(--border); border-bottom-width: 2px; border-radius: 3px; }
+// The untitled editor's hint (W63).
+.cm-untitled-hint { color: var(--text-muted); font-style: italic; a { color: var(--accent, #3794ff); font-style: normal; } }

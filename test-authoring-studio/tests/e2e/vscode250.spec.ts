@@ -1317,3 +1317,27 @@ test('W62 New Untitled Text File: Untitled-1 tab, Ctrl+S asks for a name and wri
   await expect(tab).toHaveCount(0);
   await expect(fs.stat(path.join(temp, '.tas/untitled/Untitled-1.txt'))).rejects.toThrow();
 });
+
+test('W63 Untitled editors: the empty hint (workbench.editor.empty.hint) and labels from the first line', async ({ page }) => {
+  await start(page);
+  const newUntitled = async () => { await page.keyboard.press('Control+Shift+P'); await quickBox(page).fill('>New Untitled Text File'); await expect(rows(page).first()).toContainText('New Untitled Text File'); await page.keyboard.press('Enter'); };
+  await newUntitled();
+  const src = page.getByLabel('Source of .tas/untitled/Untitled-1.txt');
+  await expect(src).toBeVisible();
+  const hint = page.locator('.cm-untitled-hint');
+  await expect(hint).toContainText('Select a language');
+  await hint.getByText('Select a language').dispatchEvent('mousedown');
+  await expect(quickBox(page)).toHaveAttribute('placeholder', 'Select Language Mode');
+  await page.keyboard.press('Escape');
+  await src.click();
+  await page.keyboard.type('Shopping list');
+  await expect(hint).toHaveCount(0);
+  // labelFormat content: the tab is named after the first line.
+  await expect(page.locator('.editor-tab-label', { hasText: 'Shopping list' })).toBeVisible();
+  await page.evaluate(() => localStorage.setItem('tas:settings', JSON.stringify({ 'workbench.editor.untitled.labelFormat': 'name', 'workbench.editor.empty.hint': 'hidden' })));
+  await page.reload();
+  await expect(page.locator('.editor-tab-label', { hasText: /^Untitled-1$/ })).toBeVisible();
+  await newUntitled();
+  await expect(page.getByLabel('Source of .tas/untitled/Untitled-2.txt')).toBeVisible();
+  await expect(page.locator('.cm-untitled-hint')).toHaveCount(0);
+});

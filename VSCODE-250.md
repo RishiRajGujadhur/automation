@@ -84,7 +84,7 @@ Legend: `[x]` done · `[ ]` to do.
 ## Editors and tabs
 - [x] W61. Empty editor watermark: VS Code logo and Show All Commands / Go to File / Find in Files / Toggle Terminal keys
 - [x] W62. New Untitled Text File (Ctrl+N): Untitled-1 tabs, "Select a language" hint, Save As
-- [ ] W63. workbench.editor.empty.hint and workbench.editor.untitled.labelFormat
+- [x] W63. workbench.editor.empty.hint and workbench.editor.untitled.labelFormat
 - [ ] W64. Keep Editor (Ctrl+K Enter) turns a preview tab into a normal one
 - [ ] W65. workbench.editor.enablePreview / enablePreviewFromQuickOpen / enablePreviewFromCodeNavigation
 - [ ] W66. Tab decorations: errors and warnings colour the tab name (workbench.editor.decorations.colors)
@@ -355,3 +355,4 @@ Legend: `[x]` done · `[ ]` to do.
 - 2026-10-22: W60. workbench.list.mouseWheelScrollSensitivity multiplies wheel scrolling in the side bar, its sections and the Quick Input list; workbench.list.smoothScrolling animates it.
 - 2026-10-22: W61. With no editor open the editor area shows VS Code's watermark: a letterpress mark and Show All Commands, Go to File, Find in Files, Toggle Terminal and Open View with their keys (each clickable); workbench.tips.enabled hides the tips. The Start Window stays below it.
 - 2026-10-22: W62. File: New Untitled Text File opens an 'Untitled-n' editor (kept under .tas/untitled, out of Git); Ctrl+S asks for its path (VS Code's Save As input box, validated) and writes it there, the tab following. Fixed on the way: a render loop from the panel-alignment measure (Maximum update depth), Enter pressed right after typing in the Quick Input took the previous list's item, and blame was asked for .tas files.
+- 2026-10-22: W63. An empty untitled editor shows VS Code's hint (Select a language… opens Change Language Mode; typing dismisses it); workbench.editor.empty.hint hides it. workbench.editor.untitled.labelFormat names untitled tabs after their first line (content, default) or Untitled-n (name).

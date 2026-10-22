@@ -17,9 +17,10 @@ import { fileType } from './fileTypes';
 import { api } from '../api';
 import { isBrowser } from './provider';
 import { untitledLabel } from './untitled';
+import { untitledTabLabel, useUntitledLabels } from './untitledHint';
 
 // An untitled editor (W62) is labelled Untitled-n.
-const base = (f: string) => untitledLabel(f) ?? f.split('/').pop()!;
+const base = (f: string) => { const u = untitledLabel(f); return u ? untitledTabLabel(f, u) : f.split('/').pop()!; };
 
 /** Editors render their toolbar (save state, Save, Run…) into the tab strip, like VS Code's editor actions. */
 const ActionsSlot = createContext<HTMLElement | null>(null);
@@ -36,6 +37,7 @@ export function EditorActions({ children, active = true }: { children: ReactNode
 export default function EditorTabs({ onClose, onSplit, children }: { onClose: (file: string) => void; onSplit?: (file: string) => void; children?: ReactNode }) {
   // Visual Studio's 'Show tabs in multiple rows': no scrolling strip, every tab visible.
   const vo = useViewOptions();
+  useUntitledLabels();
   const multiRow = !!vo.multiRowTabs && featureOn('multi-row-tabs');
   // Workbench ▸ Editor Management settings.
   useSettings();
