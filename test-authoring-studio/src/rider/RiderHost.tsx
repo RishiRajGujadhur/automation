@@ -63,6 +63,7 @@ import EvaluateExpression from './EvaluateExpression';
 import { powerSave, setPowerSave } from './powerSave';
 import CheckRegExp from './CheckRegExp';
 import CompareClipboard from './CompareClipboard';
+import { COMPARE_TEXTS_EVENT } from '../views/TimelineView';
 import LineHistory from './LineHistory';
 import { FILE_TEMPLATES, renderTemplate } from './fileTemplates';
 import ExternalToolsDialog, { expandMacros, externalTools, type ExternalTool } from './ExternalTools';
@@ -430,6 +431,17 @@ export default function RiderHost(props: RiderHostProps) {
     };
     window.addEventListener(COMPARE_FILES_EVENT, h);
     return () => window.removeEventListener(COMPARE_FILES_EVENT, h);
+  }, []);
+  // Two texts side by side (the Timeline's versions, W53): their unified diff in the compare window.
+  useEffect(() => {
+    const h = (e: Event) => {
+      const d = (e as CustomEvent<{ left: string; right: string; leftText: string; rightText: string }>).detail;
+      const norm = (t: string) => t.replace(/\r\n/g, '\n');
+      const patch = norm(d.leftText) === norm(d.rightText) ? '' : createTwoFilesPatch(d.left, d.right, norm(d.leftText), norm(d.rightText), '', '', { context: 3 }).split('\n').slice(2).join('\n');
+      setPopup({ kind: 'compare-pair', patch, left: d.left, right: d.right });
+    };
+    window.addEventListener(COMPARE_TEXTS_EVENT, h);
+    return () => window.removeEventListener(COMPARE_TEXTS_EVENT, h);
   }, []);
   // Tip of the Day at startup (when chosen in the dialog), once per session.
   useEffect(() => {

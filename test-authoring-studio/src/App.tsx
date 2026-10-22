@@ -68,6 +68,7 @@ import NotificationToasts from './NotificationToasts';
 import NotificationCenter from './NotificationCenter';
 import OpenEditors from './views/OpenEditors';
 import OutlineView from './views/OutlineView';
+import TimelineView from './views/TimelineView';
 import { NOTIFICATION_CENTER_EVENT } from './notificationCommands';
 import GoToAll from './search/GoToAll';
 import { runTests, getTestRun, discoverTests, useTestRun, outcomeOf, combine, type DiscoveredTest } from './testing/store';
@@ -1669,6 +1670,7 @@ export default function App() {
           {/* VS Code's Explorer sections (W51): Open Editors. */}
           {vscode && <OpenEditors />}
           {vscode && <OutlineView />}
+          {vscode && <TimelineView />}
           </div>}
         </aside>
         {prefs.sidebar && !prefs.focus && (

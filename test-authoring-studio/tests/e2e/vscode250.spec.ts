@@ -1143,3 +1143,31 @@ test('W52 Outline view: symbols of the active editor, follows the cursor, sort, 
   await expect(tree.locator('li')).toHaveCount(1);
   await expect(tree.locator('li')).toContainText('Square');
 });
+
+test('W53 Timeline view: Local History and Git commits of the active file, a click compares', async ({ page }) => {
+  gitInit(temp);
+  await start(page);
+  const src = await open(page, 'Steps/AuthSteps.cs');
+  // A save makes a Local History version.
+  await src.click();
+  await page.keyboard.press('Control+End');
+  await page.keyboard.type('// timeline');
+  await page.keyboard.press('Control+s');
+  await expect.poll(() => fs.readFile(path.join(temp, 'Steps/AuthSteps.cs'), 'utf8')).toContain('// timeline');
+  const pane = page.getByRole('region', { name: 'Timeline' });
+  await pane.getByRole('button', { name: /^TIMELINE/ }).click();
+  const list = pane.getByRole('list', { name: 'Timeline' });
+  await expect(list.getByRole('button', { name: /First commit/ })).toBeVisible();
+  await pane.hover();
+  await pane.getByRole('button', { name: 'Refresh' }).click();
+  await expect(list.getByRole('button', { name: /File Saved/ })).toBeVisible();
+  // The Git version against the editor: the added line shows in the diff.
+  await list.getByRole('button', { name: /First commit/ }).click();
+  await expect(page.getByText('+// timeline').first()).toBeVisible();
+  await page.keyboard.press('Escape');
+  // Filter: Local History only.
+  await pane.hover();
+  await pane.getByRole('button', { name: /^Show: / }).click();
+  await expect(list.getByRole('button', { name: /First commit/ })).toHaveCount(0);
+  await expect(list.getByRole('button', { name: /File Saved/ })).toBeVisible();
+});
