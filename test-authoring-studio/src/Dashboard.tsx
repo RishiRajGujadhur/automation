@@ -79,9 +79,6 @@ export default function Dashboard({ index, revision, onNavigate, recent = [], on
       {done.size < milestones.length && (
         <Card id="dash-getting-started" className="checklist" label="Getting started" title="Getting started" badge={<span className="subtle">{done.size} of {milestones.length} done</span>}>
           <div className="checklist-head">
-            <div>
-              <strong>{done.size} of {milestones.length} done</strong>
-            </div>
             <Meter value={done.size} max={milestones.length} label="Getting started" tone="purple" />
           </div>
           <ul>
@@ -102,15 +99,11 @@ export default function Dashboard({ index, revision, onNavigate, recent = [], on
             <Button onClick={() => onNavigate('Dictionary Inspector')}><Braces size={15} />Inspect selector dictionaries</Button>
           </div>
         </Card>
-        <Card id="dash-recently-opened" title="Recently opened">
+        {!!recent.length && <Card id="dash-recently-opened" title="Recently opened">
           <div className="wizard-body">
-            {recent.length ? (
-              <ul className="recent-list">{recent.map((f) => <li key={f}><button className="text-button" onClick={() => onSource?.(f, 1)}><FileCode2 size={13} />{f}</button></li>)}</ul>
-            ) : (
-              <p className="subtle">Files you open appear here.</p>
-            )}
+            <ul className="recent-list">{recent.map((f) => <li key={f}><button className="text-button" onClick={() => onSource?.(f, 1)}><FileCode2 size={13} />{f}</button></li>)}</ul>
           </div>
-        </Card>
+        </Card>}
         <Card id="dash-project-classification" title="Project classification">
           <div className="wizard-body"><Indicators model={model} /></div>
         </Card>
@@ -119,12 +112,11 @@ export default function Dashboard({ index, revision, onNavigate, recent = [], on
             <ul className="layer-list">{model && Object.entries(model.layers).sort((a, b) => b[1] - a[1]).map(([l, n]) => <li key={l}><span>{l}</span><strong>{n}</strong></li>)}</ul>
           </div>
         </Card>
-        <Card id="dash-index-diagnostics" title="Index diagnostics" badge={<><span className={`badge ${index?.diagnostics.length ? 'amber' : 'green'}`}>{index?.diagnostics.length ?? 0}</span></>}>
+        {!!index?.diagnostics.length && <Card id="dash-index-diagnostics" title="Index diagnostics" badge={<span className="badge amber">{index.diagnostics.length}</span>}>
           <div className="wizard-body">
-            {index?.diagnostics.slice(0, 6).map((d) => <p className="subtle" key={d}>{d}</p>)}
-            {!index?.diagnostics.length && <p className="subtle">No parse or regex diagnostics.</p>}
+            {index.diagnostics.slice(0, 6).map((d) => <p className="subtle" key={d}>{d}</p>)}
           </div>
-        </Card>
+        </Card>}
       </div>
     </div>
   );
