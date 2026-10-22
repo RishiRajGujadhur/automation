@@ -127,7 +127,8 @@ test('dropping a folder opens it, and file changes on disk refresh the index', a
 test('jump-list style --command arguments reach the running window', async () => {
   const second = spawn(electronPath, [...(process.env.TAS_EXE ? [] : ['.']), `--user-data-dir=${userData}`, '--command=palette'], { cwd: path.resolve(import.meta.dirname, '..'), stdio: 'ignore' });
   await new Promise((r) => second.on('exit', r));
-  await expect(page.locator('[cmdk-input]')).toBeVisible({ timeout: 10_000 });
+  // The palette is VS Code's Quick Input (VSCODE-250.md W2).
+  await expect(page.getByRole('combobox', { name: 'Quick Input' })).toHaveValue('>', { timeout: 10_000 });
   await page.keyboard.press('Escape');
   const tasks = await appProcess.evaluate(({ Menu }) => Menu.getApplicationMenu()!.items.find((i) => i.label.includes('Help'))!.submenu!.items.map((i) => i.label));
   expect(tasks).toContain('Playwright Browsers…');
