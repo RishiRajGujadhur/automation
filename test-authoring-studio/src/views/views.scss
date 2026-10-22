@@ -77,3 +77,4 @@ html[data-tree-guides='onHover'] .sidebar:hover .folder-children[style*='--guide
 .deco-error .tab-badge { color: #f88070; }
 .deco-warning .tab-badge { color: #cca700; }
 .tab-badge.git { opacity: 0.9; }
+.editor-tab.deleted .editor-tab-label span:first-of-type { text-decoration: line-through; }

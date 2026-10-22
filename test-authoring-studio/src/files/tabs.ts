@@ -8,7 +8,7 @@ import { featureOn } from '../features';
  * indexed repository open in the feature editor (bindings, F12, debugging); every other file, and every file
  * of a browser folder, opens in the code editor. Kept per folder in this browser.
  */
-export type EditorTab = { file: string; kind: 'feature' | 'code'; pinned?: boolean; preview?: boolean };
+export type EditorTab = { file: string; kind: 'feature' | 'code'; pinned?: boolean; preview?: boolean; /** Deleted on disk, kept open (W73). */ deleted?: boolean };
 type State = { tabs: EditorTab[]; active?: string };
 const key = () => { const s = fileSource(); return s.kind === 'browser' ? `tas:editorTabs:browser:${s.name}` : `tas:editorTabs${s.root ? `:${s.root}` : ''}`; };
 const read = (): State => { try { return JSON.parse(localStorage.getItem(key()) ?? '') as State; } catch { return { tabs: [] }; } };
@@ -137,6 +137,8 @@ export function movedPath(from: string, to: string) {
   set({ tabs: state.tabs.map((t) => ({ ...t, file: map(t.file) })), active: state.active && map(state.active) });
 }
 /** A file or folder was deleted: its tabs close. */
+/** workbench.editor.closeOnFileDelete (W73): a file deleted outside the studio closes its tab, or (VS Code's default) the tab stays, struck through, until saved again. */
+export const closeOnFileDelete = defineSetting<boolean>({ key: 'workbench.editor.closeOnFileDelete', category: 'Workbench ▸ Editor Management', title: 'Close On File Delete', type: 'boolean', default: false, description: 'Controls whether editors showing a file that was opened during the session should close automatically when getting deleted or renamed by some other process. Disabling this will keep the editor open on such an event.' });
 export function deletedPath(path: string) {
   const gone = (f: string) => f === path || f.startsWith(`${path}/`);
   const tabs = state.tabs.filter((t) => !gone(t.file));
@@ -148,4 +150,13 @@ export function cycleTab(step: 1 | -1) {
   if (!state.tabs.length) return;
   const i = Math.max(0, state.tabs.findIndex((t) => t.file === state.active));
   set({ ...state, active: state.tabs[(i + step + state.tabs.length) % state.tabs.length].file });
+}
+
+// A deleted file saved again is no longer marked deleted.
+if (typeof window !== 'undefined') window.addEventListener('tas:file-saved', (e) => { const f = (e as CustomEvent<string>).detail; if (state.tabs.some((t) => t.file === f && t.deleted)) set({ ...state, tabs: state.tabs.map((t) => (t.file === f ? { ...t, deleted: false } : t)) }); });
+/** Files deleted outside the studio (W73): their tabs close or are marked deleted. */
+export function filesDeletedOutside(files: string[]) {
+  const set1 = new Set(files);
+  if (closeOnFileDelete()) { for (const f of files) if (state.tabs.some((t) => t.file === f)) closeTab(f); return; }
+  if (state.tabs.some((t) => set1.has(t.file) && !t.deleted)) set({ ...state, tabs: state.tabs.map((t) => (set1.has(t.file) ? { ...t, deleted: true, preview: false } : t)) });
 }

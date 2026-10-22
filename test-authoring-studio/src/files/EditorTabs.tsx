@@ -127,11 +127,12 @@ export default function EditorTabs({ onClose, onSplit, children }: { onClose: (f
                 ...(featureOn('tab-reveal') ? [{ label: 'Reveal in Explorer', onSelect: () => { activateTab(t.file); requestAnimationFrame(() => window.dispatchEvent(new Event(SELECT_IN_EXPLORER))); } }] : []),
                 ...(onSplit && !t.file.endsWith('.feature') ? ['separator' as const, { label: 'Split Right', onSelect: () => onSplit(t.file) }] : []),
               ]}>
-                <div className={`editor-tab ${selected ? 'active' : ''} ${unsaved ? 'unsaved' : ''} ${t.pinned ? 'pinned' : ''} ${t.preview ? 'preview' : ''} ${decorationColors() ? decorationClass(deco(t.file)) : ''}`} onDoubleClick={() => { if (t.preview || !featureOn('tab-maximize')) keepTab(t.file); else window.dispatchEvent(new Event(TOGGLE_MAXIMIZED_EDITOR)); }} data-menu-row style={{ '--file-color': color } as React.CSSProperties}>
+                <div className={`editor-tab ${selected ? 'active' : ''} ${unsaved ? 'unsaved' : ''} ${t.pinned ? 'pinned' : ''} ${t.preview ? 'preview' : ''} ${t.deleted ? 'deleted' : ''} ${decorationColors() ? decorationClass(deco(t.file)) : ''}`} onDoubleClick={() => { if (t.preview || !featureOn('tab-maximize')) keepTab(t.file); else window.dispatchEvent(new Event(TOGGLE_MAXIMIZED_EDITOR)); }} data-menu-row style={{ '--file-color': color } as React.CSSProperties}>
                   <button aria-current={selected ? 'true' : undefined} title={t.file} className="editor-tab-label" onClick={() => activateTab(t.file)} onAuxClick={(e) => { if (e.button === 1) { e.preventDefault(); onClose(t.file); } }}>
                     <Icon size={14} aria-hidden="true" />
                     <span>{base(t.file)}</span>
                     {(() => { const text = tabDescription(t.file, dup(t.file)); return text ? <small>{text}</small> : null; })()}
+                    {t.deleted && <small className="tab-deleted">(deleted)</small>}
                     {/* VS Code's tab badges (W67): the problem count, else the Git letter. */}
                     {decorationBadges() && (() => { const d = deco(t.file); const n = d.errors + d.warnings; return n ? <span className="tab-badge" aria-label={`${d.errors} errors, ${d.warnings} warnings`}>{n > 9 ? '9+' : n}</span> : d.git ? <span className="tab-badge git" aria-label={`Git: ${d.git}`}>{d.git}</span> : null; })()}
                   </button>

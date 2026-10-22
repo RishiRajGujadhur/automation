@@ -1466,3 +1466,24 @@ test('W72 workbench.editor.focusRecentEditorAfterClose: the last used tab, or th
   await run();
   await expect.poll(activeTitle).toBe('Steps/SearchSteps.cs');
 });
+
+test('W73 workbench.editor.closeOnFileDelete: deleted outside the studio, the tab stays struck through; saving brings the file back', async ({ page }) => {
+  await start(page);
+  const src = await open(page, 'Steps/SearchSteps.cs');
+  await fs.rm(path.join(temp, 'Steps/SearchSteps.cs'));
+  const tab = page.locator('.editor-tab', { hasText: 'SearchSteps.cs' });
+  await expect(tab).toHaveClass(/deleted/, { timeout: 15_000 });
+  await expect(tab).toContainText('(deleted)');
+  await src.click();
+  await page.keyboard.press('Control+End');
+  await page.keyboard.type('// back');
+  await page.keyboard.press('Control+s');
+  await expect.poll(() => fs.readFile(path.join(temp, 'Steps/SearchSteps.cs'), 'utf8').catch(() => '')).toContain('// back');
+  await expect(tab).not.toHaveClass(/deleted/);
+  // On: the tab closes.
+  await page.evaluate(() => localStorage.setItem('tas:settings', JSON.stringify({ 'workbench.editor.closeOnFileDelete': true })));
+  await page.reload();
+  await open(page, 'Support/Hooks.cs');
+  await fs.rm(path.join(temp, 'Support/Hooks.cs'));
+  await expect(page.locator('.editor-tab', { hasText: 'Hooks.cs' })).toHaveCount(0, { timeout: 15_000 });
+});

@@ -640,13 +640,22 @@ function rescanSoon(delay: number) {
     scan(target).then((i) => { if (config === target && activations === before) activate(i); }).catch((e) => console.error('Rescan failed:', (e as Error).message));
   }, delay);
 }
+// Which of the open editors' files are gone from disk (VSCODE-250.md W73: deleted outside the studio).
+app.post('/api/files/missing', async (req, res) => {
+  const { files } = z.object({ files: z.array(z.string().max(400)).max(500) }).parse(req.body);
+  const out: string[] = [];
+  for (const f of files) { const p = await confined(config.repositoryRoot, f, false).catch(() => null); if (p && !(await fs.stat(p).then(() => true, () => false))) out.push(f); }
+  res.json(out);
+});
 app.post('/api/file/save', async (req, res) => {
   const { file, source, baseHash, encoding, reopened, fallback } = z.object({ file: z.string().max(400).regex(editable), source: z.string().max(1_000_000), baseHash: z.string().max(80), encoding: z.enum(ENCODINGS).optional(), reopened: z.enum(ENCODINGS).optional(), fallback: z.enum(ENCODINGS).optional() }).parse(req.body);
   if (file.endsWith('.feature')) parseFeature(source, file, []);
   const target = await confined(config.repositoryRoot, file, false);
   // The text the editor loaded: in the encoding it was opened with (Reopen with Encoding), else the detected one.
   const before = await readText(target, reopened, fallback).then((r) => r.text).catch((e) => { if (e.code === 'ENOENT') return ''; throw e; });
-  if (hash(before) !== baseHash) { res.status(409).json({ error: `${file} changed outside the studio. Reload it before saving.`, hash: hash(before) }); return; }
+  // A file deleted on disk can be saved again from its open editor (VS Code keeps such editors, W73).
+  const exists = await fs.stat(target).then(() => true, () => false);
+  if (exists && hash(before) !== baseHash) { res.status(409).json({ error: `${file} changed outside the studio. Reload it before saving.`, hash: hash(before) }); return; }
   await recordHistory(config.repositoryRoot, file, before, 'save').catch(() => {});
   await fs.mkdir(path.dirname(target), { recursive: true });
   // Save with Encoding (W25): the chosen encoding; otherwise the file keeps its own (a UTF-8 BOM, UTF-16…).
