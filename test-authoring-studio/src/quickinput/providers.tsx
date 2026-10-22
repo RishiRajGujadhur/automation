@@ -5,11 +5,12 @@ import { featureOn } from '../features';
 import { fuzzyScore, matchesWords, scoreFile } from './fuzzy';
 import { readUsage } from '../rider/commands';
 import { quickOpen } from '../vscode/quickOpen';
+import { editorPreview } from '../vscode/editorManagement';
 import { CONFIGURE_KEYBINDING_EVENT } from '../keybindings';
 import { closeQuickInput, lastQuery, openQuickInput, refreshQuickInput, registerQuickAccess, type QuickItem } from './store';
 
 /** Opens a file (and line) in the editor, as Go to All does. */
-export const openLocation = (file: string, line?: number, column?: number) => window.dispatchEvent(new CustomEvent('tas:open-location', { detail: { file, line, column } }));
+export const openLocation = (file: string, line?: number, column?: number, preview?: boolean) => window.dispatchEvent(new CustomEvent('tas:open-location', { detail: { file, line, column, preview } }));
 
 const fileIcon = (f: string) => { const t = fileType(f); return <t.icon size={16} style={{ color: t.color }} aria-hidden="true" />; };
 const split = (f: string) => { const i = f.lastIndexOf('/'); return { name: f.slice(i + 1), dir: i > 0 ? f.slice(0, i) : '' }; };
@@ -30,7 +31,7 @@ const fileItem = (f: string, extra: Partial<QuickItem> = {}): QuickItem => {
   // W11: Ctrl+Enter or the split button opens to the side; W12: a recent file can be removed from the list.
   const buttons = [{ icon: <span className="codicon codicon-split-horizontal" />, title: 'Open to the Side', run: () => { closeQuickInput(); openToSide(f); } }];
   if (recentFiles().includes(f)) buttons.push({ icon: <span className="codicon codicon-close" />, title: 'Remove from Recently Opened', run: () => { removeRecent(f); refreshQuickInput(); } });
-  return { id: `file:${f}`, label: name, description: dir, icon: fileIcon(f), buttons, accept: ({ side }) => (side ? openToSide(f) : openLocation(f)), ...extra };
+  return { id: `file:${f}`, label: name, description: dir, icon: fileIcon(f), buttons, accept: ({ side }) => (side ? openToSide(f) : openLocation(f, undefined, undefined, editorPreview.enable() && editorPreview.fromQuickOpen())), ...extra };
 };
 
 /** W1 Quick Open (Ctrl+P): recently opened files first, then every file of the workspace, fuzzy matched. */

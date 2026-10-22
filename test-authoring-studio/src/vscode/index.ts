@@ -28,3 +28,4 @@ import './files';
 import './git';
 import './menuBar';
 import './focusParts';
+import './editorManagement';

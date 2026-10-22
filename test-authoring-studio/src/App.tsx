@@ -93,6 +93,7 @@ import { openQuickInput, openQuickPick } from './quickinput/store';
 import { commandCenter, menuBarVisibility, revealMenuBar } from './vscode/menuBar';
 import { openCommandPalette, openQuickOpen, runPaletteCommand, setPaletteCommands, type PaletteEntry } from './quickinput/providers';
 import { setOpenViews } from './quickinput/help';
+import { editorPreview } from './vscode/editorManagement';
 import { customizeLayout, setLayoutParts, resetLayoutSettings } from './quickinput/layoutPick';
 import { CLOSE_EDITOR_EVENT } from './quickinput/editors';
 import { SelectorCatalogue, BackgroundCatalogue } from './Catalogues';
@@ -332,8 +333,8 @@ export default function App() {
     } catch (e) { setNotice((e as Error).message); }
   };
   // Ctrl+click on a file:line reference in an editor (QOL-50 QL49) opens it.
-  const editFileRef = useRef<(file: string, line?: number, column?: number) => void>(() => {});
-  useEffect(() => { const h = (e: Event) => { const d = (e as CustomEvent<{ file: string; line: number; column?: number }>).detail; editFileRef.current(d.file, d.line, d.column); }; window.addEventListener('tas:open-location', h); return () => window.removeEventListener('tas:open-location', h); }, []);
+  const editFileRef = useRef<(file: string, line?: number, column?: number, preview?: boolean) => void>(() => {});
+  useEffect(() => { const h = (e: Event) => { const d = (e as CustomEvent<{ file: string; line: number; column?: number; preview?: boolean }>).detail; editFileRef.current(d.file, d.line, d.column, !!d.preview); }; window.addEventListener('tas:open-location', h); return () => window.removeEventListener('tas:open-location', h); }, []);
   const editFile = (file: string, line?: number, column?: number, preview = false) => {
     const kind = kindOf(file);
     if (line) setCodeLines((l) => ({ ...l, [file]: { line, column } }));
@@ -343,6 +344,8 @@ export default function App() {
     setModal(undefined);
   };
   editFileRef.current = editFile;
+  // workbench.editor.enablePreviewFromCodeNavigation (W65): Go to Definition and friends open a preview tab.
+  const openFromCode = (file: string, line?: number, column?: number) => editFile(file, line, column, editorPreview.enable() && editorPreview.fromCode());
   // File ▸ Open Folder…: the desktop app opens the folder natively and indexes it; a browser opens it with the
   // File System Access API (read and write in place, no upload) — indexing then needs the folder's path.
   const fileSrc = useFileSource();
@@ -1684,7 +1687,7 @@ export default function App() {
             onConfirm={confirm}
             revision={revision}
             activeFile={openEditors.active ?? feature?.file}
-            onOpenFile={(file, line, preview) => { editFile(file, line, undefined, !!preview && prefs.previewTabs); setMobileExplorer(false); }}
+            onOpenFile={(file, line, preview) => { editFile(file, line, undefined, !!preview && (prefs.previewTabs || editorPreview.enable())); setMobileExplorer(false); }}
             query={query}
             activeFolder={activeFolder ?? featureDirectory(feature?.file)}
             onQuery={setQuery}
@@ -2243,7 +2246,7 @@ export default function App() {
             </section>
           )}
             {openEditors.tabs.filter((t) => t.kind === 'code').map((t) => (
-              <CodeEditor key={t.file} file={t.file} reveal={codeLines[t.file]} onOpen={editFile} runMarks={marksFor(t.file)} onRunLine={(line, debug) => runLine(t.file, line, debug)} active={t.file === openEditors.active} onNotice={setNotice} onIndex={setIndex} />
+              <CodeEditor key={t.file} file={t.file} reveal={codeLines[t.file]} onOpen={openFromCode} runMarks={marksFor(t.file)} onRunLine={(line, debug) => runLine(t.file, line, debug)} active={t.file === openEditors.active} onNotice={setNotice} onIndex={setIndex} />
             ))}
             </EditorTabs>
             </div>
@@ -2263,7 +2266,7 @@ export default function App() {
                   {featureOn('editor-groups') && <button className={`icon-button ${splitLocked ? 'on' : ''}`} aria-label="Lock Group" aria-pressed={splitLocked} title={splitLocked ? 'Unlock Group' : 'Lock Group (new editors open in the main group)'} onClick={() => setSplitLocked(!splitLocked)}>{splitLocked ? <Lock size={12} /> : <Unlock size={12} />}</button>}
                   <button className="icon-button" aria-label="Close split editor" title="Close split editor" onClick={() => setSplitFile(null)}><X size={13} /></button>
                 </div>
-                <CodeEditor key={`split:${splitFile}`} file={splitFile} onOpen={editFile} active onNotice={setNotice} onIndex={setIndex} />
+                <CodeEditor key={`split:${splitFile}`} file={splitFile} onOpen={openFromCode} active onNotice={setNotice} onIndex={setIndex} />
               </section>
             )}
             {dockSide === 'right' && dock}

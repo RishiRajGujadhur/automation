@@ -1354,3 +1354,25 @@ test('W64 Keep Editor (Ctrl+K Enter) turns a preview tab into a normal one', asy
   // The text is unchanged (no line was inserted).
   expect(await docText(page)).not.toMatch(/^\n/);
 });
+
+test('W65 workbench.editor.enablePreview / enablePreviewFromQuickOpen', async ({ page }) => {
+  await start(page, { 'workbench.editor.enablePreview': true, 'workbench.editor.enablePreviewFromQuickOpen': true });
+  // Explorer single click: a preview tab; the next one replaces it.
+  await page.locator('#feature-sidebar').getByRole('button', { name: 'SearchSteps.cs', exact: true }).first().click();
+  await expect(page.locator('.editor-tab.preview', { hasText: 'SearchSteps.cs' })).toBeVisible();
+  // Quick Open: a preview too, replacing it.
+  await page.keyboard.press('Control+p');
+  await quickBox(page).fill('authsteps');
+  await expect(rows(page).first()).toContainText('AuthSteps.cs');
+  await page.keyboard.press('Enter');
+  await expect(page.locator('.editor-tab.preview', { hasText: 'AuthSteps.cs' })).toBeVisible();
+  await expect(page.locator('.editor-tab', { hasText: 'SearchSteps.cs' })).toHaveCount(0);
+  // Off: Quick Open opens normal tabs.
+  await page.evaluate(() => localStorage.setItem('tas:settings', JSON.stringify({ 'workbench.editor.enablePreview': true })));
+  await page.reload();
+  await page.keyboard.press('Control+p');
+  await quickBox(page).fill('hooks');
+  await expect(rows(page).first()).toContainText('Hooks.cs');
+  await page.keyboard.press('Enter');
+  await expect(page.locator('.editor-tab', { hasText: 'Hooks.cs' })).not.toHaveClass(/preview/);
+});
