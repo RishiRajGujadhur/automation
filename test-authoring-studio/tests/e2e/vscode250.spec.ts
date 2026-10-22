@@ -1906,3 +1906,18 @@ test('W97 explorer.confirmDelete and explorer.confirmDragAndDrop off: no questio
   await side.getByRole('button', { name: 'Moved.cs', exact: true }).dragTo(side.getByRole('button', { name: /folder Support$/ }).first());
   await expect.poll(() => fs.stat(path.join(temp, 'Support/Moved.cs')).then(() => true, () => false)).toBe(true);
 });
+
+test('W98 Explorer Find: Ctrl+Alt+F in the Explorer, filter or highlight mode', async ({ page }) => {
+  await start(page);
+  const side = page.locator('#feature-sidebar');
+  await side.getByRole('button', { name: 'AuthSteps.cs', exact: true }).focus();
+  await page.keyboard.press('Control+Alt+f');
+  const box = side.getByLabel('Search Explorer');
+  await expect(box).toBeFocused();
+  await page.keyboard.type('Auth');
+  await expect(side.getByRole('button', { name: 'SearchSteps.cs', exact: true })).toHaveCount(0);
+  await side.getByRole('button', { name: 'Find mode: filter' }).click();
+  // Highlight: everything shows, the match is marked.
+  await expect(side.getByRole('button', { name: 'SearchSteps.cs', exact: true })).toBeVisible();
+  await expect(side.getByRole('button', { name: 'AuthSteps.cs', exact: true }).locator('mark')).toHaveText('Auth');
+});

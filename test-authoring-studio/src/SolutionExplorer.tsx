@@ -258,6 +258,8 @@ export default function SolutionExplorer({ features, revision, activeFile, query
   };
   const inProject = (file: string) => projectDirs.some((d) => d === '' || file.startsWith(`${d}/`));
   // Files: the solution model plus any indexed feature it does not know yet (e.g. just created).
+  const [findMode, setFindMode] = useState<'filter' | 'highlight'>(() => { try { return localStorage.getItem('tas:explorerFindMode') === 'highlight' ? 'highlight' : 'filter'; } catch { return 'filter'; } });
+  useEffect(() => { try { localStorage.setItem('tas:explorerFindMode', findMode); } catch { /* storage blocked */ } }, [findMode]);
   const patternNest = useMemo(() => nestFiles((solution?.files ?? []).map((f) => f.file)), [solution, settingsVersion]); // eslint-disable-line react-hooks/exhaustive-deps
   const files = useMemo(() => {
     const list = [...(solution?.files ?? [])];
@@ -265,7 +267,8 @@ export default function SolutionExplorer({ features, revision, activeFile, query
     const codeBehind = new Set(Object.values(solution?.nesting ?? {}).flat().filter((n) => n.kind === 'code-behind').map((n) => n.file));
     // explorer.fileNesting (W95): children sit under their parent file.
     for (const kids of patternNest.values()) for (const k of kids) codeBehind.add(k);
-    const terms = query.trim().toLowerCase().split(/\s+/).filter(Boolean);
+    // Find's highlight mode (W98) shows every file and marks the matches instead of filtering.
+    const terms = findMode === 'highlight' ? [] : query.trim().toLowerCase().split(/\s+/).filter(Boolean);
     const featureName = new Map(features.map((f) => [normalizeFeaturePath(f.file), f.name]));
     return list.filter((x) =>
       !codeBehind.has(x.file) && // nested under its feature instead
@@ -278,7 +281,7 @@ export default function SolutionExplorer({ features, revision, activeFile, query
       (!openOnly || openSet.has(x.file)) &&
       (!scope || x.file.startsWith(`${scope}/`)) &&
       terms.every((t) => `${x.file} ${featureName.get(x.file) ?? ''}`.toLowerCase().includes(t)));
-  }, [solution, features, query, showAll, pendingOnly, pending, projectDirs, listed, scope, openOnly, openSet, patternNest]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [solution, features, query, showAll, pendingOnly, pending, projectDirs, listed, scope, openOnly, openSet, patternNest, findMode]); // eslint-disable-line react-hooks/exhaustive-deps
   const searching = !!query.trim() || pendingOnly || openOnly;
   // Files per project (deepest project folder wins); files outside every project are "Miscellaneous Files".
   const projects = useMemo(() => solution?.projects ?? [], [solution]);
@@ -570,7 +573,7 @@ export default function SolutionExplorer({ features, revision, activeFile, query
     <button className={`icon-button ${pressed ? 'pressed' : ''}`} aria-label={label} title={label} aria-pressed={pressed} onClick={onClick} {...extra}><Icon size={14} /></button>
   );
   return (
-    <section className="feature-explorer solution-explorer" aria-label="Explorer">
+    <section className="feature-explorer solution-explorer" aria-label="Explorer" onKeyDown={(e) => { if ((e.ctrlKey || e.metaKey) && e.altKey && e.key.toLowerCase() === 'f') { e.preventDefault(); e.stopPropagation(); e.currentTarget.querySelector<HTMLInputElement>('input[aria-label="Search Explorer"]')?.select(); } }}>
       {/* The tour spotlights the heading, not the whole (tall) tree, so its buttons stay on screen on phones. */}
       <div className="sidebar-heading" data-tour="explorer">
         <span>EXPLORER</span>
@@ -591,6 +594,8 @@ export default function SolutionExplorer({ features, revision, activeFile, query
         <Search size={14} />
         <input aria-label="Search Explorer" placeholder="Search Explorer (Ctrl+;)" value={query} onChange={(e) => onQuery(e.target.value)} onKeyDown={(e) => { if (e.key === 'Escape' && query) { e.stopPropagation(); onQuery(''); } }} />
         {query && <button className="icon-button" aria-label="Clear search" onClick={() => onQuery('')}><X size={13} /></button>}
+        {/* VS Code's tree find (W98): filter the tree (default) or only highlight what matches. */}
+        <button className={`icon-button find-mode ${findMode === 'filter' ? 'on' : ''}`} aria-label={findMode === 'filter' ? 'Find mode: filter' : 'Find mode: highlight'} aria-pressed={findMode === 'filter'} title={findMode === 'filter' ? 'Filter (click to only highlight)' : 'Highlight (click to filter)'} onClick={() => setFindMode(findMode === 'filter' ? 'highlight' : 'filter')}><span className="codicon codicon-list-filter" aria-hidden="true" /></button>
       </label>
       {scope && <div className="se-scope" aria-label="Explorer scope"><Focus size={12} aria-hidden="true" /><span title={scope}>Scoped to <strong>{scope}</strong></span><button className="icon-button" aria-label="Home (show the whole solution)" title="Home" onClick={() => setScope('')}><House size={13} /></button></div>}
       <div className="explorer-summary" role="status">
