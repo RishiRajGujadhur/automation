@@ -4,6 +4,8 @@ import type { EditorView } from '@codemirror/view';
 import type { Extension } from '@codemirror/state';
 import { api } from '../../api';
 import { gateSource } from '../../vscode/suggestions';
+import { doComplete } from '@vscode/emmet-helper';
+import { TextDocument } from 'vscode-languageserver-textdocument';
 
 /**
  * HTML in the editor (FRONTEND-100.md F51–F70): VS Code's HTML language service through /api/web — tag, attribute,
@@ -43,9 +45,27 @@ async function complete(file: string, ctx: CompletionContext): Promise<Completio
   return { from, options, validFor: /^[\w:.#&-]*$/ };
 }
 
+/** VS Code's Emmet helper supplies the rendered preview and snippet for structural abbreviations. */
+function emmetComplete(file: string, ctx: CompletionContext): CompletionResult | null {
+  const document = TextDocument.create(file, 'html', 1, ctx.state.doc.toString());
+  const items = doComplete(document, document.positionAt(ctx.pos), 'html', {})?.items ?? [];
+  const options: Completion[] = [];
+  let from = ctx.pos;
+  for (const item of items) {
+    const edit = item.textEdit;
+    if (!edit || !('range' in edit) || !/[>+*#.$\[\]{}^]/.test(item.label)) continue;
+    const start = document.offsetAt(edit.range.start);
+    from = Math.min(from, start);
+    options.push({ label: item.label, type: 'type', detail: 'Emmet', info: typeof item.documentation === 'string' ? item.documentation : undefined,
+      apply: (view: EditorView) => snippet(cmSnippet(edit.newText.replace(/\t/g, '  ')))(view, null, start, document.offsetAt(edit.range.end)),
+    });
+  }
+  return options.length ? { from, options } : null;
+}
+
 export function markupFeatures(file: string): Extension[] {
   return [
     markupLinter(file),
-    autocompletion({ override: [gateSource((ctx) => complete(file, ctx))], activateOnTyping: true, maxRenderedOptions: 100, icons: true }),
+    autocompletion({ override: [gateSource((ctx) => complete(file, ctx)), gateSource((ctx) => emmetComplete(file, ctx))], activateOnTyping: true, maxRenderedOptions: 100, icons: true }),
   ];
 }

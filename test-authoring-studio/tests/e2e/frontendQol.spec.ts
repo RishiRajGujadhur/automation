@@ -56,6 +56,17 @@ test('1: expands an HTML Emmet abbreviation with editable fields', async ({ page
       const view = (window as unknown as { __activeEditor: () => { view: { state: { sliceDoc(from: number, to: number): string; selection: { main: { from: number; to: number } } } } } }).__activeEditor().view;
       return view.state.sliceDoc(view.state.selection.main.from, view.state.selection.main.to);
     })).toBe('<div><p>Hello</p></div>');
+    await page.evaluate(() => {
+      const view = (window as unknown as { __activeEditor: () => { view: { state: { doc: { length: number } }; dispatch(change: unknown): void; focus(): void } } }).__activeEditor().view;
+      view.dispatch({ changes: { from: 0, to: view.state.doc.length, insert: 'ul>li.item*2' }, selection: { anchor: 'ul>li.item*2'.length } });
+      view.focus();
+    });
+    await page.keyboard.press('Control+Space');
+    const emmetOption = page.locator('.cm-tooltip-autocomplete li').filter({ has: page.locator('.cm-completionLabel', { hasText: 'ul>li.item*2' }) }).first();
+    await expect(emmetOption).toBeVisible();
+    await expect(emmetOption).toContainText('Emmet');
+    await emmetOption.click();
+    await expect(editor).toContainText('<li class="item">');
   } finally {
     await request.post('/api/workspace', { data: previous });
     await fs.rm(root, { recursive: true, force: true, maxRetries: 5 });

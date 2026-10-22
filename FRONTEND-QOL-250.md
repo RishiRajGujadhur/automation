@@ -13,3 +13,4 @@ This tracks **additional** improvements beyond the existing features in `FRONTEN
 | 7 | Wrap selected JSX/TSX text with React-compatible Emmet markup. | Focused browser test | [VS Code Emmet wrap documentation](https://code.visualstudio.com/docs/languages/emmet#_wrap-with-abbreviation) |
 | 8 | Select the enclosing HTML element, then its parent on repeated use. | Focused browser test | [VS Code Emmet balance documentation](https://code.visualstudio.com/docs/languages/emmet#_balance) |
 | 9 | Press Tab after a structural JSX/TSX Emmet abbreviation to expand React markup. | Focused browser test | [VS Code Emmet Tab setting](https://code.visualstudio.com/docs/languages/emmet#_using-tab-for-emmet-expansions) |
+| 10 | Show structural HTML Emmet abbreviations with rendered previews in editor completion. | Focused browser test | Microsoft's MIT-licensed [`@vscode/emmet-helper`](https://github.com/microsoft/vscode-emmet-helper) |
