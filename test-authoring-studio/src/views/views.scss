@@ -82,3 +82,25 @@ html[data-tree-guides='onHover'] .sidebar:hover .folder-children[style*='--guide
 .editor-tabs[data-pinned-sizing='compact'] .editor-tab.pinned .editor-tab-label { > span, > small, > .tab-badge { display: none; } }
 .editor-tabs[data-pinned-sizing='shrink'] .editor-tab.pinned { max-width: 80px; .editor-tab-label { overflow: hidden; > span { overflow: hidden; text-overflow: ellipsis; } > small { display: none; } } }
 .editor-tabs[data-tab-icons='off'] .editor-tab-label > svg:first-child { display: none; }
+// VS Code's breadcrumbs (W83), with the C# navigation bar on the same row.
+.breadcrumbs-row {
+  display: flex;
+  align-items: center;
+  flex: none;
+  height: 22px;
+  padding: 0 8px;
+  border-bottom: 1px solid var(--border);
+  overflow: hidden;
+  white-space: nowrap;
+  > .nav-bar { border-bottom: 0; padding: 0; height: auto; &::before { content: '›'; margin: 0 4px; color: var(--text-muted); } }
+}
+.file-breadcrumbs {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  color: var(--text-muted);
+  font-size: 12px;
+  .crumb-wrap { display: inline-flex; align-items: center; gap: 2px; }
+  .crumb-part { display: inline-flex; align-items: center; gap: 4px; padding: 0 4px; border: 0; border-radius: 3px; background: transparent; color: inherit; font-size: 12px; cursor: pointer; .codicon { font-size: 13px; } }
+  .crumb-part:hover, .crumb-part:focus-visible { background: color-mix(in srgb, var(--text) 10%, transparent); color: var(--text); }
+}

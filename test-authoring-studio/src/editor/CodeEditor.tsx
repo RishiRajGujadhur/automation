@@ -50,6 +50,7 @@ import { useLocalState } from '../ui';
 import { Columns2, FileText, Code as CodeIcon } from 'lucide-react';
 import LocalHistory from '../LocalHistory';
 import NavBar from './NavBar';
+import FileBreadcrumbs from './FileBreadcrumbs';
 import RenameStep from './RenameStep';
 import { api, type FilePreview } from '../api';
 import { Button } from '../radix';
@@ -539,8 +540,14 @@ export default function CodeEditor({ file, reveal, active = true, onNotice, onIn
         </div>
       )}
       {error && <p className="field-error" role="alert">{error}</p>}
-      {loaded && isCs && !browser && (
+      {/* VS Code's breadcrumbs (W83): the path with pickers, then the C# navigation bar or the symbols. */}
+      {loaded && !browser && (
+        <div className="breadcrumbs-row">
+          <FileBreadcrumbs file={file} source={value} line={caretLine} symbols={!isCs} onGo={(l, c) => { const v = ref.current?.view; if (!v) return; const at = offsetOf(v.state.doc, l, c); v.dispatch({ selection: { anchor: at }, effects: EditorView.scrollIntoView(at, { y: 'center' }) }); v.focus(); }} />
+          {isCs && (
         <NavBar file={file} source={value} line={caretLine} onGo={(l, c) => { const v = ref.current?.view; if (!v) return; const at = offsetOf(v.state.doc, l, c); v.dispatch({ selection: { anchor: at }, effects: EditorView.scrollIntoView(at, { y: 'center' }) }); v.focus(); }} />
+          )}
+        </div>
       )}
       {loaded && (
         <div className={isMd ? `md-layout md-mode-${mdMode}` : 'md-none'}>

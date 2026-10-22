@@ -1650,3 +1650,27 @@ test('W82 File: Revert File; File: Save without Formatting (Ctrl+K S) skips trim
   await expect.poll(() => fs.readFile(path.join(temp, 'Steps/SearchSteps.cs'), 'utf8')).toContain('// kept   ');
   expect(before).not.toContain('// kept');
 });
+
+test('W83 Breadcrumbs: folders and file with pickers, symbols around the caret', async ({ page }) => {
+  await fs.writeFile(path.join(temp, 'Steps/shapes.ts'), SHAPES);
+  await start(page);
+  const src = await open(page, 'Steps/shapes.ts');
+  const crumbs = page.getByRole('navigation', { name: 'Breadcrumbs' }).first();
+  await expect(crumbs.getByRole('button', { name: 'Folder: Steps' })).toBeVisible();
+  await expect(crumbs.getByRole('button', { name: 'File: shapes.ts' })).toBeVisible();
+  // The caret in Square.perimeter: the symbol path.
+  await src.locator('.cm-line').nth(17).click();
+  await expect(crumbs.getByRole('button', { name: 'Symbol: Square' })).toBeVisible({ timeout: 15_000 });
+  await expect(crumbs.getByRole('button', { name: 'Symbol: perimeter' })).toBeVisible();
+  // The symbol's picker: its siblings; picking one goes there.
+  await crumbs.getByRole('button', { name: 'Symbol: perimeter' }).click();
+  await page.getByRole('menuitem', { name: 'area' }).click();
+  await expect.poll(() => caretLine(page)).toBe(14);
+  // A folder's picker: what sits beside it (sub-folders open Quick Open there); the file's: its siblings.
+  await crumbs.getByRole('button', { name: 'Folder: Steps' }).click();
+  await expect(page.getByRole('menuitem', { name: 'Support/' })).toBeVisible();
+  await page.keyboard.press('Escape');
+  await crumbs.getByRole('button', { name: 'File: shapes.ts' }).click();
+  await page.getByRole('menuitem', { name: 'AuthSteps.cs' }).click();
+  await expect(page.locator('.editor-tab-label[aria-current="true"]')).toHaveAttribute('title', 'Steps/AuthSteps.cs');
+});
