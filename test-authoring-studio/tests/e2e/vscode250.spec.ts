@@ -1376,3 +1376,24 @@ test('W65 workbench.editor.enablePreview / enablePreviewFromQuickOpen', async ({
   await page.keyboard.press('Enter');
   await expect(page.locator('.editor-tab', { hasText: 'Hooks.cs' })).not.toHaveClass(/preview/);
 });
+
+test('W66 / W67 Tab decorations: problem colours and counts, Git letters (workbench.editor.decorations.*)', async ({ page }) => {
+  gitInit(temp);
+  await fs.writeFile(path.join(temp, 'bad.ts'), 'const n: number = "x";\n');
+  await fs.writeFile(path.join(temp, 'Steps/AuthSteps.cs'), (await fs.readFile(path.join(temp, 'Steps/AuthSteps.cs'), 'utf8')) + '// changed\n');
+  await start(page);
+  await open(page, 'bad.ts');
+  await open(page, 'Steps/AuthSteps.cs');
+  const bad = page.locator('.editor-tab', { hasText: 'bad.ts' });
+  await expect(bad).toHaveClass(/deco-error/, { timeout: 30_000 });
+  await expect(bad.locator('.tab-badge')).toHaveText('1');
+  const auth = page.locator('.editor-tab', { hasText: 'AuthSteps.cs' });
+  await expect(auth.locator('.tab-badge.git')).toHaveText('M', { timeout: 15_000 });
+  await expect(auth).toHaveClass(/deco-modified/);
+  await page.evaluate(() => localStorage.setItem('tas:settings', JSON.stringify({ 'workbench.editor.decorations.colors': false, 'workbench.editor.decorations.badges': false })));
+  await page.reload();
+  await expect(page.locator('.editor-tab', { hasText: 'AuthSteps.cs' })).toBeVisible();
+  await page.waitForTimeout(1500);
+  await expect(page.locator('.tab-badge')).toHaveCount(0);
+  await expect(page.locator('.editor-tab.deco-error, .editor-tab.deco-modified')).toHaveCount(0);
+});

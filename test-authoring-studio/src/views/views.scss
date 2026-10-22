@@ -67,3 +67,13 @@ html[data-tree-guides='onHover'] .sidebar:hover .folder-children[style*='--guide
 .editor-watermark .quick-input-keybinding kbd { font-size: 11px; padding: 1px 5px; border: 1px solid var(--border); border-bottom-width: 2px; border-radius: 3px; }
 // The untitled editor's hint (W63).
 .cm-untitled-hint { color: var(--text-muted); font-style: italic; a { color: var(--accent, #3794ff); font-style: normal; } }
+// File decorations (W66 / W67 / W92): VS Code's list.errorForeground, list.warningForeground and Git colours.
+.deco-error .editor-tab-label span:first-of-type, .se-deco.deco-error { color: #f88070 !important; }
+.deco-warning .editor-tab-label span:first-of-type, .se-deco.deco-warning { color: #cca700 !important; }
+.deco-modified .editor-tab-label span:first-of-type, .se-deco.deco-modified { color: #e2c08d !important; }
+.deco-untracked .editor-tab-label span:first-of-type, .deco-added .editor-tab-label span:first-of-type, .se-deco.deco-untracked, .se-deco.deco-added { color: #73c991 !important; }
+.deco-deleted .editor-tab-label span:first-of-type, .se-deco.deco-deleted { color: #c74e39 !important; }
+.tab-badge { margin-left: 4px; font-size: 11px; font-weight: 600; }
+.deco-error .tab-badge { color: #f88070; }
+.deco-warning .tab-badge { color: #cca700; }
+.tab-badge.git { opacity: 0.9; }

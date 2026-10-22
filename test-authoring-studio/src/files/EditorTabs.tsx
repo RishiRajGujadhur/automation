@@ -17,6 +17,7 @@ import { fileType } from './fileTypes';
 import { api } from '../api';
 import { isBrowser } from './provider';
 import { untitledLabel } from './untitled';
+import { decorationBadges, decorationClass, decorationColors, useFileDecorations } from './decorations';
 import { untitledTabLabel, useUntitledLabels } from './untitledHint';
 
 // An untitled editor (W62) is labelled Untitled-n.
@@ -38,9 +39,11 @@ export default function EditorTabs({ onClose, onSplit, children }: { onClose: (f
   // Visual Studio's 'Show tabs in multiple rows': no scrolling strip, every tab visible.
   const vo = useViewOptions();
   useUntitledLabels();
+  useSettings();
+  // File decorations (W66 / W67): problems and Git status on the tabs.
+  const deco = useFileDecorations();
   const multiRow = !!vo.multiRowTabs && featureOn('multi-row-tabs');
   // Workbench ▸ Editor Management settings.
-  useSettings();
   // Show pinned tabs in a separate row (Visual Studio): a row break after the last pinned tab.
   const pinnedRow = !!vo.pinnedRow && featureOn('pinned-row');
   const { tabs, active } = useTabs();
@@ -122,11 +125,13 @@ export default function EditorTabs({ onClose, onSplit, children }: { onClose: (f
                 ...(featureOn('tab-reveal') ? [{ label: 'Reveal in Explorer', onSelect: () => { activateTab(t.file); requestAnimationFrame(() => window.dispatchEvent(new Event(SELECT_IN_EXPLORER))); } }] : []),
                 ...(onSplit && !t.file.endsWith('.feature') ? ['separator' as const, { label: 'Split Right', onSelect: () => onSplit(t.file) }] : []),
               ]}>
-                <div className={`editor-tab ${selected ? 'active' : ''} ${unsaved ? 'unsaved' : ''} ${t.pinned ? 'pinned' : ''} ${t.preview ? 'preview' : ''}`} onDoubleClick={() => { if (t.preview || !featureOn('tab-maximize')) keepTab(t.file); else window.dispatchEvent(new Event(TOGGLE_MAXIMIZED_EDITOR)); }} data-menu-row style={{ '--file-color': color } as React.CSSProperties}>
+                <div className={`editor-tab ${selected ? 'active' : ''} ${unsaved ? 'unsaved' : ''} ${t.pinned ? 'pinned' : ''} ${t.preview ? 'preview' : ''} ${decorationColors() ? decorationClass(deco(t.file)) : ''}`} onDoubleClick={() => { if (t.preview || !featureOn('tab-maximize')) keepTab(t.file); else window.dispatchEvent(new Event(TOGGLE_MAXIMIZED_EDITOR)); }} data-menu-row style={{ '--file-color': color } as React.CSSProperties}>
                   <button aria-current={selected ? 'true' : undefined} title={t.file} className="editor-tab-label" onClick={() => activateTab(t.file)} onAuxClick={(e) => { if (e.button === 1) { e.preventDefault(); onClose(t.file); } }}>
                     <Icon size={14} aria-hidden="true" />
                     <span>{base(t.file)}</span>
                     {dup(t.file) && <small>{t.file.split('/').slice(-2, -1)[0] ?? ''}</small>}
+                    {/* VS Code's tab badges (W67): the problem count, else the Git letter. */}
+                    {decorationBadges() && (() => { const d = deco(t.file); const n = d.errors + d.warnings; return n ? <span className="tab-badge" aria-label={`${d.errors} errors, ${d.warnings} warnings`}>{n > 9 ? '9+' : n}</span> : d.git ? <span className="tab-badge git" aria-label={`Git: ${d.git}`}>{d.git}</span> : null; })()}
                   </button>
                   {t.pinned ? (
                     <button className="editor-tab-close pin" aria-label={`Unpin ${base(t.file)}`} title={unsaved ? 'Pinned, unsaved changes. Unpin' : 'Pinned. Unpin'} onClick={() => setPinned(t.file, false)}>

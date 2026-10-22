@@ -87,8 +87,8 @@ Legend: `[x]` done · `[ ]` to do.
 - [x] W63. workbench.editor.empty.hint and workbench.editor.untitled.labelFormat
 - [x] W64. Keep Editor (Ctrl+K Enter) turns a preview tab into a normal one
 - [x] W65. workbench.editor.enablePreview / enablePreviewFromQuickOpen / enablePreviewFromCodeNavigation
-- [ ] W66. Tab decorations: errors and warnings colour the tab name (workbench.editor.decorations.colors)
-- [ ] W67. Tab badges: problem counts and Git letters (workbench.editor.decorations.badges)
+- [x] W66. Tab decorations: errors and warnings colour the tab name (workbench.editor.decorations.colors)
+- [x] W67. Tab badges: problem counts and Git letters (workbench.editor.decorations.badges)
 - [ ] W68. workbench.editor.labelFormat (default / short / medium / long) and duplicate names told apart by folder
 - [ ] W69. workbench.editor.wrapTabs
 - [ ] W70. workbench.editor.openPositioning (right / left / first / last)
@@ -358,3 +358,4 @@ Legend: `[x]` done · `[ ]` to do.
 - 2026-10-22: W63. An empty untitled editor shows VS Code's hint (Select a language… opens Change Language Mode; typing dismisses it); workbench.editor.empty.hint hides it. workbench.editor.untitled.labelFormat names untitled tabs after their first line (content, default) or Untitled-n (name).
 - 2026-10-22: W64. View: Keep Editor (Ctrl+K Enter, in an editor or anywhere) turns the active preview tab into a normal one, as in VS Code.
 - 2026-10-22: W65. workbench.editor.enablePreview (with the existing Preferences ▸ Preview tab), enablePreviewFromQuickOpen and enablePreviewFromCodeNavigation: the Explorer, Quick Open and Go to Definition open preview tabs (italic, replaced by the next) when on.
+- 2026-10-22: W66, W67. Editor tabs are coloured like VS Code's: red with errors, yellow with warnings, Git colours otherwise (workbench.editor.decorations.colors), and carry a badge with the problem count or the Git letter (M, U, A, D) (workbench.editor.decorations.badges).
