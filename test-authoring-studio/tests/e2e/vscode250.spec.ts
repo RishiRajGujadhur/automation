@@ -1171,3 +1171,20 @@ test('W53 Timeline view: Local History and Git commits of the active file, a cli
   await expect(list.getByRole('button', { name: /First commit/ })).toHaveCount(0);
   await expect(list.getByRole('button', { name: /File Saved/ })).toBeVisible();
 });
+
+test('W55 Panel commands: Toggle Maximized Panel, Move Panel Left / Right / To Bottom, Hide Panel', async ({ page }) => {
+  await start(page);
+  await open(page, 'Steps/AuthSteps.cs');
+  const palette = async (cmd: string) => { await page.keyboard.press('Control+Shift+P'); await quickBox(page).fill('>' + cmd); await rows(page).filter({ hasText: cmd }).first().click(); };
+  await palette('View: Toggle Maximized Panel');
+  const dock = page.locator('.dock').first();
+  await expect(dock).toHaveClass(/dock-max/);
+  await palette('View: Toggle Maximized Panel');
+  await expect(dock).not.toHaveClass(/dock-max/);
+  await palette('View: Move Panel Right');
+  await expect(dock).toHaveClass(/dock-right/);
+  await palette('View: Move Panel To Bottom');
+  await expect(dock).toHaveClass(/dock-bottom/);
+  await palette('View: Hide Panel');
+  await expect(dock).toBeHidden();
+});

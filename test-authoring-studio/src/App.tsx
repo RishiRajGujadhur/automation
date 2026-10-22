@@ -46,7 +46,7 @@ import { setViewOptions, useViewOptions } from './editor/viewOptions';
 import { recordNotice } from './rider/notifications';
 import RiderMenubar from './rider/RiderMenubar';
 import RiderToolWindow, { RIDER_TOOLS, type RiderTool } from './rider/RiderToolWindow';
-import { menuEntries, runRider, useRiderCommands, commandOn, readUsage } from './rider/commands';
+import { menuEntries, runRider, useRiderCommands, commandOn, readUsage, registerRider } from './rider/commands';
 import { featureOn, disabledCommands, onFeaturesChanged } from './features';
 import { zenSilent } from './vscode/zenMode';
 import { sideBySide, useMaximizedGroup } from './vscode/editorGroups';
@@ -1308,6 +1308,20 @@ export default function App() {
   // The panel's size (VS Code's sash; 0 = the default) and Maximize Panel Size (the editors give way).
   const [panelSize, setPanelSize] = useLocalState<{ h: number; w: number }>('panelSize', { h: 0, w: 0 });
   const [panelMax, setPanelMax] = useState(false);
+  // VS Code's panel commands (W55): Toggle Maximized Panel, Move Panel Left / Right / Bottom, Close Panel.
+  const panelCommands = useRef({ maximize: () => {}, move: (_side: 'bottom' | 'left' | 'right') => {}, close: () => {} });
+  panelCommands.current = {
+    maximize: () => { if (!dockShows || !inEditor) showRiderTool('terminal'); setPanelHidden(false); setPanelMax((m) => !m); },
+    move: (side) => { setDockSide(side); if (!dockShows || !inEditor) showRiderTool('terminal'); },
+    close: () => setPanelHidden(true),
+  };
+  useEffect(() => registerRider([
+    { id: 'panel-maximize', label: 'View: Toggle Maximized Panel', menu: 'View', group: true, run: () => panelCommands.current.maximize() },
+    { id: 'panel-move-left', label: 'View: Move Panel Left', menu: 'View', run: () => panelCommands.current.move('left') },
+    { id: 'panel-move-right', label: 'View: Move Panel Right', menu: 'View', run: () => panelCommands.current.move('right') },
+    { id: 'panel-move-bottom', label: 'View: Move Panel To Bottom', menu: 'View', run: () => panelCommands.current.move('bottom') },
+    { id: 'panel-close', label: 'View: Hide Panel', menu: 'View', run: () => panelCommands.current.close() },
+  ]), []);
   const dockRef = useRef<HTMLDivElement>(null);
   const panelStyle = { ...(panelSize.h ? { '--panel-h': `${panelSize.h}px` } : {}), ...(panelSize.w ? { '--panel-w': `${panelSize.w}px` } : {}) } as React.CSSProperties;
   // Maximized editor (double-click a tab): side bar, panel and secondary side bar hidden; the same again restores them.
