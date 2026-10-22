@@ -29,3 +29,19 @@ function expandAtCursor(view: EditorView, file: string, syntax: 'html' | 'css' |
 export const expandHtmlAtCursor = (view: EditorView, file: string, onTab = false) => expandAtCursor(view, file, 'html', onTab);
 export const expandCssAtCursor = (view: EditorView, file: string, onTab = false) => expandAtCursor(view, file, 'css', onTab);
 export const expandJsxAtCursor = (view: EditorView, file: string) => expandAtCursor(view, file, 'jsx');
+
+/** Emmet's `text` option places existing content in the innermost generated element. */
+export function wrapHtmlSelection(view: EditorView, abbreviation: string): boolean {
+  const selection = view.state.selection.main;
+  if (selection.empty || !isAbbreviationValid('html', abbreviation)) return false;
+  try {
+    const config = getExpandOptions('html');
+    config.text = view.state.sliceDoc(selection.from, selection.to);
+    const expanded = expandAbbreviation(abbreviation, config);
+    snippet(expanded.replace(/\t/g, '  '))(view, null, selection.from, selection.to);
+    view.focus();
+    return true;
+  } catch {
+    return false;
+  }
+}
