@@ -12,3 +12,4 @@ This tracks **additional** improvements beyond the existing features in `FRONTEN
 | 6 | Wrap selected HTML text with nested elements from an Emmet abbreviation. | Focused browser test | [VS Code Emmet wrap documentation](https://code.visualstudio.com/docs/languages/emmet#_wrap-with-abbreviation) |
 | 7 | Wrap selected JSX/TSX text with React-compatible Emmet markup. | Focused browser test | [VS Code Emmet wrap documentation](https://code.visualstudio.com/docs/languages/emmet#_wrap-with-abbreviation) |
 | 8 | Select the enclosing HTML element, then its parent on repeated use. | Focused browser test | [VS Code Emmet balance documentation](https://code.visualstudio.com/docs/languages/emmet#_balance) |
+| 9 | Press Tab after a structural JSX/TSX Emmet abbreviation to expand React markup. | Focused browser test | [VS Code Emmet Tab setting](https://code.visualstudio.com/docs/languages/emmet#_using-tab-for-emmet-expansions) |

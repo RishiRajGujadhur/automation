@@ -12,7 +12,7 @@ function expandAtCursor(view: EditorView, file: string, syntax: 'html' | 'css' |
   const found = extractAbbreviation(document, document.positionAt(selection.head), { type: syntax === 'css' ? 'stylesheet' : 'markup' });
   if (!found || !isAbbreviationValid(syntax, found.abbreviation)) return false;
   // Tab is shared with indentation and snippet navigation. Only claim deliberate structural abbreviations.
-  if (onTab && syntax === 'html' && !/[>+*#.$\[\]{}^]/.test(found.abbreviation)) return false;
+  if (onTab && (syntax === 'html' || syntax === 'jsx') && !/[>+*#.$\[\]{}^]/.test(found.abbreviation)) return false;
   if (onTab && syntax === 'css' && !/^[a-z-]+-?\d/i.test(found.abbreviation)) return false;
   const from = document.offsetAt(found.abbreviationRange.start);
   const to = document.offsetAt(found.abbreviationRange.end);
@@ -29,7 +29,7 @@ function expandAtCursor(view: EditorView, file: string, syntax: 'html' | 'css' |
 
 export const expandHtmlAtCursor = (view: EditorView, file: string, onTab = false) => expandAtCursor(view, file, 'html', onTab);
 export const expandCssAtCursor = (view: EditorView, file: string, onTab = false) => expandAtCursor(view, file, 'css', onTab);
-export const expandJsxAtCursor = (view: EditorView, file: string) => expandAtCursor(view, file, 'jsx');
+export const expandJsxAtCursor = (view: EditorView, file: string, onTab = false) => expandAtCursor(view, file, 'jsx', onTab);
 
 /** Emmet's `text` option places existing content in the innermost generated element. */
 function wrapSelection(view: EditorView, abbreviation: string, syntax: 'html' | 'jsx'): boolean {

@@ -112,6 +112,13 @@ test('4: expands JSX Emmet with React className attributes', async ({ page, requ
     await expect(editor).toContainText('className="item"');
     await page.evaluate(() => {
       const view = (window as unknown as { __activeEditor: () => { view: { state: { doc: { length: number } }; dispatch(change: unknown): void; focus(): void } } }).__activeEditor().view;
+      view.dispatch({ changes: { from: 0, to: view.state.doc.length, insert: 'nav.links>a*2' }, selection: { anchor: 'nav.links>a*2'.length } });
+      view.focus();
+    });
+    await page.keyboard.press('Tab');
+    await expect(editor).toContainText('<nav className="links">');
+    await page.evaluate(() => {
+      const view = (window as unknown as { __activeEditor: () => { view: { state: { doc: { length: number } }; dispatch(change: unknown): void; focus(): void } } }).__activeEditor().view;
       view.dispatch({ changes: { from: 0, to: view.state.doc.length, insert: 'Hello' }, selection: { anchor: 0, head: 5 } });
       view.focus();
     });
