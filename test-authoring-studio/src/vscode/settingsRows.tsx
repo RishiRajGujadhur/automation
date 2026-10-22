@@ -51,7 +51,7 @@ export function settingRows(): SettingRow[] {
       keywords: `${d.key} ${d.category} ${d.description} ${(d.options ?? []).map((o) => `${o.value} ${o.description ?? ''}`).join(' ')}${modified ? ' @modified modified' : ''}`,
       control: control(d),
       modified,
-      meta: <span className="setting-meta"><code>{d.key}</code>{modified && <button className="icon-button setting-reset" aria-label={`Reset ${d.title}`} title={`Reset to the default (${JSON.stringify(d.default)})`} onClick={() => resetSetting(d.key)}><RotateCcw size={12} aria-hidden="true" /></button>}</span>,
+      meta: modified ? <span className="setting-meta"><button className="icon-button setting-reset" aria-label={`Reset ${d.title}`} title={`Reset to the default (${JSON.stringify(d.default)})`} onClick={() => resetSetting(d.key)}><RotateCcw size={12} aria-hidden="true" /></button></span> : undefined,
     };
   });
 }

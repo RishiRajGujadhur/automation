@@ -17,6 +17,8 @@ test('web workbench starts with essential controls and restores optional buttons
   await expect(settings).toBeVisible();
   await settings.locator('#setting-general-showGuideMe').click();
   await settings.getByRole('navigation', { name: 'Settings categories' }).getByRole('button', { name: 'Buttons' }).click();
+  await expect(settings.getByText('workbench.controls.activity-dashboard')).toHaveCount(0);
+  await expect(settings.getByText('Visible in the activity bar').first()).toBeVisible();
   await settings.locator('#setting-workbench-controls-activity-design').click();
   await settings.locator('#setting-workbench-controls-explorer-refresh').click();
   await page.keyboard.press('Escape');

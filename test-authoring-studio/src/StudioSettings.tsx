@@ -348,7 +348,7 @@ export default function StudioSettings({ onNotice, onWorkspace, shortcuts, onClo
       </nav>
       <div className="settings-content" ref={contentRef}>
         {grouped.map(({ s, items }) => (
-          <section key={s.id} className="settings-section" aria-labelledby={`settings-${s.id.replace(/\W/g, '')}`}>
+          <section key={s.id} className={`settings-section ${s.id === 'Workbench ▸ Buttons' ? 'button-settings-section' : ''}`} aria-labelledby={`settings-${s.id.replace(/\W/g, '')}`}>
             <h2 id={`settings-${s.id.replace(/\W/g, '')}`} className={s.sub ? 'settings-subheading' : ''}>{s.label}</h2>
             {items.map((r) => (
               <div key={r.id} data-setting-id={r.id} className={`settings-row ${r.block && !r.control ? 'stacked' : ''} ${r.sub ? 'sub' : ''} ${r.modified ? 'modified' : ''}`}>

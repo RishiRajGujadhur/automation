@@ -88,7 +88,7 @@ const controls = [
 
 const getters = Object.fromEntries((isDesktop ? [] : controls).map(([id, title, essential]) => [id, defineSetting<boolean>({
   key: `workbench.controls.${id}`, category: 'Workbench ▸ Buttons', title, type: 'boolean', default: essential,
-  description: id.startsWith('activity-') ? `Show ${title} in the activity bar when the page is available in the current interface mode.` : `Show ${title} in the workbench.`,
+  description: id.startsWith('activity-') ? 'Visible in the activity bar' : 'Visible in the workbench',
 })])) as Record<string, () => boolean>;
 
 export const controlVisible = (id: string) => isDesktop || (getters[id]?.() ?? true);
