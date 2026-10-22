@@ -1744,3 +1744,18 @@ test('W87 View ▸ Appearance: Toggle Word Wrap (Alt+Z), Minimap, Render Whitesp
   await page.getByRole('menuitem', { name: 'Appearance' }).click();
   await expect(page.getByRole('menuitem', { name: /Toggle Minimap/ })).toBeVisible();
 });
+
+test('W88 File: Compare Active File With… picks a file from a fuzzy list and shows the diff', async ({ page }) => {
+  await start(page);
+  await open(page, 'Steps/AuthSteps.cs');
+  await page.keyboard.press('Control+Shift+P');
+  await quickBox(page).fill('>Compare Active File With');
+  await expect(rows(page).first()).toContainText('Compare Active File With');
+  await page.keyboard.press('Enter');
+  await expect(quickBox(page)).toHaveAttribute('placeholder', 'Select a file to compare with');
+  await page.keyboard.type('srchstp');
+  await expect(rows(page).first()).toContainText('SearchSteps.cs');
+  await page.keyboard.press('Enter');
+  await expect(page.getByRole('dialog', { name: 'Compare Files' })).toBeVisible();
+  await expect(page.getByText(/OpenLogin|Search/).first()).toBeVisible();
+});
