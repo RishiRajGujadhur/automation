@@ -73,6 +73,7 @@ import EditorWatermark from './views/EditorWatermark';
 import './files/untitled';
 import './files/keepEditor';
 import './files/deletedWatch';
+import { CLOSE_SPLIT_EVENT } from './files/groupCommands';
 import { NOTIFICATION_CENTER_EVENT } from './notificationCommands';
 import GoToAll from './search/GoToAll';
 import { runTests, getTestRun, discoverTests, useTestRun, outcomeOf, combine, type DiscoveredTest } from './testing/store';
@@ -541,11 +542,15 @@ export default function App() {
   const [splitLocked, setSplitLocked] = useLocalState('splitLocked', false);
   const splitLockedRef = useRef(splitLocked);
   splitLockedRef.current = splitLocked;
+  const setSplitFileRef = useRef<(f: string | null) => void>(() => {});
   const setSplitFile = (f: string | null) => {
     if (f === null) { setSplitTabs([]); setSplitActive(null); setSplitLocked(false); return; }
     setSplitTabs((t) => (t.includes(f) ? t : [...t, f]));
     setSplitActive(f);
   };
+  // View: Close All Editor Groups (W81) closes the side group too.
+  useEffect(() => { const h = () => setSplitFileRef.current(null); window.addEventListener(CLOSE_SPLIT_EVENT, h); return () => window.removeEventListener(CLOSE_SPLIT_EVENT, h); }, []);
+  setSplitFileRef.current = setSplitFile;
   const closeSplitTab = (f: string) => {
     const rest = (splitTabs.length ? splitTabs : splitFile ? [splitFile] : []).filter((x) => x !== f);
     setSplitTabs(rest);

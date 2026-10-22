@@ -1599,3 +1599,32 @@ test('W80 Tab context menu: Keep Open for a preview tab, Split Down', async ({ p
   await page.getByRole('menuitem', { name: 'Split Down' }).click();
   await expect(page.locator('.editor-split.down')).toBeVisible();
 });
+
+test('W81 Ctrl+K U closes saved editors, Ctrl+K W the group, Close All Editor Groups the side group too', async ({ page }) => {
+  await start(page);
+  await open(page, 'Steps/AuthSteps.cs');
+  const s = await open(page, 'Steps/SearchSteps.cs');
+  await s.click();
+  await page.keyboard.type('x');
+  await page.keyboard.press('Control+k');
+  await page.keyboard.press('u');
+  await expect(page.locator('.editor-tab')).toHaveCount(1);
+  await expect(page.locator('.editor-tab')).toContainText('SearchSteps.cs');
+  await page.keyboard.press('Control+z');
+  await page.keyboard.press('Control+k');
+  await page.keyboard.press('w');
+  await expect(page.locator('.editor-tab')).toHaveCount(0);
+  // A side group closes with Close All Editor Groups.
+  await open(page, 'Steps/AuthSteps.cs');
+  await page.keyboard.press('Control+p');
+  await quickBox(page).fill('hooks');
+  await expect(rows(page).first()).toContainText('Hooks.cs');
+  await page.keyboard.press('Control+Enter');
+  await expect(page.getByLabel('Source of Support/Hooks.cs')).toBeVisible();
+  await page.keyboard.press('Control+Shift+P');
+  await quickBox(page).fill('>Close All Editor Groups');
+  await expect(rows(page).first()).toContainText('Close All Editor Groups');
+  await page.keyboard.press('Enter');
+  await expect(page.getByLabel('Source of Support/Hooks.cs')).toHaveCount(0);
+  await expect(page.locator('.editor-tab')).toHaveCount(0);
+});
