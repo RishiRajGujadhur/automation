@@ -1709,6 +1709,9 @@ test('W86 editor.stickyScroll.maxLineCount', async ({ page }) => {
   const sticky = async (settings: Record<string, unknown>) => {
     await page.evaluate((s) => localStorage.setItem('tas:settings', JSON.stringify(s)), settings);
     await page.reload();
+    await expect(page.getByText('Repository indexed')).toBeVisible();
+    // The shell restores its last view after a reload; open the file once that has settled.
+    await page.waitForTimeout(1000);
     const src = await open(page, 'Steps/Deep.cs');
     await src.click();
     await page.evaluate(() => { const v = (window as unknown as { __activeEditor: () => { view: { scrollDOM: HTMLElement } } }).__activeEditor().view; v.scrollDOM.scrollTop = 1500; v.scrollDOM.dispatchEvent(new Event('scroll')); });
@@ -1718,4 +1721,26 @@ test('W86 editor.stickyScroll.maxLineCount', async ({ page }) => {
   await start(page);
   expect(await sticky({})).toBe(5);
   expect(await sticky({ 'editor.stickyScroll.maxLineCount': 2 })).toBe(2);
+});
+
+test('W87 View ▸ Appearance: Toggle Word Wrap (Alt+Z), Minimap, Render Whitespace, Sticky Scroll', async ({ page }) => {
+  await start(page);
+  const src = await open(page, 'Steps/AuthSteps.cs');
+  await src.click();
+  const settings = () => page.evaluate(() => JSON.parse(localStorage.getItem('tas:settings') ?? '{}'));
+  await page.keyboard.press('Alt+z');
+  expect((await settings())['editor.wordWrap']).toBe('on');
+  await page.keyboard.press('Alt+z');
+  expect((await settings())['editor.wordWrap']).toBeUndefined();
+  const palette = async (cmd: string) => { await page.keyboard.press('Control+Shift+P'); await quickBox(page).fill('>' + cmd); await expect(rows(page).first()).toContainText(cmd); await page.keyboard.press('Enter'); };
+  await palette('View: Toggle Minimap');
+  await expect(page.locator('.code-editor:not([hidden]) canvas').first()).toBeVisible();
+  await palette('View: Toggle Render Whitespace');
+  expect((await settings())['editor.renderWhitespace']).toBe('none');
+  await palette('View: Toggle Sticky Scroll');
+  expect((await settings())['editor.stickyScroll.enabled']).toBe(false);
+  // The View menu has them in its Appearance submenu.
+  await page.getByRole('button', { name: 'View menu' }).click();
+  await page.getByRole('menuitem', { name: 'Appearance' }).click();
+  await expect(page.getByRole('menuitem', { name: /Toggle Minimap/ })).toBeVisible();
 });

@@ -1,9 +1,10 @@
 import type { EditorState, Extension } from '@codemirror/state';
 import { EditorView, ViewPlugin, type ViewUpdate } from '@codemirror/view';
-import { defineSetting } from '../vscode/settings';
+import { defineSetting, onSettingsChanged, setting } from '../vscode/settings';
 
 /** editor.stickyScroll.maxLineCount / scrollWithEditor (VSCODE-250.md W86). */
 export const stickySettings = {
+  enabled: () => setting<boolean>('editor.stickyScroll.enabled') !== false,
   maxLineCount: defineSetting<number>({ key: 'editor.stickyScroll.maxLineCount', category: 'Text Editor ▸ Sticky Scroll', title: 'Max Line Count', type: 'number', default: 5, min: 1, max: 20, description: 'Defines the maximum number of sticky lines to show.' }),
   scrollWithEditor: defineSetting<boolean>({ key: 'editor.stickyScroll.scrollWithEditor', category: 'Text Editor ▸ Sticky Scroll', title: 'Scroll With Editor', type: 'boolean', default: true, description: 'Enable scrolling of Sticky Scroll with the editor\'s horizontal scrollbar.' }),
 };
@@ -19,6 +20,7 @@ export function stickyScroll(range: RangeFn): Extension {
     dom: HTMLDivElement;
     key = '';
     frame = 0;
+    offSettings: () => void;
     constructor(readonly view: EditorView) {
       this.dom = document.createElement('div');
       this.dom.className = 'cm-sticky';
@@ -26,6 +28,8 @@ export function stickyScroll(range: RangeFn): Extension {
       view.dom.appendChild(this.dom);
       this.onScroll = this.onScroll.bind(this);
       view.scrollDOM.addEventListener('scroll', this.onScroll, { passive: true });
+      // A setting changed (enabled, max lines): render again.
+      this.offSettings = onSettingsChanged(() => { this.key = ''; this.onScroll(); });
       this.onScroll();
     }
     onScroll() {
@@ -38,7 +42,7 @@ export function stickyScroll(range: RangeFn): Extension {
       const { view } = this;
       const doc = view.state.doc;
       const scroller = view.scrollDOM;
-      if (scroller.scrollTop < 2) { this.show([]); return; }
+      if (scroller.scrollTop < 2 || !stickySettings.enabled()) { this.show([]); return; }
       const top = view.lineBlockAtHeight(scroller.scrollTop + view.documentPadding.top).from;
       const topLine = doc.lineAt(top).number;
       const lines: number[] = [];
@@ -76,6 +80,6 @@ export function stickyScroll(range: RangeFn): Extension {
       }
       this.dom.hidden = !lines.length;
     }
-    destroy() { cancelAnimationFrame(this.frame); this.view.scrollDOM.removeEventListener('scroll', this.onScroll); this.dom.remove(); }
+    destroy() { this.offSettings(); cancelAnimationFrame(this.frame); this.view.scrollDOM.removeEventListener('scroll', this.onScroll); this.dom.remove(); }
   });
 }
