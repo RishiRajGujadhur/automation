@@ -76,7 +76,7 @@ Legend: `[x]` done · `[ ]` to do.
 - [x] W54. Open Editors view (groups, dirty dot, close, Save All, Close All)
 - [x] W55. View: Toggle Maximized Panel, Move Panel Left / Right / Bottom commands
 - [x] W56. Focus parts with F6 / Shift+F6 (Focus Next / Previous Part)
-- [ ] W57. Ctrl+0 focus side bar, Ctrl+1/2/3 focus editor group, Ctrl+Shift+Y Debug Console, Ctrl+Shift+U Output
+- [x] W57. Ctrl+0 focus side bar, Ctrl+Shift+Y Debug Console, Ctrl+Shift+U Output (Ctrl+1…9 stay Go to Tab)
 - [ ] W58. workbench.view.alwaysShowHeaderActions
 - [ ] W59. workbench.tree.indent and workbench.tree.renderIndentGuides
 - [ ] W60. workbench.list.smoothScrolling and workbench.list.mouseWheelScrollSensitivity
@@ -349,3 +349,4 @@ Legend: `[x]` done · `[ ]` to do.
 - 2026-10-22: W53. Explorer ▸ Timeline: the active file's Local History versions (File Saved…, how long ago) and Git commits (subject, author, age), newest first; a click shows that version against the editor; Refresh and a source filter (Local History / Git / both).
 - 2026-10-22: W55. VS Code's View: Toggle Maximized Panel, Move Panel Left / Right / To Bottom and Hide Panel in the View menu and the palette (the panel opens first when needed).
 - 2026-10-22: W56. F6 / Shift+F6 (View: Focus Next / Previous Part) move the keyboard focus round the editor, the panel, the status bar, the activity bar and the side bar, as in VS Code.
+- 2026-10-22: W57. VS Code's Ctrl+0 focuses the side bar (opening it), Ctrl+Shift+Y the Debug Console, Ctrl+Shift+U the Output (outside an editor, where it stays Toggle Case); Ctrl+1…9 keep going to a tab.

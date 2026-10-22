@@ -1206,3 +1206,15 @@ test('W56 Focus Next / Previous Part: F6 and Shift+F6 go round the editor, statu
   await page.keyboard.press('Shift+F6');
   await expect.poll(where).toBe('side');
 });
+
+test('W57 Ctrl+0 focuses the side bar, Ctrl+Shift+Y the Debug Console, Ctrl+Shift+U the Output', async ({ page }) => {
+  await start(page);
+  await open(page, 'Steps/AuthSteps.cs');
+  await page.locator('footer.status-bar').click();
+  await page.keyboard.press('Control+0');
+  await expect.poll(() => page.evaluate(() => !!document.activeElement?.closest('#feature-sidebar'))).toBe(true);
+  await page.keyboard.press('Control+Shift+U');
+  await expect(page.getByRole('region', { name: 'Output' })).toBeVisible();
+  await page.keyboard.press('Control+Shift+Y');
+  await expect(page.getByRole('region', { name: 'Debugger' })).toBeVisible();
+});

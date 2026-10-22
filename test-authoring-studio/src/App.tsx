@@ -422,6 +422,11 @@ export default function App() {
     // Quick Open (VS Code, W1).
     if (!e.shiftKey && !e.altKey && e.key.toLowerCase() === 'p') { e.preventDefault(); openQuickOpen(); return; }
     if (e.shiftKey && !e.altKey && e.key.toLowerCase() === 'm') { e.preventDefault(); toggleProblemsRef.current(); return; }
+    // VS Code's focus keys (W57): Ctrl+0 the side bar, Ctrl+Shift+Y the Debug Console, Ctrl+Shift+U the Output
+    // (outside an editor, where Ctrl+Shift+U is Toggle Case).
+    if (!e.shiftKey && !e.altKey && e.key === '0' && Date.now() - chordK.current > 1500) { e.preventDefault(); focusKeysRef.current.sideBar(); return; }
+    if (e.shiftKey && !e.altKey && e.key.toLowerCase() === 'y') { e.preventDefault(); focusKeysRef.current.debugConsole(); return; }
+    if (e.shiftKey && !e.altKey && e.key.toLowerCase() === 'u' && !(e.target as HTMLElement | null)?.closest?.('.cm-editor')) { e.preventDefault(); focusKeysRef.current.output(); return; }
     // Open View (VS Code's Ctrl+Q, W8).
     if (!e.shiftKey && !e.altKey && e.key.toLowerCase() === 'q') { e.preventDefault(); openQuickInput('view '); return; }
     if (e.altKey && !e.shiftKey && e.key.toLowerCase() === 'o') { e.preventDefault(); openOutput(); return; }
@@ -1308,6 +1313,12 @@ export default function App() {
   // The panel's size (VS Code's sash; 0 = the default) and Maximize Panel Size (the editors give way).
   const [panelSize, setPanelSize] = useLocalState<{ h: number; w: number }>('panelSize', { h: 0, w: 0 });
   const [panelMax, setPanelMax] = useState(false);
+  const focusKeysRef = useRef({ sideBar: () => {}, debugConsole: () => {}, output: () => {} });
+  focusKeysRef.current = {
+    sideBar: () => { setPrefs({ sidebar: true }); setTimeout(() => document.querySelector<HTMLElement>('#feature-sidebar button, #feature-sidebar input')?.focus(), 50); },
+    debugConsole: () => { if (tab !== 'Features' || (view !== 'code' && view !== 'editor')) { setTab('Features'); setView('editor'); } setPanelHidden(false); setDebugOpen(true); setDockTab('debug'); },
+    output: () => { setPanelHidden(false); openOutput(); },
+  };
   // VS Code's panel commands (W55): Toggle Maximized Panel, Move Panel Left / Right / Bottom, Close Panel.
   const panelCommands = useRef({ maximize: () => {}, move: (_side: 'bottom' | 'left' | 'right') => {}, close: () => {} });
   panelCommands.current = {
