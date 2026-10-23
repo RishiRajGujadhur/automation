@@ -295,5 +295,8 @@ export function webSnippetCompletion(file: string, ctx: CompletionContext): Comp
   if (/\.(css|scss|sass|less)$/i.test(file) && matches('flexTruncate')) {
     options.push(snippetCompletion('min-width: 0;\n  overflow: hidden;\n  text-overflow: ellipsis;\n  white-space: nowrap;${0}', { label: 'flexTruncate', detail: 'Truncate text in a shrinking flex item', type: 'text' }));
   }
+  if (/\.(css|scss|sass|less)$/i.test(file) && matches('skipLinkStyle')) {
+    options.push(snippetCompletion('${1:.skip-link} {\n  position: absolute;\n  inset-block-start: 0;\n  inset-inline-start: 0;\n  transform: translateY(-150%);\n  z-index: 1000;\n}\n${1:.skip-link}:focus-visible {\n  transform: translateY(0);\n}${0}', { label: 'skipLinkStyle', detail: 'Reveal skip link on keyboard focus', type: 'text' }));
+  }
   return options.length ? { from: word.from, options } : null;
 }

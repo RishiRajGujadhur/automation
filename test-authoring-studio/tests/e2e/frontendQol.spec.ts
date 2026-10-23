@@ -964,6 +964,19 @@ test('48: CSS safe-area snippet preserves viewport insets', async ({ page, reque
     expect(truncateSource).toContain('white-space: nowrap;');
     await page.evaluate(() => {
       const view = (window as unknown as { __activeEditor: () => { view: { state: { doc: { length: number } }; dispatch(change: unknown): void; focus(): void } } }).__activeEditor().view;
+      view.dispatch({ changes: { from: 0, to: view.state.doc.length, insert: 'skipLinkStyle' }, selection: { anchor: 13 } });
+      view.focus();
+    });
+    await page.keyboard.press('Control+Space');
+    const skipStyleOption = page.locator('.cm-tooltip-autocomplete li').filter({ has: page.locator('.cm-completionLabel', { hasText: /^skipLinkStyle$/ }) }).first();
+    await expect(skipStyleOption).toContainText('keyboard focus');
+    await skipStyleOption.click();
+    const skipStyleSource = await page.evaluate(() => (window as unknown as { __activeEditor: () => { view: { state: { doc: { toString(): string } } } } }).__activeEditor().view.state.doc.toString());
+    expect(skipStyleSource).toContain('.skip-link:focus-visible {');
+    expect(skipStyleSource).toContain('transform: translateY(-150%);');
+    expect(skipStyleSource).toContain('transform: translateY(0);');
+    await page.evaluate(() => {
+      const view = (window as unknown as { __activeEditor: () => { view: { state: { doc: { length: number } }; dispatch(change: unknown): void; focus(): void } } }).__activeEditor().view;
       const next = '.box { color: flexc; }';
       view.dispatch({ changes: { from: 0, to: view.state.doc.length, insert: next }, selection: { anchor: next.indexOf('flexc') + 'flexc'.length } });
       view.focus();
