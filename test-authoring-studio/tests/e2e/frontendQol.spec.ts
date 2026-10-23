@@ -1200,6 +1200,19 @@ test('73: TypeScript utility snippets expand in source files', async ({ page, re
     await typedThrottleOption.click();
     const typedThrottleSource = await page.evaluate(() => (window as unknown as { __activeEditor: () => { view: { state: { doc: { toString(): string } } } } }).__activeEditor().view.state.doc.toString());
     expect(typedThrottleSource).toContain('function throttle<Args extends unknown[]>(callback: (...args: Args) => void, interval: number)');
+    await page.evaluate(() => {
+      const view = (window as unknown as { __activeEditor: () => { view: { state: { doc: { length: number } }; dispatch(change: unknown): void; focus(): void } } }).__activeEditor().view;
+      view.dispatch({ changes: { from: 0, to: view.state.doc.length, insert: 'useMediaQuery' }, selection: { anchor: 13 } });
+      view.focus();
+    });
+    await page.keyboard.press('Control+Space');
+    const mediaOption = page.locator('.cm-tooltip-autocomplete li').filter({ has: page.locator('.cm-completionLabel', { hasText: /^useMediaQuery$/ }) }).first();
+    await expect(mediaOption).toContainText('listener cleanup');
+    await mediaOption.click();
+    const mediaSource = await page.evaluate(() => (window as unknown as { __activeEditor: () => { view: { state: { doc: { toString(): string } } } } }).__activeEditor().view.state.doc.toString());
+    expect(mediaSource).toContain("import { useState, useEffect } from 'react';");
+    expect(mediaSource).toContain('function useMediaQuery(query: string): boolean');
+    expect(mediaSource).toContain('return () => media.removeEventListener("change", update);');
   } finally {
     await request.post('/api/workspace', { data: previous });
     await fs.rm(root, { recursive: true, force: true, maxRetries: 5 });

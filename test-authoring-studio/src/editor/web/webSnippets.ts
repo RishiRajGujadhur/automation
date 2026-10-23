@@ -82,6 +82,9 @@ export function webSnippetCompletion(file: string, ctx: CompletionContext): Comp
   if (/\.(ts|tsx)$/i.test(file) && matches('useDebouncedValue')) {
     options.push(reactHookCompletion(['useState', 'useEffect'], 'useDebouncedValue', 'React debounced value hook with timer cleanup', 'function ${1:useDebouncedValue}<T>(value: T, delay = ${2:300}): T {\n  const [debounced, setDebounced] = useState(value);\n  useEffect(() => {\n    const id = window.setTimeout(() => setDebounced(value), delay);\n    return () => window.clearTimeout(id);\n  }, [value, delay]);\n  return debounced;\n}${0}'));
   }
+  if (/\.(ts|tsx)$/i.test(file) && matches('useMediaQuery')) {
+    options.push(reactHookCompletion(['useState', 'useEffect'], 'useMediaQuery', 'Reactive media query hook with listener cleanup', 'function ${1:useMediaQuery}(query: string): boolean {\n  const [matches, setMatches] = useState(false);\n  useEffect(() => {\n    const media = window.matchMedia(query);\n    const update = () => setMatches(media.matches);\n    update();\n    media.addEventListener("change", update);\n    return () => media.removeEventListener("change", update);\n  }, [query]);\n  return matches;\n}${0}'));
+  }
   if (/\.(jsx|tsx)$/i.test(file) && matches('layoutEffect')) {
     options.push(reactHookCompletion('useLayoutEffect', 'layoutEffect', 'React layout effect with import', 'useLayoutEffect(() => {\n  ${1}\n}, [${2}]);${0}'));
   }
