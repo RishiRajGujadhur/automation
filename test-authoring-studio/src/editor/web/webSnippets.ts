@@ -158,6 +158,9 @@ export function webSnippetCompletion(file: string, ctx: CompletionContext): Comp
   if (/\.(html|htm)$/i.test(file) && matches('searchForm')) {
     options.push(snippetCompletion('<form role="search" action="${1:/search}" method="get">\n  <label for="${2:site-search}">${3:Search this site}</label>\n  <input id="${2:site-search}" name="${4:q}" type="search" />\n  <button type="submit">Search</button>\n</form>${0}', { label: 'searchForm', detail: 'Labeled search landmark and submit control', type: 'text' }));
   }
+  if (/\.(html|htm)$/i.test(file) && matches('liveStatus')) {
+    options.push(snippetCompletion('<div id="${1:status}" role="status" aria-live="polite" aria-atomic="true">${2:Ready}</div>${0}', { label: 'liveStatus', detail: 'Polite screen-reader status region', type: 'text' }));
+  }
   if (/\.(css|scss|sass|less)$/i.test(file) && matches('flexc')) {
     options.push(snippetCompletion('display: flex;\n  align-items: center;\n  gap: ${1:1rem};${0}', { label: 'flexc', detail: 'Flex container', type: 'text' }));
   }

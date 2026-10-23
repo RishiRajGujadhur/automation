@@ -985,6 +985,16 @@ test('61: HTML disclosure snippet appears in markup completion', async ({ page, 
     await expect(editor).toContainText('<input id="site-search" name="q" type="search" />');
     await page.evaluate(() => {
       const view = (window as unknown as { __activeEditor: () => { view: { state: { doc: { length: number } }; dispatch(change: unknown): void; focus(): void } } }).__activeEditor().view;
+      view.dispatch({ changes: { from: 0, to: view.state.doc.length, insert: 'liveStatus' }, selection: { anchor: 10 } });
+      view.focus();
+    });
+    await page.keyboard.press('Control+Space');
+    const statusOption = page.locator('.cm-tooltip-autocomplete li').filter({ has: page.locator('.cm-completionLabel', { hasText: /^liveStatus$/ }) }).first();
+    await expect(statusOption).toContainText('screen-reader status');
+    await statusOption.click();
+    await expect(editor).toContainText('role="status" aria-live="polite" aria-atomic="true"');
+    await page.evaluate(() => {
+      const view = (window as unknown as { __activeEditor: () => { view: { state: { doc: { length: number } }; dispatch(change: unknown): void; focus(): void } } }).__activeEditor().view;
       const next = '<!-- detailsDisclosure -->';
       view.dispatch({ changes: { from: 0, to: view.state.doc.length, insert: next }, selection: { anchor: next.indexOf('detailsDisclosure') + 'detailsDisclosure'.length } });
       view.focus();
