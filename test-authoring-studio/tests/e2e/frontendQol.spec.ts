@@ -462,6 +462,18 @@ test('31: React state snippet adds one import after use client', async ({ page, 
     const refSource = await page.evaluate(() => (window as unknown as { __activeEditor: () => { view: { state: { doc: { toString(): string } } } } }).__activeEditor().view.state.doc.toString());
     expect(refSource).toContain("import { useRef } from 'react';");
     expect(refSource).toContain('const elementRef = useRef<HTMLDivElement | null>(null);');
+    await page.evaluate(() => {
+      const view = (window as unknown as { __activeEditor: () => { view: { state: { doc: { length: number } }; dispatch(change: unknown): void; focus(): void } } }).__activeEditor().view;
+      view.dispatch({ changes: { from: 0, to: view.state.doc.length, insert: "'use client';\nreducer" }, selection: { anchor: "'use client';\nreducer".length } });
+      view.focus();
+    });
+    await page.keyboard.press('Control+Space');
+    const reducerOption = page.locator('.cm-tooltip-autocomplete li').filter({ has: page.locator('.cm-completionLabel', { hasText: /^reducer$/ }) }).first();
+    await expect(reducerOption).toContainText('React reducer hook with import');
+    await reducerOption.click();
+    const reducerSource = await page.evaluate(() => (window as unknown as { __activeEditor: () => { view: { state: { doc: { toString(): string } } } } }).__activeEditor().view.state.doc.toString());
+    expect(reducerSource).toContain("import { useReducer } from 'react';");
+    expect(reducerSource).toContain('const [state, dispatch] = useReducer(reducer, initialState);');
   } finally {
     await request.post('/api/workspace', { data: previous });
     await fs.rm(root, { recursive: true, force: true, maxRetries: 5 });
