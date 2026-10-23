@@ -104,3 +104,4 @@ This tracks **additional** improvements beyond the existing features in `FRONTEN
 | 98 | Insert a typed React media-query hook that subscribes to changes and removes its listener. | Focused browser test | [VS Code snippet workflow](https://code.visualstudio.com/docs/editing/userdefinedsnippets) |
 | 99 | Insert a typed outside-click React hook that returns a ref and cleans up its pointer listener. | Focused browser test | [VS Code snippet workflow](https://code.visualstudio.com/docs/editing/userdefinedsnippets) |
 | 100 | Reserve scrollbar space from CSS completion to prevent layout shifts when content overflows. | Focused browser test | [VS Code snippet workflow](https://code.visualstudio.com/docs/editing/userdefinedsnippets) |
+| 101 | Insert a typed keyboard shortcut hook that ignores editable controls and removes its listener. | Focused browser test | [VS Code snippet workflow](https://code.visualstudio.com/docs/editing/userdefinedsnippets) |

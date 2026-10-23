@@ -88,6 +88,9 @@ export function webSnippetCompletion(file: string, ctx: CompletionContext): Comp
   if (/\.(ts|tsx)$/i.test(file) && matches('useClickOutside')) {
     options.push(reactHookCompletion(['useRef', 'useEffect'], 'useClickOutside', 'Typed outside-click hook with pointer cleanup', 'function ${1:useClickOutside}<T extends HTMLElement>(onOutside: () => void) {\n  const ref = useRef<T | null>(null);\n  useEffect(() => {\n    const handle = (event: PointerEvent) => {\n      if (ref.current && !ref.current.contains(event.target as Node)) onOutside();\n    };\n    document.addEventListener("pointerdown", handle);\n    return () => document.removeEventListener("pointerdown", handle);\n  }, [onOutside]);\n  return ref;\n}${0}'));
   }
+  if (/\.(ts|tsx)$/i.test(file) && matches('useKeyDown')) {
+    options.push(reactHookCompletion('useEffect', 'useKeyDown', 'Typed keyboard shortcut hook that skips editable controls', 'function ${1:useKeyDown}(key: string, onKeyDown: (event: KeyboardEvent) => void) {\n  useEffect(() => {\n    const handle = (event: KeyboardEvent) => {\n      const target = event.target;\n      if (target instanceof HTMLElement && (target.isContentEditable || ["INPUT", "TEXTAREA", "SELECT"].includes(target.tagName))) return;\n      if (event.key === key) onKeyDown(event);\n    };\n    window.addEventListener("keydown", handle);\n    return () => window.removeEventListener("keydown", handle);\n  }, [key, onKeyDown]);\n}${0}'));
+  }
   if (/\.(jsx|tsx)$/i.test(file) && matches('layoutEffect')) {
     options.push(reactHookCompletion('useLayoutEffect', 'layoutEffect', 'React layout effect with import', 'useLayoutEffect(() => {\n  ${1}\n}, [${2}]);${0}'));
   }

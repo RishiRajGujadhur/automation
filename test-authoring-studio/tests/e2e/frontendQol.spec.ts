@@ -1238,6 +1238,19 @@ test('73: TypeScript utility snippets expand in source files', async ({ page, re
     expect(outsideSource).toContain("import { useRef, useEffect } from 'react';");
     expect(outsideSource).toContain('document.addEventListener("pointerdown", handle);');
     expect(outsideSource).toContain('return () => document.removeEventListener("pointerdown", handle);');
+    await page.evaluate(() => {
+      const view = (window as unknown as { __activeEditor: () => { view: { state: { doc: { length: number } }; dispatch(change: unknown): void; focus(): void } } }).__activeEditor().view;
+      view.dispatch({ changes: { from: 0, to: view.state.doc.length, insert: 'useKeyDown' }, selection: { anchor: 10 } });
+      view.focus();
+    });
+    await page.keyboard.press('Control+Space');
+    const keyOption = page.locator('.cm-tooltip-autocomplete li').filter({ has: page.locator('.cm-completionLabel', { hasText: /^useKeyDown$/ }) }).first();
+    await expect(keyOption).toContainText('skips editable controls');
+    await keyOption.click();
+    const keySource = await page.evaluate(() => (window as unknown as { __activeEditor: () => { view: { state: { doc: { toString(): string } } } } }).__activeEditor().view.state.doc.toString());
+    expect(keySource).toContain("import { useEffect } from 'react';");
+    expect(keySource).toContain('target.isContentEditable');
+    expect(keySource).toContain('window.removeEventListener("keydown", handle);');
   } finally {
     await request.post('/api/workspace', { data: previous });
     await fs.rm(root, { recursive: true, force: true, maxRetries: 5 });
