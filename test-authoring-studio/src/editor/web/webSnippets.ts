@@ -33,5 +33,8 @@ export function webSnippetCompletion(file: string, ctx: CompletionContext): Comp
   if (/\.(css|scss|sass|less)$/i.test(file) && 'reduceMotion'.startsWith(word.text)) {
     options.push(snippetCompletion('@media (prefers-reduced-motion: reduce) {\n  ${1:.element} {\n    animation: none;\n    transition: none;\n  }\n}${0}', { label: 'reduceMotion', detail: 'Reduced motion override', type: 'text' }));
   }
+  if (/\.(css|scss|sass|less)$/i.test(file) && 'darkScheme'.startsWith(word.text)) {
+    options.push(snippetCompletion('@media (prefers-color-scheme: dark) {\n  ${1::root} {\n    color-scheme: dark;\n    background: ${2:#111827};\n    color: ${3:#f9fafb};\n  }\n}${0}', { label: 'darkScheme', detail: 'System dark color scheme', type: 'text' }));
+  }
   return options.length ? { from: word.from, options } : null;
 }

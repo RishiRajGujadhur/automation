@@ -30,3 +30,4 @@ This tracks **additional** improvements beyond the existing features in `FRONTEN
 | 24 | Insert a keyboard-visible focus rule with editable selector and outline from `focusv`. | Focused browser test | [VS Code snippet workflow](https://code.visualstudio.com/docs/editing/userdefinedsnippets) |
 | 25 | Insert a responsive auto-fit grid with editable minimum card width from `autogrid`. | Focused browser test | [VS Code snippet workflow](https://code.visualstudio.com/docs/editing/userdefinedsnippets) |
 | 26 | Insert a scoped reduced-motion override with an editable selector from `reduceMotion`. | Focused browser test | [VS Code snippet workflow](https://code.visualstudio.com/docs/editing/userdefinedsnippets) |
+| 27 | Insert a system dark-color-scheme block with editable colors from `darkScheme`. | Focused browser test | [VS Code snippet workflow](https://code.visualstudio.com/docs/editing/userdefinedsnippets) |

@@ -206,6 +206,17 @@ test('3: expands a CSS Emmet property abbreviation', async ({ page, request }) =
     await motionOption.click();
     await expect(editor).toContainText('@media (prefers-reduced-motion: reduce)');
     await expect(editor).toContainText('transition: none;');
+    await page.evaluate(() => {
+      const view = (window as unknown as { __activeEditor: () => { view: { state: { doc: { length: number } }; dispatch(change: unknown): void; focus(): void } } }).__activeEditor().view;
+      view.dispatch({ changes: { from: 0, to: view.state.doc.length, insert: 'darkScheme' }, selection: { anchor: 10 } });
+      view.focus();
+    });
+    await page.keyboard.press('Control+Space');
+    const darkOption = page.locator('.cm-tooltip-autocomplete li').filter({ has: page.locator('.cm-completionLabel', { hasText: /^darkScheme$/ }) }).first();
+    await expect(darkOption).toContainText('System dark color scheme');
+    await darkOption.click();
+    await expect(editor).toContainText('@media (prefers-color-scheme: dark)');
+    await expect(editor).toContainText('color-scheme: dark;');
   } finally {
     await request.post('/api/workspace', { data: previous });
     await fs.rm(root, { recursive: true, force: true, maxRetries: 5 });
