@@ -17,5 +17,8 @@ export function webSnippetCompletion(file: string, ctx: CompletionContext): Comp
   if (/\.(css|scss|sass|less)$/i.test(file) && 'gridc'.startsWith(word.text)) {
     options.push(snippetCompletion('display: grid;\n  grid-template-columns: repeat(${1:2}, minmax(0, 1fr));\n  gap: ${2:1rem};${0}', { label: 'gridc', detail: 'Grid container', type: 'text' }));
   }
+  if (/\.(css|scss|sass|less)$/i.test(file) && 'mediaq'.startsWith(word.text)) {
+    options.push(snippetCompletion('@media (min-width: ${1:768px}) {\n  ${0}\n}', { label: 'mediaq', detail: 'Responsive media query', type: 'text' }));
+  }
   return options.length ? { from: word.from, options } : null;
 }
