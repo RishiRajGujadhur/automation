@@ -1119,6 +1119,17 @@ test('73: TypeScript utility snippets expand in source files', async ({ page, re
     await expect(editor).toContainText('type Result<T, E = Error> =');
     await expect(editor).toContainText('const success = <T,>(value: T): Result<T, never>');
     await expect(editor).toContainText('const failure = <E,>(error: E): Result<never, E>');
+    await page.evaluate(() => {
+      const view = (window as unknown as { __activeEditor: () => { view: { state: { doc: { length: number } }; dispatch(change: unknown): void; focus(): void } } }).__activeEditor().view;
+      view.dispatch({ changes: { from: 0, to: view.state.doc.length, insert: 'assertDefined' }, selection: { anchor: 13 } });
+      view.focus();
+    });
+    await page.keyboard.press('Control+Space');
+    const assertOption = page.locator('.cm-tooltip-autocomplete li').filter({ has: page.locator('.cm-completionLabel', { hasText: /^assertDefined$/ }) }).first();
+    await expect(assertOption).toContainText('narrows TypeScript types');
+    await assertOption.click();
+    await expect(editor).toContainText('asserts value is NonNullable<T>');
+    await expect(editor).toContainText('if (value == null) throw new Error(message);');
   } finally {
     await request.post('/api/workspace', { data: previous });
     await fs.rm(root, { recursive: true, force: true, maxRetries: 5 });

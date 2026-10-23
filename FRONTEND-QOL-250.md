@@ -91,3 +91,4 @@ This tracks **additional** improvements beyond the existing features in `FRONTEN
 | 85 | Insert a search landmark with a linked label, search input, and submit button. | Focused browser test | [VS Code snippet workflow](https://code.visualstudio.com/docs/editing/userdefinedsnippets) |
 | 86 | Insert a polite live status region for announcing dynamic updates. | Focused browser test | [VS Code snippet workflow](https://code.visualstudio.com/docs/editing/userdefinedsnippets) |
 | 87 | Insert a discriminated TypeScript Result type with typed success and failure constructors. | Focused browser test | [VS Code snippet workflow](https://code.visualstudio.com/docs/editing/userdefinedsnippets) |
+| 88 | Insert a null-check assertion function that narrows a TypeScript value to non-nullable. | Focused browser test | [VS Code snippet workflow](https://code.visualstudio.com/docs/editing/userdefinedsnippets) |
