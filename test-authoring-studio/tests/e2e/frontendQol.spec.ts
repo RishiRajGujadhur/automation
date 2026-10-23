@@ -426,6 +426,18 @@ test('31: React state snippet adds one import after use client', async ({ page, 
     const effectSource = await page.evaluate(() => (window as unknown as { __activeEditor: () => { view: { state: { doc: { toString(): string } } } } }).__activeEditor().view.state.doc.toString());
     expect(effectSource).toMatch(/^'use client';\nimport \{ useEffect \} from 'react';\n/);
     expect(effectSource).toContain('useEffect(() => {');
+    await page.evaluate(() => {
+      const view = (window as unknown as { __activeEditor: () => { view: { state: { doc: { length: number } }; dispatch(change: unknown): void; focus(): void } } }).__activeEditor().view;
+      view.dispatch({ changes: { from: 0, to: view.state.doc.length, insert: "'use client';\nmemoValue" }, selection: { anchor: "'use client';\nmemoValue".length } });
+      view.focus();
+    });
+    await page.keyboard.press('Control+Space');
+    const memoOption = page.locator('.cm-tooltip-autocomplete li').filter({ has: page.locator('.cm-completionLabel', { hasText: /^memoValue$/ }) }).first();
+    await expect(memoOption).toContainText('React memoized value with import');
+    await memoOption.click();
+    const memoSource = await page.evaluate(() => (window as unknown as { __activeEditor: () => { view: { state: { doc: { toString(): string } } } } }).__activeEditor().view.state.doc.toString());
+    expect(memoSource).toContain("import { useMemo } from 'react';");
+    expect(memoSource).toContain('const result = useMemo(() => compute(), []);');
   } finally {
     await request.post('/api/workspace', { data: previous });
     await fs.rm(root, { recursive: true, force: true, maxRetries: 5 });
