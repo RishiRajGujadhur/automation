@@ -119,6 +119,9 @@ export function webSnippetCompletion(file: string, ctx: CompletionContext): Comp
   if (/\.(html|htm)$/i.test(file) && 'skipLink'.startsWith(word.text)) {
     options.push(snippetCompletion('<a href="#${1:main-content}" class="skip-link">Skip to main content</a>\n<main id="${1:main-content}">\n  ${0}\n</main>', { label: 'skipLink', detail: 'Keyboard skip link and matching main landmark', type: 'text' }));
   }
+  if (/\.(html|htm)$/i.test(file) && 'radioGroup'.startsWith(word.text)) {
+    options.push(snippetCompletion('<fieldset>\n  <legend>${1:Choose an option}</legend>\n  <label><input type="radio" name="${2:choice}" value="${3:first}" /> ${4:First}</label>\n  <label><input type="radio" name="${2:choice}" value="${5:second}" /> ${6:Second}</label>\n</fieldset>${0}', { label: 'radioGroup', detail: 'Labeled radio group with shared name', type: 'text' }));
+  }
   if (/\.(css|scss|sass|less)$/i.test(file) && 'flexc'.startsWith(word.text)) {
     options.push(snippetCompletion('display: flex;\n  align-items: center;\n  gap: ${1:1rem};${0}', { label: 'flexc', detail: 'Flex container', type: 'text' }));
   }

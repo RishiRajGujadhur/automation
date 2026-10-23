@@ -853,6 +853,18 @@ test('61: HTML disclosure snippet appears in markup completion', async ({ page, 
     await skipOption.click();
     await expect(editor).toContainText('href="#main-content"');
     await expect(editor).toContainText('<main id="main-content">');
+    await page.evaluate(() => {
+      const view = (window as unknown as { __activeEditor: () => { view: { state: { doc: { length: number } }; dispatch(change: unknown): void; focus(): void } } }).__activeEditor().view;
+      view.dispatch({ changes: { from: 0, to: view.state.doc.length, insert: 'radioGroup' }, selection: { anchor: 10 } });
+      view.focus();
+    });
+    await page.keyboard.press('Control+Space');
+    const radioOption = page.locator('.cm-tooltip-autocomplete li').filter({ has: page.locator('.cm-completionLabel', { hasText: /^radioGroup$/ }) }).first();
+    await expect(radioOption).toContainText('Labeled radio group');
+    await radioOption.click();
+    await expect(editor).toContainText('<legend>Choose an option</legend>');
+    const radioSource = await page.evaluate(() => (window as unknown as { __activeEditor: () => { view: { state: { doc: { toString(): string } } } } }).__activeEditor().view.state.doc.toString());
+    expect(radioSource.match(/name="choice"/g)).toHaveLength(2);
   } finally {
     await request.post('/api/workspace', { data: previous });
     await fs.rm(root, { recursive: true, force: true, maxRetries: 5 });
