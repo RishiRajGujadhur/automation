@@ -111,3 +111,4 @@ This tracks **additional** improvements beyond the existing features in `FRONTEN
 | 105 | Insert an editable multi-line text clamp with the required box layout and overflow rules. | Focused browser test | [VS Code snippet workflow](https://code.visualstudio.com/docs/editing/userdefinedsnippets) |
 | 106 | Insert a typed element-size hook that observes its ref and disconnects on cleanup. | Focused browser test | [VS Code snippet workflow](https://code.visualstudio.com/docs/editing/userdefinedsnippets) |
 | 107 | Insert a page-visibility hook that follows tab visibility changes and removes its listener. | Focused browser test | [VS Code snippet workflow](https://code.visualstudio.com/docs/editing/userdefinedsnippets) |
+| 108 | Insert the min-width and overflow rules needed to truncate text inside a shrinking flex item. | Focused browser test | [VS Code snippet workflow](https://code.visualstudio.com/docs/editing/userdefinedsnippets) |

@@ -951,6 +951,19 @@ test('48: CSS safe-area snippet preserves viewport insets', async ({ page, reque
     expect(clampSource).toContain('-webkit-box-orient: vertical;');
     await page.evaluate(() => {
       const view = (window as unknown as { __activeEditor: () => { view: { state: { doc: { length: number } }; dispatch(change: unknown): void; focus(): void } } }).__activeEditor().view;
+      view.dispatch({ changes: { from: 0, to: view.state.doc.length, insert: 'flexTruncate' }, selection: { anchor: 12 } });
+      view.focus();
+    });
+    await page.keyboard.press('Control+Space');
+    const truncateOption = page.locator('.cm-tooltip-autocomplete li').filter({ has: page.locator('.cm-completionLabel', { hasText: /^flexTruncate$/ }) }).first();
+    await expect(truncateOption).toContainText('shrinking flex item');
+    await truncateOption.click();
+    const truncateSource = await page.evaluate(() => (window as unknown as { __activeEditor: () => { view: { state: { doc: { toString(): string } } } } }).__activeEditor().view.state.doc.toString());
+    expect(truncateSource).toContain('min-width: 0;');
+    expect(truncateSource).toContain('text-overflow: ellipsis;');
+    expect(truncateSource).toContain('white-space: nowrap;');
+    await page.evaluate(() => {
+      const view = (window as unknown as { __activeEditor: () => { view: { state: { doc: { length: number } }; dispatch(change: unknown): void; focus(): void } } }).__activeEditor().view;
       const next = '.box { color: flexc; }';
       view.dispatch({ changes: { from: 0, to: view.state.doc.length, insert: next }, selection: { anchor: next.indexOf('flexc') + 'flexc'.length } });
       view.focus();

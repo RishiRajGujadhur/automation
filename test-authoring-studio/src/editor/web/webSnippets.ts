@@ -289,5 +289,8 @@ export function webSnippetCompletion(file: string, ctx: CompletionContext): Comp
   if (/\.(css|scss|sass|less)$/i.test(file) && matches('clampLines')) {
     options.push(snippetCompletion('display: -webkit-box;\n  -webkit-box-orient: vertical;\n  -webkit-line-clamp: ${1:3};\n  overflow: hidden;${0}', { label: 'clampLines', detail: 'Clamp text to an editable number of lines', type: 'text' }));
   }
+  if (/\.(css|scss|sass|less)$/i.test(file) && matches('flexTruncate')) {
+    options.push(snippetCompletion('min-width: 0;\n  overflow: hidden;\n  text-overflow: ellipsis;\n  white-space: nowrap;${0}', { label: 'flexTruncate', detail: 'Truncate text in a shrinking flex item', type: 'text' }));
+  }
   return options.length ? { from: word.from, options } : null;
 }
