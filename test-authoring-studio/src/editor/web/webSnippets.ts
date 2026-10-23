@@ -131,6 +131,9 @@ export function webSnippetCompletion(file: string, ctx: CompletionContext): Comp
   if (/\.(ts|tsx)$/i.test(file) && matches('exhaustiveSwitch')) {
     options.push(snippetCompletion('type ${1:Action} =\n  | { type: "${2:increment}" }\n  | { type: "${3:decrement}" };\n\nfunction ${4:assertNever}(value: never): never {\n  throw new Error("Unexpected value: " + String(value));\n}\n\nfunction ${5:reducer}(state: number, action: ${1:Action}): number {\n  switch (action.type) {\n    case "${2:increment}": return state + 1;\n    case "${3:decrement}": return state - 1;\n    default: return ${4:assertNever}(action);\n  }\n}${0}', { label: 'exhaustiveSwitch', detail: 'Discriminated union switch with never check', type: 'text' }));
   }
+  if (/\.(ts|tsx)$/i.test(file) && matches('debounceFn')) {
+    options.push(snippetCompletion('function ${1:debounce}<Args extends unknown[]>(callback: (...args: Args) => void, delay: number) {\n  let timer: ReturnType<typeof setTimeout> | undefined;\n  return (...args: Args) => {\n    if (timer !== undefined) clearTimeout(timer);\n    timer = setTimeout(() => callback(...args), delay);\n  };\n}${0}', { label: 'debounceFn', detail: 'Typed debounce preserving callback arguments', type: 'text' }));
+  }
   if (/\.(html|htm)$/i.test(file) && matches('detailsDisclosure')) {
     options.push(snippetCompletion('<details>\n  <summary>${1:More information}</summary>\n  <p>${2:Details go here.}</p>\n</details>${0}', { label: 'detailsDisclosure', detail: 'Native accessible disclosure', type: 'text' }));
   }

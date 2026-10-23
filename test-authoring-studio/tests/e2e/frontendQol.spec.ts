@@ -977,6 +977,17 @@ test('73: TypeScript utility snippets expand in source files', async ({ page, re
     await switchOption.click();
     await expect(editor).toContainText('function assertNever(value: never): never');
     await expect(editor).toContainText('default: return assertNever(action);');
+    await page.evaluate(() => {
+      const view = (window as unknown as { __activeEditor: () => { view: { state: { doc: { length: number } }; dispatch(change: unknown): void; focus(): void } } }).__activeEditor().view;
+      view.dispatch({ changes: { from: 0, to: view.state.doc.length, insert: 'debounceFn' }, selection: { anchor: 10 } });
+      view.focus();
+    });
+    await page.keyboard.press('Control+Space');
+    const debounceOption = page.locator('.cm-tooltip-autocomplete li').filter({ has: page.locator('.cm-completionLabel', { hasText: /^debounceFn$/ }) }).first();
+    await expect(debounceOption).toContainText('Typed debounce');
+    await debounceOption.click();
+    await expect(editor).toContainText('function debounce<Args extends unknown[]>(callback: (...args: Args) => void');
+    await expect(editor).toContainText('if (timer !== undefined) clearTimeout(timer);');
   } finally {
     await request.post('/api/workspace', { data: previous });
     await fs.rm(root, { recursive: true, force: true, maxRetries: 5 });
