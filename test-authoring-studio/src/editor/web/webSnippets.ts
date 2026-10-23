@@ -69,6 +69,9 @@ export function webSnippetCompletion(file: string, ctx: CompletionContext): Comp
   if (/\.(ts|tsx)$/i.test(file) && matches('usePrevious')) {
     options.push(reactHookCompletion(['useRef', 'useEffect'], 'usePrevious', 'React previous-value hook with both imports', 'function ${1:usePrevious}<T>(value: T): T | undefined {\n  const ref = useRef<T | undefined>(undefined);\n  useEffect(() => { ref.current = value; }, [value]);\n  return ref.current;\n}${0}'));
   }
+  if (/\.(ts|tsx)$/i.test(file) && matches('useDebouncedValue')) {
+    options.push(reactHookCompletion(['useState', 'useEffect'], 'useDebouncedValue', 'React debounced value hook with timer cleanup', 'function ${1:useDebouncedValue}<T>(value: T, delay = ${2:300}): T {\n  const [debounced, setDebounced] = useState(value);\n  useEffect(() => {\n    const id = window.setTimeout(() => setDebounced(value), delay);\n    return () => window.clearTimeout(id);\n  }, [value, delay]);\n  return debounced;\n}${0}'));
+  }
   if (/\.(jsx|tsx)$/i.test(file) && matches('layoutEffect')) {
     options.push(reactHookCompletion('useLayoutEffect', 'layoutEffect', 'React layout effect with import', 'useLayoutEffect(() => {\n  ${1}\n}, [${2}]);${0}'));
   }
