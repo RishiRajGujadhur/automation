@@ -125,5 +125,8 @@ export function webSnippetCompletion(file: string, ctx: CompletionContext): Comp
   if (/\.(css|scss|sass|less)$/i.test(file) && 'supportsFeature'.startsWith(word.text)) {
     options.push(snippetCompletion('@supports (${1:display}: ${2:grid}) {\n  ${3:.selector} {\n    ${0}\n  }\n}', { label: 'supportsFeature', detail: 'CSS feature query with editable condition', type: 'text' }));
   }
+  if (/\.(css|scss|sass|less)$/i.test(file) && 'scrollSnap'.startsWith(word.text)) {
+    options.push(snippetCompletion('display: flex;\n  overflow-x: auto;\n  scroll-snap-type: x ${1:mandatory};\n  scroll-padding-inline: ${2:1rem};\n  gap: ${3:1rem};\n  & > * { scroll-snap-align: ${4:start}; }${0}', { label: 'scrollSnap', detail: 'Horizontal scroll-snap container and items', type: 'text' }));
+  }
   return options.length ? { from: word.from, options } : null;
 }

@@ -683,6 +683,18 @@ test('48: CSS safe-area snippet preserves viewport insets', async ({ page, reque
     const supportsSource = await page.evaluate(() => (window as unknown as { __activeEditor: () => { view: { state: { doc: { toString(): string } } } } }).__activeEditor().view.state.doc.toString());
     expect(supportsSource).toContain('@supports (display: grid) {');
     expect(supportsSource).toContain('.selector {');
+    await page.evaluate(() => {
+      const view = (window as unknown as { __activeEditor: () => { view: { state: { doc: { length: number } }; dispatch(change: unknown): void; focus(): void } } }).__activeEditor().view;
+      view.dispatch({ changes: { from: 0, to: view.state.doc.length, insert: 'scrollSnap' }, selection: { anchor: 10 } });
+      view.focus();
+    });
+    await page.keyboard.press('Control+Space');
+    const snapOption = page.locator('.cm-tooltip-autocomplete li').filter({ has: page.locator('.cm-completionLabel', { hasText: /^scrollSnap$/ }) }).first();
+    await expect(snapOption).toContainText('scroll-snap container and items');
+    await snapOption.click();
+    const snapSource = await page.evaluate(() => (window as unknown as { __activeEditor: () => { view: { state: { doc: { toString(): string } } } } }).__activeEditor().view.state.doc.toString());
+    expect(snapSource).toContain('scroll-snap-type: x mandatory;');
+    expect(snapSource).toContain('scroll-snap-align: start;');
   } finally {
     await request.post('/api/workspace', { data: previous });
     await fs.rm(root, { recursive: true, force: true, maxRetries: 5 });
