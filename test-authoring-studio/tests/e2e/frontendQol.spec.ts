@@ -450,6 +450,18 @@ test('31: React state snippet adds one import after use client', async ({ page, 
     const callbackSource = await page.evaluate(() => (window as unknown as { __activeEditor: () => { view: { state: { doc: { toString(): string } } } } }).__activeEditor().view.state.doc.toString());
     expect(callbackSource).toContain("import { useCallback } from 'react';");
     expect(callbackSource).toContain('const handleAction = useCallback(() => {');
+    await page.evaluate(() => {
+      const view = (window as unknown as { __activeEditor: () => { view: { state: { doc: { length: number } }; dispatch(change: unknown): void; focus(): void } } }).__activeEditor().view;
+      view.dispatch({ changes: { from: 0, to: view.state.doc.length, insert: "'use client';\ndomRef" }, selection: { anchor: "'use client';\ndomRef".length } });
+      view.focus();
+    });
+    await page.keyboard.press('Control+Space');
+    const refOption = page.locator('.cm-tooltip-autocomplete li').filter({ has: page.locator('.cm-completionLabel', { hasText: /^domRef$/ }) }).first();
+    await expect(refOption).toContainText('Typed React DOM ref with import');
+    await refOption.click();
+    const refSource = await page.evaluate(() => (window as unknown as { __activeEditor: () => { view: { state: { doc: { toString(): string } } } } }).__activeEditor().view.state.doc.toString());
+    expect(refSource).toContain("import { useRef } from 'react';");
+    expect(refSource).toContain('const elementRef = useRef<HTMLDivElement | null>(null);');
   } finally {
     await request.post('/api/workspace', { data: previous });
     await fs.rm(root, { recursive: true, force: true, maxRetries: 5 });

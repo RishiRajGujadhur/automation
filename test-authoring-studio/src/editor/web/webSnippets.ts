@@ -43,6 +43,9 @@ export function webSnippetCompletion(file: string, ctx: CompletionContext): Comp
   if (/\.(jsx|tsx)$/i.test(file) && 'callback'.startsWith(word.text)) {
     options.push(reactHookCompletion('useCallback', 'callback', 'React memoized callback with import', 'const ${1:handleAction} = useCallback(() => {\n  ${2}\n}, [${3}]);${0}'));
   }
+  if (/\.tsx$/i.test(file) && 'domRef'.startsWith(word.text)) {
+    options.push(reactHookCompletion('useRef', 'domRef', 'Typed React DOM ref with import', 'const ${1:elementRef} = useRef<${2:HTMLDivElement} | null>(null);${0}'));
+  }
   if (/\.(css|scss|sass|less)$/i.test(file) && 'flexc'.startsWith(word.text)) {
     options.push(snippetCompletion('display: flex;\n  align-items: center;\n  gap: ${1:1rem};${0}', { label: 'flexc', detail: 'Flex container', type: 'text' }));
   }
