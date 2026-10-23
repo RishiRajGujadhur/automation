@@ -87,3 +87,4 @@ This tracks **additional** improvements beyond the existing features in `FRONTEN
 | 81 | Insert a forced-colors media rule using system canvas and text colors. | Focused browser test | [VS Code snippet workflow](https://code.visualstudio.com/docs/editing/userdefinedsnippets) |
 | 82 | Insert a higher-contrast media rule with editable border and outline widths. | Focused browser test | [VS Code snippet workflow](https://code.visualstudio.com/docs/editing/userdefinedsnippets) |
 | 83 | Insert a subgrid column pattern for aligning nested content with its parent grid. | Focused browser test | [VS Code snippet workflow](https://code.visualstudio.com/docs/editing/userdefinedsnippets) |
+| 84 | Insert deferred off-screen rendering with an editable intrinsic-size estimate. | Focused browser test | [VS Code snippet workflow](https://code.visualstudio.com/docs/editing/userdefinedsnippets) |

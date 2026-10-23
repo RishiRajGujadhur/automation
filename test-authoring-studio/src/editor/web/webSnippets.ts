@@ -215,5 +215,8 @@ export function webSnippetCompletion(file: string, ctx: CompletionContext): Comp
   if (/\.(css|scss|sass|less)$/i.test(file) && matches('subgridColumns')) {
     options.push(snippetCompletion('display: grid;\n  grid-column: ${1:1 / -1};\n  grid-template-columns: subgrid;\n  gap: ${2:inherit};${0}', { label: 'subgridColumns', detail: 'Align nested columns to parent grid', type: 'text' }));
   }
+  if (/\.(css|scss|sass|less)$/i.test(file) && matches('deferredRender')) {
+    options.push(snippetCompletion('content-visibility: auto;\n  contain-intrinsic-size: auto ${1:400px};${0}', { label: 'deferredRender', detail: 'Defer off-screen rendering with size estimate', type: 'text' }));
+  }
   return options.length ? { from: word.from, options } : null;
 }

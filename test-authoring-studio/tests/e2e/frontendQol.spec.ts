@@ -881,6 +881,18 @@ test('48: CSS safe-area snippet preserves viewport insets', async ({ page, reque
     expect(subgridSource).toContain('grid-column: 1 / -1;');
     await page.evaluate(() => {
       const view = (window as unknown as { __activeEditor: () => { view: { state: { doc: { length: number } }; dispatch(change: unknown): void; focus(): void } } }).__activeEditor().view;
+      view.dispatch({ changes: { from: 0, to: view.state.doc.length, insert: 'deferredRender' }, selection: { anchor: 14 } });
+      view.focus();
+    });
+    await page.keyboard.press('Control+Space');
+    const renderOption = page.locator('.cm-tooltip-autocomplete li').filter({ has: page.locator('.cm-completionLabel', { hasText: /^deferredRender$/ }) }).first();
+    await expect(renderOption).toContainText('off-screen rendering');
+    await renderOption.click();
+    const renderSource = await page.evaluate(() => (window as unknown as { __activeEditor: () => { view: { state: { doc: { toString(): string } } } } }).__activeEditor().view.state.doc.toString());
+    expect(renderSource).toContain('content-visibility: auto;');
+    expect(renderSource).toContain('contain-intrinsic-size: auto 400px;');
+    await page.evaluate(() => {
+      const view = (window as unknown as { __activeEditor: () => { view: { state: { doc: { length: number } }; dispatch(change: unknown): void; focus(): void } } }).__activeEditor().view;
       const next = '.box { color: flexc; }';
       view.dispatch({ changes: { from: 0, to: view.state.doc.length, insert: next }, selection: { anchor: next.indexOf('flexc') + 'flexc'.length } });
       view.focus();
