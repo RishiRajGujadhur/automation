@@ -635,3 +635,31 @@ test('44: layout effect snippet inserts hook and import', async ({ page, request
     await fs.rm(root, { recursive: true, force: true, maxRetries: 5 });
   }
 });
+
+test('48: CSS safe-area snippet preserves viewport insets', async ({ page, request }) => {
+  const previous = (await (await request.get('/api/workspace')).json()).config;
+  const root = await fs.mkdtemp(path.join(os.tmpdir(), 'studio-css-layout-snippets-'));
+  try {
+    await fs.writeFile(path.join(root, 'layout.css'), 'safeArea');
+    expect((await request.post('/api/workspace', { data: { repositoryRoot: root, targetProject: '.' } })).ok()).toBe(true);
+    await page.goto('/#/features/editor');
+    await expect(page.getByText('Repository indexed')).toBeVisible();
+    await page.evaluate(() => window.dispatchEvent(new CustomEvent('tas:open-location', { detail: { file: 'layout.css', line: 1 } })));
+    const editor = page.getByLabel('Source of layout.css');
+    await expect(editor).toBeVisible();
+    await editor.click();
+    await page.keyboard.press('Control+End');
+    await page.keyboard.press('Control+Space');
+    const option = page.locator('.cm-tooltip-autocomplete li').filter({ has: page.locator('.cm-completionLabel', { hasText: /^safeArea$/ }) }).first();
+    await expect(option).toContainText('Viewport safe-area padding');
+    await option.click();
+    const source = await page.evaluate(() => (window as unknown as { __activeEditor: () => { view: { state: { doc: { toString(): string } } } } }).__activeEditor().view.state.doc.toString());
+    expect(source).toContain('env(safe-area-inset-top)');
+    expect(source).toContain('env(safe-area-inset-right)');
+    expect(source).toContain('env(safe-area-inset-bottom)');
+    expect(source).toContain('env(safe-area-inset-left)');
+  } finally {
+    await request.post('/api/workspace', { data: previous });
+    await fs.rm(root, { recursive: true, force: true, maxRetries: 5 });
+  }
+});

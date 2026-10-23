@@ -51,3 +51,4 @@ This tracks **additional** improvements beyond the existing features in `FRONTEN
 | 45 | Insert a `useSyncExternalStore` subscription with editable client and server snapshot functions. | Focused browser test | [VS Code snippet workflow](https://code.visualstudio.com/docs/editing/userdefinedsnippets) |
 | 46 | Insert a React list mapping block with a stable item key and linked item references. | Focused browser test | [VS Code snippet workflow](https://code.visualstudio.com/docs/editing/userdefinedsnippets) |
 | 47 | Insert a React list with an empty-state branch and stable keys. | Focused browser test | [VS Code snippet workflow](https://code.visualstudio.com/docs/editing/userdefinedsnippets) |
+| 48 | Insert viewport-safe padding for all four device insets, with linked fallback values. | Focused browser test | [VS Code snippet workflow](https://code.visualstudio.com/docs/editing/userdefinedsnippets) |

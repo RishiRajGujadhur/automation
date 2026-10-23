@@ -116,5 +116,8 @@ export function webSnippetCompletion(file: string, ctx: CompletionContext): Comp
   if (/\.(css|scss|sass|less)$/i.test(file) && 'logicalBox'.startsWith(word.text)) {
     options.push(snippetCompletion('padding-block: ${1:1rem};\n  padding-inline: ${2:1.5rem};\n  margin-block: ${3:0};\n  margin-inline: ${4:auto};${0}', { label: 'logicalBox', detail: 'Direction-aware spacing', type: 'text' }));
   }
+  if (/\.(css|scss|sass|less)$/i.test(file) && 'safeArea'.startsWith(word.text)) {
+    options.push(snippetCompletion('padding-block: max(${1:1rem}, env(safe-area-inset-top)) max(${1:1rem}, env(safe-area-inset-bottom));\n  padding-inline: max(${2:1rem}, env(safe-area-inset-left)) max(${2:1rem}, env(safe-area-inset-right));${0}', { label: 'safeArea', detail: 'Viewport safe-area padding', type: 'text' }));
+  }
   return options.length ? { from: word.from, options } : null;
 }
