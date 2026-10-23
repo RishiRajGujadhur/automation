@@ -679,6 +679,18 @@ test('44: layout effect snippet inserts hook and import', async ({ page, request
     expect(validationSource).toContain('aria-invalid={hasError}');
     expect(validationSource).toContain('aria-describedby={hasError ? "field-error" : undefined}');
     expect(validationSource).toContain('<p id="field-error" role="alert">Error message</p>');
+    await page.evaluate(() => {
+      const view = (window as unknown as { __activeEditor: () => { view: { state: { doc: { length: number } }; dispatch(change: unknown): void; focus(): void } } }).__activeEditor().view;
+      view.dispatch({ changes: { from: 0, to: view.state.doc.length, insert: 'actionState' }, selection: { anchor: 11 } });
+      view.focus();
+    });
+    await page.keyboard.press('Control+Space');
+    const actionOption = page.locator('.cm-tooltip-autocomplete li').filter({ has: page.locator('.cm-completionLabel', { hasText: /^actionState$/ }) }).first();
+    await expect(actionOption).toContainText('action state and pending');
+    await actionOption.click();
+    const actionSource = await page.evaluate(() => (window as unknown as { __activeEditor: () => { view: { state: { doc: { toString(): string } } } } }).__activeEditor().view.state.doc.toString());
+    expect(actionSource).toContain("import { useActionState } from 'react';");
+    expect(actionSource).toContain('const [state, dispatchAction, isPending] = useActionState(action, initialState);');
   } finally {
     await request.post('/api/workspace', { data: previous });
     await fs.rm(root, { recursive: true, force: true, maxRetries: 5 });

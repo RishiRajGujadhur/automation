@@ -74,6 +74,9 @@ export function webSnippetCompletion(file: string, ctx: CompletionContext): Comp
   if (/\.(jsx|tsx)$/i.test(file) && 'externalStore'.startsWith(word.text)) {
     options.push(reactHookCompletion('useSyncExternalStore', 'externalStore', 'React external store subscription with import', 'const ${1:snapshot} = useSyncExternalStore(${2:subscribe}, ${3:getSnapshot}, ${4:getServerSnapshot});${0}'));
   }
+  if (/\.(jsx|tsx)$/i.test(file) && 'actionState'.startsWith(word.text)) {
+    options.push(reactHookCompletion('useActionState', 'actionState', 'React action state and pending flag with import', 'const [${1:state}, ${2:dispatchAction}, ${3:isPending}] = useActionState(${4:action}, ${5:initialState});${0}'));
+  }
   if (/\.(jsx|tsx)$/i.test(file) && 'contextValue'.startsWith(word.text)) {
     options.push(reactHookCompletion('useContext', 'contextValue', 'React context value with import', 'const ${1:value} = useContext(${2:Context});${0}'));
   }
