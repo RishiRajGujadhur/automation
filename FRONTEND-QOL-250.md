@@ -92,3 +92,4 @@ This tracks **additional** improvements beyond the existing features in `FRONTEN
 | 86 | Insert a polite live status region for announcing dynamic updates. | Focused browser test | [VS Code snippet workflow](https://code.visualstudio.com/docs/editing/userdefinedsnippets) |
 | 87 | Insert a discriminated TypeScript Result type with typed success and failure constructors. | Focused browser test | [VS Code snippet workflow](https://code.visualstudio.com/docs/editing/userdefinedsnippets) |
 | 88 | Insert a null-check assertion function that narrows a TypeScript value to non-nullable. | Focused browser test | [VS Code snippet workflow](https://code.visualstudio.com/docs/editing/userdefinedsnippets) |
+| 89 | Insert a typed React previous-value hook, adding both missing hook imports together. | Focused browser test and TypeScript check | [VS Code snippet workflow](https://code.visualstudio.com/docs/editing/userdefinedsnippets) |

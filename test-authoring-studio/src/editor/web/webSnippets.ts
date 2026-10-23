@@ -6,26 +6,27 @@ export const frontendSnippetsEnabled = defineSetting<boolean>({ key: 'editor.fro
 export const frontendSnippetMinPrefix = defineSetting<number>({ key: 'editor.frontendSnippets.minPrefixLength', category: 'Text Editor ▸ Suggestions', title: 'Minimum Snippet Prefix', type: 'number', default: 2, min: 1, max: 5, description: 'Characters to type before frontend snippets appear automatically. Manual completion works at any prefix length.' });
 
 /** Put a missing React hook import after a top-of-file directive, preserving `use client`. */
-function reactHookCompletion(hook: string, label: string, detail: string, body: string, module = 'react'): Completion {
+function reactHookCompletion(hook: string | string[], label: string, detail: string, body: string, module = 'react'): Completion {
   return { ...snippetCompletion(body, { label, detail, type: 'text' }), apply: (view, _completion, originalFrom, originalTo) => {
     let from = originalFrom, to = originalTo;
     const source = view.state.doc.toString();
     const reactImports = [...source.matchAll(new RegExp(`import\\s*\\{([^}]*)\\}\\s*from\\s*['"]${module}['"]`, 'g'))];
-    const alreadyImported = reactImports.some((match) => match[1].split(',').some((member) =>
-      !/^type\s/.test(member.trim()) && new RegExp(`^${hook}(?:\\s|$)`).test(member.trim()) && !new RegExp(`^${hook}\\s+as\\b`).test(member.trim())));
-    if (!alreadyImported) {
+    const hooks = Array.isArray(hook) ? hook : [hook];
+    const missing = hooks.filter((name) => !reactImports.some((match) => match[1].split(',').some((member) =>
+      !/^type\s/.test(member.trim()) && new RegExp(`^${name}(?:\\s|$)`).test(member.trim()) && !new RegExp(`^${name}\\s+as\\b`).test(member.trim()))));
+    if (missing.length) {
       const existing = reactImports[0];
       let at: number;
       let added: string;
       if (existing) {
         const members = existing[1];
         at = existing.index + existing[0].indexOf('{') + 1 + members.trimEnd().length;
-        added = `${members.trim() && !members.trimEnd().endsWith(',') ? ', ' : ' '}${hook}`;
+        added = `${members.trim() && !members.trimEnd().endsWith(',') ? ', ' : ' '}${missing.join(', ')}`;
       } else {
         at = /^(?:(?:\s*\/\/[^\n]*\n)|(?:\s*\/\*[\s\S]*?\*\/\s*)|(?:[ \t]*\r?\n))*/.exec(source)?.[0].length ?? 0;
         const directive = /^(['"])use (?:client|server|strict)\1\s*;?[ \t]*(?:\r?\n|$)/;
         for (let match = directive.exec(source.slice(at)); match; match = directive.exec(source.slice(at))) at += match[0].length;
-        added = `import { ${hook} } from '${module}';\n`;
+        added = `import { ${missing.join(', ')} } from '${module}';\n`;
       }
       view.dispatch({ changes: { from: at, insert: added }, userEvent: 'input.complete' });
       if (at <= from) { from += added.length; to += added.length; }
@@ -64,6 +65,9 @@ export function webSnippetCompletion(file: string, ctx: CompletionContext): Comp
   }
   if (/\.(ts|tsx)$/i.test(file) && matches('useInterval')) {
     options.push(reactHookCompletion('useEffect', 'useInterval', 'React interval hook with pause and cleanup', 'function ${1:useInterval}(callback: () => void, delay: number | null) {\n  useEffect(() => {\n    if (delay === null) return;\n    const id = window.setInterval(callback, delay);\n    return () => window.clearInterval(id);\n  }, [callback, delay]);\n}${0}'));
+  }
+  if (/\.(ts|tsx)$/i.test(file) && matches('usePrevious')) {
+    options.push(reactHookCompletion(['useRef', 'useEffect'], 'usePrevious', 'React previous-value hook with both imports', 'function ${1:usePrevious}<T>(value: T): T | undefined {\n  const ref = useRef<T | undefined>(undefined);\n  useEffect(() => { ref.current = value; }, [value]);\n  return ref.current;\n}${0}'));
   }
   if (/\.(jsx|tsx)$/i.test(file) && matches('layoutEffect')) {
     options.push(reactHookCompletion('useLayoutEffect', 'layoutEffect', 'React layout effect with import', 'useLayoutEffect(() => {\n  ${1}\n}, [${2}]);${0}'));
