@@ -1181,3 +1181,30 @@ test('73: TypeScript utility snippets expand in source files', async ({ page, re
     await fs.rm(root, { recursive: true, force: true, maxRetries: 5 });
   }
 });
+
+test('93: JavaScript utility snippets expand without TypeScript syntax', async ({ page, request }) => {
+  const previous = (await (await request.get('/api/workspace')).json()).config;
+  const root = await fs.mkdtemp(path.join(os.tmpdir(), 'studio-js-utility-snippets-'));
+  try {
+    await fs.writeFile(path.join(root, 'utils.js'), 'fetchJson');
+    expect((await request.post('/api/workspace', { data: { repositoryRoot: root, targetProject: '.' } })).ok()).toBe(true);
+    await page.goto('/#/features/editor');
+    await expect(page.getByText('Repository indexed')).toBeVisible();
+    await page.evaluate(() => window.dispatchEvent(new CustomEvent('tas:open-location', { detail: { file: 'utils.js', line: 1 } })));
+    const editor = page.getByLabel('Source of utils.js');
+    await expect(editor).toBeVisible();
+    await editor.click();
+    await page.keyboard.press('Control+End');
+    await page.keyboard.press('Control+Space');
+    const option = page.locator('.cm-tooltip-autocomplete li').filter({ has: page.locator('.cm-completionLabel', { hasText: /^fetchJson$/ }) }).first();
+    await expect(option).toContainText('JSON request');
+    await option.click();
+    const source = await page.evaluate(() => (window as unknown as { __activeEditor: () => { view: { state: { doc: { toString(): string } } } } }).__activeEditor().view.state.doc.toString());
+    expect(source).toContain('async function fetchJson(url, signal)');
+    expect(source).toContain('return response.json();');
+    expect(source).not.toContain('<T>');
+  } finally {
+    await request.post('/api/workspace', { data: previous });
+    await fs.rm(root, { recursive: true, force: true, maxRetries: 5 });
+  }
+});

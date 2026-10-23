@@ -145,6 +145,9 @@ export function webSnippetCompletion(file: string, ctx: CompletionContext): Comp
   if (/\.(ts|tsx)$/i.test(file) && matches('fetchJson')) {
     options.push(snippetCompletion('async function ${1:fetchJson}<T>(url: string, signal?: AbortSignal): Promise<T> {\n  const response = await fetch(url, { signal });\n  if (!response.ok) throw new Error("HTTP " + response.status);\n  return await response.json() as T;\n}${0}', { label: 'fetchJson', detail: 'Typed JSON request with abort and HTTP error handling', type: 'text' }));
   }
+  if (/\.(js|jsx)$/i.test(file) && matches('fetchJson')) {
+    options.push(snippetCompletion('async function ${1:fetchJson}(url, signal) {\n  const response = await fetch(url, { signal });\n  if (!response.ok) throw new Error("HTTP " + response.status);\n  return response.json();\n}${0}', { label: 'fetchJson', detail: 'JSON request with abort and HTTP error handling', type: 'text' }));
+  }
   if (/\.(ts|tsx)$/i.test(file) && matches('typeGuard')) {
     options.push(snippetCompletion('type ${1:Thing} = { ${2:id}: string };\n\nfunction is${1:Thing}(value: unknown): value is ${1:Thing} {\n  return typeof value === "object" && value !== null && "${2:id}" in value && typeof value.${2:id} === "string";\n}${0}', { label: 'typeGuard', detail: 'Runtime checked TypeScript type guard', type: 'text' }));
   }
