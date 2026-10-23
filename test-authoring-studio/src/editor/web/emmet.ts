@@ -78,3 +78,20 @@ export function balanceHtmlOutward(view: EditorView): boolean {
   }
   return false;
 }
+
+/** Move a whole-element selection inward to its first child element, then to its text. */
+export function balanceHtmlInward(view: EditorView): boolean {
+  const selection = view.state.selection.main;
+  if (selection.empty) return false;
+  let node = syntaxTree(view.state).resolveInner(selection.from, 1);
+  while (node && (node.name !== 'Element' || node.from !== selection.from || node.to !== selection.to)) node = node.parent!;
+  if (!node) return false;
+  const child = node.getChild('Element');
+  const open = node.getChild('OpenTag');
+  const close = node.getChild('CloseTag');
+  const target = child ?? (open && close && open.to < close.from ? { from: open.to, to: close.from } : null);
+  if (!target) return false;
+  view.dispatch({ selection: { anchor: target.from, head: target.to }, scrollIntoView: true });
+  view.focus();
+  return true;
+}

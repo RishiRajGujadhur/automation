@@ -56,6 +56,18 @@ test('1: expands an HTML Emmet abbreviation with editable fields', async ({ page
       const view = (window as unknown as { __activeEditor: () => { view: { state: { sliceDoc(from: number, to: number): string; selection: { main: { from: number; to: number } } } } } }).__activeEditor().view;
       return view.state.sliceDoc(view.state.selection.main.from, view.state.selection.main.to);
     })).toBe('<div><p>Hello</p></div>');
+    await page.keyboard.press('Shift+F10');
+    await page.getByRole('menuitem', { name: 'Select Nested HTML Content' }).click();
+    await expect.poll(() => page.evaluate(() => {
+      const view = (window as unknown as { __activeEditor: () => { view: { state: { sliceDoc(from: number, to: number): string; selection: { main: { from: number; to: number } } } } } }).__activeEditor().view;
+      return view.state.sliceDoc(view.state.selection.main.from, view.state.selection.main.to);
+    })).toBe('<p>Hello</p>');
+    await page.keyboard.press('Shift+F10');
+    await page.getByRole('menuitem', { name: 'Select Nested HTML Content' }).click();
+    await expect.poll(() => page.evaluate(() => {
+      const view = (window as unknown as { __activeEditor: () => { view: { state: { sliceDoc(from: number, to: number): string; selection: { main: { from: number; to: number } } } } } }).__activeEditor().view;
+      return view.state.sliceDoc(view.state.selection.main.from, view.state.selection.main.to);
+    })).toBe('Hello');
     await page.evaluate(() => {
       const view = (window as unknown as { __activeEditor: () => { view: { state: { doc: { length: number } }; dispatch(change: unknown): void; focus(): void } } }).__activeEditor().view;
       view.dispatch({ changes: { from: 0, to: view.state.doc.length, insert: 'ul>li.item*2' }, selection: { anchor: 'ul>li.item*2'.length } });

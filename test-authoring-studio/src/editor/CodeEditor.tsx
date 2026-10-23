@@ -3,7 +3,7 @@ import { styleFeatures, colorPreviews } from './web/styleFeatures';
 import { markupFeatures } from './web/markupFeatures';
 import { scriptFeatures } from './web/scriptFeatures';
 import { webKeys } from './web/webKeys';
-import { balanceHtmlOutward, expandCssAtCursor, expandHtmlAtCursor, expandJsxAtCursor, wrapHtmlSelection, wrapJsxSelection } from './web/emmet';
+import { balanceHtmlInward, balanceHtmlOutward, expandCssAtCursor, expandHtmlAtCursor, expandJsxAtCursor, wrapHtmlSelection, wrapJsxSelection } from './web/emmet';
 import { applyRefactor } from '../rider/refactor400';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import CodeMirror, { type ReactCodeMirrorRef } from '@uiw/react-codemirror';
@@ -568,6 +568,9 @@ export default function CodeEditor({ file, reveal, active = true, onNotice, onIn
           } }, { label: 'Select Enclosing HTML Element', icon: CodeIcon, onSelect: () => {
             const view = ref.current?.view;
             if (view && !balanceHtmlOutward(view)) onNotice?.('No enclosing HTML element.');
+          } }, { label: 'Select Nested HTML Content', icon: CodeIcon, onSelect: () => {
+            const view = ref.current?.view;
+            if (view && !balanceHtmlInward(view)) onNotice?.('No nested HTML content.');
           } }, 'separator' as const] : []),
           ...(STYLE_FILE.test(file) ? [{ label: 'Expand CSS Emmet Abbreviation', icon: CodeIcon, onSelect: () => {
             const view = ref.current?.view;
