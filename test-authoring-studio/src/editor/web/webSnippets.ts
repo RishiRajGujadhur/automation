@@ -1,11 +1,11 @@
 import { snippet, snippetCompletion, type Completion, type CompletionContext, type CompletionResult } from '@codemirror/autocomplete';
 
 /** Put a missing React hook import after a top-of-file directive, preserving `use client`. */
-function reactHookCompletion(hook: string, label: string, detail: string, body: string): Completion {
+function reactHookCompletion(hook: string, label: string, detail: string, body: string, module = 'react'): Completion {
   return { ...snippetCompletion(body, { label, detail, type: 'text' }), apply: (view, _completion, originalFrom, originalTo) => {
     let from = originalFrom, to = originalTo;
     const source = view.state.doc.toString();
-    const reactImports = [...source.matchAll(/import\s*\{([^}]*)\}\s*from\s*['"]react['"]/g)];
+    const reactImports = [...source.matchAll(new RegExp(`import\\s*\\{([^}]*)\\}\\s*from\\s*['"]${module}['"]`, 'g'))];
     const alreadyImported = reactImports.some((match) => match[1].split(',').some((member) =>
       !/^type\s/.test(member.trim()) && new RegExp(`^${hook}(?:\\s|$)`).test(member.trim()) && !new RegExp(`^${hook}\\s+as\\b`).test(member.trim())));
     if (!alreadyImported) {
@@ -20,7 +20,7 @@ function reactHookCompletion(hook: string, label: string, detail: string, body: 
         at = /^(?:(?:\s*\/\/[^\n]*\n)|(?:\s*\/\*[\s\S]*?\*\/\s*)|(?:[ \t]*\r?\n))*/.exec(source)?.[0].length ?? 0;
         const directive = /^(['"])use (?:client|server|strict)\1\s*;?[ \t]*(?:\r?\n|$)/;
         for (let match = directive.exec(source.slice(at)); match; match = directive.exec(source.slice(at))) at += match[0].length;
-        added = `import { ${hook} } from 'react';\n`;
+        added = `import { ${hook} } from '${module}';\n`;
       }
       view.dispatch({ changes: { from: at, insert: added }, userEvent: 'input.complete' });
       if (at <= from) { from += added.length; to += added.length; }
@@ -79,6 +79,9 @@ export function webSnippetCompletion(file: string, ctx: CompletionContext): Comp
   }
   if (/\.(jsx|tsx)$/i.test(file) && 'optimisticState'.startsWith(word.text)) {
     options.push(reactHookCompletion('useOptimistic', 'optimisticState', 'React optimistic UI state with import', 'const [${1:optimisticValue}, ${2:setOptimisticValue}] = useOptimistic(${3:value});${0}'));
+  }
+  if (/\.(jsx|tsx)$/i.test(file) && 'formStatus'.startsWith(word.text)) {
+    options.push(reactHookCompletion('useFormStatus', 'formStatus', 'React form pending status in child component', 'const { ${1:pending} } = useFormStatus();${0}', 'react-dom'));
   }
   if (/\.(jsx|tsx)$/i.test(file) && 'contextValue'.startsWith(word.text)) {
     options.push(reactHookCompletion('useContext', 'contextValue', 'React context value with import', 'const ${1:value} = useContext(${2:Context});${0}'));

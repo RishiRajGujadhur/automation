@@ -703,6 +703,18 @@ test('44: layout effect snippet inserts hook and import', async ({ page, request
     const optimisticSource = await page.evaluate(() => (window as unknown as { __activeEditor: () => { view: { state: { doc: { toString(): string } } } } }).__activeEditor().view.state.doc.toString());
     expect(optimisticSource).toContain("import { useOptimistic } from 'react';");
     expect(optimisticSource).toContain('const [optimisticValue, setOptimisticValue] = useOptimistic(value);');
+    await page.evaluate(() => {
+      const view = (window as unknown as { __activeEditor: () => { view: { state: { doc: { length: number } }; dispatch(change: unknown): void; focus(): void } } }).__activeEditor().view;
+      view.dispatch({ changes: { from: 0, to: view.state.doc.length, insert: 'formStatus' }, selection: { anchor: 10 } });
+      view.focus();
+    });
+    await page.keyboard.press('Control+Space');
+    const formOption = page.locator('.cm-tooltip-autocomplete li').filter({ has: page.locator('.cm-completionLabel', { hasText: /^formStatus$/ }) }).first();
+    await expect(formOption).toContainText('form pending status');
+    await formOption.click();
+    const formSource = await page.evaluate(() => (window as unknown as { __activeEditor: () => { view: { state: { doc: { toString(): string } } } } }).__activeEditor().view.state.doc.toString());
+    expect(formSource).toContain("import { useFormStatus } from 'react-dom';");
+    expect(formSource).toContain('const { pending } = useFormStatus();');
   } finally {
     await request.post('/api/workspace', { data: previous });
     await fs.rm(root, { recursive: true, force: true, maxRetries: 5 });
