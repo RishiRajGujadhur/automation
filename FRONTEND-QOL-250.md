@@ -25,3 +25,4 @@ This tracks **additional** improvements beyond the existing features in `FRONTEN
 | 19 | Insert a flexbox container with alignment and an editable gap from the `flexc` CSS snippet. | Focused browser test | [VS Code snippet workflow](https://code.visualstudio.com/docs/editing/userdefinedsnippets) |
 | 20 | Insert a CSS grid container with editable column count and gap from the `gridc` snippet. | Focused browser test | [VS Code snippet workflow](https://code.visualstudio.com/docs/editing/userdefinedsnippets) |
 | 21 | Insert a responsive media query block with an editable breakpoint from the `mediaq` snippet. | Focused browser test | [VS Code snippet workflow](https://code.visualstudio.com/docs/editing/userdefinedsnippets) |
+| 22 | Insert a container query block with an editable size threshold from the `containerq` snippet. | Focused browser test | [VS Code snippet workflow](https://code.visualstudio.com/docs/editing/userdefinedsnippets) |

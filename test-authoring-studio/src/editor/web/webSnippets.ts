@@ -20,5 +20,8 @@ export function webSnippetCompletion(file: string, ctx: CompletionContext): Comp
   if (/\.(css|scss|sass|less)$/i.test(file) && 'mediaq'.startsWith(word.text)) {
     options.push(snippetCompletion('@media (min-width: ${1:768px}) {\n  ${0}\n}', { label: 'mediaq', detail: 'Responsive media query', type: 'text' }));
   }
+  if (/\.(css|scss|sass|less)$/i.test(file) && 'containerq'.startsWith(word.text)) {
+    options.push(snippetCompletion('@container (min-width: ${1:30rem}) {\n  ${0}\n}', { label: 'containerq', detail: 'Container query', type: 'text' }));
+  }
   return options.length ? { from: word.from, options } : null;
 }
