@@ -200,5 +200,8 @@ export function webSnippetCompletion(file: string, ctx: CompletionContext): Comp
   if (/\.(css|scss|sass|less)$/i.test(file) && matches('scrollSnap')) {
     options.push(snippetCompletion('display: flex;\n  overflow-x: auto;\n  scroll-snap-type: x ${1:mandatory};\n  scroll-padding-inline: ${2:1rem};\n  gap: ${3:1rem};\n  & > * { scroll-snap-align: ${4:start}; }${0}', { label: 'scrollSnap', detail: 'Horizontal scroll-snap container and items', type: 'text' }));
   }
+  if (/\.(css|scss|sass|less)$/i.test(file) && matches('cascadeLayer')) {
+    options.push(snippetCompletion('@layer reset, base, components, utilities;\n\n@layer ${1:components} {\n  ${2:.component} {\n    ${0}\n  }\n}', { label: 'cascadeLayer', detail: 'Ordered CSS cascade layers', type: 'text' }));
+  }
   return options.length ? { from: word.from, options } : null;
 }

@@ -82,3 +82,4 @@ This tracks **additional** improvements beyond the existing features in `FRONTEN
 | 76 | Insert a TypeScript debounce helper that preserves the callback argument tuple. | Focused browser test | [VS Code snippet workflow](https://code.visualstudio.com/docs/editing/userdefinedsnippets) |
 | 77 | Insert a typed window event listener inside a React effect with matching cleanup and event name. | Focused browser test | [VS Code snippet workflow](https://code.visualstudio.com/docs/editing/userdefinedsnippets) |
 | 78 | Insert a React interval hook that supports pausing and cleans up its timer. | Focused browser test | [VS Code snippet workflow](https://code.visualstudio.com/docs/editing/userdefinedsnippets) |
+| 79 | Insert an ordered CSS cascade layer declaration and editable component layer block. | Focused browser test | [VS Code snippet workflow](https://code.visualstudio.com/docs/editing/userdefinedsnippets) |

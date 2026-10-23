@@ -820,6 +820,18 @@ test('48: CSS safe-area snippet preserves viewport insets', async ({ page, reque
     expect(snapSource).toContain('scroll-snap-align: start;');
     await page.evaluate(() => {
       const view = (window as unknown as { __activeEditor: () => { view: { state: { doc: { length: number } }; dispatch(change: unknown): void; focus(): void } } }).__activeEditor().view;
+      view.dispatch({ changes: { from: 0, to: view.state.doc.length, insert: 'cascadeLayer' }, selection: { anchor: 12 } });
+      view.focus();
+    });
+    await page.keyboard.press('Control+Space');
+    const layerOption = page.locator('.cm-tooltip-autocomplete li').filter({ has: page.locator('.cm-completionLabel', { hasText: /^cascadeLayer$/ }) }).first();
+    await expect(layerOption).toContainText('Ordered CSS cascade layers');
+    await layerOption.click();
+    const layerSource = await page.evaluate(() => (window as unknown as { __activeEditor: () => { view: { state: { doc: { toString(): string } } } } }).__activeEditor().view.state.doc.toString());
+    expect(layerSource).toContain('@layer reset, base, components, utilities;');
+    expect(layerSource).toContain('@layer components {');
+    await page.evaluate(() => {
+      const view = (window as unknown as { __activeEditor: () => { view: { state: { doc: { length: number } }; dispatch(change: unknown): void; focus(): void } } }).__activeEditor().view;
       const next = '.box { color: flexc; }';
       view.dispatch({ changes: { from: 0, to: view.state.doc.length, insert: next }, selection: { anchor: next.indexOf('flexc') + 'flexc'.length } });
       view.focus();
