@@ -4,7 +4,7 @@
 //   3. resources the API expects under STUDIO_ROOT: dist/, fixtures/, scanner/bin/ (when built);
 //   4. the Electron main process (ESM) and preload (CommonJS, required for sandboxed preloads) into out/.
 import { build } from 'esbuild';
-import { execSync } from 'node:child_process';
+import { execSync, execFileSync } from 'node:child_process';
 import { cpSync, existsSync, mkdirSync, rmSync, writeFileSync, readFileSync, readdirSync, statSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -17,6 +17,8 @@ const skipStudio = process.argv.includes('--skip-studio');
 const step = (m) => console.log(`\x1b[36m›\x1b[0m ${m}`);
 
 if (!existsSync(path.join(studio, 'package.json'))) throw new Error(`Studio not found at ${studio}`);
+step('Refreshing the desktop icon from the current studio SVG…');
+execFileSync(process.execPath, [path.join(root, 'scripts/icon.mjs')], { cwd: root, stdio: 'inherit' });
 if (!skipStudio || !existsSync(path.join(studio, 'dist/index.html'))) {
   step('Building the studio client (vite)…');
   execSync('npm run build', { cwd: studio, stdio: 'inherit' });
