@@ -8,6 +8,7 @@ import { gateSource } from '../../vscode/suggestions';
 import { doComplete } from '@vscode/emmet-helper';
 import { TextDocument } from 'vscode-languageserver-textdocument';
 import { cmSnippet } from './markupFeatures';
+import { emmetSettings } from './emmet';
 
 /**
  * TypeScript / JavaScript in the editor (FRONTEND-100.md): the TypeScript service's diagnostics (unused code faded),
@@ -55,7 +56,7 @@ async function complete(file: string, ctx: CompletionContext): Promise<Completio
 
 /** Offer React-compatible Emmet snippets when a structural abbreviation is explicitly typed. */
 function jsxEmmetComplete(file: string, ctx: CompletionContext): CompletionResult | null {
-  if (!/\.(jsx|tsx)$/i.test(file)) return null;
+  if (!/\.(jsx|tsx)$/i.test(file) || emmetSettings.suggestions() !== 'always') return null;
   const document = TextDocument.create(file, 'jsx', 1, ctx.state.doc.toString());
   const items = doComplete(document, document.positionAt(ctx.pos), 'jsx', {})?.items ?? [];
   const options: Completion[] = [];

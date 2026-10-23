@@ -7,6 +7,7 @@ import { defineSetting } from '../../vscode/settings';
 
 export const emmetSettings = {
   tab: defineSetting<boolean>({ key: 'emmet.triggerExpansionOnTab', category: 'Text Editor ▸ Emmet', title: 'Expand on Tab', type: 'boolean', default: true, description: 'Expand a recognized Emmet abbreviation with Tab. When disabled, Tab follows the normal indentation and snippet behavior.' }),
+  suggestions: defineSetting<'always' | 'never' | 'inMarkupAndStylesheetFilesOnly'>({ key: 'emmet.showExpandedAbbreviation', category: 'Text Editor ▸ Emmet', title: 'Show Expanded Abbreviations', type: 'enum', default: 'always', options: [{ value: 'always' }, { value: 'inMarkupAndStylesheetFilesOnly' }, { value: 'never' }], description: 'Choose where Emmet expansions appear in completion. The expand command remains available when suggestions are hidden.' }),
 };
 
 /** Expand the abbreviation directly before the caret, preserving Emmet's editable snippet fields. */

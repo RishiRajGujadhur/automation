@@ -164,13 +164,13 @@ test('4: expands JSX Emmet with React className attributes', async ({ page, requ
   }
 });
 
-test('13: Emmet Tab expansion can be disabled in settings', async ({ page, request }) => {
+test('13–14: Emmet Tab and completion can be disabled independently of the expand command', async ({ page, request }) => {
   const previous = (await (await request.get('/api/workspace')).json()).config;
   const root = await fs.mkdtemp(path.join(os.tmpdir(), 'studio-emmet-setting-'));
   try {
     await fs.writeFile(path.join(root, 'index.html'), 'ul>li.item*2');
     expect((await request.post('/api/workspace', { data: { repositoryRoot: root, targetProject: '.' } })).ok()).toBe(true);
-    await page.addInitScript(() => localStorage.setItem('tas:settings', JSON.stringify({ 'emmet.triggerExpansionOnTab': false })));
+    await page.addInitScript(() => localStorage.setItem('tas:settings', JSON.stringify({ 'emmet.triggerExpansionOnTab': false, 'emmet.showExpandedAbbreviation': 'never' })));
     await page.goto('/#/features/editor');
     await expect(page.getByText('Repository indexed')).toBeVisible();
     await page.evaluate(() => window.dispatchEvent(new CustomEvent('tas:open-location', { detail: { file: 'index.html', line: 1 } })));
@@ -181,6 +181,12 @@ test('13: Emmet Tab expansion can be disabled in settings', async ({ page, reque
     await page.keyboard.press('Tab');
     await expect(editor).toContainText('ul>li.item*2');
     await expect(editor).not.toContainText('<li class="item">');
+    await page.keyboard.press('Control+Space');
+    await expect(page.locator('.cm-tooltip-autocomplete li').filter({ hasText: 'Emmet' })).toHaveCount(0);
+    await page.keyboard.press('Escape');
+    await editor.click({ button: 'right' });
+    await page.getByRole('menuitem', { name: 'Expand Emmet Abbreviation' }).click();
+    await expect(editor).toContainText('<li class="item">');
   } finally {
     await request.post('/api/workspace', { data: previous });
     await fs.rm(root, { recursive: true, force: true, maxRetries: 5 });
