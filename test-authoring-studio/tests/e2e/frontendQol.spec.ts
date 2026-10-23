@@ -658,6 +658,19 @@ test('48: CSS safe-area snippet preserves viewport insets', async ({ page, reque
     expect(source).toContain('env(safe-area-inset-right)');
     expect(source).toContain('env(safe-area-inset-bottom)');
     expect(source).toContain('env(safe-area-inset-left)');
+    await page.evaluate(() => {
+      const view = (window as unknown as { __activeEditor: () => { view: { state: { doc: { length: number } }; dispatch(change: unknown): void; focus(): void } } }).__activeEditor().view;
+      view.dispatch({ changes: { from: 0, to: view.state.doc.length, insert: 'stickyHeader' }, selection: { anchor: 12 } });
+      view.focus();
+    });
+    await page.keyboard.press('Control+Space');
+    const stickyOption = page.locator('.cm-tooltip-autocomplete li').filter({ has: page.locator('.cm-completionLabel', { hasText: /^stickyHeader$/ }) }).first();
+    await expect(stickyOption).toContainText('Sticky header');
+    await stickyOption.click();
+    const stickySource = await page.evaluate(() => (window as unknown as { __activeEditor: () => { view: { state: { doc: { toString(): string } } } } }).__activeEditor().view.state.doc.toString());
+    expect(stickySource).toContain('position: sticky;');
+    expect(stickySource).toContain('z-index: 10;');
+    expect(stickySource).toContain('background: var(--surface, #fff);');
   } finally {
     await request.post('/api/workspace', { data: previous });
     await fs.rm(root, { recursive: true, force: true, maxRetries: 5 });

@@ -119,5 +119,8 @@ export function webSnippetCompletion(file: string, ctx: CompletionContext): Comp
   if (/\.(css|scss|sass|less)$/i.test(file) && 'safeArea'.startsWith(word.text)) {
     options.push(snippetCompletion('padding-block: max(${1:1rem}, env(safe-area-inset-top)) max(${1:1rem}, env(safe-area-inset-bottom));\n  padding-inline: max(${2:1rem}, env(safe-area-inset-left)) max(${2:1rem}, env(safe-area-inset-right));${0}', { label: 'safeArea', detail: 'Viewport safe-area padding', type: 'text' }));
   }
+  if (/\.(css|scss|sass|less)$/i.test(file) && 'stickyHeader'.startsWith(word.text)) {
+    options.push(snippetCompletion('position: sticky;\n  top: ${1:0};\n  z-index: ${2:10};\n  background: ${3:var(--surface, #fff)};${0}', { label: 'stickyHeader', detail: 'Sticky header with stacking and background', type: 'text' }));
+  }
   return options.length ? { from: word.from, options } : null;
 }
