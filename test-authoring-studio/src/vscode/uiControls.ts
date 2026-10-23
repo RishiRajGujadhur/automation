@@ -1,10 +1,9 @@
 import { defineSetting, importSettings, onSettingsChanged } from './settings';
-import { isDesktop } from '../desktop';
 
 /** Guide Me stays available from Help and the command palette. */
-export const showGuideMe = isDesktop ? () => true : defineSetting<boolean>({ key: 'general.showGuideMe', category: 'General', title: 'Show Guide Me button', type: 'boolean', default: false, description: 'Show the guided tour button in the title bar.' });
+export const showGuideMe = defineSetting<boolean>({ key: 'general.showGuideMe', category: 'General', title: 'Show Guide Me button', type: 'boolean', default: false, description: 'Show the guided tour button in the title bar.' });
 
-/** Web workbench button visibility. The underlying commands and shortcuts are unchanged. */
+/** Workbench button visibility in web and desktop. The underlying commands and shortcuts are unchanged. */
 const controls = [
   // Activity bar
   ['activity-dashboard', 'Dashboard', true, ''],
@@ -86,13 +85,13 @@ const controls = [
   ['status-diagnostics', 'Diagnostics', false, '.status-bar button[aria-label="Open diagnostics"]'],
 ] as const satisfies readonly (readonly [string, string, boolean, string])[];
 
-const getters = Object.fromEntries((isDesktop ? [] : controls).map(([id, title, essential]) => [id, defineSetting<boolean>({
+const getters = Object.fromEntries(controls.map(([id, title, essential]) => [id, defineSetting<boolean>({
   key: `workbench.controls.${id}`, category: 'Workbench ▸ Buttons', title, type: 'boolean', default: essential,
   description: id.startsWith('activity-') ? 'Visible in the activity bar when this page is enabled' : 'Visible in the workbench',
 })])) as Record<string, () => boolean>;
 
-export const controlVisible = (id: string) => isDesktop || (getters[id]?.() ?? true);
-export const setControlProfile = (profile: 'essentials' | 'all') => isDesktop ? 0 : importSettings(JSON.stringify(Object.fromEntries(controls.map(([id, , essential]) => [`workbench.controls.${id}`, profile === 'all' || essential]))));
+export const controlVisible = (id: string) => getters[id]?.() ?? true;
+export const setControlProfile = () => importSettings(JSON.stringify(Object.fromEntries(controls.map(([id, , essential]) => [`workbench.controls.${id}`, essential]))));
 export const activityControlId: Record<string, string> = {
   Dashboard: 'activity-dashboard', Features: 'activity-features', Search: 'activity-search', Testing: 'activity-testing', Git: 'activity-git',
   'Test Generator': 'activity-generator', Recorder: 'activity-recorder', 'Dictionary Inspector': 'activity-dictionary',

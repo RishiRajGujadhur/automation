@@ -1,7 +1,6 @@
 import { defineSetting, setSetting } from './settings';
-import { isDesktop } from '../desktop';
 
-/** Optional web pages and side views. The feature editor is always available. */
+/** Optional pages and side views. The feature editor is always available. */
 const pages = [
   ['Dashboard', 'Dashboard'],
   ['Test Generator', 'Test Generator'],
@@ -28,18 +27,17 @@ const activityButtons: Record<string, string> = {
   Backgrounds: 'activity-backgrounds', Selectors: 'activity-selectors', 'Project Explorer': 'activity-project',
   Search: 'activity-search', Testing: 'activity-testing', Git: 'activity-git',
 };
-const getters = Object.fromEntries((isDesktop ? [] : pages).map(([id, title]) => [id, defineSetting<boolean>({
+const getters = Object.fromEntries(pages.map(([id, title]) => [id, defineSetting<boolean>({
   key: keyOf(id), category: 'Pages', title, type: 'boolean', default: false,
   description: 'Show in navigation',
 })])) as Record<string, () => boolean>;
 
 export const pageVisible = (name: string) => {
-  if (isDesktop || name === 'Features' || name === 'Editor') return true;
+  if (name === 'Features' || name === 'Editor') return true;
   return getters[aliases[name] ?? name]?.() ?? true;
 };
 
 export const setPageVisible = (name: string, visible: boolean) => {
-  if (isDesktop) return;
   const id = aliases[name] ?? name;
   setSetting(keyOf(id), visible);
   if (visible && activityButtons[id]) setSetting(`workbench.controls.${activityButtons[id]}`, true);

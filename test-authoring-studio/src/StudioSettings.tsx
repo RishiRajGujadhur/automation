@@ -18,7 +18,6 @@ import { defaultPrefs } from './radix2';
 import { settingCategories, settingRows } from './vscode/settingsRows';
 import { exportSettings, importSettings, useSettings } from './vscode/settings';
 import { setControlProfile } from './vscode/uiControls';
-import { isDesktop } from './desktop';
 import { FEATURES, GROUPS, featureOn, featurePreset, setFeature, setFeaturePreset, setFeatures, useFeatures, featureChanged } from './features';
 
 type Settings = { webPort: number; apiPort: number; tracing: { enabled: boolean; screenshots: boolean; snapshots: boolean; sources: boolean } };
@@ -105,7 +104,7 @@ export default function StudioSettings({ onNotice, onWorkspace, shortcuts, onClo
   const rows: Row[] = useMemo(() => [
     // General
     {
-      id: 'mode', section: 'General', title: 'Interface mode (Basic / Advanced)', description: isDesktop ? 'Basic shows Dashboard, Test Generator and Playwright Recorder. Advanced adds Features, Dictionary Inspector and more tools. Ctrl/Cmd+Shift+A switches.' : 'Choose your interface mode here. Settings > Pages controls which pages appear in navigation. Ctrl/Cmd+Shift+A switches modes.', keywords: 'basic advanced simple navigation menu hide pages',
+      id: 'mode', section: 'General', title: 'Interface mode (Basic / Advanced)', description: 'Choose your interface mode here. Settings > Pages controls which pages appear in navigation. Ctrl/Cmd+Shift+A switches modes.', keywords: 'basic advanced simple navigation menu hide pages',
       control: <Segmented label="Interface mode" value={prefs.mode} onValueChange={(v) => setPrefs({ mode: v })} options={[{ value: 'basic', label: 'Basic' }, { value: 'advanced', label: 'Advanced' }]} />,
     },
     { id: 'project-model', section: 'General', title: 'Show project model', description: 'The panel beside the Test Generator listing project files by layer, with the files the current test touches highlighted.', keywords: 'project model sidebar panel generator layers files', control: sw('pref-project-model', prefs.showProjectModel, (v) => setPrefs({ showProjectModel: v }), 'Show project model') },
@@ -280,9 +279,7 @@ export default function StudioSettings({ onNotice, onWorkspace, shortcuts, onClo
       ];
     }),
     // VS Code–style settings
-    ...(!isDesktop ? [
-      { id: 'button-profile', section: 'Workbench ▸ Buttons', title: 'Button profile', description: 'Restore the compact essential set or show every workbench button. Individual switches below can then be adjusted.', keywords: 'buttons controls toolbar essentials all reset', control: <span className="button-row"><Button size="small" onClick={() => setControlProfile('essentials')}>Essentials</Button><Button size="small" variant="ghost" onClick={() => setControlProfile('all')}>Show all</Button></span> } as Row,
-    ] : []),
+    { id: 'button-profile', section: 'Workbench ▸ Buttons', title: 'Essential buttons', description: 'Restore the compact button set. Enable any additional button with its own switch below.', keywords: 'buttons controls toolbar essentials reset', control: <Button size="small" onClick={() => setControlProfile()}>Restore essentials</Button> },
     ...settingRows(),
     {
       id: 'settings-json', section: 'Workbench', title: 'Settings (JSON)', description: 'Copy the changed settings as settings.json, or apply a settings.json (unknown ids and invalid values are skipped).', keywords: 'settings.json json export import copy share',

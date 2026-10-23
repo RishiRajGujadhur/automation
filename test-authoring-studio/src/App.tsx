@@ -277,9 +277,8 @@ export default function App() {
     return value;
   }), []);
   const [config, setConfig] = useState<any>();
-  const { prefs: startPrefs } = usePrefs();
-  const [tab, setTab] = useLocalState(desktop ? 'tab' : 'tab-v2', desktop && startPrefs.mode !== 'advanced' ? 'Dashboard' : 'Features');
-  const [view, setView] = useLocalState(desktop ? 'view' : 'view-v2', desktop ? 'recorder' : 'editor');
+  const [tab, setTab] = useLocalState(desktop ? 'tab' : 'tab-v2', 'Features');
+  const [view, setView] = useLocalState(desktop ? 'view' : 'view-v2', 'editor');
   const [feature, setFeature] = useState<Feature>();
   const [source, setSource] = useState('');
   const [query, setQuery] = useState('');
@@ -815,19 +814,15 @@ export default function App() {
   const { prefs, setPrefs } = usePrefs();
   const basic = prefs.mode !== 'advanced';
   modeRef.current = prefs.mode;
-  const previousSettingsVersion = useRef(settingsVersion);
   useEffect(() => {
-    if (previousSettingsVersion.current === settingsVersion) return;
-    previousSettingsVersion.current = settingsVersion;
     if (!pageVisible(tab) || (tab === 'Features' && ((view === 'recorder' && !pageVisible('Recorder')) || (view === 'builder' && !pageVisible('Scenario Builder')) || (view === 'spy' && !pageVisible('Spy'))))) {
       setTab('Features');
       setView('editor');
     }
   }, [settingsVersion, tab, view, setTab, setView]);
   // Page switches decide which destinations appear; the feature editor always remains available.
-  const navTabs = tabs.filter((t) => pageVisible(t.name) && (!desktop || !basic || ['Dashboard', 'Test Generator', 'Features'].includes(t.name)));
+  const navTabs = tabs.filter((t) => pageVisible(t.name));
   const onRecorder = tab === 'Features' && view === 'recorder';
-  const hiddenInBasic = !!desktop && basic && !['Dashboard', 'Test Generator', 'Features'].includes(tab);
   // VS Code-style shell (activity bar, slim title bar, full-height editor) unless the classic tab layout is chosen.
   const vscode = prefs.layout !== 'classic';
   const featureViewOptions = [
@@ -848,7 +843,7 @@ export default function App() {
   ) : null;
   const setMode = (mode: 'basic' | 'advanced') => {
     setPrefs({ mode });
-    setNotice(desktop ? (mode === 'advanced' ? 'Advanced mode: every page is in the navigation.' : 'Basic mode: Dashboard, Test Generator and Playwright Recorder. Other pages stay reachable from Ctrl/Cmd+K.') : `Interface mode: ${mode}. Choose visible pages in Settings > Pages.`);
+    setNotice(`Interface mode: ${mode}. Choose visible pages in Settings > Pages.`);
   };
   const confirm = useConfirm();
   const [sidebarWidth, setSidebarWidth] = useLocalState('sidebarWidth', SIDEBAR_DEFAULT);
@@ -1040,11 +1035,11 @@ export default function App() {
       const typing = /^(INPUT|TEXTAREA|SELECT)$/.test((e.target as HTMLElement)?.tagName) || (e.target as HTMLElement)?.isContentEditable;
       if (e.altKey && /^[1-4]$/.test(e.key)) {
         e.preventDefault();
-        const visible = tabs.filter((t) => pageVisible(t.name) && (!desktop || modeRef.current === 'advanced' || ['Dashboard', 'Test Generator', 'Features'].includes(t.name)));
+        const visible = tabs.filter((t) => pageVisible(t.name));
         const target = visible[Number(e.key) - 1];
         if (target) { setTab(target.name); if (target.name === 'Features') setView('editor'); }
       }
-      if (e.altKey && e.key === '5' && (!desktop || modeRef.current === 'advanced') && pageVisible('Test Design')) { e.preventDefault(); setTab('Test Design'); }
+      if (e.altKey && e.key === '5' && pageVisible('Test Design')) { e.preventDefault(); setTab('Test Design'); }
       if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key.toLowerCase() === 'a') {
         e.preventDefault();
         setPrefs({ mode: modeRef.current === 'advanced' ? 'basic' : 'advanced' });
@@ -1322,7 +1317,7 @@ export default function App() {
     ...navTabs.map((t) => ({ group: 'Page' as const, label: t.name, run: () => navigate(t.name) })),
   ]);
   const menuProps = {
-    pages: basic && desktop ? [] : moreTabs.filter((t) => pageVisible(t.name)).map((t) => ({ ...t })),
+    pages: moreTabs.filter((t) => pageVisible(t.name)).map((t) => ({ ...t })),
     primary: navTabs.map((t, i) => ({ name: t.name, icon: t.icon, hint: `Alt+${i + 1}` })),
     active: tab,
     onNavigate: navigate,
@@ -1601,7 +1596,7 @@ export default function App() {
           </span>
         )}
         {vscode && tab === 'Features' && featureViewSwitch}
-        {vscode && (!basic || !desktop) && <AppMenuButton {...menuProps} />}
+        {vscode && <AppMenuButton {...menuProps} />}
         {vscode && featureOn('layout-controls') && (
           <div className="layout-controls" role="group" aria-label="Layout">
             <IconButton label="Customize Layout…" onClick={() => customizeLayout()}><span className="codicon codicon-layout" aria-hidden="true" /></IconButton>
@@ -1610,7 +1605,7 @@ export default function App() {
             <IconButton label="Toggle Secondary Side Bar" aria-pressed={!!secondary} shortcut="Ctrl+Alt+B" onClick={() => setSecondary((x) => (x ? null : 'structure'))}><PanelRight size={16} /></IconButton>
           </div>
         )}
-        {(desktop || showGuideMe()) && <Button
+        {showGuideMe() && <Button
           id="guide-me" className="guide-button"
           disabled={!index || busy}
           onClick={() => {
@@ -1673,7 +1668,7 @@ export default function App() {
             </NavigationMenu.Link>
             </NavigationMenu.Item>
           ))}
-          {(!basic || !desktop) && moreTabs.filter((t) => t.name === tab && pageVisible(t.name)).map((t) => (
+          {moreTabs.filter((t) => t.name === tab && pageVisible(t.name)).map((t) => (
             <NavigationMenu.Item key={t.name}>
               <button className="nav-tab active" aria-current="page">
                 <Icon icon={t.icon} />
@@ -1681,7 +1676,7 @@ export default function App() {
               </button>
             </NavigationMenu.Item>
           ))}
-          {(!basic || !desktop) && <NavigationMenu.Item><AppMenuButton {...menuProps} /></NavigationMenu.Item>}
+          <NavigationMenu.Item><AppMenuButton {...menuProps} /></NavigationMenu.Item>
         </NavigationMenu.List>
         </NavigationMenu.Root>
         {pageVisible('Recorder') && <button
@@ -1760,13 +1755,6 @@ export default function App() {
         )}
         <main className="main-content" id="main" tabIndex={-1} aria-describedby="page-description">
           <p id="page-description" className="sr-only">{pageDescription}</p>
-          {hiddenInBasic && (
-            <div className="mode-banner" role="status">
-              <span><strong>{pageTitle}</strong> is an Advanced page. It is hidden from the navigation in Basic mode.</span>
-              <Button size="tiny" variant="soft" onClick={() => setMode('advanced')}>Switch to Advanced</Button>
-              <Button size="tiny" variant="ghost" onClick={() => setTab('Dashboard')}>Back to Dashboard</Button>
-            </div>
-          )}
           {['Dashboard', 'Test Generator'].includes(tab) && (
             <ContextBar index={index} config={config} recordStatus={recordStatus} revision={revision} />
           )}
