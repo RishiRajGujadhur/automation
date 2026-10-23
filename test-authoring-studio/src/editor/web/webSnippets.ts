@@ -80,6 +80,9 @@ export function webSnippetCompletion(file: string, ctx: CompletionContext): Comp
   if (/\.(jsx|tsx)$/i.test(file) && 'listItems'.startsWith(word.text)) {
     options.push(snippetCompletion('{${1:items}.map((${2:item}) => (\n  <li key={${2:item}.${3:id}}>{${2:item}.${4:name}}</li>\n))}${0}', { label: 'listItems', detail: 'Render keyed React list items', type: 'text' }));
   }
+  if (/\.(jsx|tsx)$/i.test(file) && 'emptyState'.startsWith(word.text)) {
+    options.push(snippetCompletion('{${1:items}.length === 0 ? (\n  <p>${2:No items yet}</p>\n) : (\n  <ul>\n    {${1:items}.map((${3:item}) => <li key={${3:item}.${4:id}}>{${3:item}.${5:name}}</li>)}\n  </ul>\n)}${0}', { label: 'emptyState', detail: 'List with empty state and stable keys', type: 'text' }));
+  }
   if (/\.(css|scss|sass|less)$/i.test(file) && 'flexc'.startsWith(word.text)) {
     options.push(snippetCompletion('display: flex;\n  align-items: center;\n  gap: ${1:1rem};${0}', { label: 'flexc', detail: 'Flex container', type: 'text' }));
   }
