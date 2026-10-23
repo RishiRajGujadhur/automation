@@ -3,9 +3,15 @@ import { syntaxTree } from '@codemirror/language';
 import type { EditorView } from '@codemirror/view';
 import { extractAbbreviation, expandAbbreviation, getExpandOptions, isAbbreviationValid } from '@vscode/emmet-helper';
 import { TextDocument } from 'vscode-languageserver-textdocument';
+import { defineSetting } from '../../vscode/settings';
+
+export const emmetSettings = {
+  tab: defineSetting<boolean>({ key: 'emmet.triggerExpansionOnTab', category: 'Text Editor ▸ Emmet', title: 'Expand on Tab', type: 'boolean', default: true, description: 'Expand a recognized Emmet abbreviation with Tab. When disabled, Tab follows the normal indentation and snippet behavior.' }),
+};
 
 /** Expand the abbreviation directly before the caret, preserving Emmet's editable snippet fields. */
 function expandAtCursor(view: EditorView, file: string, syntax: 'html' | 'css' | 'jsx', onTab = false): boolean {
+  if (onTab && !emmetSettings.tab()) return false;
   const selection = view.state.selection.main;
   if (!selection.empty) return false;
   const document = TextDocument.create(file, syntax, 1, view.state.doc.toString());

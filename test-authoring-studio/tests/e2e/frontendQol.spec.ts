@@ -163,3 +163,26 @@ test('4: expands JSX Emmet with React className attributes', async ({ page, requ
     await fs.rm(root, { recursive: true, force: true, maxRetries: 5 });
   }
 });
+
+test('13: Emmet Tab expansion can be disabled in settings', async ({ page, request }) => {
+  const previous = (await (await request.get('/api/workspace')).json()).config;
+  const root = await fs.mkdtemp(path.join(os.tmpdir(), 'studio-emmet-setting-'));
+  try {
+    await fs.writeFile(path.join(root, 'index.html'), 'ul>li.item*2');
+    expect((await request.post('/api/workspace', { data: { repositoryRoot: root, targetProject: '.' } })).ok()).toBe(true);
+    await page.addInitScript(() => localStorage.setItem('tas:settings', JSON.stringify({ 'emmet.triggerExpansionOnTab': false })));
+    await page.goto('/#/features/editor');
+    await expect(page.getByText('Repository indexed')).toBeVisible();
+    await page.evaluate(() => window.dispatchEvent(new CustomEvent('tas:open-location', { detail: { file: 'index.html', line: 1 } })));
+    const editor = page.getByLabel('Source of index.html');
+    await expect(editor).toBeVisible();
+    await editor.click();
+    await page.keyboard.press('Control+End');
+    await page.keyboard.press('Tab');
+    await expect(editor).toContainText('ul>li.item*2');
+    await expect(editor).not.toContainText('<li class="item">');
+  } finally {
+    await request.post('/api/workspace', { data: previous });
+    await fs.rm(root, { recursive: true, force: true, maxRetries: 5 });
+  }
+});
