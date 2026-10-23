@@ -6,7 +6,8 @@ function reactHookCompletion(hook: string, label: string, detail: string, body: 
     let from = originalFrom, to = originalTo;
     const source = view.state.doc.toString();
     const reactImports = [...source.matchAll(/import\s*\{([^}]*)\}\s*from\s*['"]react['"]/g)];
-    const alreadyImported = reactImports.some((match) => new RegExp(`\\b${hook}\\b(?!\\s+as\\b)`).test(match[1]));
+    const alreadyImported = reactImports.some((match) => match[1].split(',').some((member) =>
+      !/^type\s/.test(member.trim()) && new RegExp(`^${hook}(?:\\s|$)`).test(member.trim()) && !new RegExp(`^${hook}\\s+as\\b`).test(member.trim())));
     if (!alreadyImported) {
       const existing = reactImports[0];
       let at: number;

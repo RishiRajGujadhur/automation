@@ -557,6 +557,16 @@ test('41: React hook snippet extends an existing named React import', async ({ p
     await page.locator('.cm-tooltip-autocomplete li').filter({ has: page.locator('.cm-completionLabel', { hasText: /^effect$/ }) }).first().click();
     const trailingCommaSource = await page.evaluate(() => (window as unknown as { __activeEditor: () => { view: { state: { doc: { toString(): string } } } } }).__activeEditor().view.state.doc.toString());
     expect(trailingCommaSource).toMatch(/^import \{ useState, useEffect \} from 'react';\n/);
+    await page.evaluate(() => {
+      const view = (window as unknown as { __activeEditor: () => { view: { state: { doc: { length: number } }; dispatch(change: unknown): void; focus(): void } } }).__activeEditor().view;
+      const next = "import { type useEffect as EffectType } from 'react';\neffect";
+      view.dispatch({ changes: { from: 0, to: view.state.doc.length, insert: next }, selection: { anchor: next.length } });
+      view.focus();
+    });
+    await page.keyboard.press('Control+Space');
+    await page.locator('.cm-tooltip-autocomplete li').filter({ has: page.locator('.cm-completionLabel', { hasText: /^effect$/ }) }).first().click();
+    const typeOnlySource = await page.evaluate(() => (window as unknown as { __activeEditor: () => { view: { state: { doc: { toString(): string } } } } }).__activeEditor().view.state.doc.toString());
+    expect(typeOnlySource).toMatch(/^import \{ type useEffect as EffectType, useEffect \} from 'react';\n/);
   } finally {
     await request.post('/api/workspace', { data: previous });
     await fs.rm(root, { recursive: true, force: true, maxRetries: 5 });
