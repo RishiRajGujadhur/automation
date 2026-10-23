@@ -122,5 +122,8 @@ export function webSnippetCompletion(file: string, ctx: CompletionContext): Comp
   if (/\.(css|scss|sass|less)$/i.test(file) && 'stickyHeader'.startsWith(word.text)) {
     options.push(snippetCompletion('position: sticky;\n  top: ${1:0};\n  z-index: ${2:10};\n  background: ${3:var(--surface, #fff)};${0}', { label: 'stickyHeader', detail: 'Sticky header with stacking and background', type: 'text' }));
   }
+  if (/\.(css|scss|sass|less)$/i.test(file) && 'supportsFeature'.startsWith(word.text)) {
+    options.push(snippetCompletion('@supports (${1:display}: ${2:grid}) {\n  ${3:.selector} {\n    ${0}\n  }\n}', { label: 'supportsFeature', detail: 'CSS feature query with editable condition', type: 'text' }));
+  }
   return options.length ? { from: word.from, options } : null;
 }

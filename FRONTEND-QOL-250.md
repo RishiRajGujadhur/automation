@@ -53,3 +53,4 @@ This tracks **additional** improvements beyond the existing features in `FRONTEN
 | 47 | Insert a React list with an empty-state branch and stable keys. | Focused browser test | [VS Code snippet workflow](https://code.visualstudio.com/docs/editing/userdefinedsnippets) |
 | 48 | Insert viewport-safe padding for all four device insets, with linked fallback values. | Focused browser test | [VS Code snippet workflow](https://code.visualstudio.com/docs/editing/userdefinedsnippets) |
 | 49 | Insert sticky-header positioning with editable offset, stacking level, and opaque background. | Focused browser test | [VS Code snippet workflow](https://code.visualstudio.com/docs/editing/userdefinedsnippets) |
+| 50 | Insert a CSS `@supports` feature query with editable property, value, and selector. | Focused browser test | [VS Code snippet workflow](https://code.visualstudio.com/docs/editing/userdefinedsnippets) |

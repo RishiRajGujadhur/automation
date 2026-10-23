@@ -671,6 +671,18 @@ test('48: CSS safe-area snippet preserves viewport insets', async ({ page, reque
     expect(stickySource).toContain('position: sticky;');
     expect(stickySource).toContain('z-index: 10;');
     expect(stickySource).toContain('background: var(--surface, #fff);');
+    await page.evaluate(() => {
+      const view = (window as unknown as { __activeEditor: () => { view: { state: { doc: { length: number } }; dispatch(change: unknown): void; focus(): void } } }).__activeEditor().view;
+      view.dispatch({ changes: { from: 0, to: view.state.doc.length, insert: 'supportsFeature' }, selection: { anchor: 15 } });
+      view.focus();
+    });
+    await page.keyboard.press('Control+Space');
+    const supportsOption = page.locator('.cm-tooltip-autocomplete li').filter({ has: page.locator('.cm-completionLabel', { hasText: /^supportsFeature$/ }) }).first();
+    await expect(supportsOption).toContainText('CSS feature query');
+    await supportsOption.click();
+    const supportsSource = await page.evaluate(() => (window as unknown as { __activeEditor: () => { view: { state: { doc: { toString(): string } } } } }).__activeEditor().view.state.doc.toString());
+    expect(supportsSource).toContain('@supports (display: grid) {');
+    expect(supportsSource).toContain('.selector {');
   } finally {
     await request.post('/api/workspace', { data: previous });
     await fs.rm(root, { recursive: true, force: true, maxRetries: 5 });
