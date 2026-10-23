@@ -110,6 +110,9 @@ export function webSnippetCompletion(file: string, ctx: CompletionContext): Comp
   if (/\.(jsx|tsx)$/i.test(file) && 'validatedInput'.startsWith(word.text)) {
     options.push(snippetCompletion('<label htmlFor="${1:field}">${2:Label}</label>\n<input id="${1:field}" aria-invalid={${3:hasError}} aria-describedby={${3:hasError} ? "${1:field}-error" : undefined} />\n{${3:hasError} && <p id="${1:field}-error" role="alert">${4:Error message}</p>}${0}', { label: 'validatedInput', detail: 'React input linked to validation message', type: 'text' }));
   }
+  if (/\.(html|htm)$/i.test(file) && 'detailsDisclosure'.startsWith(word.text)) {
+    options.push(snippetCompletion('<details>\n  <summary>${1:More information}</summary>\n  <p>${2:Details go here.}</p>\n</details>${0}', { label: 'detailsDisclosure', detail: 'Native accessible disclosure', type: 'text' }));
+  }
   if (/\.(css|scss|sass|less)$/i.test(file) && 'flexc'.startsWith(word.text)) {
     options.push(snippetCompletion('display: flex;\n  align-items: center;\n  gap: ${1:1rem};${0}', { label: 'flexc', detail: 'Flex container', type: 'text' }));
   }

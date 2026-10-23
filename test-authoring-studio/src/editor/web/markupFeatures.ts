@@ -7,6 +7,7 @@ import { gateSource } from '../../vscode/suggestions';
 import { doComplete } from '@vscode/emmet-helper';
 import { TextDocument } from 'vscode-languageserver-textdocument';
 import { emmetConfig, emmetSettings } from './emmet';
+import { webSnippetCompletion } from './webSnippets';
 
 /**
  * HTML in the editor (FRONTEND-100.md F51–F70): VS Code's HTML language service through /api/web — tag, attribute,
@@ -68,6 +69,6 @@ function emmetComplete(file: string, ctx: CompletionContext): CompletionResult |
 export function markupFeatures(file: string): Extension[] {
   return [
     markupLinter(file),
-    autocompletion({ override: [gateSource((ctx) => complete(file, ctx)), gateSource((ctx) => emmetComplete(file, ctx))], activateOnTyping: true, maxRenderedOptions: 100, icons: true }),
+    autocompletion({ override: [gateSource((ctx) => complete(file, ctx)), gateSource((ctx) => emmetComplete(file, ctx)), gateSource((ctx) => webSnippetCompletion(file, ctx))], activateOnTyping: true, maxRenderedOptions: 100, icons: true }),
   ];
 }

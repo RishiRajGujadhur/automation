@@ -810,3 +810,28 @@ test('48: CSS safe-area snippet preserves viewport insets', async ({ page, reque
     await fs.rm(root, { recursive: true, force: true, maxRetries: 5 });
   }
 });
+
+test('61: HTML disclosure snippet appears in markup completion', async ({ page, request }) => {
+  const previous = (await (await request.get('/api/workspace')).json()).config;
+  const root = await fs.mkdtemp(path.join(os.tmpdir(), 'studio-html-snippets-'));
+  try {
+    await fs.writeFile(path.join(root, 'index.html'), 'detailsDisclosure');
+    expect((await request.post('/api/workspace', { data: { repositoryRoot: root, targetProject: '.' } })).ok()).toBe(true);
+    await page.goto('/#/features/editor');
+    await expect(page.getByText('Repository indexed')).toBeVisible();
+    await page.evaluate(() => window.dispatchEvent(new CustomEvent('tas:open-location', { detail: { file: 'index.html', line: 1 } })));
+    const editor = page.getByLabel('Source of index.html');
+    await expect(editor).toBeVisible();
+    await editor.click();
+    await page.keyboard.press('Control+End');
+    await page.keyboard.press('Control+Space');
+    const option = page.locator('.cm-tooltip-autocomplete li').filter({ has: page.locator('.cm-completionLabel', { hasText: /^detailsDisclosure$/ }) }).first();
+    await expect(option).toContainText('Native accessible disclosure');
+    await option.click();
+    await expect(editor).toContainText('<summary>More information</summary>');
+    await expect(editor).toContainText('<p>Details go here.</p>');
+  } finally {
+    await request.post('/api/workspace', { data: previous });
+    await fs.rm(root, { recursive: true, force: true, maxRetries: 5 });
+  }
+});
