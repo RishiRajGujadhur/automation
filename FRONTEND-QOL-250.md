@@ -41,3 +41,4 @@ This tracks **additional** improvements beyond the existing features in `FRONTEN
 | 35 | Insert a typed DOM `useRef` declaration from `domRef`, adding the React import. | Focused browser test | [VS Code snippet workflow](https://code.visualstudio.com/docs/editing/userdefinedsnippets) |
 | 36 | Insert a React `useReducer` state and dispatch pair from `reducer`, adding the import. | Focused browser test | [VS Code snippet workflow](https://code.visualstudio.com/docs/editing/userdefinedsnippets) |
 | 37 | Insert a stable React `useId` value for accessible form labels from `stableId`, adding the import. | Focused browser test | [VS Code snippet workflow](https://code.visualstudio.com/docs/editing/userdefinedsnippets) |
+| 38 | Insert a React `useTransition` pending state and scheduler from `transition`, adding the import. | Focused browser test | [VS Code snippet workflow](https://code.visualstudio.com/docs/editing/userdefinedsnippets) |

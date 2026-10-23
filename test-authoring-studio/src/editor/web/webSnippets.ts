@@ -52,6 +52,9 @@ export function webSnippetCompletion(file: string, ctx: CompletionContext): Comp
   if (/\.(jsx|tsx)$/i.test(file) && 'stableId'.startsWith(word.text)) {
     options.push(reactHookCompletion('useId', 'stableId', 'React accessible ID with import', 'const ${1:id} = useId();${0}'));
   }
+  if (/\.(jsx|tsx)$/i.test(file) && 'transition'.startsWith(word.text)) {
+    options.push(reactHookCompletion('useTransition', 'transition', 'React transition state with import', 'const [${1:isPending}, ${2:startTransition}] = useTransition();${0}'));
+  }
   if (/\.(css|scss|sass|less)$/i.test(file) && 'flexc'.startsWith(word.text)) {
     options.push(snippetCompletion('display: flex;\n  align-items: center;\n  gap: ${1:1rem};${0}', { label: 'flexc', detail: 'Flex container', type: 'text' }));
   }
