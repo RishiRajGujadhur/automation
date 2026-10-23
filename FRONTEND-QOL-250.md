@@ -49,3 +49,4 @@ This tracks **additional** improvements beyond the existing features in `FRONTEN
 | 43 | Detect type-only React specifiers so a hook snippet still adds its required runtime import. | Focused browser test and TypeScript check | [VS Code snippet workflow](https://code.visualstudio.com/docs/editing/userdefinedsnippets) |
 | 44 | Insert a `useLayoutEffect` block for layout measurement with editable body and dependencies. | Focused browser test | [VS Code snippet workflow](https://code.visualstudio.com/docs/editing/userdefinedsnippets) |
 | 45 | Insert a `useSyncExternalStore` subscription with editable client and server snapshot functions. | Focused browser test | [VS Code snippet workflow](https://code.visualstudio.com/docs/editing/userdefinedsnippets) |
+| 46 | Insert a React list mapping block with a stable item key and linked item references. | Focused browser test | [VS Code snippet workflow](https://code.visualstudio.com/docs/editing/userdefinedsnippets) |

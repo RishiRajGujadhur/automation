@@ -77,6 +77,9 @@ export function webSnippetCompletion(file: string, ctx: CompletionContext): Comp
   if (/\.(jsx|tsx)$/i.test(file) && 'contextValue'.startsWith(word.text)) {
     options.push(reactHookCompletion('useContext', 'contextValue', 'React context value with import', 'const ${1:value} = useContext(${2:Context});${0}'));
   }
+  if (/\.(jsx|tsx)$/i.test(file) && 'listItems'.startsWith(word.text)) {
+    options.push(snippetCompletion('{${1:items}.map((${2:item}) => (\n  <li key={${2:item}.${3:id}}>{${2:item}.${4:name}}</li>\n))}${0}', { label: 'listItems', detail: 'Render keyed React list items', type: 'text' }));
+  }
   if (/\.(css|scss|sass|less)$/i.test(file) && 'flexc'.startsWith(word.text)) {
     options.push(snippetCompletion('display: flex;\n  align-items: center;\n  gap: ${1:1rem};${0}', { label: 'flexc', detail: 'Flex container', type: 'text' }));
   }
