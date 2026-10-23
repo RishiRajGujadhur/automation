@@ -33,7 +33,7 @@ function reactHookCompletion(hook: string, label: string, detail: string, body: 
 /** Frontend snippets stay scoped to the file types where their output is valid. */
 export function webSnippetCompletion(file: string, ctx: CompletionContext): CompletionResult | null {
   const word = ctx.matchBefore(/[A-Za-z]*/);
-  if (!word || (!ctx.explicit && !word.text)) return null;
+  if (!word || (!ctx.explicit && word.text.length < 2)) return null;
   const tree = syntaxTree(ctx.state);
   for (let node: typeof tree.topNode | null = tree.resolveInner(ctx.pos, -1); node; node = node.parent) {
     if (/Comment|String|Attribute|OpenTag|CloseTag|TemplateString/.test(node.name)) return null;
