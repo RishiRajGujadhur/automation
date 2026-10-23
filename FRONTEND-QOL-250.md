@@ -106,3 +106,4 @@ This tracks **additional** improvements beyond the existing features in `FRONTEN
 | 100 | Reserve scrollbar space from CSS completion to prevent layout shifts when content overflows. | Focused browser test | [VS Code snippet workflow](https://code.visualstudio.com/docs/editing/userdefinedsnippets) |
 | 101 | Insert a typed keyboard shortcut hook that ignores editable controls and removes its listener. | Focused browser test | [VS Code snippet workflow](https://code.visualstudio.com/docs/editing/userdefinedsnippets) |
 | 102 | Insert a typed React local-storage state hook with server-render and storage-error guards. | Focused browser test | [VS Code snippet workflow](https://code.visualstudio.com/docs/editing/userdefinedsnippets) |
+| 103 | Insert a labeled sign-in form with email and password autocomplete attributes. | Focused browser test | [VS Code snippet workflow](https://code.visualstudio.com/docs/editing/userdefinedsnippets) |

@@ -1041,6 +1041,19 @@ test('61: HTML disclosure snippet appears in markup completion', async ({ page, 
     await expect(editor).toContainText('role="status" aria-live="polite" aria-atomic="true"');
     await page.evaluate(() => {
       const view = (window as unknown as { __activeEditor: () => { view: { state: { doc: { length: number } }; dispatch(change: unknown): void; focus(): void } } }).__activeEditor().view;
+      view.dispatch({ changes: { from: 0, to: view.state.doc.length, insert: 'loginForm' }, selection: { anchor: 9 } });
+      view.focus();
+    });
+    await page.keyboard.press('Control+Space');
+    const loginOption = page.locator('.cm-tooltip-autocomplete li').filter({ has: page.locator('.cm-completionLabel', { hasText: /^loginForm$/ }) }).first();
+    await expect(loginOption).toContainText('credential autocomplete');
+    await loginOption.click();
+    const loginSource = await page.evaluate(() => (window as unknown as { __activeEditor: () => { view: { state: { doc: { toString(): string } } } } }).__activeEditor().view.state.doc.toString());
+    expect(loginSource).toContain('autocomplete="username" required');
+    expect(loginSource).toContain('autocomplete="current-password" required');
+    expect(loginSource).toContain('<label for="email">Email</label>');
+    await page.evaluate(() => {
+      const view = (window as unknown as { __activeEditor: () => { view: { state: { doc: { length: number } }; dispatch(change: unknown): void; focus(): void } } }).__activeEditor().view;
       const next = '<!-- detailsDisclosure -->';
       view.dispatch({ changes: { from: 0, to: view.state.doc.length, insert: next }, selection: { anchor: next.indexOf('detailsDisclosure') + 'detailsDisclosure'.length } });
       view.focus();
