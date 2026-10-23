@@ -691,6 +691,18 @@ test('44: layout effect snippet inserts hook and import', async ({ page, request
     const actionSource = await page.evaluate(() => (window as unknown as { __activeEditor: () => { view: { state: { doc: { toString(): string } } } } }).__activeEditor().view.state.doc.toString());
     expect(actionSource).toContain("import { useActionState } from 'react';");
     expect(actionSource).toContain('const [state, dispatchAction, isPending] = useActionState(action, initialState);');
+    await page.evaluate(() => {
+      const view = (window as unknown as { __activeEditor: () => { view: { state: { doc: { length: number } }; dispatch(change: unknown): void; focus(): void } } }).__activeEditor().view;
+      view.dispatch({ changes: { from: 0, to: view.state.doc.length, insert: 'optimisticState' }, selection: { anchor: 15 } });
+      view.focus();
+    });
+    await page.keyboard.press('Control+Space');
+    const optimisticOption = page.locator('.cm-tooltip-autocomplete li').filter({ has: page.locator('.cm-completionLabel', { hasText: /^optimisticState$/ }) }).first();
+    await expect(optimisticOption).toContainText('optimistic UI state');
+    await optimisticOption.click();
+    const optimisticSource = await page.evaluate(() => (window as unknown as { __activeEditor: () => { view: { state: { doc: { toString(): string } } } } }).__activeEditor().view.state.doc.toString());
+    expect(optimisticSource).toContain("import { useOptimistic } from 'react';");
+    expect(optimisticSource).toContain('const [optimisticValue, setOptimisticValue] = useOptimistic(value);');
   } finally {
     await request.post('/api/workspace', { data: previous });
     await fs.rm(root, { recursive: true, force: true, maxRetries: 5 });

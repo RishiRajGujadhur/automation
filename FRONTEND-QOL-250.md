@@ -60,3 +60,4 @@ This tracks **additional** improvements beyond the existing features in `FRONTEN
 | 54 | Insert a responsive React picture with editable sources, meaningful alt text, and lazy decoding. | Focused browser test | [VS Code snippet workflow](https://code.visualstudio.com/docs/editing/userdefinedsnippets) |
 | 55 | Insert a React input that links its validation state to an announced error message. | Focused browser test | [VS Code snippet workflow](https://code.visualstudio.com/docs/editing/userdefinedsnippets) |
 | 56 | Insert a React `useActionState` declaration with action dispatcher and pending flag. | Focused browser test | [React useActionState](https://react.dev/reference/react/useActionState) |
+| 57 | Insert a React `useOptimistic` value and updater for an optimistic UI action. | Focused browser test | [React useOptimistic](https://react.dev/reference/react/useOptimistic) |
