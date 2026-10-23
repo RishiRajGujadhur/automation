@@ -86,6 +86,9 @@ export function webSnippetCompletion(file: string, ctx: CompletionContext): Comp
   if (/\.(jsx|tsx)$/i.test(file) && 'lazyComponent'.startsWith(word.text)) {
     options.push(reactHookCompletion('lazy', 'lazyComponent', 'Lazy-load a React component with import', 'const ${1:DetailsPanel} = lazy(() => import("${2:./DetailsPanel}"));${0}'));
   }
+  if (/\.(jsx|tsx)$/i.test(file) && 'suspenseBoundary'.startsWith(word.text)) {
+    options.push(reactHookCompletion('Suspense', 'suspenseBoundary', 'React loading boundary with fallback', '<Suspense fallback={<p role="status">${1:Loading…}</p>}>\n  <${2:DetailsPanel} />\n</Suspense>${0}'));
+  }
   if (/\.(jsx|tsx)$/i.test(file) && 'contextValue'.startsWith(word.text)) {
     options.push(reactHookCompletion('useContext', 'contextValue', 'React context value with import', 'const ${1:value} = useContext(${2:Context});${0}'));
   }

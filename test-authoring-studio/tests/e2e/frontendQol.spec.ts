@@ -727,6 +727,19 @@ test('44: layout effect snippet inserts hook and import', async ({ page, request
     const lazySource = await page.evaluate(() => (window as unknown as { __activeEditor: () => { view: { state: { doc: { toString(): string } } } } }).__activeEditor().view.state.doc.toString());
     expect(lazySource).toContain("import { lazy } from 'react';");
     expect(lazySource).toContain('const DetailsPanel = lazy(() => import("./DetailsPanel"));');
+    await page.evaluate(() => {
+      const view = (window as unknown as { __activeEditor: () => { view: { state: { doc: { length: number } }; dispatch(change: unknown): void; focus(): void } } }).__activeEditor().view;
+      view.dispatch({ changes: { from: 0, to: view.state.doc.length, insert: 'suspenseBoundary' }, selection: { anchor: 16 } });
+      view.focus();
+    });
+    await page.keyboard.press('Control+Space');
+    const suspenseOption = page.locator('.cm-tooltip-autocomplete li').filter({ has: page.locator('.cm-completionLabel', { hasText: /^suspenseBoundary$/ }) }).first();
+    await expect(suspenseOption).toContainText('loading boundary');
+    await suspenseOption.click();
+    const suspenseSource = await page.evaluate(() => (window as unknown as { __activeEditor: () => { view: { state: { doc: { toString(): string } } } } }).__activeEditor().view.state.doc.toString());
+    expect(suspenseSource).toContain("import { Suspense } from 'react';");
+    expect(suspenseSource).toContain('<Suspense fallback={<p role="status">Loading…</p>}>');
+    expect(suspenseSource).toContain('<DetailsPanel />');
   } finally {
     await request.post('/api/workspace', { data: previous });
     await fs.rm(root, { recursive: true, force: true, maxRetries: 5 });

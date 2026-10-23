@@ -63,3 +63,4 @@ This tracks **additional** improvements beyond the existing features in `FRONTEN
 | 57 | Insert a React `useOptimistic` value and updater for an optimistic UI action. | Focused browser test | [React useOptimistic](https://react.dev/reference/react/useOptimistic) |
 | 58 | Insert a `useFormStatus` declaration and its `react-dom` import for form child components. | Focused browser test and TypeScript check | [React useFormStatus](https://react.dev/reference/react-dom/hooks/useFormStatus) |
 | 59 | Insert a lazily imported React component declaration for code splitting. | Focused browser test | [React lazy](https://react.dev/reference/react/lazy) |
+| 60 | Insert a React Suspense boundary with an editable loading fallback and child component. | Focused browser test | [React Suspense](https://react.dev/reference/react/Suspense) |
