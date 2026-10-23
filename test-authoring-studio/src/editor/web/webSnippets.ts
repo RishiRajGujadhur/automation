@@ -220,6 +220,9 @@ export function webSnippetCompletion(file: string, ctx: CompletionContext): Comp
   if (/\.(html|htm)$/i.test(file) && matches('loginForm')) {
     options.push(snippetCompletion('<form action="${1:/login}" method="post">\n  <label for="${2:email}">Email</label>\n  <input id="${2:email}" name="${2:email}" type="email" autocomplete="username" required />\n  <label for="${3:password}">Password</label>\n  <input id="${3:password}" name="${3:password}" type="password" autocomplete="current-password" required />\n  <button type="submit">${4:Sign in}</button>\n</form>${0}', { label: 'loginForm', detail: 'Labeled sign-in form with credential autocomplete', type: 'text' }));
   }
+  if (/\.(html|htm)$/i.test(file) && matches('uploadForm')) {
+    options.push(snippetCompletion('<form action="${1:/upload}" method="post" enctype="multipart/form-data">\n  <label for="${2:files}">${3:Choose files}</label>\n  <input id="${2:files}" name="${2:files}" type="file" ${4:multiple} required />\n  <button type="submit">${5:Upload}</button>\n</form>${0}', { label: 'uploadForm', detail: 'Labeled multipart file upload form', type: 'text' }));
+  }
   if (/\.(css|scss|sass|less)$/i.test(file) && matches('flexc')) {
     options.push(snippetCompletion('display: flex;\n  align-items: center;\n  gap: ${1:1rem};${0}', { label: 'flexc', detail: 'Flex container', type: 'text' }));
   }
