@@ -40,3 +40,4 @@ This tracks **additional** improvements beyond the existing features in `FRONTEN
 | 34 | Insert a React `useCallback` handler with editable body and dependencies from `callback`, adding the import. | Focused browser test | [VS Code snippet workflow](https://code.visualstudio.com/docs/editing/userdefinedsnippets) |
 | 35 | Insert a typed DOM `useRef` declaration from `domRef`, adding the React import. | Focused browser test | [VS Code snippet workflow](https://code.visualstudio.com/docs/editing/userdefinedsnippets) |
 | 36 | Insert a React `useReducer` state and dispatch pair from `reducer`, adding the import. | Focused browser test | [VS Code snippet workflow](https://code.visualstudio.com/docs/editing/userdefinedsnippets) |
+| 37 | Insert a stable React `useId` value for accessible form labels from `stableId`, adding the import. | Focused browser test | [VS Code snippet workflow](https://code.visualstudio.com/docs/editing/userdefinedsnippets) |

@@ -49,6 +49,9 @@ export function webSnippetCompletion(file: string, ctx: CompletionContext): Comp
   if (/\.(jsx|tsx)$/i.test(file) && 'reducer'.startsWith(word.text)) {
     options.push(reactHookCompletion('useReducer', 'reducer', 'React reducer hook with import', 'const [${1:state}, ${2:dispatch}] = useReducer(${3:reducer}, ${4:initialState});${0}'));
   }
+  if (/\.(jsx|tsx)$/i.test(file) && 'stableId'.startsWith(word.text)) {
+    options.push(reactHookCompletion('useId', 'stableId', 'React accessible ID with import', 'const ${1:id} = useId();${0}'));
+  }
   if (/\.(css|scss|sass|less)$/i.test(file) && 'flexc'.startsWith(word.text)) {
     options.push(snippetCompletion('display: flex;\n  align-items: center;\n  gap: ${1:1rem};${0}', { label: 'flexc', detail: 'Flex container', type: 'text' }));
   }

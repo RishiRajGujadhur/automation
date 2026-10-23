@@ -474,6 +474,18 @@ test('31: React state snippet adds one import after use client', async ({ page, 
     const reducerSource = await page.evaluate(() => (window as unknown as { __activeEditor: () => { view: { state: { doc: { toString(): string } } } } }).__activeEditor().view.state.doc.toString());
     expect(reducerSource).toContain("import { useReducer } from 'react';");
     expect(reducerSource).toContain('const [state, dispatch] = useReducer(reducer, initialState);');
+    await page.evaluate(() => {
+      const view = (window as unknown as { __activeEditor: () => { view: { state: { doc: { length: number } }; dispatch(change: unknown): void; focus(): void } } }).__activeEditor().view;
+      view.dispatch({ changes: { from: 0, to: view.state.doc.length, insert: "'use client';\nstableId" }, selection: { anchor: "'use client';\nstableId".length } });
+      view.focus();
+    });
+    await page.keyboard.press('Control+Space');
+    const idOption = page.locator('.cm-tooltip-autocomplete li').filter({ has: page.locator('.cm-completionLabel', { hasText: /^stableId$/ }) }).first();
+    await expect(idOption).toContainText('React accessible ID with import');
+    await idOption.click();
+    const idSource = await page.evaluate(() => (window as unknown as { __activeEditor: () => { view: { state: { doc: { toString(): string } } } } }).__activeEditor().view.state.doc.toString());
+    expect(idSource).toContain("import { useId } from 'react';");
+    expect(idSource).toContain('const id = useId();');
   } finally {
     await request.post('/api/workspace', { data: previous });
     await fs.rm(root, { recursive: true, force: true, maxRetries: 5 });
