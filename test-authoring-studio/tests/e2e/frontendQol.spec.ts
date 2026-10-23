@@ -1216,6 +1216,18 @@ test('93: JavaScript utility snippets expand without TypeScript syntax', async (
     expect(debounceSource).toContain('function debounce(callback, delay)');
     expect(debounceSource).toContain('timer = setTimeout(() => callback(...args), delay);');
     expect(debounceSource).not.toContain('Args extends');
+    await page.evaluate(() => {
+      const view = (window as unknown as { __activeEditor: () => { view: { state: { doc: { length: number } }; dispatch(change: unknown): void; focus(): void } } }).__activeEditor().view;
+      view.dispatch({ changes: { from: 0, to: view.state.doc.length, insert: 'throttleFn' }, selection: { anchor: 10 } });
+      view.focus();
+    });
+    await page.keyboard.press('Control+Space');
+    const throttleOption = page.locator('.cm-tooltip-autocomplete li').filter({ has: page.locator('.cm-completionLabel', { hasText: /^throttleFn$/ }) }).first();
+    await expect(throttleOption).toContainText('Leading-edge');
+    await throttleOption.click();
+    const throttleSource = await page.evaluate(() => (window as unknown as { __activeEditor: () => { view: { state: { doc: { toString(): string } } } } }).__activeEditor().view.state.doc.toString());
+    expect(throttleSource).toContain('function throttle(callback, interval)');
+    expect(throttleSource).toContain('if (now - lastCall < interval) return;');
   } finally {
     await request.post('/api/workspace', { data: previous });
     await fs.rm(root, { recursive: true, force: true, maxRetries: 5 });

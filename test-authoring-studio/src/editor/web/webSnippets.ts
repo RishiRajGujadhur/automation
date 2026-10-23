@@ -160,6 +160,9 @@ export function webSnippetCompletion(file: string, ctx: CompletionContext): Comp
   if (/\.(js|jsx)$/i.test(file) && matches('debounceFn')) {
     options.push(snippetCompletion('function ${1:debounce}(callback, delay) {\n  let timer;\n  return (...args) => {\n    if (timer !== undefined) clearTimeout(timer);\n    timer = setTimeout(() => callback(...args), delay);\n  };\n}${0}', { label: 'debounceFn', detail: 'JavaScript debounce preserving callback arguments', type: 'text' }));
   }
+  if (/\.(js|jsx)$/i.test(file) && matches('throttleFn')) {
+    options.push(snippetCompletion('function ${1:throttle}(callback, interval) {\n  let lastCall = 0;\n  return (...args) => {\n    const now = Date.now();\n    if (now - lastCall < interval) return;\n    lastCall = now;\n    callback(...args);\n  };\n}${0}', { label: 'throttleFn', detail: 'Leading-edge JavaScript throttle', type: 'text' }));
+  }
   if (/\.(ts|tsx)$/i.test(file) && matches('resultType')) {
     options.push(snippetCompletion('type ${1:Result}<T, E = Error> =\n  | { ok: true; value: T }\n  | { ok: false; error: E };\n\nconst ${2:success} = <T,>(value: T): ${1:Result}<T, never> => ({ ok: true, value });\nconst ${3:failure} = <E,>(error: E): ${1:Result}<never, E> => ({ ok: false, error });${0}', { label: 'resultType', detail: 'Discriminated Result type and constructors', type: 'text' }));
   }
