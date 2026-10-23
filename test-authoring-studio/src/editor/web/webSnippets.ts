@@ -100,6 +100,9 @@ export function webSnippetCompletion(file: string, ctx: CompletionContext): Comp
   if (/\.(ts|tsx)$/i.test(file) && matches('useElementSize')) {
     options.push(reactHookCompletion(['useState', 'useEffect', 'useCallback'], 'useElementSize', 'Typed ResizeObserver hook with disconnect cleanup', 'function ${1:useElementSize}<T extends HTMLElement>() {\n  const [element, setElement] = useState<T | null>(null);\n  const [size, setSize] = useState({ width: 0, height: 0 });\n  const ref = useCallback((node: T | null) => setElement(node), []);\n  useEffect(() => {\n    if (!element) return;\n    const observer = new ResizeObserver(([entry]) => {\n      if (entry) setSize({ width: entry.contentRect.width, height: entry.contentRect.height });\n    });\n    observer.observe(element);\n    return () => observer.disconnect();\n  }, [element]);\n  return [ref, size] as const;\n}${0}'));
   }
+  if (/\.(ts|tsx)$/i.test(file) && matches('usePageVisibility')) {
+    options.push(reactHookCompletion(['useState', 'useEffect'], 'usePageVisibility', 'Page visibility hook with listener cleanup', 'function ${1:usePageVisibility}(): boolean {\n  const [visible, setVisible] = useState(true);\n  useEffect(() => {\n    const update = () => setVisible(!document.hidden);\n    update();\n    document.addEventListener("visibilitychange", update);\n    return () => document.removeEventListener("visibilitychange", update);\n  }, []);\n  return visible;\n}${0}'));
+  }
   if (/\.(jsx|tsx)$/i.test(file) && matches('layoutEffect')) {
     options.push(reactHookCompletion('useLayoutEffect', 'layoutEffect', 'React layout effect with import', 'useLayoutEffect(() => {\n  ${1}\n}, [${2}]);${0}'));
   }

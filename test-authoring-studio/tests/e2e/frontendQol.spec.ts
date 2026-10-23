@@ -1319,6 +1319,18 @@ test('73: TypeScript utility snippets expand in source files', async ({ page, re
     expect(sizeSource).toContain('const ref = useCallback((node: T | null) => setElement(node), []);');
     expect(sizeSource).toContain('new ResizeObserver(([entry]) =>');
     expect(sizeSource).toContain('return () => observer.disconnect();');
+    await page.evaluate(() => {
+      const view = (window as unknown as { __activeEditor: () => { view: { state: { doc: { length: number } }; dispatch(change: unknown): void; focus(): void } } }).__activeEditor().view;
+      view.dispatch({ changes: { from: 0, to: view.state.doc.length, insert: 'usePageVisibility' }, selection: { anchor: 17 } });
+      view.focus();
+    });
+    await page.keyboard.press('Control+Space');
+    const visibilityOption = page.locator('.cm-tooltip-autocomplete li').filter({ has: page.locator('.cm-completionLabel', { hasText: /^usePageVisibility$/ }) }).first();
+    await expect(visibilityOption).toContainText('Page visibility hook');
+    await visibilityOption.click();
+    const visibilitySource = await page.evaluate(() => (window as unknown as { __activeEditor: () => { view: { state: { doc: { toString(): string } } } } }).__activeEditor().view.state.doc.toString());
+    expect(visibilitySource).toContain('const update = () => setVisible(!document.hidden);');
+    expect(visibilitySource).toContain('document.removeEventListener("visibilitychange", update);');
   } finally {
     await request.post('/api/workspace', { data: previous });
     await fs.rm(root, { recursive: true, force: true, maxRetries: 5 });
