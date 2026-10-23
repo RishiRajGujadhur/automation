@@ -62,6 +62,9 @@ export function webSnippetCompletion(file: string, ctx: CompletionContext): Comp
   if (/\.tsx$/i.test(file) && matches('eventListener')) {
     options.push(reactHookCompletion('useEffect', 'eventListener', 'Window event listener with effect cleanup', 'useEffect(() => {\n  const handler = (event: ${1:KeyboardEvent}) => {\n    ${2}\n  };\n  window.addEventListener("${3:keydown}", handler);\n  return () => window.removeEventListener("${3:keydown}", handler);\n}, [${4}]);${0}'));
   }
+  if (/\.(ts|tsx)$/i.test(file) && matches('useInterval')) {
+    options.push(reactHookCompletion('useEffect', 'useInterval', 'React interval hook with pause and cleanup', 'function ${1:useInterval}(callback: () => void, delay: number | null) {\n  useEffect(() => {\n    if (delay === null) return;\n    const id = window.setInterval(callback, delay);\n    return () => window.clearInterval(id);\n  }, [callback, delay]);\n}${0}'));
+  }
   if (/\.(jsx|tsx)$/i.test(file) && matches('layoutEffect')) {
     options.push(reactHookCompletion('useLayoutEffect', 'layoutEffect', 'React layout effect with import', 'useLayoutEffect(() => {\n  ${1}\n}, [${2}]);${0}'));
   }

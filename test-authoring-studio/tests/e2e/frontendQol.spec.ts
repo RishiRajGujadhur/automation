@@ -1001,6 +1001,17 @@ test('73: TypeScript utility snippets expand in source files', async ({ page, re
     await debounceOption.click();
     await expect(editor).toContainText('function debounce<Args extends unknown[]>(callback: (...args: Args) => void');
     await expect(editor).toContainText('if (timer !== undefined) clearTimeout(timer);');
+    await page.evaluate(() => {
+      const view = (window as unknown as { __activeEditor: () => { view: { state: { doc: { length: number } }; dispatch(change: unknown): void; focus(): void } } }).__activeEditor().view;
+      view.dispatch({ changes: { from: 0, to: view.state.doc.length, insert: 'useInterval' }, selection: { anchor: 11 } });
+      view.focus();
+    });
+    await page.keyboard.press('Control+Space');
+    const intervalOption = page.locator('.cm-tooltip-autocomplete li').filter({ has: page.locator('.cm-completionLabel', { hasText: /^useInterval$/ }) }).first();
+    await expect(intervalOption).toContainText('pause and cleanup');
+    await intervalOption.click();
+    await expect(editor).toContainText('function useInterval(callback: () => void, delay: number | null)');
+    await expect(editor).toContainText('return () => window.clearInterval(id);');
   } finally {
     await request.post('/api/workspace', { data: previous });
     await fs.rm(root, { recursive: true, force: true, maxRetries: 5 });
