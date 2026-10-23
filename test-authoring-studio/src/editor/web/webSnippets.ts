@@ -92,6 +92,9 @@ export function webSnippetCompletion(file: string, ctx: CompletionContext): Comp
   if (/\.(jsx|tsx)$/i.test(file) && 'responsiveImage'.startsWith(word.text)) {
     options.push(snippetCompletion('<picture>\n  <source media="(min-width: ${1:768px})" srcSet="${2:/images/large.webp}" />\n  <img src="${3:/images/small.webp}" alt="${4:Describe the image}" loading="lazy" decoding="async" />\n</picture>${0}', { label: 'responsiveImage', detail: 'Responsive React picture with accessible image', type: 'text' }));
   }
+  if (/\.(jsx|tsx)$/i.test(file) && 'validatedInput'.startsWith(word.text)) {
+    options.push(snippetCompletion('<label htmlFor="${1:field}">${2:Label}</label>\n<input id="${1:field}" aria-invalid={${3:hasError}} aria-describedby={${3:hasError} ? "${1:field}-error" : undefined} />\n{${3:hasError} && <p id="${1:field}-error" role="alert">${4:Error message}</p>}${0}', { label: 'validatedInput', detail: 'React input linked to validation message', type: 'text' }));
+  }
   if (/\.(css|scss|sass|less)$/i.test(file) && 'flexc'.startsWith(word.text)) {
     options.push(snippetCompletion('display: flex;\n  align-items: center;\n  gap: ${1:1rem};${0}', { label: 'flexc', detail: 'Flex container', type: 'text' }));
   }

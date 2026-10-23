@@ -58,3 +58,4 @@ This tracks **additional** improvements beyond the existing features in `FRONTEN
 | 52 | Insert a React label and input pair with linked `htmlFor`, `id`, and `name` fields. | Focused browser test | [VS Code snippet workflow](https://code.visualstudio.com/docs/editing/userdefinedsnippets) |
 | 53 | Insert a submit button that links its disabled, busy, and visible pending states. | Focused browser test | [VS Code snippet workflow](https://code.visualstudio.com/docs/editing/userdefinedsnippets) |
 | 54 | Insert a responsive React picture with editable sources, meaningful alt text, and lazy decoding. | Focused browser test | [VS Code snippet workflow](https://code.visualstudio.com/docs/editing/userdefinedsnippets) |
+| 55 | Insert a React input that links its validation state to an announced error message. | Focused browser test | [VS Code snippet workflow](https://code.visualstudio.com/docs/editing/userdefinedsnippets) |

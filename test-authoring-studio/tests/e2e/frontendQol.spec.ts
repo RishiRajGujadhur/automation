@@ -666,6 +666,19 @@ test('44: layout effect snippet inserts hook and import', async ({ page, request
     const imageSource = await page.evaluate(() => (window as unknown as { __activeEditor: () => { view: { state: { doc: { toString(): string } } } } }).__activeEditor().view.state.doc.toString());
     expect(imageSource).toContain('<source media="(min-width: 768px)" srcSet="/images/large.webp" />');
     expect(imageSource).toContain('alt="Describe the image" loading="lazy" decoding="async"');
+    await page.evaluate(() => {
+      const view = (window as unknown as { __activeEditor: () => { view: { state: { doc: { length: number } }; dispatch(change: unknown): void; focus(): void } } }).__activeEditor().view;
+      view.dispatch({ changes: { from: 0, to: view.state.doc.length, insert: 'validatedInput' }, selection: { anchor: 14 } });
+      view.focus();
+    });
+    await page.keyboard.press('Control+Space');
+    const validationOption = page.locator('.cm-tooltip-autocomplete li').filter({ has: page.locator('.cm-completionLabel', { hasText: /^validatedInput$/ }) }).first();
+    await expect(validationOption).toContainText('linked to validation message');
+    await validationOption.click();
+    const validationSource = await page.evaluate(() => (window as unknown as { __activeEditor: () => { view: { state: { doc: { toString(): string } } } } }).__activeEditor().view.state.doc.toString());
+    expect(validationSource).toContain('aria-invalid={hasError}');
+    expect(validationSource).toContain('aria-describedby={hasError ? "field-error" : undefined}');
+    expect(validationSource).toContain('<p id="field-error" role="alert">Error message</p>');
   } finally {
     await request.post('/api/workspace', { data: previous });
     await fs.rm(root, { recursive: true, force: true, maxRetries: 5 });
