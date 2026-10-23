@@ -27,3 +27,4 @@ This tracks **additional** improvements beyond the existing features in `FRONTEN
 | 21 | Insert a responsive media query block with an editable breakpoint from the `mediaq` snippet. | Focused browser test | [VS Code snippet workflow](https://code.visualstudio.com/docs/editing/userdefinedsnippets) |
 | 22 | Insert a container query block with an editable size threshold from the `containerq` snippet. | Focused browser test | [VS Code snippet workflow](https://code.visualstudio.com/docs/editing/userdefinedsnippets) |
 | 23 | Insert a TSX React component with a typed props shape and linked editable prop names from `rfcp`. | Focused browser test | [VS Code snippet workflow](https://code.visualstudio.com/docs/editing/userdefinedsnippets) |
+| 24 | Insert a keyboard-visible focus rule with editable selector and outline from `focusv`. | Focused browser test | [VS Code snippet workflow](https://code.visualstudio.com/docs/editing/userdefinedsnippets) |

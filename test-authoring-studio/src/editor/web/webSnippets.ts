@@ -24,5 +24,8 @@ export function webSnippetCompletion(file: string, ctx: CompletionContext): Comp
   if (/\.(css|scss|sass|less)$/i.test(file) && 'containerq'.startsWith(word.text)) {
     options.push(snippetCompletion('@container (min-width: ${1:30rem}) {\n  ${0}\n}', { label: 'containerq', detail: 'Container query', type: 'text' }));
   }
+  if (/\.(css|scss|sass|less)$/i.test(file) && 'focusv'.startsWith(word.text)) {
+    options.push(snippetCompletion('${1:.control}:focus-visible {\n  outline: ${2:2px} solid currentColor;\n  outline-offset: ${3:2px};\n}${0}', { label: 'focusv', detail: 'Visible keyboard focus', type: 'text' }));
+  }
   return options.length ? { from: word.from, options } : null;
 }

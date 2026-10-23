@@ -174,6 +174,17 @@ test('3: expands a CSS Emmet property abbreviation', async ({ page, request }) =
     await expect(containerOption).toContainText('Container query');
     await containerOption.click();
     await expect(editor).toContainText('@container (min-width: 30rem) {');
+    await page.evaluate(() => {
+      const view = (window as unknown as { __activeEditor: () => { view: { state: { doc: { length: number } }; dispatch(change: unknown): void; focus(): void } } }).__activeEditor().view;
+      view.dispatch({ changes: { from: 0, to: view.state.doc.length, insert: 'focusv' }, selection: { anchor: 6 } });
+      view.focus();
+    });
+    await page.keyboard.press('Control+Space');
+    const focusOption = page.locator('.cm-tooltip-autocomplete li').filter({ has: page.locator('.cm-completionLabel', { hasText: /^focusv$/ }) }).first();
+    await expect(focusOption).toContainText('Visible keyboard focus');
+    await focusOption.click();
+    await expect(editor).toContainText('.control:focus-visible {');
+    await expect(editor).toContainText('outline-offset: 2px;');
   } finally {
     await request.post('/api/workspace', { data: previous });
     await fs.rm(root, { recursive: true, force: true, maxRetries: 5 });
