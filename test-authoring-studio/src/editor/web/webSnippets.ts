@@ -34,6 +34,9 @@ export function webSnippetCompletion(file: string, ctx: CompletionContext): Comp
   if (/\.(jsx|tsx)$/i.test(file) && 'state'.startsWith(word.text)) {
     options.push(reactHookCompletion('useState', 'state', 'React state hook with import', 'const [${1:value}, set${2:Value}] = useState(${3:initialValue});${0}'));
   }
+  if (/\.(jsx|tsx)$/i.test(file) && 'effect'.startsWith(word.text)) {
+    options.push(reactHookCompletion('useEffect', 'effect', 'React effect hook with import', 'useEffect(() => {\n  ${1}\n}, [${2}]);${0}'));
+  }
   if (/\.(css|scss|sass|less)$/i.test(file) && 'flexc'.startsWith(word.text)) {
     options.push(snippetCompletion('display: flex;\n  align-items: center;\n  gap: ${1:1rem};${0}', { label: 'flexc', detail: 'Flex container', type: 'text' }));
   }

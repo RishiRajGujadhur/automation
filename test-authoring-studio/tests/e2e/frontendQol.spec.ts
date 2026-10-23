@@ -414,6 +414,18 @@ test('31: React state snippet adds one import after use client', async ({ page, 
     const source = await page.evaluate(() => (window as unknown as { __activeEditor: () => { view: { state: { doc: { toString(): string } } } } }).__activeEditor().view.state.doc.toString());
     expect(source).toMatch(/^'use client';\nimport \{ useState \} from 'react';\n/);
     expect(source).toContain('const [value, setValue] = useState(initialValue);');
+    await page.evaluate(() => {
+      const view = (window as unknown as { __activeEditor: () => { view: { state: { doc: { length: number } }; dispatch(change: unknown): void; focus(): void } } }).__activeEditor().view;
+      view.dispatch({ changes: { from: 0, to: view.state.doc.length, insert: "'use client';\neffect" }, selection: { anchor: "'use client';\neffect".length } });
+      view.focus();
+    });
+    await page.keyboard.press('Control+Space');
+    const effectOption = page.locator('.cm-tooltip-autocomplete li').filter({ has: page.locator('.cm-completionLabel', { hasText: /^effect$/ }) }).first();
+    await expect(effectOption).toContainText('React effect hook with import');
+    await effectOption.click();
+    const effectSource = await page.evaluate(() => (window as unknown as { __activeEditor: () => { view: { state: { doc: { toString(): string } } } } }).__activeEditor().view.state.doc.toString());
+    expect(effectSource).toMatch(/^'use client';\nimport \{ useEffect \} from 'react';\n/);
+    expect(effectSource).toContain('useEffect(() => {');
   } finally {
     await request.post('/api/workspace', { data: previous });
     await fs.rm(root, { recursive: true, force: true, maxRetries: 5 });
