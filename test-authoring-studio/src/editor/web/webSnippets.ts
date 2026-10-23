@@ -10,7 +10,14 @@ function reactHookCompletion(hook: string | string[], label: string, detail: str
   return { ...snippetCompletion(body, { label, detail, type: 'text' }), apply: (view, _completion, originalFrom, originalTo) => {
     let from = originalFrom, to = originalTo;
     const source = view.state.doc.toString();
-    const reactImports = [...source.matchAll(new RegExp(`import\\s*\\{([^}]*)\\}\\s*from\\s*['"]${module}['"]`, 'g'))];
+    const tree = syntaxTree(view.state);
+    const reactImports = [...source.matchAll(new RegExp(`import\\s*\\{([^}]*)\\}\\s*from\\s*['"]${module}['"]`, 'g'))].filter((match) => {
+      for (let node: typeof tree.topNode | null = tree.resolveInner(match.index + 1, 1); node; node = node.parent) {
+        if (node.name === 'ImportDeclaration') return true;
+        if (/Comment|String/.test(node.name)) return false;
+      }
+      return false;
+    });
     const hooks = Array.isArray(hook) ? hook : [hook];
     const missing = hooks.filter((name) => !reactImports.some((match) => match[1].split(',').some((member) =>
       !/^type\s/.test(member.trim()) && new RegExp(`^${name}(?:\\s|$)`).test(member.trim()) && !new RegExp(`^${name}\\s+as\\b`).test(member.trim()))));
