@@ -774,6 +774,19 @@ test('44: layout effect snippet inserts hook and import', async ({ page, request
     expect(listenerSource).toContain("import { useEffect } from 'react';");
     expect(listenerSource).toContain('window.addEventListener("keydown", handler);');
     expect(listenerSource).toContain('return () => window.removeEventListener("keydown", handler);');
+    await page.evaluate(() => {
+      const view = (window as unknown as { __activeEditor: () => { view: { state: { doc: { length: number } }; dispatch(change: unknown): void; focus(): void } } }).__activeEditor().view;
+      view.dispatch({ changes: { from: 0, to: view.state.doc.length, insert: 'abortableEffect' }, selection: { anchor: 15 } });
+      view.focus();
+    });
+    await page.keyboard.press('Control+Space');
+    const abortOption = page.locator('.cm-tooltip-autocomplete li').filter({ has: page.locator('.cm-completionLabel', { hasText: /^abortableEffect$/ }) }).first();
+    await expect(abortOption).toContainText('Abortable React fetch');
+    await abortOption.click();
+    const abortSource = await page.evaluate(() => (window as unknown as { __activeEditor: () => { view: { state: { doc: { toString(): string } } } } }).__activeEditor().view.state.doc.toString());
+    expect(abortSource).toContain('const controller = new AbortController();');
+    expect(abortSource).toContain('signal: controller.signal');
+    expect(abortSource).toContain('return () => controller.abort();');
   } finally {
     await request.post('/api/workspace', { data: previous });
     await fs.rm(root, { recursive: true, force: true, maxRetries: 5 });

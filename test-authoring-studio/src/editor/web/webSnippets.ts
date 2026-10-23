@@ -67,6 +67,9 @@ export function webSnippetCompletion(file: string, ctx: CompletionContext): Comp
   if (/\.(jsx|tsx)$/i.test(file) && matches('effect')) {
     options.push(reactHookCompletion('useEffect', 'effect', 'React effect hook with import', 'useEffect(() => {\n  ${1}\n}, [${2}]);${0}'));
   }
+  if (/\.(jsx|tsx)$/i.test(file) && matches('abortableEffect')) {
+    options.push(reactHookCompletion('useEffect', 'abortableEffect', 'Abortable React fetch effect with cleanup', 'useEffect(() => {\n  const controller = new AbortController();\n  void (async () => {\n    try {\n      const response = await fetch(${1:url}, { signal: controller.signal });\n      if (!response.ok) throw new Error("HTTP " + response.status);\n      const data = await response.json();\n      if (!controller.signal.aborted) ${2:setData}(data);\n    } catch (error) {\n      if (!controller.signal.aborted) console.error(error);\n    }\n  })();\n  return () => controller.abort();\n}, [${1:url}]);${0}'));
+  }
   if (/\.tsx$/i.test(file) && matches('eventListener')) {
     options.push(reactHookCompletion('useEffect', 'eventListener', 'Window event listener with effect cleanup', 'useEffect(() => {\n  const handler = (event: ${1:KeyboardEvent}) => {\n    ${2}\n  };\n  window.addEventListener("${3:keydown}", handler);\n  return () => window.removeEventListener("${3:keydown}", handler);\n}, [${4}]);${0}'));
   }

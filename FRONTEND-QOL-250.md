@@ -100,3 +100,4 @@ This tracks **additional** improvements beyond the existing features in `FRONTEN
 | 94 | Insert a plain JavaScript debounce helper that preserves callback arguments and clears the previous timer. | Focused browser test | [VS Code snippet workflow](https://code.visualstudio.com/docs/editing/userdefinedsnippets) |
 | 95 | Insert a leading-edge JavaScript throttle helper for high-frequency callbacks. | Focused browser test | [VS Code snippet workflow](https://code.visualstudio.com/docs/editing/userdefinedsnippets) |
 | 96 | Insert a typed throttle helper that preserves callback argument types in TypeScript. | Focused browser test | [VS Code snippet workflow](https://code.visualstudio.com/docs/editing/userdefinedsnippets) |
+| 97 | Insert an abortable React data-loading effect with HTTP checks and cleanup. | Focused browser test | [VS Code snippet workflow](https://code.visualstudio.com/docs/editing/userdefinedsnippets) |
