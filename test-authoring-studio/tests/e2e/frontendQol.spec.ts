@@ -1315,7 +1315,8 @@ test('73: TypeScript utility snippets expand in source files', async ({ page, re
     await expect(sizeOption).toContainText('ResizeObserver hook');
     await sizeOption.click();
     const sizeSource = await page.evaluate(() => (window as unknown as { __activeEditor: () => { view: { state: { doc: { toString(): string } } } } }).__activeEditor().view.state.doc.toString());
-    expect(sizeSource).toContain("import { useRef, useState, useEffect } from 'react';");
+    expect(sizeSource).toContain("import { useState, useEffect, useCallback } from 'react';");
+    expect(sizeSource).toContain('const ref = useCallback((node: T | null) => setElement(node), []);');
     expect(sizeSource).toContain('new ResizeObserver(([entry]) =>');
     expect(sizeSource).toContain('return () => observer.disconnect();');
   } finally {
