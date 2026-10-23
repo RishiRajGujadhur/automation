@@ -1213,6 +1213,19 @@ test('73: TypeScript utility snippets expand in source files', async ({ page, re
     expect(mediaSource).toContain("import { useState, useEffect } from 'react';");
     expect(mediaSource).toContain('function useMediaQuery(query: string): boolean');
     expect(mediaSource).toContain('return () => media.removeEventListener("change", update);');
+    await page.evaluate(() => {
+      const view = (window as unknown as { __activeEditor: () => { view: { state: { doc: { length: number } }; dispatch(change: unknown): void; focus(): void } } }).__activeEditor().view;
+      view.dispatch({ changes: { from: 0, to: view.state.doc.length, insert: 'useClickOutside' }, selection: { anchor: 15 } });
+      view.focus();
+    });
+    await page.keyboard.press('Control+Space');
+    const outsideOption = page.locator('.cm-tooltip-autocomplete li').filter({ has: page.locator('.cm-completionLabel', { hasText: /^useClickOutside$/ }) }).first();
+    await expect(outsideOption).toContainText('outside-click hook');
+    await outsideOption.click();
+    const outsideSource = await page.evaluate(() => (window as unknown as { __activeEditor: () => { view: { state: { doc: { toString(): string } } } } }).__activeEditor().view.state.doc.toString());
+    expect(outsideSource).toContain("import { useRef, useEffect } from 'react';");
+    expect(outsideSource).toContain('document.addEventListener("pointerdown", handle);');
+    expect(outsideSource).toContain('return () => document.removeEventListener("pointerdown", handle);');
   } finally {
     await request.post('/api/workspace', { data: previous });
     await fs.rm(root, { recursive: true, force: true, maxRetries: 5 });

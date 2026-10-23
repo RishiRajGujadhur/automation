@@ -85,6 +85,9 @@ export function webSnippetCompletion(file: string, ctx: CompletionContext): Comp
   if (/\.(ts|tsx)$/i.test(file) && matches('useMediaQuery')) {
     options.push(reactHookCompletion(['useState', 'useEffect'], 'useMediaQuery', 'Reactive media query hook with listener cleanup', 'function ${1:useMediaQuery}(query: string): boolean {\n  const [matches, setMatches] = useState(false);\n  useEffect(() => {\n    const media = window.matchMedia(query);\n    const update = () => setMatches(media.matches);\n    update();\n    media.addEventListener("change", update);\n    return () => media.removeEventListener("change", update);\n  }, [query]);\n  return matches;\n}${0}'));
   }
+  if (/\.(ts|tsx)$/i.test(file) && matches('useClickOutside')) {
+    options.push(reactHookCompletion(['useRef', 'useEffect'], 'useClickOutside', 'Typed outside-click hook with pointer cleanup', 'function ${1:useClickOutside}<T extends HTMLElement>(onOutside: () => void) {\n  const ref = useRef<T | null>(null);\n  useEffect(() => {\n    const handle = (event: PointerEvent) => {\n      if (ref.current && !ref.current.contains(event.target as Node)) onOutside();\n    };\n    document.addEventListener("pointerdown", handle);\n    return () => document.removeEventListener("pointerdown", handle);\n  }, [onOutside]);\n  return ref;\n}${0}'));
+  }
   if (/\.(jsx|tsx)$/i.test(file) && matches('layoutEffect')) {
     options.push(reactHookCompletion('useLayoutEffect', 'layoutEffect', 'React layout effect with import', 'useLayoutEffect(() => {\n  ${1}\n}, [${2}]);${0}'));
   }
