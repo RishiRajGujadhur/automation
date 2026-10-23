@@ -527,3 +527,28 @@ test('31: React state snippet adds one import after use client', async ({ page, 
     await fs.rm(root, { recursive: true, force: true, maxRetries: 5 });
   }
 });
+
+test('41: React hook snippet extends an existing named React import', async ({ page, request }) => {
+  const previous = (await (await request.get('/api/workspace')).json()).config;
+  const root = await fs.mkdtemp(path.join(os.tmpdir(), 'studio-hook-merge-'));
+  try {
+    await fs.writeFile(path.join(root, 'Counter.tsx'), "import { useState } from 'react';\neffect");
+    expect((await request.post('/api/workspace', { data: { repositoryRoot: root, targetProject: '.' } })).ok()).toBe(true);
+    await page.goto('/#/features/editor');
+    await expect(page.getByText('Repository indexed')).toBeVisible();
+    await page.evaluate(() => window.dispatchEvent(new CustomEvent('tas:open-location', { detail: { file: 'Counter.tsx', line: 1 } })));
+    const editor = page.getByLabel('Source of Counter.tsx');
+    await expect(editor).toBeVisible();
+    await editor.click();
+    await page.keyboard.press('Control+End');
+    await page.keyboard.press('Control+Space');
+    await page.locator('.cm-tooltip-autocomplete li').filter({ has: page.locator('.cm-completionLabel', { hasText: /^effect$/ }) }).first().click();
+    const source = await page.evaluate(() => (window as unknown as { __activeEditor: () => { view: { state: { doc: { toString(): string } } } } }).__activeEditor().view.state.doc.toString());
+    expect(source).toMatch(/^import \{ useState, useEffect \} from 'react';\n/);
+    expect(source).toContain('useEffect(() => {');
+    expect(source.match(/from 'react'/g)).toHaveLength(1);
+  } finally {
+    await request.post('/api/workspace', { data: previous });
+    await fs.rm(root, { recursive: true, force: true, maxRetries: 5 });
+  }
+});

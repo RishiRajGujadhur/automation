@@ -8,10 +8,19 @@ function reactHookCompletion(hook: string, label: string, detail: string, body: 
     const reactImports = [...source.matchAll(/import\s*\{([^}]*)\}\s*from\s*['"]react['"]/g)];
     const alreadyImported = reactImports.some((match) => new RegExp(`\\b${hook}\\b(?!\\s+as\\b)`).test(match[1]));
     if (!alreadyImported) {
-      let at = /^(?:(?:\s*\/\/[^\n]*\n)|(?:\s*\/\*[\s\S]*?\*\/\s*)|(?:[ \t]*\r?\n))*/.exec(source)?.[0].length ?? 0;
-      const directive = /^(['"])use (?:client|server|strict)\1\s*;?[ \t]*(?:\r?\n|$)/;
-      for (let match = directive.exec(source.slice(at)); match; match = directive.exec(source.slice(at))) at += match[0].length;
-      const added = `import { ${hook} } from 'react';\n`;
+      const existing = reactImports[0];
+      let at: number;
+      let added: string;
+      if (existing) {
+        const members = existing[1];
+        at = existing.index + existing[0].indexOf('{') + 1 + members.trimEnd().length;
+        added = `${members.trim() ? ', ' : ''}${hook}`;
+      } else {
+        at = /^(?:(?:\s*\/\/[^\n]*\n)|(?:\s*\/\*[\s\S]*?\*\/\s*)|(?:[ \t]*\r?\n))*/.exec(source)?.[0].length ?? 0;
+        const directive = /^(['"])use (?:client|server|strict)\1\s*;?[ \t]*(?:\r?\n|$)/;
+        for (let match = directive.exec(source.slice(at)); match; match = directive.exec(source.slice(at))) at += match[0].length;
+        added = `import { ${hook} } from 'react';\n`;
+      }
       view.dispatch({ changes: { from: at, insert: added }, userEvent: 'input.complete' });
       if (at <= from) { from += added.length; to += added.length; }
     }

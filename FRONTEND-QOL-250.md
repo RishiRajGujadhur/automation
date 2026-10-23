@@ -44,3 +44,4 @@ This tracks **additional** improvements beyond the existing features in `FRONTEN
 | 38 | Insert a React `useTransition` pending state and scheduler from `transition`, adding the import. | Focused browser test | [VS Code snippet workflow](https://code.visualstudio.com/docs/editing/userdefinedsnippets) |
 | 39 | Insert a React `useDeferredValue` declaration from `deferredValue`, adding the import. | Focused browser test | [VS Code snippet workflow](https://code.visualstudio.com/docs/editing/userdefinedsnippets) |
 | 40 | Insert a React `useContext` lookup from `contextValue`, adding the import. | Focused browser test | [VS Code snippet workflow](https://code.visualstudio.com/docs/editing/userdefinedsnippets) |
+| 41 | Merge a snippet's missing React hook into an existing named React import, keeping imports tidy. | Focused browser test and TypeScript check | [VS Code snippet workflow](https://code.visualstudio.com/docs/editing/userdefinedsnippets) |
