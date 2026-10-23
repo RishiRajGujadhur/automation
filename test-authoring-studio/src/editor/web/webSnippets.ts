@@ -59,6 +59,9 @@ export function webSnippetCompletion(file: string, ctx: CompletionContext): Comp
   if (/\.(jsx|tsx)$/i.test(file) && matches('effect')) {
     options.push(reactHookCompletion('useEffect', 'effect', 'React effect hook with import', 'useEffect(() => {\n  ${1}\n}, [${2}]);${0}'));
   }
+  if (/\.tsx$/i.test(file) && matches('eventListener')) {
+    options.push(reactHookCompletion('useEffect', 'eventListener', 'Window event listener with effect cleanup', 'useEffect(() => {\n  const handler = (event: ${1:KeyboardEvent}) => {\n    ${2}\n  };\n  window.addEventListener("${3:keydown}", handler);\n  return () => window.removeEventListener("${3:keydown}", handler);\n}, [${4}]);${0}'));
+  }
   if (/\.(jsx|tsx)$/i.test(file) && matches('layoutEffect')) {
     options.push(reactHookCompletion('useLayoutEffect', 'layoutEffect', 'React layout effect with import', 'useLayoutEffect(() => {\n  ${1}\n}, [${2}]);${0}'));
   }
