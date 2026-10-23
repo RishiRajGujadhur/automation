@@ -140,6 +140,9 @@ export function webSnippetCompletion(file: string, ctx: CompletionContext): Comp
   if (/\.(ts|tsx)$/i.test(file) && matches('debounceFn')) {
     options.push(snippetCompletion('function ${1:debounce}<Args extends unknown[]>(callback: (...args: Args) => void, delay: number) {\n  let timer: ReturnType<typeof setTimeout> | undefined;\n  return (...args: Args) => {\n    if (timer !== undefined) clearTimeout(timer);\n    timer = setTimeout(() => callback(...args), delay);\n  };\n}${0}', { label: 'debounceFn', detail: 'Typed debounce preserving callback arguments', type: 'text' }));
   }
+  if (/\.(ts|tsx)$/i.test(file) && matches('resultType')) {
+    options.push(snippetCompletion('type ${1:Result}<T, E = Error> =\n  | { ok: true; value: T }\n  | { ok: false; error: E };\n\nconst ${2:success} = <T,>(value: T): ${1:Result}<T, never> => ({ ok: true, value });\nconst ${3:failure} = <E,>(error: E): ${1:Result}<never, E> => ({ ok: false, error });${0}', { label: 'resultType', detail: 'Discriminated Result type and constructors', type: 'text' }));
+  }
   if (/\.(html|htm)$/i.test(file) && matches('detailsDisclosure')) {
     options.push(snippetCompletion('<details>\n  <summary>${1:More information}</summary>\n  <p>${2:Details go here.}</p>\n</details>${0}', { label: 'detailsDisclosure', detail: 'Native accessible disclosure', type: 'text' }));
   }

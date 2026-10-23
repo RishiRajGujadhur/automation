@@ -90,3 +90,4 @@ This tracks **additional** improvements beyond the existing features in `FRONTEN
 | 84 | Insert deferred off-screen rendering with an editable intrinsic-size estimate. | Focused browser test | [VS Code snippet workflow](https://code.visualstudio.com/docs/editing/userdefinedsnippets) |
 | 85 | Insert a search landmark with a linked label, search input, and submit button. | Focused browser test | [VS Code snippet workflow](https://code.visualstudio.com/docs/editing/userdefinedsnippets) |
 | 86 | Insert a polite live status region for announcing dynamic updates. | Focused browser test | [VS Code snippet workflow](https://code.visualstudio.com/docs/editing/userdefinedsnippets) |
+| 87 | Insert a discriminated TypeScript Result type with typed success and failure constructors. | Focused browser test | [VS Code snippet workflow](https://code.visualstudio.com/docs/editing/userdefinedsnippets) |
