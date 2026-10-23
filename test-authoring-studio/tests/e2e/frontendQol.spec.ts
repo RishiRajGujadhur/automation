@@ -842,6 +842,17 @@ test('61: HTML disclosure snippet appears in markup completion', async ({ page, 
     await expect(editor).toContainText('aria-labelledby="details-dialog-title"');
     await expect(editor).toContainText('<form method="dialog">');
     await expect(editor).toContainText('<button type="submit">Close</button>');
+    await page.evaluate(() => {
+      const view = (window as unknown as { __activeEditor: () => { view: { state: { doc: { length: number } }; dispatch(change: unknown): void; focus(): void } } }).__activeEditor().view;
+      view.dispatch({ changes: { from: 0, to: view.state.doc.length, insert: 'skipLink' }, selection: { anchor: 8 } });
+      view.focus();
+    });
+    await page.keyboard.press('Control+Space');
+    const skipOption = page.locator('.cm-tooltip-autocomplete li').filter({ has: page.locator('.cm-completionLabel', { hasText: /^skipLink$/ }) }).first();
+    await expect(skipOption).toContainText('Keyboard skip link');
+    await skipOption.click();
+    await expect(editor).toContainText('href="#main-content"');
+    await expect(editor).toContainText('<main id="main-content">');
   } finally {
     await request.post('/api/workspace', { data: previous });
     await fs.rm(root, { recursive: true, force: true, maxRetries: 5 });
