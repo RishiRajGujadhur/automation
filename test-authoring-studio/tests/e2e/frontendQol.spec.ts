@@ -593,6 +593,18 @@ test('44: layout effect snippet inserts hook and import', async ({ page, request
     const source = await page.evaluate(() => (window as unknown as { __activeEditor: () => { view: { state: { doc: { toString(): string } } } } }).__activeEditor().view.state.doc.toString());
     expect(source).toMatch(/^'use client';\nimport \{ useLayoutEffect \} from 'react';\n/);
     expect(source).toContain('useLayoutEffect(() => {');
+    await page.evaluate(() => {
+      const view = (window as unknown as { __activeEditor: () => { view: { state: { doc: { length: number } }; dispatch(change: unknown): void; focus(): void } } }).__activeEditor().view;
+      view.dispatch({ changes: { from: 0, to: view.state.doc.length, insert: 'externalStore' }, selection: { anchor: 13 } });
+      view.focus();
+    });
+    await page.keyboard.press('Control+Space');
+    const storeOption = page.locator('.cm-tooltip-autocomplete li').filter({ has: page.locator('.cm-completionLabel', { hasText: /^externalStore$/ }) }).first();
+    await expect(storeOption).toContainText('external store subscription');
+    await storeOption.click();
+    const storeSource = await page.evaluate(() => (window as unknown as { __activeEditor: () => { view: { state: { doc: { toString(): string } } } } }).__activeEditor().view.state.doc.toString());
+    expect(storeSource).toContain("import { useSyncExternalStore } from 'react';");
+    expect(storeSource).toContain('useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot)');
   } finally {
     await request.post('/api/workspace', { data: previous });
     await fs.rm(root, { recursive: true, force: true, maxRetries: 5 });
