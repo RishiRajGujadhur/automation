@@ -1305,6 +1305,19 @@ test('73: TypeScript utility snippets expand in source files', async ({ page, re
     expect(onlineSource).toContain('window.addEventListener("offline", update);');
     expect(onlineSource).toContain('window.removeEventListener("online", update);');
     expect(onlineSource).toContain('window.removeEventListener("offline", update);');
+    await page.evaluate(() => {
+      const view = (window as unknown as { __activeEditor: () => { view: { state: { doc: { length: number } }; dispatch(change: unknown): void; focus(): void } } }).__activeEditor().view;
+      view.dispatch({ changes: { from: 0, to: view.state.doc.length, insert: 'useElementSize' }, selection: { anchor: 14 } });
+      view.focus();
+    });
+    await page.keyboard.press('Control+Space');
+    const sizeOption = page.locator('.cm-tooltip-autocomplete li').filter({ has: page.locator('.cm-completionLabel', { hasText: /^useElementSize$/ }) }).first();
+    await expect(sizeOption).toContainText('ResizeObserver hook');
+    await sizeOption.click();
+    const sizeSource = await page.evaluate(() => (window as unknown as { __activeEditor: () => { view: { state: { doc: { toString(): string } } } } }).__activeEditor().view.state.doc.toString());
+    expect(sizeSource).toContain("import { useRef, useState, useEffect } from 'react';");
+    expect(sizeSource).toContain('new ResizeObserver(([entry]) =>');
+    expect(sizeSource).toContain('return () => observer.disconnect();');
   } finally {
     await request.post('/api/workspace', { data: previous });
     await fs.rm(root, { recursive: true, force: true, maxRetries: 5 });

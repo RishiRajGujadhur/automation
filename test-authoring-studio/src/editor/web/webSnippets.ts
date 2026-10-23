@@ -97,6 +97,9 @@ export function webSnippetCompletion(file: string, ctx: CompletionContext): Comp
   if (/\.(ts|tsx)$/i.test(file) && matches('useOnlineStatus')) {
     options.push(reactHookCompletion(['useState', 'useEffect'], 'useOnlineStatus', 'Network-status hook with online and offline cleanup', 'function ${1:useOnlineStatus}(): boolean {\n  const [online, setOnline] = useState(true);\n  useEffect(() => {\n    const update = () => setOnline(navigator.onLine);\n    update();\n    window.addEventListener("online", update);\n    window.addEventListener("offline", update);\n    return () => {\n      window.removeEventListener("online", update);\n      window.removeEventListener("offline", update);\n    };\n  }, []);\n  return online;\n}${0}'));
   }
+  if (/\.(ts|tsx)$/i.test(file) && matches('useElementSize')) {
+    options.push(reactHookCompletion(['useRef', 'useState', 'useEffect'], 'useElementSize', 'Typed ResizeObserver hook with disconnect cleanup', 'function ${1:useElementSize}<T extends HTMLElement>() {\n  const ref = useRef<T | null>(null);\n  const [size, setSize] = useState({ width: 0, height: 0 });\n  useEffect(() => {\n    const element = ref.current;\n    if (!element) return;\n    const observer = new ResizeObserver(([entry]) => {\n      setSize({ width: entry.contentRect.width, height: entry.contentRect.height });\n    });\n    observer.observe(element);\n    return () => observer.disconnect();\n  }, []);\n  return [ref, size] as const;\n}${0}'));
+  }
   if (/\.(jsx|tsx)$/i.test(file) && matches('layoutEffect')) {
     options.push(reactHookCompletion('useLayoutEffect', 'layoutEffect', 'React layout effect with import', 'useLayoutEffect(() => {\n  ${1}\n}, [${2}]);${0}'));
   }
