@@ -33,3 +33,4 @@ This tracks **additional** improvements beyond the existing features in `FRONTEN
 | 27 | Insert a system dark-color-scheme block with editable colors from `darkScheme`. | Focused browser test | [VS Code snippet workflow](https://code.visualstudio.com/docs/editing/userdefinedsnippets) |
 | 28 | Insert fluid typography with editable clamp limits from `fluidType`. | Focused browser test | [VS Code snippet workflow](https://code.visualstudio.com/docs/editing/userdefinedsnippets) |
 | 29 | Insert a screen-reader-only utility class from `srOnly`. | Focused browser test | [VS Code snippet workflow](https://code.visualstudio.com/docs/editing/userdefinedsnippets) |
+| 30 | Insert direction-aware logical padding and margin properties from `logicalBox`. | Focused browser test | [VS Code snippet workflow](https://code.visualstudio.com/docs/editing/userdefinedsnippets) |
