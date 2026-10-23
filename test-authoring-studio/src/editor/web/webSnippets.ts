@@ -83,6 +83,9 @@ export function webSnippetCompletion(file: string, ctx: CompletionContext): Comp
   if (/\.(jsx|tsx)$/i.test(file) && 'formStatus'.startsWith(word.text)) {
     options.push(reactHookCompletion('useFormStatus', 'formStatus', 'React form pending status in child component', 'const { ${1:pending} } = useFormStatus();${0}', 'react-dom'));
   }
+  if (/\.(jsx|tsx)$/i.test(file) && 'lazyComponent'.startsWith(word.text)) {
+    options.push(reactHookCompletion('lazy', 'lazyComponent', 'Lazy-load a React component with import', 'const ${1:DetailsPanel} = lazy(() => import("${2:./DetailsPanel}"));${0}'));
+  }
   if (/\.(jsx|tsx)$/i.test(file) && 'contextValue'.startsWith(word.text)) {
     options.push(reactHookCompletion('useContext', 'contextValue', 'React context value with import', 'const ${1:value} = useContext(${2:Context});${0}'));
   }

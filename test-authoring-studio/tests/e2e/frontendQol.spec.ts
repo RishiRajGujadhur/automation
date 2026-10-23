@@ -715,6 +715,18 @@ test('44: layout effect snippet inserts hook and import', async ({ page, request
     const formSource = await page.evaluate(() => (window as unknown as { __activeEditor: () => { view: { state: { doc: { toString(): string } } } } }).__activeEditor().view.state.doc.toString());
     expect(formSource).toContain("import { useFormStatus } from 'react-dom';");
     expect(formSource).toContain('const { pending } = useFormStatus();');
+    await page.evaluate(() => {
+      const view = (window as unknown as { __activeEditor: () => { view: { state: { doc: { length: number } }; dispatch(change: unknown): void; focus(): void } } }).__activeEditor().view;
+      view.dispatch({ changes: { from: 0, to: view.state.doc.length, insert: 'lazyComponent' }, selection: { anchor: 13 } });
+      view.focus();
+    });
+    await page.keyboard.press('Control+Space');
+    const lazyOption = page.locator('.cm-tooltip-autocomplete li').filter({ has: page.locator('.cm-completionLabel', { hasText: /^lazyComponent$/ }) }).first();
+    await expect(lazyOption).toContainText('Lazy-load a React component');
+    await lazyOption.click();
+    const lazySource = await page.evaluate(() => (window as unknown as { __activeEditor: () => { view: { state: { doc: { toString(): string } } } } }).__activeEditor().view.state.doc.toString());
+    expect(lazySource).toContain("import { lazy } from 'react';");
+    expect(lazySource).toContain('const DetailsPanel = lazy(() => import("./DetailsPanel"));');
   } finally {
     await request.post('/api/workspace', { data: previous });
     await fs.rm(root, { recursive: true, force: true, maxRetries: 5 });

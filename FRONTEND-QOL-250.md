@@ -62,3 +62,4 @@ This tracks **additional** improvements beyond the existing features in `FRONTEN
 | 56 | Insert a React `useActionState` declaration with action dispatcher and pending flag. | Focused browser test | [React useActionState](https://react.dev/reference/react/useActionState) |
 | 57 | Insert a React `useOptimistic` value and updater for an optimistic UI action. | Focused browser test | [React useOptimistic](https://react.dev/reference/react/useOptimistic) |
 | 58 | Insert a `useFormStatus` declaration and its `react-dom` import for form child components. | Focused browser test and TypeScript check | [React useFormStatus](https://react.dev/reference/react-dom/hooks/useFormStatus) |
+| 59 | Insert a lazily imported React component declaration for code splitting. | Focused browser test | [React lazy](https://react.dev/reference/react/lazy) |
