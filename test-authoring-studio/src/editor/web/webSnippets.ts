@@ -3,6 +3,7 @@ import { syntaxTree } from '@codemirror/language';
 import { defineSetting } from '../../vscode/settings';
 
 export const frontendSnippetsEnabled = defineSetting<boolean>({ key: 'editor.frontendSnippets.enabled', category: 'Text Editor ▸ Suggestions', title: 'Frontend Snippets', type: 'boolean', default: true, description: 'Suggest editable HTML, CSS, JSX, and React snippets in frontend files.' });
+export const frontendSnippetMinPrefix = defineSetting<number>({ key: 'editor.frontendSnippets.minPrefixLength', category: 'Text Editor ▸ Suggestions', title: 'Minimum Snippet Prefix', type: 'number', default: 2, min: 1, max: 5, description: 'Characters to type before frontend snippets appear automatically. Manual completion works at any prefix length.' });
 
 /** Put a missing React hook import after a top-of-file directive, preserving `use client`. */
 function reactHookCompletion(hook: string, label: string, detail: string, body: string, module = 'react'): Completion {
@@ -37,7 +38,7 @@ function reactHookCompletion(hook: string, label: string, detail: string, body: 
 export function webSnippetCompletion(file: string, ctx: CompletionContext): CompletionResult | null {
   if (!frontendSnippetsEnabled()) return null;
   const word = ctx.matchBefore(/[A-Za-z]*/);
-  if (!word || (!ctx.explicit && word.text.length < 2)) return null;
+  if (!word || (!ctx.explicit && word.text.length < frontendSnippetMinPrefix())) return null;
   const tree = syntaxTree(ctx.state);
   for (let node: typeof tree.topNode | null = tree.resolveInner(ctx.pos, -1); node; node = node.parent) {
     if (/Comment|String|Attribute|OpenTag|CloseTag|TemplateString/.test(node.name)) return null;
