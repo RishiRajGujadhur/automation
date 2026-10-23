@@ -857,6 +857,18 @@ test('48: CSS safe-area snippet preserves viewport insets', async ({ page, reque
     expect(colorsSource).toContain('background: Canvas;');
     await page.evaluate(() => {
       const view = (window as unknown as { __activeEditor: () => { view: { state: { doc: { length: number } }; dispatch(change: unknown): void; focus(): void } } }).__activeEditor().view;
+      view.dispatch({ changes: { from: 0, to: view.state.doc.length, insert: 'moreContrast' }, selection: { anchor: 12 } });
+      view.focus();
+    });
+    await page.keyboard.press('Control+Space');
+    const contrastOption = page.locator('.cm-tooltip-autocomplete li').filter({ has: page.locator('.cm-completionLabel', { hasText: /^moreContrast$/ }) }).first();
+    await expect(contrastOption).toContainText('Higher-contrast');
+    await contrastOption.click();
+    const contrastSource = await page.evaluate(() => (window as unknown as { __activeEditor: () => { view: { state: { doc: { toString(): string } } } } }).__activeEditor().view.state.doc.toString());
+    expect(contrastSource).toContain('@media (prefers-contrast: more)');
+    expect(contrastSource).toContain('outline-offset: 2px;');
+    await page.evaluate(() => {
+      const view = (window as unknown as { __activeEditor: () => { view: { state: { doc: { length: number } }; dispatch(change: unknown): void; focus(): void } } }).__activeEditor().view;
       const next = '.box { color: flexc; }';
       view.dispatch({ changes: { from: 0, to: view.state.doc.length, insert: next }, selection: { anchor: next.indexOf('flexc') + 'flexc'.length } });
       view.focus();

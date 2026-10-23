@@ -209,5 +209,8 @@ export function webSnippetCompletion(file: string, ctx: CompletionContext): Comp
   if (/\.(css|scss|sass|less)$/i.test(file) && matches('forcedColors')) {
     options.push(snippetCompletion('@media (forced-colors: active) {\n  ${1:.control} {\n    border: 1px solid CanvasText;\n    background: Canvas;\n    color: CanvasText;\n  }\n}${0}', { label: 'forcedColors', detail: 'System-color override for forced colors', type: 'text' }));
   }
+  if (/\.(css|scss|sass|less)$/i.test(file) && matches('moreContrast')) {
+    options.push(snippetCompletion('@media (prefers-contrast: more) {\n  ${1:.control} {\n    border-width: ${2:2px};\n    outline: ${3:2px} solid currentColor;\n    outline-offset: ${4:2px};\n  }\n}${0}', { label: 'moreContrast', detail: 'Higher-contrast control affordance', type: 'text' }));
+  }
   return options.length ? { from: word.from, options } : null;
 }
