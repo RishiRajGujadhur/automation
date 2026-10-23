@@ -4,6 +4,13 @@ import { GutterMarker, gutter } from '@codemirror/view';
 export type BlameLine = { hash: string; author: string; when: string; summary: string };
 /** One entry per line of the file (null hides the annotations). */
 export const setBlame = StateEffect.define<BlameLine[] | null>();
+export const BLAME_VISIBILITY_EVENT = 'tas:blame-visibility';
+const activeFiles = new Set<string>();
+export const blameActive = (file: string) => activeFiles.has(file);
+export function setBlameActive(file: string, visible: boolean) {
+  if (visible) activeFiles.add(file); else activeFiles.delete(file);
+  window.dispatchEvent(new CustomEvent(BLAME_VISIBILITY_EVENT, { detail: { file, visible } }));
+}
 
 class BlameMarker extends GutterMarker {
   constructor(readonly b: BlameLine, readonly first: boolean) { super(); }

@@ -67,6 +67,9 @@ test('Git Changes: see changes, stage, unstage, discard, commit; history', async
     expect(git('log', '-1', '--pretty=%s').trim()).toBe('Change search steps');
     // Committed: no more change bars.
     await expect(bars).toHaveCount(0);
+    // Attribution is absent until Annotate is selected.
+    await expect(page.locator('.code-editor:not([hidden]) .cm-blame')).toHaveCount(0);
+    await expect(page.locator('.code-editor:not([hidden]) .cm-inline-blame')).toHaveCount(0);
     // Annotate: each block of lines shows the commit that last changed it.
     await page.getByLabel('Source of Steps/SearchSteps.cs').click({ button: 'right' });
     await page.getByRole('menuitem', { name: 'Annotate (Git Blame)' }).click();

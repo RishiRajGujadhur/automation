@@ -15,6 +15,7 @@ import { runRider } from './rider/commands';
 import { featureOn } from './features';
 import { activeEditor, allEditors } from './editor/activeEditor';
 import { blameOf, relativeDay } from './editor/advanced';
+import { BLAME_VISIBILITY_EVENT, blameActive } from './editor/blame';
 import { gitSettings } from './vscode/git';
 import { useSettings } from './vscode/settings';
 import { isBrowser } from './files/provider';
@@ -51,14 +52,21 @@ function useWorkspaceProblems(build: { diagnostics: { severity: string }[] }) {
 /** git.blame.statusBarItem.enabled (W32): who last changed the caret's line, and when; a click opens the Git Log. */
 function BlameStatus({ file, line }: { file: string; line: number }) {
   useSettings();
+  const [active, setActive] = useState(() => blameActive(file));
   const [b, setB] = useState<{ author: string; when: string; summary: string; hash: string } | null>(null);
   useEffect(() => {
-    if (!gitSettings.blameStatusBar() || isBrowser()) { setB(null); return; }
+    const update = (event: Event) => { if ((event as CustomEvent<{ file: string }>).detail.file === file) setActive(blameActive(file)); };
+    window.addEventListener(BLAME_VISIBILITY_EVENT, update);
+    setActive(blameActive(file));
+    return () => window.removeEventListener(BLAME_VISIBILITY_EVENT, update);
+  }, [file]);
+  useEffect(() => {
+    if (!active || !gitSettings.blameStatusBar() || isBrowser()) { setB(null); return; }
     let live = true;
     void blameOf(file).then((all) => { if (live) setB(all?.[line - 1] ?? null); });
     return () => { live = false; };
-  }, [file, line]);
-  if (!b || !gitSettings.blameStatusBar() || /^0+$/.test(b.hash)) return null;
+  }, [file, line, active]);
+  if (!active || !b || !gitSettings.blameStatusBar() || /^0+$/.test(b.hash)) return null;
   return <button className="status-item blame-status" aria-label={`Blame: ${b.author}, ${relativeDay(b.when)}`} title={`${b.author} · ${b.when} · ${b.summary} (${b.hash.slice(0, 8)})`} onClick={() => runRider('tool-gitlog', 'menu')}><span className="codicon codicon-git-commit" aria-hidden="true" />{b.author}, {relativeDay(b.when)}</button>;
 }
 function SyncStatus({ upstream, ahead, behind }: { upstream?: string; ahead: number; behind: number }) {

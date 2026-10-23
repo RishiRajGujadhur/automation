@@ -4,6 +4,7 @@ import { Decoration, EditorView, ViewPlugin, WidgetType, type ViewUpdate, type D
 import { api } from '../api';
 import { featureOn } from '../features';
 import { FILE_SAVED_EVENT } from './events';
+import { BLAME_VISIBILITY_EVENT, blameActive } from './blame';
 import { stepBindings, setStepBindings } from './gherkin';
 import { OPEN_LOCATION_EVENT } from './links';
 
@@ -48,10 +49,20 @@ const blameReady = StateEffect.define<null>();
 registerAdvanced((file) => (file.startsWith('untitled') ? [] : ViewPlugin.fromClass(class {
   decorations = Decoration.none;
   data: Blame[] | null | undefined;
-  constructor(view: EditorView) { this.load(view); }
+  onVisibility: (event: Event) => void;
+  constructor(view: EditorView) {
+    this.onVisibility = (event) => {
+      if ((event as CustomEvent<{ file: string }>).detail.file !== file) return;
+      if (blameActive(file)) this.load(view);
+      else { this.data = null; this.decorations = Decoration.none; view.dispatch({ effects: blameReady.of(null) }); }
+    };
+    window.addEventListener(BLAME_VISIBILITY_EVENT, this.onVisibility);
+    if (blameActive(file)) this.load(view);
+  }
+  destroy() { window.removeEventListener(BLAME_VISIBILITY_EVENT, this.onVisibility); }
   load(view: EditorView) { void blameOf(file).then((d) => { this.data = d; if (d) queueMicrotask(() => { try { view.dispatch({ effects: blameReady.of(null) }); } catch { /* destroyed */ } }); }); }
   update(u: ViewUpdate) {
-    if (!featureOn('inline-blame')) { this.decorations = Decoration.none; return; }
+    if (!blameActive(file) || !featureOn('inline-blame')) { this.decorations = Decoration.none; return; }
     if (this.data === undefined) return;
     if (u.transactions.some((t) => t.effects.some((e) => e.is(blameReady))) || u.selectionSet || u.docChanged || u.focusChanged) {
       if (u.docChanged && !blames.has(file)) this.load(u.view);
@@ -315,10 +326,21 @@ const BLOCK = /^\s*(Feature|Rule|Background|Scenario|Scenario Outline|Scenario T
 registerAdvanced((file, kind) => (kind !== 'gherkin' || file.startsWith('untitled') ? [] : ViewPlugin.fromClass(class {
   decorations = Decoration.none;
   data: Blame[] | null = null;
-  constructor(readonly view: EditorView) { void blameOf(file).then((d) => { this.data = d; this.decorations = this.build(); queueMicrotask(() => { try { view.dispatch({ effects: blameReady.of(null) }); } catch { /* destroyed */ } }); }); }
+  onVisibility: (event: Event) => void;
+  constructor(readonly view: EditorView) {
+    this.onVisibility = (event) => {
+      if ((event as CustomEvent<{ file: string }>).detail.file !== file) return;
+      if (blameActive(file)) this.load();
+      else { this.data = null; this.decorations = Decoration.none; view.dispatch({ effects: blameReady.of(null) }); }
+    };
+    window.addEventListener(BLAME_VISIBILITY_EVENT, this.onVisibility);
+    if (blameActive(file)) this.load();
+  }
+  destroy() { window.removeEventListener(BLAME_VISIBILITY_EVENT, this.onVisibility); }
+  load() { void blameOf(file).then((d) => { this.data = d; this.decorations = this.build(); queueMicrotask(() => { try { this.view.dispatch({ effects: blameReady.of(null) }); } catch { /* destroyed */ } }); }); }
   update(u: ViewUpdate) { if (u.docChanged) this.decorations = this.build(); }
   build() {
-    if (!this.data || !featureOn('code-vision-authors')) return Decoration.none;
+    if (!blameActive(file) || !this.data || !featureOn('code-vision-authors')) return Decoration.none;
     const doc = this.view.state.doc;
     const heads: number[] = [];
     for (let n = 1; n <= doc.lines; n++) if (BLOCK.test(doc.line(n).text)) heads.push(n);

@@ -268,7 +268,7 @@ test('Y61 / Y62 Commit message: issue key from the branch; Conventional Commits 
   await expect(view.getByLabel('Commit message')).toHaveValue('ABC-123: fix: Sign in works');
 });
 
-test('Z1 / Z3 Inline blame on the caret line; Stage Selected Lines', async ({ page }) => {
+test('Z3 Stage Selected Lines without automatic blame annotations', async ({ page }) => {
   const login = path.join(root, 'Features/Auth/Login.feature');
   const lines = (await fs.readFile(login, 'utf8')).split('\n');
   const mark = (i: number, m: string) => { lines[i] = lines[i].replace(/(\r?)$/, ` ${m}$1`); };
@@ -276,11 +276,9 @@ test('Z1 / Z3 Inline blame on the caret line; Stage Selected Lines', async ({ pa
   mark(3, '(two)');
   await fs.writeFile(login, lines.join('\n'));
   await open(page);
-  // Z1: an unchanged line shows its commit; a changed one says so.
-  await page.getByLabel('Gherkin source').locator('.cm-line', { hasText: '"admin"' }).click();
-  await expect(page.locator('.cm-inline-blame')).toHaveText(/^Ada, today · Sign in as admin$/);
+  // Attribution stays hidden until Git Blame is requested.
   await page.getByLabel('Gherkin source').locator('.cm-line').first().click();
-  await expect(page.locator('.cm-inline-blame')).toHaveText('You · not committed yet');
+  await expect(page.locator('.cm-inline-blame')).toHaveCount(0);
   // Z3: only the first line's change is staged.
   await page.getByRole('button', { name: 'Tools menu' }).click();
   await page.getByRole('menuitem', { name: /^Stage Selected Lines/ }).click();
@@ -291,7 +289,7 @@ test('Z1 / Z3 Inline blame on the caret line; Stage Selected Lines', async ({ pa
   expect(g('diff')).toContain('(two)');
 });
 
-test('Z18 Code Vision: who changed each scenario', async ({ page }) => {
+test('Z18 Code Vision authors stay hidden before Git Blame', async ({ page }) => {
   await open(page);
-  await expect(page.locator('.cm-code-vision').first()).toHaveText(/^Ada · today$/);
+  await expect(page.locator('.cm-code-vision')).toHaveCount(0);
 });

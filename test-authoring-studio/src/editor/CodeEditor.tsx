@@ -24,7 +24,7 @@ import { stepLenses, setLenses, setRefLenses, type StepLens, type RefLens } from
 import { runGutter, setRunMarks, type RunMark } from './runGutter';
 import { changeGutter } from './changeGutter';
 import { useChangeBars } from './useChangeBars';
-import { blameGutter, setBlame, type BlameLine } from './blame';
+import { blameActive, blameGutter, setBlame, setBlameActive, type BlameLine } from './blame';
 import { coverageGutter, setCoverage } from './coverage';
 import { useTestRun } from '../testing/store';
 import { createTwoFilesPatch } from 'diff';
@@ -275,8 +275,11 @@ export default function CodeEditor({ file, reveal, active = true, onNotice, onIn
   const annotate = async () => {
     const v = ref.current?.view;
     if (!v) return;
-    if (v.dom.querySelector('.cm-blame')) { v.dispatch({ effects: setBlame.of(null) }); return; }
-    try { v.dispatch({ effects: setBlame.of(await api<BlameLine[]>(`/git/blame?file=${encodeURIComponent(file)}`)) }); } catch (e) { onNotice?.((e as Error).message); }
+    if (blameActive(file)) { v.dispatch({ effects: setBlame.of(null) }); setBlameActive(file, false); return; }
+    try {
+      v.dispatch({ effects: setBlame.of(await api<BlameLine[]>(`/git/blame?file=${encodeURIComponent(file)}`)) });
+      setBlameActive(file, true);
+    } catch (e) { onNotice?.((e as Error).message); }
   };
 
   // Jump to the requested line once the document is in place.

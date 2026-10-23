@@ -685,12 +685,15 @@ function gitInit(dir: string) {
   run('commit -q -m "First commit"');
 }
 
-test('W32 Git blame in the status bar (git.blame.statusBarItem.enabled)', async ({ page }) => {
+test('W32 Git blame in the status bar appears only after Annotate', async ({ page }) => {
   gitInit(temp);
   await start(page);
   const src = await open(page, 'Steps/AuthSteps.cs');
   await src.locator('.cm-line').nth(3).click();
   const item = page.locator('footer.status-bar').getByRole('button', { name: /^Blame:/ });
+  await expect(item).toHaveCount(0);
+  await src.click({ button: 'right' });
+  await page.getByRole('menuitem', { name: 'Annotate (Git Blame)' }).click();
   await expect(item).toHaveText(/Ada Lovelace, today/);
   await expect(item).toHaveAttribute('title', /First commit/);
   await item.click();
