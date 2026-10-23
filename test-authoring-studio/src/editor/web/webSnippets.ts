@@ -37,6 +37,7 @@ export function webSnippetCompletion(file: string, ctx: CompletionContext): Comp
   const tree = syntaxTree(ctx.state);
   for (let node: typeof tree.topNode | null = tree.resolveInner(ctx.pos, -1); node; node = node.parent) {
     if (/Comment|String|Attribute|OpenTag|CloseTag|TemplateString/.test(node.name)) return null;
+    if (/\.(css|scss|sass|less)$/i.test(file) && node.name === 'ValueName') return null;
   }
   const options = [];
   if (/\.tsx$/i.test(file)) {
