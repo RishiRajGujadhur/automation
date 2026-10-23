@@ -973,6 +973,18 @@ test('61: HTML disclosure snippet appears in markup completion', async ({ page, 
     await expect(editor).toContainText('width="800" height="600" loading="lazy"');
     await page.evaluate(() => {
       const view = (window as unknown as { __activeEditor: () => { view: { state: { doc: { length: number } }; dispatch(change: unknown): void; focus(): void } } }).__activeEditor().view;
+      view.dispatch({ changes: { from: 0, to: view.state.doc.length, insert: 'searchForm' }, selection: { anchor: 10 } });
+      view.focus();
+    });
+    await page.keyboard.press('Control+Space');
+    const searchOption = page.locator('.cm-tooltip-autocomplete li').filter({ has: page.locator('.cm-completionLabel', { hasText: /^searchForm$/ }) }).first();
+    await expect(searchOption).toContainText('search landmark');
+    await searchOption.click();
+    await expect(editor).toContainText('<form role="search" action="/search" method="get">');
+    await expect(editor).toContainText('<label for="site-search">Search this site</label>');
+    await expect(editor).toContainText('<input id="site-search" name="q" type="search" />');
+    await page.evaluate(() => {
+      const view = (window as unknown as { __activeEditor: () => { view: { state: { doc: { length: number } }; dispatch(change: unknown): void; focus(): void } } }).__activeEditor().view;
       const next = '<!-- detailsDisclosure -->';
       view.dispatch({ changes: { from: 0, to: view.state.doc.length, insert: next }, selection: { anchor: next.indexOf('detailsDisclosure') + 'detailsDisclosure'.length } });
       view.focus();
