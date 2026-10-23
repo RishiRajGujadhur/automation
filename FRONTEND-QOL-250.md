@@ -45,3 +45,4 @@ This tracks **additional** improvements beyond the existing features in `FRONTEN
 | 39 | Insert a React `useDeferredValue` declaration from `deferredValue`, adding the import. | Focused browser test | [VS Code snippet workflow](https://code.visualstudio.com/docs/editing/userdefinedsnippets) |
 | 40 | Insert a React `useContext` lookup from `contextValue`, adding the import. | Focused browser test | [VS Code snippet workflow](https://code.visualstudio.com/docs/editing/userdefinedsnippets) |
 | 41 | Merge a snippet's missing React hook into an existing named React import, keeping imports tidy. | Focused browser test and TypeScript check | [VS Code snippet workflow](https://code.visualstudio.com/docs/editing/userdefinedsnippets) |
+| 42 | Respect trailing commas in named React imports when adding a hook, avoiding invalid double commas. | Focused browser test | [VS Code snippet workflow](https://code.visualstudio.com/docs/editing/userdefinedsnippets) |

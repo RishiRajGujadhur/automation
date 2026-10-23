@@ -14,7 +14,7 @@ function reactHookCompletion(hook: string, label: string, detail: string, body: 
       if (existing) {
         const members = existing[1];
         at = existing.index + existing[0].indexOf('{') + 1 + members.trimEnd().length;
-        added = `${members.trim() ? ', ' : ''}${hook}`;
+        added = `${members.trim() && !members.trimEnd().endsWith(',') ? ', ' : ' '}${hook}`;
       } else {
         at = /^(?:(?:\s*\/\/[^\n]*\n)|(?:\s*\/\*[\s\S]*?\*\/\s*)|(?:[ \t]*\r?\n))*/.exec(source)?.[0].length ?? 0;
         const directive = /^(['"])use (?:client|server|strict)\1\s*;?[ \t]*(?:\r?\n|$)/;
