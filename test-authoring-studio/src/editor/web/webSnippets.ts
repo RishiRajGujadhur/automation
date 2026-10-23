@@ -11,7 +11,7 @@ function reactHookCompletion(hook: string | string[], label: string, detail: str
     let from = originalFrom, to = originalTo;
     const source = view.state.doc.toString();
     const tree = syntaxTree(view.state);
-    const reactImports = [...source.matchAll(new RegExp(`import\\s*\\{([^}]*)\\}\\s*from\\s*['"]${module}['"]`, 'g'))].filter((match) => {
+    const reactImports = [...source.matchAll(new RegExp(`import\\s*(?:[A-Za-z_$][\\w$]*\\s*,\\s*)?\\{([^}]*)\\}\\s*from\\s*['"]${module}['"]`, 'g'))].filter((match) => {
       for (let node: typeof tree.topNode | null = tree.resolveInner(match.index + 1, 1); node; node = node.parent) {
         if (node.name === 'ImportDeclaration') return true;
         if (/Comment|String/.test(node.name)) return false;
