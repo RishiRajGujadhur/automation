@@ -280,5 +280,8 @@ export function webSnippetCompletion(file: string, ctx: CompletionContext): Comp
   if (/\.(css|scss|sass|less)$/i.test(file) && matches('stableScrollbar')) {
     options.push(snippetCompletion('scrollbar-gutter: stable;\n  overflow-y: ${1:auto};${0}', { label: 'stableScrollbar', detail: 'Reserve scrollbar space to prevent layout shift', type: 'text' }));
   }
+  if (/\.(css|scss|sass|less)$/i.test(file) && matches('clampLines')) {
+    options.push(snippetCompletion('display: -webkit-box;\n  -webkit-box-orient: vertical;\n  -webkit-line-clamp: ${1:3};\n  overflow: hidden;${0}', { label: 'clampLines', detail: 'Clamp text to an editable number of lines', type: 'text' }));
+  }
   return options.length ? { from: word.from, options } : null;
 }
