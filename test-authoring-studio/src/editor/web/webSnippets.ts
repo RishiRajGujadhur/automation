@@ -40,6 +40,9 @@ export function webSnippetCompletion(file: string, ctx: CompletionContext): Comp
   if (/\.(jsx|tsx)$/i.test(file) && 'memoValue'.startsWith(word.text)) {
     options.push(reactHookCompletion('useMemo', 'memoValue', 'React memoized value with import', 'const ${1:result} = useMemo(() => ${2:compute()}, [${3}]);${0}'));
   }
+  if (/\.(jsx|tsx)$/i.test(file) && 'callback'.startsWith(word.text)) {
+    options.push(reactHookCompletion('useCallback', 'callback', 'React memoized callback with import', 'const ${1:handleAction} = useCallback(() => {\n  ${2}\n}, [${3}]);${0}'));
+  }
   if (/\.(css|scss|sass|less)$/i.test(file) && 'flexc'.startsWith(word.text)) {
     options.push(snippetCompletion('display: flex;\n  align-items: center;\n  gap: ${1:1rem};${0}', { label: 'flexc', detail: 'Flex container', type: 'text' }));
   }

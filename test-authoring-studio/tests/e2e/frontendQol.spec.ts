@@ -438,6 +438,18 @@ test('31: React state snippet adds one import after use client', async ({ page, 
     const memoSource = await page.evaluate(() => (window as unknown as { __activeEditor: () => { view: { state: { doc: { toString(): string } } } } }).__activeEditor().view.state.doc.toString());
     expect(memoSource).toContain("import { useMemo } from 'react';");
     expect(memoSource).toContain('const result = useMemo(() => compute(), []);');
+    await page.evaluate(() => {
+      const view = (window as unknown as { __activeEditor: () => { view: { state: { doc: { length: number } }; dispatch(change: unknown): void; focus(): void } } }).__activeEditor().view;
+      view.dispatch({ changes: { from: 0, to: view.state.doc.length, insert: "'use client';\ncallback" }, selection: { anchor: "'use client';\ncallback".length } });
+      view.focus();
+    });
+    await page.keyboard.press('Control+Space');
+    const callbackOption = page.locator('.cm-tooltip-autocomplete li').filter({ has: page.locator('.cm-completionLabel', { hasText: /^callback$/ }) }).first();
+    await expect(callbackOption).toContainText('React memoized callback with import');
+    await callbackOption.click();
+    const callbackSource = await page.evaluate(() => (window as unknown as { __activeEditor: () => { view: { state: { doc: { toString(): string } } } } }).__activeEditor().view.state.doc.toString());
+    expect(callbackSource).toContain("import { useCallback } from 'react';");
+    expect(callbackSource).toContain('const handleAction = useCallback(() => {');
   } finally {
     await request.post('/api/workspace', { data: previous });
     await fs.rm(root, { recursive: true, force: true, maxRetries: 5 });
