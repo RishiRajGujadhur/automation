@@ -217,6 +217,16 @@ test('3: expands a CSS Emmet property abbreviation', async ({ page, request }) =
     await darkOption.click();
     await expect(editor).toContainText('@media (prefers-color-scheme: dark)');
     await expect(editor).toContainText('color-scheme: dark;');
+    await page.evaluate(() => {
+      const view = (window as unknown as { __activeEditor: () => { view: { state: { doc: { length: number } }; dispatch(change: unknown): void; focus(): void } } }).__activeEditor().view;
+      view.dispatch({ changes: { from: 0, to: view.state.doc.length, insert: '.heading {\n  fluidType\n}' }, selection: { anchor: '.heading {\n  fluidType'.length } });
+      view.focus();
+    });
+    await page.keyboard.press('Control+Space');
+    const fluidOption = page.locator('.cm-tooltip-autocomplete li').filter({ has: page.locator('.cm-completionLabel', { hasText: /^fluidType$/ }) }).first();
+    await expect(fluidOption).toContainText('Fluid type scale');
+    await fluidOption.click();
+    await expect(editor).toContainText('font-size: clamp(1rem, calc(1rem + 1vw), 2rem);');
   } finally {
     await request.post('/api/workspace', { data: previous });
     await fs.rm(root, { recursive: true, force: true, maxRetries: 5 });

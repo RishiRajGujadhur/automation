@@ -36,5 +36,8 @@ export function webSnippetCompletion(file: string, ctx: CompletionContext): Comp
   if (/\.(css|scss|sass|less)$/i.test(file) && 'darkScheme'.startsWith(word.text)) {
     options.push(snippetCompletion('@media (prefers-color-scheme: dark) {\n  ${1::root} {\n    color-scheme: dark;\n    background: ${2:#111827};\n    color: ${3:#f9fafb};\n  }\n}${0}', { label: 'darkScheme', detail: 'System dark color scheme', type: 'text' }));
   }
+  if (/\.(css|scss|sass|less)$/i.test(file) && 'fluidType'.startsWith(word.text)) {
+    options.push(snippetCompletion('font-size: clamp(${1:1rem}, ${2:calc(1rem + 1vw)}, ${3:2rem});${0}', { label: 'fluidType', detail: 'Fluid type scale', type: 'text' }));
+  }
   return options.length ? { from: word.from, options } : null;
 }
