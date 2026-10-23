@@ -36,7 +36,7 @@ export function webSnippetCompletion(file: string, ctx: CompletionContext): Comp
   if (!word || (!ctx.explicit && !word.text)) return null;
   const tree = syntaxTree(ctx.state);
   for (let node: typeof tree.topNode | null = tree.resolveInner(ctx.pos, -1); node; node = node.parent) {
-    if (/Comment|String|AttributeValue|TemplateString/.test(node.name)) return null;
+    if (/Comment|String|Attribute|OpenTag|CloseTag|TemplateString/.test(node.name)) return null;
   }
   const options = [];
   if (/\.tsx$/i.test(file)) {

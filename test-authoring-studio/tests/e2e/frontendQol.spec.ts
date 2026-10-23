@@ -885,6 +885,14 @@ test('61: HTML disclosure snippet appears in markup completion', async ({ page, 
     });
     await page.keyboard.press('Control+Space');
     await expect(page.locator('.cm-tooltip-autocomplete li').filter({ has: page.locator('.cm-completionLabel', { hasText: /^detailsDisclosure$/ }) })).toHaveCount(0);
+    await page.evaluate(() => {
+      const view = (window as unknown as { __activeEditor: () => { view: { state: { doc: { length: number } }; dispatch(change: unknown): void; focus(): void } } }).__activeEditor().view;
+      const next = '<div detailsDisclosure></div>';
+      view.dispatch({ changes: { from: 0, to: view.state.doc.length, insert: next }, selection: { anchor: next.indexOf('detailsDisclosure') + 'detailsDisclosure'.length } });
+      view.focus();
+    });
+    await page.keyboard.press('Control+Space');
+    await expect(page.locator('.cm-tooltip-autocomplete li').filter({ has: page.locator('.cm-completionLabel', { hasText: /^detailsDisclosure$/ }) })).toHaveCount(0);
   } finally {
     await request.post('/api/workspace', { data: previous });
     await fs.rm(root, { recursive: true, force: true, maxRetries: 5 });
