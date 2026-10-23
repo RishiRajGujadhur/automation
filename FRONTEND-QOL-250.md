@@ -21,3 +21,4 @@ This tracks **additional** improvements beyond the existing features in `FRONTEN
 | 15 | Choose HTML, XHTML, or XML self-closing tags for Emmet expansion from Settings. | Focused browser test | [VS Code's Emmet preferences](https://github.com/microsoft/vscode/blob/main/extensions/emmet/package.json) |
 | 16 | Select the first nested HTML element and then its text from a whole-element selection. | Focused browser test | [VS Code Emmet balance inward action](https://github.com/microsoft/vscode/blob/main/extensions/emmet/package.json) |
 | 17 | Jump between an HTML element's opening and closing tag names. | Focused browser test | [VS Code Emmet matching pair action](https://github.com/microsoft/vscode/blob/main/extensions/emmet/package.json) |
+| 18 | Insert a TSX React function component from an `rfc` completion snippet, naming it from the file. | Focused browser test | [VS Code snippet workflow](https://code.visualstudio.com/docs/editing/userdefinedsnippets) |

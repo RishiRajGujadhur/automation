@@ -9,6 +9,7 @@ import { doComplete } from '@vscode/emmet-helper';
 import { TextDocument } from 'vscode-languageserver-textdocument';
 import { cmSnippet } from './markupFeatures';
 import { emmetConfig, emmetSettings } from './emmet';
+import { webSnippetCompletion } from './webSnippets';
 
 /**
  * TypeScript / JavaScript in the editor (FRONTEND-100.md): the TypeScript service's diagnostics (unused code faded),
@@ -111,7 +112,7 @@ export function scriptFeatures(file: string): Extension[] {
   return [
     jsdocOnEnter(file),
     scriptLinter(file),
-    autocompletion({ override: [gateSource((ctx) => complete(file, ctx)), gateSource((ctx) => jsxEmmetComplete(file, ctx))], activateOnTyping: true, maxRenderedOptions: 80, icons: true }),
+    autocompletion({ override: [gateSource((ctx) => complete(file, ctx)), gateSource((ctx) => jsxEmmetComplete(file, ctx)), gateSource((ctx) => webSnippetCompletion(file, ctx))], activateOnTyping: true, maxRenderedOptions: 80, icons: true }),
     quickInfo(file),
   ];
 }

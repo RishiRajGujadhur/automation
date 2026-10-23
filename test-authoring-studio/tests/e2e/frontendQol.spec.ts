@@ -238,3 +238,29 @@ test('15: Emmet uses the configured XHTML self-closing style', async ({ page, re
     await fs.rm(root, { recursive: true, force: true, maxRetries: 5 });
   }
 });
+
+test('18: TSX component snippet uses the file name', async ({ page, request }) => {
+  const previous = (await (await request.get('/api/workspace')).json()).config;
+  const root = await fs.mkdtemp(path.join(os.tmpdir(), 'studio-react-snippets-'));
+  try {
+    await fs.mkdir(path.join(root, 'src'));
+    await fs.writeFile(path.join(root, 'src', 'UserCard.tsx'), 'rfc');
+    expect((await request.post('/api/workspace', { data: { repositoryRoot: root, targetProject: '.' } })).ok()).toBe(true);
+    await page.goto('/#/features/editor');
+    await expect(page.getByText('Repository indexed')).toBeVisible();
+    await page.evaluate(() => window.dispatchEvent(new CustomEvent('tas:open-location', { detail: { file: 'src/UserCard.tsx', line: 1 } })));
+    const editor = page.getByLabel('Source of src/UserCard.tsx');
+    await expect(editor).toBeVisible();
+    await editor.click();
+    await page.keyboard.press('Control+End');
+    await page.keyboard.press('Control+Space');
+    const option = page.locator('.cm-tooltip-autocomplete li').filter({ has: page.locator('.cm-completionLabel', { hasText: /^rfc$/ }) }).first();
+    await expect(option).toContainText('React function component');
+    await option.click();
+    await expect(editor).toContainText('export function UserCard()');
+    await expect(editor).toContainText('return <div></div>;');
+  } finally {
+    await request.post('/api/workspace', { data: previous });
+    await fs.rm(root, { recursive: true, force: true, maxRetries: 5 });
+  }
+});
