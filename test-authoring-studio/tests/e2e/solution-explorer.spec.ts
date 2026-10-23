@@ -1,4 +1,26 @@
 import { test, expect } from '@playwright/test';
+import fs from 'node:fs/promises';
+import os from 'node:os';
+import path from 'node:path';
+
+test('Explorer shows C#, JavaScript, TypeScript, and HTML source files by default', async ({ page, request }) => {
+  const previous = (await (await request.get('/api/workspace')).json()).config;
+  const root = await fs.mkdtemp(path.join(os.tmpdir(), 'studio-source-explorer-'));
+  try {
+    for (const file of ['App.cs', 'app.js', 'app.ts', 'index.html']) await fs.writeFile(path.join(root, file), '');
+    await fs.writeFile(path.join(root, 'output.log'), '');
+    expect((await request.post('/api/workspace', { data: { repositoryRoot: root, targetProject: '.' } })).ok()).toBe(true);
+    await page.goto('/#/features/editor');
+    const explorer = page.getByRole('region', { name: 'Explorer' });
+    for (const file of ['App.cs', 'app.js', 'app.ts', 'index.html']) {
+      await expect(explorer.getByRole('button', { name: file, exact: true })).toBeVisible();
+    }
+    await expect(explorer.getByRole('button', { name: 'output.log', exact: true })).toHaveCount(0);
+  } finally {
+    await request.post('/api/workspace', { data: previous });
+    await fs.rm(root, { recursive: true, force: true, maxRetries: 5 });
+  }
+});
 
 test('Solution Explorer: solution → project → dependencies → folders, nesting, open C#, search and filters', async ({ page }) => {
   await page.addInitScript(() => localStorage.setItem('tas:settings', JSON.stringify({ 'workbench.controls.explorer-pending': true })));

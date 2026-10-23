@@ -62,7 +62,7 @@ test('a classic .NET Framework solution opens like in Visual Studio', async ({ p
     await page.addInitScript(() => { if (!sessionStorage.getItem('seeded')) { localStorage.setItem('tas:prefs', JSON.stringify({ mode: 'advanced' })); sessionStorage.setItem('seeded', '1'); } });
     await page.goto('/#/features/editor');
     const se = page.getByRole('region', { name: 'Explorer' });
-    await expect(se.getByText("Solution 'Shop Tests' (1 project)")).toBeVisible();
+    await expect(se.getByRole('button', { name: 'Collapse project Shop Tests' })).toBeVisible();
     // References (classic projects): framework, packages.config packages, assemblies.
     await se.getByRole('button', { name: 'Expand References' }).click();
     const deps = se.locator('.se-deps');
@@ -70,14 +70,11 @@ test('a classic .NET Framework solution opens like in Visual Studio', async ({ p
     await expect(deps).toContainText('SpecFlow (3.1.86)');
     await expect(deps).toContainText('NUnit (3.11.0)');
     await expect(deps).toContainText('TechTalk.SpecFlow');
-    // Only listed files; the feature shows with its real name; the unlisted file and packages/ do not.
+    // Source files appear even when a classic project does not list them; packages/ remains excluded.
     await expect(se.getByRole('button', { name: 'shoppingCart.feature', exact: true })).toBeVisible();
     await expect(se.getByRole('button', { name: 'CartSteps.cs', exact: true })).toBeVisible();
-    await expect(se.getByRole('button', { name: 'Unlisted.cs', exact: true })).toHaveCount(0);
-    await expect(se.getByText('TechTalk.SpecFlow.xml')).toHaveCount(0);
-    // Show All Files reveals files the project does not list (as in Visual Studio).
-    await se.getByRole('button', { name: 'Show all files' }).click();
     await expect(se.getByRole('button', { name: 'Unlisted.cs', exact: true })).toBeVisible();
+    await expect(se.getByText('TechTalk.SpecFlow.xml')).toHaveCount(0);
     // The step binds: the feature is indexed against the project's step definitions.
     expect(ws.index.stats.steps).toBe(1);
 

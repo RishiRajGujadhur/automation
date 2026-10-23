@@ -1951,16 +1951,18 @@ test('W100 files.exclude hides matching files; Show all files shows them', async
 });
 
 test('W101 explorer.excludeGitIgnore hides what .gitignore leaves out', async ({ page }) => {
-  await fs.writeFile(path.join(temp, '.gitignore'), '*.tmp.txt\n');
+  await fs.writeFile(path.join(temp, '.gitignore'), '*.tmp.txt\nignored.ts\n');
   await fs.writeFile(path.join(temp, 'Steps/scratch.tmp.txt'), '');
+  await fs.writeFile(path.join(temp, 'ignored.ts'), 'export {};\n');
   gitInit(temp);
-  await start(page);
+  await start(page, { 'workbench.controls.explorer-all-files': true });
   const side = page.locator('#feature-sidebar');
-  await expect(side.getByRole('button', { name: 'scratch.tmp.txt', exact: true })).toBeVisible();
-  await page.evaluate(() => localStorage.setItem('tas:settings', JSON.stringify({ 'explorer.excludeGitIgnore': true })));
-  await page.reload();
   await expect(side.getByRole('button', { name: 'AuthSteps.cs', exact: true })).toBeVisible();
   await expect(side.getByRole('button', { name: 'scratch.tmp.txt', exact: true })).toHaveCount(0);
+  await expect(side.getByRole('button', { name: 'ignored.ts', exact: true })).toHaveCount(0);
+  await side.getByRole('button', { name: 'Show all files' }).click();
+  await expect(side.getByRole('button', { name: 'scratch.tmp.txt', exact: true })).toHaveCount(0);
+  await expect(side.getByRole('button', { name: 'ignored.ts', exact: true })).toHaveCount(0);
 });
 
 test('W102 Explorer: files dropped from the desktop onto a folder are copied into it', async ({ page }) => {

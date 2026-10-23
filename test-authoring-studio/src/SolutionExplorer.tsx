@@ -66,6 +66,8 @@ export const COMPARE_FILES_EVENT = 'tas:compare-files';
 let clipboard: { mode: 'copy' | 'cut'; path: string; paths?: string[] } | null = null;
 /** Layers hidden until "Show all files" (build output and unclassified files). */
 const HIDDEN_LAYERS = new Set(['Output', 'Other']);
+/** Source files remain visible even when the project model classifies them as Other or Output. */
+const DEFAULT_SOURCE_FILE = /\.(?:cs|js|jsx|ts|tsx|html?|css|scss|sass|less)$/i;
 const icon = (file: string) => (file.endsWith('.feature') ? FileText : file.endsWith('.xml') ? Braces : file.endsWith('.csproj') || file.endsWith('.json') || file.endsWith('.config') ? FileCog : FileCode2);
 
 /** The search terms marked in a name (QOL-50). */
@@ -325,13 +327,14 @@ export default function SolutionExplorer({ features, revision, activeFile, query
     // files.exclude (W100): hidden unless Show All Files is on.
     const excluded = Object.entries(files_.exclude() ?? {}).filter(([, on]) => on).map(([g]) => globMatcher(g));
     return list.filter((x) =>
-      (showAll || (!excluded.some((m) => m(x.file)) && !gitIgnored.has(x.file))) &&
+      !gitIgnored.has(x.file) &&
+      (showAll || !excluded.some((m) => m(x.file))) &&
       !codeBehind.has(x.file) && // nested under its feature instead
       !x.file.endsWith('.csproj') && // the project node stands for it
       // Inside a real project folder every file shows (as in Visual Studio); only build output stays hidden.
-      (showAll || !HIDDEN_LAYERS.has(x.layer) || (x.layer === 'Other' && inProject(x.file))) &&
+      (showAll || DEFAULT_SOURCE_FILE.test(x.file) || !HIDDEN_LAYERS.has(x.layer) || (x.layer === 'Other' && inProject(x.file))) &&
       // Classic (.NET Framework) projects list their files: only those show, like Visual Studio (Show All Files: all).
-      (showAll || listedByProject(x.file)) &&
+      (showAll || DEFAULT_SOURCE_FILE.test(x.file) || listedByProject(x.file)) &&
       (!pendingOnly || pending.includes(x.file)) &&
       (!openOnly || openSet.has(x.file)) &&
       (!scope || x.file.startsWith(`${scope}/`)) &&
