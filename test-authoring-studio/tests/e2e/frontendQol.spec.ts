@@ -955,6 +955,17 @@ test('73: TypeScript utility snippets expand in source files', async ({ page, re
     await option.click();
     await expect(editor).toContainText('async function fetchJson<T>(url: string, signal?: AbortSignal): Promise<T>');
     await expect(editor).toContainText('if (!response.ok) throw new Error("HTTP " + response.status);');
+    await page.evaluate(() => {
+      const view = (window as unknown as { __activeEditor: () => { view: { state: { doc: { length: number } }; dispatch(change: unknown): void; focus(): void } } }).__activeEditor().view;
+      view.dispatch({ changes: { from: 0, to: view.state.doc.length, insert: 'typeGuard' }, selection: { anchor: 9 } });
+      view.focus();
+    });
+    await page.keyboard.press('Control+Space');
+    const guardOption = page.locator('.cm-tooltip-autocomplete li').filter({ has: page.locator('.cm-completionLabel', { hasText: /^typeGuard$/ }) }).first();
+    await expect(guardOption).toContainText('Runtime checked');
+    await guardOption.click();
+    await expect(editor).toContainText('function isThing(value: unknown): value is Thing');
+    await expect(editor).toContainText('"id" in value && typeof value.id === "string"');
   } finally {
     await request.post('/api/workspace', { data: previous });
     await fs.rm(root, { recursive: true, force: true, maxRetries: 5 });

@@ -77,3 +77,4 @@ This tracks **additional** improvements beyond the existing features in `FRONTEN
 | 71 | Let developers disable frontend snippet suggestions with a Text Editor setting. | Focused browser test and TypeScript check | [VS Code settings](https://code.visualstudio.com/docs/configure/settings) |
 | 72 | Let developers set the minimum typed prefix for automatic frontend snippets from one to five characters. | Focused completion tests and TypeScript check | [VS Code settings](https://code.visualstudio.com/docs/configure/settings) |
 | 73 | Insert a typed JSON fetch helper that accepts an abort signal and checks HTTP responses. | Focused browser test | [VS Code snippet workflow](https://code.visualstudio.com/docs/editing/userdefinedsnippets) |
+| 74 | Insert a TypeScript type and matching runtime guard with linked type and property names. | Focused browser test | [VS Code snippet workflow](https://code.visualstudio.com/docs/editing/userdefinedsnippets) |
