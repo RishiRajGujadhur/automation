@@ -69,6 +69,17 @@ test('1: expands an HTML Emmet abbreviation with editable fields', async ({ page
       return view.state.sliceDoc(view.state.selection.main.from, view.state.selection.main.to);
     })).toBe('Hello');
     await page.evaluate(() => {
+      const view = (window as unknown as { __activeEditor: () => { view: { dispatch(change: unknown): void; focus(): void } } }).__activeEditor().view;
+      view.dispatch({ selection: { anchor: 2 } });
+      view.focus();
+    });
+    await page.keyboard.press('Shift+F10');
+    await page.getByRole('menuitem', { name: 'Go to Matching HTML Tag' }).click();
+    await expect.poll(() => page.evaluate(() => (window as unknown as { __activeEditor: () => { view: { state: { selection: { main: { head: number } } } } } }).__activeEditor().view.state.selection.main.head)).toBe(19);
+    await page.keyboard.press('Shift+F10');
+    await page.getByRole('menuitem', { name: 'Go to Matching HTML Tag' }).click();
+    await expect.poll(() => page.evaluate(() => (window as unknown as { __activeEditor: () => { view: { state: { selection: { main: { head: number } } } } } }).__activeEditor().view.state.selection.main.head)).toBe(1);
+    await page.evaluate(() => {
       const view = (window as unknown as { __activeEditor: () => { view: { state: { doc: { length: number } }; dispatch(change: unknown): void; focus(): void } } }).__activeEditor().view;
       view.dispatch({ changes: { from: 0, to: view.state.doc.length, insert: 'ul>li.item*2' }, selection: { anchor: 'ul>li.item*2'.length } });
       view.focus();

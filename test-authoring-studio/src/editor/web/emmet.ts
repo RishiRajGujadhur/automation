@@ -95,3 +95,17 @@ export function balanceHtmlInward(view: EditorView): boolean {
   view.focus();
   return true;
 }
+
+/** Jump between the opening and closing names of the element under the caret. */
+export function goToMatchingHtmlTag(view: EditorView): boolean {
+  const head = view.state.selection.main.head;
+  let tag = syntaxTree(view.state).resolveInner(head, -1);
+  while (tag && tag.name !== 'OpenTag' && tag.name !== 'CloseTag') tag = tag.parent!;
+  if (!tag || tag.parent?.name !== 'Element') return false;
+  const partner = tag.parent.getChild(tag.name === 'OpenTag' ? 'CloseTag' : 'OpenTag');
+  const name = partner?.getChild('TagName');
+  if (!name) return false;
+  view.dispatch({ selection: { anchor: name.from }, scrollIntoView: true });
+  view.focus();
+  return true;
+}
