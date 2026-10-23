@@ -1279,6 +1279,20 @@ test('73: TypeScript utility snippets expand in source files', async ({ page, re
     expect(storageSource).toContain('const [readyKey, setReadyKey] = useState<string | null>(null);');
     expect(storageSource).toContain('if (readyKey !== key) return;');
     expect(storageSource).toContain('window.localStorage.setItem(key, JSON.stringify(value));');
+    await page.evaluate(() => {
+      const view = (window as unknown as { __activeEditor: () => { view: { state: { doc: { length: number } }; dispatch(change: unknown): void; focus(): void } } }).__activeEditor().view;
+      view.dispatch({ changes: { from: 0, to: view.state.doc.length, insert: 'useOnlineStatus' }, selection: { anchor: 15 } });
+      view.focus();
+    });
+    await page.keyboard.press('Control+Space');
+    const onlineOption = page.locator('.cm-tooltip-autocomplete li').filter({ has: page.locator('.cm-completionLabel', { hasText: /^useOnlineStatus$/ }) }).first();
+    await expect(onlineOption).toContainText('online and offline cleanup');
+    await onlineOption.click();
+    const onlineSource = await page.evaluate(() => (window as unknown as { __activeEditor: () => { view: { state: { doc: { toString(): string } } } } }).__activeEditor().view.state.doc.toString());
+    expect(onlineSource).toContain("import { useState, useEffect } from 'react';");
+    expect(onlineSource).toContain('window.addEventListener("offline", update);');
+    expect(onlineSource).toContain('window.removeEventListener("online", update);');
+    expect(onlineSource).toContain('window.removeEventListener("offline", update);');
   } finally {
     await request.post('/api/workspace', { data: previous });
     await fs.rm(root, { recursive: true, force: true, maxRetries: 5 });

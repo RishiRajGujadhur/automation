@@ -107,3 +107,4 @@ This tracks **additional** improvements beyond the existing features in `FRONTEN
 | 101 | Insert a typed keyboard shortcut hook that ignores editable controls and removes its listener. | Focused browser test | [VS Code snippet workflow](https://code.visualstudio.com/docs/editing/userdefinedsnippets) |
 | 102 | Insert a typed React local-storage state hook with server-render and storage-error guards. | Focused browser test | [VS Code snippet workflow](https://code.visualstudio.com/docs/editing/userdefinedsnippets) |
 | 103 | Insert a labeled sign-in form with email and password autocomplete attributes. | Focused browser test | [VS Code snippet workflow](https://code.visualstudio.com/docs/editing/userdefinedsnippets) |
+| 104 | Insert a React online-status hook with both network listeners and cleanup. | Focused browser test | [VS Code snippet workflow](https://code.visualstudio.com/docs/editing/userdefinedsnippets) |

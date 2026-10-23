@@ -94,6 +94,9 @@ export function webSnippetCompletion(file: string, ctx: CompletionContext): Comp
   if (/\.(ts|tsx)$/i.test(file) && matches('useLocalStorage')) {
     options.push(reactHookCompletion(['useState', 'useEffect', 'useRef'], 'useLocalStorage', 'Typed persistent state with SSR and storage guards', 'function ${1:useLocalStorage}<T>(key: string, initialValue: T) {\n  const fallback = useRef(initialValue);\n  const [value, setValue] = useState<T>(fallback.current);\n  const [readyKey, setReadyKey] = useState<string | null>(null);\n  useEffect(() => {\n    try {\n      const stored = window.localStorage.getItem(key);\n      setValue(stored === null ? fallback.current : JSON.parse(stored) as T);\n    } catch {\n      setValue(fallback.current);\n    }\n    setReadyKey(key);\n  }, [key]);\n  useEffect(() => {\n    if (readyKey !== key) return;\n    try { window.localStorage.setItem(key, JSON.stringify(value)); } catch { /* Storage may be unavailable. */ }\n  }, [key, readyKey, value]);\n  return [value, setValue] as const;\n}${0}'));
   }
+  if (/\.(ts|tsx)$/i.test(file) && matches('useOnlineStatus')) {
+    options.push(reactHookCompletion(['useState', 'useEffect'], 'useOnlineStatus', 'Network-status hook with online and offline cleanup', 'function ${1:useOnlineStatus}(): boolean {\n  const [online, setOnline] = useState(true);\n  useEffect(() => {\n    const update = () => setOnline(navigator.onLine);\n    update();\n    window.addEventListener("online", update);\n    window.addEventListener("offline", update);\n    return () => {\n      window.removeEventListener("online", update);\n      window.removeEventListener("offline", update);\n    };\n  }, []);\n  return online;\n}${0}'));
+  }
   if (/\.(jsx|tsx)$/i.test(file) && matches('layoutEffect')) {
     options.push(reactHookCompletion('useLayoutEffect', 'layoutEffect', 'React layout effect with import', 'useLayoutEffect(() => {\n  ${1}\n}, [${2}]);${0}'));
   }
