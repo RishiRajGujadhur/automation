@@ -935,3 +935,28 @@ test('71: frontend snippets can be disabled from editor settings', async ({ page
     await fs.rm(root, { recursive: true, force: true, maxRetries: 5 });
   }
 });
+
+test('73: TypeScript utility snippets expand in source files', async ({ page, request }) => {
+  const previous = (await (await request.get('/api/workspace')).json()).config;
+  const root = await fs.mkdtemp(path.join(os.tmpdir(), 'studio-ts-utility-snippets-'));
+  try {
+    await fs.writeFile(path.join(root, 'utils.ts'), 'fetchJson');
+    expect((await request.post('/api/workspace', { data: { repositoryRoot: root, targetProject: '.' } })).ok()).toBe(true);
+    await page.goto('/#/features/editor');
+    await expect(page.getByText('Repository indexed')).toBeVisible();
+    await page.evaluate(() => window.dispatchEvent(new CustomEvent('tas:open-location', { detail: { file: 'utils.ts', line: 1 } })));
+    const editor = page.getByLabel('Source of utils.ts');
+    await expect(editor).toBeVisible();
+    await editor.click();
+    await page.keyboard.press('Control+End');
+    await page.keyboard.press('Control+Space');
+    const option = page.locator('.cm-tooltip-autocomplete li').filter({ has: page.locator('.cm-completionLabel', { hasText: /^fetchJson$/ }) }).first();
+    await expect(option).toContainText('Typed JSON request');
+    await option.click();
+    await expect(editor).toContainText('async function fetchJson<T>(url: string, signal?: AbortSignal): Promise<T>');
+    await expect(editor).toContainText('if (!response.ok) throw new Error("HTTP " + response.status);');
+  } finally {
+    await request.post('/api/workspace', { data: previous });
+    await fs.rm(root, { recursive: true, force: true, maxRetries: 5 });
+  }
+});

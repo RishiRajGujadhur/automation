@@ -122,6 +122,9 @@ export function webSnippetCompletion(file: string, ctx: CompletionContext): Comp
   if (/\.(jsx|tsx)$/i.test(file) && matches('validatedInput')) {
     options.push(snippetCompletion('<label htmlFor="${1:field}">${2:Label}</label>\n<input id="${1:field}" aria-invalid={${3:hasError}} aria-describedby={${3:hasError} ? "${1:field}-error" : undefined} />\n{${3:hasError} && <p id="${1:field}-error" role="alert">${4:Error message}</p>}${0}', { label: 'validatedInput', detail: 'React input linked to validation message', type: 'text' }));
   }
+  if (/\.(ts|tsx)$/i.test(file) && matches('fetchJson')) {
+    options.push(snippetCompletion('async function ${1:fetchJson}<T>(url: string, signal?: AbortSignal): Promise<T> {\n  const response = await fetch(url, { signal });\n  if (!response.ok) throw new Error("HTTP " + response.status);\n  return await response.json() as T;\n}${0}', { label: 'fetchJson', detail: 'Typed JSON request with abort and HTTP error handling', type: 'text' }));
+  }
   if (/\.(html|htm)$/i.test(file) && matches('detailsDisclosure')) {
     options.push(snippetCompletion('<details>\n  <summary>${1:More information}</summary>\n  <p>${2:Details go here.}</p>\n</details>${0}', { label: 'detailsDisclosure', detail: 'Native accessible disclosure', type: 'text' }));
   }
