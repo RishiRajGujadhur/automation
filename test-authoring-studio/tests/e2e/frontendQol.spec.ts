@@ -1261,7 +1261,8 @@ test('73: TypeScript utility snippets expand in source files', async ({ page, re
     await expect(storageOption).toContainText('SSR and storage guards');
     await storageOption.click();
     const storageSource = await page.evaluate(() => (window as unknown as { __activeEditor: () => { view: { state: { doc: { toString(): string } } } } }).__activeEditor().view.state.doc.toString());
-    expect(storageSource).toContain("import { useState, useEffect } from 'react';");
+    expect(storageSource).toContain("import { useState, useEffect, useRef } from 'react';");
+    expect(storageSource).toContain('const fallback = useRef(initialValue);');
     expect(storageSource).toContain('const [readyKey, setReadyKey] = useState<string | null>(null);');
     expect(storageSource).toContain('if (readyKey !== key) return;');
     expect(storageSource).toContain('window.localStorage.setItem(key, JSON.stringify(value));');
