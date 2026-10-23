@@ -122,6 +122,9 @@ export function webSnippetCompletion(file: string, ctx: CompletionContext): Comp
   if (/\.(html|htm)$/i.test(file) && 'radioGroup'.startsWith(word.text)) {
     options.push(snippetCompletion('<fieldset>\n  <legend>${1:Choose an option}</legend>\n  <label><input type="radio" name="${2:choice}" value="${3:first}" /> ${4:First}</label>\n  <label><input type="radio" name="${2:choice}" value="${5:second}" /> ${6:Second}</label>\n</fieldset>${0}', { label: 'radioGroup', detail: 'Labeled radio group with shared name', type: 'text' }));
   }
+  if (/\.(html|htm)$/i.test(file) && 'pictureSources'.startsWith(word.text)) {
+    options.push(snippetCompletion('<picture>\n  <source type="image/avif" srcset="${1:image.avif}" />\n  <source type="image/webp" srcset="${2:image.webp}" />\n  <img src="${3:image.jpg}" alt="${4:Describe the image}" width="${5:800}" height="${6:600}" loading="lazy" decoding="async" />\n</picture>${0}', { label: 'pictureSources', detail: 'Modern image formats with sized fallback', type: 'text' }));
+  }
   if (/\.(css|scss|sass|less)$/i.test(file) && 'flexc'.startsWith(word.text)) {
     options.push(snippetCompletion('display: flex;\n  align-items: center;\n  gap: ${1:1rem};${0}', { label: 'flexc', detail: 'Flex container', type: 'text' }));
   }

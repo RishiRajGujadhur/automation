@@ -865,6 +865,18 @@ test('61: HTML disclosure snippet appears in markup completion', async ({ page, 
     await expect(editor).toContainText('<legend>Choose an option</legend>');
     const radioSource = await page.evaluate(() => (window as unknown as { __activeEditor: () => { view: { state: { doc: { toString(): string } } } } }).__activeEditor().view.state.doc.toString());
     expect(radioSource.match(/name="choice"/g)).toHaveLength(2);
+    await page.evaluate(() => {
+      const view = (window as unknown as { __activeEditor: () => { view: { state: { doc: { length: number } }; dispatch(change: unknown): void; focus(): void } } }).__activeEditor().view;
+      view.dispatch({ changes: { from: 0, to: view.state.doc.length, insert: 'pictureSources' }, selection: { anchor: 14 } });
+      view.focus();
+    });
+    await page.keyboard.press('Control+Space');
+    const pictureOption = page.locator('.cm-tooltip-autocomplete li').filter({ has: page.locator('.cm-completionLabel', { hasText: /^pictureSources$/ }) }).first();
+    await expect(pictureOption).toContainText('Modern image formats');
+    await pictureOption.click();
+    await expect(editor).toContainText('type="image/avif"');
+    await expect(editor).toContainText('type="image/webp"');
+    await expect(editor).toContainText('width="800" height="600" loading="lazy"');
   } finally {
     await request.post('/api/workspace', { data: previous });
     await fs.rm(root, { recursive: true, force: true, maxRetries: 5 });
