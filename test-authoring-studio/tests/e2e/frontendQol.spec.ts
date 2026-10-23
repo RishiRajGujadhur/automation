@@ -630,6 +630,18 @@ test('44: layout effect snippet inserts hook and import', async ({ page, request
     expect(emptySource).toContain('items.length === 0 ?');
     expect(emptySource).toContain('<p>No items yet</p>');
     expect(emptySource).toContain('<li key={item.id}>{item.name}</li>');
+    await page.evaluate(() => {
+      const view = (window as unknown as { __activeEditor: () => { view: { state: { doc: { length: number } }; dispatch(change: unknown): void; focus(): void } } }).__activeEditor().view;
+      view.dispatch({ changes: { from: 0, to: view.state.doc.length, insert: 'labeledInput' }, selection: { anchor: 12 } });
+      view.focus();
+    });
+    await page.keyboard.press('Control+Space');
+    const inputOption = page.locator('.cm-tooltip-autocomplete li').filter({ has: page.locator('.cm-completionLabel', { hasText: /^labeledInput$/ }) }).first();
+    await expect(inputOption).toContainText('Accessible React label');
+    await inputOption.click();
+    const inputSource = await page.evaluate(() => (window as unknown as { __activeEditor: () => { view: { state: { doc: { toString(): string } } } } }).__activeEditor().view.state.doc.toString());
+    expect(inputSource).toContain('<label htmlFor="field">Label</label>');
+    expect(inputSource).toContain('<input id="field" name="field" type="text" />');
   } finally {
     await request.post('/api/workspace', { data: previous });
     await fs.rm(root, { recursive: true, force: true, maxRetries: 5 });

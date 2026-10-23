@@ -55,3 +55,4 @@ This tracks **additional** improvements beyond the existing features in `FRONTEN
 | 49 | Insert sticky-header positioning with editable offset, stacking level, and opaque background. | Focused browser test | [VS Code snippet workflow](https://code.visualstudio.com/docs/editing/userdefinedsnippets) |
 | 50 | Insert a CSS `@supports` feature query with editable property, value, and selector. | Focused browser test | [VS Code snippet workflow](https://code.visualstudio.com/docs/editing/userdefinedsnippets) |
 | 51 | Insert a horizontal scroll-snap container and child alignment rule with editable behavior. | Focused browser test | [VS Code snippet workflow](https://code.visualstudio.com/docs/editing/userdefinedsnippets) |
+| 52 | Insert a React label and input pair with linked `htmlFor`, `id`, and `name` fields. | Focused browser test | [VS Code snippet workflow](https://code.visualstudio.com/docs/editing/userdefinedsnippets) |
