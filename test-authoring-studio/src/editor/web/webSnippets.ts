@@ -113,6 +113,9 @@ export function webSnippetCompletion(file: string, ctx: CompletionContext): Comp
   if (/\.(html|htm)$/i.test(file) && 'detailsDisclosure'.startsWith(word.text)) {
     options.push(snippetCompletion('<details>\n  <summary>${1:More information}</summary>\n  <p>${2:Details go here.}</p>\n</details>${0}', { label: 'detailsDisclosure', detail: 'Native accessible disclosure', type: 'text' }));
   }
+  if (/\.(html|htm)$/i.test(file) && 'nativeDialog'.startsWith(word.text)) {
+    options.push(snippetCompletion('<dialog id="${1:details-dialog}" aria-labelledby="${1:details-dialog}-title">\n  <h2 id="${1:details-dialog}-title">${2:Dialog title}</h2>\n  <p>${3:Dialog content}</p>\n  <form method="dialog">\n    <button type="submit">${4:Close}</button>\n  </form>\n</dialog>${0}', { label: 'nativeDialog', detail: 'Labeled native dialog with close button', type: 'text' }));
+  }
   if (/\.(css|scss|sass|less)$/i.test(file) && 'flexc'.startsWith(word.text)) {
     options.push(snippetCompletion('display: flex;\n  align-items: center;\n  gap: ${1:1rem};${0}', { label: 'flexc', detail: 'Flex container', type: 'text' }));
   }

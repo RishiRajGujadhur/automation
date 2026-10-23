@@ -65,3 +65,4 @@ This tracks **additional** improvements beyond the existing features in `FRONTEN
 | 59 | Insert a lazily imported React component declaration for code splitting. | Focused browser test | [React lazy](https://react.dev/reference/react/lazy) |
 | 60 | Insert a React Suspense boundary with an editable loading fallback and child component. | Focused browser test | [React Suspense](https://react.dev/reference/react/Suspense) |
 | 61 | Offer an editable native disclosure snippet directly in HTML completion. | Focused browser test and TypeScript check | [VS Code snippet workflow](https://code.visualstudio.com/docs/editing/userdefinedsnippets) |
+| 62 | Insert a native dialog with linked title ID, content, and a semantic close form. | Focused browser test | [VS Code snippet workflow](https://code.visualstudio.com/docs/editing/userdefinedsnippets) |

@@ -830,6 +830,18 @@ test('61: HTML disclosure snippet appears in markup completion', async ({ page, 
     await option.click();
     await expect(editor).toContainText('<summary>More information</summary>');
     await expect(editor).toContainText('<p>Details go here.</p>');
+    await page.evaluate(() => {
+      const view = (window as unknown as { __activeEditor: () => { view: { state: { doc: { length: number } }; dispatch(change: unknown): void; focus(): void } } }).__activeEditor().view;
+      view.dispatch({ changes: { from: 0, to: view.state.doc.length, insert: 'nativeDialog' }, selection: { anchor: 12 } });
+      view.focus();
+    });
+    await page.keyboard.press('Control+Space');
+    const dialogOption = page.locator('.cm-tooltip-autocomplete li').filter({ has: page.locator('.cm-completionLabel', { hasText: /^nativeDialog$/ }) }).first();
+    await expect(dialogOption).toContainText('Labeled native dialog');
+    await dialogOption.click();
+    await expect(editor).toContainText('aria-labelledby="details-dialog-title"');
+    await expect(editor).toContainText('<form method="dialog">');
+    await expect(editor).toContainText('<button type="submit">Close</button>');
   } finally {
     await request.post('/api/workspace', { data: previous });
     await fs.rm(root, { recursive: true, force: true, maxRetries: 5 });
