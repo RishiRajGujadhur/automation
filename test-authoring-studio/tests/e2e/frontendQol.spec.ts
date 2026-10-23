@@ -913,3 +913,25 @@ test('61: HTML disclosure snippet appears in markup completion', async ({ page, 
     await fs.rm(root, { recursive: true, force: true, maxRetries: 5 });
   }
 });
+
+test('71: frontend snippets can be disabled from editor settings', async ({ page, request }) => {
+  const previous = (await (await request.get('/api/workspace')).json()).config;
+  const root = await fs.mkdtemp(path.join(os.tmpdir(), 'studio-snippet-settings-'));
+  try {
+    await fs.writeFile(path.join(root, 'index.html'), 'detailsDisclosure');
+    expect((await request.post('/api/workspace', { data: { repositoryRoot: root, targetProject: '.' } })).ok()).toBe(true);
+    await page.addInitScript(() => localStorage.setItem('tas:settings', JSON.stringify({ 'editor.frontendSnippets.enabled': false })));
+    await page.goto('/#/features/editor');
+    await expect(page.getByText('Repository indexed')).toBeVisible();
+    await page.evaluate(() => window.dispatchEvent(new CustomEvent('tas:open-location', { detail: { file: 'index.html', line: 1 } })));
+    const editor = page.getByLabel('Source of index.html');
+    await expect(editor).toBeVisible();
+    await editor.click();
+    await page.keyboard.press('Control+End');
+    await page.keyboard.press('Control+Space');
+    await expect(page.locator('.cm-tooltip-autocomplete li').filter({ has: page.locator('.cm-completionLabel', { hasText: /^detailsDisclosure$/ }) })).toHaveCount(0);
+  } finally {
+    await request.post('/api/workspace', { data: previous });
+    await fs.rm(root, { recursive: true, force: true, maxRetries: 5 });
+  }
+});

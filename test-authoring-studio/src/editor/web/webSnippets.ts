@@ -1,5 +1,8 @@
 import { snippet, snippetCompletion, type Completion, type CompletionContext, type CompletionResult } from '@codemirror/autocomplete';
 import { syntaxTree } from '@codemirror/language';
+import { defineSetting } from '../../vscode/settings';
+
+export const frontendSnippetsEnabled = defineSetting<boolean>({ key: 'editor.frontendSnippets.enabled', category: 'Text Editor ▸ Suggestions', title: 'Frontend Snippets', type: 'boolean', default: true, description: 'Suggest editable HTML, CSS, JSX, and React snippets in frontend files.' });
 
 /** Put a missing React hook import after a top-of-file directive, preserving `use client`. */
 function reactHookCompletion(hook: string, label: string, detail: string, body: string, module = 'react'): Completion {
@@ -32,6 +35,7 @@ function reactHookCompletion(hook: string, label: string, detail: string, body: 
 
 /** Frontend snippets stay scoped to the file types where their output is valid. */
 export function webSnippetCompletion(file: string, ctx: CompletionContext): CompletionResult | null {
+  if (!frontendSnippetsEnabled()) return null;
   const word = ctx.matchBefore(/[A-Za-z]*/);
   if (!word || (!ctx.explicit && word.text.length < 2)) return null;
   const tree = syntaxTree(ctx.state);
