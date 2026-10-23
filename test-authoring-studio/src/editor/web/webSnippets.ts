@@ -206,5 +206,8 @@ export function webSnippetCompletion(file: string, ctx: CompletionContext): Comp
   if (/\.(css|scss|sass|less)$/i.test(file) && matches('printStyles')) {
     options.push(snippetCompletion('@media print {\n  @page { margin: ${1:1.5cm}; }\n  body { color: #000; background: #fff; }\n  ${2:.no-print} { display: none !important; }\n  ${0}\n}', { label: 'printStyles', detail: 'Print media rules with page margins', type: 'text' }));
   }
+  if (/\.(css|scss|sass|less)$/i.test(file) && matches('forcedColors')) {
+    options.push(snippetCompletion('@media (forced-colors: active) {\n  ${1:.control} {\n    border: 1px solid CanvasText;\n    background: Canvas;\n    color: CanvasText;\n  }\n}${0}', { label: 'forcedColors', detail: 'System-color override for forced colors', type: 'text' }));
+  }
   return options.length ? { from: word.from, options } : null;
 }

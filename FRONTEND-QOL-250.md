@@ -84,3 +84,4 @@ This tracks **additional** improvements beyond the existing features in `FRONTEN
 | 78 | Insert a React interval hook that supports pausing and cleans up its timer. | Focused browser test | [VS Code snippet workflow](https://code.visualstudio.com/docs/editing/userdefinedsnippets) |
 | 79 | Insert an ordered CSS cascade layer declaration and editable component layer block. | Focused browser test | [VS Code snippet workflow](https://code.visualstudio.com/docs/editing/userdefinedsnippets) |
 | 80 | Insert print media rules with editable page margins and a hidden-on-print selector. | Focused browser test | [VS Code snippet workflow](https://code.visualstudio.com/docs/editing/userdefinedsnippets) |
+| 81 | Insert a forced-colors media rule using system canvas and text colors. | Focused browser test | [VS Code snippet workflow](https://code.visualstudio.com/docs/editing/userdefinedsnippets) |
