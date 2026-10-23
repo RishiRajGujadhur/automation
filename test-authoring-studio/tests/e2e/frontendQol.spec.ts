@@ -572,3 +572,29 @@ test('41: React hook snippet extends an existing named React import', async ({ p
     await fs.rm(root, { recursive: true, force: true, maxRetries: 5 });
   }
 });
+
+test('44: layout effect snippet inserts hook and import', async ({ page, request }) => {
+  const previous = (await (await request.get('/api/workspace')).json()).config;
+  const root = await fs.mkdtemp(path.join(os.tmpdir(), 'studio-layout-effect-'));
+  try {
+    await fs.writeFile(path.join(root, 'Measure.tsx'), "'use client';\nlayoutEffect");
+    expect((await request.post('/api/workspace', { data: { repositoryRoot: root, targetProject: '.' } })).ok()).toBe(true);
+    await page.goto('/#/features/editor');
+    await expect(page.getByText('Repository indexed')).toBeVisible();
+    await page.evaluate(() => window.dispatchEvent(new CustomEvent('tas:open-location', { detail: { file: 'Measure.tsx', line: 1 } })));
+    const editor = page.getByLabel('Source of Measure.tsx');
+    await expect(editor).toBeVisible();
+    await editor.click();
+    await page.keyboard.press('Control+End');
+    await page.keyboard.press('Control+Space');
+    const option = page.locator('.cm-tooltip-autocomplete li').filter({ has: page.locator('.cm-completionLabel', { hasText: /^layoutEffect$/ }) }).first();
+    await expect(option).toContainText('React layout effect with import');
+    await option.click();
+    const source = await page.evaluate(() => (window as unknown as { __activeEditor: () => { view: { state: { doc: { toString(): string } } } } }).__activeEditor().view.state.doc.toString());
+    expect(source).toMatch(/^'use client';\nimport \{ useLayoutEffect \} from 'react';\n/);
+    expect(source).toContain('useLayoutEffect(() => {');
+  } finally {
+    await request.post('/api/workspace', { data: previous });
+    await fs.rm(root, { recursive: true, force: true, maxRetries: 5 });
+  }
+});
