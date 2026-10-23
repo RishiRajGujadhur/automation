@@ -832,6 +832,19 @@ test('48: CSS safe-area snippet preserves viewport insets', async ({ page, reque
     expect(layerSource).toContain('@layer components {');
     await page.evaluate(() => {
       const view = (window as unknown as { __activeEditor: () => { view: { state: { doc: { length: number } }; dispatch(change: unknown): void; focus(): void } } }).__activeEditor().view;
+      view.dispatch({ changes: { from: 0, to: view.state.doc.length, insert: 'printStyles' }, selection: { anchor: 11 } });
+      view.focus();
+    });
+    await page.keyboard.press('Control+Space');
+    const printOption = page.locator('.cm-tooltip-autocomplete li').filter({ has: page.locator('.cm-completionLabel', { hasText: /^printStyles$/ }) }).first();
+    await expect(printOption).toContainText('Print media rules');
+    await printOption.click();
+    const printSource = await page.evaluate(() => (window as unknown as { __activeEditor: () => { view: { state: { doc: { toString(): string } } } } }).__activeEditor().view.state.doc.toString());
+    expect(printSource).toContain('@media print {');
+    expect(printSource).toContain('@page { margin: 1.5cm; }');
+    expect(printSource).toContain('.no-print { display: none !important; }');
+    await page.evaluate(() => {
+      const view = (window as unknown as { __activeEditor: () => { view: { state: { doc: { length: number } }; dispatch(change: unknown): void; focus(): void } } }).__activeEditor().view;
       const next = '.box { color: flexc; }';
       view.dispatch({ changes: { from: 0, to: view.state.doc.length, insert: next }, selection: { anchor: next.indexOf('flexc') + 'flexc'.length } });
       view.focus();

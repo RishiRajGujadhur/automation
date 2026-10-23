@@ -203,5 +203,8 @@ export function webSnippetCompletion(file: string, ctx: CompletionContext): Comp
   if (/\.(css|scss|sass|less)$/i.test(file) && matches('cascadeLayer')) {
     options.push(snippetCompletion('@layer reset, base, components, utilities;\n\n@layer ${1:components} {\n  ${2:.component} {\n    ${0}\n  }\n}', { label: 'cascadeLayer', detail: 'Ordered CSS cascade layers', type: 'text' }));
   }
+  if (/\.(css|scss|sass|less)$/i.test(file) && matches('printStyles')) {
+    options.push(snippetCompletion('@media print {\n  @page { margin: ${1:1.5cm}; }\n  body { color: #000; background: #fff; }\n  ${2:.no-print} { display: none !important; }\n  ${0}\n}', { label: 'printStyles', detail: 'Print media rules with page margins', type: 'text' }));
+  }
   return options.length ? { from: word.from, options } : null;
 }
