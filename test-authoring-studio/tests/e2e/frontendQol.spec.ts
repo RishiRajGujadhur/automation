@@ -1176,6 +1176,17 @@ test('73: TypeScript utility snippets expand in source files', async ({ page, re
     expect(debouncedSource).toContain("import { useState, useEffect } from 'react';");
     expect(debouncedSource).toContain('function useDebouncedValue<T>(value: T, delay = 300): T');
     expect(debouncedSource).toContain('return () => window.clearTimeout(id);');
+    await page.evaluate(() => {
+      const view = (window as unknown as { __activeEditor: () => { view: { state: { doc: { length: number } }; dispatch(change: unknown): void; focus(): void } } }).__activeEditor().view;
+      view.dispatch({ changes: { from: 0, to: view.state.doc.length, insert: 'throttleFn' }, selection: { anchor: 10 } });
+      view.focus();
+    });
+    await page.keyboard.press('Control+Space');
+    const typedThrottleOption = page.locator('.cm-tooltip-autocomplete li').filter({ has: page.locator('.cm-completionLabel', { hasText: /^throttleFn$/ }) }).first();
+    await expect(typedThrottleOption).toContainText('Typed leading-edge');
+    await typedThrottleOption.click();
+    const typedThrottleSource = await page.evaluate(() => (window as unknown as { __activeEditor: () => { view: { state: { doc: { toString(): string } } } } }).__activeEditor().view.state.doc.toString());
+    expect(typedThrottleSource).toContain('function throttle<Args extends unknown[]>(callback: (...args: Args) => void, interval: number)');
   } finally {
     await request.post('/api/workspace', { data: previous });
     await fs.rm(root, { recursive: true, force: true, maxRetries: 5 });

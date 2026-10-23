@@ -99,3 +99,4 @@ This tracks **additional** improvements beyond the existing features in `FRONTEN
 | 93 | Insert a JavaScript JSON fetch helper with abort support and HTTP error handling, without TypeScript syntax. | Focused browser test | [VS Code snippet workflow](https://code.visualstudio.com/docs/editing/userdefinedsnippets) |
 | 94 | Insert a plain JavaScript debounce helper that preserves callback arguments and clears the previous timer. | Focused browser test | [VS Code snippet workflow](https://code.visualstudio.com/docs/editing/userdefinedsnippets) |
 | 95 | Insert a leading-edge JavaScript throttle helper for high-frequency callbacks. | Focused browser test | [VS Code snippet workflow](https://code.visualstudio.com/docs/editing/userdefinedsnippets) |
+| 96 | Insert a typed throttle helper that preserves callback argument types in TypeScript. | Focused browser test | [VS Code snippet workflow](https://code.visualstudio.com/docs/editing/userdefinedsnippets) |
