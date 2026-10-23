@@ -392,3 +392,30 @@ test('18: TSX component snippet uses the file name', async ({ page, request }) =
     await fs.rm(root, { recursive: true, force: true, maxRetries: 5 });
   }
 });
+
+test('31: React state snippet adds one import after use client', async ({ page, request }) => {
+  const previous = (await (await request.get('/api/workspace')).json()).config;
+  const root = await fs.mkdtemp(path.join(os.tmpdir(), 'studio-hook-snippets-'));
+  try {
+    await fs.mkdir(path.join(root, 'src'));
+    await fs.writeFile(path.join(root, 'src', 'Counter.tsx'), "'use client';\nstate");
+    expect((await request.post('/api/workspace', { data: { repositoryRoot: root, targetProject: '.' } })).ok()).toBe(true);
+    await page.goto('/#/features/editor');
+    await expect(page.getByText('Repository indexed')).toBeVisible();
+    await page.evaluate(() => window.dispatchEvent(new CustomEvent('tas:open-location', { detail: { file: 'src/Counter.tsx', line: 1 } })));
+    const editor = page.getByLabel('Source of src/Counter.tsx');
+    await expect(editor).toBeVisible();
+    await editor.click();
+    await page.keyboard.press('Control+End');
+    await page.keyboard.press('Control+Space');
+    const option = page.locator('.cm-tooltip-autocomplete li').filter({ has: page.locator('.cm-completionLabel', { hasText: /^state$/ }) }).first();
+    await expect(option).toContainText('React state hook with import');
+    await option.click();
+    const source = await page.evaluate(() => (window as unknown as { __activeEditor: () => { view: { state: { doc: { toString(): string } } } } }).__activeEditor().view.state.doc.toString());
+    expect(source).toMatch(/^'use client';\nimport \{ useState \} from 'react';\n/);
+    expect(source).toContain('const [value, setValue] = useState(initialValue);');
+  } finally {
+    await request.post('/api/workspace', { data: previous });
+    await fs.rm(root, { recursive: true, force: true, maxRetries: 5 });
+  }
+});

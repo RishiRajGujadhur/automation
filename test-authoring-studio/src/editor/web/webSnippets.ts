@@ -1,4 +1,23 @@
-import { snippetCompletion, type CompletionContext, type CompletionResult } from '@codemirror/autocomplete';
+import { snippet, snippetCompletion, type Completion, type CompletionContext, type CompletionResult } from '@codemirror/autocomplete';
+
+/** Put a missing React hook import after a top-of-file directive, preserving `use client`. */
+function reactHookCompletion(hook: string, label: string, detail: string, body: string): Completion {
+  return { ...snippetCompletion(body, { label, detail, type: 'text' }), apply: (view, _completion, originalFrom, originalTo) => {
+    let from = originalFrom, to = originalTo;
+    const source = view.state.doc.toString();
+    const reactImports = [...source.matchAll(/import\s*\{([^}]*)\}\s*from\s*['"]react['"]/g)];
+    const alreadyImported = reactImports.some((match) => new RegExp(`\\b${hook}\\b(?!\\s+as\\b)`).test(match[1]));
+    if (!alreadyImported) {
+      let at = /^(?:(?:\s*\/\/[^\n]*\n)|(?:\s*\/\*[\s\S]*?\*\/\s*)|(?:[ \t]*\r?\n))*/.exec(source)?.[0].length ?? 0;
+      const directive = /^(['"])use (?:client|server|strict)\1\s*;?[ \t]*(?:\r?\n|$)/;
+      for (let match = directive.exec(source.slice(at)); match; match = directive.exec(source.slice(at))) at += match[0].length;
+      const added = `import { ${hook} } from 'react';\n`;
+      view.dispatch({ changes: { from: at, insert: added }, userEvent: 'input.complete' });
+      if (at <= from) { from += added.length; to += added.length; }
+    }
+    snippet(body)(view, null, from, to);
+  } };
+}
 
 /** Frontend snippets stay scoped to the file types where their output is valid. */
 export function webSnippetCompletion(file: string, ctx: CompletionContext): CompletionResult | null {
@@ -11,6 +30,9 @@ export function webSnippetCompletion(file: string, ctx: CompletionContext): Comp
     const safeName = /^[A-Za-z_]/.test(name) ? name : `Component${name}`;
     if ('rfc'.startsWith(word.text)) options.push(snippetCompletion('export function ${1:' + safeName + '}() {\n  return <div>${0}</div>;\n}', { label: 'rfc', detail: 'React function component', type: 'text' }));
     if ('rfcp'.startsWith(word.text)) options.push(snippetCompletion('type ${1:' + safeName + '}Props = {\n  ${2:title}: string;\n};\n\nexport function ${1:' + safeName + '}({ ${2:title} }: ${1:' + safeName + '}Props) {\n  return <div>{${2:title}}</div>;\n}${0}', { label: 'rfcp', detail: 'React component with typed props', type: 'text' }));
+  }
+  if (/\.(jsx|tsx)$/i.test(file) && 'state'.startsWith(word.text)) {
+    options.push(reactHookCompletion('useState', 'state', 'React state hook with import', 'const [${1:value}, set${2:Value}] = useState(${3:initialValue});${0}'));
   }
   if (/\.(css|scss|sass|less)$/i.test(file) && 'flexc'.startsWith(word.text)) {
     options.push(snippetCompletion('display: flex;\n  align-items: center;\n  gap: ${1:1rem};${0}', { label: 'flexc', detail: 'Flex container', type: 'text' }));
