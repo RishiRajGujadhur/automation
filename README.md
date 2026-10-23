@@ -17,7 +17,7 @@ machine; nothing is uploaded.
 | **Git and projects** | Review history and diffs, use interactive rebase and three-way merge, and inspect effective `.csproj` properties with an approval diff before writing changes. |
 | **Workbench** | Resizable panels, editor groups, file structure and call hierarchy, terminal, problems, Run Anything, Markdown preview, productivity guide, customizable settings, minimap, and layout controls. The web app starts with essential toolbar buttons and offers 70 individual visibility switches in Settings. |
 | **Appearance** | Compact SVG app mark; workspace and matching editor themes, including six Monokai inspired palettes and a Linear inspired dark palette. |
-| **Front-end languages** | JavaScript and TypeScript refactorings and imports; React actions and Hooks checks; HTML validation and accessibility checks; CSS, SCSS, LESS and CSS Modules support. See [FRONTEND-100.md](FRONTEND-100.md). |
+| **Front-end languages** | JavaScript and TypeScript refactorings and imports; React actions and Hooks checks; HTML validation and accessibility checks; CSS, SCSS, LESS and CSS Modules support; Emmet expansion and editable React, JSX, and CSS snippets. See [FRONTEND-100.md](FRONTEND-100.md) and [FRONTEND-QOL-250.md](FRONTEND-QOL-250.md). |
 | **Windows desktop integration** | Native menus and folder selection, recent repositories, remembered window placement and zoom, taskbar progress, and background test-run notifications. |
 
 The desktop and web apps share the core authoring features. Optional capabilities can be managed in **Settings > Features**. Detailed inventories and progress: [RIDER-VSCODE-FEATURES.md](RIDER-VSCODE-FEATURES.md), [FRONTEND-100.md](FRONTEND-100.md), [FRONTEND-QOL-250.md](FRONTEND-QOL-250.md), [VSCODE-20.md](VSCODE-20.md), [ADVANCED-20.md](ADVANCED-20.md), [CSHARP-20.md](CSHARP-20.md), [DEBUG-20.md](DEBUG-20.md), [REQNROLL.md](REQNROLL.md), [SPY.md](SPY.md) and [GUI-QOL.md](GUI-QOL.md).
@@ -41,6 +41,14 @@ Current web app with the editor-first navigation and essential button profile, u
 | <img src="docs/screenshots/web-test-generator.png" alt="Test generator showing scenario steps and binding matches" width="480"> | <img src="docs/screenshots/web-button-settings.png" alt="Settings page for optional workbench buttons" width="480"> |
 
 ![Page visibility settings](docs/screenshots/web-page-settings.png)
+
+### Frontend editing
+
+The editor offers Emmet expansion and file-specific snippets for React, JSX, and CSS. Snippets provide linked editable fields, and React Hook snippets add missing imports. The screenshots show completion and an expanded accessible input pair.
+
+| Snippet completion | Expanded snippet |
+| --- | --- |
+| <img src="docs/screenshots/web-frontend-snippets.png" alt="TSX editor offering the labeled input snippet" width="480"> | <img src="docs/screenshots/web-frontend-snippet-expanded.png" alt="TSX editor with linked label and input fields" width="480"> |
 
 ### Monokai inspired themes
 
