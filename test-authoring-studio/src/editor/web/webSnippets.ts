@@ -86,6 +86,9 @@ export function webSnippetCompletion(file: string, ctx: CompletionContext): Comp
   if (/\.(jsx|tsx)$/i.test(file) && 'labeledInput'.startsWith(word.text)) {
     options.push(snippetCompletion('<label htmlFor="${1:field}">${2:Label}</label>\n<input id="${1:field}" name="${1:field}" type="${3:text}" />${0}', { label: 'labeledInput', detail: 'Accessible React label and input pair', type: 'text' }));
   }
+  if (/\.(jsx|tsx)$/i.test(file) && 'pendingButton'.startsWith(word.text)) {
+    options.push(snippetCompletion('<button type="submit" disabled={${1:isPending}} aria-busy={${1:isPending}}>\n  {${1:isPending} ? "${2:Saving…}" : "${3:Save}"}\n</button>${0}', { label: 'pendingButton', detail: 'Submit button with pending and busy states', type: 'text' }));
+  }
   if (/\.(css|scss|sass|less)$/i.test(file) && 'flexc'.startsWith(word.text)) {
     options.push(snippetCompletion('display: flex;\n  align-items: center;\n  gap: ${1:1rem};${0}', { label: 'flexc', detail: 'Flex container', type: 'text' }));
   }

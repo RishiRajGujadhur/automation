@@ -56,3 +56,4 @@ This tracks **additional** improvements beyond the existing features in `FRONTEN
 | 50 | Insert a CSS `@supports` feature query with editable property, value, and selector. | Focused browser test | [VS Code snippet workflow](https://code.visualstudio.com/docs/editing/userdefinedsnippets) |
 | 51 | Insert a horizontal scroll-snap container and child alignment rule with editable behavior. | Focused browser test | [VS Code snippet workflow](https://code.visualstudio.com/docs/editing/userdefinedsnippets) |
 | 52 | Insert a React label and input pair with linked `htmlFor`, `id`, and `name` fields. | Focused browser test | [VS Code snippet workflow](https://code.visualstudio.com/docs/editing/userdefinedsnippets) |
+| 53 | Insert a submit button that links its disabled, busy, and visible pending states. | Focused browser test | [VS Code snippet workflow](https://code.visualstudio.com/docs/editing/userdefinedsnippets) |
