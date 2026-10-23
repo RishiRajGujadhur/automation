@@ -30,5 +30,8 @@ export function webSnippetCompletion(file: string, ctx: CompletionContext): Comp
   if (/\.(css|scss|sass|less)$/i.test(file) && 'autogrid'.startsWith(word.text)) {
     options.push(snippetCompletion('display: grid;\n  grid-template-columns: repeat(auto-fit, minmax(min(100%, ${1:16rem}), 1fr));\n  gap: ${2:1rem};${0}', { label: 'autogrid', detail: 'Responsive auto-fit grid', type: 'text' }));
   }
+  if (/\.(css|scss|sass|less)$/i.test(file) && 'reduceMotion'.startsWith(word.text)) {
+    options.push(snippetCompletion('@media (prefers-reduced-motion: reduce) {\n  ${1:.element} {\n    animation: none;\n    transition: none;\n  }\n}${0}', { label: 'reduceMotion', detail: 'Reduced motion override', type: 'text' }));
+  }
   return options.length ? { from: word.from, options } : null;
 }

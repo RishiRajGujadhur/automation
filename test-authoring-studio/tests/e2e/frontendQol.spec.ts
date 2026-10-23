@@ -195,6 +195,17 @@ test('3: expands a CSS Emmet property abbreviation', async ({ page, request }) =
     await expect(autoGridOption).toContainText('Responsive auto-fit grid');
     await autoGridOption.click();
     await expect(editor).toContainText('repeat(auto-fit, minmax(min(100%, 16rem), 1fr))');
+    await page.evaluate(() => {
+      const view = (window as unknown as { __activeEditor: () => { view: { state: { doc: { length: number } }; dispatch(change: unknown): void; focus(): void } } }).__activeEditor().view;
+      view.dispatch({ changes: { from: 0, to: view.state.doc.length, insert: 'reduceMotion' }, selection: { anchor: 12 } });
+      view.focus();
+    });
+    await page.keyboard.press('Control+Space');
+    const motionOption = page.locator('.cm-tooltip-autocomplete li').filter({ has: page.locator('.cm-completionLabel', { hasText: /^reduceMotion$/ }) }).first();
+    await expect(motionOption).toContainText('Reduced motion override');
+    await motionOption.click();
+    await expect(editor).toContainText('@media (prefers-reduced-motion: reduce)');
+    await expect(editor).toContainText('transition: none;');
   } finally {
     await request.post('/api/workspace', { data: previous });
     await fs.rm(root, { recursive: true, force: true, maxRetries: 5 });
