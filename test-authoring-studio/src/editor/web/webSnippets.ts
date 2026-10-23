@@ -265,5 +265,8 @@ export function webSnippetCompletion(file: string, ctx: CompletionContext): Comp
   if (/\.(css|scss|sass|less)$/i.test(file) && matches('deferredRender')) {
     options.push(snippetCompletion('content-visibility: auto;\n  contain-intrinsic-size: auto ${1:400px};${0}', { label: 'deferredRender', detail: 'Defer off-screen rendering with size estimate', type: 'text' }));
   }
+  if (/\.(css|scss|sass|less)$/i.test(file) && matches('stableScrollbar')) {
+    options.push(snippetCompletion('scrollbar-gutter: stable;\n  overflow-y: ${1:auto};${0}', { label: 'stableScrollbar', detail: 'Reserve scrollbar space to prevent layout shift', type: 'text' }));
+  }
   return options.length ? { from: word.from, options } : null;
 }
