@@ -128,6 +128,9 @@ export function webSnippetCompletion(file: string, ctx: CompletionContext): Comp
   if (/\.(ts|tsx)$/i.test(file) && matches('typeGuard')) {
     options.push(snippetCompletion('type ${1:Thing} = { ${2:id}: string };\n\nfunction is${1:Thing}(value: unknown): value is ${1:Thing} {\n  return typeof value === "object" && value !== null && "${2:id}" in value && typeof value.${2:id} === "string";\n}${0}', { label: 'typeGuard', detail: 'Runtime checked TypeScript type guard', type: 'text' }));
   }
+  if (/\.(ts|tsx)$/i.test(file) && matches('exhaustiveSwitch')) {
+    options.push(snippetCompletion('type ${1:Action} =\n  | { type: "${2:increment}" }\n  | { type: "${3:decrement}" };\n\nfunction ${4:assertNever}(value: never): never {\n  throw new Error("Unexpected value: " + String(value));\n}\n\nfunction ${5:reducer}(state: number, action: ${1:Action}): number {\n  switch (action.type) {\n    case "${2:increment}": return state + 1;\n    case "${3:decrement}": return state - 1;\n    default: return ${4:assertNever}(action);\n  }\n}${0}', { label: 'exhaustiveSwitch', detail: 'Discriminated union switch with never check', type: 'text' }));
+  }
   if (/\.(html|htm)$/i.test(file) && matches('detailsDisclosure')) {
     options.push(snippetCompletion('<details>\n  <summary>${1:More information}</summary>\n  <p>${2:Details go here.}</p>\n</details>${0}', { label: 'detailsDisclosure', detail: 'Native accessible disclosure', type: 'text' }));
   }

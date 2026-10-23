@@ -966,6 +966,17 @@ test('73: TypeScript utility snippets expand in source files', async ({ page, re
     await guardOption.click();
     await expect(editor).toContainText('function isThing(value: unknown): value is Thing');
     await expect(editor).toContainText('"id" in value && typeof value.id === "string"');
+    await page.evaluate(() => {
+      const view = (window as unknown as { __activeEditor: () => { view: { state: { doc: { length: number } }; dispatch(change: unknown): void; focus(): void } } }).__activeEditor().view;
+      view.dispatch({ changes: { from: 0, to: view.state.doc.length, insert: 'exhaustiveSwitch' }, selection: { anchor: 16 } });
+      view.focus();
+    });
+    await page.keyboard.press('Control+Space');
+    const switchOption = page.locator('.cm-tooltip-autocomplete li').filter({ has: page.locator('.cm-completionLabel', { hasText: /^exhaustiveSwitch$/ }) }).first();
+    await expect(switchOption).toContainText('never check');
+    await switchOption.click();
+    await expect(editor).toContainText('function assertNever(value: never): never');
+    await expect(editor).toContainText('default: return assertNever(action);');
   } finally {
     await request.post('/api/workspace', { data: previous });
     await fs.rm(root, { recursive: true, force: true, maxRetries: 5 });
