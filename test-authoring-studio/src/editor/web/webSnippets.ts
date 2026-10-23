@@ -39,5 +39,8 @@ export function webSnippetCompletion(file: string, ctx: CompletionContext): Comp
   if (/\.(css|scss|sass|less)$/i.test(file) && 'fluidType'.startsWith(word.text)) {
     options.push(snippetCompletion('font-size: clamp(${1:1rem}, ${2:calc(1rem + 1vw)}, ${3:2rem});${0}', { label: 'fluidType', detail: 'Fluid type scale', type: 'text' }));
   }
+  if (/\.(css|scss|sass|less)$/i.test(file) && 'srOnly'.startsWith(word.text)) {
+    options.push(snippetCompletion('${1:.sr-only} {\n  position: absolute;\n  width: 1px;\n  height: 1px;\n  padding: 0;\n  margin: -1px;\n  overflow: hidden;\n  clip: rect(0, 0, 0, 0);\n  white-space: nowrap;\n  border: 0;\n}${0}', { label: 'srOnly', detail: 'Screen-reader-only utility', type: 'text' }));
+  }
   return options.length ? { from: word.from, options } : null;
 }
