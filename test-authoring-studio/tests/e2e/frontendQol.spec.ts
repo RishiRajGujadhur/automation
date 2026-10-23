@@ -301,6 +301,17 @@ test('18: TSX component snippet uses the file name', async ({ page, request }) =
     await option.click();
     await expect(editor).toContainText('export function UserCard()');
     await expect(editor).toContainText('return <div></div>;');
+    await page.evaluate(() => {
+      const view = (window as unknown as { __activeEditor: () => { view: { state: { doc: { length: number } }; dispatch(change: unknown): void; focus(): void } } }).__activeEditor().view;
+      view.dispatch({ changes: { from: 0, to: view.state.doc.length, insert: 'rfcp' }, selection: { anchor: 4 } });
+      view.focus();
+    });
+    await page.keyboard.press('Control+Space');
+    const propsOption = page.locator('.cm-tooltip-autocomplete li').filter({ has: page.locator('.cm-completionLabel', { hasText: /^rfcp$/ }) }).first();
+    await expect(propsOption).toContainText('typed props');
+    await propsOption.click();
+    await expect(editor).toContainText('type UserCardProps = {');
+    await expect(editor).toContainText('export function UserCard({ title }: UserCardProps)');
   } finally {
     await request.post('/api/workspace', { data: previous });
     await fs.rm(root, { recursive: true, force: true, maxRetries: 5 });

@@ -5,11 +5,12 @@ export function webSnippetCompletion(file: string, ctx: CompletionContext): Comp
   const word = ctx.matchBefore(/[A-Za-z]*/);
   if (!word || (!ctx.explicit && !word.text)) return null;
   const options = [];
-  if (/\.tsx$/i.test(file) && 'rfc'.startsWith(word.text)) {
+  if (/\.tsx$/i.test(file)) {
     const stem = (file.split(/[\\/]/).at(-1) ?? 'Component').replace(/\.tsx$/i, '');
     const name = stem.replace(/(^|[-_. ])([A-Za-z0-9])/g, (_m, _sep: string, letter: string) => letter.toUpperCase()).replace(/[^A-Za-z0-9_]/g, '') || 'Component';
     const safeName = /^[A-Za-z_]/.test(name) ? name : `Component${name}`;
-    options.push(snippetCompletion('export function ${1:' + safeName + '}() {\n  return <div>${0}</div>;\n}', { label: 'rfc', detail: 'React function component', type: 'text' }));
+    if ('rfc'.startsWith(word.text)) options.push(snippetCompletion('export function ${1:' + safeName + '}() {\n  return <div>${0}</div>;\n}', { label: 'rfc', detail: 'React function component', type: 'text' }));
+    if ('rfcp'.startsWith(word.text)) options.push(snippetCompletion('type ${1:' + safeName + '}Props = {\n  ${2:title}: string;\n};\n\nexport function ${1:' + safeName + '}({ ${2:title} }: ${1:' + safeName + '}Props) {\n  return <div>{${2:title}}</div>;\n}${0}', { label: 'rfcp', detail: 'React component with typed props', type: 'text' }));
   }
   if (/\.(css|scss|sass|less)$/i.test(file) && 'flexc'.startsWith(word.text)) {
     options.push(snippetCompletion('display: flex;\n  align-items: center;\n  gap: ${1:1rem};${0}', { label: 'flexc', detail: 'Flex container', type: 'text' }));
