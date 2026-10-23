@@ -8,6 +8,7 @@ import { cmSnippet } from './markupFeatures';
 import { doComplete } from '@vscode/emmet-helper';
 import { TextDocument } from 'vscode-languageserver-textdocument';
 import { emmetConfig, emmetSettings } from './emmet';
+import { webSnippetCompletion } from './webSnippets';
 
 /**
  * CSS, SCSS and LESS in the editor (FRONTEND-100.md F71–F95): VS Code's CSS language services through /api/web
@@ -150,7 +151,7 @@ export const colorPreviews = ViewPlugin.fromClass(class {
 export function styleFeatures(file: string): Extension[] {
   return [
     styleLinter(file),
-    autocompletion({ override: [gateSource((ctx) => complete(file, ctx)), gateSource((ctx) => emmetComplete(file, ctx))], activateOnTyping: true, maxRenderedOptions: 100, icons: true }),
+    autocompletion({ override: [gateSource((ctx) => complete(file, ctx)), gateSource((ctx) => emmetComplete(file, ctx)), gateSource((ctx) => webSnippetCompletion(file, ctx))], activateOnTyping: true, maxRenderedOptions: 100, icons: true }),
     hover(file),
     colorPreviews,
   ];

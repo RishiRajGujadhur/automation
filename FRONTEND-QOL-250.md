@@ -22,3 +22,4 @@ This tracks **additional** improvements beyond the existing features in `FRONTEN
 | 16 | Select the first nested HTML element and then its text from a whole-element selection. | Focused browser test | [VS Code Emmet balance inward action](https://github.com/microsoft/vscode/blob/main/extensions/emmet/package.json) |
 | 17 | Jump between an HTML element's opening and closing tag names. | Focused browser test | [VS Code Emmet matching pair action](https://github.com/microsoft/vscode/blob/main/extensions/emmet/package.json) |
 | 18 | Insert a TSX React function component from an `rfc` completion snippet, naming it from the file. | Focused browser test | [VS Code snippet workflow](https://code.visualstudio.com/docs/editing/userdefinedsnippets) |
+| 19 | Insert a flexbox container with alignment and an editable gap from the `flexc` CSS snippet. | Focused browser test | [VS Code snippet workflow](https://code.visualstudio.com/docs/editing/userdefinedsnippets) |

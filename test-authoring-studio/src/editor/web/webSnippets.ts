@@ -11,5 +11,8 @@ export function webSnippetCompletion(file: string, ctx: CompletionContext): Comp
     const safeName = /^[A-Za-z_]/.test(name) ? name : `Component${name}`;
     options.push(snippetCompletion('export function ${1:' + safeName + '}() {\n  return <div>${0}</div>;\n}', { label: 'rfc', detail: 'React function component', type: 'text' }));
   }
+  if (/\.(css|scss|sass|less)$/i.test(file) && 'flexc'.startsWith(word.text)) {
+    options.push(snippetCompletion('display: flex;\n  align-items: center;\n  gap: ${1:1rem};${0}', { label: 'flexc', detail: 'Flex container', type: 'text' }));
+  }
   return options.length ? { from: word.from, options } : null;
 }
