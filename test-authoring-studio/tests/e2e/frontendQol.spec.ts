@@ -654,6 +654,18 @@ test('44: layout effect snippet inserts hook and import', async ({ page, request
     const buttonSource = await page.evaluate(() => (window as unknown as { __activeEditor: () => { view: { state: { doc: { toString(): string } } } } }).__activeEditor().view.state.doc.toString());
     expect(buttonSource).toContain('disabled={isPending} aria-busy={isPending}');
     expect(buttonSource).toContain('isPending ? "Saving…" : "Save"');
+    await page.evaluate(() => {
+      const view = (window as unknown as { __activeEditor: () => { view: { state: { doc: { length: number } }; dispatch(change: unknown): void; focus(): void } } }).__activeEditor().view;
+      view.dispatch({ changes: { from: 0, to: view.state.doc.length, insert: 'responsiveImage' }, selection: { anchor: 15 } });
+      view.focus();
+    });
+    await page.keyboard.press('Control+Space');
+    const imageOption = page.locator('.cm-tooltip-autocomplete li').filter({ has: page.locator('.cm-completionLabel', { hasText: /^responsiveImage$/ }) }).first();
+    await expect(imageOption).toContainText('Responsive React picture');
+    await imageOption.click();
+    const imageSource = await page.evaluate(() => (window as unknown as { __activeEditor: () => { view: { state: { doc: { toString(): string } } } } }).__activeEditor().view.state.doc.toString());
+    expect(imageSource).toContain('<source media="(min-width: 768px)" srcSet="/images/large.webp" />');
+    expect(imageSource).toContain('alt="Describe the image" loading="lazy" decoding="async"');
   } finally {
     await request.post('/api/workspace', { data: previous });
     await fs.rm(root, { recursive: true, force: true, maxRetries: 5 });

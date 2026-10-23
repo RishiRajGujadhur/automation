@@ -89,6 +89,9 @@ export function webSnippetCompletion(file: string, ctx: CompletionContext): Comp
   if (/\.(jsx|tsx)$/i.test(file) && 'pendingButton'.startsWith(word.text)) {
     options.push(snippetCompletion('<button type="submit" disabled={${1:isPending}} aria-busy={${1:isPending}}>\n  {${1:isPending} ? "${2:Saving…}" : "${3:Save}"}\n</button>${0}', { label: 'pendingButton', detail: 'Submit button with pending and busy states', type: 'text' }));
   }
+  if (/\.(jsx|tsx)$/i.test(file) && 'responsiveImage'.startsWith(word.text)) {
+    options.push(snippetCompletion('<picture>\n  <source media="(min-width: ${1:768px})" srcSet="${2:/images/large.webp}" />\n  <img src="${3:/images/small.webp}" alt="${4:Describe the image}" loading="lazy" decoding="async" />\n</picture>${0}', { label: 'responsiveImage', detail: 'Responsive React picture with accessible image', type: 'text' }));
+  }
   if (/\.(css|scss|sass|less)$/i.test(file) && 'flexc'.startsWith(word.text)) {
     options.push(snippetCompletion('display: flex;\n  align-items: center;\n  gap: ${1:1rem};${0}', { label: 'flexc', detail: 'Flex container', type: 'text' }));
   }
