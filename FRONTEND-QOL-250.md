@@ -69,3 +69,4 @@ This tracks **additional** improvements beyond the existing features in `FRONTEN
 | 63 | Insert a keyboard skip link whose fragment stays linked to the main landmark ID. | Focused browser test | [VS Code snippet workflow](https://code.visualstudio.com/docs/editing/userdefinedsnippets) |
 | 64 | Insert a fieldset and legend around radio controls with a linked group name. | Focused browser test | [VS Code snippet workflow](https://code.visualstudio.com/docs/editing/userdefinedsnippets) |
 | 65 | Insert a picture element with AVIF and WebP sources plus a sized, lazy-loaded fallback image. | Focused browser test | [VS Code snippet workflow](https://code.visualstudio.com/docs/editing/userdefinedsnippets) |
+| 66 | Suppress frontend snippet suggestions inside comments and string values, where they would insert invalid code. | Focused browser test and TypeScript check | [VS Code snippet workflow](https://code.visualstudio.com/docs/editing/userdefinedsnippets) |

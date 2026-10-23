@@ -1,4 +1,5 @@
 import { snippet, snippetCompletion, type Completion, type CompletionContext, type CompletionResult } from '@codemirror/autocomplete';
+import { syntaxTree } from '@codemirror/language';
 
 /** Put a missing React hook import after a top-of-file directive, preserving `use client`. */
 function reactHookCompletion(hook: string, label: string, detail: string, body: string, module = 'react'): Completion {
@@ -33,6 +34,10 @@ function reactHookCompletion(hook: string, label: string, detail: string, body: 
 export function webSnippetCompletion(file: string, ctx: CompletionContext): CompletionResult | null {
   const word = ctx.matchBefore(/[A-Za-z]*/);
   if (!word || (!ctx.explicit && !word.text)) return null;
+  const tree = syntaxTree(ctx.state);
+  for (let node: typeof tree.topNode | null = tree.resolveInner(ctx.pos, -1); node; node = node.parent) {
+    if (/Comment|String|AttributeValue|TemplateString/.test(node.name)) return null;
+  }
   const options = [];
   if (/\.tsx$/i.test(file)) {
     const stem = (file.split(/[\\/]/).at(-1) ?? 'Component').replace(/\.tsx$/i, '');
