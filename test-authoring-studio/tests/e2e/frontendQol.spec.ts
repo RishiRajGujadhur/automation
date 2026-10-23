@@ -192,3 +192,26 @@ test('13–14: Emmet Tab and completion can be disabled independently of the exp
     await fs.rm(root, { recursive: true, force: true, maxRetries: 5 });
   }
 });
+
+test('15: Emmet uses the configured XHTML self-closing style', async ({ page, request }) => {
+  const previous = (await (await request.get('/api/workspace')).json()).config;
+  const root = await fs.mkdtemp(path.join(os.tmpdir(), 'studio-emmet-closing-'));
+  try {
+    await fs.writeFile(path.join(root, 'index.html'), 'img');
+    expect((await request.post('/api/workspace', { data: { repositoryRoot: root, targetProject: '.' } })).ok()).toBe(true);
+    await page.addInitScript(() => localStorage.setItem('tas:settings', JSON.stringify({ 'emmet.selfClosingStyle': 'xhtml' })));
+    await page.goto('/#/features/editor');
+    await expect(page.getByText('Repository indexed')).toBeVisible();
+    await page.evaluate(() => window.dispatchEvent(new CustomEvent('tas:open-location', { detail: { file: 'index.html', line: 1 } })));
+    const editor = page.getByLabel('Source of index.html');
+    await expect(editor).toBeVisible();
+    await editor.click();
+    await page.keyboard.press('Control+End');
+    await editor.click({ button: 'right' });
+    await page.getByRole('menuitem', { name: 'Expand Emmet Abbreviation' }).click();
+    await expect(editor).toContainText('alt="" />');
+  } finally {
+    await request.post('/api/workspace', { data: previous });
+    await fs.rm(root, { recursive: true, force: true, maxRetries: 5 });
+  }
+});

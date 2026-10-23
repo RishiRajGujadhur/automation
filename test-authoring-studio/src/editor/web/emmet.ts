@@ -1,14 +1,20 @@
 import { snippet } from '@codemirror/autocomplete';
 import { syntaxTree } from '@codemirror/language';
 import type { EditorView } from '@codemirror/view';
-import { extractAbbreviation, expandAbbreviation, getExpandOptions, isAbbreviationValid } from '@vscode/emmet-helper';
+import { extractAbbreviation, expandAbbreviation, getExpandOptions, isAbbreviationValid, type VSCodeEmmetConfig } from '@vscode/emmet-helper';
 import { TextDocument } from 'vscode-languageserver-textdocument';
 import { defineSetting } from '../../vscode/settings';
 
 export const emmetSettings = {
   tab: defineSetting<boolean>({ key: 'emmet.triggerExpansionOnTab', category: 'Text Editor ▸ Emmet', title: 'Expand on Tab', type: 'boolean', default: true, description: 'Expand a recognized Emmet abbreviation with Tab. When disabled, Tab follows the normal indentation and snippet behavior.' }),
   suggestions: defineSetting<'always' | 'never' | 'inMarkupAndStylesheetFilesOnly'>({ key: 'emmet.showExpandedAbbreviation', category: 'Text Editor ▸ Emmet', title: 'Show Expanded Abbreviations', type: 'enum', default: 'always', options: [{ value: 'always' }, { value: 'inMarkupAndStylesheetFilesOnly' }, { value: 'never' }], description: 'Choose where Emmet expansions appear in completion. The expand command remains available when suggestions are hidden.' }),
+  selfClosing: defineSetting<'default' | 'html' | 'xhtml' | 'xml'>({ key: 'emmet.selfClosingStyle', category: 'Text Editor ▸ Emmet', title: 'Self Closing Tags', type: 'enum', default: 'default', options: [{ value: 'default' }, { value: 'html' }, { value: 'xhtml' }, { value: 'xml' }], description: 'Choose how Emmet writes void elements such as img. Default follows the file language.' }),
 };
+
+export function emmetConfig(): VSCodeEmmetConfig {
+  const style = emmetSettings.selfClosing();
+  return style === 'default' ? {} : { preferences: { 'output.selfClosingStyle': style } };
+}
 
 /** Expand the abbreviation directly before the caret, preserving Emmet's editable snippet fields. */
 function expandAtCursor(view: EditorView, file: string, syntax: 'html' | 'css' | 'jsx', onTab = false): boolean {
@@ -25,7 +31,7 @@ function expandAtCursor(view: EditorView, file: string, syntax: 'html' | 'css' |
   const to = document.offsetAt(found.abbreviationRange.end);
   if (from === to || to !== selection.head) return false;
   try {
-    const expanded = expandAbbreviation(found.abbreviation, getExpandOptions(syntax, undefined, found.filter));
+    const expanded = expandAbbreviation(found.abbreviation, getExpandOptions(syntax, emmetConfig(), found.filter));
     snippet(expanded.replace(/\t/g, '  '))(view, null, from, to);
     view.focus();
     return true;
@@ -43,7 +49,7 @@ function wrapSelection(view: EditorView, abbreviation: string, syntax: 'html' | 
   const selection = view.state.selection.main;
   if (selection.empty || !isAbbreviationValid(syntax, abbreviation)) return false;
   try {
-    const config = getExpandOptions(syntax);
+    const config = getExpandOptions(syntax, emmetConfig());
     config.text = view.state.sliceDoc(selection.from, selection.to);
     const expanded = expandAbbreviation(abbreviation, config);
     snippet(expanded.replace(/\t/g, '  '))(view, null, selection.from, selection.to);

@@ -6,7 +6,7 @@ import { api } from '../../api';
 import { gateSource } from '../../vscode/suggestions';
 import { doComplete } from '@vscode/emmet-helper';
 import { TextDocument } from 'vscode-languageserver-textdocument';
-import { emmetSettings } from './emmet';
+import { emmetConfig, emmetSettings } from './emmet';
 
 /**
  * HTML in the editor (FRONTEND-100.md F51–F70): VS Code's HTML language service through /api/web — tag, attribute,
@@ -50,7 +50,7 @@ async function complete(file: string, ctx: CompletionContext): Promise<Completio
 function emmetComplete(file: string, ctx: CompletionContext): CompletionResult | null {
   if (emmetSettings.suggestions() === 'never') return null;
   const document = TextDocument.create(file, 'html', 1, ctx.state.doc.toString());
-  const items = doComplete(document, document.positionAt(ctx.pos), 'html', {})?.items ?? [];
+  const items = doComplete(document, document.positionAt(ctx.pos), 'html', emmetConfig())?.items ?? [];
   const options: Completion[] = [];
   let from = ctx.pos;
   for (const item of items) {

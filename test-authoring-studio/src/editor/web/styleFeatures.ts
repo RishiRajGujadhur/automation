@@ -7,7 +7,7 @@ import { gateSource } from '../../vscode/suggestions';
 import { cmSnippet } from './markupFeatures';
 import { doComplete } from '@vscode/emmet-helper';
 import { TextDocument } from 'vscode-languageserver-textdocument';
-import { emmetSettings } from './emmet';
+import { emmetConfig, emmetSettings } from './emmet';
 
 /**
  * CSS, SCSS and LESS in the editor (FRONTEND-100.md F71–F95): VS Code's CSS language services through /api/web
@@ -50,7 +50,7 @@ async function complete(file: string, ctx: CompletionContext): Promise<Completio
 function emmetComplete(file: string, ctx: CompletionContext): CompletionResult | null {
   if (emmetSettings.suggestions() === 'never') return null;
   const document = TextDocument.create(file, 'css', 1, ctx.state.doc.toString());
-  const items = doComplete(document, document.positionAt(ctx.pos), 'css', {})?.items ?? [];
+  const items = doComplete(document, document.positionAt(ctx.pos), 'css', emmetConfig())?.items ?? [];
   const options: Completion[] = [];
   let from = ctx.pos;
   for (const item of items) {
